@@ -244,7 +244,7 @@ public interface CalendarObject {
 	    }
 	    
         public static String getEtag(ZAppointmentHit item) {
-            return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getModifiedDate())+"\"";
+            return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getModifiedDate())+"000\"";
         }
 		private RemoteCalendarCollection mParent;
 	    private String mRemoteId;

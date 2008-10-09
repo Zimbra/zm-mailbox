@@ -160,19 +160,22 @@ public class ScheduleOutbox extends Collection {
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.3;No scheduling for the user");
             return;
         }
-        InternetAddress from, to;
+        ArrayList<Address> recipients = new java.util.ArrayList<Address>();
+        InternetAddress from, sender, to;
         try {
-            from = AccountUtil.getFriendlyEmailAddress(ctxt.getAuthAccount());
+            from = AccountUtil.getFriendlyEmailAddress(getMailbox(ctxt).getAccount());
+            if (originator.toLowerCase().startsWith("mailto:"))
+                originator = originator.substring(7);
+            sender = new InternetAddress(originator);
             if (rcpt.toLowerCase().startsWith("mailto:"))
                 rcpt = rcpt.substring(7);
             to = new InternetAddress(rcpt);
+            recipients.add(to);
         } catch (AddressException e) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.7;"+rcpt);
             return;
         }
-        ArrayList<Address> recipients = new java.util.ArrayList<Address>();
-        recipients.add(to);
         String subject, uid, text, status, method;
 
         status = req.getPropVal(ICalTok.STATUS, "");
@@ -181,9 +184,8 @@ public class ScheduleOutbox extends Collection {
         if (method.equals("REQUEST")) {
             ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
             if (organizerProp != null) {
-                ZOrganizer organizer = new ZOrganizer(organizerProp);
-                String organizerStr = this.getAddressFromPrincipalURL(organizer.getAddress());
-                if (!organizerStr.equalsIgnoreCase(from.getAddress()))
+                String organizerStr = this.getAddressFromPrincipalURL(new ZOrganizer(organizerProp).getAddress());
+                if (!AccountUtil.addressMatchesAccount(getMailbox(ctxt).getAccount(), organizerStr))
                     throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
             }
             subject = "Meeting Request: ";
@@ -217,7 +219,7 @@ public class ScheduleOutbox extends Collection {
             return;
         }
         try {
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, from, recipients, subject, text, uid, cal);
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, sender, recipients, subject, text, uid, cal);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
             mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, null, true, false);
         } catch (ServiceException e) {

@@ -140,14 +140,11 @@ public abstract class MailItemResource extends DavResource {
 		return mEtag;
 	}
 	
-	protected static Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
-		String user = ctxt.getUser();
-		if (user == null)
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
 		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.get(AccountBy.name, user);
+		Account account = prov.get(AccountBy.id, mOwnerId);
 		if (account == null)
-			throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+			throw new DavException("no such account "+mOwnerId, HttpServletResponse.SC_NOT_FOUND, null);
 		return MailboxManager.getInstance().getMailboxByAccount(account);
 	}
 	
@@ -214,7 +211,7 @@ public abstract class MailItemResource extends DavResource {
 	
 	private static Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws DocumentException, IOException, DavException, ServiceException {
 		HashMap<QName,Element> props = new HashMap<QName,Element>();
-		Mailbox mbox = getMailbox(ctxt);
+		Mailbox mbox = item.getMailbox();
 		Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
 		if (data == null)
 			return props;
