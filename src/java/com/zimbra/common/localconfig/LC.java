@@ -235,6 +235,7 @@ public class LC {
 
     public static final KnownKey postfix_alias_maps;
     public static final KnownKey postfix_broken_sasl_auth_clients;
+    public static final KnownKey postfix_bounce_queue_lifetime;
     public static final KnownKey postfix_command_directory;
     public static final KnownKey postfix_daemon_directory;
     public static final KnownKey postfix_header_checks;
@@ -817,6 +818,9 @@ public class LC {
 
         postfix_broken_sasl_auth_clients  = new KnownKey("postfix_broken_sasl_auth_clients");
         postfix_broken_sasl_auth_clients.setDefault("yes");
+
+        postfix_bounce_queue_lifetime  = new KnownKey("postfix_bounce_queue_lifetime");
+        postfix_bounce_queue_lifetime.setDefault("5d");
 
         postfix_command_directory  = new KnownKey("postfix_command_directory");
         postfix_command_directory.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin");
