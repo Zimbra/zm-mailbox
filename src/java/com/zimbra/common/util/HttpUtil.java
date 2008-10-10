@@ -114,6 +114,24 @@ public class HttpUtil {
         }
         return encoded;
     }
+    
+    /**
+     * bug 32207
+     * 
+     * The apache reverse proxy is re-writing the Host header to be the MBS IP.  It sets 
+     * the original request hostname in the X-Forwarded-Host header.  To work around it, 
+     * we first check for X-Forwarded-Host and then fallback to Host.
+     *
+     * @param req
+     * @return the original request hostname 
+     */
+    public static String getVirtulaHost(HttpServletRequest req) {
+        String virtualHost = req.getHeader("X-Forwarded-Host");
+        if (virtualHost != null)
+            return virtualHost;
+        else 
+            return req.getServerName();
+    }
 
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
