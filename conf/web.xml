@@ -245,6 +245,25 @@
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
+	<!--
+	<init-param>
+		<description>The initial size of the resource cache.</description>
+		<param-name>resource-cache-size</param-name>
+		<param-value>1000</param-value>
+	</init-param>
+	-->
+	<init-param>
+		<description>
+			The temp directory of the resource cache. The servlet creates
+			a "zimletres" sub-directory in the specified directory. So you
+			should NOT append that to the directory.
+			NOTE: The special string "${webapp}" can be used to specify
+			the webapp/service/ directory. It should ONLY be used at the
+			beginning of the parameter value.
+		</description>
+		<param-name>resource-cache-dir</param-name>
+		<param-value>${webapp}/../../work/resource-cache</param-value>
+	</init-param>
   </servlet>
 
   <servlet-mapping>

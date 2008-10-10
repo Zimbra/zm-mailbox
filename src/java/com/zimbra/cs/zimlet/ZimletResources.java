@@ -19,7 +19,7 @@ package com.zimbra.cs.zimlet;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.servlet.DiskCacheServlet;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 import org.w3c.dom.Document;
@@ -28,10 +28,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import javax.servlet.http.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
@@ -41,7 +38,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 public class ZimletResources
-        extends ZimbraServlet {
+        extends DiskCacheServlet {
 
     //
     // Constants
@@ -66,17 +63,13 @@ public class ZimletResources
         TYPES.put("plain", "text/plain");
     }
 
-    //
-    // Data
-    //
+	//
+	// Constants
+	//
 
-    /**
-     * <ul>
-     * <li>Key: request uri
-     * <li>Value: String buffer
-     * </ul>
-     */
-    private Map<String, byte[]> cache = new HashMap<String, byte[]>();
+	public ZimletResources() {
+		super("zimletres");
+	}
 
     //
     // HttpServlet methods
@@ -101,8 +94,9 @@ public class ZimletResources
         }
 
         // generate buffer
-        byte[] buffer = !debug ? cache.get(cacheId) : null;
-        if (buffer == null) {
+		String text = null;
+        File file = !debug ? getCacheFile(cacheId) : null;
+        if (file == null || !file.exists()) {
             StringWriter writer = new StringWriter();
             PrintWriter printer = new PrintWriter(writer);
 
@@ -114,11 +108,11 @@ public class ZimletResources
                 RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/res/");
 
                 List<ZimletFile> files = getZimletFiles(req, type);
-                for (ZimletFile file : files) {
-                    if (!file.isResourceFile) {
+                for (ZimletFile zfile : files) {
+                    if (!zfile.isResourceFile) {
                         continue;
                     }
-                    HttpServletRequest wrappedReq = new RequestWrapper(req, "/res/" + file.zimletName);
+                    HttpServletRequest wrappedReq = new RequestWrapper(req, "/res/" + zfile.zimletName);
                     HttpServletResponse wrappedResp = new ResponseWrapper(resp, printer);
                     dispatcher.include(wrappedReq, wrappedResp);
                 }
@@ -127,7 +121,7 @@ public class ZimletResources
             // zimlet resources
             if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: generating buffer");
             generate(req, type, printer);
-            String text = writer.toString();
+            text = writer.toString();
 
             // minimize css
             if (type.equals(T_CSS) && !debug) {
@@ -175,25 +169,20 @@ public class ZimletResources
                 }
             }
 
-            // compress
-            buffer = text.getBytes("UTF-8");
-            if (uri.endsWith(COMPRESSED_EXT)) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream(buffer.length);
-                OutputStream gzos = new GZIPOutputStream(bos);
-                gzos.write(buffer);
-                gzos.close();
-                buffer = bos.toByteArray();
-            }
-
             // store buffer
             if (!debug) {
-                cache.put(cacheId, buffer);
+				file = File.createTempFile("res-", "."+type, getCacheDir());
+				if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: "+file);
+				copy(text, file);
+				compress(file);
+                putCacheFile(cacheId, file);
             }
         } else {
             if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: using previous buffer");
         }
 
         // write buffer
+		boolean compress = !debug && uri.endsWith(COMPRESSED_EXT);
         try {
             // We browser sniff so need to make sure any caches do the same.
             resp.addHeader("Vary", "User-Agent");
@@ -207,10 +196,7 @@ public class ZimletResources
             resp.setHeader("Pragma", "no-cache");
 
             resp.setContentType(contentType);
-            resp.setContentLength(buffer.length);
-            if (uri.endsWith(COMPRESSED_EXT)) {
-                resp.setHeader("Content-Encoding", "gzip");
-            }
+            resp.setContentLength(file != null ? (int)file.length() : text.getBytes("UTF-8").length);
         }
         catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
@@ -218,19 +204,13 @@ public class ZimletResources
             ZimbraLog.zimlet.debug("zimletres: " + e.getMessage());
         }
 
-        try {
-            // print files
-            OutputStream out = resp.getOutputStream();
-            out.write(buffer);
-            out.flush();
-        }
-        catch (IllegalStateException e) {
-            ZimbraLog.zimlet.debug("!!! illegal state: " + e.getMessage());
-            // use writer if called from including JSP
-            PrintWriter out = resp.getWriter();
-            out.print(buffer);
-            out.flush();
-        }
+		// write buffer
+		if (file != null) {
+			copy(file, resp, compress);
+		}
+		else {
+			copy(text, resp, compress);
+		}
 
     } // doGet(HttpServletRequest,HttpServletResponse)
 
