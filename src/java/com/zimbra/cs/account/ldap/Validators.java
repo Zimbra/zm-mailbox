@@ -17,6 +17,7 @@
 package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,11 +53,17 @@ public class Validators {
         private long mNextCheck;
         private long mLastUserCount; // PFN: this isn't counted per-domain, is it?
         
-            public void validate(LdapProvisioning prov, String action, Object arg) throws ServiceException {
-            if (!action.equals("createAccount") || !(arg instanceof String))
+            public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
+                if (args.length < 1) return;
+            if (!action.equals("createAccount") || !(args[0] instanceof String))
                 return;
+            if (args.length > 1 && args[1] instanceof String[] &&
+                    Arrays.asList((String[]) args[1]).contains(
+                            LdapProvisioning.C_zimbraCalendarResource)) {
+                return; // as in LicenseManager, don't want to count calendar resources
+            }
             
-            String emailAddr = (String)arg;
+            String emailAddr = (String)args[0];
             String domain = null;
             int index = emailAddr.indexOf('@');
             if (index != -1)
@@ -96,15 +103,12 @@ public class Validators {
     @SuppressWarnings("unchecked")
     private static class DomainMaxAccountsValidator implements ProvisioningValidator {
         
-        public void validate(LdapProvisioning prov, String action, Object arg) throws ServiceException {
+        public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
             
-            if (!(arg instanceof Object[]))
-                return;
             if (!"createAccountCheckDomainCosAndFeature".equals(action) &&
                     !"modifyAccountCheckDomainCosAndFeature".equals(action))
                 return;
             
-            Object[] args = (Object[]) arg;
             if (args.length < 2)
                 return;
 

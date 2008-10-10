@@ -22,59 +22,21 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Account.CalendarUserType;
-import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.AccountCache;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.DomainCache;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.Group;
-import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.IDedEntryCache;
-import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntryCache;
-import com.zimbra.cs.account.PreAuthKey;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.auth.AuthMechanism;
-import com.zimbra.cs.account.callback.MailSignature;
-import com.zimbra.cs.account.gal.GalNamedFilter;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.gal.GalParams;
-import com.zimbra.cs.account.gal.GalUtil;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zimlet.ZimletException;
-import com.zimbra.cs.zimlet.ZimletUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.regex.Pattern;
 
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
@@ -96,21 +58,59 @@ import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.regex.Pattern;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountCache;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DomainCache;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.IDedEntryCache;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntryCache;
+import com.zimbra.cs.account.PreAuthKey;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.auth.AuthMechanism;
+import com.zimbra.cs.account.callback.MailSignature;
+import com.zimbra.cs.account.gal.GalNamedFilter;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.account.gal.GalUtil;
+import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletUtil;
 
 /**
  * @author schemers
@@ -231,7 +231,7 @@ public class LdapProvisioning extends Provisioning {
     private static Pattern sNamePattern = Pattern.compile("([/+])"); 
 
     public static interface ProvisioningValidator {
-    	public void validate(LdapProvisioning prov, String action, Object arg) throws ServiceException;
+    	public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException;
     }
     
     private static List<ProvisioningValidator> sValidators;
@@ -247,9 +247,9 @@ public class LdapProvisioning extends Provisioning {
     	}
     }
     
-    private void validate(String action, Object arg) throws ServiceException {
+    private void validate(String action, Object... args) throws ServiceException {
     	for (ProvisioningValidator v : sValidators) {
-    		v.validate(this, action, arg);
+    		v.validate(this, action, args);
     	}
     }
 
@@ -291,8 +291,8 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (entry instanceof Account && !(entry instanceof CalendarResource)) {
                 Account acct = (Account) entry;
-                validate("modifyAccountCheckDomainCosAndFeature", new Object[] {
-                        acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct });
+                validate("modifyAccountCheckDomainCosAndFeature",
+                        acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
             }
             if (zlc == null)
                 zlc = new ZimbraLdapContext(true);
@@ -655,14 +655,14 @@ public class LdapProvisioning extends Provisioning {
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
         
-    	validate("createAccount", emailAddress);
+    	validate("createAccount", emailAddress, additionalObjectClasses);
         emailAddress = emailAddress.toLowerCase().trim();
         
         String parts[] = emailAddress.split("@");
         if (parts.length != 2)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
  
-    	validate("createAccountCheckDomainCosAndFeature", new Object[] { emailAddress, acctAttrs });
+    	validate("createAccountCheckDomainCosAndFeature", emailAddress, acctAttrs );
             
         String localPart = parts[0];
         String domain = parts[1];
@@ -800,7 +800,7 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
-        	validate("createAccountSucceeded", emailAddress);
+            validate("createAccountSucceeded", emailAddress, acct);
             return acct;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, nabe);
