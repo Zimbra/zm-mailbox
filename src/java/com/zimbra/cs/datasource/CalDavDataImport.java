@@ -38,10 +38,12 @@ import com.zimbra.cs.dav.client.DavRequest;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
@@ -54,6 +56,7 @@ public class CalDavDataImport extends MailItemImport {
 	private static final String METADATA_TYPE_FOLDER = "f";
 	private static final String METADATA_TYPE_APPOINTMENT = "a";
 	private static final String METADATA_KEY_ETAG = "e";
+	private static final int DEFAULT_FOLDER_FLAGS = Flag.flagsToBitmask("#");
 	
 	private CalDavClient mClient;
 	
@@ -152,7 +155,12 @@ public class CalDavDataImport extends MailItemImport {
 			String url = calendars.get(name);
 			DataSourceItem f = DbDataSource.getReverseMapping(ds, url);
 			if (f.itemId == 0) {
-				Folder newFolder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, 0, (byte)0, null);
+				Folder newFolder = null;
+				try {
+					newFolder = mbox.getFolderByName(octxt, rootFolder.getId(), name);
+				} catch (MailServiceException.NoSuchItemException e) {
+					newFolder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, DEFAULT_FOLDER_FLAGS, (byte)0, null);
+				}
 				f.itemId = newFolder.getId();
 				f.remoteId = url;
 				f.md = new Metadata();
