@@ -20,6 +20,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.filter.FilterUtil.Flag;
+
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -79,42 +81,30 @@ public abstract class ZFilterAction implements ToZJSONObject {
 
     public abstract String toActionString();
 
-    Element toElement(Element parent) {
-        Element a = parent.addElement(MailConstants.E_ACTION);
-        a.addAttribute(MailConstants.A_NAME, mName);
-        for (String arg : mArgs) {
-            a.addElement(MailConstants.E_FILTER_ARG).setText(arg);
-        }
-        return a;
-    }
-
-
-    private static String getArg(Element e) throws ServiceException {
-        String value = e.getElement(MailConstants.E_FILTER_ARG).getText();
-        List<String> slist = StringUtil.parseSieveStringList(value);
-        if (slist.size() != 1) {
-            throw ZClientException.CLIENT_ERROR(String.format("unable to parse arg value(%s)", value), null);
-        }
-        return slist.get(0);
-    }
+    abstract Element toElement(Element parent);
 
     public static ZFilterAction getAction(Element actionElement) throws ServiceException {
-        String n = actionElement.getAttribute(MailConstants.A_NAME).toLowerCase();
-        if (n.equals(A_KEEP))
+        String n = actionElement.getName();
+        if (n.equals(MailConstants.E_ACTION_KEEP))
             return new ZKeepAction();
-        else if (n.equals(A_DISCARD))
+        else if (n.equals(MailConstants.E_ACTION_DISCARD))
             return new ZDiscardAction();
-        else if (n.equals(A_STOP))
+        else if (n.equals(MailConstants.E_ACTION_STOP))
             return new ZStopAction();
-        else if (n.equals(A_FILEINTO))
-            return new ZFileIntoAction(getArg(actionElement));
-        else if (n.equals(A_TAG))
-            return new ZTagAction(getArg(actionElement));
-        else if (n.equals(A_REDIRECT))
-            return new ZRedirectAction(getArg(actionElement));
-        else if (n.equals(A_FLAG))
-            return new ZMarkAction(MarkOp.fromProtoString(getArg(actionElement)));
-        else
+        else if (n.equals(MailConstants.E_ACTION_FILE_INTO)) {
+            String folderPath = actionElement.getAttribute(MailConstants.A_FOLDER_PATH);
+            return new ZFileIntoAction(folderPath);
+        } else if (n.equals(MailConstants.E_ACTION_TAG)) {
+            String tagName = actionElement.getAttribute(MailConstants.A_TAG_NAME);
+            return new ZTagAction(tagName);
+        } else if (n.equals(MailConstants.E_ACTION_REDIRECT)) {
+            String address = actionElement.getAttribute(MailConstants.A_ADDRESS);
+            return new ZRedirectAction(address);
+        } else if (n.equals(MailConstants.E_ACTION_FLAG)) {
+            Flag flag = Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
+            MarkOp op = (flag == Flag.flagged ? MarkOp.FLAGGED : MarkOp.READ); 
+            return new ZMarkAction(op);
+        } else
             throw ZClientException.CLIENT_ERROR("unknown filter action: "+n, null);
     }
 
@@ -122,18 +112,30 @@ public abstract class ZFilterAction implements ToZJSONObject {
         public ZKeepAction() { super(A_KEEP); }
 
         public String toActionString() { return "keep"; }
+        
+        Element toElement(Element parent) {
+            return parent.addElement(MailConstants.E_ACTION_KEEP);
+        }
     }
 
     public static class ZDiscardAction extends ZFilterAction {
         public ZDiscardAction() { super(A_DISCARD); }
 
         public String toActionString() { return "discard"; }
+
+        Element toElement(Element parent) {
+            return parent.addElement(MailConstants.E_ACTION_DISCARD);
+        }
     }
 
     public static class ZStopAction extends ZFilterAction {
         public ZStopAction() { super(A_STOP); }
 
         public String toActionString() { return "stop"; }
+
+        Element toElement(Element parent) {
+            return parent.addElement(MailConstants.E_ACTION_STOP);
+        }
     }
 
     public static class ZFileIntoAction extends ZFilterAction {
@@ -142,6 +144,12 @@ public abstract class ZFilterAction implements ToZJSONObject {
         public String getFolderPath() { return mArgs.get(0); }
 
         public String toActionString() { return "fileinto " + ZFilterRule.quotedString(getFolderPath()); }
+
+        Element toElement(Element parent) {
+            Element action = parent.addElement(MailConstants.E_ACTION_FILE_INTO);
+            action.addAttribute(MailConstants.A_FOLDER_PATH, getFolderPath());
+            return action;
+        }
     }
 
     public static class ZTagAction extends ZFilterAction {
@@ -149,6 +157,12 @@ public abstract class ZFilterAction implements ToZJSONObject {
         public String getTagName() { return mArgs.get(0); }
 
         public String toActionString() { return "tag " + ZFilterRule.quotedString(getTagName()); }
+
+        Element toElement(Element parent) {
+            Element action = parent.addElement(MailConstants.E_ACTION_TAG);
+            action.addAttribute(MailConstants.A_TAG_NAME, getTagName());
+            return action;
+        }
     }
 
     public static class ZMarkAction extends ZFilterAction {
@@ -160,12 +174,25 @@ public abstract class ZFilterAction implements ToZJSONObject {
 
         public String getMarkOp() { return mMarkOp.name(); }
         public String toActionString() { return "mark " + mMarkOp.name().toLowerCase(); }
+        
+        Element toElement(Element parent) {
+            Element action = parent.addElement(MailConstants.E_ACTION_FLAG);
+            Flag flag = (mMarkOp == MarkOp.FLAGGED ? Flag.flagged : Flag.read);
+            action.addAttribute(MailConstants.A_FLAG_NAME, flag.toString());
+            return action;
+        }
     }
 
     public static class ZRedirectAction extends ZFilterAction {
         public ZRedirectAction(String address) { super(A_REDIRECT, address); }
         public String getAddress() { return mArgs.get(0); }
         public String toActionString() { return "redirect " + ZFilterRule.quotedString(getAddress()); }
+        
+        Element toElement(Element parent) {
+            Element action = parent.addElement(MailConstants.E_ACTION_REDIRECT);
+            action.addAttribute(MailConstants.A_ADDRESS, getAddress());
+            return action;
+        }
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {

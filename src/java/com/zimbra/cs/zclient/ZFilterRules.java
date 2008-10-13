@@ -43,13 +43,13 @@ public class ZFilterRules implements ToZJSONObject {
 
     public ZFilterRules(Element e) throws ServiceException {
         mRules = new ArrayList<ZFilterRule>();
-        for (Element ruleEl : e.listElements(MailConstants.E_RULE)) {
+        for (Element ruleEl : e.listElements(MailConstants.E_FILTER_RULE)) {
             mRules.add(new ZFilterRule(ruleEl));
         }
     }
 
     public Element toElement(Element parent) {
-        Element r = parent.addElement(MailConstants.E_RULES);
+        Element r = parent.addElement(MailConstants.E_FILTER_RULES);
         for (ZFilterRule rule : mRules) {
             rule.toElement(r);
         }

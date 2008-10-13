@@ -3274,15 +3274,14 @@ public class ZMailbox {
 
     public synchronized ZFilterRules getFilterRules(boolean refresh) throws ServiceException {
         if (mRules == null || refresh) {
-            Element req = newRequestElement(MailConstants.GET_RULES_REQUEST);
-            mRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_RULES));
+            Element req = newRequestElement(MailConstants.GET_FILTER_RULES_REQUEST);
+            mRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_FILTER_RULES));
         }
         return new ZFilterRules(mRules);
     }
 
     public synchronized void saveFilterRules(ZFilterRules rules) throws ServiceException {
-        // TODO: this has to be XML for now, due to logic on server
-        Element req = new XMLElement(MailConstants.SAVE_RULES_REQUEST);
+        Element req = newRequestElement(MailConstants.MODIFY_FILTER_RULES_REQUEST);
         rules.toElement(req);
         invoke(req);
         mRules = new ZFilterRules(rules);

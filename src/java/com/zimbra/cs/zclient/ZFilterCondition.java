@@ -16,17 +16,20 @@
  */
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
-import org.json.JSONException;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+
+import org.json.JSONException;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.FilterUtil.DateComparison;
+import com.zimbra.cs.filter.FilterUtil.NumberComparison;
+import com.zimbra.cs.filter.FilterUtil.StringComparison;
 
 public abstract class ZFilterCondition implements ToZJSONObject {
 
@@ -44,8 +47,6 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         IS, NOT_IS, CONTAINS, NOT_CONTAINS, MATCHES, NOT_MATCHES;
 
-        private static String[] mOps = { ":is", "not :is", ":contains", "not :contains", ":matches", "not :matches" };
-
         public static HeaderOp fromString(String s) throws ServiceException {
             try {
                 return HeaderOp.valueOf(s.toUpperCase());
@@ -53,22 +54,35 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(HeaderOp.values()), null);
             }
         }
-
-        public String toProtoOp() { return mOps[ordinal()]; }
-
-        public static HeaderOp fromProtoString(String s) throws ServiceException {
-            s = s.trim().toLowerCase();
-            for (int i=0; i < mOps.length; i++)
-                if (mOps[i].equals(s)) return values()[i];
-            throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
+        
+        public static HeaderOp fromStringComparison(StringComparison comparison, boolean isNegative) {
+            if (comparison == StringComparison.is) {
+                return (isNegative ? NOT_IS : IS);
+            }
+            if (comparison == StringComparison.contains) {
+                return (isNegative ? NOT_CONTAINS : CONTAINS);
+            }
+            return (isNegative ? NOT_MATCHES : MATCHES);
+        }
+        
+        public StringComparison toStringComparison() {
+            if (this == IS || this == NOT_IS) {
+                return StringComparison.is;
+            }
+            if (this == CONTAINS || this == NOT_CONTAINS) {
+                return StringComparison.contains;
+            }
+            return StringComparison.matches;
+        }
+        
+        public boolean isNegative() {
+            return (this == NOT_IS || this == NOT_CONTAINS || this == NOT_MATCHES);
         }
     }
 
     public enum DateOp {
 
         BEFORE, NOT_BEFORE, AFTER, NOT_AFTER;
-
-        private static String[] mOps = { ":before", "not :before", ":after", "not :after" };
 
         public static DateOp fromString(String s) throws ServiceException {
             try {
@@ -77,23 +91,28 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(DateOp.values()), null);
             }
         }
-
-        public String toProtoOp() { return mOps[ordinal()]; }
-
-        public static DateOp fromProtoString(String s) throws ServiceException {
-            s = s.trim().toLowerCase();
-            for (int i=0; i < mOps.length; i++)
-                if (mOps[i].equals(s)) return values()[i];
-            throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
+        
+        public static DateOp fromDateComparison(DateComparison comparison, boolean isNegative) {
+            if (comparison == DateComparison.before) {
+                return (isNegative ? NOT_BEFORE : BEFORE);
+            }
+            return (isNegative ? NOT_AFTER : AFTER);
+        }
+        
+        public DateComparison toDateComparison() {
+            if (this == BEFORE || this == NOT_BEFORE) {
+                return DateComparison.before;
+            }
+            return DateComparison.after;
+        }
+        
+        public boolean isNegative() {
+            return (this == NOT_BEFORE || this == NOT_AFTER);
         }
     }
 
     public enum SizeOp {
         UNDER, NOT_UNDER, OVER, NOT_OVER;
-
-        private static String[] mOps = { ":under", "not :under", ":over", "not :over" };
-
-        public String toProtoOp() { return mOps[ordinal()]; }
 
         public static SizeOp fromString(String s) throws ServiceException {
             try {
@@ -102,21 +121,29 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(SizeOp.values()), null);
             }
         }
-
-        public static SizeOp fromProtoString(String s) throws ServiceException {
-            s = s.trim().toLowerCase();
-            for (int i=0; i < mOps.length; i++)
-                if (mOps[i].equals(s)) return values()[i];
-            throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
+        
+        public static SizeOp fromNumberComparison(NumberComparison comparison, boolean isNegative) {
+            if (comparison == NumberComparison.over) {
+                return (isNegative ? NOT_OVER : OVER);
+            }
+            return (isNegative ? NOT_UNDER : UNDER);
+        }
+        
+        public NumberComparison toNumberComparison() {
+            if (this == UNDER || this == NOT_UNDER) {
+                return NumberComparison.under;
+            } else {
+                return NumberComparison.over;
+            }
+        }
+        
+        public boolean isNegative() {
+            return (this == NOT_UNDER || this == NOT_OVER);
         }
     }
 
     public enum BodyOp {
         CONTAINS, NOT_CONTAINS;
-
-        private static String[] mOps = { ":contains", "not :contains" };
-
-        public String toProtoOp() { return mOps[ordinal()]; }
 
         public static BodyOp fromString(String s) throws ServiceException {
             try {
@@ -125,28 +152,10 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(BodyOp.values()), null);
             }
         }
-
-        public static BodyOp fromProtoString(String s) throws ServiceException {
-            s = s.trim().toLowerCase();
-            for (int i=0; i < mOps.length; i++)
-                if (mOps[i].equals(s)) return values()[i];
-            throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
-        }
     }
 
     public enum AddressBookOp {
         IN, NOT_IN;
-
-        private static String[] mOps = { ":in", "not :in" };
-
-        public String toProtoOp() { return mOps[ordinal()]; }
-
-        public static AddressBookOp fromProtoString(String s) throws ServiceException {
-            s = s.trim().toLowerCase();
-            for (int i=0; i < mOps.length; i++)
-                if (mOps[i].equals(s)) return values()[i];
-            throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
-        }
 
         public static AddressBookOp fromString(String s) throws ServiceException {
             try {
@@ -155,108 +164,63 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(AddressBookOp.values()), null);
             }
         }
-
-    }
-
-    protected String mName;
-    protected String mOp;
-    protected String mK0;
-    protected String mK1;
-
-    private static String getAttrK(Element e, String k, boolean defaultValue) throws ServiceException {
-        String value = defaultValue  ? e.getAttribute(k, "[\"\"]") : e.getAttribute(k);
-        List<String> slist = StringUtil.parseSieveStringList(value);
-        if (slist.size() != 1) {
-            throw ZClientException.CLIENT_ERROR(String.format("unable to parse attr(%s) value(%s)", k, value), null);
-        }
-        return slist.get(0);
-    }
-
-    private static String getK0(Element e) throws ServiceException {
-        return getAttrK(e, MailConstants.A_LHS, false);
-    }
-
-    private static String getK1(Element e) throws ServiceException {
-        return getAttrK(e, MailConstants.A_RHS, false);
-    }
-
-    private static String getK0(Element e, boolean defaultValue) throws ServiceException {
-        return getAttrK(e, MailConstants.A_LHS, defaultValue);
-    }
-
-    private static String getK1(Element e, boolean defaultValue) throws ServiceException {
-        return getAttrK(e, MailConstants.A_RHS, defaultValue);
     }
 
     public static ZFilterCondition getCondition(Element condEl) throws ServiceException {
-        String n = condEl.getAttribute(MailConstants.A_NAME).toLowerCase();
-        if (n.equals(C_HEADER)) {
-            return new ZHeaderCondition(
-                    getK0(condEl, true),
-                    HeaderOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION, ":is")),
-                    getK1(condEl, true));
-        } else if (n.equals(C_EXISTS)) {
-            return new ZHeaderExistsCondition(
-                    getK0(condEl, true),
-                    true);
-        } else if (n.equals(C_NOT_EXISTS)) {
-            return new ZHeaderExistsCondition(
-                    getK0(condEl, true),
-                    true);
-        } if (n.equals(C_DATE)) {
-            try {
-                return new ZDateCondition(
-                        DateOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                        new SimpleDateFormat("yyyyMMdd").parse(getK1(condEl)));
-            } catch (ParseException e) {
-                throw ZClientException.CLIENT_ERROR("unable to parse filter date: "+e, null);
-            }
-        } else if (n.equals(C_SIZE)) {
-            return new ZSizeCondition(
-                    SizeOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                    condEl.getAttribute(MailConstants.A_RHS, ""));
-        } else if (n.equals(C_BODY)) {
-            return new ZBodyCondition(BodyOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),getK1(condEl, true));
-        } else if (n.equals(C_ATTACHMENT)) {
-            return new ZAttachmentExistsCondition(true);
-        } else if (n.equals(C_NOT_ATTACHMENT)) {
-            return new ZAttachmentExistsCondition(false);
-        } else if (n.equals(C_ADDRESSBOOK)) {
-            return new ZAddressBookCondition(
-                    AddressBookOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                    getK0(condEl, true));
+        String name = condEl.getName();
+        boolean isNegative = condEl.getAttributeBool(MailConstants.A_NEGATIVE, false);
+
+        if (name.equals(MailConstants.E_HEADER_TEST)) {
+            String header = condEl.getAttribute(MailConstants.A_HEADER);
+            String s = condEl.getAttribute(MailConstants.A_STRING_COMPARISON);
+            s = s.toLowerCase();
+            StringComparison comparison = StringComparison.fromString(s);
+            String value = condEl.getAttribute(MailConstants.A_VALUE);
+            return new ZHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), value);
+        } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
+            String header = condEl.getAttribute(MailConstants.A_HEADER);
+            return new ZHeaderExistsCondition(header, !isNegative);
+        } else if (name.equals(MailConstants.E_SIZE_TEST)) {
+            String s = condEl.getAttribute(MailConstants.A_NUMBER_COMPARISON);
+            s = s.toLowerCase();
+            NumberComparison comparison = NumberComparison.fromString(s);
+            String size = condEl.getAttribute(MailConstants.A_SIZE);
+            return new ZSizeCondition(SizeOp.fromNumberComparison(comparison, isNegative), size);
+        } else if (name.equals(MailConstants.E_DATE_TEST)) {
+            String s = condEl.getAttribute(MailConstants.A_DATE_COMPARISON);
+            s = s.toLowerCase();
+            DateComparison comparison = DateComparison.fromString(s);
+            Date date = new Date(condEl.getAttributeLong(MailConstants.A_DATE) * 1000);
+            return new ZDateCondition(DateOp.fromDateComparison(comparison, isNegative), date);
+        } else if (name.equals(MailConstants.E_BODY_TEST)) {
+            String value = condEl.getAttribute(MailConstants.A_VALUE);
+            BodyOp op = (isNegative ? BodyOp.NOT_CONTAINS : BodyOp.CONTAINS);
+            return new ZBodyCondition(op, value);
+        } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
+            String header = condEl.getAttribute(MailConstants.A_HEADER);
+            // String folderPath = condEl.getAttribute(MailConstants.A_FOLDER_PATH);
+            // TODO: support path to contacts folder
+            AddressBookOp op = (isNegative ? AddressBookOp.NOT_IN : AddressBookOp.IN);
+            return new ZAddressBookCondition(op, header);
+        } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
+            return new ZAttachmentExistsCondition(!isNegative);
         } else {
-             throw ZClientException.CLIENT_ERROR("unknown filter condition: "+n, null);
+             throw ZClientException.CLIENT_ERROR("unknown filter condition: "+name, null);
         }
     }
 
-    Element toElement(Element parent) {
-        Element c = parent.addElement(MailConstants.E_CONDITION);
-        c.addAttribute(MailConstants.A_NAME, mName);
-        if (mOp != null) c.addAttribute(MailConstants.A_OPERATION, mOp);
-        if (mK0 != null) c.addAttribute(MailConstants.A_LHS, mK0);
-        if (mK1 != null) c.addAttribute(MailConstants.A_RHS, mK1);
-        return c;
-    }
+    /**
+     * Adds a new test element to the given parent.
+     * @return the new element
+     */
+    abstract Element toElement(Element parent);
 
-    private ZFilterCondition(String name, String op, String k0, String k1) {
-        mName = name;
-        mOp = op;
-        mK0 = k0;
-        mK1 = k1;
-    }
-
-    public final String getName() { return mName; }
-    public final String getK0() { return mK0; }
-    public final String getK1() { return mK1; }
-    public final String getOp() { return mOp; }
+    public abstract String getName();
 
     public ZJSONObject toZJSONObject() throws JSONException {
+        // TODO: Implement in subclasses?
         ZJSONObject jo = new ZJSONObject();
-        jo.put("name", mName);
-        jo.put("op", mOp);
-        jo.put("k0", mK0);
-        jo.put("k1", mK1);
+        jo.put("name", getName());
         return jo;
     }
 
@@ -269,15 +233,31 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     public static class ZAddressBookCondition extends ZFilterCondition {
         private AddressBookOp mAddressBookOp;
+        private String mHeader;
 
         public ZAddressBookCondition(AddressBookOp op, String header) {
-            super(C_ADDRESSBOOK, op.toProtoOp(), header, "contacts");
             mAddressBookOp = op;
+            mHeader = header;
         }
 
+        @Override
+        public String getName() {
+            return C_ADDRESSBOOK;
+        }
+        
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_ADDRESS_BOOK_TEST);
+            test.addAttribute(MailConstants.A_HEADER, mHeader);
+            test.addAttribute(MailConstants.A_FOLDER_PATH, "contacts");
+            if (mAddressBookOp == AddressBookOp.NOT_IN) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        public String getHeader() { return mHeader; }
         public AddressBookOp getAddressBookOp() { return mAddressBookOp; }
-        public String getFolder() { return mK1; }
-        public String getHeader() { return mK0; }
 
         public String toConditionString() {
             return (mAddressBookOp == AddressBookOp.IN ? "addressbook in " : "addressbook not_in ") + ZFilterRule.quotedString(getHeader());
@@ -286,30 +266,48 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     
     public static class ZBodyCondition extends ZFilterCondition {
         private BodyOp mBodyOp;
+        private String mText;
 
         public ZBodyCondition(BodyOp op, String text) {
-            super(C_BODY, op.toProtoOp(), null, text);
             mBodyOp = op;
+            mText = text;
+        }
+
+        @Override
+        public String getName() {
+            return C_BODY;
         }
 
         public BodyOp getBodyOp() { return mBodyOp; }
-        public String getText() { return mK1; }
+        public String getText() { return mText; }
 
         public String toConditionString() {
             return (mBodyOp == BodyOp.CONTAINS ? "body contains " : "body not_contains ") +ZFilterRule.quotedString(getText());
         }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_BODY_TEST);
+            test.addAttribute(MailConstants.A_VALUE, mText);
+            if (mBodyOp == BodyOp.NOT_CONTAINS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
     }
 
     public static class ZSizeCondition extends ZFilterCondition {
         private SizeOp mSizeOp;
+        private String mSize;
 
         public ZSizeCondition(SizeOp op, String size) {
-            super(C_SIZE, op.toProtoOp(), null, size);
             mSizeOp = op;
+            mSize = size;
         }
 
         public SizeOp getSizeOp() { return mSizeOp; }
-        public String getSize() { return mK1; }
+        public String getSize() { return mSize; }
 
         public String getUnits() {
             String val = getSize();
@@ -334,6 +332,22 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         public String toConditionString() {
             return "size " + mSizeOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getSize());
         }
+
+        @Override
+        public String getName() {
+            return C_SIZE;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_SIZE_TEST);
+            test.addAttribute(MailConstants.A_NUMBER_COMPARISON, mSizeOp.toNumberComparison().toString());
+            if (mSizeOp.isNegative()) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            test.addAttribute(MailConstants.A_SIZE, mSize);
+            return test;
+        }
     }
     
     public static class ZDateCondition extends ZFilterCondition {
@@ -341,13 +355,11 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         private Date mDate;
 
         public ZDateCondition(DateOp op, Date date) {
-            super(C_DATE, op.toProtoOp(), null, new SimpleDateFormat("yyyyMMdd").format(date));
             mDateOp = op;
             mDate = date;
         }
 
         public ZDateCondition(DateOp op, String dateStr) throws ServiceException {
-            super(C_DATE, op.toProtoOp(), null, dateStr);
             mDateOp = op;
             try {
                 mDate = new SimpleDateFormat("yyyyMMdd").parse(dateStr);
@@ -358,43 +370,97 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         public DateOp getDateOp() { return mDateOp; }
         public Date getDate() { return mDate; }
-        public String getDateString() { return mK1; }
+        public String getDateString() { return FilterUtil.SIEVE_DATE_PARSER.format(mDate); }
 
         public String toConditionString() {
             return "date " + mDateOp.name().toLowerCase() + " "+ ZFilterRule.quotedString(getDateString());
         }
+
+        @Override
+        public String getName() {
+            return C_DATE;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_DATE_TEST);
+            test.addAttribute(MailConstants.A_DATE_COMPARISON, mDateOp.toDateComparison().toString());
+            if (mDateOp.isNegative()) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            test.addAttribute(MailConstants.A_DATE, mDate.getTime() / 1000);
+            return test;
+        }
+        
     }
 
     public static class ZHeaderCondition extends ZFilterCondition {
         private HeaderOp mHeaderOp;
+        private String mHeaderName;
+        private String mValue;
 
         public ZHeaderCondition(String headerName, HeaderOp op, String value) {
-            super(C_HEADER, op.toProtoOp(), headerName, value);
+            mHeaderName = headerName;
             mHeaderOp = op;
+            mValue = value;
         }
 
         public HeaderOp getHeaderOp() { return mHeaderOp; }
-        public String getHeaderName() { return mK0; }
-        public String getHeaderValue()  { return mK1; }
+        public String getHeaderName() { return mHeaderName; }
+        public String getHeaderValue()  { return mValue; }
 
         public String toConditionString() {
             return "header " + ZFilterRule.quotedString(getHeaderName()) + " " + mHeaderOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getHeaderValue());
         }
+
+        @Override
+        public String getName() {
+            return C_HEADER;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_HEADER_TEST);
+            test.addAttribute(MailConstants.A_HEADER, mHeaderName);
+            test.addAttribute(MailConstants.A_STRING_COMPARISON, mHeaderOp.toStringComparison().toString());
+            if (mHeaderOp.isNegative()) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            test.addAttribute(MailConstants.A_VALUE, mValue);
+            return test;
+        }
+        
     }
 
     public static class ZHeaderExistsCondition extends ZFilterCondition {
         private boolean mExists;
+        private String mHeaderName;
 
         public ZHeaderExistsCondition(String headerName, boolean exists) {
-            super(exists ? C_EXISTS : C_NOT_EXISTS, null, null, headerName);
             mExists = exists;
+            mHeaderName = headerName;
         }
 
         public boolean getExists() { return mExists; }
-        public String getHeaderName() { return mK1; }
+        public String getHeaderName() { return mHeaderName; }
 
         public String toConditionString() {
             return "header " + ZFilterRule.quotedString(getHeaderName()) + (mExists ? " exists" : " not_exists");
+        }
+
+        @Override
+        public String getName() {
+            return C_EXISTS;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_HEADER_EXISTS_TEST);
+            test.addAttribute(MailConstants.A_HEADER, mHeaderName);
+            if (!mExists) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
         }
     }
 
@@ -402,7 +468,6 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         private boolean mExists;
 
         public ZAttachmentExistsCondition(boolean exists) {
-            super(exists ? C_ATTACHMENT : C_NOT_ATTACHMENT, null, null, null);
             mExists = exists;
         }
 
@@ -411,5 +476,20 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         public String toConditionString() {
             return mExists ? "attachment exists" : "attachment not_exists";
         }
+
+        @Override
+        public String getName() {
+            return C_ATTACHMENT;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_ATTACHMENT_TEST);
+            if (!mExists) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
     }
 }

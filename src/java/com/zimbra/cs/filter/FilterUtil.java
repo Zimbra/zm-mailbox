@@ -17,9 +17,13 @@
 package com.zimbra.cs.filter;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.DateParser;
+import com.zimbra.common.util.ZimbraLog;
 
 public class FilterUtil {
 
@@ -116,9 +120,51 @@ public class FilterUtil {
      * <tt>\\</tt> and <tt>&quot;</tt> with <tt>\&quot;</tt>.
      */
     public static String escape(String s) {
+        if (s == null || s.length() == 0) {
+            return s;
+        }
         s = s.replace("\\", "\\\\");
         s = s.replace("\"", "\\\"");
         return s;
+    }
+    
+    /**
+     * Removes escape characters from a Sieve string literal.
+     */
+    public static String unescape(String s) {
+        s = s.replace("\\\"", "\"");
+        s = s.replace("\\\\", "\\");
+        return s;
+    }
+
+    /**
+     * Adds a value to the given <tt>Map</tt>.  If <tt>initialKey</tt> already
+     * exists in the map, uses the next available index instead.  This way we
+     * guarantee that we don't lose data if the client sends two elements with
+     * the same index, or doesn't specify the index at all.
+     * 
+     * @return the index used to insert the value
+     */
+    public static <T> int addToMap(Map<Integer, T> map, int initialKey, T value) {
+        int i = initialKey;
+        while (true) {
+            if (!map.containsKey(i)) {
+                map.put(i, value);
+                return i;
+            }
+            i++;
+        }
+    }
+
+    public static int getIndex(Element actionElement) {
+        String s = actionElement.getAttribute(MailConstants.A_INDEX, "0");
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            ZimbraLog.soap.warn("Unable to parse index value %s for element %s.  Ignoring order.",
+                s, actionElement.getName());
+            return 0;
+        }
     }
 }
 

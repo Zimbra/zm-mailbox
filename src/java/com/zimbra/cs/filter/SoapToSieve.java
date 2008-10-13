@@ -16,9 +16,10 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -61,7 +62,7 @@ public class SoapToSieve {
     private void handleRule(Element rule)
     throws ServiceException {
         String name = rule.getAttribute(MailConstants.A_NAME);
-        boolean isEnabled = rule.getAttributeBool(MailConstants.A_ENABLED, true);
+        boolean isActive = rule.getAttributeBool(MailConstants.A_ACTIVE, true);
         
         Element testsElement = rule.getElement(MailConstants.E_FILTER_TESTS);
         String s = testsElement.getAttribute(MailConstants.A_CONDITION, Condition.allof.toString());
@@ -70,7 +71,7 @@ public class SoapToSieve {
         
         // Rule name
         mBuf.append("# ").append(name).append("\n");
-        if (isEnabled) {
+        if (isActive) {
             mBuf.append("if ");
         } else {
             mBuf.append("disabled_if ");
@@ -79,23 +80,29 @@ public class SoapToSieve {
         
         // Handle tests
         List<Element> testElements = testsElement.listElements();
-        List<String> testSnippets = new ArrayList<String>(testElements.size());
+        Map<Integer, String> tests = new TreeMap<Integer, String>();
         for (Element test : testElements) {
             s = handleTest(test);
             if (s != null) {
-                testSnippets.add(s);
+                int index = FilterUtil.getIndex(test);
+                FilterUtil.addToMap(tests, index, s);
             }
         }
-        mBuf.append(StringUtil.join(",\n  ", testSnippets));
+        mBuf.append(StringUtil.join(",\n  ", tests.values()));
         mBuf.append(") {\n");
         
         // Handle actions
         Element actionsElement = rule.getElement(MailConstants.E_FILTER_ACTIONS);
+        Map<Integer, String> actions = new TreeMap<Integer, String>(); // Sorts by index 
         for (Element action : actionsElement.listElements()) {
             s = handleAction(action);
             if (s != null) {
-                mBuf.append("    ").append(s).append(";\n");
+                int index = FilterUtil.getIndex(action);
+                FilterUtil.addToMap(actions, index, s);
             }
+        }
+        for (String action : actions.values()) {
+            mBuf.append("    ").append(action).append(";\n");
         }
         mBuf.append("}\n");
     }
@@ -120,7 +127,7 @@ public class SoapToSieve {
             String s = test.getAttribute(MailConstants.A_NUMBER_COMPARISON);
             s = s.toLowerCase();
             NumberComparison comparison = NumberComparison.fromString(s);
-            long size = test.getAttributeLong(MailConstants.A_SIZE);
+            String size = test.getAttribute(MailConstants.A_SIZE);
             snippet = String.format("size :%s %s", comparison, size);
         } else if (name.equals(MailConstants.E_DATE_TEST)) {
             String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);

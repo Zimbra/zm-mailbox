@@ -25,7 +25,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.ElementFactory;
-import com.zimbra.cs.filter.FilterUtil.Condition;
 import com.zimbra.cs.filter.FilterUtil.DateComparison;
 import com.zimbra.cs.filter.FilterUtil.Flag;
 import com.zimbra.cs.filter.FilterUtil.NumberComparison;
@@ -63,19 +62,11 @@ public class SieveToSoap extends SieveVisitor {
         if (name != null) {
             mCurrentRule.addAttribute(MailConstants.A_NAME, name);
         }
-        if (props.isEnabled) {
-            mCurrentRule.addAttribute(MailConstants.A_ENABLED, "1");
-        } else {
-            mCurrentRule.addAttribute(MailConstants.A_ENABLED, "0");
-        }
+        mCurrentRule.addAttribute(MailConstants.A_ACTIVE, props.isEnabled);
 
         // filterTests element
         Element filterTests = mCurrentRule.addElement(MailConstants.E_FILTER_TESTS);
-        if (props.conditionType == Condition.allof) {
-            filterTests.addAttribute(MailConstants.A_CONDITION, "allOf");
-        } else if (props.conditionType == Condition.anyof) {
-            filterTests.addAttribute(MailConstants.A_CONDITION, "anyOf");
-        }
+        filterTests.addAttribute(MailConstants.A_CONDITION, props.condition.toString());
         
         // filterActions element
         mCurrentRule.addElement(MailConstants.E_FILTER_ACTIONS);
@@ -85,16 +76,23 @@ public class SieveToSoap extends SieveVisitor {
     
     private Element addTest(String elementName, RuleProperties props)
     throws ServiceException {
-        Element test = mCurrentRule.getElement(MailConstants.E_FILTER_TESTS).addElement(elementName);
+        Element tests = mCurrentRule.getElement(MailConstants.E_FILTER_TESTS);
+        int index = tests.listElements().size();
+        Element test = tests.addElement(elementName);
         if (props.isNegativeTest) {
             test.addAttribute(MailConstants.A_NEGATIVE, "1");
         }
+        test.addAttribute(MailConstants.A_INDEX, index);
         return test;
     }
     
     private Element addAction(String elementName)
     throws ServiceException {
-        return mCurrentRule.getElement(MailConstants.E_FILTER_ACTIONS).addElement(elementName);
+        Element actions = mCurrentRule.getElement(MailConstants.E_FILTER_ACTIONS);
+        int index = actions.listElements().size();
+        Element action = actions.addElement(elementName);
+        action.addAttribute(MailConstants.A_INDEX, Integer.toString(index));
+        return action;
     }
     
     @Override

@@ -21,23 +21,23 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestResult;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -47,6 +47,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.Element.Attribute;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
@@ -662,7 +663,6 @@ extends Assert {
             remoteFolder = createFolder(remoteMbox, remotePath);
         }
         ZGetInfoResult remoteInfo = remoteMbox.getAccountInfo(true);
-        ZGetInfoResult localInfo = localMbox.getAccountInfo(true);
         remoteMbox.modifyFolderGrant(
             remoteFolder.getId(), GranteeType.all, null, "rwidx", null);
         return localMbox.createMountpoint(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT),
@@ -753,7 +753,53 @@ extends Assert {
         }
         
     }
-
+    
+    /**
+     * Asserts that two elements and all children in their hierarchy are equal. 
+     */
+    public static void assertEquals(Element expected, Element actual) {
+        assertEquals(expected, actual, expected.prettyPrint(), actual.prettyPrint());
+    }
+    
+    private static void assertEquals(Element expected, Element actual, String expectedDump, String actualDump) {
+        assertEquals(expected.getName(), actual.getName());
+        List<Element> expectedChildren = expected.listElements();
+        List<Element> actualChildren = actual.listElements();
+        String context = String.format("Element %s, expected:\n%s\nactual:\n%s", expected.getName(), expectedDump, actualDump);
+        assertEquals(context + " children", getElementNames(expectedChildren), getElementNames(actualChildren));
+        
+        // Compare child elements
+        for (int i = 0; i < expectedChildren.size(); i++) {
+            assertEquals(expectedChildren.get(i), actualChildren.get(i), expectedDump, actualDump);
+        }
+        
+        // Compare text
+        assertEquals(expected.getTextTrim(), actual.getTextTrim());
+        
+        // Compare attributes
+        Set<Attribute> expectedAttrs = expected.listAttributes();
+        Set<Attribute> actualAttrs = actual.listAttributes();
+        assertEquals(context + " attributes", getAttributesAsString(expectedAttrs), getAttributesAsString(actualAttrs));
+    }
+    
+    private static String getElementNames(List<Element> elements) {
+        StringBuilder buf = new StringBuilder();
+        for (Element e : elements) {
+            if (buf.length() > 0) {
+                buf.append(",");
+            }
+            buf.append(e.getName());
+        }
+        return buf.toString();
+    }
+    
+    private static String getAttributesAsString(Set<Attribute> attrs) {
+        Set<String> attrStrings = new TreeSet<String>();
+        for (Attribute attr : attrs) {
+            attrStrings.add(String.format("%s=%s", attr.getKey(), attr.getValue()));
+        }
+        return StringUtil.join(",", attrStrings);
+    }
     /**    
      * Returns a new <tt>TestNG</tt> object that writes test results to
      * <tt>/opt/zimbra/test-output</tt>. 

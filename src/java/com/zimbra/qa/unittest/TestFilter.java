@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.Node;
 
-import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
@@ -48,7 +48,6 @@ import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
@@ -87,44 +86,62 @@ extends TestCase {
         TestUtil.createFolder(remoteMbox, MOUNTPOINT_SUBFOLDER_PATH);
         
         mOriginalRules = mMbox.getFilterRules();
-        mMbox.saveFilterRules(getRules());
+        saveRules(mMbox, getRules());
         
         Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
     }
     
-    public void testQuoteValidation()
+    public void testQuoteEscape()
     throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        
+        String folderName = NAME_PREFIX + " testQuoteEscape";
+        TestUtil.createFolder(mMbox, folderName);
 
-        // if subject contains "a " b", keep
+        // if subject contains "a " b", file into folder
         ZFilterCondition condition = new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a \" b");
-        ZFilterAction action = new ZKeepAction();
+        ZFilterAction action = new ZFileIntoAction(folderName);
         conditions.add(condition);
         actions.add(action);
-        rules.add(new ZFilterRule("test quotes", true, false, conditions, actions));
+        rules.add(new ZFilterRule(folderName, true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        try {
-            mMbox.saveFilterRules(zRules);
-            fail("Saving filter rules with quotes should not have succeeded");
-        } catch (SoapFaultException e) {
-            assertTrue("Unexpected exception: " + e, e.getMessage().contains("Doublequote not allowed"));
-        }
+        saveRules(mMbox, zRules);
+
+        // Add a message and confirm it gets filed into the correct folder
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " a \" b y z";
+        TestUtil.addMessageLmtp(subject, address, address);
+        TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
+    }
+    
+    public void testBackslashEscape()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         
-        // if subject contains "a \ b", keep
-        conditions.clear();
-        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a \\ b"));
-        rules.clear();
-        rules.add(new ZFilterRule("test backslash", true, false, conditions, actions));
-        try {
-            mMbox.saveFilterRules(zRules);
-            fail("Saving filter rules with backslash should not have succeeded");
-        } catch (SoapFaultException e) {
-            assertTrue("Unexpected exception: " + e, e.getMessage().contains("Backslash not allowed"));
-        }
+        String folderName = NAME_PREFIX + " testBackslashEscape";
+        TestUtil.createFolder(mMbox, folderName);
+
+        // if subject contains "a \ b", file into folder
+        ZFilterCondition condition = new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a \\ b");
+        ZFilterAction action = new ZFileIntoAction(folderName);
+        conditions.add(condition);
+        actions.add(action);
+        rules.add(new ZFilterRule(folderName, true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message and confirm it gets filed into the correct folder
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " a \\ b y z";
+        TestUtil.addMessageLmtp(subject, address, address);
+        TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
     }
     
     /**
@@ -183,7 +200,6 @@ extends TestCase {
     	
     	// Make sure spam message doesn't already exist
     	assertEquals(0, TestUtil.search(mbox, "in:junk subject:testSpam").size());
-    	assertEquals(0, TestUtil.search(mbox, "in:" + FOLDER1_PATH + " subject:testSpam").size());
     	
     	// Deliver spam message without matching rule, make sure it gets delivered
     	// to the junk folder, and delete. 
@@ -198,7 +214,7 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testSpam"));
         actions.add(new ZFileIntoAction(FOLDER1_PATH));
         rules.getRules().add(new ZFilterRule("testBug5455", true, false, conditions, actions));
-        mbox.saveFilterRules(rules);
+        saveRules(mMbox, rules);
         
         // Set "apply user rules" attribute to TRUE and make sure the message gets filed into folder1
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_TRUE);
@@ -303,9 +319,14 @@ extends TestCase {
      * Tests {@link FilterUtil#escape}.
      */
     public void testEscape() {
-        assertEquals("Hello, \\\"Dave\\\"", FilterUtil.escape("Hello, \"Dave\""));
-        assertEquals("\\\\/\\\\/", FilterUtil.escape("\\/\\/"));
-        assertEquals("\\\"\\\\\\\"", FilterUtil.escape("\"\\\""));
+        doTestEscape("Hello, \"Dave\"", "Hello, \\\"Dave\\\"");
+        doTestEscape("\\/\\/", "\\\\/\\\\/");
+        doTestEscape("\"\\\"", "\\\"\\\\\\\"");
+    }
+    
+    private void doTestEscape(String original, String escaped) {
+        assertEquals(escaped, FilterUtil.escape(original));
+        assertEquals(original, FilterUtil.unescape(escaped));
     }
 
     /**
@@ -331,6 +352,32 @@ extends TestCase {
         script = normalizeWhiteSpace(script);
         convertedScript = normalizeWhiteSpace(convertedScript);
         assertEquals(script, convertedScript);
+    }
+    
+    public void testMarkRead()
+    throws Exception {
+        String folderName = NAME_PREFIX + " testMarkRead";
+        
+        // if the subject contains "testMarkRead", file into a folder and mark read
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testMarkRead"));
+        actions.add(new ZFileIntoAction(folderName));
+        actions.add(new ZMarkAction(MarkOp.READ));
+        rules.add(new ZFilterRule("testMarkRead", true, false, conditions, actions));
+        saveRules(mMbox, new ZFilterRules(rules));
+        
+        // Deliver message.
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " testMarkRead";
+        TestUtil.addMessageLmtp(subject, address, address);
+        
+        // Check folder and unread state.
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
+        String flags = msg.getFlags();
+        assertTrue("Unexpected flags: " + flags,
+            flags == null || flags.indexOf(ZMessage.Flag.unread.getFlagChar()) < 0);
     }
     
     private String normalizeWhiteSpace(String script) {
@@ -405,7 +452,7 @@ extends TestCase {
         actions.add(new ZTagAction(TAG1_NAME));
         actions.add(new ZFileIntoAction(FOLDER2_PATH));
         rules.add(new ZFilterRule("testBug5455", true, false, conditions, actions));
-        
+
         // if subject contains "discard", discard the message
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
@@ -426,8 +473,24 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mountpointSub"));
         actions.add(new ZFileIntoAction(MOUNTPOINT_SUBFOLDER_PATH));
         rules.add(new ZFilterRule("testMountpointSubfolder", true, false, conditions, actions));
-        
+
         return new ZFilterRules(rules);
+    }
+    
+    /**
+     * Saves the given filter rules.  Then gets them from the server and confirms that
+     * the element tree matches.
+     */
+    private void saveRules(ZMailbox mbox, ZFilterRules rules)
+    throws Exception {
+        Element root = new XMLElement("test");
+        Element expected = rules.toElement(root);
+        mbox.saveFilterRules(rules);
+        
+        rules = mbox.getFilterRules(true);
+        Element actual = rules.toElement(root);
+        
+        TestUtil.assertEquals(expected, actual);
     }
     
     public static void main(String[] args)

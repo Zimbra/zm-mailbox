@@ -59,6 +59,7 @@ import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -287,12 +288,12 @@ public class ZimbraMailAdapter implements MailAdapter
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String localPath = fileinto.getDestination();
-                    Folder folder = null;
+                    Folder defaultFolder = mMailbox.getFolderById(null, mDefaultFolderId);
                     
                     // Do initial lookup.
                     Pair<Folder, String> folderAndPath = mMailbox.getFolderByPathLongestMatch(
                         null, Mailbox.ID_FOLDER_USER_ROOT, localPath);
-                    folder = folderAndPath.getFirst();
+                    Folder folder = folderAndPath.getFirst();
                     String remainingPath = folderAndPath.getSecond();
                     ZimbraLog.filter.debug("Attempting to file to %s, remainingPath=%s.", folder, remainingPath);
                     
@@ -340,10 +341,16 @@ public class ZimbraMailAdapter implements MailAdapter
                             folder = mMailbox.getFolderById(null, mDefaultFolderId);
                         }
                     } else if (!StringUtil.isNullOrEmpty(remainingPath)) {
-                        // Only part of the folder path matched.
-                        ZimbraLog.filter.warn("Could not find folder with path %s.  Filing to %s instead.",
-                            localPath, getDefaultFolderName());
-                        folder = mMailbox.getFolderById(null, mDefaultFolderId);
+                        // Only part of the folder path matched.  Auto-create the remaining path.
+                        ZimbraLog.filter.info("Could not find folder %s.  Automatically creating it.",
+                            localPath);
+                        try {
+                            folder = mMailbox.createFolder(null, localPath, (byte) 0, MailItem.TYPE_MESSAGE);
+                        } catch (ServiceException e) {
+                            ZimbraLog.filter.warn("Unable to create folder %s.  Filing to %s.",
+                                localPath, getDefaultFolderName());
+                            folder = defaultFolder;
+                        }
                     }
                     
                     if (!filedRemotely) {
@@ -443,23 +450,31 @@ public class ZimbraMailAdapter implements MailAdapter
         return msg;
     }
 
-    private String getTags() {
+    private String getTags()
+    throws ServiceException {
         StringBuilder tagsBuf = null;
         for (Action action : getTagFlagActions()) {
             if (action instanceof ActionTag) {
                 String tagName = ((ActionTag) action).getTagName();
+                Tag tag = null;
                 try {
-                    Tag tag = mMailbox.getTagByName(tagName);
+                    tag = mMailbox.getTagByName(tagName);
+                } catch (MailServiceException e) {
+                    if (e.getCode().equals(MailServiceException.NO_SUCH_TAG)) {
+                        ZimbraLog.filter.info("Could not find tag %s.  Automatically creating it.", tagName);
+                        try {
+                            tag = mMailbox.createTag(null, tagName, MailItem.DEFAULT_COLOR);
+                        } catch (ServiceException e2) {
+                            ZimbraLog.filter.warn("Could not create tag %s.  Not applying tag.", tagName, e2);
+                        }
+                    }
+                }
+                if (tag != null) {
                     if (tagsBuf == null) {
-                        tagsBuf = new StringBuilder(String.valueOf(tag.getId()));
+                        tagsBuf = new StringBuilder(Integer.toString(tag.getId()));
                     } else {
                         tagsBuf.append(",").append(tag.getId());
                     }
-                } catch (MailServiceException.NoSuchItemException nsie) {
-                    ZimbraLog.filter.warn("Tag " + tagName + " does not exist; cannot tag message " +
-                            " for " + mRecipient);
-                } catch (ServiceException e) {
-                    ZimbraLog.filter.warn("Unable to determine tags");
                 }
             }            
         }

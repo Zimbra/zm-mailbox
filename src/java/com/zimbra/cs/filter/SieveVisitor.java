@@ -116,7 +116,7 @@ public abstract class SieveVisitor {
     public class RuleProperties {
         boolean isEnabled = true;
         boolean isNegativeTest = false;
-        Condition conditionType = Condition.allof;
+        Condition condition = Condition.allof;
         Node testNode;
     }
     
@@ -140,7 +140,7 @@ public abstract class SieveVisitor {
                 if ("disabled_if".equals(sieveNode.getName())) {
                     newProps.isEnabled = false;
                 }
-                newProps.conditionType = getCondition(getNode(node, 0, 0));
+                newProps.condition = getCondition(getNode(node, 0, 0));
                 visitRule(node, VisitPhase.begin, newProps);
                 accept(node, newProps);
                 visitRule(node, VisitPhase.end, newProps);
@@ -186,14 +186,14 @@ public abstract class SieveVisitor {
         } else if ("header".equals(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             StringComparison comparison = StringComparison.fromString(s);
-            String header = stripQuotes(getValue(node, 0, 1, 0, 0));
-            String value = stripQuotes(getValue(node, 0, 2, 0, 0));
+            String header = getValue(node, 0, 1, 0, 0);
+            String value = getValue(node, 0, 2, 0, 0);
             
             visitHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
             accept(node, props);
             visitHeaderTest(node, VisitPhase.end, props, header, comparison, value);
         } else if ("exists".equals(nodeName)) {
-            String header = stripQuotes(getValue(node, 0, 0, 0, 0));
+            String header = getValue(node, 0, 0, 0, 0);
             
             visitHeaderExistsTest(node, VisitPhase.begin, props, header);
             accept(node, props);
@@ -209,7 +209,7 @@ public abstract class SieveVisitor {
         } else if ("date".equals(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             DateComparison comparison = DateComparison.fromString(s);
-            String dateString = stripQuotes(getValue(node, 0, 1, 0, 0));
+            String dateString = getValue(node, 0, 1, 0, 0);
             Date date = FilterUtil.SIEVE_DATE_PARSER.parse(dateString);
             if (date == null) {
                 throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
@@ -219,7 +219,7 @@ public abstract class SieveVisitor {
             accept(node, props);
             visitDateTest(node, VisitPhase.end, props, comparison, date);
         } else if ("body".equals(nodeName)) {
-            String value = stripQuotes(getValue(node, 0, 1, 0, 0));
+            String value = getValue(node, 0, 1, 0, 0);
             
             visitBodyTest(node, VisitPhase.begin, props, value);
             accept(node, props);
@@ -229,8 +229,8 @@ public abstract class SieveVisitor {
             accept(node, props);
             visitAttachmentTest(node, VisitPhase.end, props);
         } else if ("addressbook".equals(nodeName)) {
-            String header = stripQuotes(getValue(node, 0, 1, 0, 0));
-            String folderPath = stripQuotes(getValue(node, 0, 2, 0, 0));
+            String header = getValue(node, 0, 1, 0, 0);
+            String folderPath = getValue(node, 0, 2, 0, 0);
             visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
             accept(node, props);
             visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
@@ -256,24 +256,24 @@ public abstract class SieveVisitor {
             accept(node, props);
             visitDiscardAction(node, VisitPhase.end, props);
         } else if ("fileinto".equals(nodeName)) {
-            String folderPath = stripQuotes(getValue(node, 0, 0, 0, 0));
+            String folderPath = getValue(node, 0, 0, 0, 0);
             visitFileIntoAction(node, VisitPhase.begin, props, folderPath);
             accept(node, props);
             visitFileIntoAction(node, VisitPhase.end, props, folderPath);
         } else if ("flag".equals(nodeName)) {
-            String s = stripQuotes(getValue(node, 0, 0, 0, 0));
+            String s = getValue(node, 0, 0, 0, 0);
             Flag flag = Flag.fromString(s);
             
             visitFlagAction(node, VisitPhase.begin, props, flag);
             accept(node, props);
             visitFlagAction(node, VisitPhase.end, props, flag);
         } else if ("tag".equals(nodeName)) {
-            String tagName = stripQuotes(getValue(node, 0, 0, 0, 0));
+            String tagName = getValue(node, 0, 0, 0, 0);
             visitTagAction(node, VisitPhase.begin, props, tagName);
             accept(node, props);
             visitTagAction(node, VisitPhase.end, props, tagName);
         } else if ("redirect".equals(nodeName)) {
-            String address = stripQuotes(getValue(node, 0, 0, 0, 0));
+            String address = getValue(node, 0, 0, 0, 0);
             visitRedirectAction(node, VisitPhase.begin, props, address);
             accept(node, props);
             visitRedirectAction(node, VisitPhase.end, props, address);
@@ -317,30 +317,28 @@ public abstract class SieveVisitor {
         return node;
     }
     
-    protected String getValue(Node parent, int ... indexes)
+    private String getValue(Node parent, int ... indexes)
     throws ServiceException {
         Node child = getNode(parent, indexes);
         Object value = ((SieveNode) child).getValue();
         if (value == null) {
             return null;
         }
+        if (value instanceof String) {
+            value = FilterUtil.unescape(stripQuotes(((String) value)));
+        }
         return value.toString();
     }
     
-    protected String getName(Node parent, int ... indexes)
-    throws ServiceException {
-        Node child = getNode(parent, indexes);
-        return ((SieveNode) child).getName();
-    }
     
-    protected String stripLeadingColon(String s) {
+    private String stripLeadingColon(String s) {
         if (s == null || s.length() == 0 || s.charAt(0) != ':') {
             return s;
         }
         return s.substring(1, s.length());
     }
     
-    protected String stripQuotes(String s) {
+    private String stripQuotes(String s) {
         if (s == null || s.length() == 0) {
             return s;
         }

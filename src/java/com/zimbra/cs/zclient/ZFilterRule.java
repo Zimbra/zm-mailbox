@@ -19,6 +19,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
@@ -43,6 +44,8 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ZFilterRule implements ToZJSONObject {
 
@@ -85,29 +88,49 @@ public class ZFilterRule implements ToZJSONObject {
     public ZFilterRule(Element e) throws ServiceException {
         mName = e.getAttribute(MailConstants.A_NAME);
         mActive = e.getAttributeBool(MailConstants.A_ACTIVE, false);
-        Element groupEl = e.getElement(MailConstants.E_CONDITION_GROUP);
+        Element testsEl = e.getElement(MailConstants.E_FILTER_TESTS);
+        
+        // Conditions
+        Map<Integer, ZFilterCondition> conditions = new TreeMap<Integer, ZFilterCondition>(); // Orders by index
+        mAllConditions = testsEl.getAttribute(MailConstants.A_CONDITION, "allof").equalsIgnoreCase("allof");
+        for (Element condEl : testsEl.listElements()) {
+            ZFilterCondition condition = ZFilterCondition.getCondition(condEl);
+            int index = FilterUtil.getIndex(condEl);
+            FilterUtil.addToMap(conditions, index, condition);
+        }
         mConditions = new ArrayList<ZFilterCondition>();
-        mAllConditions = groupEl.getAttribute(MailConstants.A_OPERATION, "allof").equalsIgnoreCase("allof");
-        for (Element condEl : groupEl.listElements(MailConstants.E_CONDITION)) {
-            mConditions.add(ZFilterCondition.getCondition(condEl));
+        mConditions.addAll(conditions.values());
+        
+        // Actions
+        Element actionsEl = e.getElement(MailConstants.E_FILTER_ACTIONS);
+        Map<Integer, ZFilterAction> actions = new TreeMap<Integer, ZFilterAction>(); // Orders by index
+        for (Element actionEl : actionsEl.listElements()) {
+            ZFilterAction action = ZFilterAction.getAction(actionEl);
+            int index = FilterUtil.getIndex(actionEl);
+            FilterUtil.addToMap(actions, index, action);
         }
         mActions = new ArrayList<ZFilterAction>();
-        for (Element actionEl : e.listElements(MailConstants.E_ACTION)) {
-            mActions.add(ZFilterAction.getAction(actionEl));
-        }
+        mActions.addAll(actions.values());
     }
 
     Element toElement(Element parent) {
-        Element r = parent.addElement(MailConstants.E_RULE);
+        Element r = parent.addElement(MailConstants.E_FILTER_RULE);
         r.addAttribute(MailConstants.A_NAME, mName);
         r.addAttribute(MailConstants.A_ACTIVE, mActive);
-        Element g = r.addElement(MailConstants.E_CONDITION_GROUP);
-        g.addAttribute(MailConstants.A_OPERATION, mAllConditions ? "allof" : "anyof");
+        
+        Element tests = r.addElement(MailConstants.E_FILTER_TESTS);
+        tests.addAttribute(MailConstants.A_CONDITION, mAllConditions ? "allof" : "anyof");
         for (ZFilterCondition condition : mConditions) {
-            condition.toElement(g);
+            int index = tests.listElements().size();
+            Element conditionEl = condition.toElement(tests);
+            conditionEl.addAttribute(MailConstants.A_INDEX, index);
         }
+        
+        Element actions = r.addElement(MailConstants.E_FILTER_ACTIONS);
         for (ZFilterAction action : mActions) {
-            action.toElement(r);
+            int index = actions.listElements().size();
+            Element actionElement = action.toElement(actions);
+            actionElement.addAttribute(MailConstants.A_INDEX, index);
         }
         return r;
     }

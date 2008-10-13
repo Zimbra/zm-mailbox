@@ -171,12 +171,26 @@ public class RuleManager {
     }
     
     /**
-     * Returns the <tt>Account</tt>'s filter rules as an XML element tree.
+     * Returns the <tt>Account</tt>'s filter rules as an XML element tree.  Uses
+     * the old Sieve-style response format.
      * 
      * @param factory used to create new XML elements
      * @param account the account
      */
     public Element getRulesAsXML(ElementFactory factory, Account account) throws ServiceException {
+        return getRulesAsXML(factory, account, false);
+    }
+    
+    /**
+     * Returns the XML representation of a user's filter rules.
+     * 
+     * @param factory used to create elements
+     * @param account the user account
+     * @param useNewFormat if <tt>true</tt>, returns the new response format instead of
+     *                     the old Sieve-style one
+     */
+    public Element getRulesAsXML(ElementFactory factory, Account account, boolean useNewFormat)
+    throws ServiceException {
         Node node = null;
         try {
             node = getRulesNode(account);
@@ -185,10 +199,18 @@ public class RuleManager {
         } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
+
         String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
         List<String> ruleNames = getRuleNames(script);
-        RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node, ruleNames);
-        return t.getElement();
+
+        if (!useNewFormat) {
+            RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node, ruleNames);
+            return t.getElement();
+        } else {
+            SieveToSoap sieveToSoap = new SieveToSoap(factory, ruleNames);
+            sieveToSoap.accept(node);
+            return sieveToSoap.getRootElement();
+        }
     }
     
     private static final Pattern PAT_RULE_NAME = Pattern.compile("# (.*)");
@@ -217,12 +239,24 @@ public class RuleManager {
     }
 
     /**
-     * Sets filter rules, specified as an XML element tree.
+     * Sets filter rules, specified as an XML element tree.  Uses the old
+     * Sieve-style XML format.
      */
     public void setXMLRules(Account account, Element eltRules) throws ServiceException {
-        RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
-        String script = t.getScript();
-        setRules(account, script);
+        setXMLRules(account, eltRules, false);
+    }
+    
+    public void setXMLRules(Account account, Element eltRules, boolean useNewFormat)
+    throws ServiceException {
+        if (!useNewFormat) {
+            RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
+            String script = t.getScript();
+            setRules(account, script);
+        } else {
+            SoapToSieve soapToSieve = new SoapToSieve(eltRules);
+            String script = soapToSieve.getSieveScript();
+            setRules(account, script);
+        }
     }
     
     public Message applyRules(Account account, Mailbox mailbox, ParsedMessage pm, int size, 
