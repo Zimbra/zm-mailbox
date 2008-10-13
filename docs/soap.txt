@@ -2391,12 +2391,65 @@ zimbra_noop_max_timeout)
 
 ---------------------------
 
-<GetRulesRequest>
-<GetRulesResponse>
-<SaveRulesRequest>
-<SaveRulesResponse>
+<GetFilterRulesRequest/>
 
-Sieve Mail Filtering manipluation.  See MailFiltering.txt for details
+<GetFilterRulesResponse>
+<filterRules>
+  <filterRule name="{rule-name}" [active="{0|1}"]>
+    <filterTests condition="{allof | anyof"}>
+      {test}
+      [test]
+      ...
+    </filterTests>
+    <filterActions>
+      {action}
+      [action]
+      ...
+    </filterActions>
+  </filterRule>
+  [filter rule]
+  ...
+</filterRules>
+</GetFilterRulesResponse>
+
+<ModifyFilterRulesRequest>
+  <filterRules> ... </filterRules>
+</ModifyFilterRulesRequest>
+
+<ModifyFilterRulesResponse/>
+
+    * Default value for "active" is 1. 
+
+Tests:
+
+  <addressTest part="{all | local | domain}" stringComparison="{type}" header="{header-name}" value="{value}" />
+  <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
+  <headerExistsTest header="{header-name}" />
+  <sizeTest numberComparison="{type}" s="{size}" />
+  <dateTest dateComparison="{type}" d="{date}" />
+  <bodyTest value="{value}" />
+  <attachmentTest />
+  <addressBookTest header="{header-name}" folderPath="{folder-path}" />
+
+    * Each test has an optional "negative" attribute, which specifies a "not" condition for that test. 
+
+Actions:
+
+  <actionKeep index="n" />
+  <actionDiscard index="n" />
+  <actionFileInto folderPath="{folder-path}" index="n" />
+  <actionTag tagName="{tag-name}" index="n" />
+  <actionFlag flagName="{flag}" index="n" />
+  <actionRedirect a="{email-address}" index="n" />
+  <actionStop index="n" />
+
+stringComparison values: is, contains, matches
+numberComparison values: over, under
+dateComparison values: before, after
+size values are in bytes
+flag values: flagged, read
+date values are in seconds since epoch, and are truncated to the day. Hours, minutes, and seconds are ignored.
+index is an integer, used to maintain the order of filter actions. 
 
 ---------------------------
 

@@ -25,13 +25,11 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author kchen
- */
 public class GetRules extends MailDocumentHandler {
 
     public Element handle(Element document, Map<String, Object> context) throws ServiceException {
@@ -41,6 +39,8 @@ public class GetRules extends MailDocumentHandler {
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
+        ZimbraLog.soap.warn("The %s SOAP API is deprecated as of ZCS 6.0.  Please use %s instead.",
+            GetRules.class.getSimpleName(), GetFilterRules.class.getSimpleName());
         Element response = zsc.createElement(MailConstants.GET_RULES_RESPONSE);
         RuleManager mgr = RuleManager.getInstance();
         Element rules = mgr.getRulesAsXML(response.getFactory(), account);
