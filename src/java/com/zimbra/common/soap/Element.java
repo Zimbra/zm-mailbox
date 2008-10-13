@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -491,7 +492,7 @@ public abstract class Element implements Cloneable {
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        public JSONElement(String name)  { mName = name;  mAttributes = new HashMap<String, Object>(); }
+        public JSONElement(String name)  { mName = name;  mAttributes = new LinkedHashMap<String, Object>(); }
         public JSONElement(QName qname)  { this(qname.getName());  setNamespace("", qname.getNamespaceURI()); }
 
         private static final class JSONFactory implements ElementFactory {
