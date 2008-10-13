@@ -210,6 +210,7 @@ public class TestBlobInputStream extends TestCase {
         assertEquals(2000, numRead);
         assertEquals(content.substring(3000, 5000), new String(thirdChunk));
         
+        mFile.delete();
         in.close();
     }
     
@@ -258,7 +259,7 @@ public class TestBlobInputStream extends TestCase {
     
     public void tearDown()
     throws Exception {
-    	if (mFile != null) {
+    	if (mFile != null && mFile.exists()) {
     		mFile.delete();
     	}
     }
