@@ -41,6 +41,7 @@ public class ZContactHit implements ZSearchHit {
     private String mDlist;
     private float mScore;
     private long mMetaDataDate;
+    private long mDate;
     private String mFullName;
         
     public ZContactHit(Element e) throws ServiceException {
@@ -59,6 +60,7 @@ public class ZContactHit implements ZSearchHit {
         mWorkEmail1 = e.getAttribute(Contact.A_workEmail1, null);
         mWorkEmail2 = e.getAttribute(Contact.A_workEmail2, null);
         mWorkEmail3 = e.getAttribute(Contact.A_workEmail3, null);
+        mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mDlist = e.getAttribute(Contact.A_dlist, null);
         mFullName = e.getAttribute(Contact.A_fullName,null);
@@ -72,6 +74,7 @@ public class ZContactHit implements ZSearchHit {
         jo.put("sortField", mSortField);
         jo.put("type", mType);
         jo.put("score", mScore);
+        jo.put("date", mDate);
         jo.put("fileAsStr", mFileAsStr);
         jo.put("revision", mRevision);
         jo.put("folderId", mFolderId);
@@ -176,6 +179,10 @@ public class ZContactHit implements ZSearchHit {
 
     public long getMetaDataChangedDate() {
         return mMetaDataDate;
+    }
+
+    public long getDate() {
+        return mDate;
     }
 
     public String getFullName() {
