@@ -93,7 +93,6 @@ import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
