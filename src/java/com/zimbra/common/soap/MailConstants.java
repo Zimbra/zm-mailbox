@@ -109,12 +109,18 @@ public class MailConstants {
     // sync for Outlook
     public static final QName SYNC_REQUEST = QName.get("SyncRequest", NAMESPACE);
     public static final QName SYNC_RESPONSE = QName.get("SyncResponse", NAMESPACE);
-    // filter rules
+    
+    // Filter rules - old format
     public static final QName GET_RULES_REQUEST = QName.get("GetRulesRequest", NAMESPACE);
     public static final QName GET_RULES_RESPONSE = QName.get("GetRulesResponse", NAMESPACE);
     public static final QName SAVE_RULES_REQUEST = QName.get("SaveRulesRequest", NAMESPACE);
     public static final QName SAVE_RULES_RESPONSE = QName.get("SaveRulesResponse", NAMESPACE);
-
+    
+    // Filter rules - new format
+    public static final QName GET_FILTER_RULES_REQUEST = QName.get("GetFilterRulesRequest", NAMESPACE);
+    public static final QName GET_FILTER_RULES_RESPONSE = QName.get("GetFilterRulesResponse", NAMESPACE);
+    public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get("ModifyFilterRulesRequest", NAMESPACE);
+    public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get("ModifyFilterRulesResponse", NAMESPACE);
 
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
@@ -262,11 +268,11 @@ public class MailConstants {
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";
     public static final String A_CONDITION = "condition";
-    public static final String A_ENABLED = "enabled";
     public static final String A_NEGATIVE = "negative";
     public static final String A_FOLDER_PATH = "folderPath";
     public static final String A_FLAG_NAME = "flagName";
     public static final String A_TAG_NAME = "tagName";
+    public static final String A_INDEX = "index";
     
     // grants
     public static final String E_ACL = "acl";
