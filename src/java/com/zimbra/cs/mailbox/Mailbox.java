@@ -2778,6 +2778,10 @@ public class Mailbox {
         return tags;
     }
 
+    /**
+     * Returns the tag with the given name.
+     * @throws ServiceException {@link MailServiceException#NO_SUCH_TAG} if the tag does not exist
+     */
     public synchronized Tag getTagByName(String name) throws ServiceException {
         boolean success = false;
         try {
@@ -2829,29 +2833,29 @@ public class Mailbox {
 
     /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
      * @throws {@link NoSuchItemException} if the folder does not exist */
-    public synchronized Folder getFolderByPath(OperationContext octxt, String name) throws ServiceException {
-        if (name == null)
-            throw MailServiceException.NO_SUCH_FOLDER(name);
-        while (name.startsWith("/"))
-            name = name.substring(1);                         // strip off the optional leading "/"
-        while (name.endsWith("/"))
-            name = name.substring(0, name.length() - 1);      // strip off the optional trailing "/"
+    public synchronized Folder getFolderByPath(OperationContext octxt, String path) throws ServiceException {
+        if (path == null)
+            throw MailServiceException.NO_SUCH_FOLDER(path);
+        while (path.startsWith("/"))
+            path = path.substring(1);                         // strip off the optional leading "/"
+        while (path.endsWith("/"))
+            path = path.substring(0, path.length() - 1);      // strip off the optional trailing "/"
 
         Folder folder = getFolderById(null, ID_FOLDER_USER_ROOT);
 
         boolean success = false;
         try {
             beginTransaction("getFolderByPath", octxt);
-            if (!name.equals("")) {
-                for (String segment : name.split("/"))
+            if (!path.equals("")) {
+                for (String segment : path.split("/"))
                     if ((folder = folder.findSubfolder(segment)) == null)
                         break;
             }
 
             if (folder == null)
-                throw MailServiceException.NO_SUCH_FOLDER("/" + name);
+                throw MailServiceException.NO_SUCH_FOLDER("/" + path);
             if (!folder.canAccess(ACL.RIGHT_READ))
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + name);
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + path);
             success = true;
             return folder;
         } finally {
