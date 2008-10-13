@@ -1968,6 +1968,7 @@ u attribute is present iff count > 0
       [<m id="{message-id}"/>]*
       [<mp mid="{message-id}" part="{part-id}"/>]*
       [<cn id="{contact-id}"/>]*
+      [<doc id="{document-id}"/>]*
     </attach>
   </m>
 </SendMsgRequest>
@@ -2020,6 +2021,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
       [<m id="{message-id}"/>]*
       [<mp mid="{message-id}" part="{part-id}"/>]*
       [<cn id="{contact-id}"/>]*
+      [<doc id="{document-id}"/>]*
     </attach>
   </m>
 </SaveDraftRequest>

@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -422,6 +423,9 @@ public class ParseMimeMessage {
             } else if (eName.equals(MailConstants.E_CONTACT)) {
                 ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
                 attachContact(mmp, iid, contentID, ctxt);
+            } else if (eName.equals(MailConstants.E_DOC)) {
+                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
+                attachDocument(mmp, iid, contentID, ctxt);
             }
         }
     }
@@ -647,6 +651,27 @@ public class ParseMimeMessage {
         mbp.setText(vcf.formatted, charset);
         mbp.setHeader("Content-Type", new ContentType("text/x-vcard", ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).setParameter("charset", charset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
+        mbp.setContentID(contentID);
+        mmp.addBodyPart(mbp);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static void attachDocument(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt) 
+    	throws MessagingException, ServiceException
+    {
+        if (!iid.isLocal()) {
+            attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, null);
+            return;
+        }
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
+        Document doc = mbox.getDocumentById(ctxt.octxt, iid.getId());
+        ctxt.incrementSize("attached document", (long)(doc.getSize() * 1.33));
+        String ct = doc.getContentType();
+
+        MimeBodyPart mbp = new MimeBodyPart();
+        mbp.setDataHandler(new DataHandler(new BlobDataSource(doc.getBlob(), ct)));
+        mbp.setHeader("Content-Type", new ContentType(ct).setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
+        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", doc.getName()).toString());
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
     }

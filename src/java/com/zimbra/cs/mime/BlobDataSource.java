@@ -42,6 +42,7 @@ import com.zimbra.cs.store.StoreManager;
 public class BlobDataSource implements DataSource {
 
     private MailboxBlob mBlob;
+    private String mContentType;
     
     /**
      * @param blob
@@ -50,11 +51,17 @@ public class BlobDataSource implements DataSource {
         mBlob = blob;
     }
 
+    public BlobDataSource(MailboxBlob blob, String ct) {
+    	this(blob);
+    	mContentType = ct;
+    }
     /* (non-Javadoc)
      * @see javax.activation.DataSource#getContentType()
      */
     public String getContentType() {
-        return mBlob.getMimeType();
+    	if (mContentType != null)
+    		return mContentType;
+        return mBlob.getMimeType();  // MailboxBlob.getMimeType() always returns message/rfc822
     }
 
     /**
