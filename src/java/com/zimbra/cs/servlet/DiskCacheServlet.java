@@ -180,8 +180,9 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
 		String cacheDirname = getServletConfig().getInitParameter(P_CACHE_DIR);
 		if (cacheDirname != null) {
-			String webappDirname = getServletContext().getRealPath("/");
-			cacheDirname = cacheDirname.replaceAll("\\$\\{webapp\\}", webappDirname).trim();
+			// careful with separatorChar on Win - backslashes in second arg can confuse replaceAll()
+			String webappDirname = getServletContext().getRealPath("/").replace(File.separatorChar, '/');
+			cacheDirname = cacheDirname.replaceAll("\\$\\{webapp\\}", webappDirname).replace('/', File.separatorChar).trim();
 			tempDir = new File(cacheDirname);
 		}
 		else {
