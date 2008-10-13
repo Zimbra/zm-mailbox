@@ -669,6 +669,11 @@
         <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
     </target>
 
+    <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
+        <exec failonerror="true" executable="src/bin/install-openldap">
+            <arg line="main"/>
+        </exec>
+    </target>
 
     <target name="reset-all" description="Reset the world plus jetty">
         <if>
@@ -680,6 +685,7 @@
         <antcall target="clean"/>
         <mkdir dir="${build.dir}"/>
 
+	<antcall target="reset-open-ldap"/>
         <delete dir="${zimbra.home.dir}/lib"/>
         <antcall target="reset-jetty"/>
         <antcall target="reset-the-world"/>
