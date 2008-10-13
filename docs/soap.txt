@@ -2422,14 +2422,15 @@ zimbra_noop_max_timeout)
 
 Tests:
 
-  <addressTest part="{all | local | domain}" stringComparison="{type}" header="{header-name}" value="{value}" />
-  <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
-  <headerExistsTest header="{header-name}" />
-  <sizeTest numberComparison="{type}" s="{size}" />
-  <dateTest dateComparison="{type}" d="{date}" />
-  <bodyTest value="{value}" />
-  <attachmentTest />
-  <addressBookTest header="{header-name}" folderPath="{folder-path}" />
+  <addressTest part="{all | local | domain}" stringComparison="{type}"
+    header="{header-name}" value="{value}" index="n"/>
+  <headerTest header="{header-name}" stringComparison="{type}" value="{value}" index="n" />
+  <headerExistsTest header="{header-name}" index="n" />
+  <sizeTest numberComparison="{type}" s="{size}" index="n" />
+  <dateTest dateComparison="{type}" d="{date}" index="n" />
+  <bodyTest value="{value}" index="n" />
+  <attachmentTest index="n" />
+  <addressBookTest header="{header-name}" folderPath="{folder-path}" index="n" />
 
     * Each test has an optional "negative" attribute, which specifies a "not" condition for that test. 
 
@@ -2449,7 +2450,7 @@ dateComparison values: before, after
 size values are in bytes
 flag values: flagged, read
 date values are in seconds since epoch, and are truncated to the day. Hours, minutes, and seconds are ignored.
-index is an integer, used to maintain the order of filter actions. 
+index is an integer, used to maintain the order of filter tests and actions. 
 
 ---------------------------
 
