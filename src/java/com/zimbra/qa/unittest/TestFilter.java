@@ -380,6 +380,32 @@ extends TestCase {
             flags == null || flags.indexOf(ZMessage.Flag.unread.getFlagChar()) < 0);
     }
     
+    /**
+     * Confirms that the header test works with headers that are folded.
+     * See section 2.2.3 of RFC 2822 and bug 14942.
+     */
+    public void testHeaderFolding()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        
+        // if subject contains "a b c", mark as flagged
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a b c"));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testHeaderFolding", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message and confirm it is flagged
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " a b\r\n c";
+        TestUtil.addMessageLmtp(subject, address, address);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"a b c\"");
+        assertTrue("Message was not flagged", msg.isFlagged());
+    }
+    
     private String normalizeWhiteSpace(String script) {
         StringBuilder buf = new StringBuilder(script.length());
         boolean inWhiteSpace = false;

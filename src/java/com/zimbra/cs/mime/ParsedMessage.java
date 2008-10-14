@@ -812,7 +812,8 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns the decoded header for this header name, only the first header is returned.
+     * Returns the decoded and unfolded value for the given header name.  If
+     * multiple headers with the same name exist, returns the first one. 
      */
     public String getHeader(String headerName) {
         try {
@@ -823,6 +824,7 @@ public class ParsedMessage {
                 value = MimeUtility.decodeText(value);
             } catch (UnsupportedEncodingException e) { }
 
+            value = MimeUtility.unfold(value);
             return value;
         } catch (MessagingException e) {
             return "";
@@ -830,7 +832,7 @@ public class ParsedMessage {
     }
     
     /**
-     * Returns the decoded headers for this header name, all headers for this header name are returned.
+     * Returns the decoded and unfolded values for the given header name.
      */
     public String[] getHeaders(String headerName) {
         try {
@@ -844,6 +846,7 @@ public class ParsedMessage {
                 } catch (UnsupportedEncodingException e) {
                     // values[i] would contain the undecoded value, fine
                 }
+                values[i] = MimeUtility.unfold(values[i]);
             }
 
             return values;
@@ -1070,7 +1073,8 @@ public class ParsedMessage {
             // iterate all the message headers, add them to the structured-field data in the index
             StringBuilder fieldText = new StringBuilder();
 //            Enumeration<String> en = (Enumeration<String>)(getMimeMessage().getAllHeaderLines());
-            Enumeration<Header> en = (Enumeration<Header>)(getMimeMessage().getAllHeaders());
+            @SuppressWarnings("unchecked")
+            Enumeration<Header> en = getMimeMessage().getAllHeaders();
             while (en.hasMoreElements()) {
                 Header h = en.nextElement();
                 String key = h.getName().trim();
