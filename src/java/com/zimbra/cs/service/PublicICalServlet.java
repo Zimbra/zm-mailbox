@@ -151,7 +151,7 @@ public class PublicICalServlet extends ZimbraServlet {
         }
 
         FreeBusyQuery fbQuery = new FreeBusyQuery(req, zsc, authAccount, rangeStart, rangeEnd);
-        fbQuery.addEmailAddress(acctName);
+        fbQuery.addEmailAddress(acctName, FreeBusyQuery.CALENDAR_FOLDER_ALL);
         Collection<FreeBusy> result = fbQuery.getResults();
         FreeBusy fb = null;
         if (result.size() > 0)

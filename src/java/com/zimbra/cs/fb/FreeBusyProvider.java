@@ -43,7 +43,7 @@ import com.zimbra.cs.service.mail.ToXML;
 
 public abstract class FreeBusyProvider {
 	protected static class Request {
-		public Request(Account req, String em, long s, long e) {
+		public Request(Account req, String em, long s, long e, int f) {
 			requestor = req; email = em; 
     		Calendar cal = GregorianCalendar.getInstance();
     		cal.setTimeInMillis(s);
@@ -54,11 +54,13 @@ public abstract class FreeBusyProvider {
     		cal.set(Calendar.MINUTE, 0);
     		cal.set(Calendar.SECOND, 0);
     		end = cal.getTimeInMillis();
+    		folder = f;
 		}
 		Account requestor;
 		String email;
 		long start;
 		long end;
+		int folder;
 		Object data;
 	}
 	@SuppressWarnings("serial")
@@ -126,11 +128,11 @@ public abstract class FreeBusyProvider {
 			ToXML.encodeFreeBusy(response, fb);
 	}
 	
-	public static List<FreeBusy> getRemoteFreeBusy(Account requestor, List<String> remoteIds, long start, long end) {
+	public static List<FreeBusy> getRemoteFreeBusy(Account requestor, List<String> remoteIds, long start, long end, int folder) {
 		Set<FreeBusyProvider> providers = getProviders();
 		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (String emailAddr : remoteIds) {
-			Request req = new Request(requestor, emailAddr, start, end);
+			Request req = new Request(requestor, emailAddr, start, end, folder);
 			boolean succeed = false;
 			for (FreeBusyProvider prov : providers) {
 				try {
@@ -152,17 +154,17 @@ public abstract class FreeBusyProvider {
 		return ret;
 	}
 	
-	public static void getRemoteFreeBusy(Account requestor, Element response, List<String> remoteIds, long start, long end) {
-		for (FreeBusy fb : getRemoteFreeBusy(requestor, remoteIds, start, end)) {
+	public static void getRemoteFreeBusy(Account requestor, Element response, List<String> remoteIds, long start, long end, int folder) {
+		for (FreeBusy fb : getRemoteFreeBusy(requestor, remoteIds, start, end, folder)) {
 			ToXML.encodeFreeBusy(response, fb);
 		}
 	}
 	
-	protected FreeBusy getFreeBusy(String accountId) throws ServiceException {
+	protected FreeBusy getFreeBusy(String accountId, int folderId) throws ServiceException {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
 		if (mbox == null)
 			return null;
-		return mbox.getFreeBusy(null, cachedFreeBusyStartTime(), cachedFreeBusyEndTime());
+		return mbox.getFreeBusy(null, cachedFreeBusyStartTime(), cachedFreeBusyEndTime(), folderId);
 	}
 	
 	protected String getEmailAddress(String accountId) throws ServiceException {

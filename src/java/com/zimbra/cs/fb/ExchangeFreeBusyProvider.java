@@ -265,7 +265,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		FreeBusy fb;
 		try {
 			email = getEmailAddress(accountId);
-			fb = getFreeBusy(accountId);
+			fb = getFreeBusy(accountId, FreeBusyQuery.CALENDAR_FOLDER_ALL);
 		} catch (ServiceException se) {
 			ZimbraLog.fb.warn("can't get freebusy for account "+accountId, se);
 			// retry the request if it's receivers fault.
@@ -468,7 +468,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 				requestor, 
 				requestor.getName(), 
 				prov.cachedFreeBusyStartTime(), 
-				prov.cachedFreeBusyEndTime()));
+				prov.cachedFreeBusyEndTime(),
+				FreeBusyQuery.CALENDAR_FOLDER_ALL));
 		String url = prov.constructGetUrl(info, req);
 		HttpMethod method = new GetMethod(url);
 		return prov.sendRequest(method, info);

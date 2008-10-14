@@ -66,7 +66,7 @@ public class IfbFormatter extends Formatter {
         String acctName = null;
         FreeBusy fb = null;
         if (context.targetMailbox != null) {
-            fb = context.targetMailbox.getFreeBusy(context.opContext, rangeStart, rangeEnd);
+            fb = context.targetMailbox.getFreeBusy(context.opContext, rangeStart, rangeEnd, context.getFreeBusyCalendar());
             acctName = context.targetMailbox.getAccount().getName();
         } else {
             // Unknown mailbox.  Fake an always-free response, to avoid harvest attacks.

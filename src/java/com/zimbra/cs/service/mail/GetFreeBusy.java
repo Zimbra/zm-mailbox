@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +30,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFreeBusy extends MailDocumentHandler {
@@ -79,18 +81,32 @@ public class GetFreeBusy extends MailDocumentHandler {
     	if (uidParam != null) {
     		idStrs = uidParam.split(",");
     		for (String idStr : idStrs)
-        		fbQuery.addId(idStr);
+        		fbQuery.addId(idStr, FreeBusyQuery.CALENDAR_FOLDER_ALL);
     	}
     	if (idParam != null) {
     		idStrs = idParam.split(",");
     		for (String idStr : idStrs)
-        		fbQuery.addAccountId(idStr);
+        		fbQuery.addAccountId(idStr, FreeBusyQuery.CALENDAR_FOLDER_ALL);
     	}
     	if (nameParam != null) {
     		idStrs = nameParam.split(",");
     		for (String idStr : idStrs)
-        		fbQuery.addEmailAddress(idStr);
+        		fbQuery.addEmailAddress(idStr, FreeBusyQuery.CALENDAR_FOLDER_ALL);
     	}
+
+    	for (Iterator<Element> usrIter = request.elementIterator(MailConstants.E_FREEBUSY_USER); usrIter.hasNext(); ) {
+    	    Element usrElem = usrIter.next();
+    	    int folderId = (int) usrElem.getAttributeLong(MailConstants.A_FOLDER, FreeBusyQuery.CALENDAR_FOLDER_ALL);
+    	    if (folderId == Mailbox.ID_FOLDER_USER_ROOT || folderId == 0)
+    	        folderId = FreeBusyQuery.CALENDAR_FOLDER_ALL;
+    	    String id = usrElem.getAttribute(MailConstants.A_ID, null);
+    	    if (id != null)
+    	        fbQuery.addAccountId(id, folderId);
+    	    String name = usrElem.getAttribute(MailConstants.A_NAME, null);
+    	    if (name != null)
+    	        fbQuery.addEmailAddress(name, folderId);
+    	}
+
     	fbQuery.getResults(response);
         return response;
     }

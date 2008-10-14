@@ -619,9 +619,19 @@ OR
 //
 // (f)ree (b)usy busy-(t)entative busy-(u)navailable or (n)o-data elements
 //
-// "uid" is a comma-separated list of account emails or zimbraId GUIDs
-//
-<GetFreeBusyRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" [uid="id,..."]/>
+<GetFreeBusyRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT"
+  [uid="zimbraId/email,..."]  // DEPRECATED
+                              // comma-separated list of zimraId or email
+                              // each value can be zimbraId or email
+  [id="zimbraId,..."]         // comma-separated list of zimbraId
+  [name="email,..."]          // comma-separated list of email
+  // For accounts listed in uid/id/name above, f/b search will be done for all calendar folders.
+  // To view free/busy for a single folder in a particular account, use the <usr> format below.
+>
+  [<usr [id="zimbraId] [name="email"]  // either id or email must be specified
+       [l="folder id"]  // calendar folder id; if omitted, get f/b on all calendar folders
+  />]*
+</GetFreeBusyRequest>
 <GetFreeBusyResponse>
   <usr id="id">
     <f s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
@@ -631,6 +641,7 @@ OR
     <n s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // could not retreive data for that user
   </usr>  
 <GetFreeBusyResponse>
+
 
 
 //////////////////////////////////////////////////////////////////////

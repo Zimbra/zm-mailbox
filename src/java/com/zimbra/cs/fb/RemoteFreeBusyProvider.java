@@ -79,8 +79,8 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		mRemoteAccountMap.put(hostname, buf);
 		mRequestList.add(req);
 	}
-	public void addFreeBusyRequest(Account requestor, Account acct, String id, long start, long end) {
-		Request req = new Request(requestor, id, start, end);
+	public void addFreeBusyRequest(Account requestor, Account acct, String id, long start, long end, int folder) {
+		Request req = new Request(requestor, id, start, end, folder);
 		req.data = acct;
 		addFreeBusyRequest(req);
 	}
@@ -96,6 +96,10 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                 targetUrl.append("&start=");
                 targetUrl.append(mStart);
                 targetUrl.append("&end=");
+                if (req.folder != FreeBusyQuery.CALENDAR_FOLDER_ALL) {
+                    targetUrl.append("&").append(UserServlet.QP_FREEBUSY_CALENDAR).append("=");
+                    targetUrl.append(req.folder);
+                }
                 targetUrl.append(mEnd);
                 String authToken = null;
                 try {

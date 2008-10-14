@@ -34,7 +34,7 @@ public class FreeBusyFormatter extends Formatter {
     }
 
     public boolean requiresAuth() {
-        return false;
+        return true;
     }
     
     public String getDefaultSearchTypes() {
