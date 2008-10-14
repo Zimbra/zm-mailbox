@@ -90,11 +90,11 @@ public class AclAccessManager extends DomainAccessManager {
             }
                 
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("failed checking ACL for: " + 
+            ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + grantee.getName() + 
-                                   "target=" + target.getLabel() + 
-                                   "right=" + rightNeeded.toString() + 
-                                   "=> denied", e);
+                                   ", target=" + target.getLabel() + 
+                                   ", right=" + rightNeeded.getCode() + 
+                                   " => denied", e);
         }
         return false;
     }
@@ -111,11 +111,11 @@ public class AclAccessManager extends DomainAccessManager {
             
             return hasRight(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("failed checking ACL for: " +
+            ZimbraLog.account.warn("ACL checking failed: " +
                                    "grantee=" + grantee.getAccountId() +
-                                   "target=" + target.getLabel() +
-                                   "right=" + rightNeeded.toString() +
-                                   "=> denied", e);
+                                   ", target=" + target.getLabel() +
+                                   ", right=" + rightNeeded.getCode() +
+                                   " => denied", e);
         }
         
         return false;
@@ -132,11 +132,11 @@ public class AclAccessManager extends DomainAccessManager {
             
             return hasRight(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("failed checking ACL for: " + 
+            ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + granteeEmail + 
-                                   "target=" + target.getLabel() + 
-                                   "right=" + rightNeeded.toString() + 
-                                   "=> denied", e);
+                                   ", target=" + target.getLabel() + 
+                                   ", right=" + rightNeeded.getCode() + 
+                                   " => denied", e);
         }
         
         return false;

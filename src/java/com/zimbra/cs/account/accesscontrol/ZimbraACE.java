@@ -114,7 +114,7 @@ public class ZimbraACE {
         case GT_AUTHUSER:
         case GT_PUBLIC: 
             if (!Provisioning.isUUID(grantee))
-                throw ServiceException.PARSE_ERROR("grantee ID" + mGrantee + " is not a UUID", null);
+                throw ServiceException.PARSE_ERROR("grantee ID [" + grantee + "] is not a UUID", null);
             mGrantee = grantee;
             break;
         case GT_GUEST:
