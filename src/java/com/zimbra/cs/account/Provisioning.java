@@ -1984,6 +1984,36 @@ public abstract class Provisioning {
     public abstract void addAlias(Account acct, String alias) throws ServiceException;
     
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;
+    
+    
+    public NamedEntry searchAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
+        String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
+        SearchOptions options = new SearchOptions();
+    
+        int flags = 0;
+
+        flags |= Provisioning.SA_ACCOUNT_FLAG;
+        flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
+        flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+            
+        String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
+    
+        options.setFlags(flags);
+        options.setQuery(query);
+    
+        List<NamedEntry> entries = searchDirectory(options);
+        
+        if (mustFind && entries.size() == 0)
+            throw ServiceException.FAILURE("target " + targetId + " of alias " +  alias.getName() + " not found " + query, null);
+        
+        if (entries.size() > 1)
+            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many results for search " + query, null);
+
+        if (entries.size() == 0)
+            return null;
+        else
+            return entries.get(0);
+    }
 
     /**
      *  Creates a zimbraDomain object in the directory. Also creates parent domains as needed (as simple dcObject entries though,
