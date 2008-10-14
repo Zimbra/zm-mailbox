@@ -53,6 +53,8 @@ public class Auth extends AdminDocumentHandler {
         AuthToken at = null;
         Account acct = null;
         
+        Provisioning prov = Provisioning.getInstance();
+        
         Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
         if (authTokenEl != null) {
             try {
@@ -63,8 +65,8 @@ public class Auth extends AdminDocumentHandler {
                     throw ServiceException.AUTH_EXPIRED();
                 
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
-                acct = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
-                if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                acct = prov.get(AccountBy.id, at.getAccountId(), at);
+                if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     throw ServiceException.AUTH_EXPIRED();
                 
                 // make sure the authenticated account is an admin account
@@ -77,7 +79,6 @@ public class Auth extends AdminDocumentHandler {
             String namePassedIn = request.getAttribute(AdminConstants.E_NAME);
             String name = namePassedIn;
     		String password = request.getAttribute(AdminConstants.E_PASSWORD);
-    		Provisioning prov = Provisioning.getInstance();
             
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();

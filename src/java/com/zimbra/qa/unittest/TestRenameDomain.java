@@ -759,7 +759,7 @@ public class TestRenameDomain  extends TestCase {
         for (NamedEntry entry : list) {
             assertTrue(entry instanceof Alias);
             
-            NamedEntry target = ((Alias)entry).searchTarget(true);
+            NamedEntry target = mProv.searchAliasTarget((Alias)entry, true);
             assertNotNull(target);
         }        
     }

@@ -86,11 +86,11 @@ public class AccountStatus extends AttributeCallback {
     }
     
     private void handleAccountStatusClosed(Account account)  throws ServiceException {
-        String status = account.getAccountStatus();
+        LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance();
+        String status = account.getAccountStatus(prov);
         
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
             ZimbraLog.misc.info("removing closed account and all its aliases from all distribution lists");
-            LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance();
             
             String aliases[] = account.getAliases();
             String addrs[] = new String[aliases.length+1];

@@ -245,7 +245,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
     // TODO Consider adding method to Account base class
     private boolean isAccountStatusActive(Account account) {
-        return account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
+        return account.getAccountStatus(Provisioning.getInstance()).equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
     }
 
     boolean executeRequest(ImapRequest req) throws IOException, ImapParseException {

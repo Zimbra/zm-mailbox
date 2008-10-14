@@ -957,6 +957,53 @@ public class LdapProvisioning extends Provisioning {
                 true);
     }
     
+    private static class NamedEntryComparator implements Comparator<NamedEntry> {
+        final Provisioning mProv;
+        final String mSortAttr;
+        final boolean mSortAscending;
+        final boolean mByName;
+        
+        NamedEntryComparator(Provisioning prov, String sortAttr, boolean sortAscending) {
+            mProv = prov;
+            mSortAttr = sortAttr;
+            mSortAscending = sortAscending;
+            mByName = sortAttr == null || sortAttr.equals("name");
+        }
+        
+        public int compare(NamedEntry oa, NamedEntry ob) {
+            NamedEntry a = (NamedEntry) oa;
+            NamedEntry b = (NamedEntry) ob;
+            int comp = 0;
+            
+            if (mByName)
+                comp = a.getName().compareToIgnoreCase(b.getName());
+            else {
+                String sa = null;
+                String sb = null;
+                if (SearchOptions.SORT_BY_TARGET_NAME.equals(mSortAttr) && (a instanceof Alias) && (b instanceof Alias)) {
+                    try {
+                        sa = ((Alias)a).getTargetUnicodeName(mProv);
+                    } catch (ServiceException e) {
+                        ZimbraLog.account.error("unable to get target name: "+a.getName(), e);
+                    }
+                    try {
+                        sb = ((Alias)b).getTargetUnicodeName(mProv);
+                    } catch (ServiceException e) {
+                        ZimbraLog.account.error("unable to get target name: "+b.getName(), e);
+                    }
+                    
+                } else {
+                    sa = a.getAttr(mSortAttr);
+                    sb = b.getAttr(mSortAttr);
+                }
+                if (sa == null) sa = "";
+                if (sb == null) sb = "";
+                comp = sa.compareToIgnoreCase(sb);
+            }
+            return mSortAscending ? comp : -comp;
+        }
+    };
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
@@ -984,40 +1031,7 @@ public class LdapProvisioning extends Provisioning {
                 searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool, false);
         }
 
-        final boolean byName = sortAttr == null || sortAttr.equals("name"); 
-        Comparator<NamedEntry> comparator = new Comparator<NamedEntry>() {
-            public int compare(NamedEntry oa, NamedEntry ob) {
-                NamedEntry a = (NamedEntry) oa;
-                NamedEntry b = (NamedEntry) ob;
-                int comp = 0;
-                if (byName)
-                    comp = a.getName().compareToIgnoreCase(b.getName());
-                else {
-                    String sa = null;
-                    String sb = null;
-                    if (SearchOptions.SORT_BY_TARGET_NAME.equals(sortAttr) && (a instanceof Alias) && (b instanceof Alias)) {
-                        try {
-                            sa = ((Alias)a).getTargetUnicodeName();
-                        } catch (ServiceException e) {
-                            ZimbraLog.account.error("unable to get target name: "+a.getName(), e);
-                        }
-                        try {
-                            sb = ((Alias)b).getTargetUnicodeName();
-                        } catch (ServiceException e) {
-                            ZimbraLog.account.error("unable to get target name: "+b.getName(), e);
-                        }
-                        
-                    } else {
-                        sa = a.getAttr(sortAttr);
-                        sb = b.getAttr(sortAttr);
-                    }
-                    if (sa == null) sa = "";
-                    if (sb == null) sb = "";
-                    comp = sa.compareToIgnoreCase(sb);
-                }
-                return sortAscending ? comp : -comp;
-            }
-        };
+        NamedEntryComparator comparator = new NamedEntryComparator(Provisioning.getInstance(), sortAttr, sortAscending);
         Collections.sort(result, comparator);        
         return result;
     }
@@ -1258,7 +1272,7 @@ public class LdapProvisioning extends Provisioning {
                  */
                 Attributes attrs = zlc.getAttributes(aliasDn);
                 Alias aliasEntry = makeAlias(aliasDn, attrs, this);
-                NamedEntry targetEntry = aliasEntry.searchTarget(false);
+                NamedEntry targetEntry = Provisioning.getInstance().searchAliasTarget(aliasEntry, false);
                 if (targetEntry == null) {
                     // remove the dangling alias 
                     removeAliasInternal(null, alias, null);
@@ -2661,7 +2675,7 @@ public class LdapProvisioning extends Provisioning {
          */
         // reload(acct);
         
-        String accountStatus = acct.getAccountStatus();
+        String accountStatus = acct.getAccountStatus(Provisioning.getInstance());
         if (accountStatus == null)
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "missing account status");
         if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) 

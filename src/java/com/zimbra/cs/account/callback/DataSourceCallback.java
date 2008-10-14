@@ -172,7 +172,7 @@ public class DataSourceCallback extends AttributeCallback {
             } catch (ServiceException e) {
                 ZimbraLog.datasource.debug("Unable to look up account for id %s: %s", accountId, e.toString());
             }
-            if (account != null && Provisioning.ACCOUNT_STATUS_ACTIVE.equals(account.getAccountStatus())) {
+            if (account != null && Provisioning.ACCOUNT_STATUS_ACTIVE.equals(account.getAccountStatus(prov))) {
                 Cos accountCos = prov.getCOS(account);
                 if (accountCos != null && cos.getId().equals(accountCos.getId())) {
                     scheduleAccount(account);

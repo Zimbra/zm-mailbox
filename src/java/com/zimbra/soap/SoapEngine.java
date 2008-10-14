@@ -195,12 +195,13 @@ public class SoapEngine {
 
         String rid = zsc.getRequestedAccountId();
         if (rid != null) {
-            Account.addAccountToLogContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
+            Provisioning prov = Provisioning.getInstance();
+            Account.addAccountToLogContext(prov, rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
             String aid = zsc.getAuthtokenAccountId();
             if (aid != null && !rid.equals(aid))
-                Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
+                Account.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
             else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null)
-                Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());                        
+                Account.addAccountToLogContext(prov, zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());                        
         
             try {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(rid, false);
@@ -355,6 +356,8 @@ public class SoapEngine {
                 delegatedAuth = at.isDelegatedAuth();
             }
             
+            Provisioning prov = Provisioning.getInstance();
+            
             if (!isGuestAccount) {
                 if (needsAuth || needsAdminAuth) {
                     // make sure that the authenticated account is still active and has not been deleted since the last request
@@ -363,10 +366,10 @@ public class SoapEngine {
                     if (account == null)
                         return soapFaultWithNotes(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
                     
-                    if (delegatedAuth && account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+                    if (delegatedAuth && account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
                         return soapFaultWithNotes(soapProto, "delegated account in MAINTENANCE mode", ServiceException.AUTH_EXPIRED());
                     
-                    if (!delegatedAuth && !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    if (!delegatedAuth && !account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                         return soapFaultWithNotes(soapProto, "account not active", ServiceException.AUTH_EXPIRED());
                     
                     // if using delegated auth, make sure the "admin" is really an active admin account
@@ -378,7 +381,7 @@ public class SoapEngine {
                         admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
                         if (!isAdmin)
                             return soapFaultWithNotes(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
-                        if (!admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                        if (!admin.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                             return soapFaultWithNotes(soapProto, "delegating account is not active", ServiceException.AUTH_EXPIRED());
                     }
 
@@ -386,9 +389,9 @@ public class SoapEngine {
                     if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
                         Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
                         // treat the account as inactive if (a) it doesn't exist, (b) it's in maintenance mode, or (c) we're non-admins and it's not "active"
-                        boolean inactive = target == null || target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
+                        boolean inactive = target == null || target.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
                         if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
-                            inactive = !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
+                            inactive = !target.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
                         if (inactive)
                             return soapFaultWithNotes(soapProto, "target account is not active", AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
                     }

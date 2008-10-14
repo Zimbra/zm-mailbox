@@ -77,7 +77,7 @@ public final class AuthenticatorUtil {
 
         // make sure that the authentication account is valid
         Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId, at);
-        if (authAccount == null || !authAccount.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+        if (authAccount == null || !authAccount.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
             return null;
         // make sure the auth token belongs to authenticatedId
         if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))

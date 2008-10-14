@@ -87,13 +87,14 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         String addr = address.getEmailAddress();
 
         try {
-		    Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
+            Provisioning prov = Provisioning.getInstance();
+		    Account acct = prov.get(AccountBy.name, addr);
 		    if (acct == null) {
 		    	ZimbraLog.lmtp.info("rejecting address " + addr + ": no account");
 		    	return LmtpStatus.REJECT;
 		    }
 		    
-		    String acctStatus = acct.getAccountStatus();
+		    String acctStatus = acct.getAccountStatus(prov);
 		    if (acctStatus == null) {
 		    	ZimbraLog.lmtp.warn("rejecting address " + addr + ": no account status");
 		    	return LmtpStatus.REJECT;

@@ -331,10 +331,12 @@ public class FileUploadServlet extends ZimbraServlet {
         			proxyServletRequest(req, resp, prov.getServer(acct), null);
         			return;
         		}
+        		
+        		String acctStatus = acct.getAccountStatus(prov);
         		// make sure the authenticated account is active
-        		if (acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+        		if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
         			throw AccountServiceException.MAINTENANCE_MODE();
-        		else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+        		else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
         			throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
         		// fetching the mailbox will except if it's in maintenance mode
         		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);

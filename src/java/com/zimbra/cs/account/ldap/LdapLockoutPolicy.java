@@ -44,7 +44,7 @@ class LdapLockoutPolicy {
     LdapLockoutPolicy(Provisioning prov, Account account) throws ServiceException {
         mAccount = account;
         mProv = prov;
-        mAccountStatus = account.getAccountStatus();
+        mAccountStatus = account.getAccountStatus(prov);
         mMaxFailures = mAccount.getLongAttr(Provisioning.A_zimbraPasswordLockoutMaxFailures, 0);
         mEnabled = mMaxFailures > 0 && mAccount.getBooleanAttr(Provisioning.A_zimbraPasswordLockoutEnabled, false);
         mFailures = mAccount.getMultiAttr(Provisioning.A_zimbraPasswordLockoutFailureTime);
