@@ -92,7 +92,9 @@ public class ZEmailAddress implements ToZJSONObject {
 
 
     private String quoteAddress(String addr) {
-        if (addr.startsWith("<"))
+        if (addr == null)
+            return "";
+        else if (addr.startsWith("<"))
             return addr;
         else
             return "<" + addr +">";
