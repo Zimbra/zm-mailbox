@@ -207,8 +207,9 @@ public abstract class Pop3Handler extends ProtocolHandler {
         // check account status before executing command
         if (mAccountId != null)
             try {
-                Account acct = Provisioning.getInstance().get(AccountBy.id, mAccountId);
-                if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                Provisioning prov = Provisioning.getInstance();
+                Account acct = prov.get(AccountBy.id, mAccountId);
+                if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     return false;
             } catch (ServiceException e) {
                 return false;

@@ -682,7 +682,7 @@ class RenameDomain {
             Alias alias = (Alias)entry;
             NamedEntry targetEntry = null;
             try {
-                targetEntry = alias.searchTarget(false);
+                targetEntry = mProv.searchAliasTarget(alias, false);
             } catch (ServiceException e) {
                 warn(e, "handleForeignAlias", "target entry not found for alias" + "alias=[%s], target=[%s]", alias.getName(), targetEntry.getName());
                 return;

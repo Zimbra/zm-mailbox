@@ -44,36 +44,7 @@ public class Alias extends MailTarget {
         super(name, id, attrs, null);
     }
     
-    public NamedEntry searchTarget(boolean mustFind) throws ServiceException {
-        String targetId = getAttr(Provisioning.A_zimbraAliasTargetId);
-        SearchOptions options = new SearchOptions();
-    
-        int flags = 0;
-
-        flags |= Provisioning.SA_ACCOUNT_FLAG;
-        flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-            
-        String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
-    
-        options.setFlags(flags);
-        options.setQuery(query);
-    
-        List<NamedEntry> entries = Provisioning.getInstance().searchDirectory(options);
-        
-        if (mustFind && entries.size() == 0)
-            throw ServiceException.FAILURE("target " + targetId + " of alias " +  getName() + " not found " + query, null);
-        
-        if (entries.size() > 1)
-            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many results for search " + query, null);
-
-        if (entries.size() == 0)
-            return null;
-        else
-            return entries.get(0);
-    }
-    
-    private String getTargetInfo(String forInfo) throws ServiceException {
+    private String getTargetInfo(Provisioning prov, String forInfo) throws ServiceException {
         Object data = getCachedData(forInfo);
         if (data != null)
             return (String)data;
@@ -81,7 +52,7 @@ public class Alias extends MailTarget {
         /*
          * not cached, search directory and put info in cache
          */
-        NamedEntry entry = searchTarget(true);
+        NamedEntry entry = prov.searchAliasTarget(this, true);
         
         String targetName = entry.getName();
         String targetType;
@@ -107,21 +78,21 @@ public class Alias extends MailTarget {
             return targetType;
     }
 
-    public String getTargetName() throws ServiceException {
-        return getTargetInfo(ALIAS_TARGET_NAME);
+    public String getTargetName(Provisioning prov) throws ServiceException {
+        return getTargetInfo(prov, ALIAS_TARGET_NAME);
     }
     
-    public String getTargetUnicodeName() throws ServiceException {
-        String targetName =  getTargetInfo(ALIAS_TARGET_NAME);
+    public String getTargetUnicodeName(Provisioning prov) throws ServiceException {
+        String targetName =  getTargetInfo(prov, ALIAS_TARGET_NAME);
         return IDNUtil.toUnicodeEmail(targetName);
     }
     
-    public String getTargetType() throws ServiceException {
-        return getTargetInfo(ALIAS_TARGET_TYPE);
+    public String getTargetType(Provisioning prov) throws ServiceException {
+        return getTargetInfo(prov, ALIAS_TARGET_TYPE);
     }
     
-    public boolean isDangling() throws ServiceException {
-        NamedEntry entry = searchTarget(false);
+    public boolean isDangling(Provisioning prov) throws ServiceException {
+        NamedEntry entry = prov.searchAliasTarget(this, false);
         return (entry == null);
     }
 

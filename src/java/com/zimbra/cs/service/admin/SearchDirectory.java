@@ -166,7 +166,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList)entry);
             } else if (entry instanceof Alias) {
-                doAlias(response, (Alias) entry);
+                doAlias(response, prov, (Alias)entry);
             } else if (entry instanceof Domain) {
                 GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
             } else if (entry instanceof Cos) {
@@ -187,12 +187,12 @@ public class SearchDirectory extends AdminDocumentHandler {
         doAttrs(elist, attrs);
     }
 
-    static void doAlias(Element e, Alias a) throws ServiceException {
+    static void doAlias(Element e, Provisioning prov, Alias a) throws ServiceException {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getUnicodeName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
-        ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetUnicodeName());
-        ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType());
+        ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetUnicodeName(prov));
+        ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType(prov));
         
         Map attrs = a.getUnicodeAttrs();
         doAttrs(ealias, attrs);

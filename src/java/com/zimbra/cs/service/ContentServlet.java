@@ -117,7 +117,7 @@ public class ContentServlet extends ZimbraServlet {
 
             String authId = token.getAccountId();
             String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
-            Account.addAccountToLogContext(accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID, token);
+            Account.addAccountToLogContext(Provisioning.getInstance(), accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID, token);
             if (!accountId.equalsIgnoreCase(authId))
                 ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
             addRemoteIpToLoggingContext(req);

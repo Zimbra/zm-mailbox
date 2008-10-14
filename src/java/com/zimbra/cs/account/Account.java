@@ -56,7 +56,7 @@ public class Account extends MailTarget {
         return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
     }
     
-    public String getAccountStatus() {
+    public String getAccountStatus(Provisioning prov) {
         
         String domainStatus = null;
         String accountStatus = getAttr(Provisioning.A_zimbraAccountStatus);
@@ -70,7 +70,7 @@ public class Account extends MailTarget {
         
         if (mDomain != null) {
             try {
-                Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, mDomain);
+                Domain domain = prov.getDomain(this);
                 if (domain != null) {
                     domainStatus = domain.getDomainStatus();
                 }
@@ -142,10 +142,10 @@ public class Account extends MailTarget {
      * @param nameKey name key to add to context if account lookup is ok
      * @param idOnlyKey id key to add to context if account lookup fails
      */
-    public static void addAccountToLogContext(String id, String nameKey, String idOnlyKey, AuthToken authToken) {
+    public static void addAccountToLogContext(Provisioning prov, String id, String nameKey, String idOnlyKey, AuthToken authToken) {
         Account acct = null;
         try {
-            acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, id, authToken);
+            acct = prov.get(Provisioning.AccountBy.id, id, authToken);
         } catch (ServiceException se) {
             ZimbraLog.misc.warn("unable to lookup account for log, id: " + id, se);
         }
