@@ -3585,4 +3585,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>If true, an X-Authenticated-User header will be added to messages sent via SendMsgRequest.</desc>
 </attr>
 
+<attr id="751" name="zimbraAdminConsoleSkinEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="future">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether to allow skin management in admin console</desc>
+</attr>
+
+
 </attrs>
