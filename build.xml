@@ -682,10 +682,11 @@
                 <antcall target="stop-webserver"/>
             </then>
         </if>
-        <antcall target="clean"/>
+    	<antcall target="stop-ldap"/>
+    	<antcall target="clean"/>
         <mkdir dir="${build.dir}"/>
 
-	<antcall target="reset-open-ldap"/>
+        <antcall target="reset-open-ldap"/>
         <delete dir="${zimbra.home.dir}/lib"/>
         <antcall target="reset-jetty"/>
         <antcall target="reset-the-world"/>
