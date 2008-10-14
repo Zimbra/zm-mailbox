@@ -1035,9 +1035,30 @@ public abstract class CalendarItem extends MailItem {
         return canAccess(ACL.RIGHT_PRIVATE, authAccount, asAdmin);
     }
 
+    /**
+     * Returns true if authAccount is allowed access to private data in calendar items in folder.
+     * @param folder
+     * @param authAccount
+     * @param asAdmin
+     * @return
+     * @throws ServiceException
+     */
     public static boolean allowPrivateAccess(Folder folder, Account authAccount, boolean asAdmin)
     throws ServiceException {
         return folder.canAccess(ACL.RIGHT_PRIVATE, authAccount, asAdmin);
+    }
+
+    /**
+     * Returns true if authAccount is allowed to run free/busy search against calendar folder.
+     * @param folder
+     * @param authAccount
+     * @param asAdmin
+     * @return
+     * @throws ServiceException
+     */
+    public static boolean allowFreeBusyAccess(Folder folder, Account authAccount, boolean asAdmin)
+    throws ServiceException {
+        return folder.canAccess(ACL.RIGHT_FREEBUSY, authAccount, asAdmin);
     }
 
     boolean processNewInvite(ParsedMessage pm, Invite invite,

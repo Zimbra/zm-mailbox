@@ -78,6 +78,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZFolder.Color;
@@ -3862,11 +3863,14 @@ public class ZMailbox {
         public long getEndTime() { return mEnd; }
     }
 
-    public List<ZGetFreeBusyResult> getFreeBusy(String id, long startTime, long endTime) throws ServiceException {
+    public List<ZGetFreeBusyResult> getFreeBusy(String email, long startTime, long endTime, int folder) throws ServiceException {
         Element req = newRequestElement(MailConstants.GET_FREE_BUSY_REQUEST);
-        req.addAttribute(MailConstants.A_UID, id);
         req.addAttribute(MailConstants.A_CAL_START_TIME, startTime);
         req.addAttribute(MailConstants.A_CAL_END_TIME, endTime);
+        Element userElem = req.addElement(MailConstants.E_FREEBUSY_USER);
+        userElem.addAttribute(MailConstants.A_NAME, email);
+        if (folder != FreeBusyQuery.CALENDAR_FOLDER_ALL)
+            userElem.addAttribute(MailConstants.A_FOLDER, folder);
         Element resp = invoke(req);
         List<ZGetFreeBusyResult> result = new ArrayList<ZGetFreeBusyResult>();
         for (Element user : resp.listElements(MailConstants.E_FREEBUSY_USER)) {

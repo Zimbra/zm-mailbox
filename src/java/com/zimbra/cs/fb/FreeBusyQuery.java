@@ -35,12 +35,14 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class FreeBusyQuery {
+    public static final int CALENDAR_FOLDER_ALL = -1;
 	
 	private Account mRequestor;
 	private long mStart;
 	private long mEnd;
 	
 	private HashMap<String,Account> mTargets;
+	private HashMap<String, Integer> mTargetFolder;  // optional calendar folder id for each target
 	
 	// needed for proxying to another mailbox server
 	private HttpServletRequest mReq;
@@ -57,22 +59,24 @@ public class FreeBusyQuery {
 		mStart = start;
 		mEnd = end;
 		mTargets = new HashMap<String,Account>();
+		mTargetFolder = new HashMap<String, Integer>();
 	}
 	
-	public void addAccountId(String accountId) {
-		addUser(accountId, getAccountFromId(accountId));
+	public void addAccountId(String accountId, int calFolderId) {
+		addUser(accountId, getAccountFromId(accountId), calFolderId);
 	}
 	
-	public void addEmailAddress(String emailAddr) {
-		addUser(emailAddr, getAccountFromName(emailAddr));
+	public void addEmailAddress(String emailAddr, int calFolderId) {
+		addUser(emailAddr, getAccountFromName(emailAddr), calFolderId);
 	}
 	
-	public void addId(String id) {
-		addUser(id, getAccountFromUid(id));
+	public void addId(String id, int calFolderId) {
+		addUser(id, getAccountFromUid(id), calFolderId);
 	}
 	
-	private void addUser(String id, Account acct) {
+	private void addUser(String id, Account acct, int calFolderId) {
 		mTargets.put(id, acct);
+		mTargetFolder.put(id, calFolderId);
 	}
 	
     private Account getAccountFromUid(String uid) {
@@ -110,6 +114,7 @@ public class FreeBusyQuery {
     			external.add(id);
     			continue;
     		}
+    		int folder = mTargetFolder.get(id);
     		try {
         		if (Provisioning.onLocalServer(acct)) {
         		    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -118,9 +123,9 @@ public class FreeBusyQuery {
         		        octxt = new OperationContext(mCtxt.getAuthToken());
         		    else if (mRequestor != null)
         		        octxt = new OperationContext(mRequestor);
-        		    local.add(mbox.getFreeBusy(octxt, id, mStart, mEnd));
+        		    local.add(mbox.getFreeBusy(octxt, id, mStart, mEnd, folder));
         		} else {
-        			remote.addFreeBusyRequest(mRequestor, acct, id, mStart, mEnd);
+        			remote.addFreeBusyRequest(mRequestor, acct, id, mStart, mEnd, folder);
         		}
     		} catch (ServiceException e) {
                 ZimbraLog.fb.error("cannot get free/busy for "+id, e);
@@ -136,7 +141,7 @@ public class FreeBusyQuery {
 
     	fbList.addAll(remote.getResults());
     	if (external.size() > 0)
-    		fbList.addAll(FreeBusyProvider.getRemoteFreeBusy(mRequestor, external, mStart, mEnd));
+    		fbList.addAll(FreeBusyProvider.getRemoteFreeBusy(mRequestor, external, mStart, mEnd, CALENDAR_FOLDER_ALL));
     	return fbList;
     }
     
@@ -150,6 +155,6 @@ public class FreeBusyQuery {
         	ToXML.encodeFreeBusy(response, fb);
     	remote.addResults(response);
     	if (external.size() > 0)
-    		FreeBusyProvider.getRemoteFreeBusy(mRequestor, response, external, mStart, mEnd);
+    		FreeBusyProvider.getRemoteFreeBusy(mRequestor, response, external, mStart, mEnd, CALENDAR_FOLDER_ALL);
 	}
 }

@@ -64,6 +64,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
@@ -153,6 +154,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_START = "start"; // start time
 
     public static final String QP_END = "end"; // end time
+
+    public static final String QP_FREEBUSY_CALENDAR = "fbcal";  // calendar folder to run free/busy search on
 
     public static final String QP_IGNORE_ERROR = "ignore";  // ignore and continue on error during ics import
 
@@ -645,48 +648,58 @@ public class UserServlet extends ZimbraServlet {
             context.extraPath = null;
         }
 
-        // first, try the full requested path
-        ServiceException failure = null;
-        try {
-            context.target = mbox.getItemByPath(context.opContext, context.itemPath);
-        } catch (ServiceException e) {
-            if (!(e instanceof NoSuchItemException) && !e.getCode().equals(ServiceException.PERM_DENIED))
-                throw e;
-            failure = e;
-        }
-
-        if (context.target == null) {
-            // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
-            int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
-            if (checkExtension && context.format == null && dot != -1 && dot > slash) {
-                /* if path == /foo/bar/baz.html, then
-                 *      format -> html
-                 *      path   -> /foo/bar/baz  */
-                String unsuffixedPath = context.itemPath.substring(0, dot);
+        if (context.format != null && (context.format.equalsIgnoreCase("freebusy") || context.format.equalsIgnoreCase("ifb"))) {
+            try {
+                // Do the get as mailbox owner to circumvent ACL system.
+                context.target = mbox.getItemByPath(null, context.itemPath);
+            } catch (ServiceException e) {
+                if (!(e instanceof NoSuchItemException))
+                    throw e;
+            }
+        } else {
+            // first, try the full requested path
+            ServiceException failure = null;
+            try {
+                context.target = mbox.getItemByPath(context.opContext, context.itemPath);
+            } catch (ServiceException e) {
+                if (!(e instanceof NoSuchItemException) && !e.getCode().equals(ServiceException.PERM_DENIED))
+                    throw e;
+                failure = e;
+            }
+    
+            if (context.target == null) {
+                // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
+                int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
+                if (checkExtension && context.format == null && dot != -1 && dot > slash) {
+                    /* if path == /foo/bar/baz.html, then
+                     *      format -> html
+                     *      path   -> /foo/bar/baz  */
+                    String unsuffixedPath = context.itemPath.substring(0, dot);
+                    try {
+                        context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
+                        context.format = context.itemPath.substring(dot + 1);
+                        context.itemPath = unsuffixedPath;
+                    } catch (ServiceException e) { }
+                }
+            }
+    
+            if (context.target == null) {
+                // still no joy.  the only viable possibility at this point is that there's a mountpoint somewhere higher up in the requested path
                 try {
-                    context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
-                    context.format = context.itemPath.substring(dot + 1);
-                    context.itemPath = unsuffixedPath;
+                    Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(context.opContext, Mailbox.ID_FOLDER_USER_ROOT, context.itemPath);
+                    Folder reachable = match.getFirst();
+                    if (reachable instanceof Mountpoint) {
+                        context.target = reachable;
+                        context.itemPath = reachable.getPath();
+                        context.extraPath = match.getSecond();
+                    }
                 } catch (ServiceException e) { }
             }
+    
+            // don't think this code can ever get called because <tt>context.target</tt> can't be null at this point
+            if (context.target == null && context.getQueryString() == null)
+                throw failure;
         }
-
-        if (context.target == null) {
-            // still no joy.  the only viable possibility at this point is that there's a mountpoint somewhere higher up in the requested path
-            try {
-                Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(context.opContext, Mailbox.ID_FOLDER_USER_ROOT, context.itemPath);
-                Folder reachable = match.getFirst();
-                if (reachable instanceof Mountpoint) {
-                    context.target = reachable;
-                    context.itemPath = reachable.getPath();
-                    context.extraPath = match.getSecond();
-                }
-            } catch (ServiceException e) { }
-        }
-
-        // don't think this code can ever get called because <tt>context.target</tt> can't be null at this point
-        if (context.target == null && context.getQueryString() == null)
-            throw failure;
 
         return context.target;
     }
@@ -856,6 +869,17 @@ public class UserServlet extends ZimbraServlet {
                 mEndTime = (et != null) ? DateUtil.parseDateSpecifier(et, defaultEndTime) : defaultEndTime;
             }
             return mEndTime;
+        }
+
+        public int getFreeBusyCalendar() {
+            int folder = FreeBusyQuery.CALENDAR_FOLDER_ALL;
+            String str = params.get(QP_FREEBUSY_CALENDAR);
+            if (str != null) {
+                try {
+                    folder = Integer.parseInt(str);
+                } catch (NumberFormatException e) {}
+            }
+            return folder;
         }
 
         public boolean ignoreAndContinueOnError() {

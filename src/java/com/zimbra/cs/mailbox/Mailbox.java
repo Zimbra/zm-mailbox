@@ -48,7 +48,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
@@ -59,6 +58,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyProvider;
+import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
@@ -3845,22 +3845,22 @@ public class Mailbox {
         return zq.toQueryString();
     }
 
-    public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end)
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end, int folder)
     throws ServiceException {
-        return getFreeBusy(octxt, getAccount().getName(), start, end, null);
+        return getFreeBusy(octxt, getAccount().getName(), start, end, folder, null);
     }
 
     public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end, Appointment exAppt)
     throws ServiceException {
-        return getFreeBusy(octxt, getAccount().getName(), start, end, exAppt);
+        return getFreeBusy(octxt, getAccount().getName(), start, end, FreeBusyQuery.CALENDAR_FOLDER_ALL, exAppt);
     }
 
-    public synchronized FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end)
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end, int folder)
     throws ServiceException {
-        return getFreeBusy(octxt, name, start, end, null);
+        return getFreeBusy(octxt, name, start, end, folder, null);
     }
 
-    public synchronized FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end, Appointment exAppt)
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end, int folder, Appointment exAppt)
     throws ServiceException {
         Account authAcct;
         boolean asAdmin;
@@ -3871,11 +3871,7 @@ public class Mailbox {
             authAcct = null;
             asAdmin = false;
         }
-        AccessManager accessMgr = AccessManager.getInstance();
-        if (accessMgr.canPerform(authAcct, getAccount(), Right.RT_viewFreeBusy, asAdmin, true))
-            return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, name, start, end, exAppt);
-        else
-            return FreeBusy.emptyFreeBusy(name, start, end);
+        return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(authAcct, asAdmin, this, name, start, end, folder, exAppt);
     }
 
     private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<BrowseTerm> newDomains, int flag) {

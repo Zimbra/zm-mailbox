@@ -16,16 +16,20 @@
  */
 package com.zimbra.cs.fb;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.fb.FreeBusy.IntervalList;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -44,12 +48,14 @@ public class LocalFreeBusyProvider {
 	 * @param mbox
 	 * @param start
 	 * @param end
+	 * @param folder folder to run free/busy search on; FreeBusyQuery.CALENDAR_FOLDER_ALL (-1) for all folders
 	 * @param exAppt appointment to exclude; calculate free/busy assuming
 	 *               the specified appointment wasn't there
 	 * @return
 	 * @throws ServiceException
 	 */
-	public static FreeBusy getFreeBusyList(Mailbox mbox, String name, long start, long end, Appointment exAppt)
+	public static FreeBusy getFreeBusyList(
+	        Account authAcct, boolean asAdmin, Mailbox mbox, String name, long start, long end, int folder, Appointment exAppt)
     throws ServiceException {
 	    // Check if this account is an always-free calendar resource.
         Account acct = mbox.getAccount();
@@ -61,16 +67,27 @@ public class LocalFreeBusyProvider {
             }
         }
 
+        AccessManager accessMgr = AccessManager.getInstance();
+        boolean accountAceAllowed = accessMgr.canPerform(authAcct, mbox.getAccount(), Right.RT_viewFreeBusy, asAdmin, true);
+
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 
         IntervalList intervals = new IntervalList(start, end);
 
-        List<CalendarData> calDataList =
-            mbox.getAllCalendarsSummaryForRange(null, MailItem.TYPE_APPOINTMENT, start, end);
+        List<CalendarData> calDataList;
+        if (folder == FreeBusyQuery.CALENDAR_FOLDER_ALL) {
+            calDataList = mbox.getAllCalendarsSummaryForRange(null, MailItem.TYPE_APPOINTMENT, start, end);
+        } else {
+            calDataList = new ArrayList<CalendarData>(1);
+            calDataList.add(mbox.getCalendarSummaryForRange(null, folder, MailItem.TYPE_APPOINTMENT, start, end));
+        }
         for (CalendarData calData : calDataList) {
             int folderId = calData.getFolderId();
             Folder f = mbox.getFolderById(null, folderId);
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
+                continue;
+            // Free/busy must be allowed by folder or at account-level.
+            if (!CalendarItem.allowFreeBusyAccess(f, authAcct, asAdmin) && !accountAceAllowed)
                 continue;
             for (Iterator<CalendarItemData> iter = calData.calendarItemIterator(); iter.hasNext(); ) {
                 CalendarItemData appt = iter.next();
@@ -145,7 +162,7 @@ public class LocalFreeBusyProvider {
 
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(1);
-            FreeBusy fb = getFreeBusyList(mbox, mbox.getAccount().getName(), 0, Long.MAX_VALUE, null);
+            FreeBusy fb = getFreeBusyList(mbox.getAccount(), false, mbox, mbox.getAccount().getName(), 0, Long.MAX_VALUE, FreeBusyQuery.CALENDAR_FOLDER_ALL, null);
             System.out.println(fb.toString());
         } catch (ServiceException e){
             System.out.println("EXCEPTION: "+e);
