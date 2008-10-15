@@ -296,6 +296,7 @@ public class DavElements {
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_PROP = QName.get(P_PROP, WEBDAV_NS);
+	public static final QName E_PROPERTYUPDATE = QName.get(P_PROPERTYUPDATE, WEBDAV_NS);
 	public static final QName E_PROPFIND = QName.get(P_PROPFIND, WEBDAV_NS);
 	public static final QName E_PROPNAME = QName.get(P_PROPNAME, WEBDAV_NS);
 	public static final QName E_PROP_CALDAV = QName.get(P_PROP, CALDAV_NS);
@@ -322,6 +323,7 @@ public class DavElements {
 	public static final QName E_SCHEDULE_OUTBOX = QName.get(P_SCHEDULE_OUTBOX, CALDAV_NS);
 	public static final QName E_SCHEDULE_OUTBOX_URL = QName.get(P_SCHEDULE_OUTBOX_URL, CALDAV_NS);
 	public static final QName E_SCHEDULE_RESPONSE = QName.get(P_SCHEDULE_RESPONSE, CALDAV_NS);
+	public static final QName E_SET = QName.get(P_SET, WEBDAV_NS);
 	public static final QName E_SHARED = QName.get(P_SHARED, WEBDAV_NS);
 	public static final QName E_SOURCE = QName.get(P_SOURCE, WEBDAV_NS);
 	public static final QName E_STATUS = QName.get(P_STATUS, WEBDAV_NS);

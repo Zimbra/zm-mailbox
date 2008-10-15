@@ -214,6 +214,9 @@ public class DavRequest {
 
 	public static DavRequest PROPPATCH(String uri) {
 		DavRequest req = new DavRequest(uri, PROPPATCH);
+    	Element root = DocumentHelper.createElement(DavElements.E_PROPERTYUPDATE);
+    	root.addElement(DavElements.E_SET).addElement(DavElements.E_PROP);
+    	req.setRequestMessage(root);
 		return req;
 	}
 	
