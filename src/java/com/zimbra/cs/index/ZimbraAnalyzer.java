@@ -648,7 +648,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             // if we get here, then we've either split as many times as we're allowed, 
             // OR we've run out of places to split..
 
-
             // no more splitting, just return what's left...
             org.apache.lucene.analysis.Token toRet = mCurToken;
             mCurToken = null;
@@ -670,13 +669,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer
      * @author tim
      *
      * Email address tokenizer.  For example:
-     *   "Tim Brennan" <tim@foo.com>
+     *   "Tim Brennan" <tim@bar.foo.com>
      * Is tokenized as:
      *    Tim
      *    Brennan
      *    tim
      *    tim@foo.com
      *    @foo.com
+     *    foo  -- for bug 30638
      */
     public static class AddressTokenFilter extends MultiTokenFilter
     {
@@ -697,6 +697,12 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         
         LinkedList<org.apache.lucene.analysis.Token> mSplitStrings = null;
         
+        /**
+         * On first call, we have one toplevel'token' from our parent filter
+         * The only interesting case is when there's an @ sign such as:
+         *        foo@a.b.c.d
+         *
+         */
         public org.apache.lucene.analysis.Token nextSplit()
         {
             if (mSplitStrings == null) {
@@ -709,22 +715,33 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 // yes, we want to include the @!
                 String rhs = termText.substring(mNextSplitPos);
                 
-                // now, split the first part on the "."
+                // now, split the left part on the "."
                 String[] lhsParts = lhs.split("\\.");
                 if (lhsParts.length > 1) {
-                    int curOffset = mCurToken.startOffset();
                     for (String s : lhsParts) {
                         mSplitStrings.addLast(
                             new org.apache.lucene.analysis.Token(
                                 s,
-                                curOffset,
-                                curOffset+s.length(),
+                                mCurToken.startOffset(),
+                                mCurToken.endOffset(),
                                 mCurToken.type()));
-                        
-                        curOffset+=s.length()+1;
                     }
                 }
                 
+                // now, split the right part on the "."
+                String[] rhsParts = rhs.split("\\.");
+                if (rhsParts.length > 1) {
+                    // for bug 30638
+                    mSplitStrings.addLast(
+                                          new org.apache.lucene.analysis.Token(
+                                              rhsParts[rhsParts.length-2],                                                                               
+                                              mCurToken.startOffset(),
+                                              mCurToken.endOffset(),
+                                              mCurToken.type()));
+                }
+                
+
+                // the full part to the left of the @ 
                 mSplitStrings.addLast(
                     new org.apache.lucene.analysis.Token(
                         lhs,
@@ -732,12 +749,24 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                         mCurToken.startOffset()+mNextSplitPos,
                         mCurToken.type()));
                 
+                // the full part to the right of the @
                 mSplitStrings.addLast(
                     new org.apache.lucene.analysis.Token(
                         rhs,
                         mCurToken.startOffset()+mNextSplitPos,
                         mCurToken.endOffset(),
                         mCurToken.type()));
+                
+                // the full part to the right of the @, not including the @
+                // see bug 30638
+                if (rhs.length() > 1) {
+                    mSplitStrings.addLast(
+                        new org.apache.lucene.analysis.Token(
+                            rhs.substring(1),
+                            mCurToken.startOffset()+mNextSplitPos,
+                            mCurToken.endOffset(),
+                            mCurToken.type()));
+                }
             }
             
             // split another piece, save our state, and return...
@@ -894,7 +923,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         }
 
         {
-            String src = "dharma@dharma.com";
+            String src = "dharma@fdharma.com";
             String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
 
             System.out.println("SRC="+src+" OUT=\""+concat+"\"");
