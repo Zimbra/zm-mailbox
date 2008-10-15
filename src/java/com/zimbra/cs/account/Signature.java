@@ -23,10 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 
-public class Signature extends NamedEntry implements Comparable {
+public class Signature extends AccountProperty implements Comparable {
 
-    private final String mAcctId;
-    
     private static final DualHashBidiMap sAttrTypeMap = new DualHashBidiMap();
 
     static {
@@ -35,8 +33,7 @@ public class Signature extends NamedEntry implements Comparable {
     }
     
     public Signature(Account acct, String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
-        mAcctId = acct.getId();
+        super(acct, name, id, attrs, null);
     }
     
     /**
@@ -47,13 +44,6 @@ public class Signature extends NamedEntry implements Comparable {
     public void setId(String id) {
         mId = id;
         getRawAttrs().put(Provisioning.A_zimbraSignatureId, id);
-    }
-    
-    /*
-     * get account of the signature
-     */
-    public Account getAccount() throws ServiceException {
-        return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
     }
     
     public static class SignatureContent {

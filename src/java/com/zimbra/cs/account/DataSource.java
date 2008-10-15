@@ -49,7 +49,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 /**
  * @author schemers
  */
-public class DataSource extends NamedEntry {
+public class DataSource extends AccountProperty {
 
     private static final int SALT_SIZE_BYTES = 16;
     private static final int AES_PAD_SIZE = 16;
@@ -57,8 +57,6 @@ public class DataSource extends NamedEntry {
     private static final String SIMPLE_CLASS_NAME =
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
-    private final String mAcctId;
-
     public enum Type {
         pop3, imap, caldav, live, yab;
         
@@ -120,20 +118,8 @@ public class DataSource extends NamedEntry {
     private Type mType;
 
     public DataSource(Account acct, Type type, String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+        super(acct, name, id, attrs, null);
         mType = type;
-        mAcctId = acct.getId();
-    }
-    
-    public String getAccountId() {
-    	return mAcctId;
-    }
-    
-    /*
-     * get account of the data source
-     */
-    public Account getAccount() throws ServiceException {
-        return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
     }
     
     public Type getType() {

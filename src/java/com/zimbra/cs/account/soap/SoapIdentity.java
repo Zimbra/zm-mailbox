@@ -49,4 +49,9 @@ class SoapIdentity extends Identity implements SoapEntry {
         //XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
         //setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
     }
+    
+    public Account getAccount() throws ServiceException {
+        throw ServiceException.INVALID_REQUEST("unsupported, use getAccount(Provisioning)", null);
+    }
+
 }

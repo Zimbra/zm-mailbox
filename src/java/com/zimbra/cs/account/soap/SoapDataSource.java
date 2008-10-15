@@ -44,5 +44,9 @@ class SoapDataSource extends DataSource implements SoapEntry {
     public void reload(SoapProvisioning prov) throws ServiceException {
         // not needed?
     }
+    
+    public Account getAccount() throws ServiceException {
+        throw ServiceException.INVALID_REQUEST("unsupported, use getAccount(Provisioning)", null);
+    }
 
 }
