@@ -670,7 +670,8 @@
     </target>
 
     <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
-        <exec failonerror="true" executable="src/bin/install-openldap">
+        <antcall target="stop-ldap"/>
+        <exec failonerror="true" executable="../ZimbraServer/src/bin/install-openldap">
             <arg line="main"/>
         </exec>
     </target>
