@@ -406,6 +406,32 @@ extends TestCase {
         assertTrue("Message was not flagged", msg.isFlagged());
     }
     
+    /**
+     * Tests matching a header against a wildcard expression.  See bug 21701.
+     */
+    public void testHeaderMatches()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        
+        // If subject matches the first for characters + *, mark as flagged.
+        String pattern = NAME_PREFIX.substring(0, 4) + "*";
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.MATCHES, pattern));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testHeaderMatches", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message and confirm it is flagged
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " testHeaderMatches";
+        TestUtil.addMessageLmtp(subject, address, address);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:testHeaderMatches");
+        assertTrue("Message was not flagged", msg.isFlagged());
+    }
+    
     private String normalizeWhiteSpace(String script) {
         StringBuilder buf = new StringBuilder(script.length());
         boolean inWhiteSpace = false;
