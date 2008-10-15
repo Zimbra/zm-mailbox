@@ -17,6 +17,7 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -32,6 +33,9 @@ import javax.mail.ReadOnlyFolderException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import com.posisoft.jdavmail.JDAVContact;
+import com.posisoft.jdavmail.JDAVContactFolder;
+import com.posisoft.jdavmail.JDAVContactGroup;
 import com.posisoft.jdavmail.JDAVMailFolder;
 import com.posisoft.jdavmail.JDAVMailMessage;
 import com.posisoft.jdavmail.JDAVMailStore;
@@ -42,12 +46,15 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.datasource.LiveData;
+import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.db.DbDataSource.DataSourceItem;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -98,8 +105,7 @@ public class LiveImport extends MailItemImport {
         connect();
         DataSource ds = getDataSource();
         try {
-            JDAVMailFolder remoteRootFolder = (JDAVMailFolder) store.getDefaultFolder();
-            Mailbox mbox = ds.getMailbox();
+            JDAVMailFolder remoteRootFolder = (JDAVMailFolder)store.getDefaultFolder();
             ImapFolderCollection imapFolders = ds.getImapFolders();
             com.zimbra.cs.mailbox.Folder localRootFolder = mbox.getFolderById(
                 null, ds.getFolderId());
@@ -142,8 +148,8 @@ for (Folder folder : remoteFolders) {
                     }
                     if (localFolder != null) {
                         if (!localFolder.getPath().equals(folderTracker.getLocalPath())) {
-                                // Folder path does not match
-                        	String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, remoteFolder.getSeparator());
+                            // Folder path does not match
+                            String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, remoteFolder.getSeparator());
                             if (jmPath != null && isParent(localRootFolder, localFolder)) {
                                 // Folder has a new name/path but is still under the
                                 // data source root
@@ -229,6 +235,8 @@ for (Folder folder : remoteFolders) {
                     // Root folder is always empty
                     continue;
                 }
+                if (zimbraFolder.getDefaultView() == MailItem.TYPE_CONTACT)
+                    continue;
                 
                 // Re-get the folder, in case it was implicitly deleted when its
                 // parent was deleted
@@ -300,6 +308,7 @@ for (Folder folder : remoteFolders) {
                     }
                 }
             }
+            importContacts(ds);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
@@ -395,7 +404,6 @@ for (Folder folder : remoteFolders) {
         DataSource ds = getDataSource();
         int folderId = trackedFolder.getItemId();
         Set<Integer> localIds = new HashSet<Integer>();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
         Message[] msgArray = remoteFolder.getMessages();
         int numMatched = 0;
         int numUpdated = 0;
@@ -508,7 +516,7 @@ for (Folder folder : remoteFolders) {
                 int flags = localMsg.getFlagBitmask();
                 setFlags(mimeMsg, flags);
                 String[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
-                assert newUids != null && newUids.length == 1 && newUids[0] != null;
+
                 numAddedRemotely++;
                 DbImapMessage.storeImapMessage(mbox, folderId,
                     newUids[0].hashCode(), localId, flags);
@@ -522,6 +530,231 @@ for (Folder folder : remoteFolders) {
             numDeletedLocally, numAddedRemotely, numDeletedRemotely);
     }
 
+    private void importContacts(DataSource ds)
+        throws MessagingException, IOException, ServiceException {
+        JDAVContactFolder contactFolder = store.getContactFolder();
+        Collection<DataSourceItem> dsItems =
+            DbDataSource.getAllMappingsInFolder(ds, Mailbox.ID_FOLDER_CONTACTS);
+        ImapFolderCollection imapFolders = ds.getImapFolders();
+        ImapFolder folderTracker = imapFolders.getByRemotePath(contactFolder.getName());
+        int folderId;
+        Set<Integer> localIds = new HashSet<Integer>();
+        int numMatched = 0;
+        int numUpdated = 0;
+        int numDeletedLocally = 0;
+        int numAddedRemotely = 0;
+        int numDeletedRemotely = 0;
+        int numAddedLocally = 0;
+        List<JDAVContact> remoteContacts = new LinkedList<JDAVContact>();
+        List<JDAVContactGroup> remoteGroups = new LinkedList<JDAVContactGroup>();
+        long remoteUvv = Math.abs(contactFolder.getName().hashCode());
+        com.zimbra.cs.mailbox.Folder localRootFolder = mbox.getFolderById(
+            null, ds.getFolderId());
+        com.zimbra.cs.mailbox.Folder localFolder = null;
+
+        ZimbraLog.datasource.debug("Processing Live contacts folder");
+        if (folderTracker != null) {
+            try {
+                folderId = folderTracker.getItemId();
+                localFolder = mbox.getFolderById(null, folderId);
+                localIds.addAll(mbox.listItemIds(null, MailItem.TYPE_CONTACT, folderId));
+                if (!localFolder.getPath().equals(folderTracker.getLocalPath())) {
+                    String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, '/');
+
+                    if (jmPath != null && isParent(localRootFolder, localFolder)) {
+                        ZimbraLog.datasource.info("Local folder %s was renamed to %s",
+                            folderTracker.getLocalPath(), localFolder.getPath());
+                        folderTracker.setLocalPath(localFolder.getPath());
+                        ds.updateImapFolder(folderTracker);
+                    } else {
+                        ZimbraLog.datasource.info("Local folder %s was renamed to %s and moved outside the data source root.",
+                            folderTracker.getLocalPath(), localFolder.getPath());
+                        ds.deleteImapFolder(folderTracker);
+                        folderTracker = null;
+                        localFolder = null;
+                    }
+                }
+            } catch (NoSuchItemException e) {
+                ds.deleteImapFolder(folderTracker);
+            }
+        }
+        if (folderTracker == null) {
+            String path = contactFolder.getName();
+            String knownPath = ds.matchKnownLocalPath(path);
+            
+            if (knownPath != null)
+                path = knownPath;
+            if (ds.getFolderId() == Mailbox.ID_FOLDER_USER_ROOT)
+                path = "/" + path;
+            else
+                path = mbox.getFolderById(null, ds.getFolderId()).getPath() +
+                    "/" + path;
+            ZimbraLog.datasource.info("Creating local contact folder %s", path);
+            try {
+                localFolder = mbox.getFolderByPath(null, path);
+            } catch (NoSuchItemException e) {
+            }
+            if (localFolder == null)
+                localFolder = mbox.createFolder(null, path, (byte) 0,
+                    MailItem.TYPE_CONTACT);
+            folderId = localFolder.getId();
+            folderTracker = ds.createImapFolder(folderId,
+                localFolder.getPath(), contactFolder.getName(), remoteUvv);
+        }
+
+        ImapMessageCollection trackedContacts = DbImapMessage.getImapMessages(mbox, ds, folderTracker);
+        String tagstr = "";
+
+        contactFolder.open(Folder.READ_WRITE);
+        folderId = folderTracker.getItemId();
+        for (int i = 1; i <= contactFolder.getContactCount(); i++) {
+            JDAVContact remoteContact = contactFolder.getContact(i);
+            long uid = Math.abs(remoteContact.getUID().hashCode());
+            ImapMessage trackedContact = trackedContacts.getByUid(uid);
+            
+            if (trackedContact == null) {
+                remoteContacts.add(remoteContact);
+            } else if (localIds.contains(trackedContact.getItemId())) {
+                Contact localContact = mbox.getContactById(null, trackedContact.getItemId());
+
+                if (localContact.getChangeDate() < remoteContact.getModifiedDate().getTime()) {
+                    mbox.modifyContact(null, localContact.getId(),
+                        LiveData.getParsedContact(remoteContact, localContact));
+                    numUpdated++;
+                    ZimbraLog.datasource.debug("Updated local contact with UID %d on both sides", uid);
+                } else if (localContact.getChangeDate() > remoteContact.getModifiedDate().getTime()) {
+                    LiveData.updateJDAVContact(remoteContact, localContact);
+                    remoteContact.modify();
+                    numUpdated++;
+                    ZimbraLog.datasource.debug("Updated remote contact with UID %d on both sides", uid);
+                } else {
+                    numMatched++;
+                }
+                localIds.remove(trackedContact.getItemId());
+            } else {
+                ZimbraLog.datasource.debug("Contact %d was deleted locally. Deleting remote copy.", uid);
+                remoteContact.delete();
+                numDeletedRemotely++;
+                DbImapMessage.deleteImapMessage(mbox, folderId, trackedContact.getItemId());
+            }
+        }
+        for (int i = 1; i <= contactFolder.getGroupCount(); i++) {
+            JDAVContactGroup remoteGroup = contactFolder.getGroup(i);
+            long uid = Math.abs(remoteGroup.getUID().hashCode());
+            ImapMessage trackedGroup = trackedContacts.getByUid(uid);
+            
+            if (trackedGroup == null) {
+                remoteGroups.add(remoteGroup);
+            } else if (localIds.contains(trackedGroup.getItemId())) {
+                Contact localContact = mbox.getContactById(null, trackedGroup.getItemId());
+
+                if (localContact.getChangeDate() < remoteGroup.getModifiedDate().getTime()) {
+                    mbox.modifyContact(null, localContact.getId(),
+                        LiveData.getParsedContact(remoteGroup, localContact));
+                    numUpdated++;
+                    ZimbraLog.datasource.debug("Updated local group with UID %d on both sides", uid);
+                /*
+                } else if (localContact.getChangeDate() > remoteGroup.getModifiedDate().getTime()) {
+                    LiveData.updateJDAVContact(remoteGroup, localContact);
+                    remoteGroup.modify();
+                    numUpdated++;
+                    ZimbraLog.datasource.debug("Updated remote group with UID %d on both sides", uid);
+                */
+                } else {
+                    numMatched++;
+                }
+                localIds.remove(trackedGroup.getItemId());
+            } else {
+                ZimbraLog.datasource.debug("group %d was deleted locally. Deleting remote copy.", uid);
+                remoteGroup.delete();
+                numDeletedRemotely++;
+                DbImapMessage.deleteImapMessage(mbox, folderId, trackedGroup.getItemId());
+            }
+        }
+        // Fetch new contacts from remote folder
+        for (JDAVContact remoteContact : remoteContacts) {
+            long uid = Math.abs(remoteContact.getUID().hashCode());
+
+            ZimbraLog.datasource.debug("Found new remote contact %d.  Creating local copy.", uid);
+            Contact c = mbox.createContact(null, LiveData.getParsedContact(
+                remoteContact, null), folderId, tagstr);
+            if (c != null) {
+                try {
+                    DbImapMessage.storeImapMessage(mbox, folderId, uid,
+                        c.getId(), 0);
+                } catch (Exception e) {
+                    DbImapMessage.deleteImapMessage(mbox, folderId,
+                        DbImapMessage.getLocalMessageId(mbox, folderId, uid));
+                    DbImapMessage.storeImapMessage(mbox, folderId, uid,
+                        c.getId(), 0);
+                }
+                numAddedLocally++;
+            }
+        }
+        // Fetch new groups from remote folder
+        for (JDAVContactGroup remoteGroup : remoteGroups) {
+            long uid = Math.abs(remoteGroup.getUID().hashCode());
+
+            ZimbraLog.datasource.debug("Found new remote group %d.  Creating local copy.", uid);
+            Contact c = mbox.createContact(null, LiveData.getParsedContact(
+                remoteGroup, null), folderId, tagstr);
+            if (c != null) {
+                try {
+                    DbImapMessage.storeImapMessage(mbox, folderId, uid,
+                        c.getId(), 0);
+                } catch (Exception e) {
+                    DbImapMessage.deleteImapMessage(mbox, folderId,
+                        DbImapMessage.getLocalMessageId(mbox, folderId, uid));
+                    DbImapMessage.storeImapMessage(mbox, folderId, uid,
+                        c.getId(), 0);
+                }
+                numAddedLocally++;
+            }
+        }
+        // Remaining local ID's are contacts that were not found on the remote server
+        for (int localId : localIds) {
+            if (trackedContacts.containsItemId(localId)) {
+                ImapMessage tracker = trackedContacts.getByItemId(localId);
+
+                ZimbraLog.datasource.debug("Contact %d was deleted remotely.  Deleting local copy.", localId);
+                mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
+                numDeletedLocally++;
+                DbImapMessage.deleteImapMessage(mbox, folderId, tracker.getItemId());
+            } else {
+                Contact localContact = mbox.getContactById(null, localId);
+                String dlist = localContact.getFields().get(Contact.A_dlist);
+                
+                if (dlist != null) {
+                    JDAVContact remoteContact = LiveData.getJDAVContact(localContact);
+                    String[] newUids = null;
+                    
+                    ZimbraLog.datasource.debug("Found new local contact %d.  Creating remote copy.", localId);
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            newUids = contactFolder.appendUIDContacts(new JDAVContact[] { remoteContact } );
+                            break;
+                        } catch (Exception e) {
+                            String s = remoteContact.getField(JDAVContact.Fields.nickname) + '-';
+    
+                            remoteContact.setField(JDAVContact.Fields.nickname, s);
+                        }
+                    }
+                    if (newUids != null) {
+                        numAddedRemotely++;
+                        DbImapMessage.storeImapMessage(mbox, folderId,
+                            newUids[0].hashCode(), localId, 0);
+                    }
+                }
+            }
+        }
+        contactFolder.close();
+        ZimbraLog.datasource.debug(
+            "Import of %s completed.  Matched: %d, updated: %d, added locally: %d, " +
+            "deleted locally: %d, added remotely: %d, deleted remotely: %d",
+            contactFolder.getName(), numMatched, numUpdated, numAddedLocally,
+            numDeletedLocally, numAddedRemotely, numDeletedRemotely);
+    }
+    
     private void setFlags(Message msg, int newFlags) throws MessagingException {
         Flags remoteFlags = msg.getFlags();
         

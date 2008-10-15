@@ -117,8 +117,6 @@ public class TarFormatter extends Formatter {
         String callback = context.params.get("callback");
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
-        Date date = new Date();
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
         Exception exception = null;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
         String filename = context.params.get("filename");
@@ -127,7 +125,6 @@ public class TarFormatter extends Formatter {
         Set<String> names = new HashSet<String>(4096);
         PrintWriter pw = null;
         String query = context.getQueryString();
-        SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
         byte[] sysTypes = {
             MailItem.TYPE_FOLDER, MailItem.TYPE_SEARCHFOLDER, MailItem.TYPE_TAG,
             MailItem.TYPE_FLAG, MailItem.TYPE_MOUNTPOINT
@@ -142,9 +139,14 @@ public class TarFormatter extends Formatter {
         String types = context.getTypesString();
 
         try {
-            if (filename == null || filename.equals(""))
-                filename = context.targetMailbox.getAccountId();
-            filename += '.' + df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
+            if (filename == null || filename.equals("")) {
+                Date date = new Date();
+                DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+                SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
+
+                filename = context.targetMailbox.getAccountId() + '.' +
+                    df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
+            }
             context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
                 "; filename=" + HttpUtil.encodeFilename(context.req, filename));
             context.resp.setContentType("application/x-tar-compressed");
@@ -195,8 +197,6 @@ public class TarFormatter extends Formatter {
                 if (query == null || query.equals("")) {
                     SortPath sp = new SortPath();
                     
-                    results = context.targetMailbox.search(context.opContext,
-                        "is:local", searchTypes, MailboxIndex.SortBy.NONE, 4096);
                     for (byte type : sysTypes) {
                         List<MailItem> items =
                             context.targetMailbox.getItemList(
@@ -208,6 +208,8 @@ public class TarFormatter extends Formatter {
                                 false, tos);
                     }
                     conversations = true;
+                    results = context.targetMailbox.search(context.opContext,
+                        "is:local", searchTypes, MailboxIndex.SortBy.NONE, 4096);
                 } else {
                     results = context.targetMailbox.search(context.opContext,
                         query, searchTypes, MailboxIndex.SortBy.NONE, 4096);
@@ -216,11 +218,12 @@ public class TarFormatter extends Formatter {
                     while (results.hasNext())
                         tos = saveItem(context, results.getNext().getMailItem(),
                             fldrs, cnts, names, false, tos);
-                    if (conversations)
+                    if (conversations) {
                         for (MailItem item : context.targetMailbox.getItemList(
                             context.opContext, MailItem.TYPE_CONVERSATION)) 
                             tos = saveItem(context, item, fldrs, cnts, names,
                                 false, tos);
+                    }
                 } catch (Exception e) {
                     ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
                 } finally {
