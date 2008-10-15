@@ -82,5 +82,7 @@ class SoapSignature extends Signature implements SoapEntry {
         return attrs;
     }
     
-    
+    public Account getAccount() throws ServiceException {
+        throw ServiceException.INVALID_REQUEST("unsupported, use getAccount(Provisioning)", null);
+    }
 }
