@@ -50,10 +50,10 @@
 
     <!-- Optional Kerberos authentication realm -->
     <condition property="zimbra.kerberos.realm" value="${env.ZIMBRA_KERBEROS_REALM}">
-	<isset property="env.ZIMBRA_KERBEROS_REALM"/>
+        <isset property="env.ZIMBRA_KERBEROS_REALM"/>
     </condition>
     <property name="zimbra.kerberos.realm" value="ZIMBRA.COM"/>
- 
+
     <property name="build.dir" location="build"/>
     <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
@@ -78,14 +78,14 @@
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="config.dir" location="conf"/>
 	<property name='jetty.xml.file' location='${config.dir}/jetty-6.1/jetty.xml' />
-	<property name="zimlet.dir" location="../Zimlet/build/dist"/>
+    <property name="zimlet.dir" location="../Zimlet/build/dist"/>
     <property file="${zimlet.dir}/build.properties"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="localhost"/>
     <property name="deploy.port" value="7070"/>
-	<property name="ldap.port" value="389"/>
-	
+    <property name="ldap.port" value="389"/>
+    
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
     </condition>
@@ -524,7 +524,7 @@
               overwrite="true"/>
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
               file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
-    	<if>
+        <if>
             <not>
                 <isset property="is-production"/>
             </not>
@@ -588,8 +588,8 @@
                      includes="${ical4j.jar},${ziputil.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar,jdom*.jar,jdavmail*.jar,json.jar"/>
         </copy>
         <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
-	    <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
-	</copy>
+            <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
+        </copy>
         <copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/lib" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
@@ -631,9 +631,9 @@
         <delete dir="${jetty.home.dir}"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
         <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
-        <move  toDir="${jetty.home.dir}">
-	    <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
-	</move>
+        <move toDir="${jetty.home.dir}">
+            <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
+        </move>
         <delete file="${build.dir}/jetty-${jetty.version}.tar"/>
         <mkdir dir="${jetty.home.dir}/logs"/>
         <mkdir dir="${jetty.home.dir}/webapps"/>
@@ -643,6 +643,11 @@
         <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
     </target>
 
+    <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
+        <exec failonerror="true" executable="src/bin/install-openldap">
+            <arg line="FRANKLIN"/>
+        </exec>
+    </target>
 
     <target name="reset-all" description="Reset the world plus jetty">
         <if>
@@ -654,7 +659,8 @@
         <antcall target="clean"/>
         <mkdir dir="${build.dir}"/>
 
-	<delete dir="${zimbra.home.dir}/lib"/>
+	<antcall target="reset-open-ldap"/>
+        <delete dir="${zimbra.home.dir}/lib"/>
         
         <antcall target="reset-jetty"/>
         <antcall target="reset-the-world"/>
@@ -786,11 +792,11 @@
         <mkdir dir="${zimbra.home.dir}/conf/keystore-backup"/>
         <copy file="${webserver.conf.dir}/keystore" tofile="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" overwrite="true"/>
     </target>
-	
+    
     <target name="keystore-restore">
         <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${webserver.conf.dir}/keystore" overwrite="true"/>
     </target>
-	
+
     <target name="dir-init">
         <echo message="If the following deletes fail, wait for your web server"/>
         <echo message="to stop (or stop jetty manually)"/>
@@ -806,7 +812,7 @@
         <delete dir="${zimbra.home.dir}/backup"/>
         <delete dir="${zimbra.home.dir}/lib/ext"/>
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
-    	<delete dir="${zimbra.home.dir}/conf/rights"/>
+        <delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
@@ -893,10 +899,10 @@
         <antcall target="stop-ldap"/>
         <sleep seconds="2"/>
         
-    	<delete dir="${build.dir}/attrs"/>
-    	<delete dir="${build.dir}/ldap-config"/>
-    	<antcall target="generate-ldap-config"/>
-    	
+        <delete dir="${build.dir}/attrs"/>
+        <delete dir="${build.dir}/ldap-config"/>
+        <antcall target="generate-ldap-config"/>
+        
         <!-- dist ldap schem and ldif files -->
         <copy todir="${dist.dir}/conf/attrs" overwrite="true">
             <fileset dir="${build.dir}/attrs"/>
@@ -920,7 +926,7 @@
         <antcall target="start-ldap"/>
         <antcall target="start-webserver"/>
     </target>
-	
+    
     <target name="ldap-add">
         <echo>Loading ${ldif.file}</echo>
         <exec failonerror="true" executable="${ldapmodify}">
@@ -936,9 +942,9 @@
     </target>
 
     <target name="ldap-load" depends="zmprov-commands">
-	     <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-	     	<socket server="${zimbra.server.hostname}" port="${ldap.port}"/>
-	     </waitfor>    
+         <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${zimbra.server.hostname}" port="${ldap.port}"/>
+         </waitfor>    
         <antcall target="ldap-add">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
         </antcall>
@@ -988,7 +994,7 @@
             zimbraMailPort 7070 \
             zimbraMailMode http \
             zimbraImapCleartextLoginEnabled TRUE \
-        	zimbraPop3CleartextLoginEnabled TRUE
+            zimbraPop3CleartextLoginEnabled TRUE
             ModifyServer ${zimbra.server.hostname} \
             zimbraServiceInstalled ldap \
             zimbraServiceInstalled mta \
@@ -997,7 +1003,7 @@
             zimbraServiceEnabled ldap \
             zimbraServiceEnabled mta \
             zimbraServiceEnabled mailbox
-        	ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
+            ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name}
             mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
@@ -1017,7 +1023,7 @@
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             zimbraPrefMailPollingInterval 12h \
             zimbraPrefWarnOnExit FALSE \
-	    zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
+        zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
             telephoneNumber '+1 650 555 1111'
             ca user2@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
@@ -1373,6 +1379,6 @@
     </target>
 
     <target name="restart-webserver" depends="stop-webserver,start-webserver"/>
-	
+    
     <target name="empty"/>
 </project>
