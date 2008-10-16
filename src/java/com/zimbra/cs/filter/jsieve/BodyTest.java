@@ -21,22 +21,30 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ListIterator;
 
-import javax.mail.MessagingException;
+import javax.mail.Part;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
-import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.StringListArgument;
-import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.TagArgument;
+import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HtmlTextExtractor;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -91,7 +99,7 @@ public class BodyTest extends AbstractTest {
             throw new SyntaxException("Found unexpected argument(s)");               
         if (!(mail instanceof ZimbraMailAdapter))
             return false;
-        return test(mail, comparator, key);
+        return test(mail, key);
 
     }
     
@@ -100,7 +108,7 @@ public class BodyTest extends AbstractTest {
         // override validation -- it's already done in executeBasic above
     }
 
-    private boolean test(MailAdapter mail, String comparator, String key) {
+    private boolean test(MailAdapter mail, String substring) {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = zimbraMail.getParsedMessage();
 
@@ -108,23 +116,62 @@ public class BodyTest extends AbstractTest {
         try {
             acct = zimbraMail.getMailbox().getAccount();
         } catch (ServiceException e) { }
-        String defaultCharset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
+        String charset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
 
-        try {
-            /*
-             * We check the first level MIME parts that are text. If the key word appears there,
-             * we consider it a match.
-             */
-            for (MPartInfo mpi : pm.getMessageParts()) {
-                String content = Mime.getStringContent(mpi.getMimePart(), defaultCharset);
-                if (content.toLowerCase().indexOf(key.toLowerCase()) >= 0) {
-                    return true;
+        for (MPartInfo mpi : pm.getMessageParts()) {
+            String cType = mpi.getContentType();
+            // Check only parts that are text/plain or text/html and are not attachments.
+            if (!Part.ATTACHMENT.equals(mpi.getDisposition())) {
+                if (cType.equals(Mime.CT_TEXT_PLAIN)) {
+                    InputStream in = null;
+                    try {
+                        in = mpi.getMimePart().getInputStream();
+                        if (contains(new BufferedReader(new InputStreamReader(in, charset)), substring)) {
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to test text body for substring '%s'", substring, e);
+                    } finally {
+                        ByteUtil.closeStream(in);
+                    }
+                } else if (cType.equals(Mime.CT_TEXT_HTML)) {
+                    InputStream in = null;
+
+                    try {
+                        // Extract up to 1MB of text and check for substring.
+                        in = mpi.getMimePart().getInputStream();
+                        Reader reader = Mime.getTextReader(in, cType, charset);
+                        String text = HtmlTextExtractor.extract(reader, 1024 * 1024);
+                        if (contains(new BufferedReader(new StringReader(text)), substring)) {
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to test HTML body for substring '%s'", substring, e);
+                    }
                 }
             }
-        } catch (IOException e) {
-        } catch (MessagingException e) {
         }
         return false;
-        
+    }
+    
+    private boolean contains(BufferedReader reader, String substring)
+    throws IOException {
+        String line = null;
+        int matchIndex = 0;
+        while ((line = reader.readLine()) != null) {
+            for (int i = 0; i < line.length(); i++) {
+                if (matchIndex == substring.length()) {
+                    return true;
+                }
+                // Check one character at a time, in case the substring
+                // spans multiple lines.
+                if (line.charAt(i) == substring.charAt(matchIndex)) {
+                    matchIndex++;
+                } else {
+                    matchIndex = 0;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -50,7 +50,9 @@ import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
+import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
+import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.cs.zclient.ZMessage.Flag;
 
@@ -430,6 +432,46 @@ extends TestCase {
         TestUtil.addMessageLmtp(subject, address, address);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:testHeaderMatches");
         assertTrue("Message was not flagged", msg.isFlagged());
+    }
+    
+    /**
+     * Confirms that the body test looks for text in the main message
+     * body and attached message bodies, but not in attachments.
+     */
+    public void testBodyContains()
+    throws Exception {
+        doBodyContainsTest("text version of the main body", true);
+        doBodyContainsTest("HTML version of the main body", true);
+        doBodyContainsTest("text attachment", false);
+        doBodyContainsTest("HTML attachment", false);
+        doBodyContainsTest("text version of the attached message body", true);
+        doBodyContainsTest("HTML version the attached message body", true);
+        doBodyContainsTest("body of a plain attached message", true);
+    }
+    
+    private void doBodyContainsTest(String substring, boolean contains)
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        
+        // If subject matches the first for characters + *, mark as flagged.
+        conditions.add(new ZBodyCondition(BodyOp.CONTAINS, substring));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testBodyContains", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message and test the flagged state.
+        String address = TestUtil.getAddress(USER_NAME);
+        String msgContent = new String(
+            ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testBodyContains.msg")));
+        TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:testBodyContains");
+        assertEquals("Unexpected message flag state", contains, msg.isFlagged());
+        mMbox.deleteMessage(msg.getId());
+        
     }
     
     private String normalizeWhiteSpace(String script) {
