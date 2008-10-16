@@ -110,7 +110,8 @@ public class FreeBusyQuery {
     private void prepareRequests(ArrayList<FreeBusy> local, RemoteFreeBusyProvider remote, ArrayList<String> external) {
     	for (String id : mTargets.keySet()) {
     		Account acct = mTargets.get(id);
-    		if (acct == null) {
+    		if (acct == null || 
+    			acct.getBooleanAttr(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, false)) {
     			external.add(id);
     			continue;
     		}
