@@ -32,6 +32,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -242,25 +243,29 @@ public class Validators {
                 zlc = new ZimbraLdapContext();
 
                 SearchControls searchControls = 
-                    new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, new String[] {
-                            "zimbraId", "objectclass"}, false, false);
+                    new SearchControls(SearchControls.SUBTREE_SCOPE,
+                            0, 0, null, false, false);
 
                 NamingEnumeration<SearchResult> ne = null;
 
-                String dn = prov.getDIT().domainToAccountSearchDN(domain);
+                String searchDN = prov.getDIT().domainToAccountSearchDN(domain);
                 int pageSize = 1000;
                 byte[] cookie = null;
                 do {
                     try {
                         zlc.setPagedControl(pageSize, cookie, true);
-                        ne = zlc.searchDir(dn, query, searchControls);
+                        ne = zlc.searchDir(searchDN, query, searchControls);
                         while (ne != null && ne.hasMore()) {
                             SearchResult sr = ne.nextElement();
-                            dn = sr.getNameInNamespace();
+                            String dn = sr.getNameInNamespace();
                             // skip admin accounts
                             if (dn.endsWith("cn=zimbra")) continue;
                             Attributes attrs = sr.getAttributes();
                             Attribute objectclass = attrs.get("objectclass");
+                            if (objectclass == null) {
+                                ZimbraLog.misc.error("DN: " + dn + ": does not have objectclass!");
+                                continue;
+                            }
                             if (objectclass.contains("zimbraAccount")) {
                                 String cosId = defaultCos;
                                 Attribute cosIdAttr = attrs.get("zimbracosid");
