@@ -2716,6 +2716,11 @@ public abstract class CalendarItem extends MailItem {
             // is earlier than previously set alarm trigger time.
             startTime = opTime;
         }
+        if (startTime == 0) {
+            // startTime == 0 means we're computing next alarm time for the first time.  Ignore alarms
+            // in the past.  Only consider those at or after opTime.
+            startTime = opTime;
+        }
         long endTime = getNextAlarmRecurrenceExpansionEndTime();
         Collection<Instance> instances = expandInstances(startTime, endTime, false);
 
