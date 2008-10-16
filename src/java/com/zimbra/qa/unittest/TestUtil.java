@@ -329,6 +329,7 @@ extends Assert {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));
         }
+        r.doneWithSearchResults();
         return ids;
 
     }

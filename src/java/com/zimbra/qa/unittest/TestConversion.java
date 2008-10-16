@@ -68,6 +68,7 @@ public class TestConversion extends TestCase {
         
         // Make sure that attachments have been extracted out of winmail.dat
         ZimbraHit hit = results.getNext();
+        results.doneWithSearchResults();
         return mbox.getMessageById(null, hit.getItemId());
     }
     
