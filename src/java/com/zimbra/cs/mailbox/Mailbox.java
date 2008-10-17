@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -425,7 +426,7 @@ public class Mailbox {
     private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
     private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
-    private Set<Session> mListeners      = new HashSet<Session>();
+    private CopyOnWriteArrayList<Session> mListeners = new CopyOnWriteArrayList();
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
@@ -614,11 +615,11 @@ public class Mailbox {
 
     /** Returns the list of all <code>Mailbox</code> listeners of a given type.
      *  Returns all listeners when the passed-in type is <tt>null</tt>. */
-    public synchronized List<Session> getListeners(Session.Type stype) {
+    public List<Session> getListeners(Session.Type stype) {
         if (mListeners.isEmpty())
             return Collections.emptyList();
         else if (stype == null)
-            return new ArrayList<Session>(mListeners);
+                return new ArrayList<Session>(mListeners);
 
         List<Session> sessions = new ArrayList<Session>(mListeners.size());
         for (Session s : mListeners)
@@ -666,8 +667,9 @@ public class Mailbox {
             return;
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
-        mListeners.add(session);
-
+        if (!mListeners.contains(session))
+            mListeners.add(session);
+        
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("adding listener: " + session);
     }
@@ -676,7 +678,7 @@ public class Mailbox {
      *  Mailbox changes.
      * 
      * @param session  The listener to deregister for notifications. */
-    public synchronized void removeListener(Session session) {
+    public void removeListener(Session session) {
         mListeners.remove(session);
 
         if (ZimbraLog.mailbox.isDebugEnabled())
@@ -694,8 +696,7 @@ public class Mailbox {
         if (mPersona != null) 
             mPersona.purgeListeners(); // do this BEFORE purgeListeners
         
-        Set<Session> purged = new HashSet<Session>(mListeners);
-        for (Session session : purged)
+        for (Session session : mListeners) 
             SessionCache.clearSession(session);
         // this may be redundant, as Session.doCleanup should dequeue
         //   the listener, but empty the list here just to be sure
@@ -703,7 +704,7 @@ public class Mailbox {
     }
 
     /** Posts an IM-related notification to all the Mailbox's sessions. */
-    public synchronized void postIMNotification(IMNotification imn) {
+    public void postIMNotification(IMNotification imn) {
         for (Session session : mListeners)
             session.notifyIM(imn);
     }
@@ -7203,7 +7204,7 @@ public class Mailbox {
 
         // committed changes, so notify any listeners
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
-            for (Session session : new ArrayList<Session>(mListeners)) {
+            for (Session session : mListeners) {
                 try {
                     session.notifyPendingChanges(dirty, mData.lastChangeId, source);
                 } catch (RuntimeException e) {
