@@ -36,16 +36,13 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class CreateFolder extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+    @Override protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    @Override protected boolean checkMountpointProxy(Element request)  { return true; }
+    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -66,12 +63,12 @@ public class CreateFolder extends MailDocumentHandler {
 
         Folder folder;
         boolean alreadyExisted = false;
-        
+
         try {
             if (iidParent != null)
                 folder = mbox.createFolder(octxt, name, iidParent.getId(), MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color, url);
-            else 
-                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view));
+            else
+                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color, url);
 
             if (!folder.getUrl().equals("")) {
                 try {
@@ -115,7 +112,7 @@ public class CreateFolder extends MailDocumentHandler {
             ToXML.encodeFolder(response, ifmt, octxt, folder);
         return response;
     }
-    
+
     private void rollbackFolder(Folder folder) {
         try {
             folder.getMailbox().delete(null, folder.getId(), MailItem.TYPE_FOLDER);
@@ -123,5 +120,4 @@ public class CreateFolder extends MailDocumentHandler {
             ZimbraLog.mailbox.warn("error ignored while rolling back folder create", nse);
         }
     }
-    
 }
