@@ -74,7 +74,8 @@ public class CalDavDataImport extends MailItemImport {
         	OperationContext octxt = new Mailbox.OperationContext(mbox);
         	for (int fid : folderIds) {
             	Folder syncFolder = mbox.getFolderById(octxt, fid);
-        		sync(mbox, octxt, syncFolder);
+            	if (syncFolder.getDefaultView() == MailItem.TYPE_APPOINTMENT)
+            	    sync(mbox, octxt, syncFolder);
         	}
     	} catch (DavException e) {
     		throw ServiceException.FAILURE("error importing CalDAV data", e);
@@ -85,9 +86,8 @@ public class CalDavDataImport extends MailItemImport {
 
     public String test() throws ServiceException {
     	try {
-    		DataSource ds = getDataSource();
         	mClient = new CalDavClient(getTargetUrl());
-    		mClient.setCredential(ds.getUsername(), ds.getDecryptedPassword());
+    		mClient.setCredential(getUsername(), getDecryptedPassword());
     		mClient.login(getPrincipalUrl());
     	} catch (Exception e) {
     		return e.getMessage();
@@ -95,18 +95,26 @@ public class CalDavDataImport extends MailItemImport {
     	return null;
     }
 
-    private String getPrincipalUrl() {
+    protected String getUsername() {
+        return getDataSource().getUsername();
+    }
+    
+    protected String getDecryptedPassword() throws ServiceException {
+        return getDataSource().getDecryptedPassword();
+    }
+    
+    protected String getPrincipalUrl() {
     	DataSource ds = getDataSource();
     	String attrs[] = ds.getMultiAttr(Provisioning.A_zimbraDataSourceAttribute);
     	for (String a : attrs) {
     		if (a.startsWith("p:")) {
-    			return a.substring(2).replaceAll("_USERNAME_", ds.getUsername());
+    			return a.substring(2).replaceAll("_USERNAME_", getUsername());
     		}
     	}
     	return null;
     }
 
-    private String getTargetUrl() {
+    protected String getTargetUrl() {
     	DataSource ds = getDataSource();
     	DataSource.ConnectionType ctype = ds.getConnectionType();
     	StringBuilder url = new StringBuilder();
@@ -126,9 +134,8 @@ public class CalDavDataImport extends MailItemImport {
 
     private CalDavClient getClient() throws ServiceException, IOException, DavException {
     	if (mClient == null) {
-    		DataSource ds = getDataSource();
         	mClient = new CalDavClient(getTargetUrl());
-    		mClient.setCredential(ds.getUsername(), ds.getDecryptedPassword());
+    		mClient.setCredential(getUsername(), getDecryptedPassword());
     		mClient.login(getPrincipalUrl());
     	}
     	return mClient;
@@ -291,7 +298,7 @@ public class CalDavDataImport extends MailItemImport {
             ZCalendar.ZComponent vcomp = inv.newToVComponent(false, true);
             ZCalendar.ZProperty organizer = vcomp.getProperty(ZCalendar.ICalTok.ORGANIZER);
             if (organizer != null)
-                organizer.setValue("mailto:"+getDataSource().getUsername());
+                organizer.setValue("mailto:" + getUsername());
             vcomp.toICalendar(wr);
             wr.flush();
             buf.append(wr.toCharArray());
