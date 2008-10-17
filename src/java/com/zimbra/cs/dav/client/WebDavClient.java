@@ -84,8 +84,11 @@ public class WebDavClient {
 		HttpMethod m = null;
 		try {
 			m = execute(req);
-			Document doc = new SAXReader().read(m.getResponseBodyAsStream());
+			int status = m.getStatusCode();
+			if (status >= 400)
+				throw new DavException("DAV server returned an error: "+status, status);
 			
+			Document doc = new SAXReader().read(m.getResponseBodyAsStream());
 			Element top = doc.getRootElement();
 			for (Object obj : top.elements(DavElements.E_RESPONSE)) {
 				if (obj instanceof Element) {
