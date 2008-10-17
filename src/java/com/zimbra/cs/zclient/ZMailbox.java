@@ -2221,6 +2221,21 @@ public class ZMailbox {
     /**
      *
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
+     * @param os the stream to send the output to
+     * @param closeOs whether or not to close the output stream when done
+     * @param msecTimeout connection timeout
+     * @throws ServiceException on error
+     */
+    @SuppressWarnings({"EmptyCatchBlock"})
+    public void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout)
+            throws ServiceException
+    {
+        getRESTResource(relativePath, os, closeOs, null, null, msecTimeout);
+    }
+
+    /**
+     *
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
      * @param is the input stream to post
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
@@ -2276,6 +2291,24 @@ public class ZMailbox {
             if (post != null)
                 post.releaseConnection();
         }
+    }
+
+    /**
+     *
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
+     * @param is the input stream to post
+     * @param closeIs whether to close the input stream when done
+     * @param length length of inputstream, or 0/-1 if length is unknown.
+     * @param contentType optional content-type header value (defaults to "application/octect-stream")
+     * @param msecTimeout connection timeout in milliseconds
+     * @throws ServiceException on error
+     */
+    @SuppressWarnings({"EmptyCatchBlock"})
+    public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
+                                 String contentType,
+                                 int msecTimeout)
+    throws ServiceException {
+        postRESTResource(relativePath, is, closeIs, length, contentType, false, false, msecTimeout);
     }
 
     /**
