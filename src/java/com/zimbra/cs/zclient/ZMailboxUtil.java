@@ -2558,7 +2558,7 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println("===============================");
     }
 
-    private static String encodeURL(String unencoded) throws ServiceException {
+    public static String encodeURL(String unencoded) throws ServiceException {
         // Look for a query string.  It's supposed to be URL encoded already, so encode only what comes before.
         String queryString = null;
         int queryStringStart = unencoded.indexOf('?');
