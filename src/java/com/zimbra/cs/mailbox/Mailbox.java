@@ -667,7 +667,7 @@ public class Mailbox {
      * @param sessionId
      * @return
      */
-    public synchronized Session getListener(String sessionId) {
+    public Session getListener(String sessionId) {
         if (sessionId != null) {
             for (Session session : mListeners) {
                 if (sessionId.equals(session.getSessionId()))
