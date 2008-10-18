@@ -21,7 +21,6 @@ import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Flag;
@@ -170,7 +169,7 @@ public class Pop3Sync extends MailItemImport {
         if (count == 0) {
             return; // No new messages
         }
-        if (poppingSelf(mbox, uids.get(0))) {
+        if (poppingSelf(uids.get(0))) {
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
@@ -207,7 +206,7 @@ public class Pop3Sync extends MailItemImport {
                 pm.setReceivedDate(date.getTime());
             }
             pm.getMimeMessage().getHeader("Date");
-            Message msg = addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+            Message msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
             if (msg != null && uid != null) {
                 DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msg.getId());
             }
@@ -250,7 +249,7 @@ public class Pop3Sync extends MailItemImport {
         return tmp;
     }
 
-    private static boolean poppingSelf(Mailbox mbox, String uid)
+    private boolean poppingSelf(String uid)
         throws ServiceException {
         Matcher matcher = PATTERN_ZIMBRA_UID.matcher(uid);
         if (!matcher.matches()) {

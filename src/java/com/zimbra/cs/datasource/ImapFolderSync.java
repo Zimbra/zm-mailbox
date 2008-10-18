@@ -812,7 +812,7 @@ class ImapFolderSync {
         }
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
         int folderId = localFolder.getId();
-        Message msg = imapSync.addMessage(pm, folderId, zflags);
+        Message msg = imapSync.addMessage(null, pm, folderId, zflags);
         if (msg != null && msg.getFolderId() == folderId) {
             storeImapMessage(uid, msg.getId(), zflags);
             stats.msgsAddedLocally++;

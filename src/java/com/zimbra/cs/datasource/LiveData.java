@@ -16,28 +16,94 @@
  */
 package com.zimbra.cs.datasource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.posisoft.jdavmail.JDAVContact;
 import com.posisoft.jdavmail.JDAVContactGroup;
 import com.posisoft.jdavmail.JDAVContact.Fields;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.db.DbDataSource;
+import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Contact;
 import static com.zimbra.cs.mailbox.Contact.*;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mime.ParsedContact;
 
 public class LiveData {
-    public LiveData() {
+    private int flags;
+    private long date;
+    private DataSource ds;
+    private DataSourceItem dsi;
+    private static final String METADATA_KEY_DATE = "d";
+    private static final String METADATA_KEY_FLAGS = "f";
+    
+    public LiveData(DataSource ds, int itemID) throws ServiceException {
+        setDataSourceItem(ds, DbDataSource.getMapping(ds, itemID));
+    }
+    
+    public LiveData(DataSource ds, int itemID, String uid, long date, int flags)
+        throws ServiceException {
+        setDataSourceItem(ds, new DataSourceItem(itemID, uid, new Metadata()));
+        setDate(date);
+        setFlags(flags);
+    }
+    
+    public LiveData(DataSource ds, DataSourceItem dsi) throws ServiceException {
+        setDataSourceItem(ds, dsi);
+    }
+    
+    int getFlags() { return flags; }
+    
+    long getDate() { return date; }
+    
+    public void setDate(long date) throws ServiceException {
+        this.date = date;
+        dsi.md.put(METADATA_KEY_DATE, Long.toString(date));
+    }
+    
+    public void setFlags(int flags) throws ServiceException {
+        this.flags = flags;
+        dsi.md.put(METADATA_KEY_FLAGS, Integer.toString(flags));
+    }
+
+    public void add() throws ServiceException {
+        DbDataSource.addMapping(ds, dsi);
+    }
+    
+    public void delete() throws ServiceException {
+        delete(ds, dsi.itemId);
+    }
+    
+    public static void delete(DataSource ds, int itemId) throws ServiceException {
+        ArrayList<Integer> toDelete = new ArrayList<Integer>(1);
+
+        toDelete.add(itemId);
+        DbDataSource.deleteMappings(ds, toDelete);
+    }
+    
+    public void update() throws ServiceException {
+        DbDataSource.updateMapping(ds, dsi);
+    }
+    
+    private void setDataSourceItem(DataSource ds, DataSourceItem dsi) throws
+        ServiceException {
+        
+        this.ds = ds;
+        this.dsi = dsi;
+        date = dsi.md.getLong(METADATA_KEY_DATE, 0);
+        flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS, 0);
     }
     
     public static JDAVContact getJDAVContact(Contact contact) throws ServiceException {
         return new JDAVContact(getJDAVFields(contact));
+    }
+    
+    public static JDAVContactGroup getJDAVContactGroup(Contact contact) throws ServiceException {
+        return new JDAVContactGroup("TODO");
     }
     
     public static void updateJDAVContact(JDAVContact jcontact, Contact contact) throws ServiceException {
