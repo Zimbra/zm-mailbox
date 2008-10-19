@@ -1757,6 +1757,60 @@ public class TestProvisioning extends TestCase {
         assertEquals(newVal, value); // now we should see the new value
     }
 
+    private void attributeInheritanceTest() throws Exception {
+        System.out.println("Testing attribute inheritance");
+        
+        Account acct = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        assertNotNull(acct);
+        
+        Cos cos = mProv.getCOS(acct);
+        assertNotNull(cos);
+        
+        Domain domain = mProv.getDomain(acct);
+        assertNotNull(domain);
+        
+        String attr = Provisioning.A_zimbraPrefSkin;
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.clear();
+        attrs.put(attr, "account-value");
+        mProv.modifyAttrs(acct, attrs);
+        
+        attrs.clear();
+        attrs.put(attr, "cos-value");
+        mProv.modifyAttrs(cos, attrs);
+        
+        attrs.clear();
+        attrs.put(attr, "domain-value");
+        mProv.modifyAttrs(domain, attrs);
+        
+        String val = acct.getAttr(attr);
+        assertEquals("account-value", val);
+        
+        // delete account value, should get cos value
+        attrs.clear();
+        attrs.put(attr, "");
+        mProv.modifyAttrs(acct, attrs);
+        
+        val = acct.getAttr(attr);
+        assertEquals("cos-value", val);
+        
+        // delete cos value, should get domain value
+        attrs.clear();
+        attrs.put(attr, "");
+        mProv.modifyAttrs(cos, attrs);
+        
+        val = acct.getAttr(attr);
+        assertEquals("domain-value", val);
+        
+        // delete domain value, should get null
+        attrs.clear();
+        attrs.put(attr, "");
+        mProv.modifyAttrs(domain, attrs);
+        
+        val = acct.getAttr(attr);
+        assertEquals(null, val);
+    }
     
     private void loadTest() throws Exception {
         System.out.println("Testing load");
@@ -1809,7 +1863,8 @@ public class TestProvisioning extends TestCase {
         Domain aliasTestDomain = aliasTest();
         familyTest();
         flushCacheTest();
-
+        attributeInheritanceTest();
+        
         // loadTest();
         
         // ========================================================================
