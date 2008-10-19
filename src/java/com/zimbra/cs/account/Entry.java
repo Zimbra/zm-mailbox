@@ -37,7 +37,8 @@ import com.zimbra.common.util.ZimbraLog;
 public abstract class Entry {
 
     private Map<String,Object> mAttrs;
-    private Map<String,Object> mDefaults;    
+    private Map<String,Object> mDefaults;
+    private Map<String,Object> mSecondaryDefaults;
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Locale mLocale;
@@ -49,14 +50,21 @@ public abstract class Entry {
         mDefaults = defaults;
     }
     
+    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
+        mAttrs = attrs;
+        mDefaults = defaults;
+        mSecondaryDefaults = secondaryDefaults;
+    }
+    
     // for debugging/logging, subclass should define a proper "label" for the entry by that it is best identified
     public String getLabel() {
         return "unknown";
     }
     
-    public synchronized void setAttrs(Map<String,Object> attrs, Map<String,Object> defaults) {
+    public synchronized void setAttrs(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
         mAttrs = attrs;
         mDefaults = defaults;
+        mSecondaryDefaults = secondaryDefaults;
         resetData();
     }
     
@@ -67,6 +75,11 @@ public abstract class Entry {
     
     public synchronized void setDefaults(Map<String,Object> defaults) {
         mDefaults = defaults;
+        resetData();
+    }
+    
+    public synchronized void setSecondaryDefaults(Map<String,Object> secondaryDefaults) {
+        mSecondaryDefaults = secondaryDefaults;
         resetData();
     }
     
@@ -89,20 +102,39 @@ public abstract class Entry {
         Object v = mAttrs.get(name);
         if (v != null) return v;
         
+        // get rid of this, TODO
         for (String key: mAttrs.keySet()) {
             if (key.equalsIgnoreCase(name))
                 return mAttrs.get(key);
         }
         
-        if (mDefaults == null || !applyDefaults) return null;
+        if (!applyDefaults)
+            return null;
         
-        v = mDefaults.get(name);
-        if (v != null) return v;
-        
-        for (String key: mDefaults.keySet()) {
-            if (key.equalsIgnoreCase(name))
-                return mDefaults.get(key);
+        // check defaults
+        if (mDefaults != null) {
+            v = mDefaults.get(name);
+            if (v != null) return v;
+            
+            // get rid of this, TODO
+            for (String key: mDefaults.keySet()) {
+                if (key.equalsIgnoreCase(name))
+                    return mDefaults.get(key);
+            }
         }
+        
+        // check secondary defaults
+        if (mSecondaryDefaults != null) {
+            v = mSecondaryDefaults.get(name);
+            if (v != null) return v;
+            
+            // get rid of this, TODO
+            for (String key: mSecondaryDefaults.keySet()) {
+                if (key.equalsIgnoreCase(name))
+                    return mSecondaryDefaults.get(key);
+            }
+        }
+        
         return null;
     }
     
@@ -121,7 +153,7 @@ public abstract class Entry {
     
     /*
      * convert attr values to unicode and put back the converted value to the same attr map
-     * We are modifying a copy of the map created in getAttrs, not the mAttrs/mDefaults data member
+     * We are modifying a copy of the map created in getAttrs, not the mAttrs/mDefaults/mSecondaryDefaults data member
      */
     private Map<String, Object> toUnicode(Map<String, Object> attrs) {
         AttributeManager attrMgr = getAttributeManager();
@@ -180,10 +212,16 @@ public abstract class Entry {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
-        if (applyDefaults && mDefaults != null) {
+        if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
             Map<String, Object> attrs = new HashMap<String, Object>();
+            // put the second defaults
+            if (mSecondaryDefaults != null)
+                attrs.putAll(mSecondaryDefaults);
+            
             // put the defaults
-            attrs.putAll(mDefaults);
+            if (mDefaults != null)
+                attrs.putAll(mDefaults);
+            
             // override with currently set
             attrs.putAll(mAttrs);
             return attrs;

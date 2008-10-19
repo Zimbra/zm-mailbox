@@ -332,10 +332,15 @@ public class LdapProvisioning extends Provisioning {
         ZimbraLdapContext zlc = initZlc;
         try {
             Map<String,Object> defaults = null;
+            Map<String,Object> secondaryDefaults = null;
     
             if (entry instanceof Account) {
                 Cos cos = prov.getCOS((Account)entry);
-                if (cos != null) defaults = cos.getAccountDefaults();
+                if (cos != null) 
+                    defaults = cos.getAccountDefaults();
+                Domain domain = prov.getDomain((Account)entry);
+                if (domain != null)
+                    secondaryDefaults = domain.getAccountDefaults();
             } else if (entry instanceof Domain) {
                 defaults = prov.getConfig().getDomainDefaults();
             } else if (entry instanceof Server) {
@@ -345,10 +350,10 @@ public class LdapProvisioning extends Provisioning {
             if (zlc == null)
                 zlc = new ZimbraLdapContext();
             String dn = ((LdapEntry)entry).getDN();
-            if (defaults == null)
+            if (defaults == null && secondaryDefaults == null)
                 entry.setAttrs(LdapUtil.getAttrs(zlc.getAttributes(dn)));
             else 
-                entry.setAttrs(LdapUtil.getAttrs(zlc.getAttributes(dn)), defaults);                
+                entry.setAttrs(LdapUtil.getAttrs(zlc.getAttributes(dn)), defaults, secondaryDefaults);                
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to refresh entry", e);
         } finally {
@@ -3473,6 +3478,9 @@ public class LdapProvisioning extends Provisioning {
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null) : new LdapCalendarResource(dn, emailAddress, attrs, null);
         Cos cos = getCOS(acct);
         acct.setDefaults(cos.getAccountDefaults());
+        Domain domain = getDomain(acct);
+        if (domain != null)
+            acct.setSecondaryDefaults(domain.getAccountDefaults());
         return acct;
     }
     

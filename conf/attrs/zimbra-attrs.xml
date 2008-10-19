@@ -121,6 +121,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     accountInherited.......if not set on account, inherit from COS
     domainInherited........if not set on domain, inherit from global config
     serverInherited........if not set on server, inherit from global config
+    accountCosDomainInherited...if not set on account, inherit from COS,
+                                if not set on COS, inherit from domain
     idn....................can contain Internationalized Domain Names (IDN). 
                            For attributes that are either:
 	                           - of type email or emailp, or
@@ -1659,7 +1661,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether changing skin is allowed for this account or in this cos</desc>
 </attr>
 
-<attr id="355" name="zimbraPrefSkin" type="string" max="80" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="355" name="zimbraPrefSkin" type="string" max="80" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable">
   <defaultCOSValue>beach</defaultCOSValue>
   <desc>Skin to use for this account</desc>
 </attr>

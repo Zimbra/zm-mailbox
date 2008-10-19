@@ -365,17 +365,17 @@ public class AttributeManager {
                 error(name, file, "atleast one of " + A_REQUIRED_IN + " or " + A_OPTIONAL_IN + " must be specified");
             }
 
-            // Check that if it is COS inheritable it is in account and COS
-            // classes
-            checkFlag(name, file, flags, AttributeFlag.accountInherited, AttributeClass.account, AttributeClass.cos, requiredIn, optionalIn);
+            // Check that if it is COS inheritable it is in account and COS classes
+            checkFlag(name, file, flags, AttributeFlag.accountInherited, AttributeClass.account, AttributeClass.cos, null, requiredIn, optionalIn);
 
-            // Check that if it is domain inheritable it is in domain and
-            // account
-            checkFlag(name, file, flags, AttributeFlag.domainInherited, AttributeClass.account, AttributeClass.domain, requiredIn, optionalIn);
+            // Check that if it is COS-domain inheritable it is in account and COS and domain classes
+            checkFlag(name, file, flags, AttributeFlag.accountCosDomainInherited, AttributeClass.account, AttributeClass.cos, AttributeClass.domain, requiredIn, optionalIn);
+            
+            // Check that if it is domain inheritable it is in domain and global config
+            checkFlag(name, file, flags, AttributeFlag.domainInherited, AttributeClass.domain, AttributeClass.globalConfig, null, requiredIn, optionalIn);
 
-            // Check that if it is domain inheritable it is in domain and
-            // account
-            checkFlag(name, file, flags, AttributeFlag.serverInherited, AttributeClass.server, AttributeClass.globalConfig, requiredIn, optionalIn);
+            // Check that if it is server inheritable it is in server and global config
+            checkFlag(name, file, flags, AttributeFlag.serverInherited, AttributeClass.server, AttributeClass.globalConfig, null, requiredIn, optionalIn);
 
             // Check that is cardinality is single, then not more than one
             // default value is specified
@@ -399,6 +399,8 @@ public class AttributeManager {
             if (flags != null) {
             	for (AttributeFlag flag : flags) {
             		mFlagToAttrsMap.get(flag).add(name);
+            		if (flag == AttributeFlag.accountCosDomainInherited)
+            		    mFlagToAttrsMap.get(AttributeFlag.accountInherited).add(name);
             	}
             }
             
@@ -649,12 +651,17 @@ public class AttributeManager {
         return result;
     }
 
-    private void checkFlag(String attrName, File file, Set<AttributeFlag> flags, AttributeFlag flag, AttributeClass c1, AttributeClass c2, Set<AttributeClass> required, Set<AttributeClass> optional) {
+    private void checkFlag(String attrName, File file, Set<AttributeFlag> flags, AttributeFlag flag, 
+                           AttributeClass c1, AttributeClass c2, AttributeClass c3,
+                           Set<AttributeClass> required, Set<AttributeClass> optional) {
+        
         if (flags != null && flags.contains(flag)) {
             boolean inC1 = (optional != null && optional.contains(c1)) || (required != null && required.contains(c1));
             boolean inC2 = (optional != null && optional.contains(c2)) || (required != null && required.contains(c2));
-            if (!inC1 && !inC2) {
-                error(attrName, file, "flag " + flag + " requires that attr be in both these classes " + c1 + " and " + c2);
+            boolean inC3 = (c3==null)? true : (optional != null && optional.contains(c3)) || (required != null && required.contains(c3));
+            if (!(inC1 && inC2 && inC3)) {
+                String classes = c1 + " and " + c2 + (c3==null?"":" and " + c3);
+                error(attrName, file, "flag " + flag + " requires that attr be in all these classes: " + classes);
             }
         }
     }
@@ -687,6 +694,10 @@ public class AttributeManager {
     public boolean isAccountInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.accountInherited).contains(attr);
     }
+    
+    public boolean isAccountCosDomainInherited(String attr) {
+        return mFlagToAttrsMap.get(AttributeFlag.accountCosDomainInherited).contains(attr);
+     }
 
     public boolean isDomainInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.domainInherited).contains(attr);
