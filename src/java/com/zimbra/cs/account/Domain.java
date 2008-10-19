@@ -22,8 +22,10 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -34,13 +36,28 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class Domain extends NamedEntry {
     private String mUnicodeName;
- 
+    private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
+    
     public Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
         if (name == null)
             mUnicodeName = name;
         else
             mUnicodeName = IDNUtil.toUnicodeDomainName(name);
+    }
+    
+    @Override
+    protected void resetData() {
+        super.resetData();
+        try {
+            getDefaults(AttributeFlag.accountCosDomainInherited, mAccountDefaults);
+        } catch (ServiceException e) {
+            // TODO log
+        }
+    }
+    
+    public Map<String, Object> getAccountDefaults() {
+        return mAccountDefaults;
     }
     
     public String getUnicodeName() {
