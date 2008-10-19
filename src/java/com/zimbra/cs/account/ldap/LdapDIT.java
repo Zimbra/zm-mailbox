@@ -85,16 +85,17 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_COS          = "cn=cos";
     protected final String DEFAULT_BASE_RDN_MIME         = "cn=mime";
     protected final String DEFAULT_BASE_RDN_SERVER       = "cn=servers";
-    protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
     protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT= "cn=xmppcomponents";
+    protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
     
-    protected final String DEFAULT_NAMING_RDN_ATTR_USER      = "uid";
+    
+    protected final String DEFAULT_NAMING_RDN_ATTR_USER          = "uid";
     protected final String DEFAULT_NAMING_RDN_ATTR_COS           = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG  = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME          = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_SERVER        = "cn";
-    protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET        = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET        = "cn";
     
     /*
      * Variables that has to be set in the init method
@@ -111,16 +112,16 @@ public class LdapDIT {
     protected String BASE_DN_COS; 
     protected String BASE_DN_MIME;
     protected String BASE_DN_SERVER;
-    protected String BASE_DN_ZIMLET;
     protected String BASE_DN_XMPPCOMPONENT;
+    protected String BASE_DN_ZIMLET;
      
     protected String NAMING_RDN_ATTR_USER;
     protected String NAMING_RDN_ATTR_COS;
     protected String NAMING_RDN_ATTR_GLOBALCONFIG;
     protected String NAMING_RDN_ATTR_MIME;
     protected String NAMING_RDN_ATTR_SERVER;
-    protected String NAMING_RDN_ATTR_ZIMLET;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
+    protected String NAMING_RDN_ATTR_ZIMLET;    
 
     protected String DN_GLOBALCONFIG;
 
@@ -144,18 +145,18 @@ public class LdapDIT {
         NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
         NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
-        NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
         NAMING_RDN_ATTR_XMPPCOMPONENT = DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT;
+        NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
         
         DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
        
-        BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN       + "," + BASE_DN_CONFIG_BRANCH;
-        BASE_DN_APPADMIN     = DEFAULT_BASE_RDN_APPADMIN    + "," + BASE_DN_CONFIG_BRANCH;
-        BASE_DN_COS          = DEFAULT_BASE_RDN_COS         + "," + BASE_DN_CONFIG_BRANCH; 
-        BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME        + "," + DN_GLOBALCONFIG;
-        BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER      + "," + BASE_DN_CONFIG_BRANCH;
-        BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET      + "," + BASE_DN_CONFIG_BRANCH;
-        BASE_DN_XMPPCOMPONENT= DEFAULT_BASE_RDN_XMPPCOMPONENT+"," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN         + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_APPADMIN     = DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_COS          = DEFAULT_BASE_RDN_COS           + "," + BASE_DN_CONFIG_BRANCH; 
+        BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG;
+        BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_XMPPCOMPONENT= DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET        + "," + BASE_DN_CONFIG_BRANCH;
         
         BASE_DN_ZIMBRA       = ROOT_DN;
         
@@ -177,8 +178,8 @@ public class LdapDIT {
             BASE_DN_COS == null ||
             BASE_DN_MIME == null ||
             BASE_DN_SERVER == null ||
-            BASE_DN_ZIMLET == null ||
             BASE_DN_XMPPCOMPONENT == null ||
+            BASE_DN_ZIMLET == null ||
             DN_GLOBALCONFIG == null)
             Zimbra.halt("Unable to initialize LDAP DIT");
     }
@@ -461,14 +462,6 @@ public class LdapDIT {
         return NAMING_RDN_ATTR_SERVER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_SERVER;
     }
     
-    /*
-     * ==========
-     *   zimlet
-     * ==========
-     */    
-    public String zimletNameToDN(String name) {
-        return NAMING_RDN_ATTR_ZIMLET + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ZIMLET;
-    }
     
     /*
      * ==========
@@ -483,6 +476,15 @@ public class LdapDIT {
         return NAMING_RDN_ATTR_XMPPCOMPONENT + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_XMPPCOMPONENT;
     }
 
+    
+    /*
+     * ==========
+     *   zimlet
+     * ==========
+     */    
+    public String zimletNameToDN(String name) {
+        return NAMING_RDN_ATTR_ZIMLET + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ZIMLET;
+    }
     
     
     /*
