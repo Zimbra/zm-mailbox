@@ -97,11 +97,8 @@ public class SoapEngine {
     }
 
     /*
-     * returns a SOAP envelope with soap fault in the body
-     * 
-     * This is for callers that need to:
-     *    - wrap a exception in a soap fault and wrap the soap fault in a soap envelope (without throwing the exception)
-     *    - log the exception at info level
+     * wraps an exception in a soap fault and returns a SOAP envelope with the soap fault in the body
+     * (without throwing the exception)
      */
     private Element soapFaultEnv(SoapProtocol soapProto, String msg, ServiceException e) {
         mLog.warn(msg, e);
@@ -109,11 +106,8 @@ public class SoapEngine {
     }
     
     /*
-     * returns a SOAP fault
-     * 
-     * This is for callers that need to:
-     *    - wrap a exception in a soap fault (without throwing the exception)
-     *    - log the exception at info level
+     * wrap an exception in a soap fault and returns the soap fault
+     * (without throwing the exception)
      */
     private Element soapFault(SoapProtocol soapProto, String msg, ServiceException e) {
         mLog.warn(msg, e);
@@ -123,7 +117,7 @@ public class SoapEngine {
     /*
      * This is for callers that need to:
      *    - enclose a SOAP fault in the envelope and return (without throwing the exception)
-     *    - log the exception at debug level, which is not normally turned on
+     *    - log the exception at warn level, which is not normally turned on
      *    - append a unique label to the exception id (exception id is always included in the <trace> 
      *      tag in the fault) so in the case when exception logging is not turned on we can identify 
      *      the location where the exception was thrown.
@@ -132,7 +126,8 @@ public class SoapEngine {
         StackTraceElement[] s = Thread.currentThread().getStackTrace();
         StackTraceElement callSite = s[3]; // third frame from top is the caller
         e.setIdLabel(callSite);
-        mLog.debug(msg, e);
+        mLog.warn(e.getMessage() + ": " + msg);     // do not log stack
+        mLog.debug(msg, e); // log stack
         return soapProto.soapFault(e);
     }
     
