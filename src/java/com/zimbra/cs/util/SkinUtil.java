@@ -103,17 +103,7 @@ public class SkinUtil {
     }
     
     private static Set<String> getAvailableSkins(Account acct) throws ServiceException {
-        
-        // 1) if set on account/cos, use it
-        Set<String> skins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
-        if (skins.size() > 0)
-            return skins;
-        
-        // 2) if set on Domain, use it
-        Domain domain = Provisioning.getInstance().getDomain(acct);
-        if (domain == null)
-        	return skins;
-        return domain.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+        return acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
     }
 
 	public static String chooseSkin(Account acct, String requestedSkin) throws ServiceException {

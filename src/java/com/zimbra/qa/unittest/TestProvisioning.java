@@ -1784,6 +1784,7 @@ public class TestProvisioning extends TestCase {
         attrs.put(attr, "domain-value");
         mProv.modifyAttrs(domain, attrs);
         
+        // should get account value
         String val = acct.getAttr(attr);
         assertEquals("account-value", val);
         
@@ -1810,6 +1811,68 @@ public class TestProvisioning extends TestCase {
         
         val = acct.getAttr(attr);
         assertEquals(null, val);
+    }
+    
+    private Set<String> getAvailableSkins_prior_bug31596(Account acct) throws ServiceException {
+
+        // 1) if set on account/cos, use it
+        Set<String> skins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+        if (skins.size() > 0)
+            return skins;
+        
+        // 2) if set on Domain, use it
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        if (domain == null)
+            return skins;
+        return domain.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+    }
+    
+    private void attributeInheritanceTestMultiValue_prior_bug31596() throws Exception {
+        System.out.println("Testing attribute inheritance multi-value prior bug31596");
+        
+        Account acct = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        assertNotNull(acct);
+        
+        Domain domain = mProv.getDomain(acct);
+        assertNotNull(domain);
+        
+        String attr = Provisioning.A_zimbraAvailableSkin;
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.clear();
+        attrs.put("+" + attr, new String[]{"domain-value-1", "domain-value-2"});
+        mProv.modifyAttrs(domain, attrs);
+        
+        // should get domain value
+        Set<String> val = getAvailableSkins_prior_bug31596(acct);
+        TestProvisioningUtil.verifyEntries(val, new String[]{"domain-value-1", "domain-value-2"}, true);
+    }
+    
+    /*
+     * too bad Entry.getMultiAttrSet caches the value instead doing what Entry.getObject does:
+     * check defaults.  Thus we can't do the same test as attributeInheritanceTest().
+     * 
+     * This is an existing bug for any multi-value attrs, has nothing to do with the fix of bug31596
+     */
+    private void attributeInheritanceTestMultiValue() throws Exception {
+        System.out.println("Testing attribute inheritance multi-value");
+        
+        Account acct = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        assertNotNull(acct);
+        
+        Domain domain = mProv.getDomain(acct);
+        assertNotNull(domain);
+        
+        String attr = Provisioning.A_zimbraAvailableSkin;
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.clear();
+        attrs.put("+" + attr, new String[]{"domain-value-1", "domain-value-2"});
+        mProv.modifyAttrs(domain, attrs);
+        
+        // should get domain value
+        Set<String> val = acct.getMultiAttrSet(attr);
+        TestProvisioningUtil.verifyEntries(val, new String[]{"domain-value-1", "domain-value-2"}, true);
     }
     
     private void loadTest() throws Exception {
@@ -1864,6 +1927,8 @@ public class TestProvisioning extends TestCase {
         familyTest();
         flushCacheTest();
         attributeInheritanceTest();
+        attributeInheritanceTestMultiValue_prior_bug31596();
+        attributeInheritanceTestMultiValue();
         
         // loadTest();
         
