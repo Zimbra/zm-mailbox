@@ -110,6 +110,10 @@ public class MailHost extends AttributeCallback {
      * still want the change to go through.
      */
     private static boolean mailTransportMatch(Server server, String mailTransport) {
+        // if there is no mailTransport, it sure "matches"
+        if (mailTransport == null)
+            return true;
+        
         String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         
         String[] parts = mailTransport.split(":");
