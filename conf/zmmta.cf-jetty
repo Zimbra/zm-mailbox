@@ -82,6 +82,7 @@ SECTION mta DEPENDS amavis
 
 	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
 	POSTCONF broken_sasl_auth_clients			        LOCAL postfix_broken_sasl_auth_clients
+  POSTCONF bounce_queue_lifetime                LOCAL postfix_bounce_queue_lifetime
 	POSTCONF mail_owner                           LOCAL postfix_mail_owner
 	POSTCONF setgid_group                         LOCAL postfix_setgid_group
 	POSTCONF command_directory					          LOCAL postfix_command_directory
