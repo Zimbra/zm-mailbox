@@ -28,6 +28,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -496,7 +497,7 @@ public class ImapPath {
             Folder folder = (Folder) mFolder;
             if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT)
                 return false;
-            if (folder.isTagged(folder.getMailbox().mDeletedFlag))
+            if (folder.isTagged(Flag.ID_FLAG_DELETED))
                 return false;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;

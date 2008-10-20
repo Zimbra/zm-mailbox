@@ -97,17 +97,17 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
         }
     }
 
-    static ImapFlagCache getSystemFlags(Mailbox mbox) {
+    static ImapFlagCache getSystemFlags(Mailbox mbox) throws ServiceException {
         ImapFlagCache i4cache = new ImapFlagCache();
 
-        i4cache.cache(new ImapFlag("\\Answered", mbox.mReplyFlag,    true));
-        i4cache.cache(new ImapFlag("\\Deleted",  mbox.mDeletedFlag,  true));
-        i4cache.cache(new ImapFlag("\\Draft",    mbox.mDraftFlag,    true));
-        i4cache.cache(new ImapFlag("\\Flagged",  mbox.mFlaggedFlag,  true));
-        i4cache.cache(new ImapFlag("\\Seen",     mbox.mUnreadFlag,   false));
-        i4cache.cache(new ImapFlag("$Forwarded", mbox.mForwardFlag,  true));
-        i4cache.cache(new ImapFlag("$MDNSent",   mbox.mNotifiedFlag, true));
-        i4cache.cache(new ImapFlag("Forwarded",  mbox.mForwardFlag,  true));
+        i4cache.cache(new ImapFlag("\\Answered", mbox.getFlagById(Flag.ID_FLAG_REPLIED),   true));
+        i4cache.cache(new ImapFlag("\\Deleted",  mbox.getFlagById(Flag.ID_FLAG_DELETED),   true));
+        i4cache.cache(new ImapFlag("\\Draft",    mbox.getFlagById(Flag.ID_FLAG_DRAFT),     true));
+        i4cache.cache(new ImapFlag("\\Flagged",  mbox.getFlagById(Flag.ID_FLAG_FLAGGED),   true));
+        i4cache.cache(new ImapFlag("\\Seen",     mbox.getFlagById(Flag.ID_FLAG_UNREAD),    false));
+        i4cache.cache(new ImapFlag("$Forwarded", mbox.getFlagById(Flag.ID_FLAG_FORWARDED), true));
+        i4cache.cache(new ImapFlag("$MDNSent",   mbox.getFlagById(Flag.ID_FLAG_NOTIFIED),  true));
+        i4cache.cache(new ImapFlag("Forwarded",  mbox.getFlagById(Flag.ID_FLAG_FORWARDED), true));
 
         i4cache.cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
         i4cache.cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));

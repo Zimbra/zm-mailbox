@@ -31,6 +31,7 @@ import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -90,7 +91,7 @@ import com.zimbra.common.soap.MailConstants;
  */
 public class ParseMimeMessage {
 
-    private static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
+    static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
 
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
@@ -361,10 +362,10 @@ public class ParseMimeMessage {
                 mm.setText("", Mime.P_CHARSET_DEFAULT);
 
             String flagStr = msgElem.getAttribute(MailConstants.A_FLAGS, "");
-            if (flagStr.indexOf(mbox.mUrgentFlag.getAbbreviation()) != -1) {
+            if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_HIGH_PRIORITY)) != -1) {
                 mm.addHeader("X-Priority", "1");
                 mm.addHeader("Importance", "high");
-            } else if (flagStr.indexOf(mbox.mBulkFlag.getAbbreviation()) != -1) {
+            } else if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_LOW_PRIORITY)) != -1) {
                 mm.addHeader("X-Priority", "5");
                 mm.addHeader("Importance", "low");
             }
@@ -680,7 +681,7 @@ public class ParseMimeMessage {
     private static class FixedMimePartDataSource implements DataSource {
         private final MimePart mMimePart;
 
-        private FixedMimePartDataSource(MimePart mimePart) {
+        FixedMimePartDataSource(MimePart mimePart) {
             mMimePart = mimePart;
         }
 
@@ -781,6 +782,7 @@ public class ParseMimeMessage {
             }
         }
 
+        @SuppressWarnings("unchecked")
         public InternetAddress[] get(String addressType) {
             Object content = addrs.get(addressType);
             if (content == null) {
@@ -788,10 +790,10 @@ public class ParseMimeMessage {
             } else if (content instanceof InternetAddress) {
                 return new InternetAddress[] { (InternetAddress) content };
             } else {
-                ArrayList list = (ArrayList) content;
+                List<InternetAddress> list = (ArrayList) content;
                 InternetAddress[] result = new InternetAddress[list.size()];
                 for (int i = 0; i < list.size(); i++)
-                    result[i] = (InternetAddress) list.get(i);
+                    result[i] = list.get(i);
                 return result;
             }
         }
@@ -846,7 +848,7 @@ public class ParseMimeMessage {
          */
         mLog.debug("--------------------------------------");
         try {
-            Enumeration hdrsEnum = mm.getAllHeaders();
+            Enumeration<?> hdrsEnum = mm.getAllHeaders();
             if (hdrsEnum != null)
                 while (hdrsEnum.hasMoreElements()) {
                     Header hdr = (Header) hdrsEnum.nextElement();

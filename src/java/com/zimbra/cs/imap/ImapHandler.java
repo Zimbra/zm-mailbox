@@ -1505,7 +1505,7 @@ abstract class ImapHandler extends ProtocolHandler {
                     throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
                 Mailbox mbox = (Mailbox) path.getOwnerMailbox();
                 Folder folder = (Folder) path.getFolder();
-                if (!folder.isTagged(mbox.mSubscribedFlag))
+                if (!folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
                     mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
             } else {
                 mCredentials.subscribe(path);
@@ -1537,7 +1537,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 try {
                     Mailbox mbox = mCredentials.getMailbox();
                     Folder folder = (Folder) path.getFolder();
-                    if (folder.isTagged(mbox.mSubscribedFlag))
+                    if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
                         mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
                 } catch (NoSuchItemException nsie) { }
             }
@@ -1805,7 +1805,7 @@ abstract class ImapHandler extends ProtocolHandler {
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(mCredentials)) {
             Folder folder = (Folder) path.getFolder();
-            return folder.isTagged(folder.getMailbox().mSubscribedFlag);
+            return folder.isTagged(Flag.ID_FLAG_SUBSCRIBED);
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
                 if (sub.equalsIgnoreCase(path.asImapPath()))
@@ -1835,7 +1835,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 if (patternPath.getOwner() == null) {
                     Mailbox mbox = mCredentials.getMailbox();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
-                        if (folder.isTagged(mbox.mSubscribedFlag))
+                        if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
                             checkSubscription(new ImapPath(null, folder, mCredentials), pattern, childPattern, hits);
                     }
                 }

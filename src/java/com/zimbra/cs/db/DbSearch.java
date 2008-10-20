@@ -579,7 +579,7 @@ public class DbSearch {
             }
 
             Comparator<SearchResult> comp = SearchResult.getComparator(sort);
-            result = mergeSortedLists((List<SearchResult>)result, resultLists, comp);
+            result = mergeSortedLists(result, resultLists, comp);
             return result;
         }
     }
@@ -1160,7 +1160,7 @@ public class DbSearch {
         inTrash.folders = folders;
 
         DbSearchConstraints isUnread = new DbSearchConstraints();
-        Set<Tag> tags = new HashSet<Tag>();  tags.add(mbox.mUnreadFlag);
+        Set<Tag> tags = new HashSet<Tag>();  tags.add(mbox.getFlagById(Flag.ID_FLAG_UNREAD));
         isUnread.tags = tags;
 
         DbSearchConstraintsInnerNode orClause = DbSearchConstraintsInnerNode.OR();

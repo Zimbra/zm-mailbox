@@ -449,60 +449,13 @@ public class Mailbox {
     private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
     private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
-    private CopyOnWriteArrayList<Session> mListeners = new CopyOnWriteArrayList();
+    private CopyOnWriteArrayList<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
-    private IMPersona mPersona = null;
+    private IMPersona    mPersona = null;
     private MailboxVersion mVersion = null;
     
-    /** flag: messages sent by me */
-    public Flag mSentFlag;
-    /** flag: messages/contacts with attachments */
-    public Flag mAttachFlag;
-    /** flag: messages that have been replied to */
-    public Flag mReplyFlag;
-    /** flag: messages that have been forwarded */
-    public Flag mForwardFlag;
-    /** flag: messages that have been copied or that are copies */
-    public Flag mCopiedFlag;
-    /** flag: messages/contacts/etc. with the little red flag */
-    public Flag mFlaggedFlag;
-    /** flag: draft messages */
-    public Flag mDraftFlag;
-    /** flag: messages/folders/etc. in IMAP's "deleted-not-expunged" limbo state */
-    public Flag mDeletedFlag;
-    /** flag: messages that have read-receipt MDN sent */
-    public Flag mNotifiedFlag;
-    /** flag: unread messages */
-    public Flag mUnreadFlag;
-    /** flag: when a message is a valid Invite */
-    public Flag mInviteFlag;
-    /** flag: urgent messages */
-    public Flag mUrgentFlag;
-    /** flag: low-priority messages */
-    public Flag mBulkFlag;
-    /** flag: indexing deferred */
-    public Flag mIndexingDeferredFlag;
-    /** flag: items with accessible past revisions */
-    public Flag mVersionedFlag;
-    /** flag: IMAP-subscribed folders */
-    public Flag mSubscribedFlag;
-    /** flag: exclude folder from free-busy calculations */
-    public Flag mExcludeFBFlag;
-    /** flag: folders "checked" for display in the web UI */
-    public Flag mCheckedFlag;
-    /** flag: whether a folder does not inherit permissions from its parent */
-    public Flag mNoInheritFlag;
-    /** flag: whether a folder is a sync folder paired with source folder on server */
-    public Flag mSyncFolderFlag;
-    /** flag: whether a folder is to sync with its counterpart on server */
-    public Flag mSyncFlag;
-    /** flag: indicates whether sync'd folder disallows children */
-    public Flag mNoInferiorsFlag;
-    /** flag: whether an item is in archive */
-    public Flag mArchivedFlag;
-
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
@@ -523,7 +476,7 @@ public class Mailbox {
         // version init done in checkInitialization()
         // index init done in checkInitialization()
     }
-    
+
     /**
      * Called by the MailboxManager before returning the mailbox, this
      * function makes sure the Mailbox is fully initialized (index initialized,
@@ -1040,7 +993,6 @@ public class Mailbox {
      *  the transaction.
      * @param item  The created item. */
     void markItemCreated(MailItem item) {
-        if ((item.getFlagBitmask() & Flag.BITMASK_UNCACHED) == 0)
         mCurrentChange.mDirty.recordCreated(item);
     }
 
@@ -1048,7 +1000,6 @@ public class Mailbox {
      *  the transaction.
      * @param item  The deleted item. */
     void markItemDeleted(MailItem item) {
-        if ((item.getFlagBitmask() & Flag.BITMASK_UNCACHED) == 0)
         mCurrentChange.mDirty.recordDeleted(item);
     }
 
@@ -1073,7 +1024,6 @@ public class Mailbox {
      * @param reason  The bitmask describing the modified item properties.
      * @see com.zimbra.cs.session.PendingModifications.Change */
     void markItemModified(MailItem item, int reason) {
-        if ((item.getFlagBitmask() & Flag.BITMASK_UNCACHED) == 0)
         mCurrentChange.mDirty.recordModified(item, reason);
     }
 
@@ -1123,7 +1073,7 @@ public class Mailbox {
         } else {
             if (!item.isFlagSet(Flag.BITMASK_INDEXING_DEFERRED)) {
                 // flag not already set -- must set the bitmask
-                item.alterSystemFlag(mIndexingDeferredFlag, true);
+                item.alterSystemFlag(getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED), true);
                 incrementIndexDeferredCount(1);
             }            
         }
@@ -1491,30 +1441,30 @@ public class Mailbox {
 
     private void initFlags() throws ServiceException {
         // flags will be added to mFlags array via call to cache() in MailItem constructor
-        mSentFlag      = Flag.instantiate(this, "\\Sent",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
-        mAttachFlag    = Flag.instantiate(this, "\\Attached",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_ATTACHED);
-        mReplyFlag     = Flag.instantiate(this, "\\Answered",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
-        mForwardFlag   = Flag.instantiate(this, "\\Forwarded",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
-        mCopiedFlag    = Flag.instantiate(this, "\\Copied",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
-        mFlaggedFlag   = Flag.instantiate(this, "\\Flagged",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
-        mDraftFlag     = Flag.instantiate(this, "\\Draft",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
-        mDeletedFlag   = Flag.instantiate(this, "\\Deleted",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
-        mNotifiedFlag  = Flag.instantiate(this, "\\Notified",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
-        mUnreadFlag    = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
-        mInviteFlag    = Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
-        mUrgentFlag    = Flag.instantiate(this, "\\Urgent",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
-        mIndexingDeferredFlag = Flag.instantiate(this, "\\IdxDeferred",     Flag.FLAG_GENERIC, Flag.ID_FLAG_INDEXING_DEFERRED);
-        mBulkFlag      = Flag.instantiate(this, "\\Bulk",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
-        mVersionedFlag = Flag.instantiate(this, "\\Versioned",  Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
+        Flag.instantiate(this, "\\Sent",        Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
+        Flag.instantiate(this, "\\Attached",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_ATTACHED);
+        Flag.instantiate(this, "\\Answered",    Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
+        Flag.instantiate(this, "\\Forwarded",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
+        Flag.instantiate(this, "\\Copied",      Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
+        Flag.instantiate(this, "\\Flagged",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
+        Flag.instantiate(this, "\\Draft",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
+        Flag.instantiate(this, "\\Deleted",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
+        Flag.instantiate(this, "\\Notified",    Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
+        Flag.instantiate(this, "\\Unread",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
+        Flag.instantiate(this, "\\Invite",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
+        Flag.instantiate(this, "\\Urgent",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
+        Flag.instantiate(this, "\\Bulk",        Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
+        Flag.instantiate(this, "\\Versioned",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
+        Flag.instantiate(this, "\\IdxDeferred", Flag.FLAG_GENERIC,         Flag.ID_FLAG_INDEXING_DEFERRED);
 
-        mSubscribedFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
-        mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
-        mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
-        mNoInheritFlag = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
-        mSyncFolderFlag = Flag.instantiate(this, "\\SyncFolder", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
-        mSyncFlag		= Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
-        mNoInferiorsFlag = Flag.instantiate(this, "\\Noinferiors", Flag.FLAG_IS_FOLDER_ONLY, Flag.ID_FLAG_NO_INFERIORS);
-        mArchivedFlag = Flag.instantiate(this, "\\Archived", Flag.FLAG_GENERIC, Flag.ID_FLAG_ARCHIVED);
+        Flag.instantiate(this, "\\Subscribed",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
+        Flag.instantiate(this, "\\ExcludeFB",   Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
+        Flag.instantiate(this, "\\Checked",     Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
+        Flag.instantiate(this, "\\NoInherit",   Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
+        Flag.instantiate(this, "\\SyncFolder",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
+        Flag.instantiate(this, "\\Sync",        Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
+        Flag.instantiate(this, "\\Noinferiors", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INFERIORS);
+        Flag.instantiate(this, "\\Archived",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_ARCHIVED);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -2759,9 +2709,10 @@ public class Mailbox {
     public synchronized List<Flag> getFlagList() {
         List<Flag> flags = new ArrayList<Flag>(mFlags.length);
         
-        for (Flag flag : mFlags)
+        for (Flag flag : mFlags) {
             if (flag != null)
                 flags.add(flag);
+        }
         return flags;
     }
 
@@ -3591,7 +3542,7 @@ public class Mailbox {
                     beginTransaction("IndexDeferredItems_Select", null);
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.tags = new HashSet<Tag>();
-                    c.tags.add(this.mIndexingDeferredFlag);
+                    c.tags.add(getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED));
                     DbSearch.search(items, getOperationConnection(), c, this, DbSearch.SORT_NONE, SearchResult.ExtraData.NONE);
                     
                     int deferredCount = getIndexDeferredCount();
@@ -5067,7 +5018,7 @@ public class Mailbox {
             SaveDraft redoPlayer = (SaveDraft) mCurrentChange.getRedoPlayer();
 
             Message msg = getMessageById(id);
-            if (!msg.isTagged(mDraftFlag))
+            if (!msg.isTagged(Flag.ID_FLAG_DRAFT))
                 throw MailServiceException.IMMUTABLE_OBJECT(id);
             if (!checkItemChangeID(msg))
                 throw MailServiceException.MODIFY_CONFLICT();
@@ -5279,6 +5230,8 @@ public class Mailbox {
             for (MailItem item : items)
                 checkItemChangeID(item);
 
+            Flag unreadFlag = getFlagById(Flag.ID_FLAG_UNREAD);
+
             for (MailItem item : items) {
                 if (item == null)
                     continue;
@@ -5288,13 +5241,12 @@ public class Mailbox {
                     iflags = item.getFlagBitmask();
                 if ((itags & MailItem.TAG_UNCHANGED) != 0)
                     itags = item.getTagBitmask();
-    
-                // Special-case the unread flag.  It's passed in as a flag from the outside,
-                // but treated as a separate argument inside the mailbox.
+                // special-case "unread" -- it's passed in with the flags, but the server process it separately
                 boolean iunread = (iflags & Flag.BITMASK_UNREAD) > 0;
                 iflags &= ~Flag.BITMASK_UNREAD;
+
                 item.setTags(iflags, itags);
-                if (mUnreadFlag.canTag(item))
+                if (unreadFlag.canTag(item))
                     item.alterUnread(iunread);
             }
 
@@ -6871,7 +6823,7 @@ public class Mailbox {
                 }
 
                 int numIndexingExceptions = 0;
-                
+                Flag indexingDeferredFlag = getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED);
                 for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
                     if (entry.getValue().mDocuments == null) {
@@ -6908,7 +6860,7 @@ public class Mailbox {
                         if ((item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) != 0) {
                             // IndexingDeferredFlag set, so we need to clear it
                             deferredTagsToClear.add(item.getId());
-                            item.tagChanged(mIndexingDeferredFlag, false);
+                            item.tagChanged(indexingDeferredFlag, false);
                             this.incrementIndexDeferredCount(-1);
                             idxDeferredChange--;
                         }
@@ -6941,7 +6893,7 @@ public class Mailbox {
                         if (!item.isFlagSet(Flag.BITMASK_INDEXING_DEFERRED)) {
                             // IndexingDeferredFlag NOT set, so we need to set it
                             deferredTagsToSet.add(item.getId());
-                            item.tagChanged(mIndexingDeferredFlag, true);
+                            item.tagChanged(indexingDeferredFlag, true);
                             this.incrementIndexDeferredCount(1);
                             idxDeferredChange++;
                         }
@@ -6952,12 +6904,12 @@ public class Mailbox {
                 if (!deferredTagsToClear.isEmpty()) {
                     if (conn == null)
                         conn = getOperationConnection();
-                    DbMailItem.alterTag(mIndexingDeferredFlag, deferredTagsToClear, false);
+                    DbMailItem.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
                 }
                 if (!deferredTagsToSet.isEmpty()) {
                     if (conn == null)
                         conn = getOperationConnection();
-                    DbMailItem.alterTag(mIndexingDeferredFlag, deferredTagsToSet, true);
+                    DbMailItem.alterTag(indexingDeferredFlag, deferredTagsToSet, true);
                 }
                 if (idxDeferredChange != 0) {
                     DbMailbox.updateMailboxStats(this);// must persist idxDeferedCount to DB

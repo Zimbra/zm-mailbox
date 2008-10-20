@@ -680,7 +680,7 @@ public final class ZimbraQuery {
     {
         public DraftQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mDraftFlag, truth);
+            super(mailbox, analyzer, modifier, "\\Draft", truth);
         }
 
         public String toString(int expLevel) {
@@ -696,7 +696,7 @@ public final class ZimbraQuery {
     {
         public FlaggedQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mFlaggedFlag, truth);
+            super(mailbox, analyzer, modifier, "\\Flagged", truth);
         }
 
         public String toString(int expLevel) {
@@ -712,7 +712,7 @@ public final class ZimbraQuery {
     {
         public ForwardedQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mForwardFlag, truth);
+            super(mailbox, analyzer, modifier, "\\Forwarded", truth);
         }
 
         public String toString(int expLevel) {
@@ -1023,7 +1023,7 @@ public final class ZimbraQuery {
     {
         public ReadQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mUnreadFlag, !truth);
+            super(mailbox, analyzer, modifier, "\\Unread", !truth);
         }
 
         public String toString(int expLevel) {
@@ -1039,7 +1039,7 @@ public final class ZimbraQuery {
     {
         public RepliedQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mReplyFlag, truth);
+            super(mailbox, analyzer, modifier, "\\Answered", truth);
         }
 
         public String toString(int expLevel) {
@@ -1056,7 +1056,7 @@ public final class ZimbraQuery {
     {
         public IsInviteQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mInviteFlag, truth);
+            super(mailbox, analyzer, modifier, "\\Invite", truth);
         }
 
         public String toString(int expLevel) {
@@ -1072,7 +1072,7 @@ public final class ZimbraQuery {
     {
         public SentQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
         {
-            super(analyzer, modifier, mailbox.mSentFlag, truth);
+            super(mailbox, analyzer, modifier, "\\Sent", truth);
         }
 
         public String toString(int expLevel) {
@@ -1397,10 +1397,10 @@ public final class ZimbraQuery {
     {
         private Tag mTag = null;
 
-        public TagQuery(Analyzer analyzer, int modifier, Tag tag, boolean truth) 
+        public TagQuery(Mailbox mailbox, Analyzer analyzer, int modifier, String name, boolean truth) throws ServiceException 
         {
             super(modifier, ZimbraQueryParser.TAG);
-            mTag = tag;
+            mTag = mailbox.getTagByName(name);
             mTruth = truth;
         }
 

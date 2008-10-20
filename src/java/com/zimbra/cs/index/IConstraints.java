@@ -89,8 +89,9 @@ interface IConstraints extends DbSearchConstraintsNode, Cloneable {
      * 
 	 * @param mbox
 	 * @return TRUE if the constraints are such that we think a DB-first plan will be faster.
+	 * @throws ServiceException 
 	 */
-	boolean tryDbFirst(Mailbox mbox);
+	boolean tryDbFirst(Mailbox mbox) throws ServiceException;
     
     
 	/**

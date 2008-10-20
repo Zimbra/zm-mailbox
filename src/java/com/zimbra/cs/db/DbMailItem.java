@@ -310,7 +310,7 @@ public class DbMailItem {
             stmt.executeUpdate();
             stmt.close();
 
-            boolean needsTag = shared && !source.isTagged(mbox.mCopiedFlag);
+            boolean needsTag = shared && !source.isTagged(Flag.ID_FLAG_COPIED);
 
             if (needsTag && areFlagsetsLoaded(mbox))
                 getFlagsetCache(conn, mbox).addTagset(source.getInternalFlagBitmask() | Flag.BITMASK_COPIED);
@@ -2576,7 +2576,7 @@ public class DbMailItem {
         Mailbox mbox = item.getMailbox();
 
         List<UnderlyingData> dlist = new ArrayList<UnderlyingData>();
-        if (!item.isTagged(mbox.mVersionedFlag))
+        if (!item.isTagged(Flag.ID_FLAG_VERSIONED))
             return dlist;
 
         Connection conn = mbox.getOperationConnection();

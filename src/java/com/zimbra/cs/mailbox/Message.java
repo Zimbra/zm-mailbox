@@ -139,7 +139,7 @@ public class Message extends MailItem {
      *  can only be set when the Message is created; it cannot be altered
      *  thereafter. */
     public boolean isDraft() {
-        return isTagged(mMailbox.mDraftFlag);
+        return isTagged(Flag.ID_FLAG_DRAFT);
     }
 
     /** Returns the <code>To:</code> header of the message, if the message
@@ -300,7 +300,7 @@ public class Message extends MailItem {
     @Override boolean isTaggable()      { return true; }
     @Override boolean isCopyable()      { return true; }
     @Override boolean isMovable()       { return true; }
-    @Override boolean isMutable()       { return isTagged(mMailbox.mDraftFlag); }
+    @Override boolean isMutable()       { return isTagged(Flag.ID_FLAG_DRAFT); }
     @Override boolean isIndexed()       { return true; }
     @Override boolean canHaveChildren() { return false; }
 
@@ -720,7 +720,7 @@ public class Message extends MailItem {
             mData.flags |= Flag.BITMASK_ATTACHED;
         if (hadAttachment != pm.hasAttachments()) {
             markItemModified(Change.MODIFIED_FLAGS);
-            parent.tagChanged(mMailbox.mAttachFlag, pm.hasAttachments());
+            parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_ATTACHED), pm.hasAttachments());
         }
 
         // make sure the "urgency" FLAGs are correct
@@ -730,8 +730,10 @@ public class Message extends MailItem {
         mData.flags |= urgency;
         if (oldUrgency != urgency) {
             markItemModified(Change.MODIFIED_FLAGS);
-            parent.tagChanged(mMailbox.mUrgentFlag, urgency == Flag.BITMASK_HIGH_PRIORITY);
-            parent.tagChanged(mMailbox.mBulkFlag, urgency == Flag.BITMASK_LOW_PRIORITY);
+            if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY)
+                parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_HIGH_PRIORITY), urgency == Flag.BITMASK_HIGH_PRIORITY);
+            if (urgency == Flag.BITMASK_LOW_PRIORITY || oldUrgency == Flag.BITMASK_LOW_PRIORITY)
+                parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_LOW_PRIORITY), urgency == Flag.BITMASK_LOW_PRIORITY);
         }
 
         // update the SIZE and METADATA

@@ -35,7 +35,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -47,6 +46,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -58,9 +58,6 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author tim
- */
 public class SearchConv extends Search {
     private static Log sLog = LogFactory.getLog(Search.class);
 
@@ -110,11 +107,11 @@ public class SearchConv extends Search {
                 
                 // filter out IMAP \Deleted messages from the message lists
                 Conversation conv = mbox.getConversationById(octxt, cid.getId());
-                if (conv.isTagged(mbox.mDeletedFlag)) {
+                if (conv.isTagged(Flag.ID_FLAG_DELETED)) {
                     List<Message> raw = msgs;
                     msgs = new ArrayList<Message>();
                     for (Message msg : raw) {
-                        if (!msg.isTagged(mbox.mDeletedFlag))
+                        if (!msg.isTagged(Flag.ID_FLAG_DELETED))
                             msgs.add(msg);
                     }
                 }

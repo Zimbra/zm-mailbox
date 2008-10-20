@@ -219,7 +219,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
               }
           }
           case TAG:
-            return new ZimbraQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
+            return new ZimbraQuery.TagQuery(mMailbox, mAnalyzer, modifier, tok, true);
           case IS:
             GetQueryCallback cback = sIsStrMap.get(tok.toLowerCase());
             if (cback != null) {

@@ -807,7 +807,7 @@ class DBQueryOperation extends QueryOperation
         return searchOrder.getDbMailItemSortByte();    	
     }
 
-    private boolean shouldExecuteDbFirst() {
+    private boolean shouldExecuteDbFirst() throws ServiceException {
         if (getResultsSet().getSortBy() == SortBy.SCORE_DESCENDING) {
             // we can't sort DB-results by score-order, so we must execute SCORE queries
             // in LUCENE-FIRST order

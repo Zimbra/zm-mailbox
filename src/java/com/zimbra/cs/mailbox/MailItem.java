@@ -533,7 +533,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  bytes of the raw blobs. */
     public long getTotalSize() throws ServiceException {
         long size = mData.size;
-        if (isTagged(mMailbox.mVersionedFlag)) {
+        if (isTagged(Flag.ID_FLAG_VERSIONED)) {
             for (MailItem revision : loadRevisions())
                 size += revision.getSize();
         }
@@ -621,10 +621,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         return ((bitmask & tag.getBitmask()) != 0);
     }
 
-    private boolean isTagged(int tagId) {
-        long bitmask = (tagId < 0 ? mData.flags : mData.tags);
-        int position = (tagId < 0 ? Flag.getIndex(tagId) : Tag.getIndex(tagId));
-        return ((bitmask & (1L << position)) != 0);
+    public boolean isTagged(int tagId) {
+        boolean isFlag = tagId < 0;
+        long bitfield = (isFlag ? mData.flags : mData.tags);
+        int position = (isFlag ? Flag.getIndex(tagId) : Tag.getIndex(tagId));
+        long bitmask = (position < 0 || position > 63 ? 0 : 1L << position);
+        return ((bitfield & bitmask) != 0);
     }
 
     /** Returns whether the item's unread count is >0.
@@ -1295,7 +1297,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             boolean delete = true;
             // don't delete blob if last revision uses it
-            if (isTagged(mMailbox.mVersionedFlag)) {
+            if (isTagged(Flag.ID_FLAG_VERSIONED)) {
                 List<MailItem> revisions = loadRevisions();
                 if (!revisions.isEmpty()) {
                     MailItem lastRev = revisions.get(revisions.size() - 1);
@@ -1347,7 +1349,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mRevisions == null) {
             mRevisions = new ArrayList<MailItem>();
 
-            if (isTagged(mMailbox.mVersionedFlag)) {
+            if (isTagged(Flag.ID_FLAG_VERSIONED)) {
                 for (UnderlyingData data : DbMailItem.getRevisionInfo(this))
                     mRevisions.add(constructItem(mMailbox, data));
             }
@@ -1396,15 +1398,15 @@ public abstract class MailItem implements Comparable<MailItem> {
             ZimbraLog.mailop.debug("saving revision %d for %s", mVersion, getMailopContext(this));
 
             DbMailItem.snapshotRevision(this, mVersion);
-            if (!isTagged(mMailbox.mVersionedFlag))
-                tagChanged(mMailbox.mVersionedFlag, true);
+            if (!isTagged(Flag.ID_FLAG_VERSIONED))
+                tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_VERSIONED), true);
         }
 
         // now that we've made a copy of the item, we can increment the version number
         mVersion++;
 
         // Purge revisions and their blobs beyond revision count limit.
-        if (maxNumRevisions > 0 && isTagged(mMailbox.mVersionedFlag)) {
+        if (maxNumRevisions > 0 && isTagged(Flag.ID_FLAG_VERSIONED)) {
             List<MailItem> revisions = loadRevisions();
             int numRevsToPurge = revisions.size() - (maxNumRevisions - 1);  // -1 for main item
             if (numRevsToPurge > 0) {
@@ -1434,7 +1436,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 DbMailItem.purgeRevisions(this, highestPurgedVer);
             }
             if (revisions.isEmpty())
-                tagChanged(mMailbox.mVersionedFlag, false);
+                tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_VERSIONED), false);
         }
 
         mData.metadataChanged(mMailbox);
@@ -1446,7 +1448,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     MailItem getRevision(int version) throws ServiceException {
         if (version == mVersion)
             return this;
-        if (version <= 0 || version > mVersion || !isTagged(mMailbox.mVersionedFlag))
+        if (version <= 0 || version > mVersion || !isTagged(Flag.ID_FLAG_VERSIONED))
             return null;
 
         for (MailItem revision : loadRevisions()) {
@@ -1484,8 +1486,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         // detect NOOPs and bail
         if (unread == isUnread())
             return;
-        if (!mMailbox.mUnreadFlag.canTag(this))
-            throw MailServiceException.CANNOT_TAG(mMailbox.mUnreadFlag, this);
+        Flag unreadFlag = mMailbox.getFlagById(Flag.ID_FLAG_UNREAD);
+        if (!unreadFlag.canTag(this))
+            throw MailServiceException.CANNOT_TAG(unreadFlag, this);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
@@ -1740,11 +1743,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         boolean shared = indexId > 0 && indexId == mData.indexId;
 
         // if the copy or original is in Spam, put the copy in its own conversation
-        boolean detach = parentId <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
+        boolean detach = parentId <= 0 || isTagged(Flag.ID_FLAG_DRAFT) || inSpam() != folder.inSpam();
         MailItem parent = detach ? null : getParent();
 
-        if (shared && !isTagged(mMailbox.mCopiedFlag)) {
-            alterSystemFlag(mMailbox.mCopiedFlag, true);
+        if (shared && !isTagged(Flag.ID_FLAG_COPIED)) {
+            alterSystemFlag(mMailbox.getFlagById(Flag.ID_FLAG_COPIED), true);
             if (ZimbraLog.mailop.isDebugEnabled())
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
         }
@@ -1860,11 +1863,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(null);
 
-        if (shared && !isTagged(mMailbox.mCopiedFlag)) {
-            tagChanged(mMailbox.mCopiedFlag, true);
-            copy.tagChanged(mMailbox.mCopiedFlag, true);
+        if (shared && !isTagged(Flag.ID_FLAG_COPIED)) {
+            Flag copiedFlag = mMailbox.getFlagById(Flag.ID_FLAG_COPIED);
+            tagChanged(copiedFlag, true);
+            copy.tagChanged(copiedFlag, true);
             if (parent != null)
-                parent.inheritedTagChanged(mMailbox.mCopiedFlag, true);
+                parent.inheritedTagChanged(copiedFlag, true);
         }
 
         if (parent != null && parent.getId() > 0) {
@@ -2419,13 +2423,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         info.rootId = mId;
         info.size   = getTotalSize();
         info.itemIds.add(getType(), id);
-        if (mData.unreadCount != 0 && mMailbox.mUnreadFlag.canTag(this))
+        if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_FLAG_UNREAD).canTag(this))
             info.unreadIds.add(id);
 
         info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(1, getTotalSize()));
 
         if (mData.indexId > 0) {
-            if (!isTagged(mMailbox.mCopiedFlag))
+            if (!isTagged(Flag.ID_FLAG_COPIED))
                 info.indexIds.add(new Integer(mData.indexId));
             else
                 (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);

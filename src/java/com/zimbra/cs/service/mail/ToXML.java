@@ -191,7 +191,7 @@ public class ToXML {
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
-                if (fields != NOTIFY_FIELDS || folder.isTagged(mbox.mNoInheritFlag))
+                if (fields != NOTIFY_FIELDS || folder.isTagged(Flag.ID_FLAG_NO_INHERIT))
                     encodeACL(elem, folder.getEffectiveACL(), exposeAclAccessKey);
             }
         }
@@ -516,10 +516,9 @@ public class ToXML {
 
         c.addAttribute(MailConstants.E_SUBJECT, msgs.get(0).getSubject(), Element.Disposition.CONTENT);
 
-        Mailbox mbox = conv.getMailbox();
         ExpandResults expand = params.getInlineRule();
         for (Message msg : msgs) {
-            if (msg.isTagged(mbox.mDeletedFlag))
+            if (msg.isTagged(Flag.ID_FLAG_DELETED))
                 continue;
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
@@ -563,7 +562,7 @@ public class ToXML {
 
         Mailbox mbox = conv.getMailbox();
         List<Message> msgs = null;
-        if ((octxt != null && octxt.isDelegatedRequest(mbox)) || (addSenders && conv.isTagged(mbox.mDeletedFlag)))
+        if ((octxt != null && octxt.isDelegatedRequest(mbox)) || (addSenders && conv.isTagged(Flag.ID_FLAG_DELETED)))
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
 
         boolean noneVisible = msgs != null && msgs.isEmpty();
@@ -587,7 +586,7 @@ public class ToXML {
                 if (msgs != null) {
                     sl = new SenderList();
                     for (Message msg : msgs) {
-                        if (!msg.isTagged(mbox.mDeletedFlag))
+                        if (!msg.isTagged(Flag.ID_FLAG_DELETED))
                             sl.add(msg);
                     }
                 } else {
@@ -619,7 +618,6 @@ public class ToXML {
         Element c = parent.addElement(MailConstants.E_CONV);
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
 
-        Mailbox mbox = conv.getMailbox();
         if (needToOutput(fields, Change.MODIFIED_CHILDREN | Change.MODIFIED_SIZE)) {
             int count = 0, nondeleted = 0;
             if (msgs == null) {
@@ -628,7 +626,7 @@ public class ToXML {
             } else {
                 count = nondeleted = msgs.size();
                 for (Message msg : msgs)
-                    if (msg.isTagged(mbox.mDeletedFlag))
+                    if (msg.isTagged(Flag.ID_FLAG_DELETED))
                         nondeleted--;
             }
 
@@ -642,7 +640,7 @@ public class ToXML {
         } else if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD | Change.MODIFIED_TAGS)) {
             int flags = 0;  long tags = 0;
             for (Message msg : msgs) {
-                if (!msg.isTagged(mbox.mDeletedFlag)) {
+                if (!msg.isTagged(Flag.ID_FLAG_DELETED)) {
                     flags |= msg.getFlagBitmask();  tags |= msg.getTagBitmask();
                 }
             }

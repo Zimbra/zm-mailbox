@@ -59,6 +59,7 @@ import com.zimbra.cs.mailbox.Chat;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -251,14 +252,14 @@ public class TarFormatter extends Formatter {
     
     private TarOutputStream saveItem(Context context, MailItem mi, 
         HashMap<Integer, String> fldrs, HashMap<Integer, Integer> cnts,
-        Set<String> names, boolean version, TarOutputStream tos) throws
-        ServiceException {
+        Set<String> names, boolean version, TarOutputStream tos)
+    throws ServiceException {
         String ext = null, name = null;
         Integer fid = mi.getFolderId();
         InputStream is = null;
         String fldr;
         
-        if (!version && mi.isTagged(mi.getMailbox().mVersionedFlag)) {
+        if (!version && mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
                 context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion())

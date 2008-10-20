@@ -199,7 +199,7 @@ public class Document extends MailItem {
 
             boolean delete = true;
             // don't delete blob if last revision uses it
-            if (isTagged(mMailbox.mVersionedFlag)) {
+            if (isTagged(Flag.ID_FLAG_VERSIONED)) {
                 List<MailItem> revisions = loadRevisions();
                 if (!revisions.isEmpty()) {
                     MailItem lastRev = revisions.get(revisions.size() - 1);

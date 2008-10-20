@@ -41,9 +41,6 @@ import com.zimbra.cs.imap.ImapFolder;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 
-/**
- * @author dkarp
- */
 public class Folder extends MailItem {
 
     public static final class SyncData {
@@ -281,7 +278,7 @@ public class Folder extends MailItem {
         if (granted != null)
             return (short) (granted.shortValue() & rightsNeeded);
         // no ACLs apply; can we check parent folder for inherited rights?
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(mMailbox.mNoInheritFlag))
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_FLAG_NO_INHERIT))
             return 0;
         return mParent.checkRights(rightsNeeded, authuser, asAdmin);
     }
@@ -304,7 +301,7 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
         
         // if there's an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.mNoInheritFlag, true);
+        alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null)
@@ -334,7 +331,7 @@ public class Folder extends MailItem {
             return;
         
         // if there's an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.mNoInheritFlag, true);
+        alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
         mRights.revokeAccess(zimbraId);
@@ -363,7 +360,7 @@ public class Folder extends MailItem {
 //        }
 
         // if we're setting an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.mNoInheritFlag, true);
+        alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
         if (acl != null && acl.isEmpty())
@@ -383,7 +380,7 @@ public class Folder extends MailItem {
     /** Returns a copy of the ACL that applies to the folder (possibly
      *  inherited from a parent), or <tt>null</tt> if one is not set. */
     public ACL getEffectiveACL() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(mMailbox.mNoInheritFlag) || mParent == null)
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_FLAG_NO_INHERIT) || mParent == null)
             return getACL();
         return mParent.getEffectiveACL();
     }
@@ -1088,8 +1085,8 @@ public class Folder extends MailItem {
         if (mlistACL != null) {
             ACL acl = new ACL(mlistACL);
             mRights = acl.isEmpty() ? null : acl;
-            if (!isTagged(mMailbox.mNoInheritFlag))
-                alterTag(mMailbox.mNoInheritFlag, true);
+            if (!isTagged(Flag.ID_FLAG_NO_INHERIT))
+                alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
         }
     }
 

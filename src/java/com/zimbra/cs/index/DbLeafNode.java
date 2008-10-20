@@ -22,6 +22,7 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbSearchConstraints;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
@@ -54,7 +55,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.IConstraints#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox, java.util.List)
      */
-    public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> trashSpamFolders) throws ServiceException
+    public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> trashSpamFolders)
     {
         if (!mHasSpamTrashSetting) {
             for (Folder f : trashSpamFolders) {
@@ -127,8 +128,8 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.IConstraints#tryDbFirst(com.zimbra.cs.mailbox.Mailbox)
      */
-    public boolean tryDbFirst(Mailbox mbox) {
-        return (convId != 0 || (tags != null && tags.contains(mbox.mUnreadFlag))); 
+    public boolean tryDbFirst(Mailbox mbox) throws ServiceException {
+        return (convId != 0 || (tags != null && tags.contains(mbox.getFlagById(Flag.ID_FLAG_UNREAD)))); 
     }
     
     /* (non-Javadoc)
