@@ -44,6 +44,7 @@ import org.apache.jsieve.parser.generated.TokenMgrError;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -103,7 +104,7 @@ public class RuleManager {
      * all rules should be deleted
      * @throws ServiceException
      */
-    public void setRules(Account account, String script) throws ServiceException {
+    public static void setRules(Account account, String script) throws ServiceException {
         String accountId = account.getId();
         ZimbraLog.filter.debug("Setting filter rules for account %s:\n%s", accountId, script);
         if (script == null) {
@@ -143,7 +144,7 @@ public class RuleManager {
     /**
      * Returns the filter rules Sieve script for the given account. 
      */
-    public String getRules(Account account) {
+    public static String getRules(Account account) {
         String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
         return script;
     }
@@ -326,7 +327,7 @@ public class RuleManager {
     /**
      * Parses the sieve script and returns the result. 
      */
-    private Node parse(String script) throws ParseException {
+    private static Node parse(String script) throws ParseException {
         ByteArrayInputStream sin = null;
         try {
             sin = new ByteArrayInputStream(script.getBytes("UTF-8"));
@@ -341,19 +342,33 @@ public class RuleManager {
      * When a folder is renamed, updates any filter rules that reference
      * that folder.
      */
-    public void folderRenamed(Account account, String originalPath, String newPath)
+    public static void folderRenamed(Account account, String originalPath, String newPath)
     throws ServiceException {
-        String rules = getRules(account);
-        if (rules != null) {
-            // Assume that we always put quotes around folder paths.  Replace
-            // any paths that start with this folder's original path.  This will
-            // take care of rules for children affected by a parent's move or rename.
-            String newRules = rules.replace("\"" + originalPath, "\"" + newPath);
-            if (!newRules.equals(rules)) {
-                setRules(account, newRules);
+        String script = getRules(account);
+        if (script != null) {
+            Node node = null;
+            try {
+                node = parse(script);
+            } catch (ParseException e) {
+                ZimbraLog.filter.warn("Unable to update filter rules with new folder path '%s'.", e);
+                return;
+            }
+            FolderRenamer renamer = new FolderRenamer(originalPath, newPath);
+            renamer.accept(node);
+            if (renamer.renamed()) {
+                // Kind of a hacky way to convert a Node tree to a script.  We
+                // convert to XML first, and then to a String.  Unfortunately
+                // jSieve 0.2 doesn't have an API that generates a script from
+                // a Node tree.
+                List<String> ruleNames = getRuleNames(script);
+                SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+                sieveToSoap.accept(node);
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+                String newScript = soapToSieve.getSieveScript();
+                setRules(account, newScript);
                 ZimbraLog.filter.info("Updated filter rules due to folder move or rename from %s to %s.",
                     originalPath, newPath);
-                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n", rules, newRules);
+                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n%s", script, newScript);
             }
         }
     }
@@ -371,7 +386,7 @@ public class RuleManager {
                 setRules(account, newRules);
                 ZimbraLog.filter.info("Updated filter rules due to tag rename from %s to %s.",
                     originalName, newName);
-                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n", rules, newRules);
+                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n%s", rules, newRules);
             }
         }
     }

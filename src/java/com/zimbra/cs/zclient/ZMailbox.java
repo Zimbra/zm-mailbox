@@ -2550,7 +2550,23 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZActionResult renameFolder(String id, String name) throws ServiceException {
-        return doAction(folderAction("rename", id).addAttribute(MailConstants.A_NAME, name));
+        return renameFolder(id, name, null);
+    }
+    
+    /** changes the folder's name and moves it be a child of the given target folder.
+     * @param id folder id
+     * @param name new name
+     * @param targetFolderId new parent, or <tt>null</tt> to keep the current parent
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult renameFolder(String id, String name, String targetFolderId) throws ServiceException {
+        Element folderAction = folderAction("rename", id);
+        folderAction.addAttribute(MailConstants.A_NAME, name);
+        if (targetFolderId != null) {
+            folderAction.addAttribute(MailConstants.A_FOLDER, targetFolderId);
+        }
+        return doAction(folderAction);
     }
 
     /** sets or unsets the folder's exclude from free busy state

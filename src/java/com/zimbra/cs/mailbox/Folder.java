@@ -29,18 +29,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.imap.ImapFolder;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.imap.ImapFolder;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @author dkarp
@@ -882,10 +881,7 @@ public class Folder extends MailItem {
         if (!renamed && target == mParent)
             return;
 
-        String originalPath = getPath();
         super.rename(name, target);
-        if (renamed && !isHidden())
-            RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
     }
 
     /** Moves this folder so that it is a subfolder of <tt>target</tt>.
@@ -905,8 +901,6 @@ public class Folder extends MailItem {
         if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
-        String originalPath = getPath();
-        
         // moving a folder to the Trash marks its contents as read
         if (!inTrash() && target.inTrash())
             recursiveAlterUnread(false);
@@ -923,8 +917,6 @@ public class Folder extends MailItem {
         mData.metadataChanged(mMailbox);
         DbMailItem.setFolder(this, target);
         
-        RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
-
         return true;
     }
 

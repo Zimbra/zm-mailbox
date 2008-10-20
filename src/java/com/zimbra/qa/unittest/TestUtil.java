@@ -646,6 +646,11 @@ extends Assert {
         return mbox.createFolder(parentId, name, null, null, null, null);
     }
     
+    public static ZFolder createFolder(ZMailbox mbox, String parentId, String folderName)
+    throws ServiceException {
+        return mbox.createFolder(parentId, folderName, null, null, null, null);
+    }
+    
     /**
      * Creates a mountpoint between two mailboxes.  The mountpoint gives the
      * "to" user full rights on the folder.

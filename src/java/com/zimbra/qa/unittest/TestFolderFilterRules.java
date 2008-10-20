@@ -20,12 +20,13 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.zclient.ZFilterRules;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
 
 
 public class TestFolderFilterRules
@@ -35,22 +36,22 @@ extends TestCase {
 
     private static String NAME_PREFIX = "TestFolderFilterRules";
     
-    private static String FOLDER1 = NAME_PREFIX + "1";
-    private static String FOLDER2 = NAME_PREFIX + "2";
-    private static String FOLDER3 = NAME_PREFIX + "3";
-    private static String FOLDER4 = NAME_PREFIX + "4";
+    private static String FOLDER1_NAME = NAME_PREFIX + "1";
+    private static String FOLDER2_NAME = NAME_PREFIX + "2";
+    private static String FOLDER3_NAME = NAME_PREFIX + "3";
+    private static String FOLDER4_NAME = NAME_PREFIX + "4";
     
     private static String SUBJECT1 = NAME_PREFIX + " 1";
     private static String SUBJECT2 = NAME_PREFIX + " 2";
     private static String SUBJECT3 = NAME_PREFIX + " 3";
     private static String SUBJECT4 = NAME_PREFIX + " 4";
 
-    private int mFolder1Id;
-    private int mFolder2Id;
-    private int mFolder3Id;
-    private int mFolder4Id;
+    private ZFolder mFolder1;
+    private ZFolder mFolder2;
+    private ZFolder mFolder3;
+    private ZFolder mFolder4;
     
-    private String mOriginalRules;
+    private ZFilterRules mOriginalRules;
     
     /**
      * Creates the following folder hierarchies:
@@ -64,30 +65,17 @@ extends TestCase {
         super.setUp();
         cleanUp();
 
-        Folder f = createFolder(FOLDER1, Mailbox.ID_FOLDER_USER_ROOT);
-        mFolder1Id = f.getId();
-        f = createFolder(FOLDER2, mFolder1Id);
-        mFolder2Id = f.getId();
-        f = createFolder(FOLDER3, mFolder2Id);
-        mFolder3Id = f.getId();
-        f = createFolder(FOLDER4, Mailbox.ID_FOLDER_USER_ROOT);
-        mFolder4Id = f.getId();
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        mFolder1 = TestUtil.createFolder(mbox, FOLDER1_NAME);
+        mFolder2 = TestUtil.createFolder(mbox, mFolder1.getId(), FOLDER2_NAME);
+        mFolder3 = TestUtil.createFolder(mbox, mFolder2.getId(), FOLDER3_NAME);
+        mFolder4 = TestUtil.createFolder(mbox, FOLDER4_NAME);
 
         // Remember original rules and set rules for this test
-        RuleManager rm = RuleManager.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        mOriginalRules = rm.getRules(account);
-        rm.setRules(account, FILTER_RULES);
+        mOriginalRules = mbox.getFilterRules();
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailSieveScript, FILTER_RULES);
     }
     
-    private Folder createFolder(String folderName, int parentId)
-    throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder f =
-            mbox.createFolder(null, folderName, parentId, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
-        return f;
-    }
-
     /**
      * Tests filtering to folders without changes.
      */
@@ -101,16 +89,18 @@ extends TestCase {
      */
     public void testRenameLeaf()
     throws Exception {
-        renameFolder(mFolder3Id, NAME_PREFIX + "New3");
+        renameFolder(mFolder3.getId(), NAME_PREFIX + "New3", null);
         sendMessages();
     }
 
     /**
-     * Tests renaming a parent folder.
+     * Tests renaming the root folder, which isn't referenced with a leading
+     * 
+     * @throws Exception
      */
-    public void testRenameParent()
+    public void testRenameRoot()
     throws Exception {
-        renameFolder(mFolder2Id, NAME_PREFIX + "New2");
+        renameFolder(mFolder1.getId(), NAME_PREFIX + "New1", null);
         sendMessages();
     }
     
@@ -119,7 +109,7 @@ extends TestCase {
      */
     public void testMoveLeaf()
     throws Exception {
-        moveFolder(mFolder3Id, mFolder4Id);
+        moveFolder(mFolder3.getId(), mFolder4.getId());
         sendMessages();
     }
 
@@ -128,7 +118,13 @@ extends TestCase {
      */
     public void testMoveParent()
     throws Exception {
-        moveFolder(mFolder2Id, mFolder4Id);
+        moveFolder(mFolder2.getId(), mFolder4.getId());
+        sendMessages();
+    }
+    
+    public void testMoveAndRename()
+    throws Exception {
+        renameFolder(mFolder2.getId(), NAME_PREFIX + "New2", mFolder4.getId());
         sendMessages();
     }
     
@@ -137,76 +133,100 @@ extends TestCase {
      */
     private void sendMessages()
     throws Exception {
-        verifyFolderSize(mFolder1Id, 0);
+        verifyFolderSize(mFolder1.getId(), 0);
         TestUtil.addMessageLmtp(SUBJECT1, USER_NAME, USER_NAME);
-        verifyFolderSize(mFolder1Id, 1);
+        verifyFolderSize(mFolder1.getId(), 1);
         
-        verifyFolderSize(mFolder2Id, 0);
+        verifyFolderSize(mFolder2.getId(), 0);
         TestUtil.addMessageLmtp(SUBJECT2, USER_NAME, USER_NAME);
-        verifyFolderSize(mFolder2Id, 1);
+        verifyFolderSize(mFolder2.getId(), 1);
         
-        verifyFolderSize(mFolder3Id, 0);
+        verifyFolderSize(mFolder3.getId(), 0);
         TestUtil.addMessageLmtp(SUBJECT3, USER_NAME, USER_NAME);
-        verifyFolderSize(mFolder3Id, 1);
+        verifyFolderSize(mFolder3.getId(), 1);
         
-        verifyFolderSize(mFolder4Id, 0);
+        verifyFolderSize(mFolder4.getId(), 0);
         TestUtil.addMessageLmtp(SUBJECT4, USER_NAME, USER_NAME);
-        verifyFolderSize(mFolder4Id, 1);
+        verifyFolderSize(mFolder4.getId(), 1);
     }
 
     /**
      * Verifies message count for the given folder.
      */
-    private void verifyFolderSize(int folderId, int size)
+    private void verifyFolderSize(String folderId, int size)
     throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder f = mbox.getFolderById(null, folderId);
-        List<Integer> ids = TestUtil.search(mbox, "in:" + f.getPath(), MailItem.TYPE_MESSAGE);
-        assertEquals("Incorrect message count for folder " + f.getPath(), size, ids.size());
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder f = mbox.getFolderById(folderId);
+        List<ZMessage> messages = TestUtil.search(mbox, "in:" + f.getPath());
+        assertEquals("Incorrect message count for folder " + f.getPath(), size, messages.size());
     }
     
-    private void renameFolder(int folderId, String newName)
+    /**
+     * Renames the given folder and confirms that filter rules were updated
+     * with the new path.
+     */
+    private void renameFolder(String folderId, String newName, String newParentId)
     throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder folder = mbox.getFolderById(null, folderId);
-        String oldPath = folder.getPath();
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder = mbox.getFolderById(folderId);
         
-        mbox.rename(null, folderId, MailItem.TYPE_FOLDER, newName);
-        folder = mbox.getFolderById(null, folder.getId());
+        // Confirm that the old path is in the script.
+        String oldPath = folder.getPath();
+        if (oldPath.charAt(0) == '/') {
+            // Path in scripts may not have a leading slash.  
+            oldPath = oldPath.substring(1, oldPath.length());
+        }
+        Account account = TestUtil.getAccount(USER_NAME);
+        String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+        assertTrue("Could not find path " + oldPath + " in script: " + script, script.contains(oldPath));
+        
+        // Rename the folder and check the new path.
+        mbox.renameFolder(folderId, newName, newParentId);
+        folder = mbox.getFolderById(folder.getId());
         String newPath = folder.getPath();
+        if (newPath.charAt(0) == '/') {
+            newPath = newPath.substring(1, newPath.length());
+        }
         assertEquals(newName, folder.getName());
         assertTrue("Folder path '" + newPath + "' does not end with " + newName,
             folder.getPath().endsWith(newName));
 
-        // Confirm that filter rules are updated
-        RuleManager rm = RuleManager.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        String rules = rm.getRules(account);
-        assertFalse("Found old path '" + oldPath + " in rules: " + rules, rules.indexOf(oldPath) >= 0);
-        assertTrue("Could not find new path '" + newPath + " in rules: " + rules, rules.indexOf(newPath) >= 0);
+        // Confirm that filter rules are updated.
+        account = TestUtil.getAccount(USER_NAME); // refresh
+        script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+        assertFalse("Found old path '" + oldPath + " in script: " + script, script.indexOf(oldPath) >= 0);
+        assertTrue("Could not find new path '" + newPath + " in script: " + script, script.indexOf(newPath) >= 0);
     }
     
-    private void moveFolder(int folderId, int newParentFolderId)
+    private void moveFolder(String folderId, String newParentFolderId)
     throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder folder = mbox.getFolderById(null, folderId);
-        Folder newParent = mbox.getFolderById(null, newParentFolderId); 
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder = mbox.getFolderById(folderId);
+        ZFolder newParent = mbox.getFolderById(newParentFolderId); 
         String newParentPath = newParent.getPath();
         String oldPath = folder.getPath();
+        if (oldPath.charAt(0) == '/') {
+            // Path in scripts may not have a leading slash  
+            oldPath = oldPath.substring(1, oldPath.length());
+        }
+
+        // Confirm that the old path is in the script.
+        Account account = TestUtil.getAccount(USER_NAME);
+        String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+        assertTrue("Could not find path " + oldPath + " in script: " + script, script.contains(oldPath));
         
-        mbox.move(null, folderId, MailItem.TYPE_FOLDER, newParentFolderId);
-        folder = mbox.getFolderById(null, folder.getId());
+        mbox.moveFolder(folderId, newParentFolderId);
+        folder = mbox.getFolderById(folder.getId());
         String newPath = folder.getPath();
         assertFalse("Path '" + oldPath + "' did not change", newPath.equals(oldPath));
         assertTrue("Folder path '" + newPath + "' does not start with " + newParentPath,
             folder.getPath().startsWith(newParentPath));
 
         // Confirm that filter rules are updated
-        RuleManager rm = RuleManager.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        String rules = rm.getRules(account);
-        assertFalse("Found old path '" + oldPath + " in rules: " + rules, rules.indexOf(oldPath) >= 0);
-        assertTrue("Could not find new path '" + newPath + " in rules: " + rules, rules.indexOf(newPath) >= 0);
+        account = TestUtil.getAccount(USER_NAME); // refresh
+        script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+        assertFalse("Found old path '" + oldPath + " in script: " + script, script.indexOf(oldPath) >= 0);
+        assertTrue("Could not find new path '" + newPath + " in script: " + script, script.indexOf(newPath) >= 0);
     }
 
     private void cleanUp()
@@ -215,13 +235,8 @@ extends TestCase {
     }
     
     protected void tearDown() throws Exception {
-        // Restore original rules
-        RuleManager rm = RuleManager.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        rm.setRules(account, mOriginalRules);
-        
-        cleanUp();
-        super.tearDown();
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        mbox.saveFilterRules(mOriginalRules);
     }
 
     private static final String FILTER_RULES = StringUtil.join("\n", new String[] {
@@ -230,29 +245,35 @@ extends TestCase {
         "# Folder 1",
         "if anyof (header :is \"subject\" \"" + SUBJECT1 + "\" )",
         "{",
-        "    fileinto \"/" + FOLDER1 + "\";",
+        "    fileinto \"" + FOLDER1_NAME + "\";",
         "    stop;",
         "}",
         "",
         "# Folder 2",
         "if anyof (header :is \"subject\" \"" + SUBJECT2 + "\" )",
         "{",
-        "    fileinto \"/" + FOLDER1 + "/" + FOLDER2 + "\";",
+        "    fileinto \"/" + FOLDER1_NAME + "/" + FOLDER2_NAME + "\";",
         "    stop;",
         "}",
         "",
         "# Folder 3",
         "if anyof (header :is \"subject\" \"" + SUBJECT3 + "\" )",
         "{",
-        "    fileinto \"/" + FOLDER1 + "/" + FOLDER2 + "/" + FOLDER3 + "\";",
+        "    fileinto \"" + FOLDER1_NAME + "/" + FOLDER2_NAME + "/" + FOLDER3_NAME + "\";",
         "    stop;",
         "}",
         "",
         "# Folder 4",
         "if anyof (header :is \"subject\" \"" + SUBJECT4 + "\" )",
         "{",
-        "    fileinto \"/" + FOLDER4 + "\";",
+        "    fileinto \"/" + FOLDER4_NAME + "\";",
         "    stop;",
         "}"
     });
+
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestFolderFilterRules.class);
+    }
 }

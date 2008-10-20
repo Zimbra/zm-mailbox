@@ -60,6 +60,7 @@ import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
@@ -5491,6 +5492,7 @@ public class Mailbox {
      * @param tcon      An optional constraint on the items being moved. */
     public synchronized void move(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
+        Map<Integer, String> oldFolderPaths = new HashMap<Integer, String>(); 
 
         boolean success = false;
         try {
@@ -5507,6 +5509,9 @@ public class Mailbox {
             boolean resetUIDNEXT = false;
 
             for (MailItem item : items) {
+                if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId())) {
+                    oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
+                }
                 // train the spam filter if necessary...
                 trainSpamFilter(item, target);
                 
@@ -5528,6 +5533,12 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+        
+        if (success) {
+            for (int id : oldFolderPaths.keySet()) {
+                updateFilterRules(id, oldFolderPaths.get(id));
+            }
+        }
     }
 
     public synchronized void rename(OperationContext octxt, int id, byte type, String name, int folderId) throws ServiceException {
@@ -5543,10 +5554,14 @@ public class Mailbox {
         RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId);
 
         boolean success = false;
+        String oldFolderPath = null;
         try {
             beginTransaction("rename", octxt, redoRecorder);
 
             MailItem item = getItemById(id, type);
+            if (item instanceof Folder) {
+                oldFolderPath = ((Folder) item).getPath();
+            }
             checkItemChangeID(item);
             if (folderId <= 0)
                 folderId = item.getFolderId();
@@ -5565,6 +5580,10 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+        
+        if (success && oldFolderPath != null) {
+            updateFilterRules(id, oldFolderPath);
+        }
     }
 
     public synchronized void rename(OperationContext octxt, int id, byte type, String path) throws ServiceException {
@@ -5576,6 +5595,7 @@ public class Mailbox {
         RenameItemPath redoRecorder = new RenameItemPath(mId, id, type, path);
 
         boolean success = false;
+        Map<Integer, String> oldFolderPaths = new HashMap<Integer, String>();
         try {
             beginTransaction("renameFolderPath", octxt, redoRecorder);
             RenameItemPath redoPlayer = (RenameItemPath) mCurrentChange.getRedoPlayer();
@@ -5601,8 +5621,12 @@ public class Mailbox {
                     subfolder = Folder.create(getNextItemId(subfolderId), this, parent, name);
                 else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                else if (!subfolder.getName().equals(name) && subfolder.isMutable())
+                else if (!subfolder.getName().equals(name) && subfolder.isMutable()) {
+                    if (!oldFolderPaths.containsKey(subfolder.getId())) {
+                        oldFolderPaths.put(subfolder.getId(), subfolder.getPath());
+                    }
                     subfolder.rename(name, parent);
+                }
                 recorderParentIds[i] = subfolder.getId();
                 parent = subfolder;
             }
@@ -5611,11 +5635,31 @@ public class Mailbox {
             trainSpamFilter(item, parent);
             
             String name = parts[parts.length - 1];
+            if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId())) {
+                oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
+            }
             item.rename(name, parent);
 
             success = true;
         } finally {
             endTransaction(success);
+        }
+        
+        if (success) {
+            for (int folderId : oldFolderPaths.keySet()) {
+                updateFilterRules(folderId, oldFolderPaths.get(folderId));
+            }
+        }
+    }
+    
+    protected void updateFilterRules(int folderId, String oldPath) {
+        try {
+            Folder folder = getFolderById(folderId);
+            if (!folder.getPath().equals(oldPath) && !folder.isHidden()) {
+                RuleManager.folderRenamed(getAccount(), oldPath, folder.getPath());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to update filter rules with new folder path.", e);
         }
     }
 
