@@ -115,7 +115,8 @@ public class LiveImport extends MailItemImport {
             JDAVMailFolder remoteRootFolder = (JDAVMailFolder)store.getDefaultFolder();
             Collection<DataSourceItem> dsFolders =
                 DbDataSource.getAllMappingsInFolder(ds, ds.getFolderId());
-            Map<Integer, DataSourceItem> dsFoldersById = new HashMap<Integer, DataSourceItem>();
+            Map<Integer, DataSourceItem> dsFoldersById = new HashMap<Integer,
+                DataSourceItem>();
             com.zimbra.cs.mailbox.Folder localRootFolder = mbox.getFolderById(
                 octxt, ds.getFolderId());
             Folder[] remoteFolders = remoteRootFolder.list("*");
@@ -376,8 +377,8 @@ public class LiveImport extends MailItemImport {
     }
 
     private void importFolder(DataSource ds, OperationContext octxt,
-        Folder[] remoteFolders, DataSourceItem dsFolder) throws IOException, MessagingException,
-        ServiceException {
+        Folder[] remoteFolders, DataSourceItem dsFolder) throws IOException,
+        MessagingException, ServiceException {
         int folderId = dsFolder.itemId;
         com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(
             octxt, folderId);
@@ -403,7 +404,8 @@ public class LiveImport extends MailItemImport {
 
         Collection<DataSourceItem> dsMsgs =
             DbDataSource.getAllMappingsInFolder(ds, dsFolder.itemId);
-        Map<Integer, DataSourceItem> dsMsgsById = new HashMap<Integer, DataSourceItem>();
+        Map<Integer, DataSourceItem> dsMsgsById = new HashMap<Integer,
+            DataSourceItem>();
         Set<Integer> localIds = new HashSet<Integer>();
         Message[] msgArray = remoteFolder.getMessages();
         int numMatched = 0;
@@ -493,7 +495,8 @@ public class LiveImport extends MailItemImport {
                 mbox.attachmentsIndexingEnabled()), folderId, flags);
             if (localMsg != null) {
                 LiveData ld = new LiveData(ds, localMsg.getId(),
-                    remoteMsg.getMessageID(), date.getTime(), flags);
+                    remoteMsg.getMessageID(), localMsg.getChangeDate(),
+                    date.getTime(), flags);
 
                 try {
                     ld.add();
@@ -526,7 +529,8 @@ public class LiveImport extends MailItemImport {
                     date = new Date(localMsg.getDate());
 
                 LiveData ld = new LiveData(ds, localMsg.getId(),
-                    newUids[0], date.getTime(), getZimbraFlags(remoteMsg));
+                    newUids[0], localMsg.getChangeDate(), date.getTime(),
+                    getZimbraFlags(remoteMsg));
 
                 try {
                     ld.add();
@@ -622,12 +626,8 @@ public class LiveImport extends MailItemImport {
 
         Collection<DataSourceItem> dsContacts =
             DbDataSource.getAllMappingsInFolder(ds, folderTracker.itemId);
-        Map<Integer, DataSourceItem> dsContactsById = new HashMap<Integer,
-            DataSourceItem>();
 
         contactFolder.open(Folder.READ_WRITE);
-        for (DataSourceItem dsContact : dsContacts)
-            dsContactsById.put(dsContact.itemId, dsContact);
         for (int i = 1; i <= contactFolder.getContactCount(); i++) {
             JDAVContact remoteContact = contactFolder.getContact(i);
             DataSourceItem trackedContact = DbDataSource.getReverseMapping(ds,
@@ -639,19 +639,21 @@ public class LiveImport extends MailItemImport {
                 LiveData ld = new LiveData(ds, trackedContact);
                 Contact localContact = mbox.getContactById(octxt, trackedContact.itemId);
 
-                if (remoteContact.getModifiedDate().getTime() > ld.getDate()) {
+                if (remoteContact.getModifiedDate().getTime() > ld.getRemoteDate()) {
                     mbox.modifyContact(octxt, localContact.getId(),
                         LiveData.getParsedContact(remoteContact, localContact));
-                    ld.setDate(remoteContact.getModifiedDate().getTime());
+                    localContact = mbox.getContactById(octxt, trackedContact.itemId);
+                    ld.setDates(localContact.getChangeDate(),
+                        remoteContact.getModifiedDate().getTime());
                     ld.update();
                     numUpdated++;
                     ZimbraLog.datasource.debug("Updated local contact %s",
                         remoteContact.getName());
-                } else if (localContact.getChangeDate() > ld.getDate()) {
+                } else if (localContact.getChangeDate() > ld.getLocalDate()) {
                     LiveData.updateJDAVContact(remoteContact, localContact);
                     remoteContact.modify();
-//                    ld.setDate(remoteContact.getModifiedDate().getTime());
-                    ld.setDate(localContact.getChangeDate());
+                    ld.setDates(localContact.getChangeDate(),
+                        remoteContact.getModifiedDate().getTime());
                     ld.update();
                     numUpdated++;
                     ZimbraLog.datasource.debug("Updated remote contact %s",
@@ -679,17 +681,22 @@ public class LiveImport extends MailItemImport {
                 LiveData ld = new LiveData(ds, trackedGroup);
                 Contact localGroup = mbox.getContactById(octxt, trackedGroup.itemId);
 
-                if (remoteGroup.getModifiedDate().getTime() > ld.getDate()) {
+                if (remoteGroup.getModifiedDate().getTime() > ld.getRemoteDate()) {
                     mbox.modifyContact(octxt, localGroup.getId(),
                         LiveData.getParsedContact(remoteGroup, localGroup));
+                    localGroup = mbox.getContactById(octxt, trackedGroup.itemId);
+                    ld.setDates(localGroup.getChangeDate(),
+                        remoteGroup.getModifiedDate().getTime());
+                    ld.update();
                     numUpdated++;
                     ZimbraLog.datasource.debug("Updated local group %s",
                         remoteGroup.getName());
                 /*
-                } else if (localGroup.getChangeDate() > ld.getDate()) {
+                } else if (localGroup.getChangeDate() > ld.getLocalDate()) {
                     LiveData.updateJDAVContact(remoteGroup, localContact);
                     remoteGroup.modify();
-                    ld.setDate(remoteContact.getModifiedDate().getTime());
+                    ld.setDates(localGroup.getChangeDate(),
+                        remoteGroup.getModifiedDate().getTime());
                     ld.update();
                     numUpdated++;
                     ZimbraLog.datasource.debug("Updated remote group %s",
@@ -716,7 +723,7 @@ public class LiveImport extends MailItemImport {
                     LiveData.getParsedContact(remoteContact, null),
                     folderTracker.itemId, null);
                 LiveData ld = new LiveData(ds, localContact.getId(),
-                    remoteContact.getUID(),
+                    remoteContact.getUID(), localContact.getChangeDate(),
                     remoteContact.getModifiedDate().getTime(), 0);
 
                 try {
@@ -743,7 +750,7 @@ public class LiveImport extends MailItemImport {
                     LiveData.getParsedContact(remoteGroup, null),
                     folderTracker.itemId, null);
                 LiveData ld = new LiveData(ds, localGroup.getId(),
-                    remoteGroup.getUID(),
+                    remoteGroup.getUID(), localGroup.getChangeDate(),
                     remoteGroup.getModifiedDate().getTime(), 0);
     
                 ZimbraLog.datasource.debug("Found new remote group %s. Creating local copy.",
@@ -762,8 +769,14 @@ public class LiveImport extends MailItemImport {
         }
         // Remaining local ID's are contacts that were not found on the remote server
         for (int localId : localIds) {
-            DataSourceItem dsContact = dsContactsById.get(localId);
+            DataSourceItem dsContact = null;
 
+            for (DataSourceItem contact : dsContacts) {
+                if (contact.itemId == localId) {
+                    dsContact = contact;
+                    break;
+                }
+            }
             if (dsContact == null) {
                 Contact localContact = mbox.getContactById(octxt, localId);
                 String dlist = localContact.getFields().get(Contact.A_dlist);
@@ -787,7 +800,8 @@ public class LiveImport extends MailItemImport {
                     }
                     if (newUids != null) {
                         LiveData ld = new LiveData(ds, localContact.getId(),
-                            newUids[0], remoteContact.getModifiedDate().getTime(), 0);
+                            newUids[0], localContact.getChangeDate(),
+                            remoteContact.getModifiedDate().getTime(), 0);
 
                         try {
                             ld.add();

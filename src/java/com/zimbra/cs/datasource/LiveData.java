@@ -35,20 +35,21 @@ import com.zimbra.cs.mime.ParsedContact;
 
 public class LiveData {
     private int flags;
-    private long date;
+    private long localDate, remoteDate;
     private DataSource ds;
     private DataSourceItem dsi;
-    private static final String METADATA_KEY_DATE = "d";
+    private static final String METADATA_KEY_DATE_LOCAL = "dl";
+    private static final String METADATA_KEY_DATE_REMOTE = "dr";
     private static final String METADATA_KEY_FLAGS = "f";
     
     public LiveData(DataSource ds, int itemID) throws ServiceException {
         setDataSourceItem(ds, DbDataSource.getMapping(ds, itemID));
     }
     
-    public LiveData(DataSource ds, int itemID, String uid, long date, int flags)
-        throws ServiceException {
+    public LiveData(DataSource ds, int itemID, String uid, long localDate,
+        long remoteDate, int flags) throws ServiceException {
         setDataSourceItem(ds, new DataSourceItem(itemID, uid, new Metadata()));
-        setDate(date);
+        setDates(localDate, remoteDate);
         setFlags(flags);
     }
     
@@ -58,11 +59,15 @@ public class LiveData {
     
     int getFlags() { return flags; }
     
-    long getDate() { return date; }
+    long getLocalDate() { return localDate; }
     
-    public void setDate(long date) throws ServiceException {
-        this.date = date;
-        dsi.md.put(METADATA_KEY_DATE, Long.toString(date));
+    long getRemoteDate() { return remoteDate; }
+
+    public void setDates(long localDate, long remoteDate) throws ServiceException {
+        this.localDate = localDate;
+        dsi.md.put(METADATA_KEY_DATE_LOCAL, Long.toString(localDate));
+        this.localDate = localDate;
+        dsi.md.put(METADATA_KEY_DATE_REMOTE, Long.toString(remoteDate));
     }
     
     public void setFlags(int flags) throws ServiceException {
@@ -94,8 +99,9 @@ public class LiveData {
         
         this.ds = ds;
         this.dsi = dsi;
-        date = dsi.md.getLong(METADATA_KEY_DATE, 0);
         flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS, 0);
+        localDate = dsi.md.getLong(METADATA_KEY_DATE_LOCAL, 0);
+        remoteDate = dsi.md.getLong(METADATA_KEY_DATE_REMOTE, 0);
     }
     
     public static JDAVContact getJDAVContact(Contact contact) throws ServiceException {
