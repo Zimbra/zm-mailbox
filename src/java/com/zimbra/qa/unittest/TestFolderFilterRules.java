@@ -122,9 +122,23 @@ extends TestCase {
         sendMessages();
     }
     
+    /**
+     * Tests moving to a new parent folder and renaming at the same time. 
+     */
     public void testMoveAndRename()
     throws Exception {
         renameFolder(mFolder2.getId(), NAME_PREFIX + "New2", mFolder4.getId());
+        sendMessages();
+    }
+    
+    /**
+     * Tests moving to a new parent folder and changing the folder name
+     * to upper-case.
+     */
+    public void testMoveAndChangeCase()
+    throws Exception {
+        String newName = mFolder2.getName().toUpperCase();
+        renameFolder(mFolder2.getId(), newName, mFolder4.getId());
         sendMessages();
     }
     
@@ -232,6 +246,7 @@ extends TestCase {
     private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX.toUpperCase()); // for testMoveAndChangeCase()
     }
     
     protected void tearDown() throws Exception {

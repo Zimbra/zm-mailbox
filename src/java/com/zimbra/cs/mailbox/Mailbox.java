@@ -5622,6 +5622,7 @@ public class Mailbox {
                 else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (!subfolder.getName().equals(name) && subfolder.isMutable()) {
+                    // Same folder name, different case.
                     if (!oldFolderPaths.containsKey(subfolder.getId())) {
                         oldFolderPaths.put(subfolder.getId(), subfolder.getPath());
                     }
