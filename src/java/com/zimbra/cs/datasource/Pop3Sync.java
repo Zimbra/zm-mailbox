@@ -220,7 +220,7 @@ public class Pop3Sync extends MailItemImport {
     private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
         throws ServiceException, IOException, MessagingException {
         return isOffline() ?
-            offlineAddMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
+            addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
             RuleManager.getInstance().applyRules(
                 mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
                 new SharedDeliveryContext(), dataSource.getFolderId());

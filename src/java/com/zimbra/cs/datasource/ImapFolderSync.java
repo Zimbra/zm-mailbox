@@ -830,7 +830,7 @@ class ImapFolderSync {
     private Message addMessage(ParsedMessage pm, int folderId, int flags)
         throws ServiceException, IOException {
         return ds.isOffline() ?
-            imapSync.offlineAddMessage(pm, folderId, flags) :
+            imapSync.addMessage(pm, folderId, flags) :
             mailbox.addMessage(null, pm, folderId, true, flags, null);
     }
 

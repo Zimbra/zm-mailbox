@@ -256,7 +256,7 @@ public class Pop3Import extends MailItemImport {
         throws ServiceException, IOException, MessagingException {
         Mailbox mbox = dataSource.getMailbox();
         return isOffline() ?
-            offlineAddMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
+            addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
             RuleManager.getInstance().applyRules(
                 mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
                 new SharedDeliveryContext(), dataSource.getFolderId());

@@ -485,7 +485,7 @@ for (Folder folder : remoteFolders) {
             ParsedMessage pm = new ParsedMessage(remoteMsg, date == null ? -1 :
                 date.getTime(), mbox.attachmentsIndexingEnabled());
             com.zimbra.cs.mailbox.Message m = ds.isOffline() ?
-                offlineAddMessage(pm, folderId, flags) :
+                addMessage(pm, folderId, flags) :
                 mbox.addMessage(null, pm, folderId, true, flags, null);
             
             if (m != null) {

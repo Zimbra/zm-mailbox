@@ -66,7 +66,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return getDataSource().isOffline();
     }
 
-    protected Message offlineAddMessage(ParsedMessage pm, int folderId, int flags)
+    protected Message addMessage(ParsedMessage pm, int folderId, int flags)
         throws ServiceException, IOException {
         Mailbox mbox = getMailbox();
         SharedDeliveryContext context = new SharedDeliveryContext();

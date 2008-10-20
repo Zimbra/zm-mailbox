@@ -810,13 +810,6 @@ public class ImapImport extends MailItemImport {
         return !runAgain;
     }
 
-    private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm, int folderId, int flags)
-        throws ServiceException, IOException {
-        return dataSource.isOffline() ?
-            offlineAddMessage(pm, folderId, flags) :
-            dataSource.getMailbox().addMessage(null, pm, folderId, true, flags, null);
-    }
-    
     private static ParsedMessage getParsedMessage(ImapData id,
                                                   Long receivedDate,
                                                   boolean indexAttachments)
