@@ -1068,8 +1068,8 @@ public class AttributeManager {
         String lengthSuffix;
         
         ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
-        ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
-        ATTRIBUTE_DEFINITIONS.append("\tDESC '" + ai.getDescription() + "'\n");
+        ATTRIBUTE_DEFINITIONS.append("  NAME ( '" + ai.getName() + "' )\n");
+        ATTRIBUTE_DEFINITIONS.append("  DESC '" + ai.getDescription() + "'\n");
         String syntax = null, substr = null, equality = null, ordering = null;
         switch (ai.getType()) {
         case TYPE_BOOLEAN:
@@ -1168,20 +1168,20 @@ public class AttributeManager {
             throw new RuntimeException("unknown type encountered!");
         }
 
-        ATTRIBUTE_DEFINITIONS.append("\tSYNTAX " + syntax +  "\n");
-        ATTRIBUTE_DEFINITIONS.append("\tEQUALITY " + equality);
+        ATTRIBUTE_DEFINITIONS.append("  SYNTAX " + syntax +  "\n");
+        ATTRIBUTE_DEFINITIONS.append("  EQUALITY " + equality);
         if (substr != null) {
-            ATTRIBUTE_DEFINITIONS.append("\n\tSUBSTR " + substr);
+            ATTRIBUTE_DEFINITIONS.append("\n  SUBSTR " + substr);
         }
         
         if (ordering != null) {
-            ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ordering);
+            ATTRIBUTE_DEFINITIONS.append("\n  ORDERING " + ordering);
         } else if (ai.getOrder() != null) {
-            ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ai.getOrder());
+            ATTRIBUTE_DEFINITIONS.append("\n  ORDERING " + ai.getOrder());
         }
         
         if (ai.getCardinality() == AttributeCardinality.single) {
-            ATTRIBUTE_DEFINITIONS.append("\n\tSINGLE-VALUE");
+            ATTRIBUTE_DEFINITIONS.append("\n  SINGLE-VALUE");
         }
         
         ATTRIBUTE_DEFINITIONS.append(")");
@@ -1211,7 +1211,13 @@ public class AttributeManager {
         }
     }
     
-    private void buildObjectClassDefs(StringBuilder OC_DEFINITIONS, String prefix) {
+    /**
+     * 
+     * @param OC_DEFINITIONS
+     * @param prefix
+     * @param blankLineSeperator whether to seperate each OC with a blank line
+     */
+    private void buildObjectClassDefs(StringBuilder OC_DEFINITIONS, String prefix, boolean blankLineSeperator) {
         for (AttributeClass cls : AttributeClass.values()) {
             
             String ocName = cls.getOCName();
@@ -1222,12 +1228,14 @@ public class AttributeManager {
                 
             // OC_DEFINITIONS: 
             List<String> comment = oci.getComment();
+            OC_DEFINITIONS.append("#\n");
             for (String line : comment) {
                 if (line.length() > 0)
                     OC_DEFINITIONS.append("# " + line + "\n");
                 else
                     OC_DEFINITIONS.append("#\n");
             }
+            OC_DEFINITIONS.append("#\n");
             
             OC_DEFINITIONS.append(prefix + "( " + oci.getName() + "\n");
             OC_DEFINITIONS.append("\tNAME '" + oci.getName() + "'\n");
@@ -1241,7 +1249,10 @@ public class AttributeManager {
             buildObjectClassAttrs(cls, value);
             
             OC_DEFINITIONS.append(value);
-            OC_DEFINITIONS.append(")\n\n");
+            OC_DEFINITIONS.append(")\n");
+            
+            if (blankLineSeperator)
+                OC_DEFINITIONS.append("\n");
             
         }
     }
@@ -1455,7 +1466,7 @@ public class AttributeManager {
         buildObjectClassOIDs(OC_GROUP_OIDS, OC_OIDS, "objectIdentifier ");
         
         // object class definitions
-        buildObjectClassDefs(OC_DEFINITIONS, "objectclass ");
+        buildObjectClassDefs(OC_DEFINITIONS, "objectclass ", true);
         
         Map<String,String> templateFillers = new HashMap<String,String>();
         templateFillers.put("BANNER", BANNER.toString());
@@ -1508,6 +1519,27 @@ public class AttributeManager {
             // - sorted by name
             sortAttrsByName(list);
             
+            /* Hack to add the company attribute from Microsoft schema
+             * For generateLdapSchema, it is specified in the zimbra.schema-template file
+             * We don't use a template file for generateSchemaLdif thus hardcode here.
+             * Move to template file if really necessary.
+             * 
+            #### From Microsoft Schema
+            olcAttributeTypes ( 1.2.840.113556.1.2.146
+                    NAME ( 'company' )
+                    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}
+                    EQUALITY caseIgnoreMatch
+                    SUBSTR caseIgnoreSubstringsMatch
+                    SINGLE-VALUE )
+            */
+            
+            ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes ( 1.2.840.113556.1.2.146\n");
+            ATTRIBUTE_DEFINITIONS.append("  NAME ( 'company' )\n");
+            ATTRIBUTE_DEFINITIONS.append("  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}\n");
+            ATTRIBUTE_DEFINITIONS.append("  EQUALITY caseIgnoreMatch\n");
+            ATTRIBUTE_DEFINITIONS.append("  SUBSTR caseIgnoreSubstringsMatch\n");
+            ATTRIBUTE_DEFINITIONS.append("  SINGLE-VALUE )\n");
+            
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes: ");
                 buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
@@ -1519,20 +1551,19 @@ public class AttributeManager {
         buildObjectClassOIDs(OC_GROUP_OIDS, OC_OIDS, "olcObjectIdentifier: ");
         
         // objectclass definitions
-        buildObjectClassDefs(OC_DEFINITIONS, "olcObjectClasses: ");
+        buildObjectClassDefs(OC_DEFINITIONS, "olcObjectClasses: ", false);
         
         pw.println(BANNER);
         pw.println("dn: cn=zimbra,cn=schema,cn=config");
         pw.println("objectClass: olcSchemaConfig");
         pw.println("cn: zimbra");
-        pw.println();
-        pw.println(ZIMBRA_ROOT_OIDS);
-        pw.println(ATTRIBUTE_GROUP_OIDS);
-        pw.println(ATTRIBUTE_OIDS);
-        pw.println(OC_GROUP_OIDS);
-        pw.println(OC_OIDS);
-        pw.println(ATTRIBUTE_DEFINITIONS);
-        pw.println(OC_DEFINITIONS);
+        pw.print(ZIMBRA_ROOT_OIDS);
+        pw.print(ATTRIBUTE_GROUP_OIDS);
+        pw.print(ATTRIBUTE_OIDS);
+        pw.print(OC_GROUP_OIDS);
+        pw.print(OC_OIDS);
+        pw.print(ATTRIBUTE_DEFINITIONS);
+        pw.print(OC_DEFINITIONS);
     }
   
     private static String sortCSL(String in) {
