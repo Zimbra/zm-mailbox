@@ -73,8 +73,10 @@ public class LiveImport extends MailItemImport {
         Long timeout = LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
         Properties props = new Properties();
         
-        props.setProperty("mail.davmail.connectiontimeout", timeout.toString());
-        props.setProperty("mail.davail.timeout", timeout.toString());
+        if (timeout > 0) {
+            props.setProperty("mail.davmail.connectiontimeout", timeout.toString());
+            props.setProperty("mail.davail.timeout", timeout.toString());
+        }
         if (debug)
             props.setProperty("mail.debug", "true");
         SESSION = Session.getInstance(props);
