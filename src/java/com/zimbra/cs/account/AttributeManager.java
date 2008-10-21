@@ -94,6 +94,9 @@ public class AttributeManager {
     private static final String E_GLOBAL_CONFIG_VALUE = "globalConfigValue";
     private static final String E_DEFAULT_COS_VALUE = "defaultCOSValue";
     
+    // multi-line continuation prefix chars
+    private static final String ML_CONT_PREFIX = "  ";
+    
     private static AttributeManager mInstance;
 
     private Map<String, AttributeInfo> mAttrs = new HashMap<String, AttributeInfo>();
@@ -1068,8 +1071,8 @@ public class AttributeManager {
         String lengthSuffix;
         
         ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
-        ATTRIBUTE_DEFINITIONS.append("  NAME ( '" + ai.getName() + "' )\n");
-        ATTRIBUTE_DEFINITIONS.append("  DESC '" + ai.getDescription() + "'\n");
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( '" + ai.getName() + "' )\n");
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + ai.getDescription() + "'\n");
         String syntax = null, substr = null, equality = null, ordering = null;
         switch (ai.getType()) {
         case TYPE_BOOLEAN:
@@ -1168,20 +1171,20 @@ public class AttributeManager {
             throw new RuntimeException("unknown type encountered!");
         }
 
-        ATTRIBUTE_DEFINITIONS.append("  SYNTAX " + syntax +  "\n");
-        ATTRIBUTE_DEFINITIONS.append("  EQUALITY " + equality);
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SYNTAX " + syntax +  "\n");
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "EQUALITY " + equality);
         if (substr != null) {
-            ATTRIBUTE_DEFINITIONS.append("\n  SUBSTR " + substr);
+            ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "SUBSTR " + substr);
         }
         
         if (ordering != null) {
-            ATTRIBUTE_DEFINITIONS.append("\n  ORDERING " + ordering);
+            ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "ORDERING " + ordering);
         } else if (ai.getOrder() != null) {
-            ATTRIBUTE_DEFINITIONS.append("\n  ORDERING " + ai.getOrder());
+            ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "ORDERING " + ai.getOrder());
         }
         
         if (ai.getCardinality() == AttributeCardinality.single) {
-            ATTRIBUTE_DEFINITIONS.append("\n  SINGLE-VALUE");
+            ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "SINGLE-VALUE");
         }
         
         ATTRIBUTE_DEFINITIONS.append(")");
@@ -1238,9 +1241,9 @@ public class AttributeManager {
             OC_DEFINITIONS.append("#\n");
             
             OC_DEFINITIONS.append(prefix + "( " + oci.getName() + "\n");
-            OC_DEFINITIONS.append("\tNAME '" + oci.getName() + "'\n");
-            OC_DEFINITIONS.append("\tDESC '" + oci.getDescription() + "'\n");
-            OC_DEFINITIONS.append("\tSUP ");
+            OC_DEFINITIONS.append(ML_CONT_PREFIX + "NAME '" + oci.getName() + "'\n");
+            OC_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + oci.getDescription() + "'\n");
+            OC_DEFINITIONS.append(ML_CONT_PREFIX + "SUP ");
             for (String sup : oci.getSuperOCs())
                 OC_DEFINITIONS.append(sup);
             OC_DEFINITIONS.append(" " + oci.getType() + "\n");
@@ -1272,30 +1275,30 @@ public class AttributeManager {
         Collections.sort(may);
         
         if (!must.isEmpty()) {
-            value.append("\tMUST (\n");
+            value.append(ML_CONT_PREFIX + "MUST (\n");
             Iterator<String> mustIter = must.iterator();
             while (true) {
-                value.append("\t\t").append(mustIter.next());
+                value.append(ML_CONT_PREFIX + "  ").append(mustIter.next());
                 if (!mustIter.hasNext()) {
                     break;
                 }
                 value.append(" $\n");
             }
-            value.append("\n\t)\n");
+            value.append("\n" + ML_CONT_PREFIX + ")\n");
         }
         if (!may.isEmpty()) {
-            value.append("\tMAY (\n");
+            value.append(ML_CONT_PREFIX + "MAY (\n");
             Iterator<String> mayIter = may.iterator();
             while (true) {
-                value.append("\t\t").append(mayIter.next());
+                value.append(ML_CONT_PREFIX + "  ").append(mayIter.next());
                 if (!mayIter.hasNext()) {
                     break;
                 }
                 value.append(" $\n");
             }
-            value.append("\n\t)\n");
+            value.append("\n" + ML_CONT_PREFIX + ")\n");
         }
-        value.append('\t');
+        value.append(ML_CONT_PREFIX);
     }
     
     private List<AttributeInfo> getAttrList(int groupId) {
@@ -1534,11 +1537,11 @@ public class AttributeManager {
             */
             
             ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes ( 1.2.840.113556.1.2.146\n");
-            ATTRIBUTE_DEFINITIONS.append("  NAME ( 'company' )\n");
-            ATTRIBUTE_DEFINITIONS.append("  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}\n");
-            ATTRIBUTE_DEFINITIONS.append("  EQUALITY caseIgnoreMatch\n");
-            ATTRIBUTE_DEFINITIONS.append("  SUBSTR caseIgnoreSubstringsMatch\n");
-            ATTRIBUTE_DEFINITIONS.append("  SINGLE-VALUE )\n");
+            ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( 'company' )\n");
+            ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}\n");
+            ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "EQUALITY caseIgnoreMatch\n");
+            ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SUBSTR caseIgnoreSubstringsMatch\n");
+            ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SINGLE-VALUE )\n");
             
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes: ");
