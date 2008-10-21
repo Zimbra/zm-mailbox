@@ -21,14 +21,11 @@ import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.DummySSLSocketFactory;
@@ -172,7 +169,7 @@ public class Pop3Sync extends MailItemImport {
         if (count == 0) {
             return; // No new messages
         }
-        if (poppingSelf(mbox, uids.get(0))) {
+        if (poppingSelf(uids.get(0))) {
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
@@ -208,22 +205,13 @@ public class Pop3Sync extends MailItemImport {
             if (date != null) {
                 pm.setReceivedDate(date.getTime());
             }
-            Message msg = addMessage(pm);
+            Message msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
             if (msg != null && uid != null) {
                 DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msg.getId());
             }
         } finally {
             tmp.delete();
         }
-    }
-    
-    private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
-        throws ServiceException, IOException, MessagingException {
-        return isOffline() ?
-            addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
-            RuleManager.getInstance().applyRules(
-                mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
-                new SharedDeliveryContext(), dataSource.getFolderId());
     }
     
     private Date getDateHeader(MimeMessage mm, String name) {
@@ -260,7 +248,7 @@ public class Pop3Sync extends MailItemImport {
         return tmp;
     }
 
-    private static boolean poppingSelf(Mailbox mbox, String uid)
+    private boolean poppingSelf(String uid)
         throws ServiceException {
         Matcher matcher = PATTERN_ZIMBRA_UID.matcher(uid);
         if (!matcher.matches()) {

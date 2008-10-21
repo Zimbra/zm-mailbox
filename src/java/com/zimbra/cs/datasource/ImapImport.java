@@ -159,7 +159,6 @@ public class ImapImport extends MailItemImport {
         DataSource ds = getDataSource();
         try {
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
-            Mailbox mbox = ds.getMailbox();
             ImapFolderCollection imapFolders = ds.getImapFolders();
 
             com.zimbra.cs.mailbox.Folder localRootFolder =
@@ -272,7 +271,7 @@ public class ImapImport extends MailItemImport {
                                 setFlags(mimeMsg, flags);
                                 AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
                                 assert newUids != null && newUids.length == 1;
-                                long uid = newUids[0] != null ? newUids[0].uid : -id;
+                                // long uid = newUids[0] != null ? newUids[0].uid : -id;
                                 // If no UID returned by APPEND, then store the message locally with a negative UID.
                                 // When we sync again we will calculate the checksum of remote message and use that
                                 // to find the corresponding local entry and update the UID with the correct value.
@@ -291,7 +290,7 @@ public class ImapImport extends MailItemImport {
 
                 // Handle new IMAP folder
                 if (folderTracker == null) {
-                    String zimbraPath = getZimbraFolderPath(mbox, ds, remoteFolder);
+                    String zimbraPath = getZimbraFolderPath(ds, remoteFolder);
                     if (zimbraPath != null) { //null means don't sync this folder
                     	ZimbraLog.datasource.info("Found new remote folder %s. Creating local folder %s.", remoteFolder.getFullName(), zimbraPath);
 	                    // Try to get the folder first, in case it was manually created or the
@@ -354,7 +353,7 @@ public class ImapImport extends MailItemImport {
                     String jmPath = localPathToRemotePath(ds, localRootFolder, zimbraFolder, remoteRootFolder.getSeparator());
                     if (jmPath != null) { //null means don't sync up
                     	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
-	                    IMAPFolder jmFolder = createJavaMailFolder(store, jmPath);
+	                    IMAPFolder jmFolder = createJavaMailFolder(jmPath);
 	                    imapFolder = ds.createImapFolder(zimbraFolder.getId(),
 	                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());
 	                    imapFolders.add(imapFolder);
@@ -465,7 +464,7 @@ public class ImapImport extends MailItemImport {
         remoteFolder.renameTo(newName);
     }
 
-    private IMAPFolder createJavaMailFolder(Store store, String jmPath)
+    private IMAPFolder createJavaMailFolder(String jmPath)
     throws MessagingException {
         IMAPFolder jmFolder = (IMAPFolder) store.getFolder(jmPath);
         jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES);
@@ -523,7 +522,7 @@ public class ImapImport extends MailItemImport {
      * folder, but is relative to the root folder specified by the
      * <tt>DataSource</tt>.
      */
-    private String getZimbraFolderPath(Mailbox mbox, DataSource ds, Folder jmFolder)
+    private String getZimbraFolderPath(DataSource ds, Folder jmFolder)
     throws ServiceException, MessagingException {
         char separator = jmFolder.getSeparator();
         String relativePath = jmFolder.getFullName();
@@ -604,7 +603,6 @@ public class ImapImport extends MailItemImport {
         trackedFolder.setUidNext(remoteFolder.getUIDNext());
 
         final DataSource ds = getDataSource();
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
         final com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
 
         // Get remote messages
@@ -638,8 +636,8 @@ public class ImapImport extends MailItemImport {
         // Get stored message ID'S
         final ImapMessageCollection trackedMsgs = DbImapMessage.getImapMessages(mbox, ds, trackedFolder);
         final Set<Integer> localIds = new HashSet<Integer>();
-        addMailItemIds(localIds, mbox, localFolder.getId(), MailItem.TYPE_MESSAGE);
-        addMailItemIds(localIds, mbox, localFolder.getId(), MailItem.TYPE_CHAT);
+        addMailItemIds(localIds, localFolder.getId(), MailItem.TYPE_MESSAGE);
+        addMailItemIds(localIds, localFolder.getId(), MailItem.TYPE_CHAT);
 
         // For servers not supporting UIDVALIDITY, get tracked messages that
         // were appended to mailbox but have no UID. We will match to downloaded
@@ -753,7 +751,8 @@ public class ImapImport extends MailItemImport {
                         Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                         ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
                         int flags = getZimbraFlags(msg.getFlags());
-                        com.zimbra.cs.mailbox.Message localMsg = addMessage(pm, localFolder.getId(), flags);
+                        com.zimbra.cs.mailbox.Message localMsg = addMessage(null, pm, localFolder.getId(), flags);
+
                         if (localMsg != null) {
                             DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, localMsg.getId(), flags);
                         }
@@ -827,7 +826,7 @@ public class ImapImport extends MailItemImport {
     /*
      * Adds item id's to the given set.
      */
-    private void addMailItemIds(Set<Integer> idSet, Mailbox mbox, int folderId, byte type)
+    private void addMailItemIds(Set<Integer> idSet, int folderId, byte type)
     throws ServiceException {
         List<Integer> ids = mbox.listItemIds(null, type, folderId);
         for (int id : ids) {

@@ -308,13 +308,13 @@ class ImapFolderSync {
         Pair<ImapMessage, Integer> pair =
             DbImapMessage.getImapMessage(mailbox, msgId);
         if (pair != null) {
-            ImapMessage tracker = pair.getFirst();
+            ImapMessage localTracker = pair.getFirst();
             int trackedFolderId = pair.getSecond();
             if (msgFolderId == trackedFolderId) {
                 if (trackedFolderId == folderId) {
                     // Case 1: Message flags changed. Update remote flags.
-                    int flags = tracker.getTrackedFlags();
-                    updateFlags(tracker, SyncUtil.zimbraToImapFlags(flags));
+                    int flags = localTracker.getTrackedFlags();
+                    updateFlags(localTracker, SyncUtil.zimbraToImapFlags(flags));
                 } else {
                     // Case 4: Message moved from another folder. Let this
                     // case be handled when the originating folder is processed.
@@ -435,15 +435,15 @@ class ImapFolderSync {
             localFolder.getId(), localPath, remotePath, uidValidity);
     }                                                        
 
-    private void appendNewMessages(List<Integer> newMsgIds)
+    private void appendNewMessages(List<Integer> newIds)
         throws ServiceException, IOException {
         remoteFolder.info("Appending %d new message(s) to remote IMAP folder",
-                          newMsgIds.size());
+                          newIds.size());
         try {
             if (connection.hasUidPlus() || isYahoo()) {
-                appendMessages(newMsgIds);
+                appendMessages(newIds);
             } else {
-                appendMessagesNoUidPlus(newMsgIds);
+                appendMessagesNoUidPlus(newIds);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Unable to append messages", e);
@@ -812,7 +812,8 @@ class ImapFolderSync {
         }
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
         int folderId = localFolder.getId();
-        Message msg = addMessage(pm, folderId, zflags);
+        Message msg = imapSync.addMessage(null, pm, folderId, zflags);
+
         if (msg != null && msg.getFolderId() == folderId) {
             storeImapMessage(uid, msg.getId(), zflags);
             stats.msgsAddedLocally++;
@@ -825,13 +826,6 @@ class ImapFolderSync {
             // that folder.
             deletedUids.add(uid);
         }
-    }
-
-    private Message addMessage(ParsedMessage pm, int folderId, int flags)
-        throws ServiceException, IOException {
-        return ds.isOffline() ?
-            imapSync.addMessage(pm, folderId, flags) :
-            mailbox.addMessage(null, pm, folderId, true, flags, null);
     }
 
     private static ImapData getBody(MessageData md) throws MailException {

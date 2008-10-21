@@ -48,12 +48,8 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.filter.RuleManager;
 
 
 public class Pop3Import extends MailItemImport {
@@ -186,15 +182,13 @@ public class Pop3Import extends MailItemImport {
             return;
         }
 
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
-
         // Fetch message UID's for reconciliation (UIDL)
         folder.fetch(msgs, UID_PROFILE);
 
         // Check the UID of the first message to make sure the account isn't trying
         // to POP itself
         String uid = folder.getUID(msgs[0]);
-        if (poppingSelf(mbox, uid)) {
+        if (poppingSelf(uid)) {
             folder.close(false);
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
@@ -204,7 +198,7 @@ public class Pop3Import extends MailItemImport {
 
         Set<String> uidsToFetch = null;
         if (ds.leaveOnServer()) {
-            uidsToFetch = getUidsToFetch(mbox, ds, folder);
+            uidsToFetch = getUidsToFetch(ds, folder);
         }
 
         // Fetch message bodies (RETR)
@@ -232,7 +226,8 @@ public class Pop3Import extends MailItemImport {
                     pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
                 }
 
-                com.zimbra.cs.mailbox.Message msg = addMessage(pm);
+                com.zimbra.cs.mailbox.Message msg = addMessage(null, pm, ds.getFolderId(), Flag.BITMASK_UNREAD);
+
                 if (msg != null && dataSource.leaveOnServer()) {
                     DbPop3Message.storeUid(mbox, dataSource.getId(), folder.getUID(pop3Msg), msg.getId());
                 }
@@ -252,17 +247,7 @@ public class Pop3Import extends MailItemImport {
         folder.close(!ds.leaveOnServer());
     }
 
-    private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
-        throws ServiceException, IOException, MessagingException {
-        Mailbox mbox = dataSource.getMailbox();
-        return isOffline() ?
-            addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
-            RuleManager.getInstance().applyRules(
-                mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
-                new SharedDeliveryContext(), dataSource.getFolderId());
-    }
-    
-    private Set<String> getUidsToFetch(Mailbox mbox, DataSource ds, POP3Folder folder)
+    private Set<String> getUidsToFetch(DataSource ds, POP3Folder folder)
     throws MessagingException, ServiceException {
         Set<String> uidsToFetch = new HashSet<String>();
         for (Message msg : folder.getMessages()) {
@@ -279,7 +264,7 @@ public class Pop3Import extends MailItemImport {
         return uidsToFetch;
     }
 
-    private boolean poppingSelf(Mailbox mbox, String uid)
+    private boolean poppingSelf(String uid)
     throws ServiceException {
         Matcher matcher = PAT_ZIMBRA_UIDL.matcher(uid);
         if (!matcher.matches()) {

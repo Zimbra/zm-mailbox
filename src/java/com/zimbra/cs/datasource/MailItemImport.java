@@ -25,6 +25,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import java.io.IOException;
@@ -66,9 +67,8 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return getDataSource().isOffline();
     }
 
-    protected Message addMessage(ParsedMessage pm, int folderId, int flags)
-        throws ServiceException, IOException {
-        Mailbox mbox = getMailbox();
+    protected Message addMessage(OperationContext octxt, ParsedMessage pm,
+        int folderId, int flags) throws ServiceException, IOException {
         SharedDeliveryContext context = new SharedDeliveryContext();
         Message msg = null;
         switch (folderId) {
@@ -83,7 +83,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
                 if (flags != Flag.BITMASK_UNREAD) {
                     // Bug 28275: Cannot set DRAFT flag after message has been created
                     flags &= ~Flag.BITMASK_DRAFT;
-                    mbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE,
+                    mbox.setTags(octxt, msg.getId(), MailItem.TYPE_MESSAGE,
                                  flags, MailItem.TAG_UNCHANGED);
                 }
             } catch (Exception e) {
@@ -96,7 +96,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
             break;
         }
         if (msg == null) {
-            msg = mbox.addMessage(null, pm, folderId, false, flags, null);
+            msg = mbox.addMessage(octxt, pm, folderId, false, flags, null);
         }
         return msg;
     }
@@ -108,7 +108,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
     public DataSource getDataSource() {
         return dataSource;
     }
-
+    
     public Mailbox getMailbox() {
         return mbox;
     }

@@ -69,13 +69,12 @@ public class CalDavDataImport extends MailItemImport {
     	try {
         	if (folderIds == null)
         		folderIds = syncFolders();
-        	Mailbox mbox = getDataSource().getMailbox();
         	mbox.beginTrackingSync();
         	OperationContext octxt = new Mailbox.OperationContext(mbox);
         	for (int fid : folderIds) {
             	Folder syncFolder = mbox.getFolderById(octxt, fid);
             	if (syncFolder.getDefaultView() == MailItem.TYPE_APPOINTMENT)
-            	    sync(mbox, octxt, syncFolder);
+            	    sync(octxt, syncFolder);
         	}
     	} catch (DavException e) {
     		throw ServiceException.FAILURE("error importing CalDAV data", e);
@@ -155,8 +154,7 @@ public class CalDavDataImport extends MailItemImport {
     	DataSource ds = getDataSource();
 		CalDavClient client = getClient();
 		Map<String,String> calendars = client.getCalendars();
-		Mailbox mbox = ds.getMailbox();
-    	OperationContext octxt = new Mailbox.OperationContext(mbox);
+		OperationContext octxt = new Mailbox.OperationContext(mbox);
 		Folder rootFolder = mbox.getFolderById(octxt, ds.getFolderId());
 		for (String name : calendars.keySet()) {
 			String url = calendars.get(name);
@@ -286,7 +284,7 @@ public class CalDavDataImport extends MailItemImport {
         buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
         Iterator<ICalTimeZone> iter = calItem.getTimeZoneMap().tzIterator();
         while (iter.hasNext()) {
-            ICalTimeZone tz = (ICalTimeZone) iter.next();
+            ICalTimeZone tz = iter.next();
             CharArrayWriter wr = new CharArrayWriter();
             tz.newToVTimeZone().toICalendar(wr);
             wr.flush();
@@ -346,7 +344,6 @@ public class CalDavDataImport extends MailItemImport {
     	}
     	RemoteCalendarItem item = (RemoteCalendarItem) remoteItem;
     	DataSource ds = getDataSource();
-    	Mailbox mbox = ds.getMailbox();
     	DataSourceItem dsItem = DbDataSource.getReverseMapping(ds, item.href);
     	boolean isStale = false;
     	if (dsItem.md == null) {
@@ -412,7 +409,7 @@ public class CalDavDataImport extends MailItemImport {
     	}
     	return mi;
     }
-    private void sync(Mailbox mbox, OperationContext octxt, Folder syncFolder) throws ServiceException, IOException, DavException {
+    private void sync(OperationContext octxt, Folder syncFolder) throws ServiceException, IOException, DavException {
     	int lastSync = (int)syncFolder.getLastSyncDate();
     	int currentSync = 0;
     	boolean allDone = false;
