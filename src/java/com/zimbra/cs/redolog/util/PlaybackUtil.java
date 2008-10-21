@@ -25,8 +25,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -331,7 +333,12 @@ public class PlaybackUtil {
                 if (until < Long.MAX_VALUE)
                     until++;
                 try {
-                    mPlayer.scanLog(redolog, true, null, mParams.fromTime, until);
+                	Map<Integer, Integer> mboxIdMap = null;
+                	if (mParams.mboxId != Params.MBOX_ID_UNSET) {
+                		mboxIdMap = new HashMap<Integer, Integer>(1);
+                		mboxIdMap.put(mParams.mboxId, mParams.mboxId);
+                	}
+                    mPlayer.scanLog(redolog, true, mboxIdMap, mParams.fromTime, until);
                 } catch (OutOfMemoryError oome) {
                     Zimbra.halt("OutOfMemoryError while replaying redolog: " + oome.getMessage(), oome);
                 } catch (Throwable t) {
