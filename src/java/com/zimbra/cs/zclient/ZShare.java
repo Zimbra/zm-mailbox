@@ -99,7 +99,7 @@ public class ZShare implements ToZJSONObject {
         zjo.put(A_ACTION, mAction.name());
         zjo.put(E_GRANTEE, mGrantee);
         zjo.put(E_GRANTOR, mGrantor);
-        zjo.put(E_LINK, mLink.toString());
+        zjo.put(E_LINK, mLink);
         return zjo;
     }
 

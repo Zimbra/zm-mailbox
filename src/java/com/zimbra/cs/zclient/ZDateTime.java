@@ -145,6 +145,7 @@ public class ZDateTime implements ToZJSONObject {
 
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
+        zjo.put("time", getDate().getTime());
         zjo.put("dateTime", mDateTime);
         zjo.put("timeZoneId", mTimeZoneId);
         return zjo;
