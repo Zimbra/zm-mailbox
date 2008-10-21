@@ -208,8 +208,7 @@ public final class ParsedDateTime {
             	else
             		tzid = str.substring(tzidIdx + 5, propValueColonIdx);
 
-                if ((tzid.equals("GMT") || tzid.equals("UTC"))
-                	&& !datetime.endsWith("Z")) {
+                if (tzid.equals("UTC") && !datetime.endsWith("Z")) {
                 	datetime += "Z";
                 } else {
                 	tz = tzmap.lookupAndAdd(tzid);
