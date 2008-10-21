@@ -138,9 +138,6 @@ public class LdapProvisioning extends Provisioning {
     
     private static LdapConfig sConfig = null;
     
-    // private static Pattern sValidCosName = Pattern.compile("^\\w+$");
-    private static Pattern sValidCosName = Pattern.compile("[-a-zA-Z0-9\\.]+");
-    
     private static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
@@ -1718,9 +1715,6 @@ public class LdapProvisioning extends Provisioning {
     private Cos copyCos(String srcCosId, String destCosName, Map<String, Object> cosAttrs) throws ServiceException {
         destCosName = destCosName.toLowerCase().trim();
 
-        if (!sValidCosName.matcher(destCosName).matches())
-            throw ServiceException.INVALID_REQUEST("invalid name: "+destCosName, null);
-
         Map<String, Object> allAttrs = new HashMap<String, Object>();
         Cos srcCos = getCosById(srcCosId, null);
         if (srcCos == null)
@@ -1777,9 +1771,6 @@ public class LdapProvisioning extends Provisioning {
         if (cos.getName().equals(DEFAULT_COS_NAME))
             throw ServiceException.INVALID_REQUEST("unable to rename default cos", null);
 
-        if (!sValidCosName.matcher(newName).matches())
-            throw ServiceException.INVALID_REQUEST("invalid name: "+newName, null);
-       
         newName = newName.toLowerCase().trim();
         ZimbraLdapContext zlc = null;
         try {
