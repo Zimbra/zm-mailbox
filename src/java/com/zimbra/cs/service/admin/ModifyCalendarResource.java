@@ -20,6 +20,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
@@ -63,7 +64,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
 
         if (isDomainAdminOnly(zsc)) {
             for (String attrName : attrs.keySet()) {
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, AttributeClass.calendarResource))
                     throw ServiceException.PERM_DENIED("can not modify attr: " + attrName);
             }
         }

@@ -25,6 +25,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -65,11 +66,12 @@ public class ModifyAccount extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         if (isDomainAdminOnly(zsc)) {
+            
             for (String attrName : attrs.keySet()) {
                 if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
                     attrName = attrName.substring(1);
-
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
+                
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, AttributeClass.account))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }

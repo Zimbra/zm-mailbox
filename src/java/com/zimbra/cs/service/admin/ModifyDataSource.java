@@ -23,6 +23,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 
@@ -62,26 +63,36 @@ public class ModifyDataSource extends AdminDocumentHandler {
         Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);
         
+        String dsId = dsEl.getAttribute(AccountConstants.A_ID);
+        DataSource ds = prov.get(account, DataSourceBy.id, dsId);
+        if (ds == null)
+            throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
+        
         if (isDomainAdminOnly(zsc)) {
+            AttributeClass klass = getAttributeClassFromType(ds.getType());
             for (String attrName : attrs.keySet()) {
                 if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
                     attrName = attrName.substring(1);
 
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, klass))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }
         
-        String dsId = dsEl.getAttribute(AccountConstants.A_ID);
-        DataSource ds = prov.get(account, DataSourceBy.id, dsId);
-        if (ds == null) {
-            throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
-        }
         ZimbraLog.addDataSourceNameToContext(ds.getName());
         
         prov.modifyDataSource(account, dsId, attrs);
         
         Element response = zsc.createElement(AdminConstants.MODIFY_DATA_SOURCE_RESPONSE);
         return response;
+    }
+    
+    static AttributeClass getAttributeClassFromType(DataSource.Type type) {
+        if (type == DataSource.Type.pop3)
+            return AttributeClass.pop3DataSource;
+        else if (type == DataSource.Type.imap)
+            return AttributeClass.imapDataSource;
+        else
+            return AttributeClass.dataSource;
     }
 }
