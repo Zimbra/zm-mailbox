@@ -38,7 +38,6 @@ public class DiffDocument extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		checkBriefcaseEnabled(zsc);
 		Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
@@ -51,6 +50,12 @@ public class DiffDocument extends WikiDocumentHandler {
     	Document r1 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.TYPE_UNKNOWN, v1);
     	Document r2 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.TYPE_UNKNOWN, v2);
     	
+        byte view = mbox.getFolderById(octxt, r1.getFolderId()).getDefaultView();
+        if (view == MailItem.TYPE_WIKI)
+    		checkNotebookEnabled(zsc);
+        else if (view == MailItem.TYPE_DOCUMENT)
+    		checkBriefcaseEnabled(zsc);
+        
         Element response = zsc.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
         
     	try {

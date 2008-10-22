@@ -22,6 +22,7 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -35,7 +36,6 @@ public class ListDocumentRevisions extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		checkBriefcaseEnabled(zsc);
 		Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
@@ -51,6 +51,12 @@ public class ListDocumentRevisions extends WikiDocumentHandler {
 
         ItemId iid = new ItemId(id, zsc);
         item = mbox.getDocumentById(octxt, iid.getId());
+        
+        byte view = mbox.getFolderById(octxt, item.getFolderId()).getDefaultView();
+        if (view == MailItem.TYPE_WIKI)
+    		checkNotebookEnabled(zsc);
+        else if (view == MailItem.TYPE_DOCUMENT)
+    		checkBriefcaseEnabled(zsc);
 
         if (version < 0)
         	version = item.getVersion();
