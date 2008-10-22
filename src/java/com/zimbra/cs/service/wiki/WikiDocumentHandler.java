@@ -68,14 +68,18 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 	}
 	
 	protected void checkNotebookEnabled(ZimbraSoapContext zsc) throws ServiceException {
+		/*
 		Account requestedAccount = getRequestedAccount(zsc);
 		if (!requestedAccount.getBooleanAttr(Provisioning.A_zimbraFeatureNotebookEnabled, false))
 			throw WikiServiceException.NOT_ENABLED();
+		 */
 	}
 	
 	protected void checkBriefcaseEnabled(ZimbraSoapContext zsc) throws ServiceException {
+		/*
 		Account requestedAccount = getRequestedAccount(zsc);
 		if (!requestedAccount.getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, false))
 			throw WikiServiceException.BRIEFCASES_NOT_ENABLED();
+		 */
 	}
 }
