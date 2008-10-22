@@ -18,6 +18,7 @@ package com.zimbra.cs.service.wiki;
 
 import com.zimbra.common.service.ServiceException;
 
+@SuppressWarnings("serial")
 public class WikiServiceException extends ServiceException {
 	
 	public static final String NO_SUCH_WIKI = "wiki.NO_SUCH_WIKI";
@@ -55,6 +56,9 @@ public class WikiServiceException extends ServiceException {
         return new WikiServiceException("invalid path: "+ path, ERROR, SENDERS_FAULT);
     }
     public static WikiServiceException NOT_ENABLED() {
-        return new WikiServiceException("wiki is not enabled", ERROR, RECEIVERS_FAULT);
+        return new WikiServiceException("notebook is not enabled", ERROR, RECEIVERS_FAULT);
+    }
+    public static WikiServiceException BRIEFCASES_NOT_ENABLED() {
+        return new WikiServiceException("briefcases is not enabled", ERROR, RECEIVERS_FAULT);
     }
 }
