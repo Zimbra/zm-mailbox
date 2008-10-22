@@ -23,6 +23,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -65,7 +66,7 @@ public class ModifyDomain extends AdminDocumentHandler {
                 if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
                     attrName = attrName.substring(1);
 
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, AttributeClass.domain))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }

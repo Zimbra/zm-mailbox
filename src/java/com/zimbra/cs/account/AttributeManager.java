@@ -710,11 +710,19 @@ public class AttributeManager {
  	   return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
     }
 
+    // leave this signature here or now, remove after FRANKLIN build pass
     public boolean isDomainAdminModifiable(String attr) {
- 	   return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
+        return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
     
-    public void makeDomainAdminModifiable (String attr) {
+    public boolean isDomainAdminModifiable(String attr, AttributeClass klass) throws ServiceException {
+        if (!isAttrInClass(attr, klass))
+            throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute on " + klass.name() + ": " + attr, null);
+        
+        return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
+    }
+    
+    public void makeDomainAdminModifiable(String attr) {
     	mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).add(attr);
     }
     
@@ -737,7 +745,7 @@ public class AttributeManager {
     	    else
     		    return since.compare(version) <= 0;
     	} else
-    	    throw ServiceException.INVALID_REQUEST("unknown attribute: " + attr, null);
+    	    throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
     }
     
     private boolean hasFlag(AttributeFlag flag, String attr) {
@@ -750,6 +758,41 @@ public class AttributeManager {
     
     public Set<String> getAttrsInClass(AttributeClass klass) {
         return mClassToAttrsMap.get(klass);
+    }
+    
+    /*
+     * Urg, for bug 32507 we need to know if an attribute is allowed in an entry 
+     * and throw INVALID_ATTR_NAME instead of PERM_DENIED for domain admins.
+     * 
+     * Without bug 32507, INVALID_ATTR_NAME will be naturally thrown by mapping LDAP 
+     * Exception if we try to update an attribute that is not allowed on an entry. 
+     * 
+     */
+    private boolean isAttrInClass(String attr, AttributeClass klass) {
+        
+        switch (klass) {
+        case account:
+            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.account).contains(attr);
+        case calendarResource:
+            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.account).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.calendarResource).contains(attr);
+        case distributionList:
+            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.distributionList).contains(attr);
+        case imapDataSource:
+            return mClassToAttrsMap.get(AttributeClass.dataSource).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.imapDataSource).contains(attr);
+        case pop3DataSource:
+            return mClassToAttrsMap.get(AttributeClass.dataSource).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.pop3DataSource).contains(attr);
+        case domain:
+            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
+                   mClassToAttrsMap.get(AttributeClass.domain).contains(attr);
+        default:
+            return mClassToAttrsMap.get(klass).contains(attr);
+        }
     }
     
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {

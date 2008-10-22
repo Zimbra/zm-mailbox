@@ -25,6 +25,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -61,19 +62,21 @@ public class CreateDataSource extends AdminDocumentHandler {
         Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);
         
+        DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountConstants.A_TYPE));
+        
         if (isDomainAdminOnly(zsc)) {
+            AttributeClass klass = ModifyDataSource.getAttributeClassFromType(type);
             for (String attrName : attrs.keySet()) {
                 if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
                     attrName = attrName.substring(1);
 
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, klass))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }
-        
 
         String name = dsEl.getAttribute(AccountConstants.A_NAME);
-        DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountConstants.A_TYPE));
+        
         DataSource ds = Provisioning.getInstance().createDataSource(account, type, name, attrs);
         Element response = zsc.createElement(AdminConstants.CREATE_DATA_SOURCE_RESPONSE);
         ToXML.encodeDataSource(response, ds);
