@@ -709,11 +709,6 @@ public class AttributeManager {
     public boolean isServerInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
     }
-
-    // leave this signature here or now, remove after FRANKLIN build pass
-    public boolean isDomainAdminModifiable(String attr) {
-        return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
-    }
     
     public boolean isDomainAdminModifiable(String attr, AttributeClass klass) throws ServiceException {
         if (!isAttrInClass(attr, klass))
