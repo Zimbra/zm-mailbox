@@ -189,8 +189,8 @@ extends Assert {
     }
 
     private static String[] MESSAGE_TEMPLATE_LINES = {
-        "From: Jeff Spiccoli <${SENDER}@${DOMAIN}>",
-        "To: Test User 1 <${RECIPIENT}@${DOMAIN}>",
+        "From: Jeff Spiccoli <${SENDER}>",
+        "To: Test User 1 <${RECIPIENT}>",
         "Subject: ${SUBJECT}",
         "Date: ${DATE}",
         "Content-Type: text/plain",
@@ -242,15 +242,24 @@ extends Assert {
         if (body == null) {
             body = DEFAULT_MESSAGE_BODY;
         }
+        sender = addDomainIfNecessary(sender);
+        recipient = addDomainIfNecessary(recipient);
         
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("SUBJECT", subject);
-        vars.put("DOMAIN", getDomain());
         vars.put("SENDER", sender);
         vars.put("RECIPIENT", recipient);
         vars.put("DATE", getDateHeaderValue(date));
         vars.put("MESSAGE_BODY", body);
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
+    }
+    
+    private static String addDomainIfNecessary(String user)
+    throws ServiceException {
+        if (user == null || user.contains("@")) {
+            return user;
+        }
+        return String.format("%s@%s", user, getDomain());
     }
     
     public static void addMessageLmtp(String subject, String recipient, String sender)
@@ -266,10 +275,14 @@ extends Assert {
     
     public static void addMessageLmtp(String[] recipients, String sender, String message)
     throws Exception {
+        String[] recipWithDomain = new String[recipients.length];
+        for (int i = 0; i < recipients.length; i++) {
+            recipWithDomain[i] = addDomainIfNecessary(recipients[i]);
+        }
         Provisioning prov = Provisioning.getInstance();
         LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
-        lmtp.sendMessage(new ByteArrayInputStream(data), recipients, sender, "TestUtil", (long) data.length);
+        lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, sender, "TestUtil", (long) data.length);
         lmtp.close();
     }
     

@@ -813,13 +813,14 @@ public class ParsedMessage {
 
     /**
      * Returns the decoded and unfolded value for the given header name.  If
-     * multiple headers with the same name exist, returns the first one. 
+     * multiple headers with the same name exist, returns the first one.
+     * If the header does not exist, returns <tt>null</tt>. 
      */
     public String getHeader(String headerName) {
         try {
             String value = getMimeMessage().getHeader(headerName, null);
             if (value == null || value.length() == 0)
-                return "";
+                return null;
             try {
                 value = MimeUtility.decodeText(value);
             } catch (UnsupportedEncodingException e) { }
@@ -827,18 +828,22 @@ public class ParsedMessage {
             value = MimeUtility.unfold(value);
             return value;
         } catch (MessagingException e) {
-            return "";
+            sLog.debug("Unable to get header '%s'", headerName, e);
+            return null;
         }
     }
     
+    private static final String[] NO_HEADERS = new String[0];
+    
     /**
-     * Returns the decoded and unfolded values for the given header name.
+     * Returns the decoded and unfolded values for the given header name,
+     * or an empty array if no headers with the given name exist.
      */
     public String[] getHeaders(String headerName) {
         try {
             String[] values = getMimeMessage().getHeader(headerName);
             if (values == null || values.length == 0)
-                return null;
+                return NO_HEADERS;
             
             for (int i=0; i<values.length; i++) {
                 try {
@@ -851,7 +856,8 @@ public class ParsedMessage {
 
             return values;
         } catch (MessagingException e) {
-            return null;
+            sLog.debug("Unable to get headers named '%s'", headerName, e);
+            return NO_HEADERS;
         }
     }
     
@@ -1058,6 +1064,9 @@ public class ParsedMessage {
         setHeaderAsLuceneField(document, "x-envelope-to", LuceneFields.L_H_X_ENV_TO, Field.Store.NO, Field.Index.TOKENIZED);
 
         String msgId = getHeader("message-id");
+        if (msgId == null) {
+            msgId = "";
+        }
         if (msgId.length() > 0) {
             if (msgId.charAt(0) == '<')
                 msgId = msgId.substring(1);

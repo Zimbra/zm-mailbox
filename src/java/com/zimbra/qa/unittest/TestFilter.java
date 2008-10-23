@@ -16,6 +16,7 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import junit.framework.TestCase;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.Node;
 
+import com.zimbra.common.mime.MimeMessage;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
@@ -37,6 +39,7 @@ import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.SieveToSoap;
 import com.zimbra.cs.filter.SoapToSieve;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
@@ -49,6 +52,7 @@ import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
@@ -471,7 +475,71 @@ extends TestCase {
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:testBodyContains");
         assertEquals("Unexpected message flag state", contains, msg.isFlagged());
         mMbox.deleteMessage(msg.getId());
+    }
+
+    /**
+     * Tests the redirect filter action and confirms that the X-ZimbraForwarded
+     * header is set on the redirected message.
+     */
+    public void testRedirect()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         
+        // if subject contains "testRedirect", redirect to user2
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testRedirect"));
+        actions.add(new ZRedirectAction(TestUtil.getAddress(REMOTE_USER_NAME)));
+        rules.add(new ZFilterRule("testRedirect", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message.
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " testRedirect";
+        TestUtil.addMessageLmtp(subject, address, address);
+        
+        // Confirm that user1 did not receive it.
+        List<ZMessage> messages = TestUtil.search(mMbox, "subject:\"" + subject + "\"");
+        assertEquals(0, messages.size());
+        
+        // Confirm that user2 received it, and make sure X-ZimbraForwarded is set.
+        ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ZMessage msg = TestUtil.waitForMessage(remoteMbox, "in:inbox subject:\"" + subject + "\"");
+        byte[] content = TestUtil.getContent(remoteMbox, msg.getId()).getBytes();
+        MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
+        Account user1 = TestUtil.getAccount(USER_NAME);
+        assertEquals(user1.getName(), mimeMsg.getHeader(ZimbraMailAdapter.HEADER_FORWARDED));
+    }
+    
+    /**
+     * Confirms that the message gets delivered even when a mail loop occurs.
+     */
+    public void testRedirectMailLoop()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        
+        // if subject contains "testRedirectMailLoop", redirect to user1
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testRedirectMailLoop"));
+        actions.add(new ZRedirectAction(TestUtil.getAddress(USER_NAME)));
+        rules.add(new ZFilterRule("testRedirectMailLoop", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message.
+        String subject = NAME_PREFIX + " testRedirectMailLoop";
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        
+        // Confirm that user1 received it.
+        ZMessage msg = TestUtil.waitForMessage(mMbox, "subject:\"" + subject + "\"");
+        byte[] content = TestUtil.getContent(mMbox, msg.getId()).getBytes();
+        MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
+        Account user1 = TestUtil.getAccount(USER_NAME);
+        assertEquals(user1.getName(), mimeMsg.getHeader(ZimbraMailAdapter.HEADER_FORWARDED));
     }
     
     private String normalizeWhiteSpace(String script) {

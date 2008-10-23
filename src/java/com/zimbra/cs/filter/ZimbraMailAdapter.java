@@ -87,6 +87,8 @@ public class ZimbraMailAdapter implements MailAdapter
     private static String sSpamHeader;
     private static Pattern sSpamHeaderValue;
     protected SharedDeliveryContext mSharedDeliveryCtxt;
+    
+    public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
 
     /**
      * The id of the folder that contains messages that don't match any
@@ -364,27 +366,45 @@ public class ZimbraMailAdapter implements MailAdapter
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
-                    ZimbraLog.filter.info("Redirecting message to " + addr);
-                    MimeMessage mm = mParsedMessage.getMimeMessage();
+                    ZimbraLog.filter.info("Redirecting message to %s.", addr);
+                    MimeMessage outgoingMsg = null;
+                    
                     try {
-                        mm.saveChanges();
+                        if (!isMailLoop()) {
+                            outgoingMsg = new MimeMessage(mParsedMessage.getMimeMessage());
+                            outgoingMsg.setHeader(HEADER_FORWARDED, mMailbox.getAccount().getName());
+                            outgoingMsg.saveChanges();
+                        } else {
+                            ZimbraLog.filter.warn("Detected a mail loop for message %s.", mParsedMessage.getMessageID());
+                        }
                     } catch (MessagingException e) {
                         try {
-                            mm = new MimeMessage(mm) {
+                            // Workaround for bug 16525
+                            outgoingMsg = new MimeMessage(mParsedMessage.getMimeMessage()) {
                                 @Override protected void updateHeaders() throws MessagingException {
                                     setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
                                 }
                             };
-                            ZimbraLog.filter.info("Message format error detected; wrapper class in use");
+                            ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
                         } catch (MessagingException e2) {
-                            ZimbraLog.filter.warn("Message format error detected; workaround failed");
+                            ZimbraLog.filter.warn("Message format error detected.  Workaround failed.", e2);
+                            outgoingMsg = null;
                         }
                     }
-                    try {
-                        Transport.send(mm, new javax.mail.Address[] { new InternetAddress(addr) });
-                    } catch (MessagingException e) {
-                        ZimbraLog.filter.warn("Redirect to %s failed.  Filing message to %s.  %s",
-                            addr, getDefaultFolderName(), e.toString());
+                    
+                    boolean sent = false;
+                    if (outgoingMsg != null) {
+                        try {
+                            Transport.send(outgoingMsg, new javax.mail.Address[] { new InternetAddress(addr) });
+                            sent = true;
+                        } catch (MessagingException e) {
+                            ZimbraLog.filter.warn("Message send failed.", e);
+                        }
+                    }
+                    
+                    if (!sent) {
+                        ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
+                            addr, getDefaultFolderName());
                         addMessage(mDefaultFolderId);
                     }
                 } else {
@@ -399,6 +419,22 @@ public class ZimbraMailAdapter implements MailAdapter
         } catch (IOException e) {
             throw new ZimbraSieveException(e);
         }
+    }
+    
+    /**
+     * Returns <tt>true</tt> if the current account's name is
+     * specified in one of the X-Zimbra-Forwarded headers.
+     */
+    private boolean isMailLoop()
+    throws ServiceException {
+        String[] forwards = mParsedMessage.getHeaders(HEADER_FORWARDED);
+        String userName = mMailbox.getAccount().getName();
+        for (String forward : forwards) {
+            if (StringUtil.equal(userName, forward)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     private String getDefaultFolderName() {
