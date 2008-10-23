@@ -3,34 +3,106 @@
 <!-- 
 
 <right name="{name}"
-       <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
+       [userRight="0|1"]
+       [type="{right-type}"]
        
-       [<doc>a more detailed description, may include use cases, examples, etc. 
-             This is to be displayed by the zmmailbox listPermission command in verbose mode.
-       </doc>]
        
-       [<default>TRUE/FALSE</default>]
+    <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
+       
+    [<doc>
+         a more detailed description, may include use cases, examples, etc. 
+         This is to be displayed by the zmmailbox listPermission command in verbose mode.
+     </doc>]
+       
+    [<default>TRUE/FALSE</default>]
+    
+    [
+      <attrs>
+          <a onEntry="{comma-separated-entry-types}" limit="0|1">{attribute-name}</a>+
+      </attrs>
+    ]
+    
 </right>
+
+name: 
+    name of the right
+
+userRight: 
+    Whether the right is grantable by users
+	1: the right is grantable by user
+	0(default): the right is only grantable by admins
+           
+type: 
+    Right type.  Is only applicable and required for admin rights(i.e. userRight="0" or not set)  
+	preset      : rights with predefined capabilities     
+	getAttrs    : rights for reading attributes
+	modifyAttrs : rights for reading and writing attributes
+      
+onEntry:
+    Only applicable and required when right type is getAttrs or modifyAttrs  
+    Comma separated entry types on which the attribute can be:
+        read: if right type is getAttrs
+        read and modified: if right type is modifyAttrs     
+                  
+limit: 
+    If the attribute can be modified to any value or within inherited limit.
+    Only applicable and required when right type is modifyAttrs.
+    0: the attribute can be modified to any value allowed by the attribute definition
+	1: the attribute can only be modified within inherited limit
 
 -->
 
 <rights>
 
-<right name="invite">
+<!-- 
+*******************
+    user rights
+*******************
+-->
+<right name="invite" userRight="1">
   <desc>automatically add meeting invites from grantee to the target's calendar</desc>
   <doc>e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G.
             (2) Conf room Y can only be booked by users A, B, C and group G.
   </doc>
 </right>
 
-<right name="viewFreeBusy">
+<right name="viewFreeBusy" userRight="1">
   <desc>view free/busy</desc>
   <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
 </right>
 
-<right name="loginAs">
+<right name="loginAs" userRight="1">
   <desc>login as</desc>
   <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
+</right>
+
+<!-- 
+********************
+    admin rights
+********************
+-->
+<right name="createAccount" type="preset">
+  <desc>create account</desc>
+</right>
+
+<right name="configureQuota" type="modifyAttrs">
+  <desc>configure quota</desc>
+  <attrs>
+      <a onEntry="account,cos" limit="0">zimbraMailQuota</a>
+      <a onEntry="account,cos" limit="0">zimbraQuotaWarnPercent</a>
+      <a onEntry="account,cos" limit="0">zimbraQuotaWarnInterval</a>
+      <a onEntry="account,cos" limit="0">zimbraQuotaWarnMessage</a>
+  </attrs>
+</right>
+
+<right name="configureQuotaWithinLimit" type="modifyAttrs">
+  <desc>configure quota</desc>
+  <attrs>
+      <a onEntry="account,cos" limit="1">zimbraMailQuota</a>
+      <a onEntry="account,cos" limit="1">zimbraQuotaWarnPercent</a>
+      <a onEntry="account,cos" limit="1">zimbraQuotaWarnInterval</a>
+      <a onEntry="account,cos" limit="1">zimbraQuotaWarnMessage</a>
+  </attrs>
 </right>
 
 </rights>
