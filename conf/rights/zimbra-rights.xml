@@ -39,10 +39,11 @@ type:
 	modifyAttrs : rights for reading and writing attributes
       
 onEntry:
-    Only applicable and required when right type is getAttrs or modifyAttrs  
+    Only applicable when right type is getAttrs or modifyAttrs  
     Comma separated entry types on which the attribute can be:
         read: if right type is getAttrs
-        read and modified: if right type is modifyAttrs     
+        read and modified: if right type is modifyAttrs  
+    If not present, it means all entry types.
                   
 limit: 
     If the attribute can be modified to any value or within inherited limit.
@@ -88,20 +89,20 @@ limit:
 <right name="configureQuota" type="modifyAttrs">
   <desc>configure quota</desc>
   <attrs>
-      <a onEntry="account,cos" limit="0">zimbraMailQuota</a>
-      <a onEntry="account,cos" limit="0">zimbraQuotaWarnPercent</a>
-      <a onEntry="account,cos" limit="0">zimbraQuotaWarnInterval</a>
-      <a onEntry="account,cos" limit="0">zimbraQuotaWarnMessage</a>
+      <attr onEntry="account,cos" limit="0">zimbraMailQuota</attr>
+      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnPercent</attr>
+      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnInterval</attr>
+      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnMessage</attr>
   </attrs>
 </right>
 
 <right name="configureQuotaWithinLimit" type="modifyAttrs">
   <desc>configure quota</desc>
   <attrs>
-      <a onEntry="account,cos" limit="1">zimbraMailQuota</a>
-      <a onEntry="account,cos" limit="1">zimbraQuotaWarnPercent</a>
-      <a onEntry="account,cos" limit="1">zimbraQuotaWarnInterval</a>
-      <a onEntry="account,cos" limit="1">zimbraQuotaWarnMessage</a>
+      <attr onEntry="account,cos" limit="1">zimbraMailQuota</attr>
+      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnPercent</attr>
+      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnInterval</attr>
+      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnMessage</attr>
   </attrs>
 </right>
 
