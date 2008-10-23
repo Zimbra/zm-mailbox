@@ -56,7 +56,7 @@ public class GrantPermission extends MailDocumentHandler {
     
     // orig: FolderAction
     ZimbraACE handleACE(Element eACE, ZimbraSoapContext zsc) throws ServiceException {
-        Right right = RightManager.getInstance().getRight(eACE.getAttribute(MailConstants.A_RIGHT));
+        Right right = RightManager.getInstance().getUserRight(eACE.getAttribute(MailConstants.A_RIGHT));
         GranteeType gtype = GranteeType.fromCode(eACE.getAttribute(MailConstants.A_GRANT_TYPE));
         String zid = eACE.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         boolean deny = eACE.getAttributeBool(MailConstants.A_DENY, false);

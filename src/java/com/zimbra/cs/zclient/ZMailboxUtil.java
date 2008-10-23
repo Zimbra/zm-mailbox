@@ -1470,7 +1470,7 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     private void doListPermission() throws ServiceException {
-        for (Right r : RightManager.getInstance().getAllRights().values()) {
+        for (Right r : RightManager.getInstance().getAllUserRights().values()) {
             stdout.println("  " + r.getName() + ": " + r.getDesc());
             if (verboseOpt() && r.getDoc() != null)
                 stdout.println("      " + r.getDoc());

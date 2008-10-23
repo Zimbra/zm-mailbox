@@ -28,7 +28,7 @@ public class GetPermission extends MailDocumentHandler {
         for (Element eACE : request.listElements(MailConstants.E_ACE)) {
             if (specificRights == null)
                 specificRights = new HashSet<Right>();
-            specificRights.add(RightManager.getInstance().getRight(eACE.getAttribute(MailConstants.A_RIGHT)));
+            specificRights.add(RightManager.getInstance().getUserRight(eACE.getAttribute(MailConstants.A_RIGHT)));
         }
         
         Set<ZimbraACE> aces = PermUtil.getACEs(account, specificRights);

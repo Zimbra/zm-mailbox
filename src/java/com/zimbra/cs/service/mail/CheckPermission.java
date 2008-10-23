@@ -68,7 +68,7 @@ public class CheckPermission extends MailDocumentHandler {
             throw ServiceException.INVALID_REQUEST("invalid target type: " + targetType, null);
         
         Element r = request.getElement(MailConstants.E_RIGHT);
-        Right right = RightManager.getInstance().getRight(r.getText());
+        Right right = RightManager.getInstance().getUserRight(r.getText());
         
         if (!AccessManager.getInstance().canPerform(zsc.getAuthToken(), entry, right, false, false))
             throw ServiceException.PERM_DENIED("credential " + zsc.getAuthtokenAccountId() + " is not allowed for right " + right.getName() + " on target " + entry.getName());

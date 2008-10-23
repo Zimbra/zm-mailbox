@@ -642,7 +642,7 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testNoACL-target"), PASSWORD, null);
         
-        for (Right right : RightManager.getInstance().getAllRights().values()) {
+        for (Right right : RightManager.getInstance().getAllUserRights().values()) {
             verifyDefault(zimbraUser, target, right);
             verifyDefault(guest, target, right);
             verifyDefault(anon, target, right);

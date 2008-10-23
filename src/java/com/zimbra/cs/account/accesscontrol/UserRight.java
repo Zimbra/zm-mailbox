@@ -5,14 +5,14 @@ import com.zimbra.common.service.ServiceException;
 public class UserRight extends Right {
     
     // known rights
-    public static Right RT_invite;
-    public static Right RT_viewFreeBusy;
-    public static Right RT_loginAs;
+    public static UserRight RT_invite;
+    public static UserRight RT_viewFreeBusy;
+    public static UserRight RT_loginAs;
 
     static void initKnownUserRights(RightManager rm) throws ServiceException {
-        RT_invite = rm.getRight("invite");
-        RT_viewFreeBusy = rm.getRight("viewFreeBusy");
-        RT_loginAs = rm.getRight("loginAs");
+        RT_invite = rm.getUserRight("invite");
+        RT_viewFreeBusy = rm.getUserRight("viewFreeBusy");
+        RT_loginAs = rm.getUserRight("loginAs");
     }
     
     UserRight(String name) {
