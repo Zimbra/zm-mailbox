@@ -53,6 +53,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     private String mFolderId;
     private String mTagIds;
     private String mRevision;
+    private long mDate;
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
     private boolean mGalContact;
@@ -98,6 +99,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
+        mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mAttrs = new HashMap<String, String>();
 
@@ -130,6 +132,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         jo.put("folderId", mFolderId);
         jo.put("flags", mFlags);
         jo.put("tags", mTagIds);
+        jo.put("date", mDate);
         jo.put("metaDataChangedDate", mMetaDataChangedDate);
         jo.put("revision", mRevision);
         jo.putMap("attrs", mAttrs);
@@ -146,6 +149,10 @@ public class ZContact implements ZItem, ToZJSONObject {
 
     public Map<String, String> getAttrs() {
         return mAttrs;
+    }
+
+    public long getDate() {
+        return mDate;
     }
 
     public long getMetaDataChangedDate() {
@@ -184,6 +191,7 @@ public class ZContact implements ZItem, ToZJSONObject {
                 mFolderId = cevent.getFolderId(mFolderId);
                 mFlags = cevent.getFlags(mFlags);
                 mRevision = cevent.getRevision(mRevision);
+                mMetaDataChangedDate = cevent.getDate(mDate);
                 mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
                 mAttrs = cevent.getAttrs(mAttrs);
             }

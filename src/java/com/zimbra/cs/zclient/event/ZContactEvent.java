@@ -69,6 +69,10 @@ public class ZContactEvent implements ToZJSONObject {
         return mContactEl.getAttributeLong(MailConstants.A_MODIFIED_DATE, defaultValue);
     }
 
+    public long getDate(long defaultValue) throws ServiceException {
+        return mContactEl.getAttributeLong(MailConstants.A_DATE, defaultValue);
+    }
+    
     public String getFileAsStr(String defaultValue) {
         return mContactEl.getAttribute(MailConstants.A_FILE_AS_STR, defaultValue);
     }
