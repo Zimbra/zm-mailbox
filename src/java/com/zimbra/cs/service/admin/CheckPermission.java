@@ -102,7 +102,7 @@ public class CheckPermission extends AdminDocumentHandler {
         Right right = RightManager.getInstance().getRight(r.getText());
         
         if (!AccessManager.getInstance().canPerform(principalValue, entry, right, false, false))
-            throw ServiceException.PERM_DENIED("credential " + principalValue + " is not allowed for right " + right.getCode() + " on target " + entry.getName());
+            throw ServiceException.PERM_DENIED("credential " + principalValue + " is not allowed for right " + right.getName() + " on target " + entry.getName());
 
         Element response = zsc.createElement(AdminConstants.CHECK_PERMISSION_RESPONSE);
 

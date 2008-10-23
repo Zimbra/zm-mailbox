@@ -34,7 +34,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -454,10 +454,10 @@ public class Message extends MailItem {
                 if (octxt != null && octxt.getAuthenticatedUser() != null) {
                     Account authAcct = octxt.getAuthenticatedUser();
                     senderEmail = authAcct.getName();
-                    canInvite = accessMgr.canPerform(authAcct, getAccount(), Right.RT_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canPerform(authAcct, getAccount(), UserRight.RT_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
                 } else {
                     senderEmail = pm != null ? pm.getSenderEmail(false) : null;
-                    canInvite = accessMgr.canPerform(senderEmail, getAccount(), Right.RT_invite, false, allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canPerform(senderEmail, getAccount(), UserRight.RT_invite, false, allowInviteIfNoAceDefined);
                 }
                 if (!canInvite) {
                     if ((getAccount() instanceof CalendarResource) && senderEmail != null &&

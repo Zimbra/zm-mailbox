@@ -26,7 +26,7 @@ public class AclAccessManager extends DomainAccessManager {
         if (super.canAccessAccount(at, target, asAdmin))
             return true;
         else
-            return canPerform(at, target, Right.RT_loginAs, asAdmin, false);
+            return canPerform(at, target, UserRight.RT_loginAs, asAdmin, false);
     }
     
     public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
@@ -37,7 +37,7 @@ public class AclAccessManager extends DomainAccessManager {
         if (super.canAccessAccount(credentials, target, asAdmin))
             return true;
         else
-            return canPerform(credentials, target, Right.RT_loginAs, asAdmin, false);
+            return canPerform(credentials, target, UserRight.RT_loginAs, asAdmin, false);
     }
     
     public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
@@ -68,7 +68,7 @@ public class AclAccessManager extends DomainAccessManager {
             }
             
             // 2. check admin access - if the right being asked for is not loginAs
-            if (rightNeeded != Right.RT_loginAs) {
+            if (rightNeeded != UserRight.RT_loginAs) {
                 if (target instanceof Account) {
                     if (canAccessAccount(grantee, (Account)target, asAdmin))
                         return true;
@@ -93,7 +93,7 @@ public class AclAccessManager extends DomainAccessManager {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + grantee.getName() + 
                                    ", target=" + target.getLabel() + 
-                                   ", right=" + rightNeeded.getCode() + 
+                                   ", right=" + rightNeeded.getName() + 
                                    " => denied", e);
         }
         return false;
@@ -114,7 +114,7 @@ public class AclAccessManager extends DomainAccessManager {
             ZimbraLog.account.warn("ACL checking failed: " +
                                    "grantee=" + grantee.getAccountId() +
                                    ", target=" + target.getLabel() +
-                                   ", right=" + rightNeeded.getCode() +
+                                   ", right=" + rightNeeded.getName() +
                                    " => denied", e);
         }
         
@@ -135,7 +135,7 @@ public class AclAccessManager extends DomainAccessManager {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + granteeEmail + 
                                    ", target=" + target.getLabel() + 
-                                   ", right=" + rightNeeded.getCode() + 
+                                   ", right=" + rightNeeded.getName() + 
                                    " => denied", e);
         }
         

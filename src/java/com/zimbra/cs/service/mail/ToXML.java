@@ -249,7 +249,7 @@ public class ToXML {
         Element eACE = parent.addElement(MailConstants.E_ACE)
                 .addAttribute(MailConstants.A_ZIMBRA_ID, ace.getGrantee())
                 .addAttribute(MailConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
-                .addAttribute(MailConstants.A_RIGHT, ace.getRight().getCode())
+                .addAttribute(MailConstants.A_RIGHT, ace.getRight().getName())
                 .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName());
         
         if (ace.getGranteeType() == GranteeType.GT_KEY)

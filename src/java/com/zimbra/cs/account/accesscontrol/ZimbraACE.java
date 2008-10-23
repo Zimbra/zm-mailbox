@@ -306,7 +306,7 @@ public class ZimbraACE {
         // right
         if (mDeny)
             sb.append(S_DENY);
-        sb.append(getRight().getCode());
+        sb.append(getRight().getName());
         
         return sb.toString();
     }

@@ -307,14 +307,14 @@ public class ZimbraACL {
         for (ZimbraACE a : mostSpecificInMatchedTrees.values()) {
             if (a.deny()) {
                 if (sLog.isDebugEnabled())
-                    sLog.debug("hasRightAsGroup: grantee "+ grantee.getName() + " denied for right " + rightNeeded.getCode() + " via ACE: " + a.dump());
+                    sLog.debug("hasRightAsGroup: grantee "+ grantee.getName() + " denied for right " + rightNeeded.getName() + " via ACE: " + a.dump());
                 return Boolean.FALSE;
             }
         }
         
         // Okay, every group says yes, allow it.
         if (sLog.isDebugEnabled())
-            sLog.debug("hasRightAsGroup: grantee "+ grantee.getName() + " allowed for right " + rightNeeded.getCode() + " via ACE: " + dump(mostSpecificInMatchedTrees.values()));
+            sLog.debug("hasRightAsGroup: grantee "+ grantee.getName() + " allowed for right " + rightNeeded.getName() + " via ACE: " + dump(mostSpecificInMatchedTrees.values()));
         return Boolean.TRUE;
     }
     

@@ -2,37 +2,31 @@ package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.service.ServiceException;
 
-public class Right {
+public abstract class Right {
     
-    // known rights
-    public static Right RT_invite;
-    public static Right RT_viewFreeBusy;
-    public static Right RT_loginAs;
-    
-    private final String mCode;
+    private final String mName;
     private String mDesc;  // a brief description
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
     
     static void initKnownRights(RightManager rm) throws ServiceException {
-        RT_invite = rm.getRight("invite");
-        RT_viewFreeBusy = rm.getRight("viewFreeBusy");
-        RT_loginAs = rm.getRight("loginAs");
+        UserRight.initKnownUserRights(rm);
+        AdminRight.initKnownAdminRights(rm);
     }
 
-    Right(String code) {
-        mCode = code;
+    Right(String name) {
+        mName = name;
     }
     
     /**
-     * - code stored in the ACE.
-     * - code appear in XML
-     * - code displayed by CLI
+     * - right name stored in zimbraACE.
+     * - right name appear in XML
+     * - right name displayed by CLI
      * 
      * @return 
      */
-    public String getCode() {
-        return mCode;
+    public String getName() {
+        return mName;
     }
     
     public String getDesc() {
