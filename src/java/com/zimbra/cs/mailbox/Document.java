@@ -21,7 +21,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,14 +30,9 @@ import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-/**
- * @author dkarp
- */
 public class Document extends MailItem {
     protected String mContentType;
     protected String mCreator;
@@ -108,8 +102,7 @@ public class Document extends MailItem {
         }
     }
 
-    @Override
-    public synchronized void reanalyze(Object obj) throws ServiceException {
+    @Override public void reanalyze(Object obj) throws ServiceException {
         if (!(obj instanceof ParsedDocument))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedDocument object", null);
         if ((mData.flags & Flag.BITMASK_UNCACHED) != 0)
@@ -117,8 +110,12 @@ public class Document extends MailItem {
 
         ParsedDocument pd = (ParsedDocument) obj;
 
-        mFragment = pd.getFragment();
-        mCreator  = pd.getCreator();
+        mContentType = pd.getContentType();
+        mCreator     = pd.getCreator();
+        mFragment    = pd.getFragment();
+        mData.date    = (int) (pd.getCreatedDate() / 1000L);
+        mData.name    = pd.getFilename();
+        mData.subject = pd.getFilename();
         pd.setVersion(getVersion());
 
         if (mData.size != pd.getSize()) {
@@ -177,71 +174,7 @@ public class Document extends MailItem {
         return doc;
     }
 
-    @Override Blob setContent(InputStream dataStream, int dataLength, String digest, short volumeId, Object content)
-    throws ServiceException, IOException {
-        if (getSavedSequence() != mMailbox.getOperationChangeID())
-            addRevision(false);
-        return super.setContent(dataStream, dataLength, digest, volumeId, content);
-    }
-
-    Blob setContent(ParsedDocument pd) throws ServiceException,IOException {
-    	short volumeId = pd.getBlob().getVolumeId();
-        addRevision(false);
-
-        // update the item's relevant attributes
-        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
-                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
-
-        // delete the old blob *unless* we've already rewritten it in this transaction
-        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
-            if (!canAccess(ACL.RIGHT_WRITE))
-                throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
-
-            boolean delete = true;
-            // don't delete blob if last revision uses it
-            if (isTagged(Flag.ID_FLAG_VERSIONED)) {
-                List<MailItem> revisions = loadRevisions();
-                if (!revisions.isEmpty()) {
-                    MailItem lastRev = revisions.get(revisions.size() - 1);
-                    if (lastRev.getSavedSequence() == getSavedSequence())
-                        delete = false;
-                }
-            }
-            if (delete)
-                markBlobForDeletion();
-        }
-
-        int size = pd.getSize();
-        if (mData.size != size) {
-            mMailbox.updateSize(size - mData.size, false);
-            getFolder().updateSize(0, size - mData.size);
-            mData.size = size;
-        }
-        mContentType = pd.getContentType();
-        mCreator = pd.getCreator();
-        mFragment = pd.getFragment();
-        mData.setBlobDigest(pd.getDigest());
-        mData.date     = (int)(pd.getCreatedDate() / 1000L);
-        mData.volumeId = volumeId;
-        mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
-        mData.name = pd.getFilename();
-        mData.subject = pd.getFilename();
-        mData.contentChanged(mMailbox);
-        mBlob = null;
-
-        // rewrite the DB row to reflect our new view (MUST call saveData)
-        reanalyze(pd);
-
-        // move the blob into the mailbox.
-        StoreManager sm = StoreManager.getInstance();
-        MailboxBlob mblob = sm.renameTo(pd.getBlob(), mMailbox, mId, getSavedSequence(), volumeId);
-        mMailbox.markOtherItemDirty(mblob);
-
-        return mblob.getBlob();
-    }
-    
-    @Override 
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         // roll forward from the old versioning mechanism (old revisions are lost)
         MetadataList revlist = meta.getList(Metadata.FN_REVISIONS, true);
         if (revlist != null && !revlist.isEmpty()) {

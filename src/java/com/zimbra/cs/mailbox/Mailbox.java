@@ -706,7 +706,7 @@ public class Mailbox {
      *  transaction and should match the <tt>long</tt> returned
      *  by {@link #getOperationTimestampMillis}. */
     public int getOperationTimestamp() {
-        return (int) (mCurrentChange.timestamp / 1000);
+        return (int) (mCurrentChange.timestamp / 1000L);
     }
 
     /** Returns the operation timestamp as a Java long with full
@@ -6440,10 +6440,10 @@ public class Mailbox {
                 throw MailServiceException.INVALID_TYPE(type);
 
             redoRecorder.setMessageId(doc.getId());
-            Blob blob = doc.setContent(pd);
+            Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
             redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
 
-            queueForIndexing(doc, false, this.getBatchedIndexingCount() > 0 ? null : pd.getDocumentList());
+            queueForIndexing(doc, false, getBatchedIndexingCount() > 0 ? null : pd.getDocumentList());
             success = true;
             return doc;
         } catch (IOException ioe) {
@@ -6453,7 +6453,8 @@ public class Mailbox {
         }
     }
 
-    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author, String name) throws ServiceException {
+    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author, String name)
+    throws ServiceException {
         maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
         try {
@@ -6464,7 +6465,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd) throws ServiceException {
+    public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd)
+    throws ServiceException {
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
         
         boolean deferIndexing = getBatchedIndexingCount() > 0 || pd.hasTemporaryAnalysisFailure();
@@ -6474,7 +6476,7 @@ public class Mailbox {
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
             Document doc = getDocumentById(docId);
-            Blob blob = doc.setContent(pd);
+            Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
 
             redoRecorder.setDocument(pd);
             redoRecorder.setDocId(docId);
