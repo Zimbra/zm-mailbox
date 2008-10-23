@@ -494,6 +494,10 @@ public class AttributeManager {
  	   return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
     }
     
+    public boolean isDomainAdminModifiable(String attr) throws ServiceException {
+        return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
+    }
+    
     public boolean isDomainAdminModifiable(String attr, AttributeClass klass) throws ServiceException {
         if (!isAttrInClass(attr, klass))
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute on " + klass.name() + ": " + attr, null);
