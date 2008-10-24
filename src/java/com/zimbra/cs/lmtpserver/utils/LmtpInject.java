@@ -64,6 +64,7 @@ public class LmtpInject {
         mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default example.zimbra.com)");
         mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
         mOptions.addOption(null, "smtp",     false, "use SMTP protocol instead of LMTP");
+        mOptions.addOption("h", "help",      false, "display usage information");
     }
 
     private static void usage(String errmsg) {
@@ -71,10 +72,11 @@ public class LmtpInject {
             mLog.error(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("LmtpInject [options] [files]",
-                "where [options] are one of:", mOptions,
-                "and [files] contain rfc822 messages.  If directory is specified, then " +
-                "[files] are ignored.");
+        formatter.printHelp(
+            "zmlmtpinject -r <recip1> [recip2 ...] -s <sender> [options]",
+            "  <file1 [file2 ...] | -d <dir>>",
+            mOptions,
+            "Specified paths contain rfc822 messages.  If -d is specified, file arguments are ignored.");
         System.exit((errmsg == null) ? 0 : 1);
     }
 
@@ -99,6 +101,9 @@ public class LmtpInject {
         CliUtil.toolSetup();
         CommandLine cl = parseArgs(args);
 
+        if (cl.hasOption("h")) {
+            usage(null);
+        }
         int threads = 1;
         if (cl.hasOption("t")) {
             threads = Integer.valueOf(cl.getOptionValue("t")).intValue();
