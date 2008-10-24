@@ -22,6 +22,7 @@
 package com.zimbra.cs.account;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
 
 
 /**
@@ -79,6 +80,10 @@ public class AccountServiceException extends ServiceException {
     
     private AccountServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
         super(message, code, isReceiversFault, cause);
+    }
+    
+    protected AccountServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments) {
+        super(message, code, isReceiversFault, cause, arguments);
     }
     
     /*
@@ -153,6 +158,10 @@ public class AccountServiceException extends ServiceException {
     
     public static AccountServiceException INVALID_PASSWORD(String desc) {
         return new AccountServiceException("invalid password: "+desc, INVALID_PASSWORD, SENDERS_FAULT, null);
+    }
+    
+    public static AccountServiceException INVALID_PASSWORD(String desc, Argument... arguments) {
+        return new AccountServiceException("invalid password: "+desc, INVALID_PASSWORD, SENDERS_FAULT, null, arguments);
     }
     
     public static AccountServiceException INVALID_ATTR_NAME(String msg, Throwable t) {

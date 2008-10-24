@@ -97,8 +97,12 @@ public abstract class AuthMechanism {
     }
     
     public static String namePassedIn(Map<String, Object> authCtxt) {
-        String npi = (String)authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
-        if (npi==null)
+        String npi;
+        if (authCtxt != null) {
+            npi = (String)authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+            if (npi==null)
+                npi = "";
+        } else
             npi = "";
         return npi;    
     }

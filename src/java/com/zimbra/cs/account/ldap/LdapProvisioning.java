@@ -60,6 +60,7 @@ import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -3104,16 +3105,16 @@ public class LdapProvisioning extends Provisioning {
         try {
             int minLength = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinLength, 0);
             if (minLength > 0 && password.length() < minLength)
-                throw AccountServiceException.INVALID_PASSWORD("too short");
+                throw AccountServiceException.INVALID_PASSWORD("too short", new Argument(Provisioning.A_zimbraPasswordMinLength, minLength, Argument.Type.NUM));
 
             int maxLength = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMaxLength, 0);        
             if (maxLength > 0 && password.length() > maxLength)
-                throw AccountServiceException.INVALID_PASSWORD("too long");
+                throw AccountServiceException.INVALID_PASSWORD("too long", new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
             
             int minUpperCase = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);
             int minLowerCase = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinLowerCaseChars, 0);
-            int minPunctuation = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinPunctuationChars, 0);
             int minNumeric = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinNumericChars, 0);
+            int minPunctuation = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinPunctuationChars, 0);
             
             if (minUpperCase > 0 || minLowerCase > 0 || minPunctuation > 0 || minNumeric > 0) {
                 int upper=0, lower=0, punctuation = 0, numeric = 0;
@@ -3125,10 +3126,14 @@ public class LdapProvisioning extends Provisioning {
                     else if (isAsciiPunc(ch)) punctuation++;
                 }
                 
-                if (upper < minUpperCase) throw AccountServiceException.INVALID_PASSWORD("not enough upper case characters");
-                if (lower < minLowerCase) throw AccountServiceException.INVALID_PASSWORD("not enough lower case characters");
-                if (numeric < minNumeric) throw AccountServiceException.INVALID_PASSWORD("not enough numeric characters");
-                if (punctuation < minPunctuation) throw AccountServiceException.INVALID_PASSWORD("not enough punctuation characters");                
+                if (upper < minUpperCase) throw AccountServiceException.INVALID_PASSWORD("not enough upper case characters", 
+                                                                                         new Argument(Provisioning.A_zimbraPasswordMinUpperCaseChars, minUpperCase, Argument.Type.NUM));
+                if (lower < minLowerCase) throw AccountServiceException.INVALID_PASSWORD("not enough lower case characters",
+                                                                                         new Argument(Provisioning.A_zimbraPasswordMinLowerCaseChars, minLowerCase, Argument.Type.NUM));
+                if (numeric < minNumeric) throw AccountServiceException.INVALID_PASSWORD("not enough numeric characters",
+                                                                                         new Argument(Provisioning.A_zimbraPasswordMinNumericChars, minNumeric, Argument.Type.NUM));
+                if (punctuation < minPunctuation) throw AccountServiceException.INVALID_PASSWORD("not enough punctuation characters",
+                                                                                         new Argument(Provisioning.A_zimbraPasswordMinPunctuationChars, minPunctuation, Argument.Type.NUM));                
             }
             
         } catch (NamingException ne) {
