@@ -47,8 +47,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -226,7 +229,7 @@ public class Pop3Import extends MailItemImport {
                     pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
                 }
 
-                com.zimbra.cs.mailbox.Message msg = addMessage(null, pm, ds.getFolderId(), Flag.BITMASK_UNREAD);
+                com.zimbra.cs.mailbox.Message msg = addMessage(pm);
 
                 if (msg != null && dataSource.leaveOnServer()) {
                     DbPop3Message.storeUid(mbox, dataSource.getId(), folder.getUID(pop3Msg), msg.getId());
@@ -245,6 +248,20 @@ public class Pop3Import extends MailItemImport {
 
         // Expunge if necessary and disconnect (QUIT)
         folder.close(!ds.leaveOnServer());
+    }
+
+    private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
+    throws ServiceException, IOException, MessagingException {
+        Mailbox mbox = dataSource.getMailbox();
+        com.zimbra.cs.mailbox.Message msg = null;
+        if (isOffline()) {
+            msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+        } else {
+            msg = RuleManager.getInstance().applyRules(
+                    mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
+                    new SharedDeliveryContext(), dataSource.getFolderId());
+        }
+        return msg;
     }
 
     private Set<String> getUidsToFetch(DataSource ds, POP3Folder folder)
@@ -303,7 +320,7 @@ public class Pop3Import extends MailItemImport {
         }
     }
 
-    protected void disconnect() throws ServiceException {
+    protected void disconnect() {
         if (store.isConnected()) {
             DataSource ds = getDataSource();
             try {

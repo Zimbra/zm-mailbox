@@ -26,6 +26,11 @@ import java.util.Set;
 
 import javax.mail.internet.MailDateFormat;
 
+import org.testng.TestNG;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.StringUtil;
@@ -58,9 +63,12 @@ public class TestPop3Import extends TestCase {
     private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
     
     private ZFilterRules mOriginalRules;
+    private boolean mIsServerSideTest;
 
     @Override
+    @BeforeMethod
     public void setUp() throws Exception {
+        mIsServerSideTest = false;
         cleanUp();
         createDataSource();
         mOriginalRules = TestUtil.getZMailbox(USER_NAME).getFilterRules();
@@ -69,7 +77,9 @@ public class TestPop3Import extends TestCase {
     /*
      * Tests the UID persistence methods in {@link DbPop3Message}.
      */
+    @Test(groups = {"Server"})
     public void testUidPersistence() throws Exception {
+        mIsServerSideTest = true;
         DataSource ds = getDataSource();
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
 
@@ -109,7 +119,10 @@ public class TestPop3Import extends TestCase {
      * Confirms that the UID database gets cleared when the host name, account
      * name or leave on server flag are changed. 
      */
+    @Test(groups = {"Server"})
     public void testModifyDataSource() throws Exception {
+        mIsServerSideTest = true;
+
         // Test modifying host
         ZPop3DataSource zds = getZDataSource();
         zds.setHost(zds.getHost() + "2");
@@ -130,7 +143,10 @@ public class TestPop3Import extends TestCase {
      * Confirms that POP3 data is deleted when the mailbox is deleted (bug 14574).  Any leftover POP3
      * data will cause a foreign key violation.
      */
+    @Test(groups = {"Server"})
     public void testDeleteMailbox() throws Exception {
+        mIsServerSideTest = true;
+
         // Create temp account and mailbox
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
@@ -145,6 +161,7 @@ public class TestPop3Import extends TestCase {
     /*
      * Tests import of a message with a date in the future (bug 17031).
      */
+    @Test
     public void testBogusDate() throws Exception {
         // Create remote account
         Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
@@ -176,6 +193,7 @@ public class TestPop3Import extends TestCase {
      * Confirms that messages pulled from a POP3 account are affected by
      * mail filtering (bug 13821).
      */
+    @Test
     public void testFiltering()
     throws Exception {
         String folderPath = "/" + NAME_PREFIX + "-testFiltering";
@@ -184,7 +202,7 @@ public class TestPop3Import extends TestCase {
         // Create remote account
         Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
         
-        // Add message with bogus date to remote mailbox
+        // Add message to remote mailbox
         ZMailbox remoteMbox = TestUtil.getZMailbox(TEMP_USER_NAME);
         TestUtil.addMessage(remoteMbox, NAME_PREFIX + " testFiltering");
 
@@ -254,6 +272,7 @@ public class TestPop3Import extends TestCase {
     }
     
     @Override
+    @AfterMethod
     public void tearDown() throws Exception {
         cleanUp();
         TestUtil.getZMailbox(USER_NAME).saveFilterRules(mOriginalRules);
@@ -287,11 +306,22 @@ public class TestPop3Import extends TestCase {
         DataSource ds = getDataSource();
         if (ds != null) {
             Account account = TestUtil.getAccount(USER_NAME);
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            DbPop3Message.deleteUids(mbox, ds.getId());
+            if (mIsServerSideTest) {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+                DbPop3Message.deleteUids(mbox, ds.getId());
+            }
             prov.deleteDataSource(account, ds.getId());
         }
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         TestUtil.deleteAccount(TEMP_USER_NAME);
+    }
+
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestNG testng = TestUtil.newTestNG();
+        testng.setExcludedGroups("Server");
+        testng.setTestClasses(new Class[] { TestPop3Import.class });
+        testng.run();
     }
 }
