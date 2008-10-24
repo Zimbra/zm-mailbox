@@ -3659,4 +3659,26 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>when set to TRUE, free/busy for the account is not calculated from local mailbox.</desc>
 </attr>
 
+<attr id="753" name="zimbraCalendarResourceExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig">
+  <desc>Object classes to add when creating a zimbra calendar resource object.
+  </desc>
+</attr>
+
+<attr id="754" name="zimbraCosExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig">
+  <desc>Object classes to add when creating a zimbra cos object.
+  </desc>
+</attr>
+
+<attr id="755" name="zimbraDomainExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig">
+  <globalConfigValue>amavisAccount</globalConfigValue>
+  <desc>Object classes to add when creating a zimbra domain object.
+  </desc>
+</attr>
+
+<attr id="756" name="zimbraServerExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig">
+  <desc>Object classes to add when creating a zimbra server object.
+  </desc>
+</attr>
+
+
 </attrs>

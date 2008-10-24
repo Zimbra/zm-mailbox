@@ -81,6 +81,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -300,6 +301,14 @@ public class LdapUtil {
     public static Attribute addAttr(Attributes attrs, String name, String value) {
         BasicAttribute a = new BasicAttribute(name);
         a.add(value);
+        attrs.put(a);
+        return a;
+    }
+    
+    public static Attribute addAttr(Attributes attrs, String name, Set<String> values) {
+        BasicAttribute a = new BasicAttribute(name);
+        for (String value : values)
+            a.add(value);
         attrs.put(a);
         return a;
     }

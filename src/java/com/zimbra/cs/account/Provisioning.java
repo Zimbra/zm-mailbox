@@ -420,10 +420,13 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefLabel = "zimbraPrefLabel";
     
     /**
-     * Object classes to add to a zimbraAccount
+     * Object classes to add to a zimbra LDAP entry
      */
-    public static final String A_zimbraAccountExtraObjectClass = "zimbraAccountExtraObjectClass";
-
+    public static final String A_zimbraAccountExtraObjectClass          = "zimbraAccountExtraObjectClass";
+    public static final String A_zimbraCalendarResourceExtraObjectClass = "zimbraCalendarResourceExtraObjectClass";
+    public static final String A_zimbraCosExtraObjectClass              = "zimbraCosExtraObjectClass";
+    public static final String A_zimbraDomainExtraObjectClass           = "zimbraDomainExtraObjectClass";
+    public static final String A_zimbraServerExtraObjectClass           = "zimbraServerExtraObjectClass";
     
     public static final String A_zimbraLocale = "zimbraLocale";
     

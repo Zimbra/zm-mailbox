@@ -699,19 +699,13 @@ public class LdapProvisioning extends Provisioning {
                     throw ServiceException.INVALID_REQUEST("invalid attribute for CreateAccount: "+a, null);
             }
             
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "organizationalPerson");
-            oc.add(C_zimbraAccount);
-
-            String[] extraObjectClasses = getConfig().getMultiAttr(A_zimbraAccountExtraObjectClass);
-            for (String eoc : extraObjectClasses) {
-                oc.add(eoc);
-            }
-            
+            Set<String> ocs = LdapObjectClass.getAccountObjectClasses(this);
             if (additionalObjectClasses != null) {
                 for (int i = 0; i < additionalObjectClasses.length; i++)
-                    oc.add(additionalObjectClasses[i]);
+                    ocs.add(additionalObjectClasses[i]);
             }
-            
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
+                        
             String zimbraIdStr;
             if (uuid == null)
                 zimbraIdStr = LdapUtil.generateUUID();
@@ -1457,9 +1451,8 @@ public class LdapProvisioning extends Provisioning {
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(domainAttrs, attrs);
             
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "dcObject");
-            oc.add("organization");
-            oc.add("zimbraDomain");
+            Set<String> ocs = LdapObjectClass.getDomainObjectClasses(this);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
             
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
@@ -1743,7 +1736,9 @@ public class LdapProvisioning extends Provisioning {
             
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(allAttrs, attrs);
-            LdapUtil.addAttr(attrs, A_objectClass, "zimbraCOS");
+            
+            Set<String> ocs = LdapObjectClass.getCosObjectClasses(this);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
             
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
@@ -2160,8 +2155,10 @@ public class LdapProvisioning extends Provisioning {
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(serverAttrs, attrs);
-            LdapUtil.addAttr(attrs, A_objectClass, "zimbraServer");
-
+            
+            Set<String> ocs = LdapObjectClass.getServerObjectClasses(this);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
+            
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
@@ -3352,8 +3349,10 @@ public class LdapProvisioning extends Provisioning {
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
         
         HashMap attrManagerContext = new HashMap();
-        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs,
-                                     new String[] { C_zimbraCalendarResource });
+        
+        Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(this);
+        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]));
+
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
         AttributeManager.getInstance().
