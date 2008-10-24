@@ -3660,6 +3660,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="753" name="zimbraCalendarResourceExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="future">
+  <globalConfigValue>amavisAccount</globalConfigValue>
   <desc>Object classes to add when creating a zimbra calendar resource object.
   </desc>
 </attr>

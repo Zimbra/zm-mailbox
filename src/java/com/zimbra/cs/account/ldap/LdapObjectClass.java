@@ -24,14 +24,19 @@ public class LdapObjectClass {
         */
     }
     
-    public static Set<String> getAccountObjectClasses(LdapProvisioning prov) throws ServiceException {
+    public static Set<String> getAccountObjectClasses(LdapProvisioning prov, boolean zimbraDefaultOnly) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
         ocs.add("organizationalPerson");
         ocs.add(LdapProvisioning.C_zimbraAccount);
         
-        addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraAccountExtraObjectClass);
+        if (!zimbraDefaultOnly)
+            addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraAccountExtraObjectClass);
         return ocs;
+    }
+    
+    public static Set<String> getAccountObjectClasses(LdapProvisioning prov) throws ServiceException {
+        return getAccountObjectClasses(prov, false);
     }
     
     public static Set<String> getCalendarResourceObjectClasses(LdapProvisioning prov) throws ServiceException {

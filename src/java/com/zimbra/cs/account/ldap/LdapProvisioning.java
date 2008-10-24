@@ -699,8 +699,18 @@ public class LdapProvisioning extends Provisioning {
                     throw ServiceException.INVALID_REQUEST("invalid attribute for CreateAccount: "+a, null);
             }
             
-            Set<String> ocs = LdapObjectClass.getAccountObjectClasses(this);
-            if (additionalObjectClasses != null) {
+            Set<String> ocs;
+            if (additionalObjectClasses == null) {
+                // We are creating a pure account object, get all object classes for account
+                ocs = LdapObjectClass.getAccountObjectClasses(this);
+            } else {
+                // We are creating a "subclass" of account (e.g. calendar resource), get just the
+                // zimbra default object classes for account, then add extra object classes needed 
+                // by the subclass.  
+                // It doesn't matter if the additionalObjectClasses already contains object classes 
+                // added by the getAccountObjectClasses(this, true).  When additional object classes
+                // are added to the set, duplicated once will only appear once.
+                ocs = LdapObjectClass.getAccountObjectClasses(this, true);
                 for (int i = 0; i < additionalObjectClasses.length; i++)
                     ocs.add(additionalObjectClasses[i]);
             }
