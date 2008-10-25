@@ -211,6 +211,12 @@ public class MailConstants {
     public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
     public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
     
+    // Yahoo Auth 
+    public static final QName GET_YAHOO_COOKIE_REQUEST = QName.get("GetYahooCookieRequest", NAMESPACE);
+    public static final QName GET_YAHOO_COOKIE_RESPONSE = QName.get("GetYahooCookieResponse", NAMESPACE);
+    public static final QName GET_YAHOO_AUTH_TOKEN_REQUEST = QName.get("GetYahooAuthTokenRequest", NAMESPACE);
+    public static final QName GET_YAHOO_AUTH_TOKEN_RESPONSE = QName.get("GetYahooAuthTokenResponse", NAMESPACE);
+    
     
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
