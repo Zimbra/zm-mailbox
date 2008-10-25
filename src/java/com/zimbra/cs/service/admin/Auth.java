@@ -57,10 +57,14 @@ public class Auth extends AdminDocumentHandler {
         
         Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
         if (authTokenEl != null) {
+            // authtoken admin auth is only supported by Yahoo auth provider, not the default Zimbra auth provider.
             try {
                 at = AuthProvider.getAuthToken(authTokenEl, new HashMap<String, Object>());
                 if (at == null)
                     throw ServiceException.AUTH_EXPIRED();
+                
+                com.zimbra.cs.service.account.Auth.addAccountToLogContextByAuthToken(prov, at);
+                
                 if (at.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
                 
@@ -104,6 +108,8 @@ public class Auth extends AdminDocumentHandler {
                 if (acct == null)
                     throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
             
+                Account.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+                
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                         new String[] {"cmd", "AdminAuth","account", name})); 
             

@@ -61,6 +61,9 @@ public class Auth extends AccountDocumentHandler {
             try {
                 String token = authTokenEl.getText();
                 AuthToken at = AuthToken.getAuthToken(token);
+                
+                addAccountToLogContextByAuthToken(prov, at);
+                
                 if (at.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
@@ -96,6 +99,8 @@ public class Auth extends AccountDocumentHandler {
             if (acct == null)
                 throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
 
+            Account.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+            
             long expires = 0;
 
             Map<String, Object> authCtxt = new HashMap<String, Object>();
@@ -172,4 +177,14 @@ public class Auth extends AccountDocumentHandler {
     public boolean needsAuth(Map<String, Object> context) {
 		return false;
 	}
+    
+    // for auth by auth token
+    public static void addAccountToLogContextByAuthToken(Provisioning prov, AuthToken at) {
+        String id = at.getAccountId();
+        if (id != null)
+            Account.addAccountToLogContext(prov, id, ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+        String aid = at.getAdminAccountId();
+        if (aid != null && !aid.equals(id))
+            Account.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+    }
 }
