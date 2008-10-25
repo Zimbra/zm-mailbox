@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -16,29 +16,35 @@
  */
 package com.zimbra.cs.service.im;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.service.im.IMDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class IMJoinChat extends IMDocumentHandler {
+/**
+ * 
+ */
+public class IMListConferenceRooms extends IMDocumentHandler {
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(IMConstants.IM_JOIN_CHAT_RESPONSE);
         
-        String threadId = request.getAttribute(IMConstants.A_THREAD_ID, null);
-        String addr = request.getAttribute(IMConstants.A_ADDRESS);
-        
+        Element response = zsc.createElement(IMConstants.IM_LIST_CONFERENCE_ROOMS_RESPONSE);
         IMPersona persona = super.getRequestedPersona(zsc);
-        synchronized(persona.getLock()) {
-            persona.joinChat(addr, threadId);
+        
+        String svc = request.getAttribute("svc");
+        List<Pair<String/*name*/, String/*JID*/>> rooms = persona.listRooms(svc);
+        for (Pair<String/*name*/, String/*JID*/> pair : rooms) {
+            Element elt = response.addElement("room");
+            elt.addAttribute("name", pair.getFirst());
+            elt.addAttribute("addr", pair.getSecond());
         }
         return response;
     }
-
 }

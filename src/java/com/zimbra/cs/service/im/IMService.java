@@ -36,6 +36,8 @@ public class IMService implements DocumentService {
         dispatcher.registerHandler(IMConstants.IM_GET_PRIVACY_LIST_REQUEST, new IMGetPrivacyList());
         dispatcher.registerHandler(IMConstants.IM_SET_PRIVACY_LIST_REQUEST, new IMSetPrivacyList());
         dispatcher.registerHandler(IMConstants.IM_SET_IDLE_REQUEST, new IMSetIdle());
+        dispatcher.registerHandler(IMConstants.IM_LIST_CONFERENCE_SERVICES_REQUEST, new IMListConferenceServices());
+        dispatcher.registerHandler(IMConstants.IM_LIST_CONFERENCE_ROOMS_REQUEST, new IMListConferenceRooms());
         
     }
 }

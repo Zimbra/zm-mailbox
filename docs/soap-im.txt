@@ -128,9 +128,13 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 
 IMJoinChat -- join a multi-user chat you have been invited to
 ----------
-<IMJoinChatRequest thread="threadId" addr="chatAddr"/>
+<IMJoinChatRequest [thread="threadId"] addr="chatAddr"/>
 </IMJoinChatResponse>
+
+Join the specified chat.  If a threadId is specified, then the already-open chat thread is connected to the chat,
+otherwise a new chat is created.
 // **look for notification: <n type="enteredchat" thread="threadId"/>**
+
 
 
 
@@ -212,6 +216,27 @@ server will update the user's status to "away".
 The web client must be careful to unset the "idle" status when the
 user comes back, otherwise the user's presence will be stuck in the
 "Away" state and the user won't understand why.
+
+
+IMListConferenceServices
+-------------------------
+<IMListConferenceServicesRequest/>
+<IMListConferenceServicesResponse>
+   <svc name="SERVICE_NAME" addr="SERVICE_ADDRESS"/>
+</IMListConferenceServicesResponse>
+
+List all the known conference services (MUC servers)
+
+
+IMListConferenceRooms
+----------------------
+<IMListConferenceRoomsRequest/>
+<IMListConferenceRoomsResponse>
+   <room name="ROOM_NAME" addr="ROOM_ADDRESS"/>
+</IMListConferenceRoomsResponse>   
+
+List all the available conference rooms on the requested server.
+Rooms can be joined via the <IMJoinChatRequest> API.
 
 
 

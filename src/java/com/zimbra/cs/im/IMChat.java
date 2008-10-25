@@ -156,11 +156,13 @@ public class IMChat extends ClassLogger {
         
         mPersona = persona;
         mThreadId = threadId;
-        mParticipants.put(initialPart.getAddress(), initialPart);
-        mDestJid = initialPart.getAddress().makeJID();
+        if (initialPart != null) {
+            mParticipants.put(initialPart.getAddress(), initialPart);
+            mDestJid = initialPart.getAddress().makeJID();
+        }
         mIsMUC = false;
     }
-
+    
     void closeChat() {
         if (isMUC()) {
             LeaveRoom l = new LeaveRoom(mPersona.getFullJidAsString(), getMUCJidWithNickname());

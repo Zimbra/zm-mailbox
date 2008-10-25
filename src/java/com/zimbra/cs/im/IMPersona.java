@@ -713,26 +713,55 @@ public class IMPersona extends ClassLogger {
         };
     }
 
-    void handleIQPacket(boolean toMe, IQ iq) {
+    void handleIQPacket(boolean intercepted, boolean toMe, IQ iq) {
         boolean handled = false;
+        ZimbraLog.im.info("INCOMING: "+iq);
         
         switch (iq.getType()) {
             case error:
-                ZimbraLog.im.debug("Ignoring IQ error packet: "+iq);
+                if (!intercepted && mPendingRequests.containsKey(iq.getID())) {
+                    // remember, a map entry of (id, NULL) is different than no map entry at all!
+                    RequestCompletionHandler handler = mPendingRequests.remove(iq.getID());
+                    if (handler != null) {
+                        handler.onResultReceived(iq);
+                    }
+                } else {
+                    ZimbraLog.im.debug("Ignoring IQ error packet: "+iq);
+                }
                 return;
             case result:
             {
-                org.dom4j.Element child = iq.getChildElement();
-                if (child != null) {
-                    if ("query".equals(child.getName())) {
-                        if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
-                            handlePrivacyResult(iq);
-                            handled = true;
+                if (!intercepted && mPendingRequests.containsKey(iq.getID())) {
+                    // remember, a map entry of (id, NULL) is different than no map entry at all!
+                    RequestCompletionHandler handler = mPendingRequests.remove(iq.getID());
+                    if (handler != null) {
+                        handler.onResultReceived(iq);
+                    }
+                } else {
+                    org.dom4j.Element child = iq.getChildElement();
+                    if (child != null) {
+                        if ("query".equals(child.getName())) {
+                            if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
+                                handlePrivacyResult(iq);
+                                handled = true;
+                            }
+                            
+//                            if (!intercepted) {
+//                                if ("http://jabber.org/protocol/disco#info".equals(child.getNamespaceURI())) {
+//                                    ZimbraLog.im.debug("Received Disco#info result packet: "+iq);
+//                                    handleDiscoInfoResult(iq);
+//                                    handled = true;
+//                                } else if ("http://jabber.org/protocol/disco#items".equals(child.getNamespaceURI())) {
+//                                    ZimbraLog.im.debug("Received Disco#items result packet: "+iq);
+//                                    handleDiscoItemsResult(iq);
+//                                    handled = true;
+//                                }
+//                            }
                         }
                     }
+                    if (!handled)
+                        ZimbraLog.im.debug("Ignoring IQ result packet: "+iq);
                 }
-                if (!handled)
-                    ZimbraLog.im.debug("Ignoring IQ result packet: "+iq);
                 return;
             }
             case set:
@@ -882,7 +911,194 @@ public class IMPersona extends ClassLogger {
             ZimbraLog.im.debug("Ignoring unknown privacy IQ response: "+iq);
     }
     
+    private static class DiscoInfoResult {
+        public String jid;
+        public String category;
+        public String name;
+        public String type;
+        public List<String> features = new ArrayList<String>();
+        
+        public String toString() {
+            return jid+" - "+name+" - "+category+" - "+type;
+        }
+    }
+    
+    private static class DiscoItemsResult {
+        public List<DiscoItemResult> items = new ArrayList<DiscoItemResult>();
+    }
+    
+    private static class DiscoInfoCompletion extends RequestCompletionHandler {
+        private DiscoInfoResult di;
+        
+        public DiscoInfoResult getDiscoInfoResult() { return di; }
+        
+        DiscoInfoCompletion(IQ iq) {
+            super(iq);
+        }
+        protected void resultReceived(IQ response) {
+            switch (response.getType()) {
+                case result:
+                    di = handleDiscoInfoResult(response);
+                    break;
+            }
+        }
+    }
+    
+    private DiscoInfoResult syncGetDiscoInfo(String target) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make callback requests while holding Persona lock!");
+        }
+        IQ iq = new IQ();
+        synchronized(getLock()) {
+            iq.setType(Type.get);
+            iq.setID("DiscoInfo-"+(mCurRequestId++));
+            iq.setChildElement("query", "http://jabber.org/protocol/disco#info");
+            iq.setTo(target);
+        }
+        DiscoInfoCompletion dic = new DiscoInfoCompletion(iq);
+        sendRequest(iq, dic);
+        synchronized(dic) {
+            try {
+                dic.wait(1000);
+            } catch (InterruptedException ex) { }
+        }
+        if (dic.isError()) {
+            throw ServiceException.FAILURE("Error fetching disco#info for server: "+dic.getRespnse(), null);
+        }
+        
+        return dic.getDiscoInfoResult();
+    }
+    
+    private static DiscoItemsResult handleDiscoItemsResult(IQ iq) {
+        DiscoItemsResult di = new DiscoItemsResult();
+        org.dom4j.Element child = iq.getChildElement();
+        for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)child.elementIterator("item");iter.hasNext();) {
+            org.dom4j.Element item = iter.next();
+            ZimbraLog.im.debug("Found item: "+item.asXML());
+            if ((item.attributeValue("name", null) != null) &&
+                (item.attributeValue("jid", null) != null)) {
+                DiscoItemResult dir = new DiscoItemResult();
+                dir.name = item.attributeValue("name");
+                dir.jid = item.attributeValue("jid");
+                di.items.add(dir);
+            }
+        }
+        return di;
+    }
 
+    private static class DiscoItemsCompletion extends RequestCompletionHandler {
+        private DiscoItemsResult di;
+        
+        public DiscoItemsResult getDiscoItemsResult() { return di; }
+        
+        DiscoItemsCompletion(IQ iq) {
+            super(iq);
+        }
+        protected void resultReceived(IQ response) {
+            switch (response.getType()) {
+                case result:
+                    di = handleDiscoItemsResult(response);
+                    break;
+            }
+        }
+    }
+    
+    private DiscoItemsResult syncGetDiscoItems(String target) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make callback requests while holding Persona lock!");
+        }
+        IQ iq = new IQ();
+        synchronized(getLock()) {
+            iq.setType(Type.get);
+            iq.setID("DiscoItems-"+(mCurRequestId++));
+            iq.setChildElement("query", "http://jabber.org/protocol/disco#items");
+            iq.setTo(target);
+        }
+        DiscoItemsCompletion dic = new DiscoItemsCompletion(iq);
+        sendRequest(iq, dic);
+        synchronized(dic) {
+            try {
+                dic.wait();
+            } catch (InterruptedException ex) { }
+        }
+        if (dic.isError()) {
+            throw ServiceException.FAILURE("Error fetching disco#info for server: "+dic.getRespnse(), null);
+        }
+        return dic.getDiscoItemsResult();
+    }
+    
+    public List<Pair<String /*name*/, String /*JID*/>> listConferenceServices() throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make this request while holding Persona lock!");
+        }
+
+        List<Pair<String /*name*/, String /*JID*/>> toRet = new ArrayList<Pair<String /*name*/, String /*JID*/>> ();
+        
+//        DiscoInfoResult serverDI = syncGetDiscoInfo(mAddr.toString());
+        DiscoItemsResult serverItems = syncGetDiscoItems(mAddr.getDomain());
+        for (DiscoItemResult item : serverItems.items) {
+            DiscoInfoResult di = syncGetDiscoInfo(item.jid);
+            if (di != null && "conference".equals(di.category) && "text".equals(di.type)) {
+                toRet.add(new Pair<String, String>(di.name, di.jid));
+            }
+        }
+        return toRet;
+    }
+    
+    public List<Pair<String /*name*/, String /*JID*/>> listRooms(String svc) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make this request while holding Persona lock!");
+        }
+
+        // make sure there's a conference service at the requested location
+        DiscoInfoResult svcDI = syncGetDiscoInfo(svc);
+        if (svcDI == null)
+            throw ServiceException.FAILURE("Could not contact service at: "+svc, null);
+        if (!"conference".equals(svcDI.category) || !"text".equals(svcDI.type)) 
+            throw ServiceException.FAILURE("Service at "+svc+" is not a conference service", null);
+        
+        // fetch the items
+        DiscoItemsResult svcItems = syncGetDiscoItems(svc);
+        if (svcItems == null) 
+            throw ServiceException.FAILURE("Could not fetch rooms from conference service at "+svc, null);
+
+        List<Pair<String /*name*/, String /*JID*/>> toRet = new ArrayList<Pair<String /*name*/, String /*JID*/>> ();
+        for (DiscoItemResult item : svcItems.items) {
+            toRet.add(new Pair<String, String>(item.name, item.jid));
+        }
+        
+        return toRet;
+    }
+    
+    private static DiscoInfoResult handleDiscoInfoResult(IQ iq) {
+        DiscoInfoResult toRet = new DiscoInfoResult();
+        
+        String fromAddr = iq.getFrom().toBareJID();
+        org.dom4j.Element child = iq.getChildElement();
+        // find the identity
+        org.dom4j.Element identity = child.element("identity");
+        
+        toRet.category = identity.attributeValue("category", "");
+        toRet.type = identity.attributeValue("type", "");
+        toRet.jid = iq.getFrom().toBareJID();
+        toRet.name = identity.attributeValue("name", "");
+        
+        // find all the features
+        for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)child.elementIterator("feature");iter.hasNext();) {
+            org.dom4j.Element item = iter.next();
+            ZimbraLog.im.info("Found feature: "+item.asXML());
+            String var = item.attributeValue("var", null);
+            if (var != null)
+                toRet.features.add(var);
+        }
+        return toRet;
+    }
+    
+    private static class DiscoItemResult {
+        public String name;
+        public String jid;
+    }
+    
     private void handleMessagePacket(boolean toMe, Message msg) {
         // is it a gateway notification?  If so, then stop processing it here
         Element xe = msg.getChildElement("x", "zimbra:interop");
@@ -1120,10 +1336,10 @@ public class IMPersona extends ClassLogger {
             }
         } catch (ServiceException ex) {
             ZimbraLog.im.warn("Caught Exception checking if XMPP enabled "
-                        + ex.toString(), ex);
+                              + ex.toString(), ex);
         }
     }
-  
+    
     public void setPrivacyList(PrivacyList pl) {
         synchronized(getLock()) {
             // figure out what name to use
@@ -1208,6 +1424,77 @@ public class IMPersona extends ClassLogger {
             mBufferedPresence = new HashMap<IMAddr, PresencePriorityMap>();
         }
     }
+    
+    public static abstract class RequestCompletionHandler {
+        private IQ request = null;
+        private IQ response = null;
+        RequestCompletionHandler(IQ iq) { 
+            request = iq;
+        }
+        
+        synchronized public IQ getRequest() { return request; }
+        synchronized public IQ getRespnse() { return response; }
+        
+        synchronized public final void onResultReceived(IQ response) {
+            this.response = response;
+            resultReceived(response);
+            this.notifyAll();
+        }
+        
+        synchronized public boolean isResponseReceived() {
+            return response != null;
+        }
+        synchronized public boolean isError() {
+            if (isResponseReceived())
+                return (response.getType() == org.xmpp.packet.IQ.Type.error);
+            return false;
+        }
+        
+        /** 
+         * Override this function
+         *  
+         * @param response
+         */
+        protected abstract void resultReceived(IQ response);
+    }
+    
+    
+    
+    
+    private Map<String /*request id*/, RequestCompletionHandler> mPendingRequests =
+        new HashMap<String /*request id*/, RequestCompletionHandler>();
+    
+    
+    private void sendRequest(IQ request, RequestCompletionHandler handler) {
+        if (mPendingRequests.containsKey(request.getID())) {
+            throw new IllegalArgumentException("Request with ID "+request.getID()+" already pending");
+        }
+        if (handler != null) 
+            mPendingRequests.put(request.getID(), handler);
+        xmppRoute(request);
+    }
+    
+    
+    private void sendDiscoInfo(String target) {
+        synchronized(getLock()) {
+            IQ iq = new IQ();
+            iq.setType(Type.get);
+            iq.setID("DiscoInfo-"+(mCurRequestId++));
+            iq.setChildElement("query", "http://jabber.org/protocol/disco#info");
+            iq.setTo(target);
+            xmppRoute(iq);
+        }
+    }
+    private void sendDiscoItems(String target) {
+        synchronized(getLock()) {
+            IQ iq = new IQ();
+            iq.setType(Type.get);
+            iq.setID("DiscoItems-"+(mCurRequestId++));
+            iq.setChildElement("query", "http://jabber.org/protocol/disco#items");
+            iq.setTo(target);
+            xmppRoute(iq);
+        }
+    }
 
 //    public boolean inSharedGroup(String name) {
 //        return mSharedGroups.contains(name);
@@ -1215,8 +1502,11 @@ public class IMPersona extends ClassLogger {
 
     public void joinChat(String addr, String threadId) throws ServiceException {
         synchronized(getLock()) {
-            if (threadId == null) 
-                throw new IllegalArgumentException("Cannot joing a chat with a NULL threadId");
+            if (threadId == null || threadId.length() == 0) {
+                threadId = addr;
+                if (threadId.indexOf('@')>=0) 
+                    threadId = addr.substring(0, addr.indexOf('@'));
+            }                
             IMChat chat = mChats.get(threadId);
             if (chat == null) {
                 chat = new IMChat(this, threadId, null);
@@ -1295,7 +1585,7 @@ public class IMPersona extends ClassLogger {
         } else if (packet instanceof Roster) {
             handleRosterPacket(toMe, (Roster) packet);
         } else if (packet instanceof IQ) {
-            handleIQPacket(toMe, (IQ) packet);
+            handleIQPacket(intercepted, toMe, (IQ) packet);
         }
     }
 
