@@ -54,6 +54,12 @@ public class IMConstants {
     
     public static final QName IM_SET_IDLE_REQUEST = QName.get("IMSetIdleRequest", NAMESPACE);
     public static final QName IM_SET_IDLE_RESPONSE = QName.get("IMSetIdleResponse", NAMESPACE);
+    
+    public static final QName IM_LIST_CONFERENCE_SERVICES_REQUEST = QName.get("IMListConferenceServicesRequest", NAMESPACE);    
+    public static final QName IM_LIST_CONFERENCE_SERVICES_RESPONSE = QName.get("IMListConferenceServicesResponse", NAMESPACE);
+    
+    public static final QName IM_LIST_CONFERENCE_ROOMS_REQUEST = QName.get("IMListConferenceRoomsRequest", NAMESPACE);
+    public static final QName IM_LIST_CONFERENCE_ROOMS_RESPONSE = QName.get("IMListConferenceRoomsResponse", NAMESPACE);    
 
     public static final String A_ACTION         = "action";
     public static final String A_AUTHORIZED     = "authorized";
