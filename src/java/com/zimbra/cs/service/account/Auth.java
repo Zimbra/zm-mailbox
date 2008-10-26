@@ -81,7 +81,6 @@ public class Auth extends AccountDocumentHandler {
             String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
             String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
-
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 

@@ -14,9 +14,12 @@ When updating multiple attributes, you need to specify all the old values at the
 
 ----------------------------
  <AuthRequest xmlns="urn:zimbraAdmin">
-   <name>...</name>
+   [<name>...</name>]
+   [<account by="name|id|foreignPrincipal">...</account>]
    <password>...</password>
  </AuthRequest>
+ 
+ Only one of <name> or <account> can/must be specified.
  
  <AuthResponse>
    <authToken>...</authToken>

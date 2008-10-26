@@ -80,49 +80,72 @@ public class Auth extends AdminDocumentHandler {
             }
             
         } else {
-            String namePassedIn = request.getAttribute(AdminConstants.E_NAME);
-            String name = namePassedIn;
-    		String password = request.getAttribute(AdminConstants.E_PASSWORD);
-            
+            /*
+             * only one of  
+             *     <name>...</name>
+             * or 
+             *     <account by="name|id|foreignPrincipal">...</account>
+             * can be specified    
+             */
+            String name = request.getAttribute(AdminConstants.E_NAME, null);
+            Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
+            if (name != null && acctEl != null)
+                throw ServiceException.INVALID_REQUEST("only one of <name> or <account> can be specified", null);
+            String password = request.getAttribute(AdminConstants.E_PASSWORD);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+            
+            String valuePassedIn;
+            AccountBy by;
+            String value;
+            if (name != null) {
+                valuePassedIn = name;
+                by = AccountBy.name;
+            } else {
+                valuePassedIn = acctEl.getText();
+                String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
+                by = AccountBy.fromString(byStr);
+            }
+            value = valuePassedIn;
      
             try {
                 
-                if (name.indexOf("@") == -1) {
-    
-                    acct = prov.get(AccountBy.adminName, name, zsc.getAuthToken());
+                if (by == AccountBy.name && value.indexOf("@") == -1) {
+                    // first try to get by adminName, which resolves the account under cn=admins,cn=zimbra
+                    // and does not need a domain 
+                    acct = prov.get(AccountBy.adminName, value, zsc.getAuthToken());
                     
+                    // not found, try applying virtual host name
                     if (acct == null) {
                         if (virtualHost != null) {
                             Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
                             if (d != null)
-                                name = name + "@" + d.getName();
+                                value = value + "@" + d.getName();
                         }                    
                     } 
                 }
     
                 if (acct == null)
-                    acct = prov.get(AccountBy.name, name);
+                    acct = prov.get(by, value);
     
                 if (acct == null)
-                    throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+                    throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
             
                 Account.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
                 
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "AdminAuth","account", name})); 
+                        new String[] {"cmd", "AdminAuth","account", value})); 
             
                 Map<String, Object> authCtxt = new HashMap<String, Object>();
                 authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
-                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, namePassedIn);
+                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
                 prov.authAccount(acct, password, "soap", authCtxt);
                 checkAdmin(acct);
                 at = AuthProvider.getAuthToken(acct, true);
                 
             } catch (ServiceException se) {
                 ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "AdminAuth","account", name, "error", se.getMessage()}));    
+                        new String[] {"cmd", "AdminAuth","account", value, "error", se.getMessage()}));    
                 throw se;
             }
         }
