@@ -62,6 +62,20 @@ abstract class LdapUpgrade {
         }
     }  
     
+    abstract static class UpgradeVisitor {
+        boolean mVerbose;
+        LdapProvisioning mProv;
+        ZimbraLdapContext mZlcForMod;
+        
+        UpgradeVisitor(LdapProvisioning prov, ZimbraLdapContext zlcForMod, boolean verbose) {
+            mVerbose = verbose;
+            mProv = prov;
+            mZlcForMod = zlcForMod;
+        }
+        
+        abstract void reportStat();
+    }
+    
     private static String O_HELP = "h";
     private static String O_BUG = "b";
     private static String O_VERBOSE = "v";
@@ -94,7 +108,9 @@ abstract class LdapUpgrade {
     }
     
     /**
-     * @param args
+     * Usage: zmjava com.zimbra.cs.account.ldap.upgrade.LdapUpgrade -b <bug number> [-v]
+     *
+    * @param args
      */
     public static void main(String[] args) throws ServiceException {
         CliUtil.toolSetup();
@@ -128,6 +144,8 @@ abstract class LdapUpgrade {
         
         if ("29978".equalsIgnoreCase(bug)) {
             upgrade = new DomainPublicServiceProtocolAndPort(verbose);
+        } else if ("32557".equalsIgnoreCase(bug)) {
+            upgrade = new DomainObjectClassAmavisAccount(verbose);
         } else {
             System.out.println("unrecognized bug number");
             System.exit(1);

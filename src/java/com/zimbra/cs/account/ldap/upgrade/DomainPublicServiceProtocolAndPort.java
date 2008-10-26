@@ -46,7 +46,7 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         return "(&(objectClass=zimbraDomain)" + query + ")";
     }
     
-    static class DomainPuclicServiceProtocolAndPortVisitor implements NamedEntry.Visitor {
+    static class DomainPuclicServiceProtocolAndPortVisitor extends LdapUpgrade.UpgradeVisitor implements NamedEntry.Visitor {
         
         class ServerInfo {
             String mServerName;
@@ -60,16 +60,11 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
             }
         }
         
-        boolean mVerbose;
-        LdapProvisioning mProv;
         Map<String, ServerInfo> mServerMap; // map keyed by server.zimbraServiceHostname
         int mDomainsVisited;
-        ZimbraLdapContext mZlcForMod;
         
         DomainPuclicServiceProtocolAndPortVisitor(LdapProvisioning prov, ZimbraLdapContext zlcForMod, List<Server> servers, boolean verbose) {
-            mVerbose = verbose;
-            mProv = prov;
-            mZlcForMod = zlcForMod;
+            super(prov, zlcForMod, verbose);
             
             mServerMap = new HashMap<String, ServerInfo>();
             for (Server server : servers) {
@@ -367,6 +362,8 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
             createTestDomain("port_present_" + i + ".test",   http.getAttr(Provisioning.A_zimbraServiceHostname), null, "8888");
 
         }
+        
+        System.out.println("\ndone");
     }
     
     public static void main(String[] args) throws ServiceException {
