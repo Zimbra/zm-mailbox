@@ -121,27 +121,63 @@ public class MimeHeader {
         return unfolded.toString();
     }
 
-    private static class Q2047Encoder extends ContentTransferEncoding.QuotedPrintableEncoderStream {
-        private static final boolean[] FORCE_ENCODE = new boolean[128];
-            static {
-                for (int i = 0; i < FORCE_ENCODE.length; i++)
-                    FORCE_ENCODE[i] = true;
-                for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes())
-                    FORCE_ENCODE[c] = false;
+    static class EncodedWord {
+        static String encode(String value, String charset) {
+            StringBuilder sb = new StringBuilder();
+
+            // FIXME: need to limit encoded-words to 75 bytes
+            charset = StringUtil.checkCharset(value, charset);
+            byte[] content = null;
+            try {
+                content = value.getBytes(charset);
+            } catch (Throwable t) {
+                content = value.getBytes();
+                charset = Charset.defaultCharset().displayName();
+            }
+            sb.append("=?").append(charset);
+
+            int invalidQ = 0;
+            for (int i = 0; i < content.length; i++)
+                if (content[i] < 0 || Q2047Encoder.FORCE_ENCODE[content[i]])
+                    invalidQ++;
+
+            InputStream encoder;
+            if (invalidQ > content.length / 3) {
+                sb.append("?B?");  encoder = new B2047Encoder(content);
+            } else {
+                sb.append("?Q?");  encoder = new Q2047Encoder(content);
             }
 
-        Q2047Encoder(byte[] content) {
-            super(new ByteArrayInputStream(content), null);  disableFolding();  setForceEncode(FORCE_ENCODE);
+            try {
+                sb.append(new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE)));
+            } catch (IOException ioe) {}
+            sb.append("?=");
+
+            return sb.toString();
         }
 
-        @Override public int read() throws IOException {
-            int c = super.read();  return c == ' ' ? '_' : c;
-        }
-    }
+        private static class Q2047Encoder extends ContentTransferEncoding.QuotedPrintableEncoderStream {
+            static final boolean[] FORCE_ENCODE = new boolean[128];
+                static {
+                    for (int i = 0; i < FORCE_ENCODE.length; i++)
+                        FORCE_ENCODE[i] = true;
+                    for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes())
+                        FORCE_ENCODE[c] = false;
+                }
 
-    private static class B2047Encoder extends ContentTransferEncoding.Base64EncoderStream {
-        B2047Encoder(byte[] content) {
-            super(new ByteArrayInputStream(content));  disableFolding();
+            Q2047Encoder(byte[] content) {
+                super(new ByteArrayInputStream(content), null);  disableFolding();  setForceEncode(FORCE_ENCODE);
+            }
+
+            @Override public int read() throws IOException {
+                int c = super.read();  return c == ' ' ? '_' : c;
+            }
+        }
+
+        private static class B2047Encoder extends ContentTransferEncoding.Base64EncoderStream {
+            B2047Encoder(byte[] content) {
+                super(new ByteArrayInputStream(content));  disableFolding();
+            }
         }
     }
 
@@ -168,30 +204,7 @@ public class MimeHeader {
         needsQuote |= wsp;
 
         if (needs2047 > 0 || (!quotable && needsQuote)) {
-            // FIXME: need to limit encoded-words to 75 bytes
-            StringBuilder sb = new StringBuilder(75).append("=?");
-
-            charset = StringUtil.checkCharset(value, charset);
-            byte[] content = null;
-            try {
-                content = value.getBytes(charset);
-                sb.append(charset);
-            } catch (Throwable t) {
-                content = value.getBytes();
-                sb.append(Charset.defaultCharset().displayName());
-            }
-
-            InputStream encoder;
-            if (needs2047 > value.length() / 3) {
-                sb.append("?B?");  encoder = new B2047Encoder(content);
-            } else {
-                sb.append("?Q?");  encoder = new Q2047Encoder(content);
-            }
-            try {
-                sb.append(new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE)));
-            } catch (IOException ioe) {}
-
-            return sb.append("?=").toString();
+            return EncodedWord.encode(value, charset);
         } else if (needsQuote && needsEscape > 0) {
             StringBuilder sb = new StringBuilder(value.length() + needsEscape + 2).append('"');
             for (int i = 0, len = value.length(); i < len; i++) {
