@@ -27,8 +27,6 @@ import java.util.TreeMap;
 
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.codec.EncoderException;
-import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.codec.net.URLCodec;
 
 import com.zimbra.common.util.StringUtil;
@@ -278,12 +276,11 @@ public class MimeCompoundHeader {
                 }
             } else if (mUse2231Encoding) {
                 try {
-                    sb.append(param.getKey()).append("*=").append(charset).append("''").append(new URLEncoder().encode(value, charset));
+                    String encoded = new URLEncoder().encode(value, charset);
+                    sb.append(param.getKey()).append("*=").append(charset).append("''").append(encoded);
                 } catch (UnsupportedEncodingException e) { }
             } else {
-                try {
-                    sb.append(param.getKey()).append("=\"").append(new QEncoder().encode(value, charset)).append('"');
-                } catch (EncoderException e) { }
+                sb.append(param.getKey()).append("=\"").append(MimeHeader.EncodedWord.encode(value, charset)).append('"');
             }
 
             if (position + sb.length() > LINE_WRAP_LENGTH) {
@@ -302,9 +299,6 @@ public class MimeCompoundHeader {
         private static final BitSet WWW_URL = (BitSet) WWW_FORM_URL.clone();
             static { WWW_URL.clear(' '); }
         @Override public byte[] encode(byte[] bytes)  { return encodeUrl(WWW_URL, bytes); }
-    }
-    private static class QEncoder extends QCodec {
-        QEncoder()  { super();  setEncodeBlanks(true); }
     }
 
     private static class RFC2231Data {
