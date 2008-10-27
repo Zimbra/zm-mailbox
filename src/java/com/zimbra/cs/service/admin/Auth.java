@@ -85,12 +85,15 @@ public class Auth extends AdminDocumentHandler {
              *     <name>...</name>
              * or 
              *     <account by="name|id|foreignPrincipal">...</account>
-             * can be specified    
+             * can/must be specified    
              */
             String name = request.getAttribute(AdminConstants.E_NAME, null);
             Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
             if (name != null && acctEl != null)
                 throw ServiceException.INVALID_REQUEST("only one of <name> or <account> can be specified", null);
+            if (name == null && acctEl == null)
+                throw ServiceException.INVALID_REQUEST("missing <name> or <account>", null);
+            
             String password = request.getAttribute(AdminConstants.E_PASSWORD);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
