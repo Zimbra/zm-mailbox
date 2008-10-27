@@ -633,7 +633,7 @@ OR
   />]*
 </GetFreeBusyRequest>
 <GetFreeBusyResponse>
-  <usr id="id">
+  <usr id="id">  // id is always account email; it is not zimbraId as the attribute name may suggest
     <f s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
     <b s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
     <t s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
