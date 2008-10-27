@@ -712,7 +712,7 @@ public class LdapUtil {
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");
                         result.setToken(getLaterTimestamp(result.getToken(), cts));
                         result.addMatch(lgc);
-                        ZimbraLog.gal.debug("dn=" + dn + ", modifyTimeStamp=" + mts + ", createTimeStamp" + cts);
+                        ZimbraLog.gal.debug("dn=" + dn + ", modifyTimeStamp=" + mts + ", createTimeStamp=" + cts);
                     
                     }
                     if (pageSize > 0)

@@ -91,6 +91,9 @@ public class SearchGal extends AccountDocumentHandler {
     }
     
     public static void addContacts(Element response, SearchGalResult result) throws ServiceException {
+        
+        ZimbraLog.gal.debug("GAL result total entries:" + result.getNumMatches());
+        
         if (isLarge(result))
             response.setIsLarge();   
         
