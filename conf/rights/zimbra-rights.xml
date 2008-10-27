@@ -67,15 +67,22 @@ limit:
   </doc>
 </right>
 
+<right name="loginAs" userRight="1">
+  <desc>login as</desc>
+  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
+</right>
+
+<right name="sendAs" userRight="1">
+  <desc>send as</desc>
+  <doc>reply to messages in a shared folder as the owner of the folder</doc>
+</right>
+
 <right name="viewFreeBusy" userRight="1">
   <desc>view free/busy</desc>
   <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
 </right>
 
-<right name="loginAs" userRight="1">
-  <desc>login as</desc>
-  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
-</right>
+
 
 <!-- 
 ********************
