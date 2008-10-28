@@ -127,8 +127,13 @@ public class SoapToSieve {
             String s = test.getAttribute(MailConstants.A_NUMBER_COMPARISON);
             s = s.toLowerCase();
             NumberComparison comparison = NumberComparison.fromString(s);
-            String size = test.getAttribute(MailConstants.A_SIZE);
-            snippet = String.format("size :%s %s", comparison, size);
+            String sizeString = test.getAttribute(MailConstants.A_SIZE);
+            try {
+                FilterUtil.parseSize(sizeString);
+            } catch (NumberFormatException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid size: " + sizeString, e);
+            }
+            snippet = String.format("size :%s %s", comparison, sizeString);
         } else if (name.equals(MailConstants.E_DATE_TEST)) {
             String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
             s = s.toLowerCase();

@@ -70,7 +70,7 @@ public abstract class SieveVisitor {
     
     @SuppressWarnings("unused")
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-        NumberComparison comparison, int size)
+        NumberComparison comparison, int size, String sizeString)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
@@ -217,11 +217,18 @@ public abstract class SieveVisitor {
         } else if ("size".equals(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             NumberComparison comparison = NumberComparison.fromString(s);
-            int size = parseInt(getValue(node, 0, 1));
+            SieveNode sizeNode = (SieveNode) getNode(node, 0, 1);
+            String sizeString = sizeNode.getFirstToken().toString();
+            int size = 0;
+            try {
+                size = FilterUtil.parseSize(sizeString);
+            } catch (NumberFormatException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid size value " + sizeString, e);
+            }
             
-            visitSizeTest(node, VisitPhase.begin, props, comparison, size);
+            visitSizeTest(node, VisitPhase.begin, props, comparison, size, sizeString);
             accept(node, props);
-            visitSizeTest(node, VisitPhase.end, props, comparison, size);
+            visitSizeTest(node, VisitPhase.end, props, comparison, size, sizeString);
         } else if ("date".equals(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             DateComparison comparison = DateComparison.fromString(s);

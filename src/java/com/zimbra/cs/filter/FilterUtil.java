@@ -166,5 +166,32 @@ public class FilterUtil {
             return 0;
         }
     }
+    
+    /**
+     * Parses a Sieve size string and returns the integer value.
+     * The string may end with <tt>K</tt> (kilobytes), <tt>M</tt> (megabytes)
+     * or <tt>G</tt> (gigabytes).  If the units are not specified, the
+     * value is in bytes.
+     * 
+     * @throws NumberFormatException if the value cannot be parsed
+     */
+    public static int parseSize(String sizeString) {
+        if (sizeString == null || sizeString.length() == 0) {
+            return 0;
+        }
+        sizeString = sizeString.toUpperCase();
+        int multiplier = 1;
+        if (sizeString.endsWith("K")) {
+            sizeString = sizeString.substring(0, sizeString.length() - 1);
+            multiplier = 1024;
+        } else if (sizeString.endsWith("M")) {
+            sizeString = sizeString.substring(0, sizeString.length() - 1);
+            multiplier = 1024 * 1024;
+        } else if (sizeString.endsWith("G")) {
+            sizeString = sizeString.substring(0, sizeString.length() - 1);
+            multiplier = 1024 * 1024 * 1024;
+        }
+        return Integer.parseInt(sizeString) * multiplier;
+    }
 }
 

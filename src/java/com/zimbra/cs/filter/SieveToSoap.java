@@ -146,12 +146,12 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-                                 NumberComparison comparison, int size)
+                                 NumberComparison comparison, int size, String sizeString)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_SIZE_TEST, props);
             test.addAttribute(MailConstants.A_NUMBER_COMPARISON, comparison.toString());
-            test.addAttribute(MailConstants.A_SIZE, size);
+            test.addAttribute(MailConstants.A_SIZE, sizeString);
         }
     }
 

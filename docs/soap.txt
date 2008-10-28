@@ -2394,22 +2394,22 @@ zimbra_noop_max_timeout)
 <GetFilterRulesRequest/>
 
 <GetFilterRulesResponse>
-<filterRules>
-  <filterRule name="{rule-name}" [active="{0|1}"]>
-    <filterTests condition="{allof | anyof"}>
-      {test}
-      [test]
-      ...
-    </filterTests>
-    <filterActions>
-      {action}
-      [action]
-      ...
-    </filterActions>
-  </filterRule>
-  [filter rule]
-  ...
-</filterRules>
+  <filterRules>
+    <filterRule name="{rule-name}" [active="{0|1}"]>
+      <filterTests condition="{allof | anyof"}>
+        {test}
+        [test]
+        ...
+      </filterTests>
+      <filterActions>
+        {action}
+        [action]
+        ...
+      </filterActions>
+    </filterRule>
+    [filter rule]
+    ...
+  </filterRules>
 </GetFilterRulesResponse>
 
 <ModifyFilterRulesRequest>
@@ -2447,7 +2447,7 @@ Actions:
 stringComparison values: is, contains, matches
 numberComparison values: over, under
 dateComparison values: before, after
-size values are in bytes
+size values are in bytes (no suffix), kilobytes (50K), megabytes (50M) or gigabytes (2G)
 flag values: flagged, read
 date values are in seconds since epoch, and are truncated to the day. Hours, minutes, and seconds are ignored.
 index is an integer, used to maintain the order of filter tests and actions. 

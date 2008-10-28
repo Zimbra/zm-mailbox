@@ -542,6 +542,23 @@ extends TestCase {
         assertEquals(user1.getName(), mimeMsg.getHeader(ZimbraMailAdapter.HEADER_FORWARDED));
     }
     
+    /**
+     * Tests {@link FilterUtil#parseSize}.
+     */
+    public void testParseSize()
+    throws Exception {
+        assertEquals(10, FilterUtil.parseSize("10"));
+        assertEquals(10 * 1024, FilterUtil.parseSize("10k"));
+        assertEquals(10 * 1024, FilterUtil.parseSize("10K"));
+        assertEquals(10 * 1024 * 1024, FilterUtil.parseSize("10M"));
+        assertEquals(10 * 1024 * 1024 * 1024, FilterUtil.parseSize("10G"));
+        try {
+            FilterUtil.parseSize("10Q");
+            fail("Should not have parsed bogus size value.");
+        } catch (NumberFormatException e) {
+        }
+    }
+    
     private String normalizeWhiteSpace(String script) {
         StringBuilder buf = new StringBuilder(script.length());
         boolean inWhiteSpace = false;
