@@ -361,6 +361,8 @@ public class LC {
     public static final KnownKey zimbra_auth_provider;
     public static final KnownKey zimbra_authtoken_cookie_domain;
     
+    public static final KnownKey zimbra_zmjava_options;
+    
     public static final KnownKey debug_xmpp_disable_client_tls;
     
     public static final KnownKey im_dnsutil_dnsoverride;
@@ -1102,6 +1104,9 @@ public class LC {
         zimbra_auth_provider.setDefault("zimbra");
         zimbra_authtoken_cookie_domain = new KnownKey("zimbra_authtoken_cookie_domain");
         zimbra_authtoken_cookie_domain.setDefault("");
+        
+        zimbra_zmjava_options = new KnownKey("zimbra_zmjava_options");
+        zimbra_zmjava_options.setDefault("-Xmx256m");
         
         debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0");
         
