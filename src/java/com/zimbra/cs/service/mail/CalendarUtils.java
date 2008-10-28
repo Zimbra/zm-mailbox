@@ -403,8 +403,8 @@ public class CalendarUtils {
                 
                 if (intElt.getName().equals(MailConstants.E_CAL_DATES)) {
                     // handle RDATE or EXDATE
-                    String tzid = intElt.getAttribute(MailConstants.A_CAL_TIMEZONE);
-                    ICalTimeZone tz = invTzMap.lookupAndAdd(tzid);
+                    String tzid = intElt.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
+                    ICalTimeZone tz = tzid != null ? invTzMap.lookupAndAdd(tzid) : null;
                     RdateExdate rexdate = new RdateExdate(exclude ? ICalTok.EXDATE : ICalTok.RDATE, tz);
 
                     ICalTok valueType = null;
