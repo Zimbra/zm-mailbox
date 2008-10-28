@@ -17,6 +17,79 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.Disposition;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.soap.VoiceConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.zclient.ZFolder.Color;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
+import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
+import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
+import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateTagEvent;
+import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
+import com.zimbra.cs.zclient.event.ZDeleteEvent;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyTagEvent;
+import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.dom4j.QName;
+
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,56 +110,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.dom4j.QName;
-
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.VoiceConstants;
-import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.soap.Element.Disposition;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.zclient.ZFolder.Color;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.*;
 
 public class ZMailbox {
 
@@ -1193,7 +1216,12 @@ public class ZMailbox {
     }
 
     public String createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
+        return createContact(folderId, tags, attrs, true).getId();
+    }
+
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, boolean verbose) throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
+        req.addAttribute(MailConstants.A_VERBOSE, verbose);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         if (folderId != null)
             cn.addAttribute(MailConstants.A_FOLDER, folderId);
@@ -1202,7 +1230,7 @@ public class ZMailbox {
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
-        return invoke(req).getElement(MailConstants.E_CONTACT).getAttribute(MailConstants.A_ID);
+        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT));
     }
 
     /**
@@ -1214,7 +1242,20 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public String modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
+        return modifyContact(id, replace, attrs, true).getId();
+    }
+
+    /**
+     *
+     * @param id of contact
+     * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
+     * @param attrs modified attrs
+     * @return updated contact
+     * @throws ServiceException on error
+     */
+    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, boolean verbose) throws ServiceException {
         Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
+        req.addAttribute(MailConstants.A_VERBOSE, verbose);
         if (replace)
             req.addAttribute(MailConstants.A_REPLACE, replace);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
@@ -1222,7 +1263,7 @@ public class ZMailbox {
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
-        return invoke(req).getElement(MailConstants.E_CONTACT).getAttribute(MailConstants.A_ID);
+        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT));
     }
 
     /**
