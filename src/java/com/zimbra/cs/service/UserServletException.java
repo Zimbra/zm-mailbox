@@ -31,7 +31,7 @@ public class UserServletException extends Exception {
         mCode = code;
     }
 
-    int getHttpStatusCode() {
+    public int getHttpStatusCode() {
        return mCode;
     }
 

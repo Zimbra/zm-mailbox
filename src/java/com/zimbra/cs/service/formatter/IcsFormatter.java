@@ -42,14 +42,9 @@ import com.zimbra.cs.service.UserServlet.Context;
 import javax.mail.Part;
 import javax.servlet.ServletException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -143,9 +138,9 @@ public class IcsFormatter extends Formatter {
         // use that charset in String() constructor.
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();
-        Reader reader = null;
+        Reader reader = new InputStreamReader(getRequestInputStream(context), Mime.P_CHARSET_UTF8);
+        
         try {
-            reader = new InputStreamReader(context.req.getInputStream(), Mime.P_CHARSET_UTF8);
             if (context.req.getContentLength() <= LC.calendar_ics_import_full_parse_max_size.intValue()) {
                 // Build a list of ZVCalendar objects by fully parsing the ics file, then iterate them
                 // and add them one by one.  Memory hungry if there are very many events/tasks, but it allows
@@ -163,8 +158,7 @@ public class IcsFormatter extends Formatter {
                 ZCalendarBuilder.parse(reader, handler);
             }
         } finally {
-            if (reader != null)
-                reader.close();
+            reader.close();
         }
     }
     
