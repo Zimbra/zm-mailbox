@@ -394,14 +394,16 @@ public abstract class Formatter {
                     throw (IOException)exception;
                 throw ServiceException.FAILURE(getType() + " formatter failure",
                     exception);
-            } else {
-                if (exception == null) {
-                    context.resp.getWriter().print("<body></body>\n</html>\n");
-                } else {
-                    ZimbraLog.misc.warn(getType() + " formatter exception", exception);
-                    context.resp.getWriter().print("<body>\n<pre>\n" +
-                        exception.getLocalizedMessage() + "\n</pre>\n</body>\n</html>\n");
-                }
+            }
+	    if (exception == null) {
+                context.resp.getWriter().print("<body></body>\n</html>\n");
+	    } else {
+	        String s = exception.getLocalizedMessage();
+
+                ZimbraLog.misc.warn(getType() + " formatter exception", exception);
+                s = s.replace("\n", "<br>");
+                context.resp.getWriter().print("<body>\n<pre>\n" + s +
+                    "\n</pre>\n</body>\n</html>\n");
             }
         } else {
             String s;
