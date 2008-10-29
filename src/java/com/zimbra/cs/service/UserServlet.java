@@ -1124,9 +1124,22 @@ public class UserServlet extends ZimbraServlet {
                     throw new UserServletException(HttpServletResponse.
                         SC_NO_CONTENT, "No file content");
             } else {
-                String ce = req.getHeader("content-encoding");
+                String filename = null;
+                String hdr = req.getHeader("content-disposition");
                 
-                is = new UploadInputStream(ce != null && ce.indexOf("gzip") != -1 ?
+                if (hdr != null)
+                    filename = new ContentDisposition(hdr).getParameter("filename");
+                if (filename == null || filename.equals("")) {
+                    hdr = req.getHeader("content-disposition");
+                    if (hdr != null)
+                        filename = new ContentType(hdr).getParameter("name");
+                }
+                if (filename == null || filename.equals(""))
+                    filename = "unknown";
+                ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
+                    filename, req.getContentLength());
+                hdr = req.getHeader("content-encoding");
+                is = new UploadInputStream(hdr != null && hdr.indexOf("gzip") != -1 ?
                     new GZIPInputStream(req.getInputStream()) :
                         req.getInputStream(), limit);
             }
