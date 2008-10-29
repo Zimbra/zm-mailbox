@@ -19,7 +19,6 @@ package com.zimbra.cs.service.formatter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -39,10 +38,6 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -115,16 +110,13 @@ public class TarFormatter extends Formatter {
 
     @Override public void formatCallback(Context context) throws IOException,
         ServiceException, UserServletException {
-        String callback = context.params.get("callback");
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
-        Exception exception = null;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         MailboxLock ml = null;
         Set<String> names = new HashSet<String>(4096);
-        PrintWriter pw = null;
         String query = context.getQueryString();
         byte[] sysTypes = {
             MailItem.TYPE_FOLDER, MailItem.TYPE_SEARCHFOLDER, MailItem.TYPE_TAG,
@@ -146,8 +138,9 @@ public class TarFormatter extends Formatter {
                 SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
 
                 filename = context.targetMailbox.getAccountId() + '.' +
-                    df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
+                    df.format(date).replace('/', '-') + sdf.format(date);
             }
+            filename += ".tgz";
             context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
                 "; filename=" + HttpUtil.encodeFilename(context.req, filename));
             context.resp.setContentType("application/x-tar-compressed");
@@ -209,11 +202,13 @@ public class TarFormatter extends Formatter {
                                 false, tos);
                     }
                     conversations = true;
-                    results = context.targetMailbox.search(context.opContext,
-                        "is:local", searchTypes, MailboxIndex.SortBy.NONE, 4096);
-                } else {
+                    query = "is:local";
+                }
+                try {
                     results = context.targetMailbox.search(context.opContext,
                         query, searchTypes, MailboxIndex.SortBy.NONE, 4096);
+                } catch (com.zimbra.cs.index.queryparser.ParseException e) {
+                    throw ServiceException.PARSE_ERROR(e.getLocalizedMessage(), e);
                 }
                 try {
                     while (results.hasNext())
@@ -231,23 +226,20 @@ public class TarFormatter extends Formatter {
                     if (results != null)
                         results.doneWithSearchResults();
                 }
+                if (tos == null)
+                    throw new UserServletException(HttpServletResponse.
+                        SC_NO_CONTENT, "No data found");
             }
-        } catch (Exception e) {
-            exception = e;
         } finally {
             if (ml != null)
                 MailboxManager.getInstance().endMaintenance(ml, true, true);
-            try {
-                if (tos != null)
+            if (tos != null) {
+                try {
                     tos.close();
-            } catch (Exception e) {
+                } catch (Exception e) {
+                }
             }
         }
-        if (tos == null && exception == null)
-            exception = new UserServletException(HttpServletResponse.
-                SC_NO_CONTENT, "No data found");
-        if (exception != null)
-            updateComplete(context, pw, callback, null, exception);
     }
     
     private TarOutputStream saveItem(Context context, MailItem mi, 
@@ -483,19 +475,15 @@ public class TarFormatter extends Formatter {
     public void saveCallback(Context context, String contentType, Folder fldr,
         String file) throws IOException, ServiceException, UserServletException {
         ItemData id = null;
-        String callback = context.params.get("callback");
         String charset = context.params.get("charset");
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
         StringBuffer errs = new StringBuffer();
-        Exception exception = null;
         List<Folder> flist = fldr.getSubfolderHierarchy();
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         int[] ids = null;
         long interval = 45 * 1000;
-        InputStream is = null;
         long last = System.currentTimeMillis();
-        PrintWriter pw = null;
         Resolve r;
         String resolve = context.params.get("resolve");
         byte[] searchTypes = null;
@@ -529,26 +517,8 @@ public class TarFormatter extends Formatter {
                     }
                 }
             }
-            if (ServletFileUpload.isMultipartContent(context.req)) {
-                ServletFileUpload sfu = new ServletFileUpload();
-                FileItemIterator iter = sfu.getItemIterator(context.req);
-                
-                while (iter.hasNext()) {
-                    FileItemStream fis = iter.next();
-                    
-                    if (!fis.isFormField()) {
-                        is = fis.openStream();
-                        break;
-                    }
-                }
-                if (is == null)
-                    throw new UserServletException(HttpServletResponse.
-                        SC_NO_CONTENT, "No file content");
-            } else {
-                is = context.req.getInputStream();
-            }
-            tis = new TarInputStream(new GZIPInputStream(is), charset == null ?
-                "UTF-8" : charset);
+            tis = new TarInputStream(new GZIPInputStream(getRequestInputStream(
+                context, false)), charset == null ? "UTF-8" : charset);
             if (subfolder != null && !subfolder.equals("")) {
                 fldr = createPath(context, fmap, fldr.getPath() + subfolder,
                     Folder.TYPE_UNKNOWN);
@@ -560,7 +530,7 @@ public class TarFormatter extends Formatter {
                         List<Integer> delIds;
                         
                         if (System.currentTimeMillis() - last > interval) {
-                            pw = update(context, pw, true);
+                            updateClient(context, true);
                             last = System.currentTimeMillis();
                         }
                         if (searchTypes == null) {
@@ -614,7 +584,7 @@ public class TarFormatter extends Formatter {
             try {
                 while ((te = tis.getNextEntry()) != null) {
                     if (System.currentTimeMillis() - last > interval) {
-                        pw = update(context, pw, true);
+                        updateClient(context, true);
                         last = System.currentTimeMillis();
                     }
                     if (te.getName().endsWith(".meta")) {
@@ -650,12 +620,12 @@ public class TarFormatter extends Formatter {
                     tis.close();
             }
         } catch (Exception e) {
-            if (pw == null)
-                exception = e;
-            else
+            if (errs.length() > 0) {
                 addError(errs, null, e.getLocalizedMessage());
+                throw new IOException(errs.toString());
+            }
+            throw ServiceException.FAILURE("Tar formatter failure", e);
         }
-        updateComplete(context, pw, callback, errs.toString(), exception);
     }
 
     private void addError(StringBuffer errs, String path, String err) {
@@ -716,68 +686,6 @@ public class TarFormatter extends Formatter {
 
     private String string(String s) { return s == null ? new String() : s; }
 
-    private PrintWriter update(Context context, PrintWriter pw, boolean flush)
-        throws IOException {
-        if (pw == null) {
-            context.resp.reset();
-            if (flush)
-                context.resp.setBufferSize(0);
-            context.resp.setContentType("text/html");
-            pw = context.resp.getWriter();
-            pw.print("<html>\n<head>\n</head>\n");
-        } else {
-            pw.println();
-        }
-        if (flush)
-            pw.flush();
-        return pw;
-    }
-
-    private void updateComplete(Context context, PrintWriter pw, String callback,
-        String errs, Exception e) throws IOException, ServiceException,
-        UserServletException {
-        String errstr;
-        
-        if (e != null)
-            errs = (errs == null ? "" : errs + "\n") + e.getLocalizedMessage();
-	else if (errs == null)
-	    errs = "";
-        if (errs.length() > 0) {
-            if (errs.indexOf("\n") == -1)
-                errstr = "Tar formatter error: " + errs;
-            else
-                errstr = "Tar formatter errors:\n" + errs;
-            ZimbraLog.misc.warn(errstr);
-        }
-        if (callback == null || callback.equals("")) {
-            if (pw == null) {
-                if (errs.length() == 0)
-                    return;
-                else if (e == null)
-                    throw new UserServletException(
-		    	HttpServletResponse.SC_CONFLICT, errs);
-                else if (e instanceof IOException)
-                    throw (IOException)e;
-                else if (e instanceof ServiceException)
-                    throw (ServiceException)e;
-                else if (e instanceof UserServletException)
-                    throw (UserServletException)e;
-                throw ServiceException.FAILURE("Tar formatter failure", e);
-            }
-            pw.print("<body>\n<pre>\n" + errs + "\n</pre>\n</body>\n</html>\n");
-        } else {
-            errstr = errs.substring(0, errs.length() > 2048 ? 2048 :
-		errs.length());
-            errstr = errstr.replace("\\", "\\\\");
-            errstr = errstr.replace("'", "\\\'");
-            errstr = errstr.replace("\"", "\\\'");
-            errstr = errstr.replace("\n", "\\n");
-            pw = update(context, pw, false);
-            pw.print("<body onload=\"window.parent." + callback + "('" +
-                errstr + "');\">\n</body>\n</html>\n");
-        }
-    }
-    
     private void recoverItem(Context context, Folder fldr,
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
         Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,

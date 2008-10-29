@@ -89,21 +89,19 @@ public class CsvFormatter extends Formatter {
 
     public void saveCallback(Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
-        BufferedReader reader = null;
+        InputStreamReader isr = new InputStreamReader(getRequestInputStream(context), Mime.P_CHARSET_UTF8);
+        BufferedReader reader = new BufferedReader(isr);
+        
         try {
-            InputStreamReader isr = new InputStreamReader(context.req.getInputStream(), Mime.P_CHARSET_UTF8);
-            reader = new BufferedReader(isr);
             String format = context.params.get(UserServlet.QP_CSVFORMAT);
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format);
             ItemId iidFolder = new ItemId(folder);
+            
             ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts);
         } catch (ContactCSV.ParseException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
-        } catch (UnsupportedEncodingException uee) {
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
         } finally {
-            if (reader != null)
-                reader.close();
+            reader.close();
         }
     }
 }

@@ -17,13 +17,20 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -44,8 +51,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public abstract class Formatter {
-    
     public abstract String getType();
+    private static String PROGRESS = "-progress";
 
     public String[] getDefaultMimeTypes() {
         return new String[0];
@@ -79,17 +86,12 @@ public abstract class Formatter {
 
     public final void format(UserServlet.Context context) throws UserServletException, IOException, ServletException, ServiceException {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(FORMAT)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
+
         try {
-        	formatCallback(context);
-        } catch (ServiceException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof UserServletException)
-                throw (UserServletException) cause;
-            if (cause instanceof ServletException)
-                throw (ServletException) cause;
-            if (cause instanceof IOException)
-                throw (IOException) cause;
-            throw e;
+            formatCallback(context);
+            updateClient(context, null);
+        } catch (Exception e) {
+            updateClient(context, e);
         } finally {
             op.finish();
         }
@@ -98,17 +100,12 @@ public abstract class Formatter {
     public final void save(UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, IOException, ServletException, ServiceException {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(SAVE)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
+
         try {
             saveCallback(context, contentType, folder, filename);
-        } catch (ServiceException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof UserServletException)
-                throw (UserServletException) cause;
-            if (cause instanceof ServletException)
-                throw (ServletException) cause;
-            if (cause instanceof IOException)
-                throw (IOException) cause;
-            throw e;
+            updateClient(context, null);
+        } catch (Exception e) {
+            updateClient(context, e);
         } finally {
             op.finish();
         }
@@ -179,6 +176,101 @@ public abstract class Formatter {
         }
     }
  
+    private static final class UploadInputStream extends InputStream {
+        private InputStream is;
+        private long curSize = 0;
+        private long maxSize;
+        private long markSize = 0;
+        
+        UploadInputStream(InputStream is, long maxSize) throws IOException {
+            this.is = is;
+            this.maxSize = maxSize;
+        }
+
+        public void close() throws IOException { is.close(); }
+        
+        public int available() throws IOException { return is.available(); }
+
+        public void mark(int where) { is.mark(where); markSize = curSize; }
+
+        public boolean markSupported() { return is.markSupported(); }
+        
+        public int read() throws IOException { return (int)check(is.read()); }
+        
+        public int read(byte b[]) throws IOException { return (int)check(is.read(b)); }
+
+        public int read(byte b[], int off, int len) throws IOException {
+            return (int)check(is.read(b, off, len));
+        }
+
+        public void reset() throws IOException { is.reset(); curSize = markSize; }
+
+        public long skip(long n) throws IOException { return check(is.skip(n)); }
+
+        private long check(long in) throws IOException {
+            if (in > 0) {
+                curSize += in;
+                if (maxSize > 0 && curSize > maxSize)
+                    throw new IOException("upload too large");
+            }
+            return in;
+        }
+    }
+    
+    
+    public InputStream getRequestInputStream(UserServlet.Context context) 
+        throws IOException, ServiceException, UserServletException {
+        return getRequestInputStream(context, true);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public InputStream getRequestInputStream(UserServlet.Context context, boolean limit) 
+        throws IOException, ServiceException, UserServletException {
+        InputStream is = null;
+        long maxSize = -1;
+        final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
+        
+        if (limit) {
+            if (context.req.getParameter("lbfums") != null)
+                maxSize = Provisioning.getInstance().getLocalServer().
+                    getLongAttr(Provisioning.A_zimbraFileUploadMaxSize,
+                    DEFAULT_MAX_SIZE);
+            else
+                maxSize = Provisioning.getInstance().getConfig().
+                    getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize,
+                    DEFAULT_MAX_SIZE);
+        }
+        if (ServletFileUpload.isMultipartContent(context.req)) {
+            ServletFileUpload sfu = new ServletFileUpload();
+            
+            try {
+                FileItemIterator iter = sfu.getItemIterator(context.req);
+                
+                while (iter.hasNext()) {
+                    FileItemStream fis = iter.next();
+                    
+                    if (!fis.isFormField()) {
+                        is = fis.openStream();
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                throw new UserServletException(HttpServletResponse.
+                    SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
+            }
+            if (is == null)
+                throw new UserServletException(HttpServletResponse.
+                    SC_NO_CONTENT, "No file content");
+        } else {
+            String ce = context.req.getHeader("content-encoding");
+            
+            is = new UploadInputStream(ce != null && ce.indexOf("gzip") != -1 ?
+                new GZIPInputStream(context.req.getInputStream()) :
+                    context.req.getInputStream(), maxSize);
+        }
+        return is;
+    }
+    
     /**
      * 
      * @param attr
@@ -239,4 +331,81 @@ public abstract class Formatter {
         }
     }
     
+    protected PrintWriter updateClient(Context context, boolean flush) throws IOException {
+        PrintWriter pw;
+        
+        if (context.params.get(PROGRESS) == null) {
+            context.resp.reset();
+            context.resp.setContentType("text/html; charset=\"utf-8\"");
+            context.resp.setCharacterEncoding("utf-8");
+            context.params.put(PROGRESS, "1");
+            pw = context.resp.getWriter();
+            pw.print("<html>\n<head>\n</head>\n");
+        } else {
+            pw = context.resp.getWriter();
+            pw.println();
+        }
+        if (flush)
+            pw.flush();
+        return pw;
+    }
+    
+    private void updateClient(UserServlet.Context context, Exception e)
+        throws UserServletException, IOException, ServletException, ServiceException {
+        String callback = context.params.get("callback");
+        Throwable exception = null;
+        
+        if (e != null) {
+            Throwable cause = e.getCause();
+            
+            exception = cause instanceof UserServletException ||
+                cause instanceof ServletException ||
+                cause instanceof IOException ? cause : e;
+        }
+        if (callback == null || callback.equals("")) {
+            if (context.params.get(PROGRESS) == null) {
+                if (exception == null)
+                    return;
+                else if (exception instanceof UserServletException)
+                    throw (UserServletException)exception;
+                else if (exception instanceof ServletException)
+                    throw (ServletException)exception;
+                else if (exception instanceof IOException)
+                    throw (IOException)exception;
+                throw ServiceException.FAILURE(getType() + " formatter failure",
+                    exception);
+            } else {
+                if (exception == null) {
+                    context.resp.getWriter().print("<body></body>\n</html>\n");
+                } else {
+                    ZimbraLog.misc.warn(getType() + " formatter exception", exception);
+                    context.resp.getWriter().print("<body>\n<pre>\n" +
+                        exception.getLocalizedMessage() + "\n</pre>\n</body>\n</html>\n");
+                }
+            }
+        } else {
+            String s;
+            
+            if (exception == null) {
+                s = "''";
+            } else {
+                ZimbraLog.misc.warn(getType() + " formatter exception", exception);
+                s = exception.getLocalizedMessage();
+                s.substring(0, s.length() > 4096 ? 4096 : s.length());
+                s = s.replace("\\", "\\\\");
+                s = s.replace("'", "\\\'");
+                s = s.replace("\"", "\\\'");
+                s = s.replace("\n", "\\n");
+                s = s.replace("\r", "\\r");
+                s = "'" + s + "', '" + exception.getClass().getName() + "'";
+                if (exception instanceof ServiceException)
+                    s += ", '" + ((ServiceException)exception).getCode() + "'";
+                else if (exception instanceof UserServletException)
+                    s += ", '" + ((UserServletException)exception).getHttpStatusCode() + "'";
+            }
+            updateClient(context, false);
+            context.resp.getWriter().print("<body onload=\"window.parent." +
+                callback + "(" + s + ");\">\n</body>\n</html>\n");
+        }
+    }
 }
