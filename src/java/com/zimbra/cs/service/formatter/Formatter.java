@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import javax.servlet.ServletException;
@@ -223,7 +222,6 @@ public abstract class Formatter {
         return getRequestInputStream(context, true);
     }
     
-    @SuppressWarnings("unchecked")
     public InputStream getRequestInputStream(UserServlet.Context context, boolean limit) 
         throws IOException, ServiceException, UserServletException {
         InputStream is = null;
@@ -250,7 +248,7 @@ public abstract class Formatter {
                     FileItemStream fis = iter.next();
                     
                     if (!fis.isFormField()) {
-                        is = fis.openStream();
+                        is = new UploadInputStream(fis.openStream(), maxSize);
                         break;
                     }
                 }
@@ -374,14 +372,16 @@ public abstract class Formatter {
                     throw (IOException)exception;
                 throw ServiceException.FAILURE(getType() + " formatter failure",
                     exception);
+            }
+            if (exception == null) {
+                context.resp.getWriter().print("<body></body>\n</html>\n");
             } else {
-                if (exception == null) {
-                    context.resp.getWriter().print("<body></body>\n</html>\n");
-                } else {
-                    ZimbraLog.misc.warn(getType() + " formatter exception", exception);
-                    context.resp.getWriter().print("<body>\n<pre>\n" +
-                        exception.getLocalizedMessage() + "\n</pre>\n</body>\n</html>\n");
-                }
+                String s = exception.getLocalizedMessage();
+
+                ZimbraLog.misc.warn(getType() + " formatter exception", exception);
+                s = s.replace("\n", "<br>");
+                context.resp.getWriter().print("<body>\n<pre>\n" + s +
+                    "\n</pre>\n</body>\n</html>\n");
             }
         } else {
             String s;
