@@ -24,9 +24,11 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.zip.GZIPInputStream;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -34,6 +36,9 @@ import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.DiskFileUpload;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -995,16 +1000,139 @@ public class UserServlet extends ZimbraServlet {
         private static final long DEFAULT_MAX_POST_SIZE = 10 * 1024 * 1024;
 
         // don't use this for a large upload.  use getUpload() instead.
-        public byte[] getPostBody() throws ServiceException, IOException {
+        public byte[] getPostBody() throws ServiceException, IOException, UserServletException {
             long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(
                     Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_POST_SIZE);
-            return ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
+            InputStream is = getRequestInputStream(sizeLimit);
+            
+            try {
+                return ByteUtil.getContent(is, req.getContentLength(), sizeLimit);
+            } finally {
+                is.close();
+            }
         }
         
         public FileUploadServlet.Upload getUpload() throws ServiceException, IOException {
             return FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId());
         }
 
+        private static final class UploadInputStream extends InputStream {
+            private FileItem fi = null;
+            private InputStream is;
+            private long curSize = 0;
+            private long maxSize;
+            private long markSize = 0;
+            
+            UploadInputStream(InputStream is, long maxSize) throws IOException {
+                this.is = is;
+                this.maxSize = maxSize;
+            }
+
+            UploadInputStream(FileItem fi, long maxSize) throws IOException {
+                this(fi.getInputStream(), maxSize);
+                this.fi = fi;
+            }
+
+            public void close() throws IOException {
+                try {
+                    is.close();
+                } finally {
+                    if (fi != null)
+                        fi.delete();
+                    fi = null;
+                }
+            }
+            
+            public int available() throws IOException { return is.available(); }
+
+            public void mark(int where) { is.mark(where); markSize = curSize; }
+
+            public boolean markSupported() { return is.markSupported(); }
+            
+            public int read() throws IOException { return (int)check(is.read()); }
+            
+            public int read(byte b[]) throws IOException { return (int)check(is.read(b)); }
+
+            public int read(byte b[], int off, int len) throws IOException {
+                return (int)check(is.read(b, off, len));
+            }
+
+            public void reset() throws IOException { is.reset(); curSize = markSize; }
+
+            public long skip(long n) throws IOException { return check(is.skip(n)); }
+
+            private long check(long in) throws IOException {
+                if (in > 0) {
+                    curSize += in;
+                    if (maxSize > 0 && curSize > maxSize)
+                        throw new IOException("upload over " + maxSize + " byte limit");
+                }
+                return in;
+            }
+        }
+        
+        public InputStream getRequestInputStream() 
+            throws IOException, ServiceException, UserServletException {
+            return getRequestInputStream(0);
+        }
+        
+        @SuppressWarnings("unchecked")
+        public InputStream getRequestInputStream(long limit) 
+            throws IOException, ServiceException, UserServletException {
+            FileItem fi = null;
+            InputStream is = null;
+            final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
+            
+            if (limit == 0) {
+                if (req.getParameter("lbfums") != null)
+                    limit = Provisioning.getInstance().getLocalServer().
+                        getLongAttr(Provisioning.A_zimbraFileUploadMaxSize,
+                        DEFAULT_MAX_SIZE);
+                else
+                    limit = Provisioning.getInstance().getConfig().
+                        getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize,
+                        DEFAULT_MAX_SIZE);
+            }
+            if (FileUploadBase.isMultipartContent(req)) {
+                DiskFileUpload dku = new DiskFileUpload();
+                List<FileItem> files;
+
+                dku.setSizeThreshold(1024 * 1024);
+                dku.setRepositoryPath(System.getProperty("java.io.tmpdir",
+                    "/tmp"));
+                try {
+                    files = dku.parseRequest(req);
+                } catch (Exception e) {
+                    throw new UserServletException(HttpServletResponse.
+                        SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
+                }
+                for (Iterator<FileItem> it = files.iterator(); it.hasNext(); ) {
+                    fi = it.next();
+                    if (fi != null) {
+                        if (fi.isFormField()) {
+                            params.put(fi.getFieldName(), fi.getString("UTF-8"));
+                        } else {
+                            ZimbraLog.mailbox.info("UserServlet received file %s - %d bytes",
+                                fi.getName() == null ? "unknown" : fi.getName(),
+                                fi.getSize());
+                            is = new UploadInputStream(fi, limit);
+                            break;
+                        }
+                    }
+                }
+                if (is == null)
+                    throw new UserServletException(HttpServletResponse.
+                        SC_NO_CONTENT, "No file content");
+            } else {
+                String ce = req.getHeader("content-encoding");
+                
+                is = new UploadInputStream(ce != null && ce.indexOf("gzip") != -1 ?
+                    new GZIPInputStream(req.getInputStream()) :
+                        req.getInputStream(), limit);
+            }
+            return is;
+        }
+        
         @Override public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("account(" + accountPath + ")\n");

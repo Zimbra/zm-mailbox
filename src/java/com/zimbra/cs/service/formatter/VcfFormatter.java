@@ -17,7 +17,6 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import javax.mail.Part;
@@ -32,7 +31,6 @@ import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 
 public class VcfFormatter extends Formatter {
@@ -86,22 +84,15 @@ public class VcfFormatter extends Formatter {
     }
 
     public void saveCallback(Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException, UserServletException {
-        InputStream is = getRequestInputStream(context);
+        byte[] body = context.getPostBody();
+        List<VCard> cards = VCard.parseVCard(new String(body, Mime.P_CHARSET_UTF8));
         
-        try {
-            byte[] body = ByteUtil.getContent(is, context.req.getContentLength(), -1);
-
-            List<VCard> cards = VCard.parseVCard(new String(body, Mime.P_CHARSET_UTF8));
-            
-            if (cards == null || cards.size() == 0 || (cards.size() == 1 && cards.get(0).fields.isEmpty()))
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
-            for (VCard vcf : cards) {
-                if (vcf.fields.isEmpty())
-                    continue;
-                folder.getMailbox().createContact(context.opContext, vcf.asParsedContact(), folder.getId(), null);
-            }
-        } finally {
-            is.close();
+        if (cards == null || cards.size() == 0 || (cards.size() == 1 && cards.get(0).fields.isEmpty()))
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
+        for (VCard vcf : cards) {
+            if (vcf.fields.isEmpty())
+                continue;
+            folder.getMailbox().createContact(context.opContext, vcf.asParsedContact(), folder.getId(), null);
         }
     }
 }
