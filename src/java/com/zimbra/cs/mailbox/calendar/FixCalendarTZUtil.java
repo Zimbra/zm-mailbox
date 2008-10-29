@@ -64,7 +64,7 @@ public class FixCalendarTZUtil extends SoapCLI {
     }
 
     protected String getCommandUsage() {
-        return "zmfixtz --rulefile <rule file> -a <account(s)> [options]";
+        return "zmtzupdate --rulefile <rule file> -a <account(s)> [options]";
     }
 
     public FixCalendarTZUtil() throws ServiceException {
