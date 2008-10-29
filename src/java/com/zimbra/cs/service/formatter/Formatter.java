@@ -17,19 +17,13 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.zip.GZIPInputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -173,100 +167,6 @@ public abstract class Formatter {
             default:
                 return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
         }
-    }
- 
-    private static final class UploadInputStream extends InputStream {
-        private InputStream is;
-        private long curSize = 0;
-        private long maxSize;
-        private long markSize = 0;
-        
-        UploadInputStream(InputStream is, long maxSize) throws IOException {
-            this.is = is;
-            this.maxSize = maxSize;
-        }
-
-        public void close() throws IOException { is.close(); }
-        
-        public int available() throws IOException { return is.available(); }
-
-        public void mark(int where) { is.mark(where); markSize = curSize; }
-
-        public boolean markSupported() { return is.markSupported(); }
-        
-        public int read() throws IOException { return (int)check(is.read()); }
-        
-        public int read(byte b[]) throws IOException { return (int)check(is.read(b)); }
-
-        public int read(byte b[], int off, int len) throws IOException {
-            return (int)check(is.read(b, off, len));
-        }
-
-        public void reset() throws IOException { is.reset(); curSize = markSize; }
-
-        public long skip(long n) throws IOException { return check(is.skip(n)); }
-
-        private long check(long in) throws IOException {
-            if (in > 0) {
-                curSize += in;
-                if (maxSize > 0 && curSize > maxSize)
-                    throw new IOException("upload too large");
-            }
-            return in;
-        }
-    }
-    
-    
-    public InputStream getRequestInputStream(UserServlet.Context context) 
-        throws IOException, ServiceException, UserServletException {
-        return getRequestInputStream(context, true);
-    }
-    
-    public InputStream getRequestInputStream(UserServlet.Context context, boolean limit) 
-        throws IOException, ServiceException, UserServletException {
-        InputStream is = null;
-        long maxSize = -1;
-        final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
-        
-        if (limit) {
-            if (context.req.getParameter("lbfums") != null)
-                maxSize = Provisioning.getInstance().getLocalServer().
-                    getLongAttr(Provisioning.A_zimbraFileUploadMaxSize,
-                    DEFAULT_MAX_SIZE);
-            else
-                maxSize = Provisioning.getInstance().getConfig().
-                    getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize,
-                    DEFAULT_MAX_SIZE);
-        }
-        if (ServletFileUpload.isMultipartContent(context.req)) {
-            ServletFileUpload sfu = new ServletFileUpload();
-            
-            try {
-                FileItemIterator iter = sfu.getItemIterator(context.req);
-                
-                while (iter.hasNext()) {
-                    FileItemStream fis = iter.next();
-                    
-                    if (!fis.isFormField()) {
-                        is = new UploadInputStream(fis.openStream(), maxSize);
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                throw new UserServletException(HttpServletResponse.
-                    SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
-            }
-            if (is == null)
-                throw new UserServletException(HttpServletResponse.
-                    SC_NO_CONTENT, "No file content");
-        } else {
-            String ce = context.req.getHeader("content-encoding");
-            
-            is = new UploadInputStream(ce != null && ce.indexOf("gzip") != -1 ?
-                new GZIPInputStream(context.req.getInputStream()) :
-                    context.req.getInputStream(), maxSize);
-        }
-        return is;
     }
     
     /**

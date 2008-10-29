@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 
 import javax.mail.Part;
@@ -31,7 +32,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedDocument;
-import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -243,12 +243,12 @@ public class WikiFormatter extends Formatter {
     @Override
 	public void saveCallback(Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
-        Mailbox mbox = folder.getMailbox();
-
-    	FileUploadServlet.Upload upload = context.getUpload();
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
-        ParsedDocument pd = new ParsedDocument(upload.getInputStream(), filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
+        InputStream is = context.getRequestInputStream();
+        Mailbox mbox = folder.getMailbox();
+        ParsedDocument pd = new ParsedDocument(is, filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
         MailItem item = null;
+        
         try {
             MailItem orig = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
@@ -259,7 +259,7 @@ public class WikiFormatter extends Formatter {
         } catch (NoSuchItemException nsie) {
             item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
         } finally {
-        	FileUploadServlet.deleteUpload(upload);
+        	is.close();
         }
 
         if (item != null) {

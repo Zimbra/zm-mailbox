@@ -517,8 +517,9 @@ public class TarFormatter extends Formatter {
                     }
                 }
             }
-            tis = new TarInputStream(new GZIPInputStream(getRequestInputStream(
-                context, false)), charset == null ? "UTF-8" : charset);
+            tis = new TarInputStream(new GZIPInputStream(
+                context.getRequestInputStream(-1)), charset == null ? "UTF-8" :
+                    charset);
             if (subfolder != null && !subfolder.equals("")) {
                 fldr = createPath(context, fmap, fldr.getPath() + subfolder,
                     Folder.TYPE_UNKNOWN);

@@ -47,14 +47,12 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.Pair;
 
 public class NativeFormatter extends Formatter {
     
@@ -266,9 +264,11 @@ public class NativeFormatter extends Formatter {
         }
 
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
-    	FileUploadServlet.Upload upload = context.getUpload();
-        ParsedDocument pd = new ParsedDocument(upload.getInputStream(), filename, contentType, System.currentTimeMillis(), creator);
+        InputStream is = context.getRequestInputStream();
+        ParsedDocument pd = null;
+
         try {
+            pd = new ParsedDocument(is, filename, contentType, System.currentTimeMillis(), creator);
             item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
             if (!(item instanceof Document))
@@ -278,7 +278,7 @@ public class NativeFormatter extends Formatter {
         } catch (NoSuchItemException nsie) {
             item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
         } finally {
-        	FileUploadServlet.deleteUpload(upload);
+            is.close();
         }
         if (item != null) {
         	context.resp.addHeader("X-Zimbra-ItemId", item.getId() + "");

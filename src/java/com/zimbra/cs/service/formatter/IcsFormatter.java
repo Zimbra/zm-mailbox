@@ -138,7 +138,7 @@ public class IcsFormatter extends Formatter {
         // use that charset in String() constructor.
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();
-        Reader reader = new InputStreamReader(getRequestInputStream(context), Mime.P_CHARSET_UTF8);
+        Reader reader = new InputStreamReader(context.getRequestInputStream(), Mime.P_CHARSET_UTF8);
         
         try {
             if (context.req.getContentLength() <= LC.calendar_ics_import_full_parse_max_size.intValue()) {

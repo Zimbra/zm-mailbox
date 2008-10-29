@@ -24,6 +24,7 @@ import java.util.Iterator;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -91,9 +92,9 @@ public class AtomFormatter extends Formatter {
     }
     
     private void addCalendarItem(CalendarItem calItem, Element feed, Context context) throws ServiceException {
-        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
-        for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
-            CalendarItem.Instance inst = (CalendarItem.Instance) instIt.next();
+        Collection<Instance> instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
+        for (Iterator<Instance> instIt = instances.iterator(); instIt.hasNext(); ) {
+            CalendarItem.Instance inst = instIt.next();
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
             Element entry = feed.addElement("entry");
