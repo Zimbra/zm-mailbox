@@ -151,6 +151,10 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZImapDataSource %s]", mName);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

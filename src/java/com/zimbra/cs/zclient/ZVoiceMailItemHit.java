@@ -155,6 +155,10 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     }
 
     public String toString() {
+        return String.format("[ZVoiceMailItemHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

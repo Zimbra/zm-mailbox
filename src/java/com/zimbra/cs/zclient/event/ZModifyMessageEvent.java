@@ -83,6 +83,14 @@ public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderE
     }
 
     public String toString() {
+        try {
+            return String.format("[ZModifyMessageEvent %s]", getId());
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

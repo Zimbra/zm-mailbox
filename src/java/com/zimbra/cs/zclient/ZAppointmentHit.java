@@ -423,6 +423,10 @@ public class ZAppointmentHit implements ZSearchHit {
     }
 
     public String toString() {
+        return String.format("[ZAppointmentHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
     

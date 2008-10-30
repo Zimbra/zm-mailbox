@@ -104,6 +104,10 @@ public class ZShare implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZShare %s]", mGrantor);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 
@@ -220,6 +224,10 @@ public class ZShare implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZGrantInfo id=%s email=%s name=%s]", mId, mEmail, mName);
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }
@@ -322,6 +330,10 @@ public class ZShare implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZLink id=%s name=%s]", mId, mName);
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }

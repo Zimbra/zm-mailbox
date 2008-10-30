@@ -32,8 +32,8 @@ public class ZSearchFolder extends ZFolder {
     private String mTypes;
     private SearchSortBy mSortBy;
     
-    public ZSearchFolder(Element e, ZFolder parent) throws ServiceException {
-        super(e, parent);
+    public ZSearchFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        super(e, parent, mailbox);
         mQuery = e.getAttribute(MailConstants.A_QUERY);
         mTypes = e.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         try {
@@ -73,6 +73,10 @@ public class ZSearchFolder extends ZFolder {
 
     public String getTypes() {
         return mTypes;
+    }
+
+    public String toString() {
+        return String.format("[ZSearchFolder %s]", getPath());
     }
     
 }

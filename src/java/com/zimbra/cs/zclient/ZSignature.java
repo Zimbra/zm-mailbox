@@ -93,6 +93,10 @@ public class ZSignature implements Comparable, ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZSignature %s]", mName);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

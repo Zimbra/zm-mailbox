@@ -225,6 +225,10 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZFilterCondition %s]", getName());
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

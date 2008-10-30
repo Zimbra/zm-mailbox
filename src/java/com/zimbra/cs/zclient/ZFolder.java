@@ -66,6 +66,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     private List<ZFolder> mSubFolders;
     private ZFolder mParent;
     private boolean mIsPlaceholder;
+    private ZMailbox mMailbox;
 
     public int compareTo(Object obj) {
         if (!(obj instanceof ZFolder))
@@ -173,7 +174,8 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
 
     }
     
-    public ZFolder(Element e, ZFolder parent) throws ServiceException {
+    public ZFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        mMailbox = mailbox;
         mParent = parent;
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
@@ -210,15 +212,15 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
 
         // search
         for (Element s : e.listElements(MailConstants.E_SEARCH))
-            mSubFolders.add(new ZSearchFolder(s, this));
+            mSubFolders.add(new ZSearchFolder(s, this, mMailbox));
         
         // link
         for (Element l : e.listElements(MailConstants.E_MOUNT))
-            mSubFolders.add(new ZMountpoint(l, this));
+            mSubFolders.add(new ZMountpoint(l, this, mMailbox));
     }
 
     protected ZFolder createSubFolder(Element element) throws ServiceException {
-        return new ZFolder(element, this);
+        return new ZFolder(element, this, getMailbox());
     }
 
     synchronized void addChild(ZFolder folder) {
@@ -250,7 +252,11 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
             mSize = fevent.getSize(mSize);
         }
     }
-        
+
+    public ZMailbox getMailbox() {
+        return mMailbox;
+    }
+    
     public ZFolder getParent() {
         return mParent;
     }
@@ -360,7 +366,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
      * Sets unread count.
 	 * @param count unread count.
      */
-    public void setUnreadCount(int count) {
+    void setUnreadCount(int count) {
         mUnreadCount = count;
     }
 
@@ -383,7 +389,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
 	 * Sets message count.
 	 * @param count message count.
 	 */
-    public void setMessageCount(int count) {
+    void setMessageCount(int count) {
         mMessageCount = count;
     }
 
@@ -527,7 +533,46 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     }
     
     public String toString() {
+        return String.format("[ZFolder %s]", getPath());
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 
+    public void delete() throws ServiceException { mMailbox.deleteFolder(mId); }
+
+    public void deleteItem() throws ServiceException { delete(); }
+
+    public void moveToTrash() throws ServiceException { mMailbox.trashFolder(mId); }
+
+    public void sync() throws ServiceException { mMailbox.syncFolder(mId); }
+
+    public void clearGrants() throws ServiceException {
+        mMailbox.updateFolder(mId, null, null, null, null, new ArrayList<ZGrant>());
+    }
+
+    public void empty(boolean recursive) throws ServiceException { mMailbox.emptyFolder(mId, recursive); }
+
+    public void importURL(String url) throws ServiceException { mMailbox.importURLIntoFolder(mId, url); }
+
+    public void markRead() throws ServiceException { mMailbox.markFolderRead(mId); }
+    
+    public void checked(boolean checked) throws ServiceException { mMailbox.modifyFolderChecked(mId, checked); }
+
+    public void modifySyncFlag(boolean checked) throws ServiceException { mMailbox.modifyFolderSyncFlag(mId, checked); }
+
+    public void modifyExcludeFreeBusy(boolean exclude) throws ServiceException { mMailbox.modifyFolderExcludeFreeBusy(mId, exclude); }
+
+    public void modifyColor(ZFolder.Color color) throws ServiceException { mMailbox.modifyFolderColor(mId, color); }
+
+    public void modifyFlags(String flags) throws ServiceException { mMailbox.updateFolder(mId, null, null, null, flags, null); }
+
+    public void modifyURL(String url) throws ServiceException { mMailbox.modifyFolderURL(mId, url); }
+
+    public void rename(String newPath) throws ServiceException { mMailbox.renameFolder(mId, newPath); }
+
+    public void updateFolder(String name, String parentId, Color newColor, String flags, List<ZGrant> acl) throws ServiceException {
+        mMailbox.updateFolder(mId, name, parentId, newColor, flags, acl);
+    }
 }

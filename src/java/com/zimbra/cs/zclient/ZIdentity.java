@@ -175,6 +175,10 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZIdentity %s]", mName);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

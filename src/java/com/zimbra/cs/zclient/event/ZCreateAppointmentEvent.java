@@ -51,6 +51,14 @@ public class ZCreateAppointmentEvent implements ZCreateItemEvent, ToZJSONObject 
     }
 
     public String toString() {
+        try {
+            return String.format("[ZCreateAppointmentEvent %s]", getId());
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

@@ -136,6 +136,10 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZCalendarItem %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

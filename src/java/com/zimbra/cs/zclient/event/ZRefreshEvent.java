@@ -65,6 +65,10 @@ public class ZRefreshEvent implements ToZJSONObject {
     }
 
     public String toString() {
+        return "[ZRefreshEvent]";
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

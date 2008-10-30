@@ -90,6 +90,10 @@ public class ZContactHit implements ZSearchHit {
     }
     
     public String toString() {
+        return String.format("[ZContactHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

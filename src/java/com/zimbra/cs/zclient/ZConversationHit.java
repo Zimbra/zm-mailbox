@@ -99,8 +99,13 @@ public class ZConversationHit implements ZSearchHit {
     }
 
     public String toString() {
+        return String.format("[ZConversationHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
+
     public String getFlags() {
         return mFlags;
     }

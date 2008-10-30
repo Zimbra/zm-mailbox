@@ -30,7 +30,7 @@ public class ZPhoneAccount {
 
 	public ZPhoneAccount(Element e, ZMailbox mbox) throws ServiceException {
         mPhone = new ZPhone(e.getAttribute(MailConstants.A_NAME));
-        mFolder = new ZVoiceFolder(e.getElement(MailConstants.E_FOLDER), null);
+        mFolder = new ZVoiceFolder(e.getElement(MailConstants.E_FOLDER), null, mbox);
         mCallFeatures = new ZCallFeatures(mbox, mPhone, e.getElement(VoiceConstants.E_CALL_FEATURES));
 		mHasVoiceMail = e.getAttributeBool(VoiceConstants.E_VOICEMSG);
 	}

@@ -36,12 +36,12 @@ public class ZVoiceFolder extends ZFolder {
         mSortMap.put(VoiceConstants.FNAME_TRASH, 2);
     }
 
-    public ZVoiceFolder(Element e, ZFolder parent) throws ServiceException {
-        super(e, parent);
+    public ZVoiceFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        super(e, parent, mailbox);
     }
 
     protected ZFolder createSubFolder(Element element) throws ServiceException {
-        return new ZVoiceFolder(element, this);
+        return new ZVoiceFolder(element, this, getMailbox());
     }
 
     public int compareTo(Object obj) {

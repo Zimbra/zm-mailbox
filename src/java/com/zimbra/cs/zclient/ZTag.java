@@ -29,6 +29,7 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
     private String mId;
     private String mName;
     private int mUnreadCount;
+    private ZMailbox mMailbox;
         
     public enum Color {
         
@@ -65,7 +66,8 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         Color(int value) { mValue = value; } 
     }
 
-    public ZTag(Element e) throws ServiceException {
+    public ZTag(Element e, ZMailbox mailbox) throws ServiceException {
+        mMailbox = mailbox;
         mColor = Color.fromString(e.getAttribute(MailConstants.A_COLOR, "0"));
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
@@ -83,6 +85,10 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
 
     public String getId() {
         return mId;
+    }
+
+    public ZMailbox getMailbox() {
+        return mMailbox;
     }
 
     /** Returns the folder's name.  Note that this is the folder's
@@ -116,6 +122,10 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZTag %s]", mName);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 
@@ -124,5 +134,15 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         ZTag other = (ZTag) o;
         return getName().compareToIgnoreCase(other.getName());
     }
+
+    public void delete() throws ServiceException { mMailbox.deleteTag(mId); }
+
+    public void deleteItem() throws ServiceException { delete(); }
+
+    public void markRead() throws ServiceException { mMailbox.markTagRead(mId); }
+
+    public void modifyColor(ZTag.Color color) throws ServiceException { mMailbox.modifyTagColor(mId, color); }
+
+    public void rename(String newName) throws ServiceException { mMailbox.renameTag(mId, newName); }
 
 }

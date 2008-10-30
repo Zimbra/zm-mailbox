@@ -1,17 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
+ *
  * ***** END LICENSE BLOCK *****
  */
 
@@ -150,7 +150,7 @@ public class ZMailboxUtil implements DebugListener {
     public void setMailboxName(String account) { mMailboxName = account; }
 
     public void setPassword(String password) { mPassword = password; }
-    
+
     public void setAdminAuthToken(ZAuthToken authToken) { mAdminAuthToken = authToken; }
 
     private SoapProtocol parseProto(String proto) throws ZClientException {
@@ -221,7 +221,7 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println("  -r/--protocol {proto|req-proto/response-proto} specify request/response protocol [soap11,soap12,json]");
         stdout.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         stdout.println("  -d/--debug                               debug mode (dumps SOAP messages)");
-        
+
         stdout.println("");
         doHelp(null);
         System.exit(1);
@@ -324,7 +324,7 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");
     static Option O_IGNORE_ERROR = new Option("i", "ignore", false, "ignore and continue on error during ics import");
-    static Option O_LAST = new Option("l", "last", false, "add as last filter rule");    
+    static Option O_LAST = new Option("l", "last", false, "add as last filter rule");
     static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     static Option O_NEXT = new Option("n", "next", false, "next page of search results");
     static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
@@ -360,7 +360,7 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
         DELETE_ITEM("deleteItem", "di", "{item-ids}", "hard delete item(s)", Category.ITEM, 1, 1),
         DELETE_IDENTITY("deleteIdentity", "did", "{identity-name}", "delete an identity", Category.ACCOUNT, 1, 1),
-        DELETE_FILTER_RULE("deleteFilterRule", "dfrl", "{name}", "add filter rule", Category.FILTER,  1, 1),        
+        DELETE_FILTER_RULE("deleteFilterRule", "dfrl", "{name}", "add filter rule", Category.FILTER,  1, 1),
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{signature-name|signature-id}", "delete signature", Category.ACCOUNT, 1, 1),
@@ -401,7 +401,7 @@ public class ZMailboxUtil implements DebugListener {
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", "mark all items with this tag as read", Category.TAG, 1, 1),
         MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE, O_IGNORE),
-        MODIFY_FILTER_RULE("modifyFilterRule", "mfrl", "{name} [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE),        
+        MODIFY_FILTER_RULE("modifyFilterRule", "mfrl", "{name} [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE),
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
@@ -592,7 +592,7 @@ public class ZMailboxUtil implements DebugListener {
         if (listener != null) mProv.soapSetTransportDebugListener(listener);
         mProv.soapAdminAuthenticate(name, password);
     }
-    
+
     private void adminAuth(ZAuthToken zat, String uri) throws ServiceException {
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
@@ -854,7 +854,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private String  beforeOpt() { return mCommandLine.getOptionValue(O_BEFORE.getOpt()); }
 
-    private String  afterOpt() { return mCommandLine.getOptionValue(O_AFTER.getOpt()); }    
+    private String  afterOpt() { return mCommandLine.getOptionValue(O_AFTER.getOpt()); }
 
 
     private SearchSortBy searchSortByOpt() throws ServiceException {
@@ -1017,11 +1017,11 @@ public class ZMailboxUtil implements DebugListener {
         case GET_FOLDER:
             doGetFolder(args);
             break;
-        /*    
+        /*
         case GET_FOLDER_REQUEST:
             doGetFolderRequest(args);
             break;
-        */    
+        */
         case GET_FOLDER_GRANT:
             doGetFolderGrant(args);
             break;
@@ -1264,7 +1264,7 @@ public class ZMailboxUtil implements DebugListener {
         }
         stdout.println("]");
     }
-    
+
     /*
     addFilterRule(afrl)
   --before {existing-rule-name}
@@ -1327,7 +1327,7 @@ public class ZMailboxUtil implements DebugListener {
         }
         throw ZClientException.CLIENT_ERROR("can't find rule: " + args[0], null);
     }
-    
+
     private void doDeleteFilterRule(String[] args) throws ServiceException {
         String name = args[0];
 
@@ -1362,14 +1362,14 @@ public class ZMailboxUtil implements DebugListener {
         default: return "unknown";
         }
     }
-    
+
     private void doGetFolderGrant(String[] args) throws ServiceException {
         ZFolder f = lookupFolder(args[0]);
         if (verboseOpt()) {
-            StringBuilder sb = new StringBuilder();            
+            StringBuilder sb = new StringBuilder();
             for (ZGrant g : f.getGrants()) {
                 if (sb.length() > 0) sb.append(",\n");
-                sb.append(g);
+                sb.append(g.dump());
             }
             stdout.format("[%n%s%n]%n", sb.toString());
 
@@ -1377,21 +1377,21 @@ public class ZMailboxUtil implements DebugListener {
             String format = "%11.11s  %6.6s  %s%n";
             stdout.format(format, "Permissions", "Type",   "Display");
             stdout.format(format, "-----------", "------", "-------");
-            
+
             for (ZGrant g : f.getGrants()) {
                 GranteeType gt = g.getGranteeType();
-                String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" : 
-                            ((gt == GranteeType.guest || gt == GranteeType.key) ? g.getGranteeId() : 
-                            (g.getGranteeName() != null ? g.getGranteeName() : 
-                            g.getGranteeId()));                             
+                String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" :
+                            ((gt == GranteeType.guest || gt == GranteeType.key) ? g.getGranteeId() :
+                            (g.getGranteeName() != null ? g.getGranteeName() :
+                            g.getGranteeId()));
                 stdout.format(format, g.getPermissions(), getGranteeDisplay(g.getGranteeType()), dn);
             }
         }
     }
-    
+
     private GranteeType getGranteeType(String name) throws ServiceException {
         if (name.equalsIgnoreCase("account")) return GranteeType.usr;
-        else if (name.equalsIgnoreCase("group")) return GranteeType.grp;        
+        else if (name.equalsIgnoreCase("group")) return GranteeType.grp;
         else if (name.equalsIgnoreCase("public")) return GranteeType.pub;
         else if (name.equalsIgnoreCase("all")) return GranteeType.all;
         else if (name.equalsIgnoreCase("domain")) return GranteeType.dom;
@@ -1422,27 +1422,27 @@ public class ZMailboxUtil implements DebugListener {
         case all:
             grantee = ACL.GUID_AUTHUSER;
             perms = args[2];
-            break;            
+            break;
         case guest:
-            if (args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);            
+            if (args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);
             grantee = args[2];
-            arg = args[3];            
+            arg = args[3];
             perms = args[4];
-            break;    
+            break;
         case key:
-            if (args.length != 4 && args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);            
+            if (args.length != 4 && args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);
             grantee = args[2];
             if (args.length == 5) {
-                arg = args[3];            
+                arg = args[3];
                 perms = args[4];
             } else {
                 perms = args[3];
             }
-            break;    
+            break;
         }
-        
-        boolean revoke = (perms != null && (perms.equalsIgnoreCase("none") || perms.length() == 0));        
-        
+
+        boolean revoke = (perms != null && (perms.equalsIgnoreCase("none") || perms.length() == 0));
+
         if (revoke) {
             // convert grantee to grantee id if it is a name
             ZFolder f = lookupFolder(folderId);
@@ -1460,13 +1460,13 @@ public class ZMailboxUtil implements DebugListener {
             } else {
                 grantee = zid;
             }
-            
+
             mMbox.modifyFolderRevokeGrant(folderId, grantee);
         } else {
             mMbox.modifyFolderGrant(folderId, type, grantee, perms, arg);
         }
     }
-    
+
     private void doListPermission() throws ServiceException {
         for (Right r : RightManager.getInstance().getAllUserRights().values()) {
             stdout.println("  " + r.getName() + ": " + r.getDesc());
@@ -1476,13 +1476,13 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    
+
     private void doGetPermission(String[] args) throws ServiceException {
         if (verboseOpt()) {
-            StringBuilder sb = new StringBuilder();            
+            StringBuilder sb = new StringBuilder();
             for (ZAce g : mMbox.getPermission(args)) {
                 if (sb.length() > 0) sb.append(",\n");
-                sb.append(g);
+                sb.append(g.dump());
             }
             stdout.format("[%n%s%n]%n", sb.toString());
         } else {
@@ -1502,15 +1502,15 @@ public class ZMailboxUtil implements DebugListener {
                     return order;
                 }
             };
-            Collections.sort(result, comparator);  
-            
+            Collections.sort(result, comparator);
+
             for (ZAce ace : result) {
                 stdout.format(format, ace.getRightDisplay(), ace.getGranteeTypeDisplay(), ace.getGranteeName());
             }
         }
         stdout.println();
     }
-    
+
     private ZAce getAceFromArgs(String[] args) throws ServiceException {
         ZAce.GranteeType type = ZAce.getGranteeTypeFromDisplay(args[0]);
         String granteeName = null;
@@ -1518,7 +1518,7 @@ public class ZMailboxUtil implements DebugListener {
         String right = null;
         boolean deny = false;
         String secret = null;
-        
+
         switch (type) {
         case usr:
         case grp:
@@ -1536,7 +1536,7 @@ public class ZMailboxUtil implements DebugListener {
             granteeId = ACL.GUID_PUBLIC;
             right = args[1];
             break;
-        case gst:   
+        case gst:
             if (args.length != 4) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
             granteeName = args[1];
             secret = args[2];
@@ -1553,15 +1553,15 @@ public class ZMailboxUtil implements DebugListener {
             }
             break;
         }
-        
+
         if (right.charAt(0) == '-') {
             deny = true;
             right = right.substring(1);
         }
-        
+
         return new ZAce(type, granteeId, granteeName, right, deny, secret);
     }
-    
+
     private void doGrantPermission(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
         List<ZAce> granted = mMbox.grantPermission(ace);
@@ -1573,10 +1573,10 @@ public class ZMailboxUtil implements DebugListener {
                 stdout.println("    " + g.getGranteeTypeDisplay() + " " + g.getGranteeName() + " " + g.getRightDisplay());
         }
     }
-    
+
     private void doRevokePermission(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
-        
+
         ZAce.GranteeType granteeType= ace.getGranteeType();
         if (granteeType == ZAce.GranteeType.usr || granteeType == ZAce.GranteeType.grp) {
             // convert grantee to grantee id if it is a name
@@ -1594,7 +1594,7 @@ public class ZMailboxUtil implements DebugListener {
                 throw ZClientException.CLIENT_ERROR("unable to resolve zimbra id for: "+granteeName, null);
             ace.setGranteeId(zid);
         }
-        
+
         List<ZAce> revoked = mMbox.revokePermission(ace);
         if (revoked.size() == 0)
             stdout.println("  revoked 0 permission");
@@ -1681,8 +1681,8 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doCreateFolder(String args[]) throws ServiceException {
         ZFolder cf = mMbox.createFolder(
-                lookupFolderId(args[0], true), 
-                ZMailbox.getBasePath(args[0]), 
+                lookupFolderId(args[0], true),
+                ZMailbox.getBasePath(args[0]),
                 folderViewOpt(),
                 folderColorOpt(),
                 flagsOpt(),
@@ -1730,7 +1730,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doCreateSearchFolder(String args[]) throws ServiceException {
 
         ZSearchFolder csf = mMbox.createSearchFolder(
-                lookupFolderId(args[0], true), 
+                lookupFolderId(args[0], true),
                 ZMailbox.getBasePath(args[0]),
                 args[1],
                 typesOpt(),
@@ -1743,7 +1743,7 @@ public class ZMailboxUtil implements DebugListener {
         String cmPath = args[0];
         String cmOwner = args[1];
         String cmItem = args[2];
-        
+
         OwnerBy ownerBy = OwnerBy.BY_ID;
         Account ownerAcct = mProv.getAccount(cmOwner);
         if (ownerAcct != null) {
@@ -1754,9 +1754,9 @@ public class ZMailboxUtil implements DebugListener {
         } else {
             // account is not found, still let it go to server (default to OwnerBy.BY_ID) and let server return us the error
         }
-        
+
         ZMountpoint cm = mMbox.createMountpoint(
-                    lookupFolderId(cmPath, true), 
+                    lookupFolderId(cmPath, true),
                     ZMailbox.getBasePath(cmPath),
                     folderViewOpt(),
                     folderColorOpt(),
@@ -1769,37 +1769,37 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doSearch(String[] args) throws ServiceException {
-        
+
         if (currrentOpt()) { doSearchRedisplay(args); return; }
         else if (previousOpt()) { doSearchPrevious(args); return; }
         else if (nextOpt()) { doSearchNext(args); return; }
         else if (args.length == 0) { usage(); return; }
-        
+
         mSearchParams = new ZSearchParams(args[0]);
 
-//        [limit {limit}] [sortby {sortBy}] [types {types}]        
-        
+//        [limit {limit}] [sortby {sortBy}] [types {types}]
+
         String limitStr = mCommandLine.getOptionValue(O_LIMIT.getOpt());
         mSearchParams.setLimit(limitStr != null ? Integer.parseInt(limitStr) : 25);
-        
+
         SearchSortBy sortBy = searchSortByOpt();
         mSearchParams.setSortBy(sortBy != null ?  sortBy : SearchSortBy.dateDesc);
-            
+
         String types = typesOpt();
         mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);
-        
+
         mIndexToId.clear();
         mSearchPage = 0;
         ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false, false);
         //stdout.println(result);
-        dumpSearch(pager.getResult(), verboseOpt());                
+        dumpSearch(pager.getResult(), verboseOpt());
     }
-    
+
     private void doSearchRedisplay(String[] args) throws ServiceException {
         if (mSearchParams == null) return;
         ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, true, false);
         mSearchPage = pager.getActualPage();
-        if (pager.getResult().getHits().size() == 0) return;        
+        if (pager.getResult().getHits().size() == 0) return;
         dumpSearch(pager.getResult(), verboseOpt());
     }
 
@@ -1821,9 +1821,9 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     String mConvSearchConvId;
-    
+
     private void doSearchConv(String[] args) throws ServiceException {
-        
+
         if (currrentOpt()) { doSearchConvRedisplay(args); return; }
         else if (previousOpt()) { doSearchConvPrevious(args); return; }
         else if (nextOpt()) { doSearchConvNext(args); return; }
@@ -1832,22 +1832,22 @@ public class ZMailboxUtil implements DebugListener {
         mConvSearchConvId = id(args[0]);
         mConvSearchParams = new ZSearchParams(args[1]);
 
-//        [limit {limit}] [sortby {sortBy}] [types {types}]        
-        
+//        [limit {limit}] [sortby {sortBy}] [types {types}]
+
         String limitStr = mCommandLine.getOptionValue(O_LIMIT.getOpt());
         mConvSearchParams.setLimit(limitStr != null ? Integer.parseInt(limitStr) : 25);
-        
+
         SearchSortBy sortBy = searchSortByOpt();
         mConvSearchParams.setSortBy(sortBy != null ?  sortBy : SearchSortBy.dateDesc);
-            
+
         String types = typesOpt();
-        mConvSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
+        mConvSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);
 
         mIndexToId.clear();
         //stdout.println(result);
-        dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, mConvSearchParams), verboseOpt());                
+        dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, mConvSearchParams), verboseOpt());
     }
-    
+
     private void doSearchConvRedisplay(String[] args) throws ServiceException {
         ZSearchResult sr = mConvSearchResult;
         if (sr == null) return;
@@ -1871,7 +1871,7 @@ public class ZMailboxUtil implements DebugListener {
         ZSearchResult sr = mConvSearchResult;
         if (sp == null || sr == null || sp.getOffset() == 0)
             return;
-        sp.setOffset(sp.getOffset() - sr.getHits().size());        
+        sp.setOffset(sp.getOffset() - sr.getHits().size());
         dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, sp), verboseOpt());
     }
 
@@ -1886,7 +1886,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void dumpSearch(ZSearchResult sr, boolean verbose) {
         if (verbose) {
-            stdout.println(sr);
+            stdout.println(sr.dump());
             return;
         }
         
@@ -1981,7 +1981,7 @@ public class ZMailboxUtil implements DebugListener {
     private void dumpConvSearch(ZSearchResult sr, boolean verbose) {
         mConvSearchResult =  sr;
         if (verbose) {
-            stdout.println(sr);
+            stdout.println(sr.dump());
             return;
         }
         
@@ -2031,7 +2031,7 @@ public class ZMailboxUtil implements DebugListener {
             for (String tagName: mMbox.getAllTagNames()) {
                 ZTag tag = mMbox.getTagByName(tagName);
                 if (sb.length() > 0) sb.append(",\n");
-                sb.append(tag);
+                sb.append(tag.dump());
             }
             stdout.format("[%n%s%n]%n", sb.toString());
         } else {
@@ -2071,7 +2071,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetAllFolders(String[] args) throws ServiceException {
         if (verboseOpt()) {
-            stdout.println(mMbox.getUserRoot());
+            stdout.println(mMbox.getUserRoot().dump());
         } else {
             String hdrFormat = "%10.10s  %4.4s  %10.10s  %10.10s  %s%n";
             stdout.format(hdrFormat, "Id", "View", "Unread", "Msg Count", "Path");
@@ -2082,7 +2082,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetFolder(String[] args) throws ServiceException {
         ZFolder f = lookupFolder(args[0]);
-        stdout.println(f);
+        stdout.println(f.dump());
         /*
         if (verboseOpt()) {
             
@@ -2099,7 +2099,14 @@ public class ZMailboxUtil implements DebugListener {
 
     private void dumpAllContacts(List<ZContact> contacts) throws ServiceException {
         if (verboseOpt()) {
-            stdout.println(contacts);
+            stdout.println("[");
+            boolean first = true;
+            for (ZContact cn: contacts) {
+                if (first) first = false;else stdout.println(",");
+                stdout.println(cn.dump());
+            }
+            stdout.println("]");
+
         } else {
             if (contacts.size() == 0) return;            
             String hdrFormat = "%10.10s  %s%n";
@@ -2114,7 +2121,13 @@ public class ZMailboxUtil implements DebugListener {
     
     private void dumpIdentities(List<ZIdentity> identities) {
         if (verboseOpt()) {
-            stdout.println(identities);
+            stdout.println("[");
+            boolean first = true;
+            for (ZIdentity identity: identities) {
+                if (first) first = false;else stdout.println(",");
+                stdout.println(identity.dump());
+            }
+            stdout.println("]");
         } else {
             if (identities.size() == 0) return;            
             for (ZIdentity identity: identities) {
@@ -2129,7 +2142,13 @@ public class ZMailboxUtil implements DebugListener {
 
     private void dumpSignatures(List<ZSignature> signatures) {
         if (verboseOpt()) {
-            stdout.println(signatures);
+            stdout.println("[");
+            boolean first = true;
+            for (ZSignature sig : signatures) {
+                if (first) first = false;else stdout.println(",");
+                stdout.println(sig.dump());
+            }
+            stdout.println("]");
         } else {
             if (signatures.size() == 0) return;
             for (ZSignature sig : signatures) {
@@ -2145,7 +2164,13 @@ public class ZMailboxUtil implements DebugListener {
 
     private void dumpContacts(List<ZContact> contacts) throws ServiceException {
         if (verboseOpt()) {
-            stdout.println(contacts);
+            stdout.println("[");
+            boolean first = true;
+            for (ZContact cn: contacts) {
+                if (first) first = false;else stdout.println(",");
+                stdout.println(cn.dump());
+            }
+            stdout.println("]");
         } else {
             if (contacts.size() == 0) return;            
             for (ZContact cn: contacts) {
@@ -2209,7 +2234,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetConversation(String[] args) throws ServiceException {
         ZConversation conv = mMbox.getConversation(id(args[0]), Fetch.none);
         if (verboseOpt()) {
-            stdout.println(conv);
+            stdout.println(conv.dump());
         } else {
             dumpConversation(conv);
         }
@@ -2282,7 +2307,7 @@ public class ZMailboxUtil implements DebugListener {
         params.setId(id(args[0]));
         ZMessage msg = mMbox.getMessage(params);
         if (verboseOpt()) {
-            stdout.println(msg);
+            stdout.println(msg.dump());
         } else {
             dumpMessage(msg);
         }

@@ -115,6 +115,10 @@ public class ZMessageHit implements ZSearchHit {
     }
 
     public String toString() {
+        return String.format("[ZMessageHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

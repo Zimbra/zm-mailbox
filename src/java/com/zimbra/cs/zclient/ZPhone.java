@@ -43,6 +43,10 @@ public class ZPhone implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZPhone %s]", mName);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

@@ -90,6 +90,10 @@ public class ZCallHit implements ZSearchHit {
     }
 
     public String toString() {
+        return String.format("[ZCallHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

@@ -226,6 +226,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZMessage %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 
@@ -343,6 +347,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZMimePart %s]", mPartName);
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
 

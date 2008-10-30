@@ -156,8 +156,17 @@ public class ZCreateMessageEvent implements ZCreateItemEvent, ToZJSONObject {
     }
 
     public String toString() {
+        try {
+            return String.format("[ZCreateMessageEvent %s]", getId());
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
+
     public ZItem getItem() throws ServiceException {
         return null;
     }

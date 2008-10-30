@@ -57,6 +57,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
     private boolean mGalContact;
+    private ZMailbox mMailbox;
 
     public enum Flag {
         flagged('f'),
@@ -88,12 +89,13 @@ public class ZContact implements ZItem, ToZJSONObject {
         }
     }
 
-    public ZContact(Element e, boolean galContact) throws ServiceException {
-        this(e);
+    public ZContact(Element e, boolean galContact, ZMailbox mailbox) throws ServiceException {
+        this(e, mailbox);
         mGalContact = galContact;
     }
 
-    public ZContact(Element e) throws ServiceException {
+    public ZContact(Element e, ZMailbox mailbox) throws ServiceException {
+        mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
@@ -108,6 +110,10 @@ public class ZContact implements ZItem, ToZJSONObject {
         }
     }
 
+    public ZMailbox getMailbox() {
+        return mMailbox;
+    }
+    
     public String getFolderId() {
         return mFolderId;
     }
@@ -140,6 +146,10 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZContact %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 
@@ -197,4 +207,59 @@ public class ZContact implements ZItem, ToZJSONObject {
             }
         }
 	}
+
+    public void delete() throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
+        mMailbox.deleteContact(mId);
+    }
+
+    public void deleteItem() throws ServiceException {
+        delete();
+    }
+    
+    public void moveToTrash() throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
+        mMailbox.trashContact(mId);
+    }
+
+    public void flag(boolean flagged) throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
+        mMailbox.flagContact(mId, flagged);
+    }
+
+    public void tag(String nameOrId, boolean tagged) throws ServiceException {
+        ZTag tag = mMailbox.getTag(nameOrId);
+        if (tag == null)
+            throw ZClientException.CLIENT_ERROR("unknown tag: "+nameOrId, null);
+        else
+           tag(tag, tagged);
+    }
+
+    public void tag(ZTag tag, boolean tagged) throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
+        mMailbox.tagContact(mId, tag.getId(), tagged);
+    }
+
+    public void move(String pathOrId) throws ServiceException {
+        ZFolder destFolder = mMailbox.getFolder(pathOrId);
+        if (destFolder == null)
+            throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        else
+            move(destFolder);
+    }
+
+    public void move(ZFolder destFolder) throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
+        mMailbox.moveContact(mId, destFolder.getId());
+    }
+
+    public void modify(Map<String,String> attrs, boolean replace) throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
+        mMailbox.modifyContact(mId, replace, attrs, true);
+    }
+
+    public void update(String destFolderId, String tagList, String flags) throws ServiceException {
+        mMailbox.updateContact(mId, destFolderId, tagList, flags);
+    }
+
 }

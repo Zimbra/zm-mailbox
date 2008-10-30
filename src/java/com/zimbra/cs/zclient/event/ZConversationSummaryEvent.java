@@ -129,6 +129,14 @@ public class ZConversationSummaryEvent implements ToZJSONObject {
     }
 
     public String toString() {
+        try {
+            return String.format("[ZConversationSummaryEvent %s]", getId());
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

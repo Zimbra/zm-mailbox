@@ -233,6 +233,10 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZGetInfoResult %s]", mName);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

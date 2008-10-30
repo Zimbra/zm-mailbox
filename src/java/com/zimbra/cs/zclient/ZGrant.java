@@ -242,6 +242,10 @@ public class ZGrant implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZGrant %s %s %s]", mGranteeType.name(), mGranteeName, mPermissions);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

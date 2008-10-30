@@ -102,6 +102,10 @@ public class ZInvite implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZInvite %s]", getComponent().getName());
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 
@@ -578,6 +582,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZComponent %s]", getName());
+        }
+        
+        public String dump() {
             return ZJSONObject.toString(this);
         }
 
@@ -603,9 +611,13 @@ public class ZInvite implements ToZJSONObject {
             }
             
             public String toString() {
+                return String.format("[ZReply %s]", mAttendee);
+            }
+
+            public String dump() {
                 return ZJSONObject.toString(this);
             }
-            
+
             public ZReply(Element e) throws ServiceException {
                 mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
                 mAttendee = e.getAttribute(MailConstants.A_CAL_ATTENDEE, null);
@@ -781,6 +793,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZTimeZone %s]", mId);
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
 
@@ -888,6 +904,10 @@ public class ZInvite implements ToZJSONObject {
             }
 
             public String toString() {
+                return "[ZTransitionRule]";
+            }
+
+            public String dump() {
                 return ZJSONObject.toString(this);
             }
         }
@@ -1005,6 +1025,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return "[ZDuration]"; // TODO
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
 
@@ -1227,6 +1251,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZCalendarUser %s]", mAddress);
+        }
+        
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }
@@ -1257,6 +1285,10 @@ public class ZInvite implements ToZJSONObject {
             if (getLanguage() != null) orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
             ToXML.encodeXParams(orEl, xparamsIterator());
             return orEl;
+        }
+
+        public String toString() {
+            return String.format("[ZOrganizer %s]", getAddress());
         }
 
     }
@@ -1374,8 +1406,13 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZAttendee %s]", getAddress());
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
+
     }
 
     public static class ZRecurrenceDate implements ToZJSONObject {
@@ -1440,6 +1477,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZRecurrenceDate]"); // TODO
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }
@@ -1494,6 +1535,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZRecurrenceDates]"); // TODO
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }
@@ -1636,6 +1681,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZByDayWeekDay weekOrd=%d day=%s]", mWeekOrd, mDay);
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }
@@ -1791,6 +1840,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZByRule]"); //TODO
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }
@@ -1838,6 +1891,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZRecurrenceRule]"); // TODO
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
 
@@ -2031,6 +2088,10 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZRecurrence]");
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
     }

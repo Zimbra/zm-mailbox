@@ -182,6 +182,10 @@ public class ZAce implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZGrant %s %s]", mGranteeName, mRight);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

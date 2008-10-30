@@ -139,6 +139,10 @@ public class ZEmailAddress implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZEmailAddress %s]", getFullAddressQuoted());
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

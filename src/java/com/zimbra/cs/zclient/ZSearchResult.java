@@ -133,6 +133,10 @@ public class ZSearchResult implements ToZJSONObject {
     }
 
     public String toString() {
+       return String.format("[ZSearchResult size=%s more=%s]", mHits.size(), mHasMore);
+    }
+
+    public String dump() {
        return ZJSONObject.toString(this);
     }
 
@@ -184,6 +188,10 @@ public class ZSearchResult implements ToZJSONObject {
         }
 
         public String toString() {
+            return String.format("[ZConversationSummary %s]", mId);
+        }
+
+        public String dump() {
             return ZJSONObject.toString(this);
         }
 

@@ -48,6 +48,10 @@ public class ZDeleteEvent implements ToZJSONObject {
     }
     
     public String toString() {
+        return String.format("[ZDeleteEvent %s]", getIds());
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 

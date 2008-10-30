@@ -66,6 +66,10 @@ public class ZDocumentHit implements ZSearchHit {
     }
 
     public String toString() {
+        return String.format("[ZDocumentHit %s]", mId);
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

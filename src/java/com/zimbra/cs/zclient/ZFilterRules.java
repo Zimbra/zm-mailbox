@@ -63,6 +63,10 @@ public class ZFilterRules implements ToZJSONObject {
     }
 
     public String toString() {
+        return String.format("[ZFilterRules]");
+    }
+
+    public String dump() {
         return ZJSONObject.toString(this);
     }
 }

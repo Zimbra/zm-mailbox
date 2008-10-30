@@ -582,12 +582,12 @@ public class ZMailbox {
         List<ZTag> tagList = new ArrayList<ZTag>();
         if (tags != null) {
             for (Element t : tags.listElements(MailConstants.E_TAG)) {
-            	ZTag tag = new ZTag(t);
+            	ZTag tag = new ZTag(t, this);
             	tagList.add(tag);
             }
         }
         Element folderEl = refresh.getOptionalElement(MailConstants.E_FOLDER);
-        ZFolder userRoot = new ZFolder(folderEl, null);
+        ZFolder userRoot = new ZFolder(folderEl, null, this);
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
         	handler.handleRefresh(event, this);
@@ -658,14 +658,14 @@ public class ZMailbox {
             } else if (e.getName().equals(MailConstants.E_FOLDER)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                ZFolder child = new ZFolder(e, parent);
+                ZFolder child = new ZFolder(e, parent, this);
                 addItemIdMapping(child);
                 event = new ZCreateFolderEvent(child);
                 parentFixup = parentCheck(parentFixup, child, parent);
             } else if (e.getName().equals(MailConstants.E_MOUNT)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                ZMountpoint child = new ZMountpoint(e, parent);
+                ZMountpoint child = new ZMountpoint(e, parent, this);
              	addItemIdMapping(child);
             	addRemoteItemIdMapping(child.getCanonicalRemoteId(), child);
                 parentFixup = parentCheck(parentFixup, child, parent);
@@ -673,12 +673,12 @@ public class ZMailbox {
             } else if (e.getName().equals(MailConstants.E_SEARCH)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                ZSearchFolder child = new ZSearchFolder(e, parent);
+                ZSearchFolder child = new ZSearchFolder(e, parent, this);
                 addItemIdMapping(child);
                 event = new ZCreateSearchFolderEvent(child);
                 parentFixup = parentCheck(parentFixup, child, parent);
             } else if (e.getName().equals(MailConstants.E_TAG)) {
-                event = new ZCreateTagEvent(new ZTag(e));
+                event = new ZCreateTagEvent(new ZTag(e, this));
                 addTag(((ZCreateTagEvent)event).getTag());
             }
             if (event != null) {
@@ -1030,6 +1030,19 @@ public class ZMailbox {
     }
 
     /**
+     * returns the tag the specified name/id, or null if no such tag exists.
+     * checks for tag by name first, then by id.
+     *
+     * @param name tag name
+     * @return the tag, or null if tag not found
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public ZTag getTag(String nameOrId) throws ServiceException {
+        ZTag result = getTagByName(nameOrId);
+        return result != null ? result : getTagById(nameOrId);
+    }
+
+    /**
      * returns the tag the specified name, or null if no such tag exists.
      *
      * @param name tag name
@@ -1095,7 +1108,7 @@ public class ZMailbox {
         if (color != null) tagEl.addAttribute(MailConstants.A_COLOR, color.getValue());
         Element createdTagEl = invoke(req).getElement(MailConstants.E_TAG);
         ZTag tag = getTagById(createdTagEl.getAttribute(MailConstants.A_ID));
-        return tag != null ? tag : new ZTag(createdTagEl);
+        return tag != null ? tag : new ZTag(createdTagEl, this);
     }
 
     /**
@@ -1210,7 +1223,7 @@ public class ZMailbox {
         Element response = invoke(req);
         List<ZContact> result = new ArrayList<ZContact>();
         for (Element cn : response.listElements(MailConstants.E_CONTACT)) {
-            result.add(new ZContact(cn));
+            result.add(new ZContact(cn, this));
         }
         return result;
     }
@@ -1230,7 +1243,7 @@ public class ZMailbox {
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
-        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT));
+        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
 
     /**
@@ -1263,7 +1276,7 @@ public class ZMailbox {
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
-        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT));
+        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
 
     /**
@@ -1290,7 +1303,7 @@ public class ZMailbox {
         }
         List<ZContact> result = new ArrayList<ZContact>();
         for (Element cn : invoke(req).listElements(MailConstants.E_CONTACT)) {
-            result.add(new ZContact(cn));
+            result.add(new ZContact(cn, this));
         }
         return result;
     }
@@ -1307,7 +1320,7 @@ public class ZMailbox {
             Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
             req.addAttribute(MailConstants.A_SYNC, true);
             req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
-            result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT));
+            result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
             mContactCache.put(id, result);
         }
         return result;
@@ -2096,6 +2109,20 @@ public class ZMailbox {
         return getUserRoot().getSubFolderByPath(path.substring(1));
     }
 
+    public ZFolder getInbox() throws ServiceException { return getFolderById(ZFolder.ID_INBOX); }
+    public ZFolder getTrash() throws ServiceException { return getFolderById(ZFolder.ID_TRASH); }
+    public ZFolder getSpam() throws ServiceException { return getFolderById(ZFolder.ID_SPAM); }
+    public ZFolder getJunk() throws ServiceException { return getFolderById(ZFolder.ID_SPAM); }
+    public ZFolder getSent() throws ServiceException { return getFolderById(ZFolder.ID_SENT); }
+    public ZFolder getDrafts() throws ServiceException { return getFolderById(ZFolder.ID_DRAFTS); }
+    public ZFolder getContacts() throws ServiceException { return getFolderById(ZFolder.ID_CONTACTS); }
+    public ZFolder getCalendar() throws ServiceException { return getFolderById(ZFolder.ID_CALENDAR); }
+    public ZFolder getNotebok() throws ServiceException { return getFolderById(ZFolder.ID_NOTEBOOK); }
+    public ZFolder getAutoContacts() throws ServiceException { return getFolderById(ZFolder.ID_AUTO_CONTACTS); }
+    public ZFolder getChats() throws ServiceException { return getFolderById(ZFolder.ID_CHATS); }
+    public ZFolder getTasks() throws ServiceException { return getFolderById(ZFolder.ID_TASKS); }
+    public ZFolder getBriefcase() throws ServiceException { return getFolderById(ZFolder.ID_BRIEFCASE); }
+
     /**
      * find the folder with the specified id.
      * @param id id of  folder
@@ -2108,6 +2135,17 @@ public class ZMailbox {
         if (!(item instanceof ZFolder)) return null;
         ZFolder folder = (ZFolder) item;
         return folder.isHierarchyPlaceholder() ? null : folder;
+    }
+
+    /**
+     * find the folder with the specified path/id. Look up by path first, then id if path not found.
+     * @param pathOrId path or id of  folder
+     * @return ZFolder if found, null otherwise.
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public ZFolder getFolder(String pathOrId) throws ServiceException {
+        ZFolder result = getFolderByPath(pathOrId);
+        return result != null ? result : getFolderById(pathOrId);
     }
     
     /**
@@ -2128,7 +2166,7 @@ public class ZMailbox {
         if (eFolder == null)
             return null;
         
-        ZFolder folder = new ZFolder(eFolder, null);
+        ZFolder folder = new ZFolder(eFolder, null, this);
         return folder.isHierarchyPlaceholder() ? null : folder;
     }
     
@@ -2406,7 +2444,7 @@ public class ZMailbox {
         if (url != null && url.length() > 0) folderEl.addAttribute(MailConstants.A_URL, url);
         Element newFolderEl = invoke(req).getElement(MailConstants.E_FOLDER);
         ZFolder newFolder = getFolderById(newFolderEl.getAttribute(MailConstants.A_ID));
-        return newFolder != null ? newFolder : new ZFolder(newFolderEl, null);
+        return newFolder != null ? newFolder : new ZFolder(newFolderEl, null, this);
     }
 
     /**
@@ -2434,7 +2472,7 @@ public class ZMailbox {
         if (sortBy != null) folderEl.addAttribute(MailConstants.A_SORTBY, sortBy.name());
         Element newSearchEl = invoke(req).getElement(MailConstants.E_SEARCH);
         ZSearchFolder newSearch = getSearchFolderById(newSearchEl.getAttribute(MailConstants.A_ID));
-        return newSearch != null ? newSearch : new ZSearchFolder(newSearchEl, null);
+        return newSearch != null ? newSearch : new ZSearchFolder(newSearchEl, null, this);
     }
 
     /**
@@ -2479,7 +2517,7 @@ public class ZMailbox {
         }
 
         public String toString() {
-            return String.format("actionResult: { ids: %s }", mIds);
+            return String.format("[ZActionResult %s]", mIds);
         }
         
         Element getResponse() {
@@ -2850,7 +2888,7 @@ public class ZMailbox {
 
         Element response = invoke(newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
         Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
-        ZFolder userRoot = (eFolder != null ? new ZFolder(eFolder, null) : null);
+        ZFolder userRoot = (eFolder != null ? new ZFolder(eFolder, null, this) : null);
 
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, null);
         for (ZEventHandler handler : mHandlers)
@@ -2871,7 +2909,7 @@ public class ZMailbox {
             try {
                 Element response = invoke(newRequestElement(MailConstants.GET_TAG_REQUEST));
                 for (Element t : response.listElements(MailConstants.E_TAG))
-                    tagList.add(new ZTag(t));
+                    tagList.add(new ZTag(t, this));
             } catch (SoapFaultException sfe) {
                 if (!sfe.getCode().equals(ServiceException.PERM_DENIED))
                     throw sfe;
@@ -2947,7 +2985,7 @@ public class ZMailbox {
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailConstants.A_REMOTE_ID: MailConstants.A_PATH, sharedItem);
         Element newMountEl = invoke(req).getElement(MailConstants.E_MOUNT);
         ZMountpoint newMount = getMountpointById(newMountEl.getAttribute(MailConstants.A_ID));
-        return newMount != null ? newMount : new ZMountpoint(newMountEl, null);
+        return newMount != null ? newMount : new ZMountpoint(newMountEl, null, this);
     }
 
     /**
@@ -3527,7 +3565,7 @@ public class ZMailbox {
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
-                contacts.add(new ZContact(contact, true));
+                contacts.add(new ZContact(contact, true, this));
         }
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
@@ -3541,7 +3579,7 @@ public class ZMailbox {
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
-                contacts.add(new ZContact(contact, true));
+                contacts.add(new ZContact(contact, true, this));
         }
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
