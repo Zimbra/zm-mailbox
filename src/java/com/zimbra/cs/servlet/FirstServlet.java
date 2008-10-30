@@ -30,6 +30,7 @@ import java.util.TimerTask;
 import javax.servlet.http.HttpServlet;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.Zimbra;
@@ -95,6 +96,12 @@ public class FirstServlet extends HttpServlet {
             
             if (Provisioning.getInstance() instanceof LdapProvisioning)
                 checkLDAP();
+            
+            try {
+                RightManager.getInstance();
+            } catch (ServiceException e) {
+                Util.halt("cannot initialize RightManager" + e.getMessage());
+            }
     		
             synchronized (mInitializedCondition) {
                 mInitialized = true;

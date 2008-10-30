@@ -63,6 +63,10 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -177,6 +181,7 @@ public class ProvUtil implements DebugListener {
         MISC("help on misc commands"),
         MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
+        PERMISSION("help on permission-related commands"),
         SEARCH("help on search-related commands"), 
         SERVER("help on server-related commands"),
         FREEBUSY("help on free/busy-related commands");
@@ -187,6 +192,66 @@ public class ProvUtil implements DebugListener {
         
         Category(String desc) {
             mDesc = desc;
+        }
+        
+        static void help(Category cat) {
+            try {
+                if (cat == CALENDAR)
+                    helpCALENDAR();
+                else if (cat == PERMISSION)
+                    helpPERMISSION();
+            } catch (ServiceException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        static void helpCALENDAR() {
+            System.out.println("");                
+            StringBuilder sb = new StringBuilder();
+            EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
+            for (int i = 0; i < vals.length; i++) {
+                if (i > 0)
+                    sb.append(", ");
+                sb.append(vals[i].toString());
+            }
+            System.out.println("    op = " + sb.toString());
+        }
+        
+        static void helpPERMISSION() throws ServiceException {
+            
+            // target types
+            System.out.println();
+            StringBuilder tt = new StringBuilder();
+            TargetType[] tts = TargetType.values();
+            for (int i = 0; i < tts.length; i++) {
+                if (i > 0)
+                    tt.append(", ");
+                tt.append(tts[i].getCode());
+            }
+            System.out.println("    target-type = " + tt.toString());
+            System.out.println("        {target-id|target-name} is required if target-type is not all***");
+            System.out.println("        {target-id|target-name} should not be specified if target-type is all***");
+            
+            // grantee types
+            System.out.println();
+            StringBuilder gt = new StringBuilder();
+            GranteeType[] gts = GranteeType.values();
+            for (int i = 0; i < gts.length; i++) {
+                if (gts[i].allowedForAdminRights()) {
+                    if (i > 0)
+                        gt.append(", ");
+                    gt.append(gts[i].getCode());
+                }
+            }
+            System.out.println("    grantee-type = " + gt.toString());
+            
+            // rights
+            System.out.println();
+            System.out.println("    right:");
+            for (Right r : RightManager.getInstance().getAllAdminRights().values()) {
+                System.out.println("        " + r.getName());
+            }
+            System.out.println();
         }
     }
     
@@ -254,6 +319,7 @@ public class ProvUtil implements DebugListener {
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
+        GRANT_PERMISSION("grantPermission", "gp", "{target-type} [{target-id|target-name}] {[-]right} {grantee-type} {grantee-id|grantee-name}", Category.PERMISSION, 4, 5),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -281,6 +347,7 @@ public class ProvUtil implements DebugListener {
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
+        REVOKE_PERMISSION("revokePermission", "rp", "{target-type} [{target-id|target-name}] {[-]right} {grantee-type} {grantee-id|grantee-name}", Category.PERMISSION, 4, 5),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -579,6 +646,12 @@ public class ProvUtil implements DebugListener {
         case GET_XMPP_COMPONENT:
             doGetXMPPComponent(args);
             break;
+        case GRANT_PERMISSION:
+            doGrantPermission(args);
+            break;
+        case REVOKE_PERMISSION:
+            doRevokePermission(args);
+            break;    
         case HELP:
             doHelp(args); 
             break;            
@@ -2339,6 +2412,77 @@ public class ProvUtil implements DebugListener {
         dumpXMPPComponent(lookupXMPPComponent(args[1]), getArgNameSet(args, 2));
     }
     
+    static private class PermissionArgs {
+        TargetType mTargetType;
+        String mTargetIdOrName;
+        boolean mDeny;
+        Right mRight;
+        GranteeType mGranteeType;
+        String mGranteeIdOrName;
+    }
+    
+    private PermissionArgs getPermissionArgs(String[] args) throws ServiceException {
+        
+        int argBase = 3;
+        
+        String targetType = args[1];
+        TargetType tt = TargetType.fromString(targetType);
+        String targetIdOrName = null;
+        boolean deny = false;
+        String right = null;
+        Right rt = null;
+        String granteeType = null;
+        GranteeType gt = null;
+        String granteeIdOrName = null;
+        
+        if (tt == TargetType.allcos || 
+            tt == TargetType.alldomains ||
+            tt == TargetType.allrights ||
+            tt == TargetType.allservers) {
+            if (args.length != 5) {
+                usage();
+                return null;
+            } else
+                argBase = 2;
+        } else {
+            if (args.length != 6) {
+                usage();
+                return null;
+            } else
+                targetIdOrName = args[2];
+        }
+        
+        right = args[argBase++];
+        granteeType = args[argBase++];
+        granteeIdOrName = args[argBase++];
+            
+        if ("-".equals(right.charAt(0))) {
+            deny = true;
+            right = right.substring(1);
+        }
+        rt = RightManager.getInstance().getRight(right);
+        gt = GranteeType.fromCode(granteeType);
+        
+        PermissionArgs pa = new PermissionArgs();
+        pa.mTargetType = tt;
+        pa.mTargetIdOrName = targetIdOrName;
+        pa.mDeny = deny;
+        pa.mRight = rt;
+        pa.mGranteeType = gt;
+        pa.mGranteeIdOrName = granteeIdOrName;
+        
+        return pa;
+        
+    }
+    
+    private void doGrantPermission(String[] args) throws ServiceException {
+        PermissionArgs pa = getPermissionArgs(args);
+    }
+    
+    private void doRevokePermission(String[] args) throws ServiceException {
+        PermissionArgs pa = getPermissionArgs(args);
+    }
+    
     private void doHelp(String[] args) {
         Category cat = null;
         if (args != null && args.length >= 2) {
@@ -2383,17 +2527,7 @@ public class ProvUtil implements DebugListener {
                 }
             }
         
-            if (cat == Category.CALENDAR) {
-                System.out.println("");                
-                StringBuilder sb = new StringBuilder();
-                EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
-                for (int i = 0; i < vals.length; i++) {
-                    if (i > 0)
-                        sb.append(", ");
-                    sb.append(vals[i].toString());
-                }
-                System.out.println("    op = " + sb.toString());
-            }
+            Category.help(cat);
         }
         System.out.println();
     }

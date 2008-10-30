@@ -5,7 +5,6 @@ import java.util.TreeMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -165,8 +164,8 @@ public class RightManager {
     private Right parseRight(Element eRight) throws ServiceException {
         String name = eRight.attributeValue(A_NAME);
         boolean userRight = getBooleanAttr(eRight, A_USER_RIGHT, false);
-        System.out.println("Parsing right " + "(" +  (userRight?"user":"admin") + ") " + name);
         
+        // System.out.println("Parsing right " + "(" +  (userRight?"user":"admin") + ") " + name);
         
         AdminRight.RightType rightType = null;
         if (!userRight) {
@@ -255,6 +254,10 @@ public class RightManager {
     
     public Map<String, UserRight> getAllUserRights() {
         return sUserRights;
+    }
+    
+    public Map<String, AdminRight> getAllAdminRights() {
+        return sAdminRights;
     }
 
     /**

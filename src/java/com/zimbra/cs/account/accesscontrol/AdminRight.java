@@ -9,6 +9,9 @@ import com.zimbra.common.service.ServiceException;
 
 public class AdminRight extends Right {
     
+    // known rights
+    public static AdminRight RT_createAccount;
+    
     enum RightType {
         preset,
         getAttrs,
@@ -64,6 +67,7 @@ public class AdminRight extends Right {
     private Map<String, AttrRight> mAttrs;
     
     static void initKnownAdminRights(RightManager rm) throws ServiceException {
+        RT_createAccount = rm.getAdminRight("createAccount");
     }
     
     AdminRight(String name, RightType rightType) {

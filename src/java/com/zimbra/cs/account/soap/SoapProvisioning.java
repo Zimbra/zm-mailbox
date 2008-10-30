@@ -62,6 +62,10 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.zclient.ZClientException;
@@ -1719,6 +1723,45 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
     }
 
+    public void grantPermission(TargetType targetType, String targetId,
+            GranteeType granteeType, String granteeId, 
+            Right right, boolean deny) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GRANT_PERMISSION_REQUEST);
+        
+        Element eTarget = req.addElement(AdminConstants.E_TARGET);
+        eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
+        eTarget.addAttribute(AdminConstants.A_ZIMBRA_ID, targetId);
+        
+        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
+        eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
+        eGrantee.addAttribute(AdminConstants.A_ZIMBRA_ID, granteeId);
+        
+        Element eRight = req.addElement(AdminConstants.E_RIGHT);
+        eGrantee.addAttribute(AdminConstants.A_NAME, right.getName());
+        eGrantee.addAttribute(AdminConstants.A_DENY, deny);
+        
+        Element resp = invoke(req);
+    }
+    
+    public void revokePermission(TargetType targetType, String targetId,
+                 GranteeType granteeType, String granteeId, 
+                 Right right, boolean deny) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.REVOKE_PERMISSION_REQUEST);
+        
+        Element eTarget = req.addElement(AdminConstants.E_TARGET);
+        eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
+        eTarget.addAttribute(AdminConstants.A_ZIMBRA_ID, targetId);
+        
+        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
+        eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
+        eGrantee.addAttribute(AdminConstants.A_ZIMBRA_ID, granteeId);
+        
+        Element eRight = req.addElement(AdminConstants.E_RIGHT);
+        eGrantee.addAttribute(AdminConstants.A_NAME, right.getName());
+        eGrantee.addAttribute(AdminConstants.A_DENY, deny);
+        
+        Element resp = invoke(req);
+    }
     
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
         flushCache(type.name(), entries);

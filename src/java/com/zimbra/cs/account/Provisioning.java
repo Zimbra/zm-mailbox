@@ -24,6 +24,10 @@ package com.zimbra.cs.account;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
@@ -2756,6 +2760,18 @@ public abstract class Provisioning {
     public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
     
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
+    
+    // permissions
+    public void grantPermission(TargetType targetType, String targetId,
+                                     GranteeType granteeType, String granteeId, 
+                                     Right right, boolean deny) throws ServiceException {
+        // todo: change to abstract and fix offline provisioning
+    }
+    public void revokePermission(TargetType targetType, String targetId,
+                                      GranteeType granteeType, String granteeId, 
+                                      Right right, boolean deny) throws ServiceException {
+        // todo: change to abstract and fix offline provisioning
+    }
     
     public static enum CacheEntryType {
         account,

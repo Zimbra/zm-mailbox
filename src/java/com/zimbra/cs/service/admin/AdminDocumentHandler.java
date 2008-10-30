@@ -25,13 +25,16 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
@@ -193,5 +196,25 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     
     public boolean canAccessCos(ZimbraSoapContext zsc, String cosId) throws ServiceException {
         return AccessManager.getInstance().canAccessCos(zsc.getAuthToken(), cosId);
+    }
+    
+    
+    public Domain getDomainFromEmailAddr(String email) throws ServiceException  {
+        String parts[] = EmailUtil.getLocalPartAndDomain(email);
+        if (parts == null)
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
+        return Provisioning.getInstance().get(Provisioning.DomainBy.name, parts[1]);
+    }
+    
+    public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded) {
+        return AccessManager.getInstance().canPerform(grantee, target, rightNeeded, true, false);
+    }
+    
+    public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded) {
+        return AccessManager.getInstance().canPerform(grantee, target, rightNeeded, true, false);
+    }
+    
+    public boolean canPerform(String grantee, NamedEntry target, Right rightNeeded) {
+        return AccessManager.getInstance().canPerform(grantee, target, rightNeeded, true, false);
     }
 }

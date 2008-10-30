@@ -7,22 +7,29 @@ import com.zimbra.common.service.ServiceException;
 
 public enum GranteeType {
     
-    GT_USER("usr"),     // compare grantee ID with Account's zimbraId
-    GT_GROUP("grp"),    // compare grantee ID with Account's zimbraMemberOf values
-    GT_AUTHUSER("all"), // the caller needs to present a valid Zimbra credential
-    GT_GUEST("gst"),    // the caller needs to present a non-Zimbra email address and password
-    GT_KEY("key"),      // the caller needs to present an access key
-    GT_PUBLIC("pub");   // always succeeds
+    GT_USER("usr", true),   // compare grantee ID with Account's zimbraId
+    GT_GROUP("grp", true),  // compare grantee ID with Account's zimbraMemberOf values
+    GT_AUTHUSER("all"),     // the caller needs to present a valid Zimbra credential
+    GT_GUEST("gst"),        // the caller needs to present a non-Zimbra email address and password
+    GT_KEY("key"),          // the caller needs to present an access key
+    GT_PUBLIC("pub");       // always succeeds
 
     private static class GT {
         static Map<String, GranteeType> sCodeMap = new HashMap<String, GranteeType>();
     }
     
     private String mCode;
+    private boolean mAllowedForAdminRights;
     
     GranteeType(String code) {
         mCode = code;
         GT.sCodeMap.put(code, this);
+    }
+    
+    GranteeType(String code, boolean allowedForAdminRights) {
+        mCode = code;
+        GT.sCodeMap.put(code, this);
+        mAllowedForAdminRights = allowedForAdminRights;
     }
     
     public static GranteeType fromCode(String granteeType) throws ServiceException {
@@ -48,5 +55,8 @@ public enum GranteeType {
         return mCode;    
     }
 
+    public boolean allowedForAdminRights() {
+        return mAllowedForAdminRights;
+    }
 
 }
