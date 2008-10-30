@@ -121,7 +121,9 @@
         <Call name="addRewriteRule"><Arg>/zimbraAdmin/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>/*</Arg><Arg>/zimbra</Arg></Call>
+        <Call name="addRewriteRule"><Arg>%%zimbraAdminURL%%/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/*</Arg><Arg>%%zimbraMailURL%%</Arg></Call>
         <Set name="handler">
           <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
             <Set name="handlers">
@@ -168,7 +170,7 @@
     <New id="zimbra" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
-      <Arg>/zimbra</Arg>
+      <Arg>%%zimbraMailURL%%</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
@@ -182,13 +184,13 @@
     </New>
 
 
-    <New id="%%zimbraAdminURL%%" class="org.mortbay.jetty.webapp.WebAppContext">
+    <New id="zimbraAdmin" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps%%zimbraAdminURL%%/</Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin</Arg>
       <Arg>%%zimbraAdminURL%%</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work%%zimbraAdminURL%%/</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
       <Get name="errorHandler">
         <Call name="addErrorPage">
           <Arg type="int">500</Arg>
