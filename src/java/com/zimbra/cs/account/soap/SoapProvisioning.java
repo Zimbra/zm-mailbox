@@ -38,6 +38,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
@@ -69,8 +71,76 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.zclient.ZClientException;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import org.mozilla.javascript.Context;
 
 public class SoapProvisioning extends Provisioning {
+
+    public static class Options {
+        private String mAccount;
+        private AccountBy mAccountBy = AccountBy.name;
+        private String mPassword;
+        private ZAuthToken mAuthToken;
+        private String mUri;
+        private int mTimeout = 60000;
+        private int mRetryCount = -1;
+        private SoapTransport.DebugListener mDebugListener;
+        private boolean mLocalConfigAuth;
+
+        public Options() {
+        }
+
+        public Options(String account, AccountBy accountBy, String password, String uri) {
+            mAccount = account;
+            mAccountBy = accountBy;
+            mPassword = password;
+            mUri = uri;
+        }
+
+        // AP-TODO-7: retire
+        public Options(String authToken, String uri) {
+            mAuthToken = new ZAuthToken(null, authToken, null);
+            mUri = uri;
+        }
+
+        public Options(ZAuthToken authToken, String uri) {
+            mAuthToken = authToken;
+            mUri = uri;
+        }
+
+        public String getAccount() { return mAccount; }
+        public void setAccount(String account) { mAccount = account; }
+
+        public AccountBy getAccountBy() { return mAccountBy; }
+        public void setAccountBy(AccountBy accountBy) { mAccountBy = accountBy; }
+
+        public String getPassword() { return mPassword; }
+        public void setPassword(String password) { mPassword = password; }
+
+        public ZAuthToken getAuthToken() { return mAuthToken; }
+        public void setAuthToken(ZAuthToken authToken) { mAuthToken = authToken; }
+
+        // AP-TODO-8: retire
+        public void setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null); }
+
+        public String getUri() { return mUri; }
+        public void setUri(String uri) { mUri = uri; }
+
+        public int getTimeout() { return mTimeout; }
+        public void setTimeout(int timeout) { mTimeout = timeout; }
+
+        public int getRetryCount() { return mRetryCount; }
+        public void setRetryCount(int retryCount) { mRetryCount = retryCount; }
+
+        public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
+        public void setDebugListener(SoapTransport.DebugListener liistener) { mDebugListener = liistener; }
+
+        public boolean getLocalConfigAuth() { return mLocalConfigAuth; }
+        public void setLocalConfigAuth(boolean auth) { mLocalConfigAuth = auth; }
+    }
+
 
     private int mTimeout = -1;
     private int mRetryCount;
@@ -79,9 +149,44 @@ public class SoapProvisioning extends Provisioning {
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
-    
+
     public SoapProvisioning() {
-        
+
+    }
+
+    public SoapProvisioning(Options options) throws ServiceException {
+        mTimeout = options.getTimeout();
+        mRetryCount = options.getRetryCount();
+        mDebugListener = options.getDebugListener();
+        mAuthToken = options.getAuthToken();
+        if (options.getUri() == null) options.setUri(getLocalConfigURI());
+        soapSetURI(options.getUri());
+
+        if (options.getLocalConfigAuth()) {
+            soapZimbraAdminAuthenticate();
+        } else if (mAuthToken == null) {
+            soapAdminAuthenticate(mAuthToken);
+        } else if (options.getAccount() != null && options.getPassword() != null) {
+            XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
+            switch(options.getAccountBy()) {
+                case name:
+                    req.addElement(AdminConstants.E_NAME).setText(options.getAccount());
+                    break;
+                default:
+                    Element account = req.addElement(AccountConstants.E_ACCOUNT);
+                    account.addAttribute(AccountConstants.A_BY, options.getAccountBy().name());
+                    account.setText(options.getAccount());
+                    break;
+            }
+            req.addElement(AdminConstants.E_PASSWORD).setText(options.getPassword());
+            Element response = invoke(req);
+            mAuthToken = new ZAuthToken(response.getElement(AdminConstants.E_AUTH_TOKEN), true);
+            mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
+            mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
+            mTransport.setAuthToken(mAuthToken);
+        } else {
+            throw ZClientException.CLIENT_ERROR("no valid authentication method selected", null);
+        }
     }
 
     /**
@@ -100,6 +205,26 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setDebugListener(mDebugListener);
     }
 
+    public static String getLocalConfigURI() {
+        String server = LC.zimbra_zmprov_default_soap_server.value();
+        int port = LC.zimbra_admin_service_port.intValue();
+        return LC.zimbra_admin_service_scheme.value()+server+":"+port+ ZimbraServlet.ADMIN_SERVICE_URI;
+    }
+
+    /**
+     * Construct and return a SoapProvisioning instance using values from localconfig:
+     * zimbra_zmprov_default_soap_server, zimbra_admin_service_port, zimbra_admin_service_scheme
+     * and calling soapZimbraAdminAuthenticate.
+     * @return new SoapProvisionig instance
+     *
+     * @throws ServiceException
+     */
+    public static SoapProvisioning getAdminInstance() throws ServiceException {
+        Options opts = new Options();
+        opts.setLocalConfigAuth(true);
+        return new SoapProvisioning(opts);
+    }
+
     public String soapGetURI() {
         return mTransport.getURI();
     }
@@ -115,17 +240,17 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport != null && retryCount >= 0)
             mTransport.setRetryCount(retryCount);
     }
-    
+
     public void soapSetTransportDebugListener(DebugListener listener) {
         mDebugListener = listener;
         if (mTransport != null)
             mTransport.setDebugListener(mDebugListener);
     }
-    
+
     public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
-    
+
     public void setAuthToken(ZAuthToken authToken) {
         mAuthToken = authToken;
         if (mTransport != null)
@@ -134,11 +259,11 @@ public class SoapProvisioning extends Provisioning {
 
     /**
      * used to authenticate via admin AuthRequest. can only be called after setting the URI with setURI.
-     * 
+     *
      * @param name
      * @param password
      * @throws ServiceException
-     * @throws IOException 
+     * @throws IOException
      */
     public void soapAdminAuthenticate(String name, String password) throws ServiceException {
        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
@@ -151,7 +276,7 @@ public class SoapProvisioning extends Provisioning {
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
        mTransport.setAuthToken(mAuthToken);
     }
-    
+
     public void soapAdminAuthenticate(ZAuthToken zat) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
         XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
@@ -166,8 +291,8 @@ public class SoapProvisioning extends Provisioning {
 
     /**
      * auth as zimbra admin (over SOAP) using password from localconfig. Can only be called after
-     * setting the URI with setUI. 
-     * 
+     * setting the URI with setUI.
+     *
      * @throws ServiceException
      * @throws IOException
      */
@@ -182,15 +307,15 @@ public class SoapProvisioning extends Provisioning {
             return mTransport.getURI();
         }
     }
-    
+
     private void checkTransport() throws ServiceException {
         if (mTransport == null)
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
-    
+
     public synchronized Element invoke(Element request) throws ServiceException {
         checkTransport();
-        
+
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
@@ -202,7 +327,7 @@ public class SoapProvisioning extends Provisioning {
 
     protected synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
         checkTransport();
-        
+
         String oldTarget = mTransport.getTargetAcctId();
         try {
             mTransport.setTargetAcctId(targetId);
@@ -215,10 +340,10 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setTargetAcctId(oldTarget);
         }
     }
-    
+
     synchronized Element invoke(Element request, String serverName) throws ServiceException {
         checkTransport();
-        
+
         String oldUri = soapGetURI();
         String newUri = URLUtil.getAdminURL(serverName);
         boolean diff = !oldUri.equals(newUri);        
@@ -237,7 +362,7 @@ public class SoapProvisioning extends Provisioning {
     static Map<String, Object> getAttrs(Element e) throws ServiceException {
         return getAttrs(e, AdminConstants.A_N);
     }
-    
+
     static Map<String, Object> getAttrs(Element e, String nameAttr) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Element a : e.listElements(AdminConstants.E_A)) {
@@ -248,7 +373,7 @@ public class SoapProvisioning extends Provisioning {
 
     public static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
         if (attrs == null) return;
-        
+
         for (Entry entry : attrs.entrySet()) {
             String key = (String) entry.getKey();
             Object value = entry.getValue();
@@ -261,12 +386,12 @@ public class SoapProvisioning extends Provisioning {
                 for (String v: values) {
                     Element  a = req.addElement(AdminConstants.E_A);
                     a.addAttribute(AdminConstants.A_N, key);
-                    a.setText((String)v);                    
+                    a.setText((String)v);
                 }
             } else {
                 throw ZClientException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
             }
-        }        
+        }
     }
 
     @Override
@@ -284,7 +409,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(dl.getId());
         req.addElement(AdminConstants.E_ALIAS).setText(alias);
-        invoke(req); 
+        invoke(req);
         reload(dl);
     }
 
@@ -298,9 +423,9 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AccountConstants.E_PASSWORD).setText(password);
         invoke(req);
     }
-    
+
     @Override
-    public void authAccount(Account acct, String password, String proto, Map<String, Object> context) 
+    public void authAccount(Account acct, String password, String proto, Map<String, Object> context)
             throws ServiceException {
 	authAccount(acct, password, proto);
     }
@@ -319,8 +444,8 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs) 
-        throws ServiceException 
+    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
+        throws ServiceException
     {
         XMLElement req = new XMLElement(AdminConstants.CREATE_ACCOUNT_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(emailAddress);
@@ -347,7 +472,7 @@ public class SoapProvisioning extends Provisioning {
         addAttrElements(req, attrs);
         return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
     }
-    
+
     @Override
     public Cos copyCos(String srcCosId, String destCosName)
             throws ServiceException {
@@ -404,14 +529,14 @@ public class SoapProvisioning extends Provisioning {
     public void deleteCalendarResource(String zimbraId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_CALENDAR_RESOURCE_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);        
+        invoke(req);
     }
 
     @Override
     public void deleteCos(String zimbraId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_COS_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);                
+        invoke(req);
     }
 
     @Override
@@ -425,7 +550,7 @@ public class SoapProvisioning extends Provisioning {
     public void deleteDomain(String zimbraId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_DOMAIN_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);                        
+        invoke(req);
     }
 
     @Override
@@ -442,7 +567,7 @@ public class SoapProvisioning extends Provisioning {
     public void deleteZimlet(String name) throws ServiceException {
         throw new UnsupportedOperationException();
     }
-    
+
     public static class DelegateAuthResponse {
         private ZAuthToken mAuthToken;
         private long mExpires;
@@ -459,16 +584,16 @@ public class SoapProvisioning extends Provisioning {
         public ZAuthToken getAuthToken() {
             return mAuthToken;
         }
-        
+
         public long getExpires() {
             return mExpires;
         }
-        
+
         public long getLifetime() {
             return mLifetime;
         }
     }
-    
+
     public DelegateAuthResponse delegateAuth(AccountBy keyType, String key, int durationSeconds) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELEGATE_AUTH_REQUEST);
         req.addAttribute(AdminConstants.A_DURATION, durationSeconds);
@@ -484,6 +609,16 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         return new SoapAccountInfo(invoke(req));
+    }
+
+    public ZMailbox.Options getMailboxOptions(AccountBy by, String key, int lifetimeSeconds) throws ServiceException {
+        SoapAccountInfo sai = getAccountInfo(by, key);
+        DelegateAuthResponse dar = delegateAuth(by, key, lifetimeSeconds > 0 ? lifetimeSeconds: 60*60*24);
+        return new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+    }
+
+    public ZMailbox getMailbox(AccountBy by, String key) throws ServiceException {
+        return new ZMailbox(getMailboxOptions(by, key, 60*60*24));
     }
 
     @Override
@@ -1724,45 +1859,45 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public void grantPermission(TargetType targetType, String targetId,
-            GranteeType granteeType, String granteeId, 
+            GranteeType granteeType, String granteeId,
             Right right, boolean deny) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GRANT_PERMISSION_REQUEST);
-        
+
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
         eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
         eTarget.addAttribute(AdminConstants.A_ZIMBRA_ID, targetId);
-        
+
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
         eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
         eGrantee.addAttribute(AdminConstants.A_ZIMBRA_ID, granteeId);
-        
+
         Element eRight = req.addElement(AdminConstants.E_RIGHT);
         eGrantee.addAttribute(AdminConstants.A_NAME, right.getName());
         eGrantee.addAttribute(AdminConstants.A_DENY, deny);
-        
+
         Element resp = invoke(req);
     }
-    
+
     public void revokePermission(TargetType targetType, String targetId,
-                 GranteeType granteeType, String granteeId, 
+                 GranteeType granteeType, String granteeId,
                  Right right, boolean deny) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REVOKE_PERMISSION_REQUEST);
-        
+
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
         eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
         eTarget.addAttribute(AdminConstants.A_ZIMBRA_ID, targetId);
-        
+
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
         eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
         eGrantee.addAttribute(AdminConstants.A_ZIMBRA_ID, granteeId);
-        
+
         Element eRight = req.addElement(AdminConstants.E_RIGHT);
         eGrantee.addAttribute(AdminConstants.A_NAME, right.getName());
         eGrantee.addAttribute(AdminConstants.A_DENY, deny);
-        
+
         Element resp = invoke(req);
     }
-    
+
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
         flushCache(type.name(), entries);
     }

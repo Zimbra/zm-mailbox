@@ -565,9 +565,7 @@ public class ZMailboxUtil implements DebugListener {
         mMbox = null; //make sure to null out current value so if select fails any further ops will fail
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mMailboxName = targetAccount;
-        SoapAccountInfo sai = prov.getAccountInfo(AccountBy.name, mMailboxName);
-        DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
-        ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+        ZMailbox.Options options = prov.getMailboxOptions(AccountBy.name, mMailboxName, 60*60*24);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
         options.setDebugListener(listener);

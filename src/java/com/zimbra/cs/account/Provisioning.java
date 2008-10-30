@@ -1828,7 +1828,13 @@ public abstract class Provisioning {
      * @throws ServiceException if the key is malformed
      */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
-    
+
+    public Account getAccountByName(String name) throws ServiceException { return get(AccountBy.name, name); }
+    public Account getAccountById(String id) throws ServiceException { return get(AccountBy.id, id); }
+    public Account getAccountByAppAdminName(String name) throws ServiceException { return get(AccountBy.appAdminName, name); }
+    public Account getAccountByForeignPrincipal(String name) throws ServiceException { return get(AccountBy.foreignPrincipal, name); }
+    public Account getAccountByKrb5Principal(String name) throws ServiceException { return get(AccountBy.krb5Principal, name); }
+
     /**
      * Looks up an account by the specified key.
      * 
@@ -2763,16 +2769,16 @@ public abstract class Provisioning {
     
     // permissions
     public void grantPermission(TargetType targetType, String targetId,
-                                     GranteeType granteeType, String granteeId, 
+                                     GranteeType granteeType, String granteeId,
                                      Right right, boolean deny) throws ServiceException {
         // todo: change to abstract and fix offline provisioning
     }
     public void revokePermission(TargetType targetType, String targetId,
-                                      GranteeType granteeType, String granteeId, 
+                                      GranteeType granteeType, String granteeId,
                                       Right right, boolean deny) throws ServiceException {
         // todo: change to abstract and fix offline provisioning
     }
-    
+
     public static enum CacheEntryType {
         account,
         config,

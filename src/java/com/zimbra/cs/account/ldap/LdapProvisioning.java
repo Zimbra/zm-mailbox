@@ -545,10 +545,6 @@ public class LdapProvisioning extends Provisioning {
             return null;
         }
     }
-    
-    protected Account getAccountById(String zimbraId) throws ServiceException {
-        return getAccountById(zimbraId, null, false);
-    }
 
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
         Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
