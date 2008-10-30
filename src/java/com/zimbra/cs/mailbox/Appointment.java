@@ -252,12 +252,6 @@ public class Appointment extends CalendarItem {
             octxt != null ? (CreateCalendarItemPlayer) octxt.getPlayer() : null;
 
         Account account = getMailbox().getAccount();
-        Locale lc;
-        Account organizer = invite.getOrganizerAccount();
-        if (organizer != null)
-            lc = organizer.getLocale();
-        else
-            lc = account.getLocale();
 
         String partStat = defaultPartStat;
         if (player != null) {
@@ -281,6 +275,12 @@ public class Appointment extends CalendarItem {
             boolean needReplyEmail = octxt == null;
 
             CalendarResource resource = (CalendarResource) account;
+            Locale lc;
+            Account organizer = invite.getOrganizerAccount();
+            if (organizer != null)
+                lc = organizer.getLocale();
+            else
+                lc = account.getLocale();
             if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
