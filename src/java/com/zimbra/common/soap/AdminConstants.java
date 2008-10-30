@@ -341,6 +341,11 @@ public class AdminConstants {
     public static final QName DELETE_XMPPCOMPONENT_REQUEST = QName.get("DeleteXMPPComponentRequest", NAMESPACE);
     public static final QName DELETE_XMPPCOMPONENT_RESPONSE = QName.get("DeleteXMPPComponentResponse", NAMESPACE);
     
+    public static final QName GRANT_PERMISSION_REQUEST = QName.get("GrantPermissionRequest", NAMESPACE);
+    public static final QName GRANT_PERMISSION_RESPONSE = QName.get("GrantPermissionResponse", NAMESPACE);
+    public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
+    public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -418,6 +423,7 @@ public class AdminConstants {
     public static final String E_PRINCIPAL = "principal";
     public static final String E_RIGHT = "right";
     public static final String E_TARGET = "target";
+    public static final String E_GRANTEE = "grantee";
     
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
@@ -564,6 +570,9 @@ public class AdminConstants {
     public static final String A_MT_LASTSOAPACCESS   = "lastSoapAccess";
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
+    
+    // permission
+    public static final String A_DENY = "deny";
     
     public static final String E_WAITSET = "waitSet";
 }
