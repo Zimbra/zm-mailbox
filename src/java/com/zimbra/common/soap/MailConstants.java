@@ -217,6 +217,10 @@ public class MailConstants {
     public static final QName GET_YAHOO_AUTH_TOKEN_REQUEST = QName.get("GetYahooAuthTokenRequest", NAMESPACE);
     public static final QName GET_YAHOO_AUTH_TOKEN_RESPONSE = QName.get("GetYahooAuthTokenResponse", NAMESPACE);
     
+    // autocomplete
+    public static final QName AUTO_COMPLETE_REQUEST  = QName.get("AutoCompleteRequest", NAMESPACE);
+    public static final QName AUTO_COMPLETE_RESPONSE = QName.get("AutoCompleteResponse", NAMESPACE);
+    
     
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
@@ -687,5 +691,8 @@ public class MailConstants {
     public static final String A_TYPES = "types";
     public static final String E_A = "a";
     
-    
+    public static final String A_FOLDERS = "folders";
+    public static final String A_EMAIL = "email";
+    public static final String A_RANKING = "ranking";
+    public static final String A_CANBECACHED = "cache";
 }
