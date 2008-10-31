@@ -165,26 +165,33 @@ public class TZIDMapper {
             "(GMT-05.00) Bogota / Lima / Quito");
         map("US/Eastern", "America/New_York", "(GMT-05.00) Eastern Time (US & Canada)");
         map("US/East-Indiana", "America/Jamaica", "(GMT-05.00) Indiana (East)");
+        map("America/Caracas", null, "(GMT-04.30) Caracas");
         map("Canada/Eastern", "America/Glace_Bay", "(GMT-04.00) Atlantic Time (Canada)");
-        map("America/Caracas", null, "(GMT-04.00) Caracas / La Paz");
+        map("America/Guyana", null, "(GMT-04.00) Georgetown");
+        map("America/La_Paz", null, "(GMT-04.00) La Paz",
+                "(GMT-04.00) Caracas / La Paz");
         map("America/Manaus", "America/Manaus", "(GMT-04.00) Manaus");
         map("America/Santiago", null, "(GMT-04.00) Santiago");
         map("Canada/Newfoundland", "America/St_Johns", "(GMT-03.30) Newfoundland");
         map("Brazil/East", "America/Sao_Paulo", "(GMT-03.00) Brasilia");
-        map("America/Buenos_Aires", "America/Argentina/Buenos_Aires", "(GMT-03.00) Buenos Aires / Georgetown");
+        map("America/Buenos_Aires", "America/Argentina/Buenos_Aires", "(GMT-03.00) Buenos Aires",
+                "(GMT-03.00) Buenos Aires / Georgetown");
         map("America/Godthab", null, "(GMT-03.00) Greenland");
         map("America/Montevideo", null, "(GMT-03.00) Montevideo");
         map("Atlantic/South_Georgia", null, "(GMT-02.00) Mid-Atlantic");
         map("Atlantic/Azores", null, "(GMT-01.00) Azores");
         map("Atlantic/Cape_Verde", null, "(GMT-01.00) Cape Verde Is.");
-        map("Africa/Casablanca", null, "(GMT) Casablanca / Monrovia / Reykjavik",
-            "(GMT) Casablanca / Monrovia");
+        map("Africa/Casablanca", null, "(GMT) Casablanca");
         map("Europe/London", null, "(GMT) Greenwich Mean Time - Dublin / Edinburgh / Lisbon / London");
+        map("Africa/Monrovia", null, "(GMT) Monrovia / Reykjavik",
+                "(GMT) Casablanca / Monrovia / Reykjavik",
+                "(GMT) Casablanca / Monrovia");
         map("Europe/Berlin", null, "(GMT+01.00) Amsterdam / Berlin / Bern / Rome / Stockholm / Vienna");
         map("Europe/Belgrade", null, "(GMT+01.00) Belgrade / Bratislava / Budapest / Ljubljana / Prague");
         map("Europe/Brussels", null, "(GMT+01.00) Brussels / Copenhagen / Madrid / Paris");
         map("Europe/Warsaw", null, "(GMT+01.00) Sarajevo / Skopje / Warsaw / Zagreb");
         map("Africa/Algiers", null, "(GMT+01.00) West Central Africa");
+        map("Africa/Windhoek", null, "(GMT+01.00) Windhoek");
         map("Asia/Amman", null, "(GMT+02.00) Amman");
         map("Europe/Athens", null, "(GMT+02.00) Athens / Bucharest / Istanbul",
             "(GMT+02.00) Athens / Beirut / Istanbul / Minsk",
@@ -195,7 +202,6 @@ public class TZIDMapper {
         map("Europe/Helsinki", null, "(GMT+02.00) Helsinki / Kyiv / Riga / Sofia / Tallinn / Vilnius");
         map("Asia/Jerusalem", null, "(GMT+02.00) Jerusalem");
         map("Europe/Minsk", null, "(GMT+02.00) Minsk");
-        map("Africa/Windhoek", null, "(GMT+02.00) Windhoek");
         map("Asia/Baghdad", null, "(GMT+03.00) Baghdad");
         map("Asia/Kuwait", null, "(GMT+03.00) Kuwait / Riyadh");
         map("Europe/Moscow", null, "(GMT+03.00) Moscow / St. Petersburg / Volgograd");
@@ -205,10 +211,13 @@ public class TZIDMapper {
         map("Asia/Muscat", null, "(GMT+04.00) Abu Dhabi / Muscat");
         map("Asia/Baku", null, "(GMT+04.00) Baku",
             "(GMT+04.00) Baku / Tbilisi / Yerevan");
+        map("Asia/Tbilisi", null, "(GMT+04.00) Caucasus Standard Time");
         map("Asia/Yerevan", null, "(GMT+04.00) Yerevan");
         map("Asia/Kabul", null, "(GMT+04.30) Kabul");
         map("Asia/Yekaterinburg", null, "(GMT+05.00) Ekaterinburg");
-        map("Asia/Karachi", null, "(GMT+05.00) Islamabad / Karachi / Tashkent");
+        map("Asia/Karachi", null, "(GMT+05.00) Islamabad / Karachi",
+                "(GMT+05.00) Islamabad / Karachi / Tashkent");
+        map("Asia/Tashkent", null, "(GMT+05.00) Tashkent");
         map("Asia/Calcutta", null, "(GMT+05.30) Chennai / Kolkata / Mumbai / New Delhi");
         map("Asia/Colombo", null, "(GMT+05.30) Sri Jayawardenepura",
             "(GMT+06.00) Sri Jayawardenepura");
