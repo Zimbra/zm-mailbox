@@ -5,13 +5,20 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class PermUtil {
@@ -32,7 +39,7 @@ public class PermUtil {
             return null;
     }
     
-    public static Set<ZimbraACE> grantAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static Set<ZimbraACE> grantAccess(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         for (ZimbraACE ace : aces)
             ZimbraACE.validate(ace);
         
@@ -48,14 +55,14 @@ public class PermUtil {
             granted = acl.grantAccess(aces); 
         }
         
-        serialize(target, acl);
+        serialize(prov, target, acl);
         return granted;
     }
     
     /** Removes the right granted to the specified id.  If the right 
      *  was not previously granted to the target, no error is thrown.
      */
-    public static Set<ZimbraACE> revokeAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static Set<ZimbraACE> revokeAccess(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         ZimbraACL acl = getACL(target); 
         if (acl == null)
             return null;
@@ -63,15 +70,15 @@ public class PermUtil {
         // make a copy so we don't interfere with others that are using the acl
         acl = acl.clone();
         Set<ZimbraACE> revoked = acl.revokeAccess(aces);
-        serialize(target, acl);
+        serialize(prov, target, acl);
         return revoked;
     }
     
-    private static void serialize(Entry target, ZimbraACL acl) throws ServiceException {
+    private static void serialize(Provisioning prov, Entry target, ZimbraACL acl) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraACE, acl.serialize());
         // modifyAttrs will erase cached ACL on the target
-        Provisioning.getInstance().modifyAttrs(target, attrs);
+        prov.modifyAttrs(target, attrs);
     }
     
 
@@ -156,6 +163,77 @@ public class PermUtil {
         } catch (ServiceException e) {
             return null;
         }
+    }
+    
+    //
+    // for admins
+    //
+    public static NamedEntry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
+        NamedEntry targetEntry = null;
+        
+        switch (targetType) {
+        case account:
+            targetEntry = prov.get(AccountBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(target); 
+            break;
+        case resource:
+            targetEntry = prov.get(CalendarResourceBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
+            break;
+        case distributionlist:
+            targetEntry = prov.get(DistributionListBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
+            break;
+        case domain:
+            targetEntry = prov.get(DomainBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_DOMAIN(target); 
+            break;
+        case cos:
+            targetEntry = prov.get(CosBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_COS(target); 
+            break;
+        case right:
+            throw ServiceException.FAILURE("unsupported", null);
+            // break;
+        case server:
+            targetEntry = prov.get(ServerBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_SERVER(target); 
+            break;
+        default:
+            ServiceException.INVALID_REQUEST("invallid target type for lookupTarget:" + targetType.toString(), null);
+        }
+    
+        return targetEntry;
+    }
+    
+    //
+    // for admins
+    //
+    public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
+        NamedEntry granteeEntry = null;
+        
+        switch (granteeType) {
+        case GT_USER:
+            granteeEntry = prov.get(AccountBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(grantee); 
+            break;
+        case GT_GROUP:
+            granteeEntry = prov.get(DistributionListBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null)
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
+            break;
+        default:
+            ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + granteeType.getCode(), null);
+        }
+    
+        return granteeEntry;
     }
 
 }

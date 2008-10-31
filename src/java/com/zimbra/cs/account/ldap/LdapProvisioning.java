@@ -84,6 +84,7 @@ import com.zimbra.cs.account.DomainCache;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.IDedEntryCache;
@@ -98,6 +99,13 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.PermUtil;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -138,6 +146,8 @@ public class LdapProvisioning extends Provisioning {
     private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
     
     private static LdapConfig sConfig = null;
+    
+    private static GlobalGrant sGlobalGrant = null;
     
     private static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_zimbraMailAlias,
@@ -401,6 +411,29 @@ public class LdapProvisioning extends Provisioning {
             }
         }
         return sConfig;
+    }
+    
+    public GlobalGrant getGlobalGrant() throws ServiceException
+    {
+        // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
+        if (sGlobalGrant == null) {
+            synchronized(LdapProvisioning.class) {
+                if (sGlobalGrant == null) {
+                    ZimbraLdapContext zlc = null;
+                    try {
+                        String globalGrantDn = mDIT.globalGrantDN();
+                        zlc = new ZimbraLdapContext();
+                        Attributes attrs = zlc.getAttributes(globalGrantDn);
+                        sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs);
+                    } catch (NamingException e) {
+                        throw ServiceException.FAILURE("unable to get globalgrant", e);
+                    } finally {
+                        ZimbraLdapContext.closeContext(zlc);
+                    }
+                }
+            }
+        }
+        return sGlobalGrant;
     }
 
     @Override
@@ -5182,6 +5215,54 @@ public class LdapProvisioning extends Provisioning {
             ZimbraLdapContext.closeContext(zlc);
         }
     }
+    
+    private Entry getGrantTarget(TargetType targetType, NamedEntry target) throws ServiceException {
+        Entry targetEntry;
+        
+        if (target == null) {
+            if (targetType == TargetType.config)
+                targetEntry = getConfig();
+            else if (targetType == TargetType.global)
+                targetEntry = getGlobalGrant();
+            else
+                throw ServiceException.INVALID_REQUEST("missing target", null);
+        } else {
+            // target should be null for target types that are at a fixed, unique location 
+            if (!targetType.needsTargetIdentity())
+                throw ServiceException.INVALID_REQUEST("missing target", null);
+            
+            targetEntry = target;
+        }
+        return targetEntry;
+    }
+    
+    @Override
+    public void grantPermission(TargetType targetType, NamedEntry target,
+                                GranteeType granteeType, NamedEntry grantee, 
+                                Right right, boolean deny) throws ServiceException {
+        
+        Entry targetEntry = getGrantTarget(targetType, target);
+        
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        ZimbraACE ace = new ZimbraACE(grantee.getId(), granteeType, right, deny, null);
+        aces.add(ace);
+        
+        PermUtil.grantAccess(this, targetEntry, aces);
+    }
+
+    @Override
+    public void revokePermission(TargetType targetType, NamedEntry target,
+                                 GranteeType granteeType, NamedEntry grantee, 
+                                 Right right, boolean deny) throws ServiceException {
+        Entry targetEntry = getGrantTarget(targetType, target);
+        
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        ZimbraACE ace = new ZimbraACE(grantee.getId(), granteeType, right, deny, null);
+        aces.add(ace);
+        
+        PermUtil.revokeAccess(this, targetEntry, aces);
+    }
+
     
     public long countAccounts(String domain) throws ServiceException {
         String query = LdapFilter.allNonSystemAccounts();

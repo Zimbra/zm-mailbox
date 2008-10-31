@@ -1858,43 +1858,46 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
     }
 
-    public void grantPermission(TargetType targetType, String targetId,
-            GranteeType granteeType, String granteeId,
-            Right right, boolean deny) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GRANT_PERMISSION_REQUEST);
-
+    //
+    // permissions
+    //
+    
+    private void encodePermReq(Element req,
+                               TargetType targetType, NamedEntry target,
+                               GranteeType granteeType, NamedEntry grantee, 
+                               Right right, boolean deny) {
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
         eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
-        eTarget.addAttribute(AdminConstants.A_ZIMBRA_ID, targetId);
-
+        if (target != null) {
+            eTarget.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
+            eTarget.setText(target.getId());
+        }
+        
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
         eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
-        eGrantee.addAttribute(AdminConstants.A_ZIMBRA_ID, granteeId);
-
+        eGrantee.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
+        eGrantee.setText(grantee.getId());
+        
         Element eRight = req.addElement(AdminConstants.E_RIGHT);
-        eGrantee.addAttribute(AdminConstants.A_NAME, right.getName());
-        eGrantee.addAttribute(AdminConstants.A_DENY, deny);
-
+        eRight.addAttribute(AdminConstants.A_DENY, deny);
+        eRight.setText(right.getName());
+    }
+    
+    @Override
+    public void grantPermission(TargetType targetType, NamedEntry target,
+                                GranteeType granteeType, NamedEntry grantee, 
+                                Right right, boolean deny) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GRANT_PERMISSION_REQUEST);
+        encodePermReq(req, targetType, target, granteeType, grantee, right, deny);
         Element resp = invoke(req);
     }
-
-    public void revokePermission(TargetType targetType, String targetId,
-                 GranteeType granteeType, String granteeId,
-                 Right right, boolean deny) throws ServiceException {
+    
+    @Override
+    public void revokePermission(TargetType targetType, NamedEntry target,
+                                 GranteeType granteeType, NamedEntry grantee, 
+                                 Right right, boolean deny) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REVOKE_PERMISSION_REQUEST);
-
-        Element eTarget = req.addElement(AdminConstants.E_TARGET);
-        eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
-        eTarget.addAttribute(AdminConstants.A_ZIMBRA_ID, targetId);
-
-        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
-        eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
-        eGrantee.addAttribute(AdminConstants.A_ZIMBRA_ID, granteeId);
-
-        Element eRight = req.addElement(AdminConstants.E_RIGHT);
-        eGrantee.addAttribute(AdminConstants.A_NAME, right.getName());
-        eGrantee.addAttribute(AdminConstants.A_DENY, deny);
-
+        encodePermReq(req, targetType, target, granteeType, grantee, right, deny);
         Element resp = invoke(req);
     }
 

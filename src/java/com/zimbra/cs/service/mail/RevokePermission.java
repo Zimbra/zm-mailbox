@@ -8,11 +8,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RevokePermission extends GrantPermission {
+public class RevokePermission extends MailDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -24,11 +25,12 @@ public class RevokePermission extends GrantPermission {
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         for (Element eACE : request.listElements(MailConstants.E_ACE)) {
-            ZimbraACE ace = handleACE(eACE, zsc);
+            ZimbraACE ace = GrantPermission.handleACE(eACE, zsc);
             aces.add(ace);
         }
 
-        Set<ZimbraACE> revoked = PermUtil.revokeAccess(account, aces);
+        // TODO, change to Provisioning.grantPermission?
+        Set<ZimbraACE> revoked = PermUtil.revokeAccess(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.REVOKE_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : revoked)

@@ -79,7 +79,7 @@
     
 <objectclass id="7" name="zimbraMailRecipient" type="AUXILIARY">
   <sup>top</sup>
-  <desc>Account object</desc>
+  <desc>Mail recipient object</desc>
   <comment>
     zimbraMailRecipient is used to represent entries in the directory
     that can receive mail. i.e., they have a visible external address, that
@@ -206,6 +206,14 @@
   <comment>
     zimbraXMPPComponent defines information about routable XMPP services such as conference
     rooms, file transfer servies, etc
+  </comment>
+</objectclass>
+
+<objectclass id="23" name="zimbraAclTarget" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>acl target</desc>
+  <comment>
+    target entries on which rights(acl) can be granted
   </comment>
 </objectclass>
 

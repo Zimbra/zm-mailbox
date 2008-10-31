@@ -201,6 +201,8 @@ public class AdminService implements DocumentService {
         
         // permissions
         dispatcher.registerHandler(AdminConstants.CHECK_PERMISSION_REQUEST, new CheckPermission());
+        dispatcher.registerHandler(AdminConstants.GRANT_PERMISSION_REQUEST, new GrantPermission());
+        dispatcher.registerHandler(AdminConstants.REVOKE_PERMISSION_REQUEST, new RevokePermission());
         
         // admin wait set
         dispatcher.registerHandler(AdminConstants.ADMIN_CREATE_WAIT_SET_REQUEST, new AdminCreateWaitSetRequest());        

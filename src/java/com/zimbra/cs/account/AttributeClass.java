@@ -42,7 +42,8 @@ public enum AttributeClass {
     pop3DataSource("zimbraPop3DataSource"), 
     imapDataSource("zimbraImapDataSource"),
     signature("zimbraSignature"),
-    xmppComponent("zimbraXMPPComponent")
+    xmppComponent("zimbraXMPPComponent"),
+    aclTarget("zimbraAclTarget"),
     ;
     
     private static class TM {

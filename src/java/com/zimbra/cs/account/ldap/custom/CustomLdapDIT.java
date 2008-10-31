@@ -87,6 +87,7 @@ public class CustomLdapDIT extends LdapDIT {
         
         public static final KnownKey ldap_dit_naming_rdn_attr_cos          = new KnownKey("ldap_dit_naming_rdn_attr_cos",          "", "LDAP Custom DIT RDN attr for cos entries");
         public static final KnownKey ldap_dit_naming_rdn_attr_globalconfig = new KnownKey("ldap_dit_naming_rdn_attr_globalconfig", "", "LDAP Custom DIT RDN attr for globalconfig entry");
+        public static final KnownKey ldap_dit_naming_rdn_attr_globalgrant  = new KnownKey("ldap_dit_naming_rdn_attr_globalgrant",  "", "LDAP Custom DIT RDN attr for globalgrant entry");
         public static final KnownKey ldap_dit_naming_rdn_attr_mime         = new KnownKey("ldap_dit_naming_rdn_attr_mime",         "", "LDAP Custom DIT RDN attr for mime entries");
         public static final KnownKey ldap_dit_naming_rdn_attr_server       = new KnownKey("ldap_dit_naming_rdn_attr_server",       "", "LDAP Custom DIT RDN attr for server entries");
         public static final KnownKey ldap_dit_naming_rdn_attr_user         = new KnownKey("ldap_dit_naming_rdn_attr_user",         "", "LDAP Custom DIT RDN attr for account, calendar resource, and distribution list entries");
@@ -124,12 +125,14 @@ public class CustomLdapDIT extends LdapDIT {
         NAMING_RDN_ATTR_USER          = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_user,         DEFAULT_NAMING_RDN_ATTR_USER);
         NAMING_RDN_ATTR_COS           = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_cos,          DEFAULT_NAMING_RDN_ATTR_COS);
         NAMING_RDN_ATTR_GLOBALCONFIG  = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_globalconfig, DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
+        NAMING_RDN_ATTR_GLOBALGRANT   = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_globalgrant,  DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT);
         NAMING_RDN_ATTR_MIME          = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_mime,         DEFAULT_NAMING_RDN_ATTR_MIME);
         NAMING_RDN_ATTR_SERVER        = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_server,       DEFAULT_NAMING_RDN_ATTR_SERVER);
         NAMING_RDN_ATTR_XMPPCOMPONENT = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_xmppcomponent,DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT);
         NAMING_RDN_ATTR_ZIMLET        = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_zimlet,       DEFAULT_NAMING_RDN_ATTR_ZIMLET);
        
-        DN_GLOBALCONFIG   = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
+        DN_GLOBALCONFIG    = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH;
+        DN_GLOBALGRANT     = NAMING_RDN_ATTR_GLOBALGRANT  + "=globalgrant" + "," + BASE_DN_CONFIG_BRANCH;
 
         BASE_DN_ADMIN         = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_admin,         DEFAULT_BASE_RDN_ADMIN         + "," + BASE_DN_CONFIG_BRANCH);
         BASE_DN_APPADMIN      = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_appadmin,      DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH);

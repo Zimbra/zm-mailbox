@@ -31,6 +31,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -89,13 +90,14 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
     
     
-    protected final String DEFAULT_NAMING_RDN_ATTR_USER          = "uid";
-    protected final String DEFAULT_NAMING_RDN_ATTR_COS           = "cn";
-    protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG  = "cn";
-    protected final String DEFAULT_NAMING_RDN_ATTR_MIME          = "cn";
-    protected final String DEFAULT_NAMING_RDN_ATTR_SERVER        = "cn";
-    protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT = "cn";
-    protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET        = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_USER             = "uid";
+    protected final String DEFAULT_NAMING_RDN_ATTR_COS              = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG     = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT      = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_MIME             = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_SERVER           = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT    = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET           = "cn";
     
     /*
      * Variables that has to be set in the init method
@@ -117,15 +119,17 @@ public class LdapDIT {
      
     protected String NAMING_RDN_ATTR_USER;
     protected String NAMING_RDN_ATTR_COS;
+    
     protected String NAMING_RDN_ATTR_GLOBALCONFIG;
+    protected String NAMING_RDN_ATTR_GLOBALGRANT;
     protected String NAMING_RDN_ATTR_MIME;
     protected String NAMING_RDN_ATTR_SERVER;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
     protected String NAMING_RDN_ATTR_ZIMLET;    
 
     protected String DN_GLOBALCONFIG;
-
-
+    protected String DN_GLOBALGRANT;
+    
     public LdapDIT(LdapProvisioning prov) {
         // our Provisioning instance
         mProv = prov;  
@@ -140,15 +144,17 @@ public class LdapDIT {
 
         BASE_RDN_ACCOUNT  = DEFAULT_BASE_RDN_ACCOUNT;
 
-        NAMING_RDN_ATTR_USER      = DEFAULT_NAMING_RDN_ATTR_USER;
+        NAMING_RDN_ATTR_USER          = DEFAULT_NAMING_RDN_ATTR_USER;
         NAMING_RDN_ATTR_COS           = DEFAULT_NAMING_RDN_ATTR_COS;
         NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
+        NAMING_RDN_ATTR_GLOBALGRANT   = DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
         NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
         NAMING_RDN_ATTR_XMPPCOMPONENT = DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT;
         NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
         
         DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
+        DN_GLOBALGRANT       = NAMING_RDN_ATTR_GLOBALGRANT  + "=globalgrant" + "," + BASE_DN_CONFIG_BRANCH; 
        
         BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN         + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_APPADMIN     = DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH;
@@ -170,6 +176,7 @@ public class LdapDIT {
             NAMING_RDN_ATTR_USER == null ||
             NAMING_RDN_ATTR_COS == null ||
             NAMING_RDN_ATTR_GLOBALCONFIG == null ||
+            NAMING_RDN_ATTR_GLOBALGRANT == null ||
             NAMING_RDN_ATTR_MIME == null ||
             NAMING_RDN_ATTR_SERVER == null ||
             NAMING_RDN_ATTR_ZIMLET == null ||
@@ -180,7 +187,8 @@ public class LdapDIT {
             BASE_DN_SERVER == null ||
             BASE_DN_XMPPCOMPONENT == null ||
             BASE_DN_ZIMLET == null ||
-            DN_GLOBALCONFIG == null)
+            DN_GLOBALCONFIG == null ||
+            DN_GLOBALGRANT == null)
             Zimbra.halt("Unable to initialize LDAP DIT");
     }
     
@@ -421,7 +429,6 @@ public class LdapDIT {
             return BASE_RDN_ACCOUNT + "," + domainDN;
     }
     
-    
     /*
      * ==============
      *   globalconfig
@@ -429,6 +436,15 @@ public class LdapDIT {
      */
     public String configDN() {
         return DN_GLOBALCONFIG;
+    }
+    
+    /*
+     * =====================
+     *   globalgrant
+     * =====================
+     */
+    public String globalGrantDN() {
+        return DN_GLOBALGRANT;
     }
 
    
@@ -518,6 +534,8 @@ public class LdapDIT {
             return Provisioning.A_dc;
         else if (entry instanceof Identity)
             return Provisioning.A_zimbraPrefIdentityName;   
+        else if (entry instanceof GlobalGrant) 
+            return NAMING_RDN_ATTR_GLOBALGRANT;
         else if (entry instanceof Server)
             return NAMING_RDN_ATTR_SERVER;
         else if (entry instanceof Zimlet)

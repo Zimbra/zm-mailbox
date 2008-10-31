@@ -58,12 +58,15 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -222,15 +225,19 @@ public class ProvUtil implements DebugListener {
             // target types
             System.out.println();
             StringBuilder tt = new StringBuilder();
+            StringBuilder ttNeedsTargetIdentity = new StringBuilder();
             TargetType[] tts = TargetType.values();
             for (int i = 0; i < tts.length; i++) {
                 if (i > 0)
                     tt.append(", ");
                 tt.append(tts[i].getCode());
+                
+                if (tts[i].needsTargetIdentity())
+                    ttNeedsTargetIdentity.append(tts[i].getCode() + " ");
             }
             System.out.println("    target-type = " + tt.toString());
-            System.out.println("        {target-id|target-name} is required if target-type is not all***");
-            System.out.println("        {target-id|target-name} should not be specified if target-type is all***");
+            System.out.println("        {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity + ",");
+            System.out.println("        otherwise {target-id|target-name} should not be specified");
             
             // grantee types
             System.out.println();
@@ -247,7 +254,7 @@ public class ProvUtil implements DebugListener {
             
             // rights
             System.out.println();
-            System.out.println("    right:");
+            System.out.println("    right: (if right is prefixed with a '-', it means negative right, i.e., specifically deny)");
             for (Right r : RightManager.getInstance().getAllAdminRights().values()) {
                 System.out.println("        " + r.getName());
             }
@@ -319,7 +326,7 @@ public class ProvUtil implements DebugListener {
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-        GRANT_PERMISSION("grantPermission", "gp", "{target-type} [{target-id|target-name}] {[-]right} {grantee-type} {grantee-id|grantee-name}", Category.PERMISSION, 4, 5),
+        GRANT_PERMISSION("grantPermission", "gp", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.PERMISSION, 4, 5),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -347,7 +354,7 @@ public class ProvUtil implements DebugListener {
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
-        REVOKE_PERMISSION("revokePermission", "rp", "{target-type} [{target-id|target-name}] {[-]right} {grantee-type} {grantee-id|grantee-name}", Category.PERMISSION, 4, 5),
+        REVOKE_PERMISSION("revokePermission", "rp", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.PERMISSION, 4, 5),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -2035,6 +2042,18 @@ public class ProvUtil implements DebugListener {
         return SignatureBy.name;
     }
     
+    public static TargetBy guessTargetBy(String value) {
+        if (Provisioning.isUUID(value))
+            return TargetBy.id;
+        return TargetBy.name;
+    }
+    
+    public static GranteeBy guessGranteeBy(String value) {
+        if (Provisioning.isUUID(value))
+            return GranteeBy.id;
+        return GranteeBy.name;
+    }
+    
     
     private Map<String, Object> getMap(String[] args, int offset) throws ArgException {
         try {
@@ -2415,10 +2434,10 @@ public class ProvUtil implements DebugListener {
     static private class PermissionArgs {
         TargetType mTargetType;
         String mTargetIdOrName;
-        boolean mDeny;
-        Right mRight;
         GranteeType mGranteeType;
         String mGranteeIdOrName;
+        Right mRight;
+        boolean mDeny;
     }
     
     private PermissionArgs getPermissionArgs(String[] args) throws ServiceException {
@@ -2428,59 +2447,78 @@ public class ProvUtil implements DebugListener {
         String targetType = args[1];
         TargetType tt = TargetType.fromString(targetType);
         String targetIdOrName = null;
-        boolean deny = false;
-        String right = null;
-        Right rt = null;
         String granteeType = null;
         GranteeType gt = null;
         String granteeIdOrName = null;
+        boolean deny = false;
+        String right = null;
+        Right rt = null;
         
-        if (tt == TargetType.allcos || 
-            tt == TargetType.alldomains ||
-            tt == TargetType.allrights ||
-            tt == TargetType.allservers) {
-            if (args.length != 5) {
-                usage();
-                return null;
-            } else
-                argBase = 2;
-        } else {
+        if (tt.needsTargetIdentity()) {
             if (args.length != 6) {
                 usage();
                 return null;
             } else
                 targetIdOrName = args[2];
+        } else {
+            if (args.length != 5) {
+                usage();
+                return null;
+            } else
+                argBase = 2;
         }
         
-        right = args[argBase++];
         granteeType = args[argBase++];
         granteeIdOrName = args[argBase++];
+        right = args[argBase++];
+        
+        gt = GranteeType.fromCode(granteeType);
             
-        if ("-".equals(right.charAt(0))) {
+        if (right.charAt(0) == '-') {
             deny = true;
             right = right.substring(1);
         }
         rt = RightManager.getInstance().getRight(right);
-        gt = GranteeType.fromCode(granteeType);
         
         PermissionArgs pa = new PermissionArgs();
         pa.mTargetType = tt;
         pa.mTargetIdOrName = targetIdOrName;
-        pa.mDeny = deny;
-        pa.mRight = rt;
         pa.mGranteeType = gt;
         pa.mGranteeIdOrName = granteeIdOrName;
+        pa.mRight = rt;
+        pa.mDeny = deny;
         
         return pa;
-        
     }
     
     private void doGrantPermission(String[] args) throws ServiceException {
         PermissionArgs pa = getPermissionArgs(args);
+        
+        NamedEntry targetEntry = null;
+        if (pa.mTargetIdOrName != null) {
+            TargetBy targetBy = guessTargetBy(pa.mTargetIdOrName);
+            targetEntry = PermUtil.lookupTarget(mProv, pa.mTargetType, targetBy, pa.mTargetIdOrName);
+        }
+        
+        GranteeBy granteeBy = guessGranteeBy(pa.mGranteeIdOrName);
+        NamedEntry granteeEntry = PermUtil.lookupGrantee(mProv, pa.mGranteeType, granteeBy, pa.mGranteeIdOrName);
+    
+        mProv.grantPermission(pa.mTargetType, targetEntry, pa.mGranteeType, granteeEntry, pa.mRight, pa.mDeny);
     }
     
     private void doRevokePermission(String[] args) throws ServiceException {
         PermissionArgs pa = getPermissionArgs(args);
+
+        NamedEntry targetEntry = null;
+        if (pa.mTargetIdOrName != null) {
+            TargetBy targetBy = guessTargetBy(pa.mTargetIdOrName);
+            targetEntry = PermUtil.lookupTarget(mProv, pa.mTargetType, targetBy, pa.mTargetIdOrName);
+        }
+        
+        GranteeBy granteeBy = guessGranteeBy(pa.mGranteeIdOrName);
+        NamedEntry granteeEntry = PermUtil.lookupGrantee(mProv, pa.mGranteeType, granteeBy, pa.mGranteeIdOrName);
+    
+        mProv.revokePermission(pa.mTargetType, targetEntry, pa.mGranteeType, granteeEntry, pa.mRight, pa.mDeny);
     }
     
     private void doHelp(String[] args) {

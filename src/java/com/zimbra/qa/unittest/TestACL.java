@@ -310,7 +310,7 @@ public class TestACL extends TestCase {
         aces.add(newUsrACE(goodguy, UserRight.RT_invite, false));
         aces.add(newUsrACE(badguy, UserRight.RT_viewFreeBusy, true));
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // self should always be allowed
         verify(target, target, UserRight.RT_invite, true);
@@ -353,7 +353,7 @@ public class TestACL extends TestCase {
         Account target = prov.createAccount(getEmailAddr("testGranteeAllAuthUser-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newAllACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // zimbra user should be allowed
         verify(zimbra, target, UserRight.RT_viewFreeBusy, true);
@@ -384,7 +384,7 @@ public class TestACL extends TestCase {
         Account target = prov.createAccount(getEmailAddr("testGranteeGuest-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // right allowed for PUB
         verify(guest, target, UserRight.RT_viewFreeBusy, true);
@@ -419,7 +419,7 @@ public class TestACL extends TestCase {
         aces.add(newKeyACE(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, null, UserRight.RT_viewFreeBusy, false));
         aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, UserRight.RT_viewFreeBusy, true));
         aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED, null, UserRight.RT_viewFreeBusy, true));
-        Set<ZimbraACE> grantedAces = PermUtil.grantAccess(target, aces);
+        Set<ZimbraACE> grantedAces = PermUtil.grantAccess(prov, target, aces);
         
         /*
          * get generated accesskey to build our test accounts
@@ -453,7 +453,7 @@ public class TestACL extends TestCase {
          * add a pub grant
          */
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         /*
          * verify the effect
@@ -470,7 +470,7 @@ public class TestACL extends TestCase {
         aces.clear();
         aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, "doesn't matter", UserRight.RT_viewFreeBusy, true));
         aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED, null, UserRight.RT_viewFreeBusy, true));
-        PermUtil.revokeAccess(target, aces);
+        PermUtil.revokeAccess(prov, target, aces);
         
         /*
          * now everybody should be allowed
@@ -496,7 +496,7 @@ public class TestACL extends TestCase {
         aces.add(newUsrACE(user1, UserRight.RT_viewFreeBusy, false));
         
         try {
-            Set<ZimbraACE> grantedAces = PermUtil.grantAccess(target, aces);
+            Set<ZimbraACE> grantedAces = PermUtil.grantAccess(prov, target, aces);
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.INVALID_REQUEST)) {
                 // make sure nothing is granted, including the good ones
@@ -524,7 +524,7 @@ public class TestACL extends TestCase {
         Account target = prov.createAccount(getEmailAddr("testGranteeAnon-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // anon grantee
         verify(anon, target, UserRight.RT_viewFreeBusy, true);
@@ -558,7 +558,7 @@ public class TestACL extends TestCase {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(user1, UserRight.RT_viewFreeBusy, true));
         aces.add(newGrpACE(groupA, UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // group member, but account is specifically denied
         verify(user1, target, UserRight.RT_viewFreeBusy, false);
@@ -619,7 +619,7 @@ public class TestACL extends TestCase {
         aces.add(newGrpACE(G4, UserRight.RT_viewFreeBusy, true));
         aces.add(newGrpACE(G5, UserRight.RT_viewFreeBusy, false));
         aces.add(newGrpACE(G6, UserRight.RT_viewFreeBusy, true));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         verify(user1, target, UserRight.RT_viewFreeBusy, false);
     }
@@ -673,7 +673,7 @@ public class TestACL extends TestCase {
         Account target = prov.createAccount(getEmailAddr("testDefaultWithNonEmptyACL-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(zimbraUser, rightGranted, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify callsite default is honored for not granted right
         verifyDefault(zimbraUser, target, rightNotGranted);
@@ -700,7 +700,7 @@ public class TestACL extends TestCase {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(conflict, UserRight.RT_viewFreeBusy, true));
         aces.add(newUsrACE(conflict, UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify that only one is added 
         Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
@@ -722,7 +722,7 @@ public class TestACL extends TestCase {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(duplicate, UserRight.RT_viewFreeBusy, true));
         aces.add(newUsrACE(duplicate, UserRight.RT_viewFreeBusy, true));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify that only one is added 
         Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
@@ -747,7 +747,7 @@ public class TestACL extends TestCase {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(user, UserRight.RT_viewFreeBusy, true));
         aces.add(newGrpACE(group, UserRight.RT_viewFreeBusy, true));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify the grants were added
         Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
@@ -756,7 +756,7 @@ public class TestACL extends TestCase {
         // grant some more
         aces.clear();
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify the grants were added
         acl = PermUtil.getACEs(target, null);
@@ -765,7 +765,7 @@ public class TestACL extends TestCase {
         // grant some more
         aces.clear();
         aces.add(newAllACE(UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify the grants were added
         acl = PermUtil.getACEs(target, null);
@@ -789,7 +789,7 @@ public class TestACL extends TestCase {
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(user, UserRight.RT_loginAs, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify the grant was added
         Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
@@ -819,7 +819,7 @@ public class TestACL extends TestCase {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(user, UserRight.RT_invite, false));
         aces.add(newUsrACE(user, UserRight.RT_viewFreeBusy, false));
-        PermUtil.grantAccess(target, aces);
+        PermUtil.grantAccess(prov, target, aces);
         
         // verify the grant was added
         Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
@@ -829,7 +829,7 @@ public class TestACL extends TestCase {
         // revoke one right
         Set<ZimbraACE> acesToRevoke = new HashSet<ZimbraACE>();
         acesToRevoke.add(newUsrACE(user, UserRight.RT_invite, false));
-        PermUtil.revokeAccess(target, acesToRevoke);
+        PermUtil.revokeAccess(prov, target, acesToRevoke);
         
         // verify the grant was removed
         acl = PermUtil.getACEs(target, null);
@@ -842,7 +842,7 @@ public class TestACL extends TestCase {
         // revoke the other right
         acesToRevoke = new HashSet<ZimbraACE>();
         acesToRevoke.add(newUsrACE(user, UserRight.RT_viewFreeBusy, false));
-        PermUtil.revokeAccess(target, acesToRevoke);
+        PermUtil.revokeAccess(prov, target, acesToRevoke);
         
         // verify all right are gone
         verifyDefault(user, target, UserRight.RT_invite);
@@ -853,7 +853,7 @@ public class TestACL extends TestCase {
         // revoke non-existing right, make sure we don't crash
         acesToRevoke = new HashSet<ZimbraACE>();
         acesToRevoke.add(newUsrACE(user, UserRight.RT_invite, false));
-        PermUtil.revokeAccess(target, acesToRevoke);
+        PermUtil.revokeAccess(prov, target, acesToRevoke);
     }
 
 

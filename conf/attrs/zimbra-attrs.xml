@@ -157,7 +157,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="company" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry,xmppComponent" flags="domainAdminModifiable,accountInfo"/>
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry,xmppComponent,aclTarget" flags="domainAdminModifiable,accountInfo"/>
 
 <attr name="displayName" type="string" optionalIn="account,distributionList" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName"/>
 
@@ -165,7 +165,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="givenName" type="string" flags="domainAdminModifiable"/>
 
-<attr name="description" type="string" optionalIn="account,distributionList,cos,domain,server,mimeEntry,objectEntry" flags="domainAdminModifiable"/>
+<attr name="description" type="string" optionalIn="account,distributionList,cos,domain,server,mimeEntry,objectEntry,aclTarget" flags="domainAdminModifiable"/>
 
 <attr name="initials" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
@@ -3210,7 +3210,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Yahoo ID</desc>
 </attr>
 
-<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,calendarResource">
+<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,aclTarget">
   <desc>Zimbra access control list</desc>
 </attr>
 
