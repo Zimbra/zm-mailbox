@@ -37,10 +37,6 @@ public class ZSearchResult implements ToZJSONObject {
     private String mSortBy;
     private int mOffset;
 
-    private ZSearchResult(Element e) throws ServiceException {
-        init(e, e, null);
-    }
-
     public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
             init(e, e, tz);

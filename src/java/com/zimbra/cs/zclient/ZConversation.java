@@ -74,8 +74,9 @@ public class ZConversation implements ZItem, ToZJSONObject {
     private String mTags;
     private int mMessageCount;
     private List<ZMessageSummary> mMessageSummaries;
+    private ZMailbox mMailbox;
         
-    public ZConversation(Element e) throws ServiceException {
+    public ZConversation(Element e, ZMailbox mailbox) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTags = e.getAttribute(MailConstants.A_TAGS, null);
@@ -106,14 +107,18 @@ public class ZConversation implements ZItem, ToZJSONObject {
         return mId;
     }
 
+    public ZMailbox getMailbox() {
+        return mMailbox;
+    }
+
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
-        jo.put("tags", mTags);
+        jo.put("tagIds", mTags);
         jo.put("flags", mFlags);
         jo.put("subject", mSubject);
         jo.put("messageCount", mMessageCount);
-        jo.put("messages", mMessageSummaries);
+        jo.put("messageSummaries", mMessageSummaries);
         return jo;
     }
 
@@ -193,6 +198,19 @@ public class ZConversation implements ZItem, ToZJSONObject {
             jo.put("size", mSize);
             jo.put("sender", mSender);
             jo.put("date", mDate);
+            jo.put("hasAttachment", hasAttachment());
+            jo.put("hasFlags", hasFlags());
+            jo.put("hasTags", hasTags());
+            jo.put("isDeleted", isDeleted());
+            jo.put("isDraft", isDraft());
+            jo.put("isFlagged", isFlagged());
+            jo.put("isHighPriority", isHighPriority());
+            jo.put("isLowPriority", isLowPriority());
+            jo.put("isForwarded", isForwarded());
+            jo.put("isNotificationSent", isNotificationSent());
+            jo.put("isRepliedTo", isRepliedTo());
+            jo.put("isSentByMe", isSentByMe());
+            jo.put("isUnread", isUnread());
             return jo;
         }
 
@@ -333,4 +351,59 @@ public class ZConversation implements ZItem, ToZJSONObject {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.lowPriority.getFlagChar()) != -1;
     }
 
+    public void delete(String tc) throws ServiceException {
+        getMailbox().deleteConversation(getId(), tc);
+    }
+
+    public void deleteItem(String tc) throws ServiceException {
+        delete(tc);
+    }
+
+    public void trash(String tc) throws ServiceException {
+        getMailbox().trashConversation(getId(), tc);
+    }
+
+    public void markRead(boolean read, String tc) throws ServiceException {
+        getMailbox().markConversationRead(getId(), read, tc);
+    }
+
+    public void flag(boolean flag, String tc) throws ServiceException {
+        getMailbox().flagConversation(getId(), flag, tc);
+    }
+
+    public void tag(String nameOrId, boolean tagged, String tc) throws ServiceException {
+        ZTag tag = mMailbox.getTag(nameOrId);
+        if (tag == null)
+            throw ZClientException.CLIENT_ERROR("unknown tag: "+nameOrId, null);
+        else
+           tag(tag, tagged, tc);
+    }
+
+    public void tag(ZTag tag, boolean tagged, String tc) throws ServiceException {
+        mMailbox.tagConversation(mId, tag.getId(), tagged, tc);
+    }
+
+    public void move(String pathOrId, String tc) throws ServiceException {
+        ZFolder destFolder = mMailbox.getFolder(pathOrId);
+        if (destFolder == null)
+            throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        else
+            move(destFolder, tc);
+    }
+
+    public void move(ZFolder destFolder, String tc) throws ServiceException {
+        mMailbox.moveConversation(mId, destFolder.getId(), tc);
+    }
+
+    public void markSpam(boolean spam, String pathOrId, String tc) throws ServiceException {
+        ZFolder destFolder = mMailbox.getFolder(pathOrId);
+        if (destFolder == null)
+            throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        else
+            markSpam(spam, destFolder, tc);
+    }
+
+    public void markSpam(boolean spam, ZFolder destFolder, String tc) throws ServiceException {
+        getMailbox().markConversationSpam(getId(), spam, destFolder == null ? null : destFolder.getId(), tc);
+    }
 }

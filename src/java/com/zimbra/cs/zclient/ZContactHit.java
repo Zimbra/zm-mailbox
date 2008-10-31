@@ -43,7 +43,7 @@ public class ZContactHit implements ZSearchHit {
     private long mMetaDataDate;
     private long mDate;
     private String mFullName;
-        
+
     public ZContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);

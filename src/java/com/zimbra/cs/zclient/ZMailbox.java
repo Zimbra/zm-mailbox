@@ -88,6 +88,7 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
+import org.json.JSONException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -111,7 +112,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ZMailbox {
+public class ZMailbox implements ToZJSONObject {
 
     static {
         if (LC.ssl_allow_untrusted_certs.booleanValue())
@@ -1471,7 +1472,7 @@ public class ZMailbox {
             // use "1" for "first" for backward compat until DF is updated
             convEl.addAttribute(MailConstants.A_FETCH, fetch == Fetch.first ? "1" : fetch.name());
         }
-        return new ZConversation(invoke(req).getElement(MailConstants.E_CONV));
+        return new ZConversation(invoke(req).getElement(MailConstants.E_CONV), this);
     }
 
     /** include items in the Trash folder */
@@ -1978,7 +1979,7 @@ public class ZMailbox {
             msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
             msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
             msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
-            ZMessage zm = new ZMessage(invoke(req).getElement(MailConstants.E_MSG));
+            ZMessage zm = new ZMessage(invoke(req).getElement(MailConstants.E_MSG), this);
             cm = new CachedMessage();
             cm.zm = zm;
             cm.params = params;
@@ -3263,7 +3264,7 @@ public class ZMailbox {
             m.addAttribute(MailConstants.A_FOLDER, folderId);
 
 		String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
-        return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG));
+        return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
     }
 
 	public static class CheckSpellingResult {
@@ -4366,5 +4367,31 @@ public class ZMailbox {
             result.add(new ZAce(a));
         }
         return result;
+    }
+
+    public String toString() {
+        try {
+            return String.format("[ZMailbox %s]", getName());
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ZJSONObject toZJSONObject() throws JSONException {
+        try {
+            ZJSONObject jo = new ZJSONObject();
+            jo.put("name", getName());
+            jo.put("size", mSize);
+            jo.put("hasTags", hasTags());
+            jo.put("userRoot", getUserRoot());
+            jo.put("tags", getAllTags());
+            return jo;
+        } catch (ServiceException se) {
+            throw new JSONException(se);
+        }
+    }
+    
+    public String dump() {
+        return ZJSONObject.toString(this);
     }
 }

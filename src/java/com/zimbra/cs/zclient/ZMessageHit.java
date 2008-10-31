@@ -78,7 +78,7 @@ public class ZMessageHit implements ZSearchHit {
 
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
         if (mp != null) {
-            mMessage = new ZMessage(e);
+            mMessage = new ZMessage(e, null); // TODO: pass in ref
         }
         mIsInvite = e.getOptionalElement(MailConstants.E_INVITE) != null;
     }

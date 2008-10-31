@@ -23,6 +23,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import org.json.JSONException;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Function;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,8 +94,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
     private String mOrigId;
     private ZInvite mInvite;
     private ZShare mShare;
+    private ZMailbox mMailbox;
         
-    public ZMessage(Element e) throws ServiceException {
+    public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
+        mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTags = e.getAttribute(MailConstants.A_TAGS, null);
@@ -149,10 +154,13 @@ public class ZMessage implements ZItem, ToZJSONObject {
         }
     }
 
+    public ZMailbox getMailbox() {
+        return mMailbox;
+    }
+
     public  ZShare getShare() {
         return mShare;
     }
-
 
     /**
      *
@@ -206,7 +214,9 @@ public class ZMessage implements ZItem, ToZJSONObject {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", mId);
         zjo.put("flags", mFlags);
-        zjo.put("tags", mTags);
+        zjo.put("tagIds", mTags);
+        zjo.put("inReplyTo", mInReplyTo);
+        zjo.put("originalId", mOrigId);
         zjo.put("subject", mSubject);
         zjo.put("fragment", mFragment);
         zjo.put("partName", mPartName);
@@ -222,6 +232,20 @@ public class ZMessage implements ZItem, ToZJSONObject {
         zjo.put("mimeStructure", mMimeStructure);
         zjo.put("invite", mInvite);
         zjo.put("share", mShare);
+        zjo.put("isInvite", getInvite() != null);
+        zjo.put("hasAttachment", hasAttachment());
+        zjo.put("hasFlags", hasFlags());
+        zjo.put("hasTags", hasTags());
+        zjo.put("isDeleted", isDeleted());
+        zjo.put("isDraft", isDraft());
+        zjo.put("isFlagged", isFlagged());
+        zjo.put("isHighPriority", isHighPriority());
+        zjo.put("isLowPriority", isLowPriority());
+        zjo.put("isForwarded", isForwarded());
+        zjo.put("isNotificationSent", isNotificationSent());
+        zjo.put("isRepliedTo", isRepliedTo());
+        zjo.put("isSentByMe", isSentByMe());
+        zjo.put("isUnread", isUnread());
         return zjo;
     }
 
@@ -462,4 +486,64 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.lowPriority.getFlagChar()) != -1;
     }
 
+    public void delete() throws ServiceException {
+        getMailbox().deleteMessage(getId());
+    }
+
+    public void deleteItem() throws ServiceException {
+        delete();
+    }
+
+    public void trash() throws ServiceException {
+        getMailbox().trashMessage(getId());
+    }
+
+    public void markRead(boolean read) throws ServiceException {
+        getMailbox().markMessageRead(getId(), read);
+    }
+
+    public void flag(boolean flag) throws ServiceException {
+        getMailbox().flagMessage(getId(), flag);
+    }
+
+
+    public void tag(String nameOrId, boolean tagged) throws ServiceException {
+        ZTag tag = mMailbox.getTag(nameOrId);
+        if (tag == null)
+            throw ZClientException.CLIENT_ERROR("unknown tag: "+nameOrId, null);
+        else
+           tag(tag, tagged);
+    }
+
+    public void tag(ZTag tag, boolean tagged) throws ServiceException {
+        mMailbox.tagMessage(mId, tag.getId(), tagged);
+    }
+
+    public void move(String pathOrId) throws ServiceException {
+        ZFolder destFolder = mMailbox.getFolder(pathOrId);
+        if (destFolder == null)
+            throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        else
+            move(destFolder);
+    }
+
+    public void move(ZFolder destFolder) throws ServiceException {
+        mMailbox.moveMessage(mId, destFolder.getId());
+    }
+
+    public void markSpam(boolean spam, String pathOrId) throws ServiceException {
+        ZFolder destFolder = mMailbox.getFolder(pathOrId);
+        if (destFolder == null)
+            throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        else
+            markSpam(spam, destFolder);
+    }
+
+    public void markSpam(boolean spam, ZFolder destFolder) throws ServiceException {
+        getMailbox().markMessageSpam(getId(), spam, destFolder == null ? null : destFolder.getId());
+    }
+
+    public void update(String destFolderId, String tagList, String flags) throws ServiceException {
+        getMailbox().updateMessage(getId(), destFolderId, tagList, flags); // TODO: simplify tags/folders
+    }
 }

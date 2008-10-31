@@ -118,6 +118,10 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mFolderId;
     }
 
+    public ZFolder getFolder() throws ServiceException {
+        return mMailbox.getFolderById(mFolderId);
+    }
+
     public String getId() {
         return mId;
     }
@@ -126,7 +130,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mGalContact;
     }
 
-    public boolean getIsGroup() { return getAttrs().get("dlist") != null; }
+    public boolean isGroup() { return getAttrs().get("dlist") != null; }
+
+    public boolean getIsGroup() { return isGroup(); }
 
     public List<ZEmailAddress> getGroupMembers() throws ServiceException {
         return ZEmailAddress.parseAddresses(getAttrs().get("dlist"), ZEmailAddress.EMAIL_TYPE_TO);
@@ -137,10 +143,15 @@ public class ZContact implements ZItem, ToZJSONObject {
         jo.put("id", mId);
         jo.put("folderId", mFolderId);
         jo.put("flags", mFlags);
-        jo.put("tags", mTagIds);
+        jo.put("tagIds", mTagIds);
         jo.put("date", mDate);
         jo.put("metaDataChangedDate", mMetaDataChangedDate);
         jo.put("revision", mRevision);
+        jo.put("isFlagged", isFlagged());
+        jo.put("isGalContact", isGalContact());
+        jo.put("isGroup", isGroup());
+        jo.put("hasFlags", hasFlags());
+        jo.put("hasTags", hasTags());
         jo.putMap("attrs", mAttrs);
         return jo;
     }
@@ -217,7 +228,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         delete();
     }
     
-    public void moveToTrash() throws ServiceException {
+    public void trash() throws ServiceException {
         if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
         mMailbox.trashContact(mId);
     }
@@ -258,7 +269,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         mMailbox.modifyContact(mId, replace, attrs, true);
     }
 
+    // TODO: better handling of folder/tag ids
     public void update(String destFolderId, String tagList, String flags) throws ServiceException {
+        if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
         mMailbox.updateContact(mId, destFolderId, tagList, flags);
     }
 

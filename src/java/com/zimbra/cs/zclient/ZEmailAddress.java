@@ -128,6 +128,13 @@ public class ZEmailAddress implements ToZJSONObject {
             }
         }
     }
+
+    public boolean  isBcc()        { return ZEmailAddress.EMAIL_TYPE_BCC.equals(getType()); }
+    public boolean  isCc()         { return ZEmailAddress.EMAIL_TYPE_CC.equals(getType()); }
+    public boolean  isFrom()       { return ZEmailAddress.EMAIL_TYPE_FROM.equals(getType()); }
+    public boolean  isSender()     { return ZEmailAddress.EMAIL_TYPE_SENDER.equals(getType()); }
+    public boolean  isTo()         { return ZEmailAddress.EMAIL_TYPE_TO.equals(getType()); }
+    public boolean  isReplyTo()    { return ZEmailAddress.EMAIL_TYPE_REPLY_TO.equals(getType()); }
     
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
@@ -135,6 +142,7 @@ public class ZEmailAddress implements ToZJSONObject {
         jo.put("display", mDisplay);
         jo.put("personal", mPersonal);
         jo.put("type", mType);
+        jo.put("fullAddressQuoted", getFullAddressQuoted());
         return jo;
     }
 
