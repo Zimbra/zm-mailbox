@@ -47,10 +47,6 @@ public class CalendarResource extends Account {
                 Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
     }
 
-    public String getDisplayName() {
-        return getAttr(Provisioning.A_displayName);
-    }
-
     public String getLocationDisplayName() {
         return getAttr(Provisioning.A_zimbraCalResLocationDisplayName);
     }

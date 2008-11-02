@@ -59,6 +59,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Date;
+import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class AttributeManager {
 
@@ -249,7 +253,7 @@ public class AttributeManager {
 
             String deprecatedSince = null;
             BuildInfo.Version sinceVer = null;
-            
+
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
                 String aname = attr.getName();
@@ -971,6 +975,7 @@ public class AttributeManager {
                           generateGlobalConfigLdif,
                           generateDefaultCOSLdif,
                           dump,
+                          generateProvisioning,
                           generateGetters,
                           listAttrs}
 
@@ -988,7 +993,7 @@ public class AttributeManager {
         }
 
         AttributeManager am = null;
-        if (action != Action.dump && action != Action.listAttrs && action != Action.generateGetters) {
+        if (action != Action.dump && action != Action.listAttrs) {
             if (!cl.hasOption('i')) usage("no input attribute xml files specified");
             am = new AttributeManager(cl.getOptionValue('i'));
             if (am.hasErrors()) {
@@ -1026,7 +1031,10 @@ public class AttributeManager {
             listAttrs(pw, cl.getOptionValues('c'), cl.getOptionValues('n'), cl.getOptionValues('f'));
             break;
         case generateGetters:
-            generateGetters(pw, cl.getOptionValues('c'), cl.getOptionValues('n'), cl.getOptionValues('f'));
+            am.generateGetters(pw, cl.getOptionValue('c'));
+            break;
+        case generateProvisioning:
+            am.generateProvisioningConstants(pw);
             break;
         }
 
@@ -1731,6 +1739,7 @@ public class AttributeManager {
         return mAttrs.get(name.toLowerCase());
     }
 
+
     /**
      *
      * @param pw
@@ -1739,69 +1748,172 @@ public class AttributeManager {
      * @param printFlags
      * @throws ServiceException
      */
-    private static void generateGetters(PrintWriter pw, String[] inClass, String[] notInClass, String[] printFlags) throws ServiceException {
-        AttributeManager am = AttributeManager.getInstance();
+    private void generateProvisioningConstants(PrintWriter pw) throws ServiceException {
+        //AttributeManager am = AttributeManager.getInstance();
+
+        List<String> list = new ArrayList<String>(mAttrs.keySet());
+        Collections.sort(list);
+
+        int numMissing=0, numFound = 0, numWarning = 0;
+
+        Class clazz = Provisioning.class;
+
+        StringBuilder result = new StringBuilder();
+
+        for (String a : list) {
+            AttributeInfo ai = mAttrs.get(a.toLowerCase());
+            if (ai == null)
+                continue;
+
+            try {
+                Field f = clazz.getField("A_"+ai.getName());
+                int mod = f.getModifiers();
+                if (f.getType() != String.class ||
+                        !Modifier.isFinal(mod) ||
+                        !Modifier.isStatic(mod) ||
+                        !Modifier.isPublic(mod)
+                        )
+                {
+                    System.err.format("!!!! EXISTING field(Provisioning.%s) is not 'public static final String%n", f.getName());
+                    numWarning++;
+                }
+                numFound++;
+                continue;
+            } catch (NoSuchFieldException e) {
+                numMissing++;
+            }
+
+            result.append("\n    /**\n");
+            if (ai.getDescription() != null) {
+                result.append(wrapComments(StringUtil.escapeHtml(ai.getDescription()), 70, "     * "));
+                result.append("\n");
+            }
+            if (ai.getSince() != null) {
+                result.append("     *\n");
+                result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
+            }
+            result.append("     */\n");
+            result.append(String.format("    public static final String A_%s = \"%s\";%n", ai.getName(), ai.getName()));
+
+        }
+
+        System.err.println();
+        System.err.format("%s: found(%d) missing(%d) warnings(%d)%n", clazz.getName(), numFound, numMissing, numWarning);
+        System.err.println();
+        if (numMissing > 0) {
+            System.err.println("=====================================================================");
+            System.err.println("NEED TO UPDATE: "+clazz.getName());
+            System.err.println("=====================================================================");
+        }
+
+        pw.println(result.toString());
+    }
+
+    private class GetterStats {
+        int numFound;
+        int numMissing;
+        int numWarning;
+    }
+
+    /**
+     *
+     * @param pw
+     * @param inClass
+     * @param notInClass
+     * @param printFlags
+     * @throws ServiceException
+     */
+    private void generateGetters(PrintWriter pw, String inClass) throws ServiceException {
+        //AttributeManager am = AttributeManager.getInstance();
 
         if (inClass == null)
             usage("no class specified");
 
-        Set<String> attrsInClass = new HashSet<String>();
-        for (String c : inClass) {
-            AttributeClass ac = AttributeClass.valueOf(c);
-            SetUtil.union(attrsInClass, am.getAttrsInClass(ac));
-        }
 
-        Set<String> attrsNotInClass = new HashSet<String>();
-        if (notInClass != null) {
-            for (String c : notInClass) {
-                AttributeClass ac = AttributeClass.valueOf(c);
-                SetUtil.union(attrsNotInClass, am.getAttrsInClass(ac));
-            }
-        }
+        AttributeClass ac = AttributeClass.valueOf(inClass);
+        Set<String> attrsInClass = getAttrsInClass(ac);
 
-        attrsInClass = SetUtil.subtract(attrsInClass, attrsNotInClass);
+        Class clazz = null;
+
+        switch(ac) {
+            case account:
+                clazz = Account.class;
+                break;
+            case cos:
+                clazz = Cos.class;
+                break;
+            case domain:
+                clazz = Domain.class;
+                break;
+            case calendarResource:
+                clazz = CalendarResource.class;
+                break;
+            case distributionList:
+                clazz = DistributionList.class;
+                break;
+            case globalConfig:
+                clazz = Config.class;
+                break;
+            case mailRecipient:
+                clazz = MailTarget.class;
+                break;
+            case server:
+                clazz = Server.class;
+                break;
+        }
 
         List<String> list = new ArrayList<String>(attrsInClass);
         Collections.sort(list);
 
+        GetterStats stats = new GetterStats();
         for (String a : list) {
-            AttributeInfo ai = am.mAttrs.get(a.toLowerCase());
+            AttributeInfo ai = mAttrs.get(a.toLowerCase());
             if (ai == null)
                 continue;
 
             switch (ai.getType()) {
                 case TYPE_DURATION:
-                    System.out.print(generateGetter(ai, false));
-                    System.out.println();
-                    System.out.print(generateGetter(ai, true));
+                case TYPE_GENTIME:
+                    pw.print(generateGetter(ai, false, clazz, stats));
+                    pw.print(generateGetter(ai, true, clazz, stats));
                     break;
                 default:
-                    System.out.print(generateGetter(ai, false));
+                    pw.print(generateGetter(ai, false, clazz, stats));
                     break;
             }
         }
+
+        System.err.format("%s: found(%d) missing(%d) warning(%d)%n", clazz.getName(), stats.numFound, stats.numMissing, stats.numWarning);
+        if (stats.numMissing > 0) {
+            System.err.println("=====================================================================");
+            System.err.println("NEED TO UPDATE: "+clazz.getName());
+            System.err.println("=====================================================================");
+        }
     }
 
-    private static String generateGetter(AttributeInfo ai, boolean asString) throws ServiceException {
+    private static String generateGetter(AttributeInfo ai, boolean asString, Class clazz, GetterStats stats) throws ServiceException {
         String javaType;
         String javaBody;
         String javaDocReturns;
 
         String name = ai.getName();
 
+        AttributeType type = asString ? AttributeType.TYPE_STRING : ai.getType();
+
         StringBuilder result = new StringBuilder();
         boolean asStringDoc = false;
 
         String methodName = ai.getName();
         if (methodName.startsWith("zimbra")) methodName = methodName.substring(6);
-        methodName = methodName.substring(0,1).toUpperCase() + methodName.substring(1);
+        methodName = (type == AttributeType.TYPE_BOOLEAN ? "is" : "get")+methodName.substring(0,1).toUpperCase() + methodName.substring(1);
         if (asString) methodName += "AsString";
 
-        AttributeType type = asString ? AttributeType.TYPE_STRING : ai.getType();
+        Class returnTypeClass = null;
 
         switch (type) {
             case TYPE_BOOLEAN:
                 javaType = "boolean";
+                returnTypeClass = boolean.class;
                 javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, false);", name);
                 javaDocReturns = ", or false if unset";
                 break;
@@ -1809,20 +1921,31 @@ public class AttributeManager {
                 javaType = "int";
                 javaBody = String.format("return getIntAttr(Provisioning.A_%s, -1);", name);
                 javaDocReturns = ", or -1 if unset";
+                returnTypeClass = int.class;
                 break;
             case TYPE_LONG:
                 javaType = "long";
                 javaBody = String.format("return getLongAttr(Provisioning.A_%s, -1);", name);
                 javaDocReturns = ", or -1 if unset";
+                returnTypeClass = long.class;
                 break;
             case TYPE_DURATION:
                 javaType = "long";
                 javaBody = String.format("return getTimeInterval(Provisioning.A_%s, -1);", name);
                 javaDocReturns = " in millseconds, or -1 if unset";
+                returnTypeClass = long.class;
                 asStringDoc = true;
                 break;
+            case TYPE_GENTIME:
+                javaType = "Date";
+                javaBody = String.format("return getGeneralizedTimeAttr(Provisioning.A_%s, null);", name);
+                javaDocReturns = " as Date, null if unset or unable to parse";
+                asStringDoc = true;
+                returnTypeClass = Date.class;
+                break;
             default:
-                if (ai.getCardinality() == AttributeCardinality.single) {
+                if (ai.getCardinality() != AttributeCardinality.multi) {
+                    returnTypeClass = String.class;
                     javaType = "String";
                     javaBody = String.format("return getAttr(Provisioning.A_%s);", name);
                     javaDocReturns = ", or null unset";
@@ -1830,11 +1953,29 @@ public class AttributeManager {
                     javaType = "String[]";
                     javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
                     javaDocReturns = ", or ampty array if unset";
+                    returnTypeClass = String[].class;
                 }
                 break;
         }
 
-        result.append("    /**\n");
+        try {
+            if (clazz != null) {
+                Method method = clazz.getMethod(methodName);
+
+                if (method.getReturnType() != returnTypeClass) {
+                    stats.numWarning++;
+                    System.err.format("!!!! EXISTING method(%s.%s) does not have correct return type%n", clazz.getName(), method.getName());
+                }
+                stats.numFound++;
+                return "";
+            }
+        } catch (NoSuchMethodException e) {
+            stats.numMissing++;
+        }
+
+
+
+        result.append("\n    /**\n");
         if (ai.getDescription() != null) {
             result.append(wrapComments(StringUtil.escapeHtml(ai.getDescription()), 70, "     * "));
             result.append("\n");
@@ -1856,8 +1997,7 @@ public class AttributeManager {
             result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
         }
         result.append("     */\n");
-        result.append(String.format("    public %s get%s() {%n        %s%n    }%n", javaType, methodName, javaBody));
-        result.append("\n");
+        result.append(String.format("    public %s %s() {%n        %s%n    }%n", javaType, methodName, javaBody));
         return result.toString();
     }
 
