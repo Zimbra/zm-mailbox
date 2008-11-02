@@ -39,7 +39,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -55,6 +54,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
@@ -117,7 +117,7 @@ public class ContentServlet extends ZimbraServlet {
 
             String authId = token.getAccountId();
             String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
-            Account.addAccountToLogContext(Provisioning.getInstance(), accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID, token);
+            AccountUtil.addAccountToLogContext(Provisioning.getInstance(), accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID, token);
             if (!accountId.equalsIgnoreCase(authId))
                 ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
             addRemoteIpToLoggingContext(req);

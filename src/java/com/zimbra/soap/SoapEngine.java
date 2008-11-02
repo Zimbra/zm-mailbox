@@ -21,8 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.dom4j.DocumentException;
 
 import com.zimbra.common.service.ServiceException;
@@ -55,6 +53,7 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 
 /**
@@ -218,12 +217,12 @@ public class SoapEngine {
         String rid = zsc.getRequestedAccountId();
         if (rid != null) {
             Provisioning prov = Provisioning.getInstance();
-            Account.addAccountToLogContext(prov, rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
+            AccountUtil.addAccountToLogContext(prov, rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
             String aid = zsc.getAuthtokenAccountId();
             if (aid != null && !rid.equals(aid))
-                Account.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
+                AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
             else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null)
-                Account.addAccountToLogContext(prov, zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());                        
+                AccountUtil.addAccountToLogContext(prov, zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
         
             try {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(rid, false);

@@ -38,6 +38,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.SkinUtil;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.common.util.ZimbraLog;
@@ -98,7 +99,7 @@ public class Auth extends AccountDocumentHandler {
             if (acct == null)
                 throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
 
-            Account.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+            AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
             
             long expires = 0;
 
@@ -181,9 +182,9 @@ public class Auth extends AccountDocumentHandler {
     public static void addAccountToLogContextByAuthToken(Provisioning prov, AuthToken at) {
         String id = at.getAccountId();
         if (id != null)
-            Account.addAccountToLogContext(prov, id, ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+            AccountUtil.addAccountToLogContext(prov, id, ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
-            Account.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+            AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
 }

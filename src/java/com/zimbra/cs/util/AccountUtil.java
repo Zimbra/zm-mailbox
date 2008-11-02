@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -246,4 +247,24 @@ public class AccountUtil {
 //        }
 //        return false;
 //    }
+
+    /**
+     *
+     * @param id account id to lookup
+     * @param nameKey name key to add to context if account lookup is ok
+     * @param idOnlyKey id key to add to context if account lookup fails
+     */
+    public static void addAccountToLogContext(Provisioning prov, String id, String nameKey, String idOnlyKey, AuthToken authToken) {
+        Account acct = null;
+        try {
+            acct = prov.get(Provisioning.AccountBy.id, id, authToken);
+        } catch (ServiceException se) {
+            ZimbraLog.misc.warn("unable to lookup account for log, id: " + id, se);
+        }
+        if (acct == null) {
+            ZimbraLog.addToContext(idOnlyKey, id);
+        } else {
+            ZimbraLog.addToContext(nameKey, acct.getName());
+        }
+    }
 }

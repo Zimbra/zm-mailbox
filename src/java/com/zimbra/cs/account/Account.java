@@ -114,24 +114,4 @@ public class Account extends MailTarget {
         return getAttr(Provisioning.A_zimbraCOSId);
     }
 
-    /**
-     * 
-     * @param id account id to lookup
-     * @param nameKey name key to add to context if account lookup is ok
-     * @param idOnlyKey id key to add to context if account lookup fails
-     */
-    public static void addAccountToLogContext(Provisioning prov, String id, String nameKey, String idOnlyKey, AuthToken authToken) {
-        Account acct = null;
-        try {
-            acct = prov.get(Provisioning.AccountBy.id, id, authToken);
-        } catch (ServiceException se) {
-            ZimbraLog.misc.warn("unable to lookup account for log, id: " + id, se);
-        }
-        if (acct == null) {
-            ZimbraLog.addToContext(idOnlyKey, id);
-        } else {
-            ZimbraLog.addToContext(nameKey, acct.getName());
-    
-        }
-    }
 }

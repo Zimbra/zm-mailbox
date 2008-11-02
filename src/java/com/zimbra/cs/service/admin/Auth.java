@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
@@ -134,7 +135,7 @@ public class Auth extends AdminDocumentHandler {
                 if (acct == null)
                     throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
             
-                Account.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+                AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
                 
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                         new String[] {"cmd", "AdminAuth","account", value})); 
