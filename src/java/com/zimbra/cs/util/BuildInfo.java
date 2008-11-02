@@ -68,12 +68,14 @@ public class BuildInfo {
         private int mMajor;
         private int mMinor;
         private int mPatch;
+        private String mVersion;
         
         /**
          * 
          * @param version String in the format of <major number>.<minor number>.<patch number>
          */
         public Version(String version) throws ServiceException {
+            mVersion = version;
             if (FUTURE.equalsIgnoreCase(version)) {
                 mFuture = true;
                 return;
@@ -149,6 +151,10 @@ public class BuildInfo {
                 return r;
             
             return mPatch - version.mPatch;
+        }
+
+        public String toString() {
+            return mVersion;
         }
     }
 

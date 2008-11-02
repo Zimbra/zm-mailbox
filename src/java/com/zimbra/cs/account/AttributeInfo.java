@@ -397,6 +397,10 @@ public class AttributeInfo {
     int getId() {
         return mId;
     }
+
+    Set<String> getEnumSet() {
+        return mEnumSet;
+    }
    
     String getParentOid() {
         return mParentOid;

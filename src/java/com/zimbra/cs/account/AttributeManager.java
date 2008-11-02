@@ -391,8 +391,8 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(name, id, parentOid, groupId, callback, type, order, value, immutable, min, max, 
-                                                   cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, 
+            AttributeInfo info = new AttributeInfo(name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
+                                                   cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                                                    description, sinceVer);
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
@@ -406,30 +406,30 @@ public class AttributeManager {
             		    mFlagToAttrsMap.get(AttributeFlag.accountInherited).add(name);
             	}
             }
-            
+
             if (requiredIn != null || optionalIn != null) {
                 if (requiredIn != null) {
                     for (AttributeClass klass : requiredIn) {
                         mClassToAttrsMap.get(klass).add(name);
-                        mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());                        
+                        mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());
                     }
                 }
                 if (optionalIn != null) {
                     for (AttributeClass klass : optionalIn) {
                         mClassToAttrsMap.get(klass).add(name);
-                        mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());                        
+                        mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());
                     }
                 }
             }
         }
     }
-    
+
     private enum ObjectClassType {
         ABSTRACT,
         AUXILIARY,
         STRUCTURAL;
     }
-    
+
     private class ObjectClassInfo {
         private AttributeClass mAttributeClass;
         private String mName;
@@ -439,11 +439,11 @@ public class AttributeManager {
         private List<String> mSuperOCs;
         private String mDescription;
         private List<String> mComment;
-        
+
         // there must be a one-to-one mapping between enums in AttributeClass and ocs defined in the xml
-        
-        
-        ObjectClassInfo(AttributeClass attrClass, String ocName, int id, int groupId, ObjectClassType type, 
+
+
+        ObjectClassInfo(AttributeClass attrClass, String ocName, int id, int groupId, ObjectClassType type,
                         List<String> superOCs, String description, List<String> comment) {
             mAttributeClass = attrClass;
             mName = ocName;
@@ -454,41 +454,41 @@ public class AttributeManager {
             mDescription = description;
             mComment = comment;
         }
-        
+
         AttributeClass getAttributeClass() {
             return mAttributeClass;
         }
-        
+
         String getName() {
             return mName;
         }
-        
+
         int getId() {
             return mId;
         }
-        
+
         int getGroupId() {
             return mGroupId;
         }
-        
+
         ObjectClassType getType() {
             return mType;
         }
-        
+
         List<String> getSuperOCs() {
             return mSuperOCs;
         }
-        
+
         String getDescription() {
             return mDescription;
         }
-        
+
         List<String> getComment() {
             return mComment;
         }
-        
+
     }
-    
+
     private void loadObjectClasses(File file) throws DocumentException {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
@@ -522,7 +522,7 @@ public class AttributeManager {
                 mOCGroupMap.put(groupId, group);
             }
         }
-        
+
         for (Iterator iter = root.elementIterator(); iter.hasNext();) {
             Element eattr = (Element) iter.next();
             if (!eattr.getName().equals(E_OBJECTCLASS)) {
@@ -590,26 +590,26 @@ public class AttributeManager {
             if (id <= 0) {
                 error(name, file, "id not specified");
             }
-            
+
             if (type == null) {
                 error(name, file, "type not specified");
             }
-            
+
             if (description == null) {
                 error(name, file, "desc not specified");
             }
-            
+
             if (superOCs.isEmpty()) {
                 error(name, file, "sup not specified");
             }
-            
+
             // there must be a one-to-one mapping between enums in AttributeClass and ocs defined in the xml
             AttributeClass attrClass = AttributeClass.getAttributeClass(name);
             if (attrClass == null) {
                 error(name, file, "unknown class in AttributeClass: " + name);
             }
-                
-            
+
+
             ObjectClassInfo info = new ObjectClassInfo(attrClass, name, id, groupId, type, superOCs, description, comment);
             if (mOCs.get(canonicalName) != null) {
                 error(name, file, "duplicate objectclass definiton");
@@ -654,10 +654,10 @@ public class AttributeManager {
         return result;
     }
 
-    private void checkFlag(String attrName, File file, Set<AttributeFlag> flags, AttributeFlag flag, 
+    private void checkFlag(String attrName, File file, Set<AttributeFlag> flags, AttributeFlag flag,
                            AttributeClass c1, AttributeClass c2, AttributeClass c3,
                            Set<AttributeClass> required, Set<AttributeClass> optional) {
-        
+
         if (flags != null && flags.contains(flag)) {
             boolean inC1 = (optional != null && optional.contains(c1)) || (required != null && required.contains(c1));
             boolean inC2 = (optional != null && optional.contains(c2)) || (required != null && required.contains(c2));
@@ -672,7 +672,7 @@ public class AttributeManager {
     /*
      * Support for lookup by class
      */
-    
+
     private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
     private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
 
@@ -697,7 +697,7 @@ public class AttributeManager {
     public boolean isAccountInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.accountInherited).contains(attr);
     }
-    
+
     public boolean isAccountCosDomainInherited(String attr) {
         return mFlagToAttrsMap.get(AttributeFlag.accountCosDomainInherited).contains(attr);
      }
@@ -709,18 +709,18 @@ public class AttributeManager {
     public boolean isServerInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
     }
-    
+
     public boolean isDomainAdminModifiable(String attr, AttributeClass klass) throws ServiceException {
         if (!isAttrInClass(attr, klass))
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute on " + klass.name() + ": " + attr, null);
-        
+
         return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
-    
+
     public void makeDomainAdminModifiable(String attr) {
     	mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).add(attr);
     }
-    
+
     public boolean isEmailOrIDN(String attr) {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null) {
@@ -730,7 +730,7 @@ public class AttributeManager {
         } else
             return false;
     }
-    
+
     public boolean inVersion(String attr, String version) throws ServiceException {
     	AttributeInfo ai = mAttrs.get(attr.toLowerCase());
     	if (ai != null) {
@@ -742,29 +742,29 @@ public class AttributeManager {
     	} else
     	    throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
     }
-    
+
     private boolean hasFlag(AttributeFlag flag, String attr) {
         return mFlagToAttrsMap.get(flag).contains(attr);
     }
-    
+
     public Set<String> getAttrsWithFlag(AttributeFlag flag) {
  	   return mFlagToAttrsMap.get(flag);
     }
-    
+
     public Set<String> getAttrsInClass(AttributeClass klass) {
         return mClassToAttrsMap.get(klass);
     }
-    
+
     /*
-     * Urg, for bug 32507 we need to know if an attribute is allowed in an entry 
+     * Urg, for bug 32507 we need to know if an attribute is allowed in an entry
      * and throw INVALID_ATTR_NAME instead of PERM_DENIED for domain admins.
-     * 
-     * Without bug 32507, INVALID_ATTR_NAME will be naturally thrown by mapping LDAP 
-     * Exception if we try to update an attribute that is not allowed on an entry. 
-     * 
+     *
+     * Without bug 32507, INVALID_ATTR_NAME will be naturally thrown by mapping LDAP
+     * Exception if we try to update an attribute that is not allowed on an entry.
+     *
      */
     private boolean isAttrInClass(String attr, AttributeClass klass) {
-        
+
         switch (klass) {
         case account:
             return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
@@ -789,7 +789,7 @@ public class AttributeManager {
             return mClassToAttrsMap.get(klass).contains(attr);
         }
     }
-    
+
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {
         return mClassToLowerCaseAttrsMap.get(klass);
     }
@@ -839,7 +839,7 @@ public class AttributeManager {
                           Entry entry,
                           Map context,
                           boolean isCreate,
-                          boolean checkImmutable)    
+                          boolean checkImmutable)
     throws ServiceException {
         preModify(attrs, entry, context, isCreate, checkImmutable, true);
     }
@@ -849,7 +849,7 @@ public class AttributeManager {
                           Map context,
                           boolean isCreate,
                           boolean checkImmutable,
-                          boolean allowCallback)    
+                          boolean allowCallback)
     throws ServiceException {
     	String[] keys = attrs.keySet().toArray(new String[0]);
 		for (int i = 0; i < keys.length; i++) {
@@ -861,7 +861,7 @@ public class AttributeManager {
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null) {
-                // IDN unicode to ACE conversion needs to happen before checkValue or else 
+                // IDN unicode to ACE conversion needs to happen before checkValue or else
                 // regex attrs will be rejected by checkValue
                 if (isEmailOrIDN(name)) {
                     mIDNCallback.preModify(context, name, value, attrs, entry, isCreate);
@@ -906,39 +906,39 @@ public class AttributeManager {
             }
        }
     }
-    
+
     private static Log mLog = LogFactory.getLog(AttributeManager.class);
 
     private static Options mOptions = new Options();
-    
+
     static {
         mOptions.addOption("h", "help", false, "display this  usage info");
         mOptions.addOption("o", "output", true, "output file (default it to generate output to stdout)");
         mOptions.addOption("a", "action", true, "[generateLdapSchema | generateGlobalConfigLdif | generateDefaultCOSLdif | generateSchemaLdif]");
         mOptions.addOption("t", "template", true, "template for LDAP schema");
-        
+
         Option iopt = new Option("i", "input", true,"attrs definition xml input file (can repeat)");
         iopt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(iopt);
-        
+
         /*
          * options for the listAttrs action
          */
         Option copt = new Option("c", "inclass", true, "list attrs in class  (can repeat)");
         copt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(copt);
-        
+
         Option nopt = new Option("n", "notinclass", true, "not list attrs in class  (can repeat)");
         nopt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(nopt);
-        
+
         Option fopt = new Option("f", "flags", true, "flags to print  (can repeat)");
         fopt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(fopt);
     }
-    
+
     private static void usage(String errmsg) {
-        if (errmsg != null) { 
+        if (errmsg != null) {
             mLog.error(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
@@ -952,7 +952,7 @@ public class AttributeManager {
             gotCL.append("'").append(args[i]).append("' ");
         }
         //mLog.info(gotCL);
-        
+
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
         try {
@@ -966,13 +966,14 @@ public class AttributeManager {
         return cl;
     }
 
-    private enum Action { generateLdapSchema, 
+    private enum Action { generateLdapSchema,
                           generateSchemaLdif,
-                          generateGlobalConfigLdif, 
-                          generateDefaultCOSLdif, 
+                          generateGlobalConfigLdif,
+                          generateDefaultCOSLdif,
                           dump,
+                          generateGetters,
                           listAttrs}
-    
+
     public static void main(String[] args) throws IOException, ServiceException {
         CliUtil.toolSetup();
         CommandLine cl = parseArgs(args);
@@ -987,7 +988,7 @@ public class AttributeManager {
         }
 
         AttributeManager am = null;
-        if (action != Action.dump && action != Action.listAttrs) {
+        if (action != Action.dump && action != Action.listAttrs && action != Action.generateGetters) {
             if (!cl.hasOption('i')) usage("no input attribute xml files specified");
             am = new AttributeManager(cl.getOptionValue('i'));
             if (am.hasErrors()) {
@@ -995,13 +996,13 @@ public class AttributeManager {
                 System.exit(1);
             }
         }
-        
+
         OutputStream os = System.out;
         if (cl.hasOption('o')) {
             os = new FileOutputStream(cl.getOptionValue('o'));
         }
         PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf8")));
-        
+
         switch (action) {
         case generateDefaultCOSLdif:
             am.generateDefaultCOSLdif(pw);
@@ -1024,6 +1025,9 @@ public class AttributeManager {
         case listAttrs:
             listAttrs(pw, cl.getOptionValues('c'), cl.getOptionValues('n'), cl.getOptionValues('f'));
             break;
+        case generateGetters:
+            generateGetters(pw, cl.getOptionValues('c'), cl.getOptionValues('n'), cl.getOptionValues('f'));
+            break;
         }
 
         pw.close();
@@ -1032,14 +1036,14 @@ public class AttributeManager {
     private void generateGlobalConfigLdif(PrintWriter pw) {
         pw.println("# DO NOT MODIFY - generated by AttributeManager.");
         pw.println("# LDAP entry that contains initial default Zimbra global config.");
-        pw.println("# " + CLOptions.buildVersion()); 
-        
+        pw.println("# " + CLOptions.buildVersion());
+
         String baseDn = CLOptions.getBaseDn("config");
         pw.println("dn: cn=config," + baseDn);
         pw.println("objectclass: organizationalRole");
         pw.println("cn: config");
         pw.println("objectclass: zimbraGlobalConfig");
-        
+
         List<String> out = new LinkedList<String>();
         for (AttributeInfo attr : mAttrs.values()) {
            List<String> gcv = attr.getGlobalConfigValues();
@@ -1059,12 +1063,12 @@ public class AttributeManager {
     private void generateDefaultCOSLdif(PrintWriter pw) {
         pw.println("# DO NOT MODIFY - generated by AttributeManager.");
         pw.println("# LDAP entry for the default Zimbra COS.");
-        pw.println("# " + CLOptions.buildVersion()); 
+        pw.println("# " + CLOptions.buildVersion());
 
         String baseDn = CLOptions.getBaseDn("cos");
         String cosName = CLOptions.getEntryName("cos", "default");
         String cosId = CLOptions.getEntryId("cos", "e00428a1-0c00-11d9-836a-000d93afea2a");
-        
+
         pw.println("dn: cn=" + cosName +",cn=cos," + baseDn);
         pw.println("cn: " + cosName);
         pw.println("objectclass: zimbraCOS");
@@ -1088,7 +1092,7 @@ public class AttributeManager {
     }
 
     private void buildSchemaBanner(StringBuilder BANNER) {
-        
+
         BANNER.append("#\n");
         BANNER.append("# Zimbra LDAP Schema\n");
         BANNER.append("#\n");
@@ -1103,11 +1107,11 @@ public class AttributeManager {
         BANNER.append("#  1.3.6.1.4.1.19348.2.1    Attribute Types\n");
         BANNER.append("#  1.3.6.1.4.1.19348.2.2    Object Classes\n");
         BANNER.append("#");
-    }        
-    
+    }
+
     private void buildAttrDef(StringBuilder ATTRIBUTE_DEFINITIONS, AttributeInfo ai) {
         String lengthSuffix;
-        
+
         ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
         ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( '" + ai.getName() + "' )\n");
         ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + ai.getDescription() + "'\n");
@@ -1147,14 +1151,14 @@ public class AttributeManager {
             equality = "caseIgnoreMatch";
             substr = "caseIgnoreSubstringsMatch";
             break;
-                
+
         case TYPE_INTEGER:
         case TYPE_PORT:
         case TYPE_LONG:
             syntax = "1.3.6.1.4.1.1466.115.121.1.27";
             equality = "integerMatch";
             break;
-            
+
         case TYPE_STRING:
         case TYPE_REGEX:
             lengthSuffix = "";
@@ -1165,7 +1169,7 @@ public class AttributeManager {
             equality = "caseIgnoreMatch";
             substr = "caseIgnoreSubstringsMatch";
             break;
-            
+
         case TYPE_ASTRING:
             lengthSuffix = "";
             if (ai.getMax() != Long.MAX_VALUE) {
@@ -1194,7 +1198,7 @@ public class AttributeManager {
             equality = "caseExactMatch";
             substr = "caseExactSubstringsMatch";
             break;
-            
+
         case TYPE_PHONE:
             lengthSuffix = "";
             if (ai.getMax() != Long.MAX_VALUE) {
@@ -1204,7 +1208,7 @@ public class AttributeManager {
             equality = "telephoneNumberMatch";
             substr = "telephoneNumberSubstringsMatch";
             break;
-            
+
         default:
             throw new RuntimeException("unknown type encountered!");
         }
@@ -1214,60 +1218,60 @@ public class AttributeManager {
         if (substr != null) {
             ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "SUBSTR " + substr);
         }
-        
+
         if (ordering != null) {
             ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "ORDERING " + ordering);
         } else if (ai.getOrder() != null) {
             ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "ORDERING " + ai.getOrder());
         }
-        
+
         if (ai.getCardinality() == AttributeCardinality.single) {
             ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "SINGLE-VALUE");
         }
-        
+
         ATTRIBUTE_DEFINITIONS.append(")");
     }
-    
+
     private void buildZimbraRootOIDs(StringBuilder ZIMBRA_ROOT_OIDS, String prefix) {
         ZIMBRA_ROOT_OIDS.append(prefix + "ZimbraRoot 1.3.6.1.4.1.19348\n");
         ZIMBRA_ROOT_OIDS.append(prefix + "ZimbraLDAP ZimbraRoot:2\n");
     }
-    
+
     private void buildObjectClassOIDs(StringBuilder OC_GROUP_OIDS, StringBuilder OC_OIDS, String prefix) {
         for (Iterator<Integer> iter = mOCGroupMap.keySet().iterator(); iter.hasNext();) {
             int i = iter.next();
 
             // OC_GROUP_OIDS
             OC_GROUP_OIDS.append(prefix + mOCGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
-            
+
             // List all ocs which we define and which belong in this group
             List<ObjectClassInfo> list = getOCList(i);
-            
+
             // OC_OIDS - sorted by OID
             sortOCsByOID(list);
-            
+
             for (ObjectClassInfo oci : list) {
                 OC_OIDS.append(prefix + oci.getName() + " " + mOCGroupMap.get(i) + ':' + oci.getId() + "\n");
             }
         }
     }
-    
+
     /**
-     * 
+     *
      * @param OC_DEFINITIONS
      * @param prefix
      * @param blankLineSeperator whether to seperate each OC with a blank line
      */
     private void buildObjectClassDefs(StringBuilder OC_DEFINITIONS, String prefix, boolean blankLineSeperator) {
         for (AttributeClass cls : AttributeClass.values()) {
-            
+
             String ocName = cls.getOCName();
             String ocCanonicalName = ocName.toLowerCase();
             ObjectClassInfo oci = mOCs.get(ocCanonicalName);
             if (oci == null)
                 continue;  // oc not defined in xml, skip
-                
-            // OC_DEFINITIONS: 
+
+            // OC_DEFINITIONS:
             List<String> comment = oci.getComment();
             OC_DEFINITIONS.append("#\n");
             for (String line : comment) {
@@ -1277,7 +1281,7 @@ public class AttributeManager {
                     OC_DEFINITIONS.append("#\n");
             }
             OC_DEFINITIONS.append("#\n");
-            
+
             OC_DEFINITIONS.append(prefix + "( " + oci.getName() + "\n");
             OC_DEFINITIONS.append(ML_CONT_PREFIX + "NAME '" + oci.getName() + "'\n");
             OC_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + oci.getDescription() + "'\n");
@@ -1285,19 +1289,19 @@ public class AttributeManager {
             for (String sup : oci.getSuperOCs())
                 OC_DEFINITIONS.append(sup);
             OC_DEFINITIONS.append(" " + oci.getType() + "\n");
-            
+
             StringBuilder value = new StringBuilder();
             buildObjectClassAttrs(cls, value);
-            
+
             OC_DEFINITIONS.append(value);
             OC_DEFINITIONS.append(")\n");
-            
+
             if (blankLineSeperator)
                 OC_DEFINITIONS.append("\n");
-            
+
         }
     }
-    
+
     private void buildObjectClassAttrs(AttributeClass cls, StringBuilder value) {
         List<String> must = new LinkedList<String>();
         List<String> may = new LinkedList<String>();
@@ -1311,7 +1315,7 @@ public class AttributeManager {
         }
         Collections.sort(must);
         Collections.sort(may);
-        
+
         if (!must.isEmpty()) {
             value.append(ML_CONT_PREFIX + "MUST (\n");
             Iterator<String> mustIter = must.iterator();
@@ -1338,7 +1342,7 @@ public class AttributeManager {
         }
         value.append(ML_CONT_PREFIX);
     }
-    
+
     private List<AttributeInfo> getAttrList(int groupId) {
         List<AttributeInfo> list = new ArrayList<AttributeInfo>(mAttrs.size());
         for (AttributeInfo ai : mAttrs.values()) {
@@ -1348,7 +1352,7 @@ public class AttributeManager {
         }
         return list;
     }
-    
+
     private void sortAttrsByOID(List<AttributeInfo> list) {
         Collections.sort(list, new Comparator<AttributeInfo>() {
             public int compare(AttributeInfo a1, AttributeInfo b1) {
@@ -1356,7 +1360,7 @@ public class AttributeManager {
             }
         });
     }
-    
+
     private void sortAttrsByName(List<AttributeInfo> list) {
         Collections.sort(list, new Comparator<AttributeInfo>() {
             public int compare(AttributeInfo a1, AttributeInfo b1) {
@@ -1364,7 +1368,7 @@ public class AttributeManager {
             }
         });
     }
-    
+
     private List<ObjectClassInfo> getOCList(int groupId) {
         List<ObjectClassInfo> list = new ArrayList<ObjectClassInfo>(mOCs.size());
         for (ObjectClassInfo oci : mOCs.values()) {
@@ -1374,7 +1378,7 @@ public class AttributeManager {
         }
         return list;
     }
-    
+
     private void sortOCsByOID(List<ObjectClassInfo> list) {
         Collections.sort(list, new Comparator<ObjectClassInfo>() {
             public int compare(ObjectClassInfo oc1, ObjectClassInfo oc2) {
@@ -1382,7 +1386,7 @@ public class AttributeManager {
             }
         });
     }
-    
+
     private void sortOCsByName(List<ObjectClassInfo> list) {
         Collections.sort(list, new Comparator<ObjectClassInfo>() {
             public int compare(ObjectClassInfo oc1, ObjectClassInfo oc2) {
@@ -1390,10 +1394,10 @@ public class AttributeManager {
             }
         });
     }
-    
+
     /**
      * using the old schema template file (version 9), delete this methods after things are stablized.
-     *  
+     *
      * @param pw
      * @param schemaTemplateFile
      * @throws IOException
@@ -1401,11 +1405,11 @@ public class AttributeManager {
     private void generateLdapSchema_old(PrintWriter pw, String schemaTemplateFile) throws IOException {
         byte[] templateBytes = ByteUtil.getContent(new File(schemaTemplateFile));
         String templateString = new String(templateBytes, "utf-8");
-        
+
         StringBuilder GROUP_OIDS = new StringBuilder();
         StringBuilder ATTRIBUTE_OIDS = new StringBuilder();
         StringBuilder ATTRIBUTE_DEFINITIONS = new StringBuilder();
-        
+
         for (Iterator<Integer> iter = mGroupMap.keySet().iterator(); iter.hasNext();) {
             int i = iter.next();
 
@@ -1414,35 +1418,35 @@ public class AttributeManager {
 
             // List all attrs which we define and which belong in this group
             List<AttributeInfo> list = getAttrList(i);
-            
+
             // ATTRIBUTE_OIDS - sorted by OID
             sortAttrsByOID(list);
-            
+
             for (AttributeInfo ai : list) {
                 String parentOid = ai.getParentOid();
                 if (parentOid == null)
                     ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
-                else 
-                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");                    
+                else
+                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");
             }
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
             // - sorted by name
             sortAttrsByName(list);
-            
+
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("attributetype ");
                 buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
                 ATTRIBUTE_DEFINITIONS.append("\n\n");
             }
         }
-        
+
         Map<String,String> templateFillers = new HashMap<String,String>();
         templateFillers.put("SCHEMA_VERSION_INFO", CLOptions.buildVersion());
         templateFillers.put("GROUP_OIDS", GROUP_OIDS.toString());
         templateFillers.put("ATTRIBUTE_OIDS", ATTRIBUTE_OIDS.toString());
         templateFillers.put("ATTRIBUTE_DEFINITIONS", ATTRIBUTE_DEFINITIONS.toString());
-        
+
         for (AttributeClass cls : AttributeClass.values()) {
             String key = "CLASS_MEMBERS_" + cls.toString().toUpperCase();
             StringBuilder value = new StringBuilder();
@@ -1452,14 +1456,14 @@ public class AttributeManager {
 
         pw.print(StringUtil.fillTemplate(templateString, templateFillers));
     }
-    
+
     /**
      * This methods uses xml for generating objectclass OIDs and definitions
      */
     private void generateLdapSchema(PrintWriter pw, String schemaTemplateFile) throws IOException {
         byte[] templateBytes = ByteUtil.getContent(new File(schemaTemplateFile));
         String templateString = new String(templateBytes, "utf-8");
-        
+
         StringBuilder BANNER = new StringBuilder();
         StringBuilder ZIMBRA_ROOT_OIDS = new StringBuilder();
         StringBuilder GROUP_OIDS = new StringBuilder();
@@ -1468,10 +1472,10 @@ public class AttributeManager {
         StringBuilder OC_GROUP_OIDS = new StringBuilder();
         StringBuilder OC_OIDS = new StringBuilder();
         StringBuilder OC_DEFINITIONS = new StringBuilder();
-        
+
         buildSchemaBanner(BANNER);
         buildZimbraRootOIDs(ZIMBRA_ROOT_OIDS, "objectIdentifier ");
-        
+
         for (Iterator<Integer> iter = mGroupMap.keySet().iterator(); iter.hasNext();) {
             int i = iter.next();
 
@@ -1480,35 +1484,35 @@ public class AttributeManager {
 
             // List all attrs which we define and which belong in this group
             List<AttributeInfo> list = getAttrList(i);
-            
+
             // ATTRIBUTE_OIDS - sorted by OID
             sortAttrsByOID(list);
-            
+
             for (AttributeInfo ai : list) {
                 String parentOid = ai.getParentOid();
                 if (parentOid == null)
                     ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
-                else 
-                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");                    
+                else
+                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");
             }
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
             // - sorted by name
             sortAttrsByName(list);
-            
+
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("attributetype ");
                 buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
                 ATTRIBUTE_DEFINITIONS.append("\n\n");
             }
         }
-        
+
         // object class OIDs
         buildObjectClassOIDs(OC_GROUP_OIDS, OC_OIDS, "objectIdentifier ");
-        
+
         // object class definitions
         buildObjectClassDefs(OC_DEFINITIONS, "objectclass ", true);
-        
+
         Map<String,String> templateFillers = new HashMap<String,String>();
         templateFillers.put("BANNER", BANNER.toString());
         templateFillers.put("ZIMBRA_ROOT_OIDS", ZIMBRA_ROOT_OIDS.toString());
@@ -1518,12 +1522,12 @@ public class AttributeManager {
         templateFillers.put("OC_OIDS", OC_OIDS.toString());
         templateFillers.put("ATTRIBUTE_DEFINITIONS", ATTRIBUTE_DEFINITIONS.toString());
         templateFillers.put("OC_DEFINITIONS", OC_DEFINITIONS.toString());
- 
+
         pw.print(StringUtil.fillTemplate(templateString, templateFillers));
     }
-    
+
     private void generateSchemaLdif(PrintWriter pw) {
-        
+
         StringBuilder BANNER = new StringBuilder();
         StringBuilder ZIMBRA_ROOT_OIDS = new StringBuilder();
         StringBuilder ATTRIBUTE_GROUP_OIDS = new StringBuilder();
@@ -1532,10 +1536,10 @@ public class AttributeManager {
         StringBuilder OC_GROUP_OIDS = new StringBuilder();
         StringBuilder OC_OIDS = new StringBuilder();
         StringBuilder OC_DEFINITIONS = new StringBuilder();
-        
+
         buildSchemaBanner(BANNER);
         buildZimbraRootOIDs(ZIMBRA_ROOT_OIDS, "olcObjectIdentifier: ");
-        
+
         for (Iterator<Integer> iter = mGroupMap.keySet().iterator(); iter.hasNext();) {
             int i = iter.next();
 
@@ -1544,27 +1548,27 @@ public class AttributeManager {
 
             // List all attrs which we define and which belong in this group
             List<AttributeInfo> list = getAttrList(i);
-            
+
             // ATTRIBUTE_OIDS - sorted by OID
             sortAttrsByOID(list);
-            
+
             for (AttributeInfo ai : list) {
                 String parentOid = ai.getParentOid();
                 if (parentOid == null)
                     ATTRIBUTE_OIDS.append("olcObjectIdentifier: " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
-                else 
-                    ATTRIBUTE_OIDS.append("olcObjectIdentifier: " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");                    
+                else
+                    ATTRIBUTE_OIDS.append("olcObjectIdentifier: " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");
             }
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
             // - sorted by name
             sortAttrsByName(list);
-            
+
             /* Hack to add the company attribute from Microsoft schema
              * For generateLdapSchema, it is specified in the zimbra.schema-template file
              * We don't use a template file for generateSchemaLdif thus hardcode here.
              * Move to template file if really necessary.
-             * 
+             *
             #### From Microsoft Schema
             olcAttributeTypes ( 1.2.840.113556.1.2.146
                     NAME ( 'company' )
@@ -1573,27 +1577,27 @@ public class AttributeManager {
                     SUBSTR caseIgnoreSubstringsMatch
                     SINGLE-VALUE )
             */
-            
+
             ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes ( 1.2.840.113556.1.2.146\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( 'company' )\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "EQUALITY caseIgnoreMatch\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SUBSTR caseIgnoreSubstringsMatch\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SINGLE-VALUE )\n");
-            
+
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes: ");
                 buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
                 ATTRIBUTE_DEFINITIONS.append("\n");
             }
         }
-        
+
         // objectclass OIDs
         buildObjectClassOIDs(OC_GROUP_OIDS, OC_OIDS, "olcObjectIdentifier: ");
-        
+
         // objectclass definitions
         buildObjectClassDefs(OC_DEFINITIONS, "olcObjectClasses: ", false);
-        
+
         pw.println(BANNER);
         pw.println("dn: cn=zimbra,cn=schema,cn=config");
         pw.println("objectClass: olcSchemaConfig");
@@ -1606,7 +1610,7 @@ public class AttributeManager {
         pw.print(ATTRIBUTE_DEFINITIONS);
         pw.print(OC_DEFINITIONS);
     }
-  
+
     private static String sortCSL(String in) {
         String[] ss = in.split("\\s*,\\s*");
         Arrays.sort(ss);
@@ -1644,7 +1648,7 @@ public class AttributeManager {
             }
         }
     }
-    
+
     private static void dumpSchema(PrintWriter pw) throws ServiceException {
         ZimbraLdapContext zlc = null;
         try {
@@ -1663,7 +1667,7 @@ public class AttributeManager {
               Collections.sort(schemaEntries);
 
               for (String schemaEntry : schemaEntries) {
-                  DirContext sdc = (DirContext) schema.lookup(schemaType + "/" + schemaEntry);  
+                  DirContext sdc = (DirContext) schema.lookup(schemaType + "/" + schemaEntry);
                   dumpAttrs(pw, schemaType + ": " + schemaEntry, sdc.getAttributes(""));
               }
           }
@@ -1676,19 +1680,19 @@ public class AttributeManager {
             ZimbraLdapContext.closeContext(zlc);
         }
     }
-    
+
     private static void listAttrs(PrintWriter pw, String[] inClass, String[] notInClass, String[] printFlags) throws ServiceException {
         AttributeManager am = AttributeManager.getInstance();
-        
+
         if (inClass == null)
             usage("no class specified");
-        
+
         Set<String> attrsInClass = new HashSet<String>();
         for (String c : inClass) {
             AttributeClass ac = AttributeClass.valueOf(c);
             SetUtil.union(attrsInClass, am.getAttrsInClass(ac));
         }
-        
+
         Set<String> attrsNotInClass = new HashSet<String>();
         if (notInClass != null) {
             for (String c : notInClass) {
@@ -1696,12 +1700,12 @@ public class AttributeManager {
                 SetUtil.union(attrsNotInClass, am.getAttrsInClass(ac));
             }
         }
-        
+
         attrsInClass = SetUtil.subtract(attrsInClass, attrsNotInClass);
-        
+
         List<String> list = new ArrayList<String>(attrsInClass);
         Collections.sort(list);
-        
+
         for (String a : list) {
             StringBuffer flags = new StringBuffer();
             if (printFlags != null) {
@@ -1713,17 +1717,171 @@ public class AttributeManager {
                         flags.append(af.name());
                     }
                 }
-                
+
                 if (flags.length() > 0) {
                     flags.insert(0, "(").append(")");
                 }
             }
             System.out.println(a + " " + flags);
         }
-            
+
     }
-    
-    static class CLOptions { 
+
+    public AttributeInfo getAttributeInfo(String name) {
+        return mAttrs.get(name.toLowerCase());
+    }
+
+    /**
+     *
+     * @param pw
+     * @param inClass
+     * @param notInClass
+     * @param printFlags
+     * @throws ServiceException
+     */
+    private static void generateGetters(PrintWriter pw, String[] inClass, String[] notInClass, String[] printFlags) throws ServiceException {
+        AttributeManager am = AttributeManager.getInstance();
+
+        if (inClass == null)
+            usage("no class specified");
+
+        Set<String> attrsInClass = new HashSet<String>();
+        for (String c : inClass) {
+            AttributeClass ac = AttributeClass.valueOf(c);
+            SetUtil.union(attrsInClass, am.getAttrsInClass(ac));
+        }
+
+        Set<String> attrsNotInClass = new HashSet<String>();
+        if (notInClass != null) {
+            for (String c : notInClass) {
+                AttributeClass ac = AttributeClass.valueOf(c);
+                SetUtil.union(attrsNotInClass, am.getAttrsInClass(ac));
+            }
+        }
+
+        attrsInClass = SetUtil.subtract(attrsInClass, attrsNotInClass);
+
+        List<String> list = new ArrayList<String>(attrsInClass);
+        Collections.sort(list);
+
+        for (String a : list) {
+            AttributeInfo ai = am.mAttrs.get(a.toLowerCase());
+            if (ai == null)
+                continue;
+
+            switch (ai.getType()) {
+                case TYPE_DURATION:
+                    System.out.print(generateGetter(ai, false));
+                    System.out.println();
+                    System.out.print(generateGetter(ai, true));
+                    break;
+                default:
+                    System.out.print(generateGetter(ai, false));
+                    break;
+            }
+        }
+    }
+
+    private static String generateGetter(AttributeInfo ai, boolean asString) throws ServiceException {
+        String javaType;
+        String javaBody;
+        String javaDocReturns;
+
+        String name = ai.getName();
+
+        StringBuilder result = new StringBuilder();
+        boolean asStringDoc = false;
+
+        String methodName = ai.getName();
+        if (methodName.startsWith("zimbra")) methodName = methodName.substring(6);
+        methodName = methodName.substring(0,1).toUpperCase() + methodName.substring(1);
+        if (asString) methodName += "AsString";
+
+        AttributeType type = asString ? AttributeType.TYPE_STRING : ai.getType();
+
+        switch (type) {
+            case TYPE_BOOLEAN:
+                javaType = "boolean";
+                javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, false);", name);
+                javaDocReturns = ", or false if unset";
+                break;
+            case TYPE_INTEGER:
+                javaType = "int";
+                javaBody = String.format("return getIntAttr(Provisioning.A_%s, -1);", name);
+                javaDocReturns = ", or -1 if unset";
+                break;
+            case TYPE_LONG:
+                javaType = "long";
+                javaBody = String.format("return getLongAttr(Provisioning.A_%s, -1);", name);
+                javaDocReturns = ", or -1 if unset";
+                break;
+            case TYPE_DURATION:
+                javaType = "long";
+                javaBody = String.format("return getTimeInterval(Provisioning.A_%s, -1);", name);
+                javaDocReturns = " in millseconds, or -1 if unset";
+                asStringDoc = true;
+                break;
+            default:
+                if (ai.getCardinality() == AttributeCardinality.single) {
+                    javaType = "String";
+                    javaBody = String.format("return getAttr(Provisioning.A_%s);", name);
+                    javaDocReturns = ", or null unset";
+                } else {
+                    javaType = "String[]";
+                    javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
+                    javaDocReturns = ", or ampty array if unset";
+                }
+                break;
+        }
+
+        result.append("    /**\n");
+        if (ai.getDescription() != null) {
+            result.append(wrapComments(StringUtil.escapeHtml(ai.getDescription()), 70, "     * "));
+            result.append("\n");
+        }
+        if (ai.getType() == AttributeType.TYPE_ENUM) {
+            result.append("     *\n");
+            result.append(String.format("     * <p>Valid values: %s%n", ai.getEnumSet().toString()));
+        }
+        if (asStringDoc) {
+            result.append("     *\n");
+            result.append(String.format("     * <p>Use %sAsString to access value as a string.%n", methodName));
+            result.append("     *\n");
+            result.append(String.format("     * @see #%sAsString()%n", methodName));
+        }
+        result.append("     *\n");
+        result.append(String.format("     * @return %s%s%n", name, javaDocReturns));
+        if (ai.getSince() != null) {
+            result.append("     *\n");
+            result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
+        }
+        result.append("     */\n");
+        result.append(String.format("    public %s get%s() {%n        %s%n    }%n", javaType, methodName, javaBody));
+        result.append("\n");
+        return result.toString();
+    }
+
+    private static String wrapComments(String comments, int maxLineLength, String prefix) {
+        comments = comments.trim().replaceAll("\\s+", " ");
+        StringBuilder result = new StringBuilder();
+        String[] words = comments.split("\\s+");
+        int lineLength = 0;
+        for (String word : words) {
+            if (lineLength + word.length() + 1> maxLineLength) {
+                result.append("\n");
+                lineLength = 0;
+            }
+            if (lineLength == 0 && prefix != null) result.append(prefix);
+            if (lineLength > 0) { result.append(' '); lineLength++; }
+            result.append(word);
+            lineLength += word.length();
+        }
+        if (result.length() == 0 && prefix != null)
+            result.append(prefix);
+        return result.toString();
+    }
+
+    static class CLOptions {
         
         private static String get(String key, String defaultValue) {
             String value = System.getProperty(key);
