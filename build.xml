@@ -393,6 +393,31 @@
         </if>
     </target>
 
+    <target name="generate-getters" depends="set-buildinfo-vars,compile">
+        <mkdir dir="${build.dir}/getters-output"/>
+        <antcall target="generate-getter"><param name="getter.class" value="account"/></antcall>
+        <antcall target="generate-getter"><param name="getter.class" value="calendarResource"/></antcall>
+        <antcall target="generate-getter"><param name="getter.class" value="cos"/></antcall>
+        <antcall target="generate-getter"><param name="getter.class" value="domain"/></antcall>
+        <antcall target="generate-getter"><param name="getter.class" value="server"/></antcall>
+        <antcall target="generate-getter"><param name="getter.class" value="globalConfig"/></antcall>
+        <antcall target="generate-getter"><param name="getter.class" value="mailRecipient"/></antcall>        
+        <antcall target="generate-getter"><param name="getter.class" value="distributionList"/></antcall>
+        <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+              failonerror="true">
+          <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+          <arg line="-a generateProvisioning -i ${build.dir}/attrs -o ${build.dir}/getters-output/add-to-Provisioning.java"/>
+        </java>
+    </target>
+
+    <target name="generate-getter">
+       <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+              failonerror="true">
+          <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+          <arg line="-a generateGetters -c ${getter.class} -i ${build.dir}/attrs -o ${build.dir}/getters-output/add-to-${getter.class}.java"/>
+        </java>
+    </target>
+
     <target name="mysql-versions-init" if="db-mysql">
         <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
