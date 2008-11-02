@@ -113,28 +113,6 @@ public class Account extends MailTarget {
     public String getAccountCOSId() {
         return getAttr(Provisioning.A_zimbraCOSId);
     }
-    
-    /**
-     * Returns true if authAccount should be allowed access to private data in appointments owned
-     * by targetAccount.  Returns true if authAccount and targetAccount are the same account or if
-     * authAccount has admin rights over targetAccount.
-     * @param authAccount
-     * @param targetAccount
-     * @param asAdmin true if authAccount is authenticated with admin privileges
-     * @return
-     * @throws ServiceException
-     */
-    public static boolean allowPrivateAccess(Account authAccount, Account targetAccount, boolean asAdmin)
-    throws ServiceException {
-        if (authAccount != null && targetAccount != null) {
-            if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
-                return true;
-            AccessManager accessMgr = AccessManager.getInstance();
-            if (accessMgr.canAccessAccount(authAccount, targetAccount, asAdmin))
-                return true;
-        }
-        return false;
-    }
 
     /**
      * 

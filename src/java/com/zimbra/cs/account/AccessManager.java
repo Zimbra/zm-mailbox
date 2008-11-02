@@ -90,4 +90,25 @@ public abstract class AccessManager {
     public abstract boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
     public abstract boolean canPerform(String grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
 
+    /**
+     * Returns true if authAccount should be allowed access to private data in appointments owned
+     * by targetAccount.  Returns true if authAccount and targetAccount are the same account or if
+     * authAccount has admin rights over targetAccount.
+     * 
+     * @param authAccount
+     * @param targetAccount
+     * @param asAdmin true if authAccount is authenticated with admin privileges
+     * @return
+     * @throws com.zimbra.common.service.ServiceException
+     */
+    public boolean allowPrivateAccess(Account authAccount, Account targetAccount, boolean asAdmin)
+    throws ServiceException {
+        if (authAccount != null && targetAccount != null) {
+            if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
+                return true;
+            if (canAccessAccount(authAccount, targetAccount, asAdmin))
+                return true;
+        }
+        return false;
+    }
 }

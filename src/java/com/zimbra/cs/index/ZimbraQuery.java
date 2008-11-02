@@ -46,6 +46,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.Token;
@@ -2608,7 +2609,7 @@ public final class ZimbraQuery {
                 // Check to see if we need to filter out private appointment data
                 boolean allowPrivateAccess = true;
                 if (octxt != null) {
-                    allowPrivateAccess = Account.allowPrivateAccess(octxt.getAuthenticatedUser(), 
+                    allowPrivateAccess = AccessManager.getInstance().allowPrivateAccess(octxt.getAuthenticatedUser(),
                                                                     mbox.getAccount(), octxt.isUsingAdminPrivileges());
                 }
 
