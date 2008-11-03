@@ -170,6 +170,14 @@
         <not><isset property="is-production"/></not>
     </condition>
 
+    <property name="slapd.config.dir" value="${config.dir}/ldap/config"/>
+    <condition property="slapd.config.src" value="${slapd.config.dir}/cn=config.ldif">
+        <isset property="is-production"/>
+    </condition>
+    <condition property="slapd.config.src" value="${slapd.config.dir}/cn=config.ldif.dev">
+        <not><isset property="is-production"/></not>
+    </condition>
+
     <condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.win.conf">
         <isset property="is-windows"/>
     </condition>
@@ -360,6 +368,7 @@
                     <fileset dir="${config.dir}/attrs" includes="*.xml"/>
                 </copy>
                 <mkdir dir="${build.dir}/ldap-config"/>
+                <mkdir dir="${build.dir}/ldap-config/config"/>
             	
             	<!-- Zimbra schema for pre OpenLDAP 2.4 - uses zimbra.schema-template, should eventually retire zimbra.schema-template and only use zimbra-ocs.xml -->
                 <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
@@ -372,7 +381,7 @@
                 <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-                    <arg line="-a generateSchemaLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_schema.ldif"/>
+                    <arg line="-a generateSchemaLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/config/zimbra.ldif"/>
                 </java>
             	
                 <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
@@ -388,34 +397,16 @@
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
-                <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${config.dir}/ldap/amavisd.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.src}"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/cn=module{0}.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/cn=schema.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={0}config.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={-1}frontend.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={1}monitor.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={2}hdb.ldif"/>
             </then>
         </if>
-    </target>
-
-    <target name="generate-getters" depends="set-buildinfo-vars,compile">
-        <mkdir dir="${build.dir}/getters-output"/>
-        <antcall target="generate-getter"><param name="getter.class" value="account"/></antcall>
-        <antcall target="generate-getter"><param name="getter.class" value="calendarResource"/></antcall>
-        <antcall target="generate-getter"><param name="getter.class" value="cos"/></antcall>
-        <antcall target="generate-getter"><param name="getter.class" value="domain"/></antcall>
-        <antcall target="generate-getter"><param name="getter.class" value="server"/></antcall>
-        <antcall target="generate-getter"><param name="getter.class" value="globalConfig"/></antcall>
-        <antcall target="generate-getter"><param name="getter.class" value="mailRecipient"/></antcall>        
-        <antcall target="generate-getter"><param name="getter.class" value="distributionList"/></antcall>
-        <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
-              failonerror="true">
-          <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-          <arg line="-a generateProvisioning -i ${build.dir}/attrs -o ${build.dir}/getters-output/add-to-Provisioning.java"/>
-        </java>
-    </target>
-
-    <target name="generate-getter">
-       <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
-              failonerror="true">
-          <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-          <arg line="-a generateGetters -c ${getter.class} -i ${build.dir}/attrs -o ${build.dir}/getters-output/add-to-${getter.class}.java"/>
-        </java>
     </target>
 
     <target name="mysql-versions-init" if="db-mysql">
