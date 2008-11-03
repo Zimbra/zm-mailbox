@@ -409,9 +409,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException; 
 
+    
+    /**
+     * @return the domain of the distribution list
+     * @throws ServiceException
+     */    
+    public Domain getDomain(DistributionList dl) throws ServiceException {
+        String dname = dl.getDomainName();
+        return dname == null ? null : get(DomainBy.name, dname);
+    }
+    
     public abstract boolean healthCheck() throws ServiceException;
 
     public abstract Config getConfig() throws ServiceException;
+    
+    public abstract GlobalGrant getGlobalGrant() throws ServiceException;
     
     public abstract List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException;
     

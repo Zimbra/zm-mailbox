@@ -390,6 +390,7 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
 
+    @Override
     public Config getConfig() throws ServiceException
     {
         // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
@@ -413,6 +414,7 @@ public class LdapProvisioning extends Provisioning {
         return sConfig;
     }
     
+    @Override
     public GlobalGrant getGlobalGrant() throws ServiceException
     {
         // TODO: failure scenarios? fallback to static config file or hard-coded defaults?

@@ -55,6 +55,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -963,6 +964,10 @@ public class SoapProvisioning extends Provisioning {
     public Config getConfig() throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_CONFIG_REQUEST);
         return new SoapConfig(invoke(req));
+    }
+    
+    public GlobalGrant getGlobalGrant() throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
     }
 
     @Override

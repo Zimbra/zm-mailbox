@@ -288,8 +288,8 @@ Depending on the context, there are three aspects of targets that need to be dea
           - modifyCalenceResource              : modify all calendar resource attributes
           - modifyCalenceResourceWithinInheritedLimit : modify all calendar resource attributes within COS limit
           
-          - renameCalenceResource              : rename calendar resource
-          - deleteCalenceResource              : delete calendar resource
+          - renameCalendarResource             : rename calendar resource
+          - deleteCalendarResource             : delete calendar resource
           
           - addCalenceResourceAlias            : add alias to calendar resource
           - removeCalenceResourceAlias         : remove alias from calendar resource
@@ -728,6 +728,24 @@ Depending on the context, there are three aspects of targets that need to be dea
                 because grant (b) allows it.  Even if grant (a) denies it, but it on the group 
                 level in the grantee scope, so grant (b) takes precedence over grant (a).
        
+    C) Combining Target Scope and Grantee Scope: Grantee Relativity takes Precedence over Target Relativity
+       For example, for this target hierarchy:
+           domain D
+               group G1 (allow right R for group GA)
+                   group G2 (deny right R for group GB)
+                       group G3 (deny right R for group GC)
+                           account A1   
+                       
+       And this grantee hierarchy:
+           group GA
+               group GB
+                   group GC
+                       (admin) account A
+                   
+       The A is *allowed* for right R on target account A1, because GC is more specific to A than GA and GB.
+       Even if on the target side, grant on G3(grant to GC) and G2(grant to GB) is more specific than the 
+       grant on G1(grant to GA).
+                   
 
 5.2 Negative Grants Takes Precedence Over Positive Grants
     If grants are all equal in both target and grantee scope, and they conflict with each other, 

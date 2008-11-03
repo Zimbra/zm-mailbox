@@ -8,6 +8,7 @@ public abstract class Right {
     private String mDesc;  // a brief description
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
+    private TargetType mTargetType;
     
     static void initKnownRights(RightManager rm) throws ServiceException {
         UserRight.initKnownUserRights(rm);
@@ -41,6 +42,14 @@ public abstract class Right {
         return mDefault;
     }
     
+    public TargetType getTargetType() {
+        return mTargetType;
+    }
+    
+    public boolean isUserRight() {
+        return (this instanceof UserRight);
+    }
+    
     void setDesc(String desc) {
         mDesc = desc;
     }
@@ -51,6 +60,10 @@ public abstract class Right {
 
     void setDefault(Boolean defaultValue) {
         mDefault = defaultValue;
+    }
+    
+    void setTargetType(TargetType targetType) {
+        mTargetType = targetType;
     }
 
 }

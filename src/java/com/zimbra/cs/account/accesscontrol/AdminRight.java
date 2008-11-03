@@ -11,6 +11,9 @@ public class AdminRight extends Right {
     
     // known rights
     public static AdminRight RT_createAccount;
+    public static AdminRight RT_renameAccount;
+    public static AdminRight RT_renameCalendarResource;
+    public static AdminRight RT_renameDistributionList;
     
     enum RightType {
         preset,
@@ -68,6 +71,10 @@ public class AdminRight extends Right {
     
     static void initKnownAdminRights(RightManager rm) throws ServiceException {
         RT_createAccount = rm.getAdminRight("createAccount");
+        RT_renameAccount = rm.getAdminRight("renameAccount");
+        RT_renameCalendarResource = rm.getAdminRight("renameCalendarResource");
+        RT_renameDistributionList = rm.getAdminRight("renameDistributionList");
+        
     }
     
     AdminRight(String name, RightType rightType) {
@@ -81,6 +88,10 @@ public class AdminRight extends Right {
         AttrRight attrRight = new AttrRight(attrName);
         mAttrs.put(attrName, attrRight);
         return attrRight;
+    }
+    
+    RightType getRightType() {
+        return mRightType;
     }
     
 }

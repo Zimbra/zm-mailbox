@@ -436,40 +436,75 @@ public class ZimbraACL {
     }
     
     /**
+     * Get all ACEs
+     * @return all ACEs
+     */
+    Set<ZimbraACE> getAllACEs() {
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        
+        if (mAces != null) aces.addAll(mAces);
+        if (mAuthuserAces != null) aces.addAll(mAuthuserAces);
+        if (mPublicAces != null) aces.addAll(mPublicAces);
+        
+        return aces;
+    }
+    
+    /**
      * Get ACEs with specified rights
      * 
-     * @param rights specified rights.  If null, all ACEs in the ACL will be returned.
+     * @param rights specified rights.
      * @return ACEs with right specified in rights
      */
     Set<ZimbraACE> getACEs(Set<Right> rights) {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         
-        if (rights == null) {
-            if (mAces != null) aces.addAll(mAces);
-            if (mAuthuserAces != null) aces.addAll(mAuthuserAces);
-            if (mPublicAces != null) aces.addAll(mPublicAces);
-        } else {
-            if (mAces != null) {
-                for (ZimbraACE ace : mAces) {
-                    if (rights.contains(ace.getRight()))
-                        aces.add(ace);
-                }
+        if (mAces != null) {
+            for (ZimbraACE ace : mAces) {
+                if (rights.contains(ace.getRight()))
+                    aces.add(ace);
             }
-            if (mAuthuserAces != null) {
-                for (ZimbraACE ace : mAuthuserAces) {
-                    if (rights.contains(ace.getRight()))
-                        aces.add(ace);
-                }
+        }
+        if (mAuthuserAces != null) {
+            for (ZimbraACE ace : mAuthuserAces) {
+                if (rights.contains(ace.getRight()))
+                    aces.add(ace);
             }
-            if (mPublicAces != null) {
-                for (ZimbraACE ace : mPublicAces) {
-                    if (rights.contains(ace.getRight()))
-                        aces.add(ace);
-                }
+        }
+        if (mPublicAces != null) {
+            for (ZimbraACE ace : mPublicAces) {
+                if (rights.contains(ace.getRight()))
+                    aces.add(ace);
             }
         }
         
         return aces;
+    }
+    
+    /**
+     * Get ACEs with the specified right into the result Set
+     * 
+     * @param right
+     * @param result
+     */
+    void getACEs(Right right, Set<ZimbraACE> result) {
+        if (mAces != null) {
+            for (ZimbraACE ace : mAces) {
+                if (right == ace.getRight())
+                    result.add(ace);
+            }
+        }
+        if (mAuthuserAces != null) {
+            for (ZimbraACE ace : mAuthuserAces) {
+                if (right == ace.getRight())
+                    result.add(ace);
+            }
+        }
+        if (mPublicAces != null) {
+            for (ZimbraACE ace : mPublicAces) {
+                if (right == ace.getRight())
+                    result.add(ace);
+            }
+        }
     }
     
     public List<String> serialize() {

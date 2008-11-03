@@ -21,6 +21,7 @@ public class RightManager {
     private static final String E_DOC          = "doc";
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
+    private static final String E_TARGET_TYPE  = "targetType";
     
     private static final String A_ATTR         = "attr";
     private static final String A_LIMIT        = "limit";
@@ -122,6 +123,14 @@ public class RightManager {
             throw ServiceException.PARSE_ERROR("invalid default value: " + defaultValue, null);
     }
     
+    private void parseTargetType(Element eTargetType, Right right) throws ServiceException {
+        if (right.isUserRight())
+            throw ServiceException.PARSE_ERROR(E_TARGET_TYPE + " is not allowed for user right", null);
+        
+        TargetType targetType = TargetType.fromString(eTargetType.getText());
+        right.setTargetType(targetType);
+    }
+    
     private void parseAttr(Element eAttr, AdminRight right) throws ServiceException {
         
         // parse attribute name
@@ -185,6 +194,8 @@ public class RightManager {
                 parseDoc(elem, right);
             else if (elem.getName().equals(E_DEFAULT))
                 parseDefault(elem, right);
+            else if (elem.getName().equals(E_TARGET_TYPE))
+                parseTargetType(elem, right);
             else if (elem.getName().equals(E_ATTRS))
                 parseAttrs(elem, right);
             else
@@ -193,6 +204,14 @@ public class RightManager {
         if (right.getDesc() == null)
             throw ServiceException.PARSE_ERROR("missing element [" + E_DESC + "]", null);
 
+        if (right.isUserRight()) {
+            // user right can only be on accounts
+            right.setTargetType(TargetType.account);
+        } else {
+            // preset rights requires a target type
+            if (right.getTargetType() == null && ((AdminRight)right).getRightType() == AdminRight.RightType.preset)
+                throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "] for preset admin right", null);
+        }
         return right;
     }
     

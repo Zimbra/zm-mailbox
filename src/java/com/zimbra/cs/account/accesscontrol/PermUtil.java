@@ -23,11 +23,19 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class PermUtil {
     
+    public static Set<ZimbraACE> getAllACEs(Entry target) throws ServiceException {
+        ZimbraACL acl = getACL(target); 
+        if (acl != null)
+            return acl.getAllACEs();
+        else
+            return null;
+    }
+    
     /**
-     * Get ACEs with specified rights
+     * Get ACEs granted on target with specified rights
      * 
      * @param target 
-     * @param rights specified rights.  If null, all ACEs in the ACL will be returned.
+     * @param rights specified rights.
      * @return ACEs with right specified in rights
      * @throws ServiceException
      */
@@ -39,6 +47,20 @@ public class PermUtil {
             return null;
     }
     
+    /**
+     * Get ACEs granted on target with the specified right
+     * 
+     * @param target
+     * @param right
+     * @return
+     * @throws ServiceException
+     */
+    public static void getACEs(Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+        ZimbraACL acl = getACL(target); 
+        if (acl != null)
+            acl.getACEs(right, result);
+    }
+    
     public static Set<ZimbraACE> grantAccess(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         for (ZimbraACE ace : aces)
             ZimbraACE.validate(ace);
@@ -48,7 +70,7 @@ public class PermUtil {
         
         if (acl == null) {
             acl = new ZimbraACL(aces);
-            granted = acl.getACEs(null);
+            granted = acl.getAllACEs();
         } else {
             // make a copy so we don't interfere with others that are using the acl
             acl = acl.clone();
@@ -169,52 +191,13 @@ public class PermUtil {
     // for admins
     //
     public static NamedEntry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
-        NamedEntry targetEntry = null;
-        
-        switch (targetType) {
-        case account:
-            targetEntry = prov.get(AccountBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(target); 
-            break;
-        case resource:
-            targetEntry = prov.get(CalendarResourceBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
-                throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
-            break;
-        case distributionlist:
-            targetEntry = prov.get(DistributionListBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
-            break;
-        case domain:
-            targetEntry = prov.get(DomainBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
-                throw AccountServiceException.NO_SUCH_DOMAIN(target); 
-            break;
-        case cos:
-            targetEntry = prov.get(CosBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
-                throw AccountServiceException.NO_SUCH_COS(target); 
-            break;
-        case right:
-            throw ServiceException.FAILURE("unsupported", null);
-            // break;
-        case server:
-            targetEntry = prov.get(ServerBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
-                throw AccountServiceException.NO_SUCH_SERVER(target); 
-            break;
-        default:
-            ServiceException.INVALID_REQUEST("invallid target type for lookupTarget:" + targetType.toString(), null);
-        }
-    
-        return targetEntry;
+        return TargetType.lookupTarget(prov, targetType, targetBy, target);
     }
     
     //
     // for admins
     //
+    // TODO: move to GranteeType?
     public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
         NamedEntry granteeEntry = null;
         
