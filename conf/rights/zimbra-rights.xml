@@ -91,7 +91,24 @@ limit:
 -->
 <right name="createAccount" type="preset">
   <desc>create account</desc>
+  <targetType>domain</targetType>
 </right>
+
+<right name="renameAccount" type="preset">
+  <desc>rename account</desc>
+  <targetType>account</targetType>
+</right>
+
+<right name="renameCalendarResource" type="preset">
+  <desc>rename calendar resource</desc>
+  <targetType>resource</targetType>
+</right>
+
+<right name="renameDistributionList" type="preset">
+  <desc>rename distribution list</desc>
+  <targetType>distributionlist</targetType>
+</right>
+
 
 <right name="configureQuota" type="modifyAttrs">
   <desc>configure quota</desc>
