@@ -175,7 +175,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: first name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="givenName" type="string" flags="domainAdminModifiable">
+<attr name="givenName" type="string" optionalIn="account" flags="domainAdminModifiable">
     <desc>RFC2256: first name(s) for which the entity is known by</desc>
 </attr>
 
