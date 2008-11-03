@@ -1793,6 +1793,8 @@ public class AttributeManager {
                 result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
             }
             result.append("     */\n");
+            result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
+
             result.append(String.format("    public static final String A_%s = \"%s\";%n", ai.getName(), ai.getName()));
 
         }
@@ -1997,6 +1999,7 @@ public class AttributeManager {
             result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
         }
         result.append("     */\n");
+        result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
         result.append(String.format("    public %s %s() {%n        %s%n    }%n", javaType, methodName, javaBody));
         return result.toString();
     }
