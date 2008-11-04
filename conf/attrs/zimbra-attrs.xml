@@ -251,12 +251,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256/2307: password of user. Stored encoded as SSHA (salted-SHA1)</desc>
 </attr>
 
-<!-- zimbraHsmAge is special. We set parentOid to keep the same OID it had before -->
-
-<attr id="20" parentOid="1.3.6.1.4.1.19348.2.4" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>30d</globalConfigValue>
-  <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
-</attr>
 
 <attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource,xmppComponent" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
@@ -272,6 +266,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="4" name="zimbraMailHost" type="astring" max="256" callback="MailHost" cardinality="single" optionalIn="mailRecipient">
   <desc>the server hosting the accounts mailbox</desc>
+</attr>
+
+<!--
+    In and prior to 5.0.*, zimbraHsmAge is special. We set parentOid to keep the same OID it had before: 1.3.6.1.4.1.19348.2.4.20
+    Since 5.5, we use an oid in the normal range, see bug 8945.
+ -->
+<attr id="8" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>30d</globalConfigValue>
+  <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
 </attr>
 
 <attr id="9" name="zimbraNotes" type="string" max="1024" cardinality="single" optionalIn="account,distributionList,cos,domain,server" flags="domainAdminModifiable">
