@@ -17,15 +17,15 @@
 
 package com.zimbra.cs.account;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+
+import java.util.Map;
 
 /**
  * @author schemers
  */
-public class Account extends MailTarget {
+public class Account extends ZAttrAccount  {
     
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
@@ -46,10 +46,6 @@ public class Account extends MailTarget {
         String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
                 CalendarUserType.USER.toString());
         return CalendarUserType.valueOf(cutype);
-    }
-
-    public String getUid() {
-        return super.getAttr(Provisioning.A_uid);
     }
 
     public boolean saveToSent() {

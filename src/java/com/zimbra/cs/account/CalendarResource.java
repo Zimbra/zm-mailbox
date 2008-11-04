@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * @author jhahm
  */
-public class CalendarResource extends Account {
+public class CalendarResource extends ZAttrCalendarResource {
 
     public CalendarResource(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);

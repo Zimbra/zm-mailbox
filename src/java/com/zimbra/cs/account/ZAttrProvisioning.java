@@ -24,6 +24,10 @@ package com.zimbra.cs.account;
  */
 public class ZAttrProvisioning {
 
+    ///// BEGIN-AUTO-GEN-REPLACE
+
+    /* build: 5.0 schemers 20081104-1137 */
+
     /**
      */
     @ZAttr(id=-1)
@@ -4914,4 +4918,6 @@ public class ZAttrProvisioning {
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
 
+    ///// END-AUTO-GEN-REPLACE
 }
+

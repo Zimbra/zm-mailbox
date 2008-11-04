@@ -19,10 +19,10 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
-public class DistributionList extends MailTarget {
+public class DistributionList extends ZAttrDistributionList {
     
     protected DistributionList(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+        super(name, id, attrs);
     }
 
     public String[] getAllMembers() {

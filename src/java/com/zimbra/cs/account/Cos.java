@@ -22,22 +22,22 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class Cos extends NamedEntry {
+public class Cos extends ZAttrCos {
  
     private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
 
     public Cos(String name, String id, Map<String,Object> attrs) {
-        super(name, id, attrs, null);
+        super(name, id, attrs);
         resetData();
     }
 

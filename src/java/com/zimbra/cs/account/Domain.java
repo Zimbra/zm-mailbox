@@ -22,19 +22,19 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author schemers
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class Domain extends NamedEntry {
+public class Domain extends ZAttrDomain {
     private String mUnicodeName;
     private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
     
@@ -62,10 +62,6 @@ public class Domain extends NamedEntry {
     
     public String getUnicodeName() {
         return mUnicodeName;
-    }
-    
-    public String getDomainStatus() {
-        return getAttr(Provisioning.A_zimbraDomainStatus);
     }
     
     public boolean isSuspended() {

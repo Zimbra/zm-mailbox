@@ -22,23 +22,23 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class Config extends Entry {
+public class Config extends ZAttrConfig {
     
     private Map<String, Object> mDomainDefaults = new HashMap<String, Object>();
     private Map<String, Object> mServerDefaults = new HashMap<String, Object>();    
 
     public Config(Map<String, Object> attrs) {
-        super(attrs, null);
+        super(attrs);
         resetData();
     }
     

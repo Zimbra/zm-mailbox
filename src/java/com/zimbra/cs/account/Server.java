@@ -29,7 +29,7 @@ import java.util.Map;
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class Server extends NamedEntry {
+public class Server extends ZAttrServer {
     
     public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults) {
         super(name, id, attrs, defaults);
