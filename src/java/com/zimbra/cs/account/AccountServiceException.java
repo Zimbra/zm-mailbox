@@ -71,7 +71,8 @@ public class AccountServiceException extends ServiceException {
     public static final String TOO_MANY_DATA_SOURCES = "account.TOO_MANY_DATA_SOURCES";
     public static final String TOO_MANY_ACCOUNTS = "account.TOO_MANY_ACCOUNTS";
     public static final String TOO_MANY_SEARCH_RESULTS = "account.TOO_MANY_SEARCH_RESULTS";
-
+    public static final String PROV_ERROR    = "account.PROV_ERROR";
+    
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
     }
@@ -174,6 +175,10 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("no such account: "+name, NO_SUCH_ACCOUNT, SENDERS_FAULT, null);
     }
 
+    public static AccountServiceException PROV_ERROR(String name, Throwable t) {
+        return new AccountServiceException("Provisioning error for account: "+name, PROV_ERROR, SENDERS_FAULT, t);
+    }
+    
     public static AccountServiceException NO_SUCH_ALIAS(String name) {
         return new AccountServiceException("no such alias: "+name, NO_SUCH_ALIAS, SENDERS_FAULT, null);
     }
