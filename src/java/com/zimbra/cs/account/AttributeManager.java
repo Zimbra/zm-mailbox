@@ -1593,7 +1593,7 @@ public class AttributeManager {
                     SINGLE-VALUE )
             */
 
-            ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes ( 1.2.840.113556.1.2.146\n");
+            ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes: ( 1.2.840.113556.1.2.146\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( 'company' )\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}\n");
             ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "EQUALITY caseIgnoreMatch\n");
