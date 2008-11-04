@@ -39,6 +39,7 @@ public class AdminService implements DocumentService {
     public void registerHandlers(DocumentDispatcher dispatcher) {
         dispatcher.registerHandler(AdminConstants.PING_REQUEST, new Ping());
         dispatcher.registerHandler(AdminConstants.CHECK_HEALTH_REQUEST, new CheckHealth());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_LOCALES_REQUEST, new GetAllLocales());
 
         dispatcher.registerHandler(AdminConstants.AUTH_REQUEST, new Auth());
         dispatcher.registerHandler(AdminConstants.CREATE_ACCOUNT_REQUEST, new CreateAccount());

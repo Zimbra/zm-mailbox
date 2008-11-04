@@ -2100,6 +2100,18 @@ in soap-waitset.txt
 
 ----------------------------------------
 
+<GetAllLocalesRequest/>
+
+<GetAllLocalesResponse>
+  <locale id="en_US" name="English (United States)"/>
+  ...
+</GetAllLocalesResponse>
+
+Returns all locales defined in the system.  This is the same list returned by
+java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
+
+----------------------------------------
+
 <CheckPermissionRequest>
   <principal by="id|name">...</principal>
   <target type="{target-type}" by="id|name">...</target>
