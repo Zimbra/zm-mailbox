@@ -17,8 +17,11 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.zimbra.common.util.ByteUtil;
 
 /**
  * Returns data from the encapsulated stream until <tt>CRLFCRLF</tt> is reached.
@@ -31,17 +34,15 @@ public class HeadersOnlyInputStream extends InputStream {
     private boolean mEOF = false;
     
     public HeadersOnlyInputStream(InputStream in) {
-        if (!in.markSupported()) {
+        if (!in.markSupported())
             in = new BufferedInputStream(in);
-        }
         mIn = in;
     }
     
-    @Override
-    public int read() throws IOException {
-        if (mEOF) {
+    @Override public int read() throws IOException {
+        if (mEOF)
             return -1;
-        }
+
         int c = mIn.read();
         if (c == '\r') {
             mIn.mark(4);
@@ -57,23 +58,25 @@ public class HeadersOnlyInputStream extends InputStream {
         return c;
     }
 
-    @Override
-    public void close() throws IOException {
+    @Override public void close() throws IOException {
         mIn.close();
     }
 
-    @Override
-    public synchronized void mark(int readlimit) {
+    @Override public synchronized void mark(int readlimit) {
         mIn.mark(readlimit);
     }
 
-    @Override
-    public boolean markSupported() {
+    @Override public boolean markSupported() {
         return mIn.markSupported();
     }
 
-    @Override
-    public synchronized void reset() throws IOException {
+    @Override public synchronized void reset() throws IOException {
         mIn.reset();
+    }
+
+    public static byte[] getHeaders(InputStream is) throws IOException {
+        ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
+        ByteUtil.copy(new HeadersOnlyInputStream(is), true, buf, false);
+        return buf.toByteArray();
     }
 }

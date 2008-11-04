@@ -776,19 +776,21 @@ public class UserServlet extends ZimbraServlet {
             //rest url override for locale
             String language = this.params.get(QP_LANGUAGE);
             if (language != null) {
-                String country =  this.params.get(QP_COUNTRY);
+                String country = this.params.get(QP_COUNTRY);
                 if (country != null) {
                     String variant = this.params.get(QP_VARIANT);
                     if (variant != null) {
                         this.locale = new Locale(language, country, variant);
+                    } else {
+                        this.locale = new Locale(language, country);
                     }
-                    this.locale =  new Locale(language, country);
+                } else {
+                    this.locale = new Locale(language);
                 }
-                this.locale =  new Locale(language);
-            }else{
-            	this.locale =  req.getLocale();
-            }            
-            
+            } else {
+            	this.locale = req.getLocale();
+            }
+
             String pathInfo = request.getPathInfo();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/"))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidPath, request));
@@ -815,7 +817,7 @@ public class UserServlet extends ZimbraServlet {
             } catch (ServiceException e) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidId, request));
             }
-            
+
             String listParam = this.params.get(QP_LIST);
             if (listParam != null && listParam.length() > 0) {
             	String[] ids = listParam.split(",");
@@ -824,7 +826,7 @@ public class UserServlet extends ZimbraServlet {
             		reqListIds[i] = Integer.parseInt(ids[i]);
             	}
             }
-            
+
             String imap = this.params.get(QP_IMAP_ID);
             try {
                 this.imapId = imap == null ? -1 : Integer.parseInt(imap);
@@ -857,7 +859,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public Servlet getServlet() { return servlet; }
-        
+
         public long getStartTime() {
             if (mStartTime == -2) {
                 String st = params.get(QP_START);
@@ -918,8 +920,8 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public boolean noSetCookie() {
-            return authAccount != null && authAccount instanceof ACL.GuestAccount
-            || getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
+            return (authAccount != null && authAccount instanceof ACL.GuestAccount)
+                    || getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
         }
 
         public boolean basicAuthAllowed() {
@@ -929,7 +931,7 @@ public class UserServlet extends ZimbraServlet {
         public boolean queryParamAuthAllowed() {
             return getAuth().indexOf(AUTH_QUERYPARAM) != -1;
         }
-        
+
         public String getAuth() {
             String a = params.get(QP_AUTH);
             return (a == null || a.length() == 0) ? AUTH_DEFAULT : a;
@@ -943,7 +945,7 @@ public class UserServlet extends ZimbraServlet {
         public String getPart() {
             return params.get(QP_PART);
         }
-        
+
         public boolean hasBody() {
             String p = getBody();
             return p != null;
@@ -971,7 +973,7 @@ public class UserServlet extends ZimbraServlet {
             }
             return 0;
         }
-        
+
         public int getLimit() {
             String s = params.get(QP_LIMIT);
             if (s != null) {
@@ -981,12 +983,19 @@ public class UserServlet extends ZimbraServlet {
             }
             return 50;
         }
-        
 
         public String getTypesString() {
             return params.get(QP_TYPES);
         }
         
+        /** Returns <tt>true</tt> if {@link UserServlet#QP_BODY} is not
+         *  specified or is set to a non-zero value. */
+        public boolean shouldReturnBody() {
+            String bodyVal = params.get(UserServlet.QP_BODY);
+            if (bodyVal != null && bodyVal.equals("0"))
+                return false;
+            return true;
+        }
 
         public void setAnonymousRequest() {
             authAccount = ACL.ANONYMOUS_ACCT;
@@ -1004,14 +1013,13 @@ public class UserServlet extends ZimbraServlet {
             long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(
                     Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_POST_SIZE);
             InputStream is = getRequestInputStream(sizeLimit);
-            
             try {
                 return ByteUtil.getContent(is, req.getContentLength(), sizeLimit);
             } finally {
                 is.close();
             }
         }
-        
+
         public FileUploadServlet.Upload getUpload() throws ServiceException, IOException {
             return FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId());
         }

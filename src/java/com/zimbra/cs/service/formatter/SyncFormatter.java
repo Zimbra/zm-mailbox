@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -68,17 +69,15 @@ public class SyncFormatter extends Formatter {
         hdrs.add(new Pair<String, String>("X-Zimbra-Modified", item.getChangeDate() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Change", item.getModifiedSequence() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Revision", item.getSavedSequence() + ""));
-        if (item instanceof Message) {
+        if (item instanceof Message)
         	hdrs.add(new Pair<String, String>("X-Zimbra-Conv", ((Message) item).getConversationId() + ""));
-        }
         return hdrs;
     }
     
     private static byte[] getXZimbraHeadersBytes(List<Pair<String, String>> hdrs) {
     	StringBuilder sb = new StringBuilder();
-    	for (Pair<String, String> pair :  hdrs) {
+    	for (Pair<String, String> pair : hdrs)
     		sb.append(pair.getFirst()).append(": ").append(pair.getSecond()).append("\r\n");
-    	}
     	return sb.toString().getBytes();
     }
     
@@ -88,20 +87,18 @@ public class SyncFormatter extends Formatter {
     
     private static void addXZimbraHeaders(Context context, MailItem item, long size) throws IOException {
     	List<Pair<String, String>> hdrs = getXZimbraHeaders(item);
-    	for (Pair<String, String> pair :  hdrs) {
+    	for (Pair<String, String> pair : hdrs)
     		context.resp.addHeader(pair.getFirst(), pair.getSecond());
-    	}
 
-    	//inline X-Zimbra headers with response body if nohdr parameter is not present
-    	//also explicitly set the Content-Length header, as it's only done implicitly for short payloads
+    	// inline X-Zimbra headers with response body if nohdr parameter is not present
+    	// also explicitly set the Content-Length header, as it's only done implicitly for short payloads
     	if (context.params.get(QP_NOHDR) == null) {
     		byte[] inline = getXZimbraHeadersBytes(hdrs);
-    		if (size > 0) {
-    			context.resp.setContentLength(inline.length + (int)size);
-    		}
+    		if (size > 0)
+    			context.resp.setContentLength(inline.length + (int) size);
     		context.resp.getOutputStream().write(inline);
     	} else if (size > 0) {
-    		context.resp.setContentLength((int)size);
+    		context.resp.setContentLength((int) size);
     	}
     }
 
@@ -141,7 +138,14 @@ public class SyncFormatter extends Formatter {
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
         InputStream is = msg.getContentStream();
-        addXZimbraHeaders(context, msg, msg.getSize());
+        long size = msg.getSize();
+
+        if (!context.shouldReturnBody()) {
+            byte[] headers = HeadersOnlyInputStream.getHeaders(is);
+            is = new ByteArrayInputStream(headers);
+            size = headers.length;
+        }
+        addXZimbraHeaders(context, msg, size);
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
 

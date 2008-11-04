@@ -84,10 +84,10 @@ public class TarFormatter extends Formatter {
     private static enum Resolve { Modify, Replace, Reset, Skip }
 
     private static final class SortPath implements Comparator<MailItem> {
+        SortPath()  { }
         public int compare(MailItem m1, MailItem m2) {
             try {
                 int ret = m1.getPath().compareTo(m2.getPath());
-                
                 return ret == 0 ? m1.getName().compareTo(m2.getName()) : ret;
             } catch (Exception e) {
                 return 0;
@@ -377,7 +377,7 @@ public class TarFormatter extends Formatter {
             }
             if (is != null) {
                 entry.setName(path);
-                if (shouldReturnBody(context)) {
+                if (context.shouldReturnBody()) {
                     byte buf[] = new byte[tos.getRecordSize() * 20];
                     int in;
                     long remain = miSize;
@@ -401,12 +401,7 @@ public class TarFormatter extends Formatter {
                     }
                 } else {
                     // Read headers into memory, since we need to write the size first.
-                    InputStream headerStream = new HeadersOnlyInputStream(is);
-                    ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
-                    
-                    ByteUtil.copy(headerStream, true, buf, false);
-                    byte[] headerData = buf.toByteArray();
-                    
+                    byte[] headerData = HeadersOnlyInputStream.getHeaders(is);
                     entry.setSize(headerData.length);
                     tos.putNextEntry(entry);
                     tos.write(headerData);
@@ -419,18 +414,6 @@ public class TarFormatter extends Formatter {
             ByteUtil.closeStream(is);
         }
         return tos;
-    }
-    
-    /**
-     * Returns <tt>true</tt> if {@link UserServlet#QP_BODY} is not
-     * specified or set to a non-zero value.
-     */
-    static boolean shouldReturnBody(Context context) {
-        String bodyVal = context.params.get(UserServlet.QP_BODY);
-        if (bodyVal != null && bodyVal.equals("0")) {
-            return false;
-        }
-        return true;
     }
     
     /**
@@ -471,38 +454,38 @@ public class TarFormatter extends Formatter {
         names.add(lpath);
         return path;
     }
-    
-    public void saveCallback(Context context, String contentType, Folder fldr,
-        String file) throws IOException, ServiceException, UserServletException {
+
+    @Override public void saveCallback(Context context, String contentType, Folder fldr, String file)
+    throws IOException, ServiceException {
         ItemData id = null;
-        String charset = context.params.get("charset");
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
         StringBuffer errs = new StringBuffer();
-        List<Folder> flist = fldr.getSubfolderHierarchy();
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
-        int[] ids = null;
-        long interval = 45 * 1000;
         long last = System.currentTimeMillis();
-        Resolve r;
-        String resolve = context.params.get("resolve");
-        byte[] searchTypes = null;
-        String subfolder = context.params.get("subfolder");
-        TarEntry te;
-        String timeout = context.params.get("timeout");
-        TarInputStream tis = null;
+
         String types = context.getTypesString();
+        String charset = context.params.get("charset");
+        String resolve = context.params.get("resolve");
+        String subfolder = context.params.get("subfolder");
+        String timeout = context.params.get("timeout");
  
         try {
+            int[] ids = null;
             if (context.reqListIds != null) {
                 ids = context.reqListIds.clone();
                 Arrays.sort(ids);
             }
-            r = resolve == null ? Resolve.Skip : Resolve.valueOf(
+
+            Resolve r = resolve == null ? Resolve.Skip : Resolve.valueOf(
                 resolve.substring(0,1).toUpperCase() +
                 resolve.substring(1).toLowerCase());
+
+            long interval = 45 * 1000;
             if (timeout != null)
                 interval = Long.parseLong(timeout);
+
+            byte[] searchTypes = null;
             if (types != null && !types.equals("")) {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
                 for (byte type : searchTypes) {
@@ -517,14 +500,16 @@ public class TarFormatter extends Formatter {
                     }
                 }
             }
-            tis = new TarInputStream(new GZIPInputStream(
-                context.getRequestInputStream(-1)), charset == null ? "UTF-8" :
-                    charset);
+
+            TarInputStream tis = new TarInputStream(new GZIPInputStream(
+                context.getRequestInputStream(-1)), charset == null ? "UTF-8" : charset);
+
+            List<Folder> flist = fldr.getSubfolderHierarchy();
             if (subfolder != null && !subfolder.equals("")) {
-                fldr = createPath(context, fmap, fldr.getPath() + subfolder,
-                    Folder.TYPE_UNKNOWN);
+                fldr = createPath(context, fmap, fldr.getPath() + subfolder, Folder.TYPE_UNKNOWN);
                 flist = fldr.getSubfolderHierarchy();
             }
+
             if (r == Resolve.Reset) {
                 for (Folder f : flist) {
                     try {
@@ -583,6 +568,7 @@ public class TarFormatter extends Formatter {
                 fmap.put(f.getPath(), f);
             }
             try {
+                TarEntry te;
                 while ((te = tis.getNextEntry()) != null) {
                     if (System.currentTimeMillis() - last > interval) {
                         updateClient(context, true);
