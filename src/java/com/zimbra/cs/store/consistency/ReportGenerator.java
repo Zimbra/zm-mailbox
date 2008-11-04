@@ -46,7 +46,25 @@ public class ReportGenerator implements Runnable {
     private final File reportFile;
     private final int mailboxId;
     private final int mboxGroupId;
-    final static String JDBC_URL = "jdbc:mysql://localhost:7306/";
+    final static String JDBC_URL;
+    
+    static {
+        final String addr_expr =
+            "/localconfig/key[@name = 'mysql_bind_address']/value";
+        final String port_expr =
+            "/localconfig/key[@name = 'mysql_port']/value";
+        String address;
+        String port;
+        try {
+            address = BlobConsistencyCheck.queryLocalConfig(addr_expr);
+            port    = BlobConsistencyCheck.queryLocalConfig(port_expr);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to read localconfig", e);
+        }
+        JDBC_URL = "jdbc:mysql://" + address + ":" + port + "/";
+        
+    }
     private final static char[] SPINNER = { '|', '/', '-', '\\' };
     
     /**

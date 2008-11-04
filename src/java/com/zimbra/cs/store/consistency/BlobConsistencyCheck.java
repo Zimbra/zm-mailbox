@@ -172,8 +172,12 @@ public class BlobConsistencyCheck {
     }
 
     private static String loadMysqlPassword() throws IOException {
+        return queryLocalConfig(XPATH_EXPR);
+    }
+    
+    static String queryLocalConfig(String xpath) throws IOException {
         File config = new File(LOCAL_CONFIG);
-        String passwd = null;
+        String result = null;
         if (config.exists() && config.isFile()) {
             FileInputStream in = null;
             try {
@@ -182,7 +186,7 @@ public class BlobConsistencyCheck {
                 XPathFactory xpf = XPathFactory.newInstance();
                 XPath xp = xpf.newXPath();
                 try {
-                    passwd = xp.evaluate(XPATH_EXPR, src);
+                    result = xp.evaluate(xpath, src);
                 }
                 catch (XPathExpressionException e) {
                     e.printStackTrace();
@@ -191,6 +195,6 @@ public class BlobConsistencyCheck {
                 if (in != null) in.close();
             }
         }
-        return passwd;
+        return result;
     }
 }
