@@ -65,29 +65,28 @@ import com.zimbra.cs.mime.ParsedMessage;
 public class LiveImport extends MailItemImport {
     private JDAVMailStore store;
 
-    private static final Session SESSION;
+    public LiveImport(DataSource ds) throws ServiceException {
+        super(ds);
+        store = new JDAVMailStore(getSession(ds), null);
 
-    static {
+    }
+    
+    private static Session getSession(DataSource ds) {
         boolean debug = Boolean.getBoolean("ZimbraJavamailDebug") ||
-            LC.javamail_imap_debug.booleanValue();
+            LC.javamail_imap_debug.booleanValue() || ds.isDebugTraceEnabled();
         Long timeout = LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
         Properties props = new Properties();
-        
+
         if (timeout > 0) {
             props.setProperty("mail.davmail.connectiontimeout", timeout.toString());
             props.setProperty("mail.davail.timeout", timeout.toString());
         }
         if (debug)
             props.setProperty("mail.debug", "true");
-        SESSION = Session.getInstance(props);
+        Session session = Session.getInstance(props);
         if (debug)
-            SESSION.setDebug(true);
-    }
-
-    public LiveImport(DataSource ds) throws ServiceException {
-        super(ds);
-        store = new JDAVMailStore(SESSION, null);
-
+            session.setDebug(true);
+        return session;
     }
 
     public synchronized String test() throws ServiceException {
