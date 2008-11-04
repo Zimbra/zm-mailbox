@@ -69,36 +69,9 @@ public class Pop3Import extends MailItemImport {
     private static final boolean DEBUG =
         Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_pop3_debug.booleanValue();
 
-    private static final Session SESSION;
     private static final FetchProfile UID_PROFILE;
 
     static {
-        Properties props = new Properties();
-        props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3s.socketFactory.class",
-            LC.data_source_trust_self_signed_certs.booleanValue() ?
-                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
-        props.setProperty("mail.pop3s.socketFactory.fallback", "false");
-        if (LC.javamail_pop3_enable_starttls.booleanValue()) {
-        	props.setProperty("mail.pop3.starttls.enable", "true");
-        }
-        props.setProperty("mail.pop3.max.message.memory.size",
-                          String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
-        props.setProperty("mail.pop3s.max.message.memory.size",
-                          String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
-        if (DEBUG) {
-            props.setProperty("mail.debug", "true");
-        }
-
-        SESSION = Session.getInstance(props);
-
-        if (DEBUG) {
-            SESSION.setDebug(true);
-        }
-
         UID_PROFILE = new FetchProfile();
         UID_PROFILE.add(UIDFolder.FetchProfileItem.UID);
     }
@@ -155,7 +128,7 @@ public class Pop3Import extends MailItemImport {
             throw ServiceException.FAILURE("Invalid connection type: " + type, null);
         }
         try {
-            return (POP3Store) SESSION.getStore(provider);
+            return (POP3Store) getSession(ds).getStore(provider);
         } catch (NoSuchProviderException e) {
             throw ServiceException.FAILURE("Unknown provider: " + provider, e);
         }
@@ -171,7 +144,36 @@ public class Pop3Import extends MailItemImport {
             return null;
         }
     }
-
+    
+    private static Session getSession(DataSource ds) {
+        Properties props = new Properties();
+        props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.socketFactory.class",
+            LC.data_source_trust_self_signed_certs.booleanValue() ?
+                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.pop3s.socketFactory.fallback", "false");
+        if (LC.javamail_pop3_enable_starttls.booleanValue()) {
+            props.setProperty("mail.pop3.starttls.enable", "true");
+        }
+        props.setProperty("mail.pop3.max.message.memory.size",
+                          String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
+        props.setProperty("mail.pop3s.max.message.memory.size",
+                          String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
+        if (DEBUG) {
+            props.setProperty("mail.debug", "true");
+        }
+        
+        Session session = Session.getInstance(props);
+        
+        if (DEBUG || ds.isDebugTraceEnabled()) {
+            session.setDebug(true);
+        }
+        return session;
+    }
+    
     private void fetchMessages() throws MessagingException, IOException, ServiceException {
         DataSource ds = getDataSource();
         POP3Folder folder = (POP3Folder) store.getFolder("INBOX");

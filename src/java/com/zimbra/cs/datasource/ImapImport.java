@@ -98,32 +98,9 @@ public class ImapImport extends MailItemImport {
     private static final long TIMEOUT =
         LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
 
-    private static final Session SESSION;
     private static final FetchProfile FETCH_PROFILE;
 
     static {
-        Properties props = new Properties();
-        props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imaps.socketFactory.class",
-            LC.data_source_trust_self_signed_certs.booleanValue() ?
-                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
-        props.setProperty("mail.imaps.socketFactory.fallback", "false");
-        if (DEBUG) {
-            props.setProperty("mail.debug", "true");
-        }
-        props.setProperty("mail.imap.idextension", ID_EXT);
-        props.setProperty("mail.imaps.idextension", ID_EXT);
-        if (LC.javamail_imap_enable_starttls.booleanValue()) {
-            props.setProperty("mail.imap.starttls.enable", "true");
-            props.setProperty("mail.imap.socketFactory.class", TlsSocketFactory.class.getName());
-        }
-        SESSION = Session.getInstance(props);
-        if (DEBUG) {
-            SESSION.setDebug(true);
-        }
         FETCH_PROFILE = new FetchProfile();
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.FLAGS);
@@ -557,12 +534,38 @@ public class ImapImport extends MailItemImport {
             throw ServiceException.FAILURE("Invalid connection type: " + type, null);
         }
         try {
-            return (IMAPStore) SESSION.getStore(provider);
+            return (IMAPStore) getSession(ds).getStore(provider);
         } catch (NoSuchProviderException e) {
             throw ServiceException.FAILURE("Unknown provider: " + provider, e);
         }
     }
 
+    private static Session getSession(DataSource ds) {
+        Properties props = new Properties();
+        props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.socketFactory.class",
+            LC.data_source_trust_self_signed_certs.booleanValue() ?
+                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.imaps.socketFactory.fallback", "false");
+        if (DEBUG) {
+            props.setProperty("mail.debug", "true");
+        }
+        props.setProperty("mail.imap.idextension", ID_EXT);
+        props.setProperty("mail.imaps.idextension", ID_EXT);
+        if (LC.javamail_imap_enable_starttls.booleanValue()) {
+            props.setProperty("mail.imap.starttls.enable", "true");
+            props.setProperty("mail.imap.socketFactory.class", TlsSocketFactory.class.getName());
+        }
+        Session session = Session.getInstance(props);
+        if (DEBUG || ds.isDebugTraceEnabled()) {
+            session.setDebug(true);
+        }
+        return session;
+    }
+    
     private static String getProvider(DataSource.ConnectionType type) {
         switch (type) {
         case cleartext:
