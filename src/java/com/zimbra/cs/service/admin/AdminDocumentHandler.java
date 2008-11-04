@@ -91,6 +91,32 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     protected String[] getProxiedResourcePath()         { return null; }
     protected String[] getProxiedResourceElementPath()  { return null; }
     protected String[] getProxiedServerPath()           { return null; }
+    
+    private Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken) throws ServiceException {
+        Account acct = null;
+        
+        // first try getting it from master if not in cache
+        try {
+            acct = prov.get(accountBy, value, true, authToken);
+        } catch (ServiceException e) {
+            // try the replica
+            acct = prov.get(accountBy, value, false, authToken);
+        }
+        return acct;
+    }
+    
+    private CalendarResource getCalendarResource(Provisioning prov, CalendarResourceBy crBy, String value, AuthToken authToken) throws ServiceException {
+        CalendarResource cr = null;
+        
+        // first try getting it from master if not in cache
+        try {
+            cr = prov.get(crBy, value, true);
+        } catch (ServiceException e) {
+            // try the replica
+            cr = prov.get(crBy, value, false);
+        }
+        return cr;
+    }
 
     @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
@@ -106,7 +132,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             String[] xpath = getProxiedAccountPath();
             String acctId = (xpath != null ? getXPath(request, xpath) : null);
             if (acctId != null) {
-                Account acct = prov.get(AccountBy.id, acctId, true, zsc.getAuthToken());
+                Account acct = getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acctId);
             }
@@ -114,7 +140,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedAccountElementPath();
             Element acctElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (acctElt != null) {
-                Account acct = prov.get(AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)), acctElt.getText(), true);
+                Account acct = getAccount(prov, AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)), acctElt.getText(), zsc.getAuthToken());   
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acct.getId());
             }
@@ -123,7 +149,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedResourcePath();
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
-                CalendarResource rsrc = prov.get(CalendarResourceBy.id, rsrcId, true);
+                CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.id, rsrcId, zsc.getAuthToken());
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
                     if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
@@ -134,7 +160,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedResourceElementPath();
             Element resourceElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (resourceElt != null) {
-                CalendarResource rsrc = prov.get(CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText(), true);
+                CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText(), zsc.getAuthToken());
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
                     if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
