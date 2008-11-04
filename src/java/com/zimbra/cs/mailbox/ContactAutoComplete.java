@@ -20,11 +20,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.TreeSet;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.MultiTreeMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -39,9 +38,21 @@ import com.zimbra.cs.index.queryparser.ParseException;
 
 public class ContactAutoComplete {
 	public static class AutoCompleteResult {
-		public AutoCompleteResult() { entries = new ArrayList<ContactEntry>(); canBeCached = true; }
 		public Collection<ContactEntry> entries;
 		public boolean canBeCached;
+		public AutoCompleteResult() { 
+			entries = new ArrayList<ContactEntry>(); 
+			emails = new HashSet<String>();
+			canBeCached = true; 
+		}
+		public void addEntry(ContactEntry entry) {
+			String email = entry.mEmail.toLowerCase();
+			if (!emails.contains(email)) {
+				entries.add(entry);
+				emails.add(email);
+			}
+		}
+		private HashSet<String> emails;
 	}
     public static class ContactEntry implements Comparable<ContactEntry> {
         String mEmail;
@@ -69,6 +80,7 @@ public class ContactAutoComplete {
     		if (name == null)
     			name = "";
     		mDisplayName = name;
+    		mLastName = "";
     		int space = name.lastIndexOf(' ');
     		if (space > 0)
     			mLastName = name.substring(space+1);
@@ -89,137 +101,43 @@ public class ContactAutoComplete {
         }
 	}
     
-    private static class ContactRankings {
-    	private static final String CONFIG_KEY_CONTACT_RANKINGS = "CONTACT_RANKINGS";
-    	private static final String KEY_NAME = "n";
-    	private static final String KEY_FOLDER = "o";
-    	private static final String KEY_RANKING = "r";
-    	
-    	private String mAccountId;
-    	private MultiTreeMap<String,ContactEntry> mEntryMap;
-    	private TreeSet<ContactEntry> mEntrySet;
-    	public ContactRankings(String accountId) throws ServiceException {
-    		mAccountId = accountId;
-    		mEntryMap = new MultiTreeMap<String,ContactEntry>();
-    		mEntrySet = new TreeSet<ContactEntry>();
-    		readFromDatabase();
-    	}
-    	public synchronized void increment(String email, String displayName, int folderId) throws ServiceException {
-    		ContactEntry entry = mEntryMap.getFirst(email.toLowerCase());
-    		if (entry != null) {
-    			entry.mRanking++;
-    			return;
-    		}
-    		entry = new ContactEntry();
-    		entry.mEmail = email;
-			entry.mRanking = 1;
-    		entry.setName(displayName);
-    		if (folderId == 0)
-    			folderId = FOLDER_ID_GAL;
-    		entry.mFolderId = folderId;
-    		
-    		ContactEntry firstEntry = mEntrySet.first();
-    		if (firstEntry.mRanking == 0) {
-    			remove(firstEntry);
-    			add(entry);
-    		} else {
-    			for (ContactEntry e : mEntrySet)
-    				e.mRanking--;
-    		}
-    		writeToDatabase();
-    	}
-    	public synchronized Collection<ContactEntry> query(String str, Collection<Integer> folders) {
-    		ZimbraLog.gal.debug("querying ranking database");
-    		TreeSet<ContactEntry> entries = new TreeSet<ContactEntry>();
-    		str = str.toLowerCase();
-    		for (String k : mEntryMap.tailMap(str).keySet()) {
-    			if (k.startsWith(str)) {
-    				for (ContactEntry entry : mEntryMap.get(k)) {
-    					if (folders.contains(entry.mFolderId)) {
-    						entries.add(entry);
-    						ZimbraLog.gal.debug("adding "+entry.toString());
-    					}
-    				}
-    			} else
-    				break;
-    		}
-    		return entries;
-    	}
-    	private void readFromDatabase() throws ServiceException {
-    		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-    		Metadata config = mbox.getConfig(null, CONFIG_KEY_CONTACT_RANKINGS);
-            if (config == null) {
-    			ZimbraLog.gal.debug("creating new contact ranking list for account "+mAccountId);
-            	config = new Metadata();
-            	mbox.setConfig(null, CONFIG_KEY_CONTACT_RANKINGS, config);
-            }
-            for (Object k : config.mMap.keySet()) {
-            	Object v = config.mMap.get(k);
-            	if (v instanceof Map) {
-            		@SuppressWarnings("unchecked")
-            		Map<Object,Object> m = (Map<Object,Object>) v;
-            		ContactEntry entry = new ContactEntry();
-            		entry.mEmail = (String) k;
-            		entry.setName((String) m.get(KEY_NAME));
-            		entry.mFolderId = Integer.parseInt((String) m.get(KEY_FOLDER));
-            		entry.mRanking = Integer.parseInt((String) m.get(KEY_RANKING));
-            		add(entry);
-            	}
-            }
-            dump("reading");
-    	}
-    	private void writeToDatabase() throws ServiceException {
-    		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-    		Metadata config = new Metadata();
-    		for (ContactEntry entry : mEntrySet) {
-    			Metadata m = new Metadata();
-    			m.put(KEY_NAME, entry.mDisplayName);
-    			m.put(KEY_FOLDER, entry.mFolderId);
-    			m.put(KEY_RANKING, entry.mRanking);
-    			config.put(entry.mEmail, m);
-    		}
-    		mbox.setConfig(null, CONFIG_KEY_CONTACT_RANKINGS, config);
-    		dump("writing");
-    	}
-    	private void add(ContactEntry entry) {
-    		mEntryMap.add(entry.mEmail.toLowerCase(), entry);
-    		mEntryMap.add(entry.mDisplayName.toLowerCase(), entry);
-    		mEntryMap.add(entry.mLastName.toLowerCase(), entry);
-    		mEntrySet.add(entry);
-    	}
-    	private void remove(ContactEntry entry) {
-    		mEntryMap.remove(entry.mEmail.toLowerCase(), entry);
-    		mEntryMap.remove(entry.mDisplayName.toLowerCase(), entry);
-    		mEntryMap.remove(entry.mLastName.toLowerCase(), entry);
-    		mEntrySet.remove(entry);
-    	}
-    	private void dump(String action) {
-    		if (ZimbraLog.gal.isDebugEnabled()) {
-    			StringBuilder buf = new StringBuilder(action);
-    			buf.append("\n");
-    			for (ContactEntry entry : mEntrySet) {
-    				entry.toString(buf);
-    				buf.append("\n");
-    			}
-    			ZimbraLog.gal.debug(buf.toString());
-    		}
-    	}
-    }
+    public static final int FOLDER_ID_GAL = 0;
     
     private String mAccountId;
     private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
-    private static final int FOLDER_ID_GAL = 0;
-    private static final Collection<Integer> DEFAULT_FOLDERS = Arrays.asList(Mailbox.ID_FOLDER_CONTACTS, FOLDER_ID_GAL);
     
-	private static final String[] gal_email_keys = {
-		"email", "zimbraMailDeliveryAddress", "zimbraMailAlias"
-	};
-	private static final String[] contact_email_keys = {
+    private Collection<Integer> mDefaultFolders;
+    private Collection<String> mEmailKeys;
+    
+    private static final Integer[] DEFAULT_FOLDERS = {
+    	Mailbox.ID_FOLDER_CONTACTS, FOLDER_ID_GAL
+    };
+	private static final String[] DEFAULT_EMAIL_KEYS = {
 		Contact.A_email, Contact.A_email2, Contact.A_email3
 	};
 	
+	
 	public ContactAutoComplete(String accountId) {
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
+			String defaultFolders = acct.getAttr(Provisioning.A_zimbraContactAutoCompleteFolderIds);
+			if (defaultFolders != null) {
+				mDefaultFolders = new ArrayList<Integer>();
+				for (String fid : defaultFolders.split(","))
+					mDefaultFolders.add(Integer.parseInt(fid));
+			}
+			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields);
+			if (emailKeys != null)
+				mEmailKeys = Arrays.asList(emailKeys.split(","));
+		} catch (ServiceException se) {
+			ZimbraLog.gal.warn("error initializing ContactAutoComplete", se);
+		}
 		mAccountId = accountId;
+		if (mDefaultFolders == null)
+			mDefaultFolders = Arrays.asList(DEFAULT_FOLDERS);
+		if (mEmailKeys == null)
+			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
 	}
 	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
@@ -227,8 +145,9 @@ public class ContactAutoComplete {
 		AutoCompleteResult result = new AutoCompleteResult();
 		ContactRankings rankings = new ContactRankings(mAccountId);
 		if (folders == null)
-			folders = DEFAULT_FOLDERS;
-		result.entries.addAll(rankings.query(str, folders));
+			folders = mDefaultFolders;
+		for (ContactEntry e : rankings.query(str, folders))
+			result.addEntry(e);
 		if (result.entries.size() < limit) {
 			// search other folders
     		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
@@ -263,7 +182,7 @@ public class ContactAutoComplete {
 			ZimbraLog.gal.debug("gal entry: "+id);
         	ContactEntry entry = new ContactEntry();
 	        Map<String, Object> attrs = contact.getAttrs();
-        	for (String emailKey : gal_email_keys) {
+        	for (String emailKey : mEmailKeys) {
     			Object email = attrs.get(emailKey);
     			if (email == null)
     				continue;
@@ -284,9 +203,9 @@ public class ContactAutoComplete {
         		continue;
 			}
 			
-			entry.setName((String)attrs.get("fullName"));
+			entry.setName((String)attrs.get(Contact.A_fullName));
         	entry.mFolderId = FOLDER_ID_GAL;
-        	result.entries.add(entry);
+        	result.addEntry(entry);
 			ZimbraLog.gal.debug("adding "+entry.getEmail());
 		}
 	}
@@ -295,21 +214,21 @@ public class ContactAutoComplete {
 		ZimbraLog.gal.debug("querying folder "+fid);
 		str = str.toLowerCase();
 		String query = generateQuery(fid, str);
-        ZimbraQueryResults results = null;
+        ZimbraQueryResults qres = null;
         try {
-			results = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, 100);
-            while (results.hasNext()) {
+			qres = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, 100);
+            while (qres.hasNext()) {
             	if (result.entries.size() > limit) {
                 	result.canBeCached = false;
             		ZimbraLog.gal.debug("exceeded request limit "+limit);
             		return;
             	}
-                ZimbraHit hit = results.getNext();
+                ZimbraHit hit = qres.getNext();
                 if (hit instanceof ContactHit) {
                 	Contact c = ((ContactHit) hit).getContact();
             		ZimbraLog.gal.debug("hit: "+c.getId());
                 	ContactEntry entry = new ContactEntry();
-                	for (String emailKey : contact_email_keys) {
+                	for (String emailKey : mEmailKeys) {
                     	String email = c.get(emailKey);
                     	if (email != null && email.toLowerCase().startsWith(str)) {
                     		entry.mEmail = email;
@@ -323,11 +242,14 @@ public class ContactAutoComplete {
                 	entry.mLastName = c.get(Contact.A_lastName);
                 	if (entry.mLastName == null)
                 		entry.mLastName = "";
-                	String firstname = c.get(Contact.A_firstName);
-                	firstname = (firstname == null) ? "" : firstname + " ";
-                	entry.mDisplayName = firstname + entry.mLastName;
+                	entry.mDisplayName = c.get(Contact.A_fullName);
+                	if (entry.mDisplayName == null) {
+                    	String firstname = c.get(Contact.A_firstName);
+                    	firstname = (firstname == null) ? "" : firstname + " ";
+                    	entry.mDisplayName = firstname + entry.mLastName;
+                	}
                 	entry.mFolderId = fid;
-                	result.entries.add(entry);
+                	result.addEntry(entry);
         			ZimbraLog.gal.debug("adding "+entry.getEmail());
                 }
             }
@@ -336,8 +258,8 @@ public class ContactAutoComplete {
         } catch (ParseException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
-            if (results != null)
-                results.doneWithSearchResults();
+            if (qres != null)
+                qres.doneWithSearchResults();
         }
 	}
 	
@@ -346,7 +268,7 @@ public class ContactAutoComplete {
 		buf.append(fid);
 		buf.append(" (#lastName:").append(query).append("*");
 		buf.append(" OR #firstName:").append(query).append("*");
-		for (String emailKey : contact_email_keys)
+		for (String emailKey : mEmailKeys)
 			buf.append(" OR #").append(emailKey).append(":").append(query).append("*");
 		buf.append(")");
 		return buf.toString();
