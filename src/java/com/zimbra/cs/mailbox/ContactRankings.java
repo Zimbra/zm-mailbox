@@ -52,22 +52,21 @@ public class ContactRankings {
 		
 		rankings.writeToDatabase();
 	}
-	public synchronized void increment(String email, String displayName) throws ServiceException {
+	public synchronized void increment(String email, String displayName) {
 		ContactEntry entry = mEntryMap.getFirst(email.toLowerCase());
 		if (entry == null) {
 			entry = new ContactEntry();
 			entry.mEmail = email;
 			entry.mRanking = 1;
 			entry.setName(displayName);
-			entry.mFolderId = ContactAutoComplete.FOLDER_ID_GAL;
-			ContactAutoComplete auto = new ContactAutoComplete(mAccountId);
-			ContactAutoComplete.AutoCompleteResult res = auto.query(email, null, 1);
-			if (res.entries.size() > 0)
-				entry.mFolderId = res.entries.iterator().next().mFolderId;
+			entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
+			updateContactInfo(entry);
 			
 			if (mEntrySet.size() < mTableSize)
 				add(entry);
 			else {
+				while (mEntrySet.size() > mTableSize)
+					remove(mEntrySet.first());
 				ContactEntry firstEntry = mEntrySet.first();
 				if (firstEntry.mRanking == 0) {
 					remove(firstEntry);
@@ -79,9 +78,33 @@ public class ContactRankings {
 			}
 		} else {
 			entry.mRanking++;
-			if (displayName != null && displayName.length() > 0 && entry.mDisplayName.length() == 0)
-				entry.mDisplayName = displayName;
+			if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
+					entry.mDisplayName.length() == 0)
+				updateContactInfo(entry);
 		}
+	}
+	private void updateContactInfo(ContactEntry entry) {
+		ContactAutoComplete auto = new ContactAutoComplete(mAccountId);
+		ContactEntry storedContact = null;
+		try {
+			ContactAutoComplete.AutoCompleteResult res = auto.query(entry.mEmail, null, 1);
+			if (res.entries.size() == 0)
+				return;
+			storedContact = res.entries.iterator().next();
+		} catch (ServiceException se) {
+			ZimbraLog.gal.warn("error searching for contact "+entry, se);
+		}
+
+		if (storedContact == null)
+			return;
+		
+		// check if the contact has been added to the addressbook since
+		// it entered the ranking database.
+		entry.mFolderId = storedContact.mFolderId;
+		
+		// update display name if a better one is available.
+		if (storedContact.mDisplayName.length() > 0 && entry.mDisplayName.length() == 0)
+			entry.mDisplayName = storedContact.mDisplayName;
 	}
 	public synchronized Collection<ContactEntry> query(String str, Collection<Integer> folders) {
 		ZimbraLog.gal.debug("querying ranking database");

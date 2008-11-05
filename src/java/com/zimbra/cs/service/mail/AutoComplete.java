@@ -74,6 +74,8 @@ public class AutoComplete extends MailDocumentHandler {
             cn.addKeyValuePair(MailConstants.A_EMAIL, entry.getEmail(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             cn.addKeyValuePair(MailConstants.A_RANKING, ""+entry.getRanking(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             cn.addKeyValuePair(MailConstants.A_FOLDER, ""+entry.getFolderId(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+            if (entry.isDlist())
+            	cn.addKeyValuePair(MailConstants.A_DLIST, ""+entry.getDisplayName(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
 		}
 	}
 }

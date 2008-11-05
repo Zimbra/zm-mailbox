@@ -46,7 +46,11 @@ public class ContactAutoComplete {
 			canBeCached = true; 
 		}
 		public void addEntry(ContactEntry entry) {
-			String email = entry.mEmail.toLowerCase();
+			String email;
+			if (entry.isDlist())
+				email = entry.mDisplayName;
+			else
+				email = entry.mEmail.toLowerCase();
 			if (!emails.contains(email)) {
 				entries.add(entry);
 				emails.add(email);
@@ -58,9 +62,12 @@ public class ContactAutoComplete {
         String mEmail;
         String mDisplayName;
         String mLastName;
+        String mDlist;
         int mFolderId;
         int mRanking;
         public String getEmail() {
+        	if (mDlist != null)
+        		return mDlist;
         	StringBuilder buf = new StringBuilder();
         	if (mDisplayName.length() > 0) {
         		buf.append("\"");
@@ -75,6 +82,12 @@ public class ContactAutoComplete {
         }
         public int getRanking() {
         	return mRanking;
+        }
+        public boolean isDlist() {
+        	return mDlist != null;
+        }
+        public String getDisplayName() {
+        	return mDisplayName;
         }
         void setName(String name) {
     		if (name == null)
@@ -97,11 +110,17 @@ public class ContactAutoComplete {
         	return buf.toString();
         }
         public void toString(StringBuilder buf) {
-        	buf.append(mRanking).append(" ").append(getEmail()).append(" (").append(mFolderId).append(")");
+        	buf.append(mRanking).append(" ");
+        	if (isDlist())
+        		buf.append(getDisplayName()).append(" (dlist)");
+        	else
+        		buf.append(getEmail());
+        	buf.append(" (").append(mFolderId).append(")");
         }
 	}
     
     public static final int FOLDER_ID_GAL = 0;
+    public static final int FOLDER_ID_UNKNOWN = -1;
     
     private String mAccountId;
     private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
@@ -110,7 +129,7 @@ public class ContactAutoComplete {
     private Collection<String> mEmailKeys;
     
     private static final Integer[] DEFAULT_FOLDERS = {
-    	Mailbox.ID_FOLDER_CONTACTS, FOLDER_ID_GAL
+    	FOLDER_ID_UNKNOWN, FOLDER_ID_GAL
     };
 	private static final String[] DEFAULT_EMAIL_KEYS = {
 		Contact.A_email, Contact.A_email2, Contact.A_email3
@@ -138,6 +157,10 @@ public class ContactAutoComplete {
 			mDefaultFolders = Arrays.asList(DEFAULT_FOLDERS);
 		if (mEmailKeys == null)
 			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
+	}
+	
+	public void addExtraEmailKey(String key) {
+		mEmailKeys.add(key);
 	}
 	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
@@ -228,27 +251,38 @@ public class ContactAutoComplete {
                 	Contact c = ((ContactHit) hit).getContact();
             		ZimbraLog.gal.debug("hit: "+c.getId());
                 	ContactEntry entry = new ContactEntry();
-                	for (String emailKey : mEmailKeys) {
-                    	String email = c.get(emailKey);
-                    	if (email != null && email.toLowerCase().startsWith(str)) {
-                    		entry.mEmail = email;
-                    		break;
+                	if (c.get(Contact.A_dlist) == null) {
+                    	for (String emailKey : mEmailKeys) {
+                        	String email = c.get(emailKey);
+                        	if (email != null && 
+                        			(entry.mEmail == null || 
+                        			 email.toLowerCase().startsWith(str))) {
+                        		entry.mEmail = email;
+                        	}
                     	}
-                	}
-                	if (entry.mEmail == null) {
-                		ZimbraLog.gal.debug("contact has empty email address");
-                		continue;
-                	}
-                	entry.mLastName = c.get(Contact.A_lastName);
-                	if (entry.mLastName == null)
-                		entry.mLastName = "";
-                	entry.mDisplayName = c.get(Contact.A_fullName);
-                	if (entry.mDisplayName == null) {
+                    	if (entry.mEmail == null) {
+                    		ZimbraLog.gal.debug("contact has empty email address");
+                    		continue;
+                    	}
+                    	// use fullName if available
+                    	String fullName = c.get(Contact.A_fullName);
+                    	if (fullName != null) {
+                    		entry.setName(fullName);
+                    		continue;
+                    	}
+                    	// otherwise displayName is firstName." ".lastName
+                    	entry.mLastName = c.get(Contact.A_lastName);
+                    	if (entry.mLastName == null)
+                    		entry.mLastName = "";
                     	String firstname = c.get(Contact.A_firstName);
                     	firstname = (firstname == null) ? "" : firstname + " ";
                     	entry.mDisplayName = firstname + entry.mLastName;
+                	} else {
+                		// distribution list
+                		entry.mDisplayName = c.get(Contact.A_nickname);
+                		entry.mDlist = c.get(Contact.A_dlist);
                 	}
-                	entry.mFolderId = fid;
+                	entry.mFolderId = c.getFolderId();
                 	result.addEntry(entry);
         			ZimbraLog.gal.debug("adding "+entry.getEmail());
                 }
@@ -264,9 +298,12 @@ public class ContactAutoComplete {
 	}
 	
 	private String generateQuery(int fid, String query) {
-		StringBuilder buf = new StringBuilder("inid:");
-		buf.append(fid);
-		buf.append(" (#lastName:").append(query).append("*");
+		StringBuilder buf = new StringBuilder();
+		if (fid > 0)
+			buf.append("inid:").append(fid).append(" ");
+		buf.append("(#lastName:").append(query).append("*");
+		buf.append(" OR #fullName:").append(query).append("*");
+		buf.append(" OR #nickName:").append(query).append("*");
 		buf.append(" OR #firstName:").append(query).append("*");
 		for (String emailKey : mEmailKeys)
 			buf.append(" OR #").append(emailKey).append(":").append(query).append("*");
