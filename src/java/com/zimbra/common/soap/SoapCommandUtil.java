@@ -68,12 +68,14 @@ public class SoapCommandUtil {
     private static final String TYPE_MAIL = "mail";
     private static final String TYPE_ADMIN = "admin";
     private static final String TYPE_ACCOUNT = "account";
+    private static final String TYPE_IM = "im";
     
     static {
         // Namespaces
         sTypeToNamespace.put(TYPE_MAIL, Namespace.get("urn:zimbraMail"));
         sTypeToNamespace.put(TYPE_ADMIN, Namespace.get("urn:zimbraAdmin"));
         sTypeToNamespace.put(TYPE_ACCOUNT, Namespace.get("urn:zimbraAccount"));
+        sTypeToNamespace.put(TYPE_IM, Namespace.get("urn:zimbraIM"));
     }
     
     private Group mOptions;
@@ -137,14 +139,14 @@ public class SoapCommandUtil {
         
         // Types option
         Set<String> validTypes = new HashSet<String>();
-        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin");
+        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin"); validTypes.add("im");
         Argument typeArg = abuilder
             .withName("type").withValidator(new EnumValidator(validTypes))
             .withMinimum(1).withMaximum(1).create();
         Option type = obuilder
             .withLongName("type").withShortName("t")
             .withArgument(typeArg)
-            .withDescription("SOAP request type (mail, account, admin).  Default is admin.")
+            .withDescription("SOAP request type (mail, account, admin, im).  Default is admin.")
             .create();
         
         // Initialize option group
@@ -209,7 +211,7 @@ public class SoapCommandUtil {
         
         if (cl.hasOption(type)) {
             mType = (String) cl.getValue(type);
-            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT)) && mMailboxName == null) {
+            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) && mMailboxName == null) {
                 usage("Mailbox must be specified for mail or account requests.");
             }
         } else {
@@ -287,7 +289,7 @@ public class SoapCommandUtil {
         transport.setAuthToken(mAuthToken);
         
         // Do delegate auth if this is a mail or account service request
-        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT)) {
+        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) {
             Element getInfo = DocumentHelper.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
             Element account = DomUtil.add(getInfo, AccountConstants.E_ACCOUNT, mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
