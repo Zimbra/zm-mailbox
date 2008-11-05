@@ -4394,4 +4394,12 @@ public class ZMailbox implements ToZJSONObject {
     public String dump() {
         return ZJSONObject.toString(this);
     }
+
+    public ZSearchContext searchContext(ZSearchParams params) {
+        return new ZSearchContext(params, this);
+    }
+
+    public ZSearchContext searchContext(String query) {
+        return new ZSearchContext(new ZSearchParams(query), this);
+    }
 }

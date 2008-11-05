@@ -22,42 +22,6 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.regex.Pattern;
-
-import javax.naming.AuthenticationException;
-import javax.naming.AuthenticationNotSupportedException;
-import javax.naming.ContextNotEmptyException;
-import javax.naming.InvalidNameException;
-import javax.naming.NameAlreadyBoundException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.SizeLimitExceededException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttributes;
-import javax.naming.directory.InvalidAttributeIdentifierException;
-import javax.naming.directory.InvalidAttributeValueException;
-import javax.naming.directory.InvalidAttributesException;
-import javax.naming.directory.InvalidSearchFilterException;
-import javax.naming.directory.SchemaViolationException;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -69,8 +33,10 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -97,10 +63,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Account.CalendarUserType;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -120,6 +82,41 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
+
+import javax.naming.AuthenticationException;
+import javax.naming.AuthenticationNotSupportedException;
+import javax.naming.ContextNotEmptyException;
+import javax.naming.InvalidNameException;
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.SizeLimitExceededException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.InvalidAttributeIdentifierException;
+import javax.naming.directory.InvalidAttributeValueException;
+import javax.naming.directory.InvalidAttributesException;
+import javax.naming.directory.InvalidSearchFilterException;
+import javax.naming.directory.SchemaViolationException;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.regex.Pattern;
 
 /**
  * @author schemers
@@ -644,7 +641,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByNameInternal(java.lang.String)
      */
     private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
         
@@ -1580,13 +1577,13 @@ public class LdapProvisioning extends Provisioning {
     public Domain get(DomainBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case name: 
-                return getDomainByName(key);
+                return getDomainByNameInternal(key);
             case id: 
-                return getDomainById(key);
+                return getDomainByIdInternal(key);
             case virtualHostname:
-                return getDomainByVirtualHostname(key);
+                return getDomainByVirtualHostnameInternal(key);
             case krb5Realm:    
-                return getDomainByKrb5Realm(key);
+                return getDomainByKrb5RealmInternal(key);
             default:
                     return null;
         }
@@ -1626,16 +1623,16 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByIdInternal(java.lang.String)
      */
-    private Domain getDomainById(String zimbraId) throws ServiceException {
+    private Domain getDomainByIdInternal(String zimbraId) throws ServiceException {
         return getDomainById(zimbraId, null);
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByNameInternal(java.lang.String)
      */
-    private Domain getDomainByName(String name) throws ServiceException {
+    private Domain getDomainByNameInternal(String name) throws ServiceException {
         String asciiName = IDNUtil.toAsciiDomainName(name);
         return getDomainByAsciiName(asciiName, null);
     }        
@@ -1654,7 +1651,7 @@ public class LdapProvisioning extends Provisioning {
         return domain;        
     }
    
-    private Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
+    private Domain getDomainByVirtualHostnameInternal(String virtualHostname) throws ServiceException {
         Domain d = sDomainCache.getByVirtualHostname(virtualHostname);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
@@ -1668,7 +1665,7 @@ public class LdapProvisioning extends Provisioning {
         return domain;        
     }
     
-    private Domain getDomainByKrb5Realm(String krb5Realm) throws ServiceException {
+    private Domain getDomainByKrb5RealmInternal(String krb5Realm) throws ServiceException {
         Domain d = sDomainCache.getByKrb5Realm(krb5Realm);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;

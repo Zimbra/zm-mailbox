@@ -621,6 +621,9 @@ public class SoapProvisioning extends Provisioning {
         return new ZMailbox(getMailboxOptions(by, key, 60*60*24));
     }
 
+    public ZMailbox getMailboxByName(String name) throws ServiceException { return getMailbox(AccountBy.name, name); }
+    public ZMailbox getMailboxById(String id) throws ServiceException { return getMailbox(AccountBy.id, id); }
+
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {
         return get(keyType, key, true);

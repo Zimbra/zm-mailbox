@@ -348,7 +348,7 @@ public class ZSearchParams implements ToZJSONObject {
     }
 
     public String toString() {
-       return String.format("[SearchParams %s]", mQuery == null ? "" : mQuery);
+       return String.format("[ZSearchParams %s]", mQuery == null ? "" : mQuery);
     }
 
     public String dump() {

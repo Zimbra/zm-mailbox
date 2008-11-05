@@ -725,6 +725,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
+
+    public Domain getDomainByName(String name) throws ServiceException { return get(DomainBy.name, name); }
+    public Domain getDomainById(String id) throws ServiceException { return get(DomainBy.id, id); }
+    public Domain getDomainByVirtualHostname(String host) throws ServiceException { return get(DomainBy.virtualHostname, host); }
+    public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
     
     public abstract List<Domain> getAllDomains()  throws ServiceException;
 

@@ -96,11 +96,11 @@ public class ZSearchContext implements ToZJSONObject {
      */
     public int getCount() { return mCount; }
 
-    public ZSearchResult getSearchResult() {
+    public ZSearchResult getResult() {
         return mResult;
     }
 
-    public ZSearchParams getSearchParams() {
+    public ZSearchParams getParams() {
         return mParams;
     }
 
