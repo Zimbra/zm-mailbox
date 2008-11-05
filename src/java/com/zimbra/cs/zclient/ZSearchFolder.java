@@ -78,5 +78,12 @@ public class ZSearchFolder extends ZFolder {
     public String toString() {
         return String.format("[ZSearchFolder %s]", getPath());
     }
+
+    public ZSearchContext getSearchContext() {
+        ZSearchParams params = new ZSearchParams(mQuery);
+        params.setTypes(mTypes);
+        params.setSortBy(mSortBy);
+        return new ZSearchContext(params,getMailbox());
+    }
     
 }

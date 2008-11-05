@@ -253,6 +253,12 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
         }
     }
 
+    public ZSearchContext getSearchContext() {
+        ZSearchParams params = new ZSearchParams("inid:"+getId());
+        if (getDefaultView() != null) params.setTypes(getDefaultView().name());
+        return new ZSearchContext(params,getMailbox());
+    }
+    
     public ZMailbox getMailbox() {
         return mMailbox;
     }

@@ -21,10 +21,11 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+import org.json.JSONException;
 
 import java.util.TimeZone;
 
-public class ZSearchParams {
+public class ZSearchParams implements ToZJSONObject {
 
     public static final String TYPE_CONVERSATION = "conversation";
     
@@ -77,7 +78,7 @@ public class ZSearchParams {
     /**
      *  max number of results to return
      */
-    private int mLimit;
+    private int mLimit = 100;
     
     /**
      * offset is an integer specifying the 0-based offset into the results list to return as
@@ -326,6 +327,34 @@ public class ZSearchParams {
         return mField;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        if (mFetch != null) zjo.put("fetch", mFetch.name());
+        zjo.put("limit", mLimit);
+        zjo.put("markAsRead", mMarkAsRead);
+        zjo.put("offset", mOffset);
+        zjo.put("preferHtml", mPreferHtml);
+        zjo.put("query", mQuery);
+        zjo.put("recipientMode", mRecipientMode);
+        if (mSortBy != null) zjo.put("sortBy", mSortBy.name());
+        zjo.put("types", mTypes);
+        zjo.put("field", mField);
+        zjo.put("convId", mConvId);
+        zjo.put("calExpandInstEnd", mCalExpandInstEnd);
+        zjo.put("calExpandInstStart", mCalExpandInstStart);
+        if (mTimeZone != null) zjo.put("timeZone", mTimeZone.getID());
+        if (mCursor != null) zjo.put("cursor", mCursor);
+        return zjo;
+    }
+
+    public String toString() {
+       return String.format("[SearchParams %s]", mQuery == null ? "" : mQuery);
+    }
+
+    public String dump() {
+       return ZJSONObject.toString(this);
+    }
+
     /**
      *  by default, text without an operator searches the CONTENT field.  By setting the
      * {field} value, you can control the default operator. Specify any of the text operators that are
@@ -339,7 +368,7 @@ public class ZSearchParams {
         mField = field;
     }
     
-    public static class Cursor {
+    public static class Cursor implements ToZJSONObject {
         
         private String mPreviousId;
 
@@ -381,5 +410,21 @@ public class ZSearchParams {
             if (!StringUtil.equal(this.mPreviousSortValue, that.mPreviousSortValue)) return false;
             return true;
         }
+
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("previousId", mPreviousId);
+            zjo.put("previousSortValue", mPreviousSortValue);
+            return zjo;
+        }
+
+        public String toString() {
+            return String.format("[Cursor id=%s sort=%s]", mPreviousId, mPreviousSortValue);
+        }
+
+        public String dump() {
+            return ZJSONObject.toString(this);
+        }
+
     }
 }
