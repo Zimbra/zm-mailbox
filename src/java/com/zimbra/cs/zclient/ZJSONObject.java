@@ -85,6 +85,17 @@ public class ZJSONObject {
         return this;
     }
 
+    public ZJSONObject put(String key, String[] items) throws JSONException {
+        JSONArray ja = new JSONArray();
+        mJO.put(key, ja);
+        if (items != null) {
+            for (String item : items) {
+                ja.put(item);
+            }
+        }
+        return this;
+    }
+
     public ZJSONObject putMapList(String key, Map<String,List<String>> attrs) throws JSONException {
         JSONObject obj = new JSONObject();
         mJO.put(key, obj);

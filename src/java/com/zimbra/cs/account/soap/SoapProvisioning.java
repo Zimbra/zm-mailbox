@@ -17,34 +17,21 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
-
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -58,24 +45,32 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.event.ZEventHandler;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import org.mozilla.javascript.Context;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -190,6 +185,10 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
+    public String toString() {
+        return String.format("[%s %s]", getClass().getName(), mTransport == null ? "" : mTransport.getURI());
+    }
+    
     /**
      * @param uri URI of server we want to talk to
      */

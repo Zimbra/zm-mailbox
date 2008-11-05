@@ -17,6 +17,13 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,17 +31,10 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.jsieve.parser.generated.Node;
-
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.ZimbraACL;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.ZimbraLog;
-
-public abstract class Entry {
+public abstract class Entry implements ToZJSONObject {
 
     private Map<String,Object> mAttrs;
     private Map<String,Object> mDefaults;
@@ -422,15 +422,71 @@ public abstract class Entry {
         }
         //return Collections.unmodifiableMap(defaults);
     }
-
-    
     
     public synchronized String toString() {
+        return String.format("[%s]", getClass().getName());
+        /*
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getName()).append(": {  ");        
         //sb.append(getClass().getName()).append(": { name=").append(getName()).append(" ");
         sb.append(mAttrs.toString());
         sb.append("}");
-        return sb.toString();           
+        return sb.toString();
+                   */
     }
+
+    public ZJSONObject toZJSONObject() throws JSONException {
+            return toZJSONObject(null, true);
+    }
+
+    static Pattern regex = Pattern.compile("^/(.*)/(i)?$");
+    
+    public ZJSONObject toZJSONObject(String filter, boolean applyDefaults) throws JSONException {
+        Map<String, Object> attrs = getAttrs(applyDefaults);
+
+        if (this instanceof NamedEntry) {
+            NamedEntry ne = (NamedEntry) this;
+            attrs.put("id", ne.getId());
+            attrs.put("name", ne.getName());
+        }
+
+        Pattern pattern = null;
+        if (filter != null) {
+            Matcher rm = regex.matcher(filter);
+            if (rm.matches())
+                pattern = Pattern.compile(rm.group(1), "i".equals(rm.group(2)) ? Pattern.CASE_INSENSITIVE : 0);
+            else
+                filter = filter.toLowerCase();
+        }
+
+        ZJSONObject zj = new ZJSONObject();
+        for (Map.Entry<String,Object> entry : attrs.entrySet()) {
+            if (pattern != null) {
+                if (!pattern.matcher(entry.getKey()).find()) continue;
+            } else if (filter != null) {
+                if (!entry.getKey().toLowerCase().contains(filter)) continue;
+            }
+            Object o = entry.getValue();
+            if (o instanceof String) {
+                zj.put(entry.getKey(), (String)o);
+            } else if (o instanceof String[]) {
+                zj.put(entry.getKey(), (String[])o);
+            }
+        }
+        return zj;
+    }
+
+    public String dump() throws JSONException {
+        return dump(null, true);
+    }
+
+    public String dump(String filter) throws JSONException {
+        return dump(filter, true);
+    }
+
+    public String dump(String filter, boolean applyDefaults) throws JSONException {
+        return toZJSONObject(filter, applyDefaults).toString();
+    }
+
+
 }

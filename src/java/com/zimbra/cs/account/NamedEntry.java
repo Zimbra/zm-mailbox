@@ -22,10 +22,9 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.NamedEntry;
+
+import java.util.Map;
 
 public abstract class NamedEntry extends Entry implements Comparable {
 
@@ -62,11 +61,7 @@ public abstract class NamedEntry extends Entry implements Comparable {
     }
     
     public synchronized String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getName()).append(": { name=").append(getName()).append(" id=").append(getId());
-        sb.append(getAttrs().toString());
-        sb.append("}");
-        return sb.toString();           
+        return String.format("[%s %s]", getClass().getName(), getName());
     }
 
 }
