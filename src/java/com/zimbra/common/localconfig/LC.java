@@ -785,7 +785,7 @@ public class LC {
         mysql_read_buffer_size.setDefault("1048576");
 
         mysql_table_cache = new KnownKey("mysql_table_cache");
-        mysql_table_cache.setDefault("500");
+        mysql_table_cache.setDefault("1200");
         
         derby_properties = new KnownKey("derby_properties");
         derby_properties.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "derby.properties");
