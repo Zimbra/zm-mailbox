@@ -221,7 +221,16 @@
       <param-value>7071</param-value>
     </init-param>
   </servlet>
-  
+
+   <servlet>
+    <servlet-name>AdminFileDownload</servlet-name>
+    <servlet-class>com.zimbra.cs.service.admin.AdminFileDownload</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>7071</param-value>
+    </init-param>
+  </servlet>
+
   <servlet>
     <servlet-name>CollectConfigFiles</servlet-name>
     <servlet-class>com.zimbra.cs.service.admin.CollectConfigFiles</servlet-class>
@@ -323,7 +332,12 @@
     <servlet-name>CollectLDAPConfigZimbra</servlet-name>
     <url-pattern>/collectldapconfig/*</url-pattern>
   </servlet-mapping>
-  
+
+    <servlet-mapping>
+        <servlet-name>AdminFileDownload</servlet-name>
+        <url-pattern>/afd/*</url-pattern>
+    </servlet-mapping>
+
   <servlet-mapping>
     <servlet-name>ProxyServlet</servlet-name>
     <url-pattern>/proxy/*</url-pattern>
