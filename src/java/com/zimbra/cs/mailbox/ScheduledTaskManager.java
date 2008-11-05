@@ -28,6 +28,11 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
 
+/**
+ * Manages persistent scheduled tasks.  Properties of recurring tasks
+ * are stored in a database table, to allow the tasks to be rescheduled
+ * on server startup. 
+ */
 public class ScheduledTaskManager {
 
     private static TaskScheduler<Void> sScheduler;
