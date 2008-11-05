@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
@@ -41,8 +40,13 @@ public class AutoComplete extends MailDocumentHandler {
 		String n = request.getAttribute(MailConstants.A_NAME);
 		while (n.endsWith("*"))
 			n = n.substring(0, n.length() - 1);
-        int limit = (int) request.getAttributeLong(AccountConstants.A_LIMIT, 20);
+        int limit = (int) request.getAttributeLong(MailConstants.A_LIMIT, 20);
 		ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
+		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, false);
+		if (includeGal)
+			folders.add(ContactAutoComplete.FOLDER_ID_GAL);
+		if (folders.isEmpty())
+			folders = null;
 
 		ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
 		AutoCompleteResult result = autoComplete.query(n, folders, limit);
@@ -58,9 +62,9 @@ public class AutoComplete extends MailDocumentHandler {
 	}
 	
 	private ArrayList<Integer> csvToArray(String csv) {
-		if (csv == null)
-			return null;
 		ArrayList<Integer> array = new ArrayList<Integer>();
+		if (csv == null)
+			return array;
 		for (String f : csv.split(",")) {
 			array.add(Integer.parseInt(f));
 		}
@@ -70,12 +74,26 @@ public class AutoComplete extends MailDocumentHandler {
 	private void toXML(Element response, AutoCompleteResult result) {
 		response.addAttribute(MailConstants.A_CANBECACHED, result.canBeCached);
 		for (ContactEntry entry : result.entries) {
-	        Element cn = response.addElement(MailConstants.E_CONTACT);
-            cn.addKeyValuePair(MailConstants.A_EMAIL, entry.getEmail(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            cn.addKeyValuePair(MailConstants.A_RANKING, ""+entry.getRanking(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            cn.addKeyValuePair(MailConstants.A_FOLDER, ""+entry.getFolderId(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+	        Element cn = response.addElement(MailConstants.E_MATCH);
+	        cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
+	        cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
+            cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
+            int folderId = entry.getFolderId();
+            if (folderId > 0)
+            	cn.addAttribute(MailConstants.A_FOLDER, Integer.toString(entry.getFolderId()));
             if (entry.isDlist())
-            	cn.addKeyValuePair(MailConstants.A_DLIST, ""+entry.getDisplayName(), MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+            	cn.addAttribute(MailConstants.A_DISPLAYNAME, entry.getDisplayName());
 		}
+	}
+	
+	private String getType(ContactEntry entry) {
+		if (entry.getFolderId() == ContactAutoComplete.FOLDER_ID_GAL)
+			return "gal";
+		else if (entry.getFolderId() == ContactAutoComplete.FOLDER_ID_UNKNOWN)
+			return "unknown";
+		else if (entry.isDlist())
+			return "group";
+		else
+			return "contact";
 	}
 }

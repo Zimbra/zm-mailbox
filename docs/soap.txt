@@ -676,6 +676,21 @@ import and export of addressbook.
 
 ----------------------------
 
+<AutoCompleteRequest folders="{folders}" includeGal="0|1" limit="...">
+  <name>...</name>
+</AutoCompleteRequest>
+
+<AutoCompleteResponse canBeCached="0|1">
+  <match ranking="..." l="..." type="gal|group|contact|unknown" email="..." [display="..."] [id="..."]/>*
+</AutoCompleteResponse>
+
+  {folders} - comma separates list of folder IDs.
+  
+  - email field contains comma separated email addresses in case of group
+  - display field contains string that should be displayed by the client
+
+----------------------------
+
  <SyncGalRequest token="[{previous-token}]"/>
  
  <SyncGalResponse token="{new-token}">
