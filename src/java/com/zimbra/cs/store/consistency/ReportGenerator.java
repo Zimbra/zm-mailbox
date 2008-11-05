@@ -62,6 +62,11 @@ public class ReportGenerator implements Runnable {
         catch (IOException e) {
             throw new IllegalStateException("Unable to read localconfig", e);
         }
+        
+        if (address == null || "".equals(address.trim()))
+            address = "localhost";
+        if (port == null || "".equals(port.trim()))
+            port = "7306";
         JDBC_URL = "jdbc:mysql://" + address + ":" + port + "/";
         
     }
@@ -139,6 +144,9 @@ public class ReportGenerator implements Runnable {
                     e = new StatementExecutor(c);
                     items += getMailItems(mailboxId, mboxGroupId, e, out);
                     c.close();
+                } else if (mailboxId != -1 && mboxGroupId == -1) {
+                    System.out.println("ERROR: mailbox " + mailboxId + " not found!");
+                    System.exit(1);
                 } else {
                     for (int group : mboxGroups) {
                         String mboxgroup = "mboxgroup" + group;
@@ -237,32 +245,40 @@ public class ReportGenerator implements Runnable {
                 Object r = null;
                 if (file.length >= 5 && f.toString().endsWith(".msg")) {
                     // groupMask/mboxId/msg/itemMask/itemId-content.msg
-                    String itemIdAndModContent = file[file.length - 1];
-                    String mboxIdStr = file[file.length - 4];
-                    int mboxId = Integer.parseInt(mboxIdStr);
-                    int mboxGroup = mboxId % 100;
-                    if (mboxGroup == 0) mboxGroup = 100;
-                    itemIdAndModContent.substring(0, itemIdAndModContent.indexOf("."));
-                    String itemIdStr = itemIdAndModContent.substring(
-                            0, itemIdAndModContent.indexOf("-"));
-                    String modContentStr = itemIdAndModContent.substring(
-                            itemIdAndModContent.indexOf("-") + 1, itemIdAndModContent.indexOf("."));
-                    int itemId = Integer.parseInt(itemIdStr);
-                    int modContent = Integer.parseInt(modContentStr);
-                    String mboxGroupName = "mboxgroup" + mboxGroup;
-                    if (!mboxGroupName.equals(walkMboxGroup)) {
-                        if (walkConnection != null)
-                            walkConnection.close();
-                        
-                        walkConnection = DriverManager.getConnection(
-                                JDBC_URL + mboxGroupName,
-                                BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
-                        walkMboxGroup = mboxGroupName;
-                        walkExecutor = new StatementExecutor(walkConnection);
-                    }
-                    r = walkExecutor.query(QUERY_FOR_FILE, new Object[] {
-                                    mboxId, itemId, modContent, modContent });
+                    try {
+                        String itemIdAndModContent = file[file.length - 1];
+                        String mboxIdStr = file[file.length - 4];
+                        int mboxId = Integer.parseInt(mboxIdStr);
+                        int mboxGroup = mboxId % 100;
+                        if (mboxGroup == 0) mboxGroup = 100;
 
+                        String itemIdStr = itemIdAndModContent.substring(
+                                0, itemIdAndModContent.indexOf("-"));
+                        String modContentStr = itemIdAndModContent.substring(
+                                itemIdAndModContent.indexOf("-") + 1,
+                                itemIdAndModContent.indexOf("."));
+
+                        int itemId = Integer.parseInt(itemIdStr);
+                        int modContent = Integer.parseInt(modContentStr);
+                        String mboxGroupName = "mboxgroup" + mboxGroup;
+                        if (!mboxGroupName.equals(walkMboxGroup)) {
+                            if (walkConnection != null)
+                                walkConnection.close();
+
+                            walkConnection = DriverManager.getConnection(
+                                    JDBC_URL + mboxGroupName,
+                                    BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
+                            walkMboxGroup = mboxGroupName;
+                            walkExecutor = new StatementExecutor(walkConnection);
+                        }
+                        r = walkExecutor.query(QUERY_FOR_FILE, new Object[] {
+                                mboxId, itemId, modContent, modContent });
+
+                    }
+                    catch (NumberFormatException ex) {
+                        System.err.println("\nUnable to parse metadata info from filename: " + f);
+                        System.err.print(" ");
+                    }
                 }
                 if (r == null) {
                     addAndPrintFault(faults, new ItemFault(null, null, null,
