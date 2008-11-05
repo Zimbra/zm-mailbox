@@ -35,8 +35,10 @@ import javax.mail.internet.MimeMessage;
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
 
 
@@ -133,6 +135,20 @@ extends TestCase {
         assertTrue((new String(pm.getRawData()).contains("oldsubject")));
         assertTrue(getContent(pm.getMimeMessage()).contains("newsubject"));
         assertTrue(pm.getSubject().contains("newsubject"));
+    }
+    
+    /**
+     * Tests {@link Mime#isSpam}.
+     */
+    public void testSpam()
+    throws Exception {
+        String content = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", RECIPIENT_NAME, RECIPIENT_NAME, null);
+        MimeMessage msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
+        assertFalse(SpamHandler.isSpam(msg));
+        
+        content = "X-Spam-Flag: YES\r\n" + content;
+        msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
+        assertTrue(SpamHandler.isSpam(msg));
     }
     
     private void verifyParsedMessage(ParsedMessage pm, ExpectedResults expected)

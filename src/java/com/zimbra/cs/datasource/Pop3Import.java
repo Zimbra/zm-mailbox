@@ -17,11 +17,11 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Date;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,16 +43,17 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
 
 
 public class Pop3Import extends MailItemImport {
@@ -259,9 +260,12 @@ public class Pop3Import extends MailItemImport {
         if (isOffline()) {
             msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
         } else {
-            msg = RuleManager.getInstance().applyRules(
-                    mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
-                    new SharedDeliveryContext(), dataSource.getFolderId());
+            List<ItemId> ids = RuleManager.getInstance().applyRules(mbox, pm, dataSource.getEmailAddress(),
+                new SharedDeliveryContext(), dataSource.getFolderId());
+            Integer localId = getFirstLocalId(ids);
+            if (localId != null) {
+                msg = mbox.getMessageById(null, localId);
+            }
         }
         return msg;
     }

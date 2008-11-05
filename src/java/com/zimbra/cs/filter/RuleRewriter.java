@@ -36,29 +36,22 @@ import org.apache.jsieve.parser.generated.ASTstring_list;
 import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * @author kchen
@@ -193,7 +186,7 @@ public class RuleRewriter {
                     }
                 }
             } else if (childNode instanceof ASTstring_list) {
-                List val = getStringList(childNode);
+                List<Object> val = getStringList(childNode);
                 String cname = elem.getAttribute(MailConstants.A_NAME, null);
                 String param = null;
                 if ("date".equals(cname) || "body".equals(cname))
@@ -227,7 +220,7 @@ public class RuleRewriter {
     
     private int x = 0;
     
-    private List getStringList(Node node) {
+    private List<Object> getStringList(Node node) {
         int n = node.jjtGetNumChildren();
         List<Object> a = new ArrayList<Object>(n);
         for (int i=0; i<n; i++ ) {
@@ -407,7 +400,7 @@ public class RuleRewriter {
             Mountpoint mountpoint = (Mountpoint) folder;
             ZimbraLog.filter.info("Creating folder %s in remote folder %s for rule %s.",
                 remotePath, folder.getPath(), ruleName);
-            ZMailbox remoteMbox = ZimbraMailAdapter.getRemoteZMailbox(mMailbox, (Mountpoint) folder);
+            ZMailbox remoteMbox = FilterUtil.getRemoteZMailbox(mMailbox, (Mountpoint) folder);
             ItemId id = new ItemId(mountpoint.getOwnerId(), mountpoint.getRemoteId());
             ZFolder parent = remoteMbox.getFolderById(id.toString());
             if (parent == null) {

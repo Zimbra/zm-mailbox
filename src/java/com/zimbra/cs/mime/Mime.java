@@ -41,19 +41,20 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.activation.DataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message.RecipientType;
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
+import javax.mail.Message.RecipientType;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 
 import org.apache.commons.codec.EncoderException;
@@ -73,7 +74,7 @@ import com.zimbra.cs.util.JMSession;
  */
 public class Mime {
 
-    static Log mLog = LogFactory.getLog(Mime.class);
+    static Log sLog = LogFactory.getLog(Mime.class);
 
     // content types
     public static final String CT_TEXT_PLAIN = "text/plain";
@@ -1010,6 +1011,95 @@ public class Mime {
         return bodies;
     }
 
+    /**
+     * Returns the decoded and unfolded value for the given header name.  If
+     * multiple headers with the same name exist, returns the first one.
+     * If the header does not exist, returns <tt>null</tt>. 
+     */
+    public static String getHeader(MimeMessage msg, String headerName) {
+        try {
+            String value = msg.getHeader(headerName, null);
+            if (value == null || value.length() == 0)
+                return null;
+            try {
+                value = MimeUtility.decodeText(value);
+            } catch (UnsupportedEncodingException e) { }
+
+            value = MimeUtility.unfold(value);
+            return value;
+        } catch (MessagingException e) {
+            sLog.debug("Unable to get header '%s'", headerName, e);
+            return null;
+        }
+    }
+    
+    private static final String[] NO_HEADERS = new String[0];
+    
+    /**
+     * Returns the decoded and unfolded values for the given header name,
+     * or an empty array if no headers with the given name exist.
+     */
+    public static String[] getHeaders(MimeMessage msg, String headerName) {
+        try {
+            String[] values = msg.getHeader(headerName);
+            if (values == null || values.length == 0)
+                return NO_HEADERS;
+
+            for (int i=0; i<values.length; i++) {
+                try {
+                    values[i] = MimeUtility.decodeText(values[i]);
+                } catch (UnsupportedEncodingException e) {
+                    // values[i] would contain the undecoded value, fine
+                }
+                values[i] = MimeUtility.unfold(values[i]);
+            }
+
+            return values;
+        } catch (MessagingException e) {
+            sLog.debug("Unable to get headers named '%s'", headerName, e);
+            return NO_HEADERS;
+        }
+    }
+    
+    /**
+     * Returns the value of the <tt>Message-ID</tt> header, or <tt>null</tt>
+     * if the header does not exist or has an empty value.
+     */
+    public static String getMessageID(MimeMessage msg) {
+        try {
+            String msgid = msg.getMessageID();
+            return ("".equals(msgid) ? null : msgid);
+        } catch (MessagingException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the decoded value of the <tt>From</tt> header.  If not available,
+     * returns the value of the <tt>Sender</tt> header.  Returns an empty
+     * <tt>String</tt> if neither header is available.
+     */
+    public static String getSender(MimeMessage msg) {
+        String sender = null;
+        try {
+            sender = msg.getHeader("From", null);
+        } catch (MessagingException e) {}
+        if (sender == null) {
+            try {
+                sender = msg.getHeader("Sender", null);
+            } catch (MessagingException e) {}
+        }
+        if (sender == null)
+            sender = "";
+        String decoded;
+        try {
+            decoded = MimeUtility.decodeText(sender);
+        } catch (UnsupportedEncodingException e) {
+            return sender;
+        }
+        return decoded;
+    }
+    
     private static Set<String> TEXT_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_HTML } ));
     private static Set<String> HTML_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_PLAIN } ));
 

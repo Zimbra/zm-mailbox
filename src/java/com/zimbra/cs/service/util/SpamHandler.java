@@ -19,6 +19,8 @@ package com.zimbra.cs.service.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
@@ -27,10 +29,12 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.cs.account.Config;
@@ -264,6 +268,50 @@ public class SpamHandler {
         }
 
         enqueue(accountName, mbox, msgs, isSpam);
+    }
+    
+    /**
+     * Stores the last known value of <tt>zimbraSpamHeaderValue</tt>.  Used
+     * for determining whether {@link #sSpamPattern} needs to be recompiled. 
+     */
+    private static String sSpamHeaderValue;
+    
+    /**
+     * Compiled version of {@link #sSpamHeaderValue}.
+     */
+    private static Pattern sSpamPattern;
+
+    /**
+     * Returns <tt>true</tt> if the value of the header named <tt>zimbraSpamHeader</tt>
+     * matches the pattern specified by <tt>zimbraSpamHeaderValue</tt>.
+     */
+    public static boolean isSpam(MimeMessage msg) {
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            String spamHeader = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeader, null);
+            if (StringUtil.isNullOrEmpty(spamHeader)) {
+                return false;
+            }
+            String spamHeaderValue = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeaderValue, null);
+            if (StringUtil.isNullOrEmpty(spamHeaderValue)) {
+                return false;
+            }
+            if (!spamHeaderValue.equals(sSpamHeaderValue)) {
+                // Value has changed.  Recompile pattern.
+                sSpamHeaderValue = spamHeaderValue;
+                sSpamPattern = Pattern.compile(spamHeaderValue);
+            }
+            String val = msg.getHeader(spamHeader, null);
+            if (val != null) {
+                Matcher m = sSpamPattern.matcher(val);
+                if (m.matches()) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("Unable to determine whether the message is spam.", e);
+        }
+        return false;
     }
     
 }

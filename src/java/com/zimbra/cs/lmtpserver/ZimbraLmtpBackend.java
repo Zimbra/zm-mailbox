@@ -49,6 +49,7 @@ import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.Zimbra;
@@ -134,9 +135,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 	public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) {
         try {
             deliverMessageToLocalMailboxes(in, env, sizeHint);
-        } catch (MessagingException me) {
-            ZimbraLog.lmtp.warn("Exception delivering mail (permanent failure)", me);
-            setDeliveryStatuses(env.getRecipients(), LmtpStatus.REJECT);
         } catch (ServiceException e) {
             ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
             setDeliveryStatuses(env.getRecipients(), LmtpStatus.TRYAGAIN);
@@ -222,7 +220,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     private void deliverMessageToLocalMailboxes(InputStream in,
                                                 LmtpEnvelope env, 
                                                 int sizeHint)
-    throws MessagingException, ServiceException {
+    throws ServiceException {
 
         List<LmtpAddress> recipients = env.getRecipients();
         String envSender = env.getSender().getEmailAddress();
@@ -354,39 +352,44 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 Account account = rd.account;
                                 Mailbox mbox = rd.mbox;
                                 ParsedMessage pm = rd.pm;
-                                Message msg = null;
                                 
                                 String msgid = null;
+                                List<ItemId> addedMessageIds = null; 
                                 if (dedupe(pm, mbox)) {
                                     // message was already delivered to this mailbox
                                     ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
-                                    msg = null;
                                 } else if (!DebugConfig.disableFilter) {
                                     // Get msgid first, to avoid having to reopen and reparse the blob
                                     // file if Mailbox.addMessageInternal() closes it.
                                     msgid = pm.getMessageID();
-                                    msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawSize(),
-                                                                               rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
+                                    addedMessageIds = RuleManager.getInstance().applyRules(mbox, pm,
+                                        rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
                                 } else {
                                     msgid = pm.getMessageID();
-                                    msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
-                                                          rcptEmail, sharedDeliveryCtxt);
+                                    Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
+                                        rcptEmail, sharedDeliveryCtxt);
+                                    addedMessageIds = new ArrayList<ItemId>(1);
+                                    addedMessageIds.add(new ItemId(msg));
                                 }
-                                if (msg != null) {
+                                if (addedMessageIds != null && addedMessageIds.size() > 0) {
                                     recordReceipt(msgid, mbox);
                                     
                                     // Execute callbacks
                                     for (LmtpCallback callback : sCallbacks) {
-                                        if (ZimbraLog.lmtp.isDebugEnabled()) {
-                                            ZimbraLog.lmtp.debug("Executing callback %s", callback.getClass().getName());
-                                        }
-                                        try {
-                                            callback.afterDelivery(account, mbox, envSender, rcptEmail, msg);
-                                        } catch (Throwable t) {
-                                            if (t instanceof OutOfMemoryError) {
-                                                Zimbra.halt("LMTP callback failed", t);
-                                            } else {
-                                                ZimbraLog.lmtp.warn("LMTP callback threw an exception", t);
+                                        for (ItemId id : addedMessageIds) {
+                                            if (id.belongsTo(mbox)) {
+                                                // Message was added to the local mailbox, as opposed to a mountpoint.
+                                                ZimbraLog.lmtp.debug("Executing callback %s", callback.getClass().getName());
+                                                try {
+                                                    Message msg = mbox.getMessageById(null, id.getId());
+                                                    callback.afterDelivery(account, mbox, envSender, rcptEmail, msg);
+                                                } catch (Throwable t) {
+                                                    if (t instanceof OutOfMemoryError) {
+                                                        Zimbra.halt("LMTP callback failed", t);
+                                                    } else {
+                                                        ZimbraLog.lmtp.warn("LMTP callback threw an exception", t);
+                                                    }
+                                                }
                                             }
                                         }
                                     }

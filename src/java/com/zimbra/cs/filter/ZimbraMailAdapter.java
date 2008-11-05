@@ -17,21 +17,18 @@
 
 package com.zimbra.cs.filter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
-import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -47,32 +44,20 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s 
@@ -82,14 +67,18 @@ import com.zimbra.cs.zclient.ZMailbox;
 public class ZimbraMailAdapter implements MailAdapter
 {
     private Mailbox mMailbox;
-    private String mRecipient;
 
-    private static String sSpamHeader;
-    private static Pattern sSpamHeaderValue;
     protected SharedDeliveryContext mSharedDeliveryCtxt;
+    private FilterHandler mHandler;
+    private Integer mFlagBitmask;
+    private String mTags;
     
-    public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
-
+    /**
+     * Keeps track of folders into which we filed messages, so we don't file twice
+     * (RFC 3028 2.10.3).
+     */
+    private Set<String> mFiledIntoPaths = new HashSet<String>();
+   
     /**
      * The id of the folder that contains messages that don't match any
      * filter rules.  The default is {@link Mailbox#ID_FOLDER_INBOX}.
@@ -102,38 +91,16 @@ public class ZimbraMailAdapter implements MailAdapter
     private static Set<String> sAddrHdrs;
     
     /**
-     * The message being adapted.
-     */ 
-    private ParsedMessage mParsedMessage;
-    
-    /**
      * List of Actions to perform.
      */ 
-    private List<Action> mActions;
+    private List<Action> mActions = new ArrayList<Action>();
 
     /**
-     * List of processed messages that have been filed into appropriate folders.
+     * Ids of messages that have been added.
      */
-    protected List<Message> mMessages;
+    protected List<ItemId> mAddedMessageIds = new ArrayList<ItemId>();
 
-    /**
-     * true if the system spam detector finds this mail to be spam
-     * false otherwise
-     */
-    private boolean mIsSpam;
-    
     static {
-        try {
-            Provisioning prov = Provisioning.getInstance();
-            sSpamHeader = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeader, null);
-            String spamRegex = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeaderValue, null);
-            if (spamRegex != null)
-                sSpamHeaderValue = Pattern.compile(spamRegex);
-        } catch (Exception e) {
-            ZimbraLog.filter.fatal("Unable to get spam header from provisioning", e);
-            throw new RuntimeException("Unable to get spam header from provisioning", e);
-        }
-        
         sAddrHdrs = new HashSet<String>();
         sAddrHdrs.add("bcc");
         sAddrHdrs.add("cc");
@@ -147,10 +114,8 @@ public class ZimbraMailAdapter implements MailAdapter
     /**
      * Constructor for ZimbraMailAdapter.
      */
-    private ZimbraMailAdapter()
-    {
+    private ZimbraMailAdapter() {
         super();
-        mMessages = new ArrayList<Message>(5);
     }
     
     /**
@@ -164,277 +129,105 @@ public class ZimbraMailAdapter implements MailAdapter
     {
         this();
         mMailbox = mailbox;
-        mRecipient = recipient;
         mSharedDeliveryCtxt = sharedDeliveryCtxt;
         if (defaultFolderId != Mailbox.ID_FOLDER_INBOX) {
             // Validate folder id.
             mMailbox.getFolderById(null, defaultFolderId);
         }
         mDefaultFolderId = defaultFolderId;
-        setParsedMessage(pm);
-        
-        // check spam headers set by system spam detector
-        if (sSpamHeader != null) {
-            String val = pm.getMimeMessage().getHeader(sSpamHeader, null);
-            if (val != null) {
-                if (sSpamHeaderValue != null) {
-                    Matcher m = sSpamHeaderValue.matcher(val);
-                    mIsSpam = m.matches();
-                } else {
-                    // no expected header value is configured; 
-                    // presence of the header (regardless of its value) indicates spam
-                    mIsSpam = true;
-                }
-            }
-        }
+        // XXX bburtin: extract this later
+        mHandler = new IncomingMessageHandler(sharedDeliveryCtxt, mailbox, recipient, pm, defaultFolderId);
     }    
 
-    public boolean isSpam() {
-    	return mIsSpam;
-    }
-    
     public ParsedMessage getParsedMessage() {
-        return mParsedMessage;
+        return mHandler.getParsedMessage();
     }
     
-    /**
-     * Sets the message.
-     * @param pm The message to set
-     */
-    protected void setParsedMessage(ParsedMessage pm) {
-        mParsedMessage = pm;
+    public MimeMessage getMimeMessage() {
+        return mHandler.getMimeMessage();
     }
     
     /**
      * Returns the List of actions.
      * @return List
      */
-    public List<Action> getActions()
-    {
-        List<Action> actions = null;
-        if (null == (actions = getActionsBasic()))
-        {
-            updateActions();
-            return getActions();
-        }    
-        return actions;
-    }
-    
-    /**
-     * Returns a new List of actions.
-     * @return List
-     */
-    protected List<Action> computeActions()
-    {
-        return new ArrayList<Action>();
-    }    
-    
-    /**
-     * Returns the List of actions.
-     * @return List
-     */
-    private List<Action> getActionsBasic()
-    {
+    public List<Action> getActions() {
         return mActions;
-    }    
+    }
+    
+    public ListIterator<Action> getActionsIterator() {
+        return mActions.listIterator();
+    }
 
     /**
      * Adds an Action.
      * @param action The action to set
      */
-    public void addAction(Action action)
-    {
-        getActions().add(action);
+    public void addAction(Action action) {
+        mActions.add(action);
     }
     
     public void executeActions() throws SieveException {
         try {
-            boolean dup = false;
-            
+            String messageId = Mime.getMessageID(mHandler.getMimeMessage());
+
             // If the Sieve script has no actions, JSieve generates an implicit keep.  If
             // the script contains a single discard action, JSieve returns an empty list.
             if (getActions().size() == 0) {
                 ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
-                    mParsedMessage.getMessageID(), mParsedMessage.getSender());
+                    messageId, Mime.getSender(mHandler.getMimeMessage()));
+                mHandler.discard();
                 return;
             }
             
             // If only tag/flag actions are specified, JSieve does not generate an
             // implicit keep.
             List<Action> deliveryActions = getDeliveryActions();
+            
             if (deliveryActions.size() == 0) {
-                Message msg = doDefaultFiling();
-                if (msg == null) {
-                    dup = true;
-                }
+                doDefaultFiling();
             }
-
+            
             // Handle explicit and implicit delivery actions
             for (Action action : deliveryActions) {
                 if (action instanceof ActionKeep) {
-                    Message msg = null;
                     CommandStateManager state = CommandStateManager.getInstance();
                     if (state.isImplicitKeep()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
-                        msg = doDefaultFiling();
+                        doDefaultFiling();
                     } else {
-                        // if explicit keep is specified, keep in INBOX regardless of spam
-                        // save the message to INBOX by explicit user request in the filter
-                        msg = addMessage(mDefaultFolderId);
-                    }
-                    if (msg == null) {
-                        dup = true;
-                        break;
+                        explicitKeep();
                     }
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
-                    String localPath = fileinto.getDestination();
-                    Folder defaultFolder = mMailbox.getFolderById(null, mDefaultFolderId);
-                    
-                    // Do initial lookup.
-                    Pair<Folder, String> folderAndPath = mMailbox.getFolderByPathLongestMatch(
-                        null, Mailbox.ID_FOLDER_USER_ROOT, localPath);
-                    Folder folder = folderAndPath.getFirst();
-                    String remainingPath = folderAndPath.getSecond();
-                    ZimbraLog.filter.debug("Attempting to file to %s, remainingPath=%s.", folder, remainingPath);
-                    
-                    // save the message to the specified folder;
-                    // The message will not be filed into the same folder multiple times because of
-                    // jsieve FileInto validation ensures it; it is allowed to be filed into
-                    // multiple different folders, however
-
-                    boolean filedRemotely = false;
-
-                    if (folder instanceof Mountpoint) {
-                        Mountpoint mountpoint = (Mountpoint) folder;
-                        try {
-                            ZMailbox remoteMbox = getRemoteZMailbox(mMailbox, mountpoint);
-
-                            // Look up remote folder.
-                            ItemId id = new ItemId(mountpoint.getOwnerId(), mountpoint.getRemoteId());
-                            ZFolder remoteFolder = remoteMbox.getFolderById(id.toString());
-                            if (remoteFolder != null) {
-                                if (remainingPath != null) {
-                                    remoteFolder = remoteFolder.getSubFolderByPath(remainingPath);
-                                    if (remoteFolder == null) {
-                                        ZimbraLog.filter.warn("Subfolder %s of mountpoint %s does not exist.  " +
-                                            "Filing to %s instead.",
-                                            remainingPath, mountpoint.getName(), getDefaultFolderName());
-                                    }
-                                }
-                            } else {
-                                ZimbraLog.filter.warn("Unable to find remote folder %s for mountpoint %s.  " +
-                                    "Filing to %s instead.",
-                                    id.toString(), mountpoint.getName(), getDefaultFolderName());
-                            }
-
-                            // File to remote folder.
-                            if (remoteFolder != null) {
-                                remoteMbox.addMessage(remoteFolder.getId(), Flag.bitmaskToFlags(
-                                    getFlagBitmask()), null, 0, mParsedMessage.getRawData(), false);
-                                filedRemotely = true;
-                            } else {
-                                folder = mMailbox.getFolderById(null, mDefaultFolderId);
-                            }
-                        } catch (Exception e) {
-                            ZimbraLog.filter.warn("Unable to file to %s.  Filing to %s instead.",
-                                localPath, getDefaultFolderName(), e);
-                            folder = mMailbox.getFolderById(null, mDefaultFolderId);
-                        }
-                    } else if (!StringUtil.isNullOrEmpty(remainingPath)) {
-                        // Only part of the folder path matched.  Auto-create the remaining path.
-                        ZimbraLog.filter.info("Could not find folder %s.  Automatically creating it.",
-                            localPath);
-                        try {
-                            folder = mMailbox.createFolder(null, localPath, (byte) 0, MailItem.TYPE_MESSAGE);
-                        } catch (ServiceException e) {
-                            ZimbraLog.filter.warn("Unable to create folder %s.  Filing to %s.",
-                                localPath, getDefaultFolderName());
-                            folder = defaultFolder;
-                        }
-                    }
-                    
-                    if (!filedRemotely) {
-                        Message msg = addMessage(folder.getId());
-                        if (msg == null) {
-                            dup = true;
-                            break;
-                        }
+                    String folderPath = fileinto.getDestination();
+                    try {
+                        fileInto(folderPath);
+                    } catch (ServiceException e) {
+                        ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
+                            folderPath, getDefaultFolderName());
+                        explicitKeep();
                     }
                 } else if (action instanceof ActionRedirect) {
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
                     ZimbraLog.filter.info("Redirecting message to %s.", addr);
-                    MimeMessage outgoingMsg = null;
-                    
                     try {
-                        if (!isMailLoop()) {
-                            outgoingMsg = new MimeMessage(mParsedMessage.getMimeMessage());
-                            outgoingMsg.setHeader(HEADER_FORWARDED, mMailbox.getAccount().getName());
-                            outgoingMsg.saveChanges();
-                        } else {
-                            ZimbraLog.filter.warn("Detected a mail loop for message %s.", mParsedMessage.getMessageID());
-                        }
-                    } catch (MessagingException e) {
-                        try {
-                            // Workaround for bug 16525
-                            outgoingMsg = new MimeMessage(mParsedMessage.getMimeMessage()) {
-                                @Override protected void updateHeaders() throws MessagingException {
-                                    setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
-                                }
-                            };
-                            ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
-                        } catch (MessagingException e2) {
-                            ZimbraLog.filter.warn("Message format error detected.  Workaround failed.", e2);
-                            outgoingMsg = null;
-                        }
-                    }
-                    
-                    boolean sent = false;
-                    if (outgoingMsg != null) {
-                        try {
-                            Transport.send(outgoingMsg, new javax.mail.Address[] { new InternetAddress(addr) });
-                            sent = true;
-                        } catch (MessagingException e) {
-                            ZimbraLog.filter.warn("Message send failed.", e);
-                        }
-                    }
-                    
-                    if (!sent) {
+                        mHandler.redirect(addr);
+                    } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
                             addr, getDefaultFolderName());
-                        addMessage(mDefaultFolderId);
+                        explicitKeep();
                     }
                 } else {
                     throw new SieveException("unknown action " + action);
                 }
             }
-            if (dup) {
-                ZimbraLog.filter.debug("filter actions ignored for duplicate messages that are not delivered");
-            }
         } catch (ServiceException e) {
             throw new ZimbraSieveException(e);
-        } catch (IOException e) {
-            throw new ZimbraSieveException(e);
         }
-    }
-    
-    /**
-     * Returns <tt>true</tt> if the current account's name is
-     * specified in one of the X-Zimbra-Forwarded headers.
-     */
-    private boolean isMailLoop()
-    throws ServiceException {
-        String[] forwards = mParsedMessage.getHeaders(HEADER_FORWARDED);
-        String userName = mMailbox.getAccount().getName();
-        for (String forward : forwards) {
-            if (StringUtil.equal(userName, forward)) {
-                return true;
-            }
-        }
-        return false;
     }
     
     private String getDefaultFolderName() {
@@ -449,7 +242,7 @@ public class ZimbraMailAdapter implements MailAdapter
 
     private List<Action> getDeliveryActions() {
         List<Action> actions = new ArrayList<Action>();
-        for (Action action : getActions()) {
+        for (Action action : mActions) {
             if (action instanceof ActionKeep ||
                 action instanceof ActionFileInto ||
                 action instanceof ActionRedirect) {
@@ -459,38 +252,91 @@ public class ZimbraMailAdapter implements MailAdapter
         return actions;
     }
     
-    private List<Action> getTagFlagActions() {
+    private List<Action> getTagActions() {
         List<Action> actions = new ArrayList<Action>();
-        for (Action action : getActions()) {
-            if (action instanceof ActionTag ||
-                action instanceof ActionFlag) {
+        for (Action action : mActions) {
+            if (action instanceof ActionTag) {
+                actions.add(action);
+            }
+        }
+        return actions;
+    }
+    
+    private List<Action> getFlagActions() {
+        List<Action> actions = new ArrayList<Action>();
+        for (Action action : mActions) {
+            if (action instanceof ActionFlag) {
                 actions.add(action);
             }
         }
         return actions;
     }
 
-    Message doDefaultFiling() throws IOException, ServiceException {
-        int folderId = mIsSpam ? Mailbox.ID_FOLDER_SPAM : mDefaultFolderId;
-        return addMessage(folderId);
-    }
-
-    private Message addMessage(int folderId) throws IOException, ServiceException {
-        int flags = getFlagBitmask();
-        String tags = getTags();
-        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId,
-            false, flags, tags, mRecipient, mSharedDeliveryCtxt);
-        if (msg != null) {
-            mMessages.add(msg);
+    /**
+     * Files the message into the inbox or spam folder.  Keeps track
+     * of the folder path, to make sure we don't file to the same
+     * folder twice.
+     */
+    Message doDefaultFiling()
+    throws ServiceException {
+        String folderPath = mHandler.getDefaultFolderPath();
+        Message msg = null;
+        if (mFiledIntoPaths.contains(folderPath)) {
+            ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
+        } else {
+            msg = mHandler.implicitKeep(getFlagBitmask(), getTags());
+            if (msg != null) {
+                mFiledIntoPaths.add(folderPath);
+                mAddedMessageIds.add(new ItemId(msg));
+            }
         }
         return msg;
     }
 
+    /**
+     * Files the message into the inbox folder.  Keeps track
+     * of the folder path, to make sure we don't file to the same
+     * folder twice.
+     */
+    private Message explicitKeep()
+    throws ServiceException {
+        String folderPath = mHandler.getDefaultFolderPath();
+        Message msg = null;
+        if (mFiledIntoPaths.contains(folderPath)) {
+            ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
+        } else {
+            msg = mHandler.explicitKeep(getFlagBitmask(), getTags());
+            if (msg != null) {
+                mFiledIntoPaths.add(folderPath);
+                mAddedMessageIds.add(new ItemId(msg));
+            }
+        }
+        return msg;
+    }
+    
+    /**
+     * Files the message into the given folder.  Keeps track
+     * of the folder path, to make sure we don't file to the same
+     * folder twice.
+     */
+    private void fileInto(String folderPath)
+    throws ServiceException {
+        if (mFiledIntoPaths.contains(folderPath)) {
+            ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
+        } else {
+            ItemId id = mHandler.fileInto(folderPath, getFlagBitmask(), getTags());
+            if (id != null) {
+                mFiledIntoPaths.add(folderPath);
+                mAddedMessageIds.add(id);
+            }
+        }
+    }
+
     private String getTags()
     throws ServiceException {
-        StringBuilder tagsBuf = null;
-        for (Action action : getTagFlagActions()) {
-            if (action instanceof ActionTag) {
+        if (mTags == null) {
+            StringBuilder tagsBuf = null;
+            for (Action action : getTagActions()) {
                 String tagName = ((ActionTag) action).getTagName();
                 Tag tag = null;
                 try {
@@ -512,15 +358,20 @@ public class ZimbraMailAdapter implements MailAdapter
                         tagsBuf.append(",").append(tag.getId());
                     }
                 }
-            }            
+            }
+            if (tagsBuf == null) {
+                mTags = "";
+            } else {
+                mTags = tagsBuf.toString();
+            }
         }
-        return tagsBuf == null ? "" : tagsBuf.toString();
+        return mTags;
     }
     
     private int getFlagBitmask() {
-        int flagBits = Flag.BITMASK_UNREAD;
-        for (Action action : getTagFlagActions()) {
-            if (action instanceof ActionFlag) {
+        if (mFlagBitmask == null) {
+            int flagBits = Flag.BITMASK_UNREAD;
+            for (Action action : getFlagActions()) {
                 ActionFlag flagAction = (ActionFlag) action;
                 int flagId = flagAction.getFlagId();
                 try {
@@ -533,32 +384,11 @@ public class ZimbraMailAdapter implements MailAdapter
                     ZimbraLog.filter.warn("Unable to flag message", e);
                 }
             }
+            mFlagBitmask = flagBits;
         }
-        return flagBits;
+        return mFlagBitmask;
     }
     
-    /**
-     * Sets the actions.
-     * @param actions The actions to set
-     */
-    protected void setActions(List<Action> actions)
-    {
-        mActions = actions;
-    }
-    
-    /**
-     * Updates the actions.
-     */
-    protected void updateActions()
-    {
-        setActions(computeActions());
-    }    
-
-    public ListIterator<Action> getActionsIterator()
-    {
-        return getActions().listIterator();
-    }
-
     private List<String> handleIDN(String headerName, String[] headers) {
 
         List<String> hdrs = new ArrayList<String>();
@@ -606,9 +436,8 @@ public class ZimbraMailAdapter implements MailAdapter
         return hdrs;
     }
     
-    public List<String> getHeader(String name)
-    {
-        String[] headers = mParsedMessage.getHeaders(name);
+    public List<String> getHeader(String name) {
+        String[] headers = Mime.getHeaders(mHandler.getMimeMessage(), name);
         
         if (sAddrHdrs.contains(name.toLowerCase()))
             return handleIDN(name, headers);
@@ -616,13 +445,12 @@ public class ZimbraMailAdapter implements MailAdapter
             return (headers == null ? new ArrayList<String>(0) : Arrays.asList(headers));
     }
 
-    public List<String> getHeaderNames() throws SieveMailException
-    {
+    public List<String> getHeaderNames() throws SieveMailException {
         Set<String> headerNames = new HashSet<String>();
         try
         {
             @SuppressWarnings("unchecked")
-            Enumeration<Header> allHeaders = mParsedMessage.getMimeMessage().getAllHeaders();
+            Enumeration<Header> allHeaders = mHandler.getMimeMessage().getAllHeaders();
             while (allHeaders.hasMoreElements())
             {
                 headerNames.add(allHeaders.nextElement().getName());
@@ -636,69 +464,32 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     public List<String> getMatchingHeader(String name)
-        throws SieveMailException
-    {
+        throws SieveMailException {
         @SuppressWarnings("unchecked")
         List<String> result = MailUtils.getMatchingHeader(this, name);
         return result;
     }
 
-    public int getSize() throws SieveMailException
-    {
-        int size;
+    public int getSize() throws SieveMailException {
         try {
-            size = mParsedMessage.getRawSize();
-            return size;
-        } catch (IOException ioe) {
-            throw new SieveMailException(ioe);
-        } catch (ServiceException se) {
-            throw new SieveMailException(se);
+            return mHandler.getParsedMessage().getRawSize();
+        } catch (Exception e) {
+            throw new SieveMailException(e);
         }
     }
     
     /**
-     * Gets the processed messages. Multiple fileinto actions may be specified.
-     * In that case, multiple copies of the message appear in different folders.
-     * 
-     * @return
+     * Returns the ids of messages that have been added by filter rules,
+     * or an empty list.
      */
-    public Message[] getProcessedMessages() {
-        return mMessages.toArray(new Message[0]);
+    public List<ItemId> getAddedMessageIds() {
+        return Collections.unmodifiableList(mAddedMessageIds);
     }
     
     public Mailbox getMailbox() {
         return mMailbox;
     }
     
-    /**
-     * Returns a <tt>ZMailbox</tt> for the remote mailbox referenced by the given
-     * <tt>Mountpoint</tt>.
-     */
-    public static ZMailbox getRemoteZMailbox(Mailbox localMbox, Mountpoint mountpoint)
-    throws ServiceException {
-        // Get auth token
-        AuthToken authToken = null;
-        OperationContext opCtxt = localMbox.getOperationContext();
-        if (opCtxt != null) {
-            authToken = opCtxt.getAuthToken();
-        }
-        if (authToken == null) {
-            authToken = AuthProvider.getAuthToken(localMbox.getAccount());
-        }
-        
-        // Get ZMailbox
-        Account account = Provisioning.getInstance().get(AccountBy.id, mountpoint.getOwnerId());
-        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(account));
-        zoptions.setNoSession(true);
-        zoptions.setTargetAccount(account.getId());
-        zoptions.setTargetAccountBy(AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
-    }
-    
-    protected String getRecipient() {
-        return mRecipient;
-    }
-
     public Object getContent() {
         return "";
     }
@@ -708,7 +499,7 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     public Address[] parseAddresses(String headerName) {
-        String[] addresses = mParsedMessage.getHeaders(headerName);
+        String[] addresses = Mime.getHeaders(mHandler.getMimeMessage(), headerName);
         if (addresses == null) {
             return FilterAddress.EMPTY_ADDRESS_ARRAY;
         }

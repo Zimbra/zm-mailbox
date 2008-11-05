@@ -42,6 +42,8 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -61,6 +63,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -127,6 +130,7 @@ public class ParsedMessage {
     private BlobInputStream mBlobInputStream;
     private boolean mWasMutated;
     private Integer mRawSize;
+    private boolean mIsSpam = false;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments)
     throws ServiceException {
@@ -802,65 +806,12 @@ public class ParsedMessage {
         return mFragment;
     }
 
+    /**
+     * Returns the message ID, or <tt>null</tt> if the message id cannot be determined.
+     */
     public String getMessageID() {
-        try {
-            String msgid = getMimeMessage().getMessageID();
-            return ("".equals(msgid) ? null : msgid);
-        } catch (MessagingException me) {
-            return null;
-        }
+        return Mime.getMessageID(getMimeMessage());
     }
-
-    /**
-     * Returns the decoded and unfolded value for the given header name.  If
-     * multiple headers with the same name exist, returns the first one.
-     * If the header does not exist, returns <tt>null</tt>. 
-     */
-    public String getHeader(String headerName) {
-        try {
-            String value = getMimeMessage().getHeader(headerName, null);
-            if (value == null || value.length() == 0)
-                return null;
-            try {
-                value = MimeUtility.decodeText(value);
-            } catch (UnsupportedEncodingException e) { }
-
-            value = MimeUtility.unfold(value);
-            return value;
-        } catch (MessagingException e) {
-            sLog.debug("Unable to get header '%s'", headerName, e);
-            return null;
-        }
-    }
-    
-    private static final String[] NO_HEADERS = new String[0];
-    
-    /**
-     * Returns the decoded and unfolded values for the given header name,
-     * or an empty array if no headers with the given name exist.
-     */
-    public String[] getHeaders(String headerName) {
-        try {
-            String[] values = getMimeMessage().getHeader(headerName);
-            if (values == null || values.length == 0)
-                return NO_HEADERS;
-            
-            for (int i=0; i<values.length; i++) {
-                try {
-                    values[i] = MimeUtility.decodeText(values[i]);
-                } catch (UnsupportedEncodingException e) {
-                    // values[i] would contain the undecoded value, fine
-                }
-                values[i] = MimeUtility.unfold(values[i]);
-            }
-
-            return values;
-        } catch (MessagingException e) {
-            sLog.debug("Unable to get headers named '%s'", headerName, e);
-            return NO_HEADERS;
-        }
-    }
-    
     
     public String getRecipients() {
         if (mRecipients == null) {
@@ -880,28 +831,13 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns the value of the <tt>From</tt> header.  If not available,
+     * Returns the decoded value of the <tt>From</tt> header.  If not available,
      * returns the value of the <tt>Sender</tt> header.  Returns an empty
      * <tt>String</tt> if neither header is available.
      */
     public String getSender() {
         if (mSender == null) {
-            String sender = null;
-            try {
-                sender = getMimeMessage().getHeader("From", null);
-            } catch (MessagingException e) {}
-            if (sender == null) {
-                try {
-                    sender = getMimeMessage().getHeader("Sender", null);
-                } catch (MessagingException e) {}
-            }
-            if (sender == null)
-                sender = "";
-            try {
-                mSender = MimeUtility.decodeText(sender);
-            } catch (UnsupportedEncodingException e) {
-                mSender = sender;
-            }
+            mSender = Mime.getSender(getMimeMessage());
         }
         return mSender;
     }
@@ -1063,7 +999,7 @@ public class ParsedMessage {
         setHeaderAsLuceneField(document, "x-envelope-from", LuceneFields.L_H_X_ENV_FROM, Field.Store.NO, Field.Index.TOKENIZED);
         setHeaderAsLuceneField(document, "x-envelope-to", LuceneFields.L_H_X_ENV_TO, Field.Store.NO, Field.Index.TOKENIZED);
 
-        String msgId = getHeader("message-id");
+        String msgId = Mime.getHeader(getMimeMessage(), "message-id");
         if (msgId == null) {
             msgId = "";
         }
@@ -1364,7 +1300,7 @@ public class ParsedMessage {
         }
         return toRet;
     }
-    
+
     private static final void appendToContent(StringBuilder sb, String s) {
         if (sb.length() > 0)
             sb.append(' ');

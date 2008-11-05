@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
 
 import java.io.IOException;
 import java.util.List;
@@ -74,16 +75,19 @@ public abstract class MailItemImport implements DataSource.DataImport {
         switch (folderId) {
         case Mailbox.ID_FOLDER_INBOX:
             try {
-                msg = RULE_MANAGER.applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(),
+                List<ItemId> addedMessageIds = RULE_MANAGER.applyRules(mbox, pm, 
                     dataSource.getEmailAddress(), context, Mailbox.ID_FOLDER_INBOX);
-                if (msg == null) {
-                    return null; // Message was discarded
+                Integer newMessageId = getFirstLocalId(addedMessageIds);
+                if (newMessageId == null) {
+                    return null; // Message was discarded or filed remotely
+                } else {
+                    msg = mbox.getMessageById(null, newMessageId);
                 }
                 // Set flags (setting of BITMASK_UNREAD is implicit)
                 if (flags != Flag.BITMASK_UNREAD) {
                     // Bug 28275: Cannot set DRAFT flag after message has been created
                     flags &= ~Flag.BITMASK_DRAFT;
-                    mbox.setTags(octxt, msg.getId(), MailItem.TYPE_MESSAGE,
+                    mbox.setTags(octxt, newMessageId, MailItem.TYPE_MESSAGE,
                                  flags, MailItem.TAG_UNCHANGED);
                 }
             } catch (Exception e) {
@@ -111,5 +115,17 @@ public abstract class MailItemImport implements DataSource.DataImport {
     
     public Mailbox getMailbox() {
         return mbox;
+    }
+    
+    protected Integer getFirstLocalId(List<ItemId> idList) {
+        if (idList == null) {
+            return null;
+        }
+        for (ItemId id : idList) {
+            if (id.belongsTo(mbox)) {
+                return id.getId();
+            }
+        }
+        return null;
     }
 }

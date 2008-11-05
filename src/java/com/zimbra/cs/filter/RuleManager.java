@@ -55,6 +55,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.SpamHandler;
 
 /**
  * Handles setting and getting filter rules for an <tt>Account</tt>.
@@ -260,12 +262,19 @@ public class RuleManager {
         }
     }
     
-    public Message applyRules(Account account, Mailbox mailbox, ParsedMessage pm, int size, 
+    /**
+     * Adds a message to a mailbox.  If filter rules exist, processes
+     * the filter rules.  Otherwise, files to <tt>Inbox</tt> or <tt>Spam</tt>.
+     * 
+     * @return the list of message id's that were added, or an empty list.
+     */
+    public List<ItemId> applyRules(Mailbox mailbox, ParsedMessage pm,
             String recipient, SharedDeliveryContext sharedDeliveryCtxt, int incomingFolderId)
-    	throws IOException, MessagingException, ServiceException
-    {
-        Message msg = null;
+    throws IOException, MessagingException, ServiceException {
+        List<ItemId> addedMessageIds = null;
+        
         try {
+            Account account = mailbox.getAccount();
             Node node = getRulesNode(account);
             ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(
                     mailbox, pm, recipient, sharedDeliveryCtxt, incomingFolderId);
@@ -275,7 +284,7 @@ public class RuleManager {
             if (node == null) {
             	applyRules = false;
             }
-            if (mailAdapter.isSpam() &&
+            if (SpamHandler.isSpam(pm.getMimeMessage()) &&
             		!account.getBooleanAttr(Provisioning.A_zimbraSpamApplyUserFilters, false)) {
             	// Don't apply user filters to spam by default
             	applyRules = false;
@@ -284,12 +293,13 @@ public class RuleManager {
             if (applyRules) {
                 SieveFactory.getInstance().evaluate(mailAdapter, node);
                 // multiple fileinto may result in multiple copies of the messages in different folders
-                Message[] msgs = mailAdapter.getProcessedMessages();
-                // return only the last filed message
-                if (msgs.length > 0)
-                    msg = msgs[msgs.length - 1];
+                addedMessageIds = mailAdapter.getAddedMessageIds(); 
             } else {
-                msg = mailAdapter.doDefaultFiling();
+                addedMessageIds = new ArrayList<ItemId>(1);
+                Message msg = mailAdapter.doDefaultFiling();
+                if (msg != null) {
+                    addedMessageIds.add(new ItemId(msg));
+                }
             }
         } catch (SieveException e) {
             if (e instanceof ZimbraSieveException) {
@@ -305,23 +315,29 @@ public class RuleManager {
                 ZimbraLog.filter.warn("Sieve error:", e);
                 // filtering system generates errors; 
                 // ignore filtering and file the message into INBOX
-                msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
+                Message msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
                         false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
+                addedMessageIds = new ArrayList<ItemId>(1);
+                addedMessageIds.add(new ItemId(msg));
             }
         } catch (ParseException e) {
             ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
-            msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
+            Message msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
                     false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
+            addedMessageIds = new ArrayList<ItemId>(1);
+            addedMessageIds.add(new ItemId(msg));
         } catch (TokenMgrError e) {
             ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
-            msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
+            Message msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
                     false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
+            addedMessageIds = new ArrayList<ItemId>(1);
+            addedMessageIds.add(new ItemId(msg));
         }
-        return msg;
+        return addedMessageIds;
     }
     
     /**

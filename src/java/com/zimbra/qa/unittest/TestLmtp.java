@@ -16,18 +16,15 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
@@ -312,7 +309,6 @@ extends TestCase {
         mbox2.markItemRead(msg2.getId(), true, null);
         mbox2.emptyFolder(folder2.getId());
         mbox1 = TestUtil.getZMailbox(USER_NAME);
-        System.out.println("Getting message content?");
         
         TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
     }

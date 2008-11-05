@@ -16,14 +16,40 @@
  */
 package com.zimbra.cs.filter;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.DateParser;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 public class FilterUtil {
 
@@ -192,6 +218,149 @@ public class FilterUtil {
             multiplier = 1024 * 1024 * 1024;
         }
         return Integer.parseInt(sizeString) * multiplier;
+    }
+    
+    /**
+     * Adds a message to the given folder.  Handles both local folders and mountpoints.
+     * @return the id of the new message, or <tt>null</tt> if it was a duplicate
+     */
+    public static ItemId addMessage(SharedDeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
+                                    String folderPath, int flags, String tags)
+    throws ServiceException {
+        // Do initial lookup.
+        Pair<Folder, String> folderAndPath = mbox.getFolderByPathLongestMatch(
+            null, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
+        Folder folder = folderAndPath.getFirst();
+        String remainingPath = folderAndPath.getSecond();
+        ZimbraLog.filter.debug("Attempting to file to %s, remainingPath=%s.", folder, remainingPath);
+        
+        if (folder instanceof Mountpoint) {
+            Mountpoint mountpoint = (Mountpoint) folder;
+            ZMailbox remoteMbox = getRemoteZMailbox(mbox, mountpoint);
+
+            // Look up remote folder.
+            String remoteAccountId = mountpoint.getOwnerId();
+            ItemId id = new ItemId(remoteAccountId, mountpoint.getRemoteId());
+            ZFolder remoteFolder = remoteMbox.getFolderById(id.toString());
+            if (remoteFolder != null) {
+                if (remainingPath != null) {
+                    remoteFolder = remoteFolder.getSubFolderByPath(remainingPath);
+                    if (remoteFolder == null) {
+                        String msg = String.format("Subfolder %s of mountpoint %s does not exist.",
+                            remainingPath, mountpoint.getName());
+                        throw ServiceException.FAILURE(msg, null);
+                    }
+                }
+            }
+
+            // File to remote folder.
+            if (remoteFolder != null) {
+                byte[] content = null;
+                try {
+                    content = pm.getRawData();
+                } catch (Exception e) {
+                    throw ServiceException.FAILURE("Unable to get message content", e);
+                }
+                String msgId = remoteMbox.addMessage(remoteFolder.getId(),
+                    com.zimbra.cs.mailbox.Flag.bitmaskToFlags(flags),
+                    null, 0, content, false);
+                return new ItemId(remoteAccountId, Integer.valueOf(msgId));
+            } else {
+                String msg = String.format("Unable to find remote folder %s for mountpoint %s.",
+                    remainingPath, mountpoint.getName());
+                throw ServiceException.FAILURE(msg, null);
+            }
+        } else {
+            if (!StringUtil.isNullOrEmpty(remainingPath)) {
+                // Only part of the folder path matched.  Auto-create the remaining path.
+                ZimbraLog.filter.info("Could not find folder %s.  Automatically creating it.",
+                    folderPath);
+                folder = mbox.createFolder(null, folderPath, (byte) 0, MailItem.TYPE_MESSAGE);
+            }
+            try {
+                Message msg = mbox.addMessage(null, pm, folder.getId(), false, flags, tags, recipient, context);
+                if (msg == null) {
+                    return null;
+                } else {
+                    return new ItemId(msg);
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Unable to add message", e);
+            }
+        }
+    }
+
+    /**
+     * Returns a <tt>ZMailbox</tt> for the remote mailbox referenced by the given
+     * <tt>Mountpoint</tt>.
+     */
+    public static ZMailbox getRemoteZMailbox(Mailbox localMbox, Mountpoint mountpoint)
+    throws ServiceException {
+        // Get auth token
+        AuthToken authToken = null;
+        OperationContext opCtxt = localMbox.getOperationContext();
+        if (opCtxt != null) {
+            authToken = opCtxt.getAuthToken();
+        }
+        if (authToken == null) {
+            authToken = AuthProvider.getAuthToken(localMbox.getAccount());
+        }
+        
+        // Get ZMailbox
+        Account account = Provisioning.getInstance().get(AccountBy.id, mountpoint.getOwnerId());
+        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(account));
+        zoptions.setNoSession(true);
+        zoptions.setTargetAccount(account.getId());
+        zoptions.setTargetAccountBy(AccountBy.id);
+        return ZMailbox.getMailbox(zoptions);
+    }
+
+    public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
+
+    public static void redirect(Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
+    throws ServiceException, MessagingException {
+        MimeMessage outgoingMsg = null;
+        
+        try {
+            if (!isMailLoop(sourceMbox, msg)) {
+                outgoingMsg = new MimeMessage(msg);
+                outgoingMsg.setHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
+                outgoingMsg.saveChanges();
+            } else {
+                String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(msg));
+                throw ServiceException.FAILURE(error, null);
+            }
+        } catch (MessagingException e) {
+            try {
+                // Workaround for bug 16525
+                outgoingMsg = new MimeMessage(msg) {
+                    @Override protected void updateHeaders() throws MessagingException {
+                        setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
+                    }
+                };
+                ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
+            } catch (MessagingException e2) {
+                throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", e2);
+            }
+        }
+        
+        Transport.send(outgoingMsg, new javax.mail.Address[] { new InternetAddress(destinationAddress) });
+    }
+    
+    /**
+     * Returns <tt>true</tt> if the current account's name is
+     * specified in one of the X-Zimbra-Forwarded headers.
+     */
+    private static boolean isMailLoop(Mailbox sourceMbox, MimeMessage msg)
+    throws MessagingException, ServiceException {
+        String[] forwards = Mime.getHeaders(msg, HEADER_FORWARDED);
+        String userName = sourceMbox.getAccount().getName();
+        for (String forward : forwards) {
+            if (StringUtil.equal(userName, forward)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

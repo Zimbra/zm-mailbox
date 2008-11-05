@@ -39,7 +39,6 @@ import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.SieveToSoap;
 import com.zimbra.cs.filter.SoapToSieve;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
@@ -208,9 +207,9 @@ extends TestCase {
     	assertEquals(0, TestUtil.search(mbox, "in:junk subject:testSpam").size());
     	
     	// Deliver spam message without matching rule, make sure it gets delivered
-    	// to the junk folder, and delete. 
+    	// to the junk folder, and delete.
     	TestUtil.addMessageLmtp(recipients, sender, message);
-    	ZMessage msg = TestUtil.waitForMessage(mbox, "in:junk subject:testSpam");
+    	ZMessage msg = TestUtil.getMessage(mbox, "in:junk subject:testSpam");
     	mbox.deleteMessage(msg.getId());
     	
     	// Add matching filter rule: if subject contains "testSpam", file into folder1
@@ -510,7 +509,7 @@ extends TestCase {
         byte[] content = TestUtil.getContent(remoteMbox, msg.getId()).getBytes();
         MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
         Account user1 = TestUtil.getAccount(USER_NAME);
-        assertEquals(user1.getName(), mimeMsg.getHeader(ZimbraMailAdapter.HEADER_FORWARDED));
+        assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
     }
     
     /**
@@ -539,7 +538,7 @@ extends TestCase {
         byte[] content = TestUtil.getContent(mMbox, msg.getId()).getBytes();
         MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
         Account user1 = TestUtil.getAccount(USER_NAME);
-        assertEquals(user1.getName(), mimeMsg.getHeader(ZimbraMailAdapter.HEADER_FORWARDED));
+        assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
     }
     
     /**

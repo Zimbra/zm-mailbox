@@ -106,7 +106,7 @@ public class DateTest extends AbstractTest {
 
     private boolean test(MailAdapter mail, String comparator, Date date) throws SieveException {
         // get the date from the mail
-        MimeMessage mimeMsg = ((ZimbraMailAdapter) mail).getParsedMessage().getMimeMessage();
+        MimeMessage mimeMsg = ((ZimbraMailAdapter) mail).getMimeMessage();
         try {
             Date msgDate = mimeMsg.getSentDate();
             if (msgDate == null) {
