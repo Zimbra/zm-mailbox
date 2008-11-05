@@ -37,7 +37,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081104-1137 */
+    /* build: 5.0 schemers 20081104-1827 */
 
     /**
      * Zimbra access control list
@@ -856,7 +856,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraHsmAge in millseconds, or -1 if unset
      */
-    @ZAttr(id=20)
+    @ZAttr(id=8)
     public long getHsmAge() {
         return getTimeInterval(Provisioning.A_zimbraHsmAge, -1);
     }
@@ -867,7 +867,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraHsmAge, or null unset
      */
-    @ZAttr(id=20)
+    @ZAttr(id=8)
     public String getHsmAgeAsString() {
         return getAttr(Provisioning.A_zimbraHsmAge);
     }

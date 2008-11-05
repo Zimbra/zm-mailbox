@@ -36,7 +36,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081104-1137 */
+    /* build: 5.0 schemers 20081104-1827 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -292,7 +292,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraHsmAge in millseconds, or -1 if unset
      */
-    @ZAttr(id=20)
+    @ZAttr(id=8)
     public long getHsmAge() {
         return getTimeInterval(Provisioning.A_zimbraHsmAge, -1);
     }
@@ -303,7 +303,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraHsmAge, or null unset
      */
-    @ZAttr(id=20)
+    @ZAttr(id=8)
     public String getHsmAgeAsString() {
         return getAttr(Provisioning.A_zimbraHsmAge);
     }

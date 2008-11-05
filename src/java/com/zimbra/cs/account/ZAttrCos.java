@@ -37,7 +37,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081104-1137 */
+    /* build: 5.0 schemers 20081104-1827 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -237,6 +237,32 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @return zimbraContactAutoCompleteEmailFields, or null unset
+     */
+    @ZAttr(id=760)
+    public String getContactAutoCompleteEmailFields() {
+        return getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields);
+    }
+
+    /**
+     * Comma separates list of folder Ids that should be used to search for
+     * contacts when generating auto-complete contact list. Folder id of 0 is
+     * used to include GAL contacts in the response.
+     *
+     * @return zimbraContactAutoCompleteFolderIds, or null unset
+     */
+    @ZAttr(id=759)
+    public String getContactAutoCompleteFolderIds() {
+        return getAttr(Provisioning.A_zimbraContactAutoCompleteFolderIds);
+    }
+
+    /**
      * Maximum number of contacts allowed in mailbox. 0 means no limit.
      *
      * @return zimbraContactMaxNumEntries, or -1 if unset
@@ -244,6 +270,19 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=107)
     public int getContactMaxNumEntries() {
         return getIntAttr(Provisioning.A_zimbraContactMaxNumEntries, -1);
+    }
+
+    /**
+     * Size of the contact ranking table. Ranking table is used to keep track
+     * of most heavily used contacts in outgoing email. Contacts in the
+     * ranking table are given the priority when generating the auto-complete
+     * contact list.
+     *
+     * @return zimbraContactRankingTableSize, or -1 if unset
+     */
+    @ZAttr(id=758)
+    public int getContactRankingTableSize() {
+        return getIntAttr(Provisioning.A_zimbraContactRankingTableSize, -1);
     }
 
     /**

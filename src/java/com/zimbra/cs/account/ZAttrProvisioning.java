@@ -26,7 +26,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081104-1137 */
+    /* build: 5.0 schemers 20081104-1827 */
 
     /**
      */
@@ -880,10 +880,37 @@ public class ZAttrProvisioning {
     public static final String A_zimbraComponentAvailable = "zimbraComponentAvailable";
 
     /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     */
+    @ZAttr(id=760)
+    public static final String A_zimbraContactAutoCompleteEmailFields = "zimbraContactAutoCompleteEmailFields";
+
+    /**
+     * Comma separates list of folder Ids that should be used to search for
+     * contacts when generating auto-complete contact list. Folder id of 0 is
+     * used to include GAL contacts in the response.
+     */
+    @ZAttr(id=759)
+    public static final String A_zimbraContactAutoCompleteFolderIds = "zimbraContactAutoCompleteFolderIds";
+
+    /**
      * Maximum number of contacts allowed in mailbox. 0 means no limit.
      */
     @ZAttr(id=107)
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
+
+    /**
+     * Size of the contact ranking table. Ranking table is used to keep track
+     * of most heavily used contacts in outgoing email. Contacts in the
+     * ranking table are given the priority when generating the auto-complete
+     * contact list.
+     */
+    @ZAttr(id=758)
+    public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";
 
     /**
      * Object classes to add when creating a zimbra cos object.
@@ -1809,7 +1836,7 @@ public class ZAttrProvisioning {
      * Minimum age of mail items whose filesystem data will be moved to
      * secondary storage (nnnnn[hmsd]).
      */
-    @ZAttr(id=20)
+    @ZAttr(id=8)
     public static final String A_zimbraHsmAge = "zimbraHsmAge";
 
     /**

@@ -1828,8 +1828,6 @@ public class AttributeManager {
         List<String> list = new ArrayList<String>(mAttrs.keySet());
         Collections.sort(list);
 
-        Class clazz = ZAttrProvisioning.class;
-
         StringBuilder result = new StringBuilder();
 
         for (String a : list) {
