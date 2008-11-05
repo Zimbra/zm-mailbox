@@ -691,9 +691,14 @@ public class MailConstants {
     public static final String A_TYPES = "types";
     public static final String E_A = "a";
     
+    // AutoComplete
+    public static final String E_MATCH = "match";
+    public static final String A_LIMIT = "limit";
     public static final String A_FOLDERS = "folders";
+    public static final String A_INCLUDE_GAL = "includeGal";
     public static final String A_EMAIL = "email";
     public static final String A_RANKING = "ranking";
-    public static final String A_CANBECACHED = "cache";
-    public static final String A_DLIST = "dlist";
+    public static final String A_CANBECACHED = "canBeCached";
+    public static final String A_DISPLAYNAME = "display";
+    public static final String A_MATCH_TYPE = "type";
 }
