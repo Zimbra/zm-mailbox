@@ -695,4 +695,5 @@ public class MailConstants {
     public static final String A_EMAIL = "email";
     public static final String A_RANKING = "ranking";
     public static final String A_CANBECACHED = "cache";
+    public static final String A_DLIST = "dlist";
 }
