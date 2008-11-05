@@ -198,8 +198,12 @@ public class DataSourceManager {
             // Don't have mailbox ID, so we'll have to wait for the task to run and clean itself up.
             return;
         }
+        // Get the mailbox without requesting auto-create.  It's important not to auto-create
+        // the mailbox when this code is called during restore.
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId(), false);
+        if (mbox == null)
+        	return;
         DataSource ds = prov.get(account, DataSourceBy.id, dsId);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         if (ds == null) {
             ZimbraLog.datasource.info(
                 "Data source %s was deleted.  Deleting scheduled task.", dsId);
