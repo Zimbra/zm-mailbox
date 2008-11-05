@@ -88,7 +88,7 @@ extends TestCase {
         ScheduledTaskManager.cancel(TestTask.class.getName(), TASK_NAME, mbox.getId(), false);
         Thread.sleep(200);
         int numCalls = task.getNumCalls();
-        assertTrue("Unexpected number of task runs: " + numCalls, numCalls > 4);
+        assertTrue("Unexpected number of task runs: " + numCalls, numCalls > 0);
         checkNumPersistedTasks(0);
         
         // Sleep some more and make sure the task doesn't run again
