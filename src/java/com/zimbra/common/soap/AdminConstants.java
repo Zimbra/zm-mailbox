@@ -320,10 +320,6 @@ public class AdminConstants {
     public static final QName PUSH_FREE_BUSY_REQUEST = QName.get("PushFreeBusyRequest", NAMESPACE);
     public static final QName PUSH_FREE_BUSY_RESPONSE = QName.get("PushFreeBusyResponse", NAMESPACE);
     
-    // permissions
-    public static final QName CHECK_PERMISSION_REQUEST = QName.get("CheckPermissionRequest", NAMESPACE);
-    public static final QName CHECK_PERMISSION_RESPONSE = QName.get("CheckPermissionResponse", NAMESPACE);
-    
     // admin-version of WaitSetRequest
     public static final QName ADMIN_CREATE_WAIT_SET_REQUEST = QName.get("AdminCreateWaitSetRequest", NAMESPACE);
     public static final QName ADMIN_CREATE_WAIT_SET_RESPONSE = QName.get("AdminCreateWaitSetResponse", NAMESPACE);
@@ -344,10 +340,13 @@ public class AdminConstants {
     public static final QName DELETE_XMPPCOMPONENT_REQUEST = QName.get("DeleteXMPPComponentRequest", NAMESPACE);
     public static final QName DELETE_XMPPCOMPONENT_RESPONSE = QName.get("DeleteXMPPComponentResponse", NAMESPACE);
     
-    public static final QName GRANT_PERMISSION_REQUEST = QName.get("GrantPermissionRequest", NAMESPACE);
-    public static final QName GRANT_PERMISSION_RESPONSE = QName.get("GrantPermissionResponse", NAMESPACE);
-    public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
-    public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
+    // rights
+    public static final QName GRANT_RIGHT_REQUEST = QName.get("GrantRightRequest", NAMESPACE);
+    public static final QName GRANT_RIGHT_RESPONSE = QName.get("GrantRightResponse", NAMESPACE);
+    public static final QName REVOKE_RIGHT_REQUEST = QName.get("RevokeRightRequest", NAMESPACE);
+    public static final QName REVOKE_RIGHT_RESPONSE = QName.get("RevokeRightResponse", NAMESPACE);
+    public static final QName CHECK_RIGHT_REQUEST = QName.get("CheckRightRequest", NAMESPACE);
+    public static final QName CHECK_RIGHT_RESPONSE = QName.get("CheckRightResponse", NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -574,7 +573,7 @@ public class AdminConstants {
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     
-    // permission
+    // right
     public static final String A_DENY = "deny";
     
     public static final String E_WAITSET = "waitSet";
