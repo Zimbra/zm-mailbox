@@ -52,6 +52,8 @@ public class SaveDocument extends WikiDocumentHandler {
     	return id == null ? TARGET_DOC_FOLDER_PATH : TARGET_DOC_ID_PATH; 
     }
 
+    private static final String DEFAULT_DOCUMENT_FOLDER = "" + Mailbox.ID_FOLDER_BRIEFCASE;
+
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         OperationContext octxt = getOperationContext(zsc, context);
@@ -90,13 +92,15 @@ public class SaveDocument extends WikiDocumentHandler {
             if (doc.contentType == null || doc.contentType.trim().equals(""))
                 throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
 
+            ItemId fid = new ItemId(docElem.getAttribute(MailConstants.A_ID, DEFAULT_DOCUMENT_FOLDER), zsc);
+
             String id = docElem.getAttribute(MailConstants.A_ID, null);
             int itemId = (id == null ? 0 : new ItemId(id, zsc).getId());
             int ver = (int) docElem.getAttributeLong(MailConstants.A_VERSION, 0);
 
             WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
             WikiPage page = WikiPage.create(doc.name, getAuthor(zsc), doc.contentType, doc.getInputStream());
-            Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
+            Wiki.addPage(ctxt, page, itemId, ver, fid);
             Document docItem = page.getWikiItem(ctxt);
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
