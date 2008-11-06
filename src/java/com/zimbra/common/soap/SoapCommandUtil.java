@@ -55,7 +55,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 
-public class SoapCommandUtil {
+public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     private static final Map<String, Namespace> sTypeToNamespace =
         new HashMap<String, Namespace>();
@@ -90,7 +90,8 @@ public class SoapCommandUtil {
     private String mRootElement;
     private List mPaths;
     private String mAuthToken;
-    private boolean mVerbose = false;
+    private int mVerbose = 0;
+    private boolean mUseSession = false;
     
     private void parseCommandLine(String[] args) {
         
@@ -132,7 +133,7 @@ public class SoapCommandUtil {
             .withDescription("Authenticate with zimbra admin name/password from localconfig.").create();
         Option verbose = obuilder
             .withLongName("verbose").withShortName("v").withArgument(noArgs)
-            .withDescription("Print the SOAP request and other status information.").create();
+            .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output").create();
         Option paths = abuilder.withName("path").withMinimum(1)
             .withDescription("Element or attribute path and value.  Roughly follows XPath syntax: " +
                 "[/]element1[/element2][/@attr][=value].").create();
@@ -242,7 +243,19 @@ public class SoapCommandUtil {
         mRootElement = (String) cl.getValue(element);
         
         mPaths = cl.getValues(paths);
-        mVerbose = cl.hasOption(verbose);
+        mVerbose = cl.getOptionCount(verbose);
+    }
+    
+    public void sendSoapMessage(com.zimbra.common.soap.Element envelope) {
+        if (mVerbose > 1) {
+            System.out.println(DomUtil.toString(envelope.toXML(), true));
+        }
+    }
+    
+    public void receiveSoapMessage(com.zimbra.common.soap.Element envelope) {
+        if (mVerbose > 1) {
+            System.out.println(DomUtil.toString(envelope.toXML(), true));
+        }
     }
     
     private void usage(String errorMsg) {
@@ -264,6 +277,7 @@ public class SoapCommandUtil {
     private void adminAuth()
     throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
+        transport.setDebugListener(this);
         
         // Create auth element
         Element auth = DocumentHelper.createElement(AdminConstants.AUTH_REQUEST);
@@ -274,13 +288,13 @@ public class SoapCommandUtil {
         com.zimbra.common.soap.Element response = null;
         com.zimbra.common.soap.Element request = null;
         
-        if (mVerbose) {
+        if (mVerbose > 0) {
             System.out.println("Sending admin auth request to " + mUrl);
         }
         
         try {
             request = com.zimbra.common.soap.Element.convertDOM(auth);
-            response = transport.invoke(request);
+            response = transport.invoke(request, false, !mUseSession, null);
         } catch (SoapFaultException e) {
             System.err.format("Authentication error: %s\n", e.getMessage());
             System.exit(1);
@@ -295,7 +309,7 @@ public class SoapCommandUtil {
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
             try {
                 request = com.zimbra.common.soap.Element.convertDOM(getInfo);
-                response = transport.invoke(request);
+                response = transport.invoke(request, false, !mUseSession, null);
             } catch (SoapFaultException e) {
                 System.err.format("Cannot access account: %s\n", e.getMessage());
                 System.exit(1);
@@ -308,7 +322,7 @@ public class SoapCommandUtil {
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
             try {
                 request = com.zimbra.common.soap.Element.convertDOM(delegateAuth);
-                response = transport.invoke(request);
+                response = transport.invoke(request, false, !mUseSession, null);
             } catch (SoapFaultException e) {
                 System.err.format("Cannot do delegate auth: %s\n", e.getMessage());
             }
@@ -318,11 +332,12 @@ public class SoapCommandUtil {
     
     private void mailboxAuth()
     throws Exception {
-        if (mVerbose) {
+        if (mVerbose > 0) {
             System.out.println("Sending auth request to " + mUrl);
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
+        transport.setDebugListener(this);
         
         // Create auth element
         Element auth = DocumentHelper.createElement(AccountConstants.AUTH_REQUEST);
@@ -335,7 +350,7 @@ public class SoapCommandUtil {
         
         try {
             com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(auth);
-            response = transport.invoke(requestElt);
+            response = transport.invoke(requestElt, false, !mUseSession, null);
         } catch (SoapFaultException e) {
             System.err.println("Authentication error: " + e.getMessage());
             System.exit(1);
@@ -375,11 +390,13 @@ public class SoapCommandUtil {
         }
         
         // Send request and print response
-        if (mVerbose) {
+        if (mVerbose == 1) {
             System.out.println(DomUtil.toString(request, true));
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
+        transport.setDebugListener(this);
+        
         transport.setAuthToken(mAuthToken);
         if (!mType.equals(TYPE_ADMIN) && mTargetAccountName != null) {
             transport.setTargetAcctName(mTargetAccountName);
@@ -387,13 +404,14 @@ public class SoapCommandUtil {
         com.zimbra.common.soap.Element response = null;
         try {
             com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(request);
-            response = transport.invoke(requestElt);
+            response = transport.invoke(requestElt, false, !mUseSession, null);
         } catch (SoapFaultException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
         
-        System.out.println(DomUtil.toString(response.toXML(), true));
+        if (mVerbose <= 1) 
+            System.out.println(DomUtil.toString(response.toXML(), true));
     }
 
     /**
