@@ -36,7 +36,7 @@ public class GrantPermission extends MailDocumentHandler {
         }
 
         // TODO, change to Provisioning.grantPermission?
-        Set<ZimbraACE> granted = PermUtil.grantAccess(Provisioning.getInstance(), account, aces);
+        Set<ZimbraACE> granted = PermUtil.grantRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted)

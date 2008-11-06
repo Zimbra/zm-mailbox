@@ -1,6 +1,6 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.Set;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -8,8 +8,9 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -96,7 +97,7 @@ public class RoleAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             if (grantee == null) {
                 if (rightNeeded.isUserRight())
@@ -106,17 +107,17 @@ public class RoleAccessManager extends AccessManager {
             }
 
             // 1. always allow self
-            if (grantee != null) {
-                if (target.getId().equals(grantee.getId()))
+            if (target instanceof Account) {
+                if (((Account)target).getId().equals(grantee.getId()))
                     return true;
             }
             
             Provisioning prov = Provisioning.getInstance();
             
             // 2. check ACL
-            Set<ZimbraACE> effectiveACEs = TargetType.expandTarget(prov, target, rightNeeded);
-            if (effectiveACEs.size() > 0)
-                return RightChecker.canDo(effectiveACEs, grantee, rightNeeded);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
+            if (effectiveACLs.size() > 0)
+                return RightChecker.canDo(effectiveACLs, grantee, rightNeeded);
             else {
                 // no ACL, see if there is a configured default 
                 Boolean defaultValue = rightNeeded.getDefault();
@@ -138,7 +139,7 @@ public class RoleAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct;
             if (grantee == null) {
@@ -168,7 +169,7 @@ public class RoleAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canPerform(String granteeEmail, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct = null;
             

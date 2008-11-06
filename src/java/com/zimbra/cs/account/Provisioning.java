@@ -373,20 +373,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
     
     /**
-     * @param groupInner
-     * @param groupOuter 
-     * @return true if the group signified by groupInner is a member of the group signified by groupOuter
-     * @throws ServiceException
-     */
-    public boolean inGroup(String groupInner, String groupOuter) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
-    
-    /**
      * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
      * @throws ServiceException
      */
     public abstract Set<String> getDistributionLists(Account acct) throws ServiceException; 
+
 
     /**
      *      
@@ -398,6 +389,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException; 
 
+    /**
+     * 
+     * @param distList
+     * @return set of all the zimbraId's of lists this list belongs to, including any list in other list. 
+     * @throws ServiceException
+     */
+    public Set<String> getDistributionLists(DistributionList list) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
     
     /**
      *      
@@ -409,6 +409,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException; 
 
+
+    //
+    // AclGroup
+    // 
+    public DistributionList getAclGroup(DistributionListBy keyType, String key) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    /**
+     * @param groupInner
+     * @param groupOuter 
+     * @return true if groupInner is a member groupOuter
+     * @throws ServiceException
+     */
+    public boolean inAclGroup(String groupInner, String groupOuter) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
     
     /**
      * @return the domain of the distribution list
@@ -1468,13 +1485,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
 
-    public abstract void grantPermission(TargetType targetType, NamedEntry target,
-                                         GranteeType granteeType, NamedEntry grantee, 
-                                         Right right, boolean deny) throws ServiceException;
+    public abstract void grantRight(TargetType targetType, Entry target,
+                                    GranteeType granteeType, NamedEntry grantee, 
+                                    Right right, boolean deny) throws ServiceException;
     
-    public abstract void revokePermission(TargetType targetType, NamedEntry target,
-                                          GranteeType granteeType, NamedEntry grantee, 
-                                          Right right, boolean deny) throws ServiceException;
+    public abstract void revokeRight(TargetType targetType, Entry target,
+                                     GranteeType granteeType, NamedEntry grantee, 
+                                     Right right, boolean deny) throws ServiceException;
     
 
 

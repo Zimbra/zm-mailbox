@@ -7,6 +7,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 
@@ -44,14 +45,14 @@ public class AclAccessManager extends DomainAccessManager {
         return canAccessAccount(credentials, target, true);
     }
     
-    public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             if (grantee == null)
                 grantee = ACL.ANONYMOUS_ACCT;
 
             // 1. always allow self
-            if (grantee != null) {
-                if (target.getId().equals(grantee.getId()))
+            if (target instanceof Account) {
+                if (((Account)target).getId().equals(grantee.getId()))
                     return true;
             }
             
@@ -87,7 +88,7 @@ public class AclAccessManager extends DomainAccessManager {
         return false;
     }
     
-    public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct;
             if (grantee == null)
@@ -109,7 +110,7 @@ public class AclAccessManager extends DomainAccessManager {
         return false;
     }
 
-    public boolean canPerform(String granteeEmail, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct = null;
             

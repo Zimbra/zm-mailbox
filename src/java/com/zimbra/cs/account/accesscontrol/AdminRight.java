@@ -14,6 +14,10 @@ public class AdminRight extends Right {
     public static AdminRight RT_renameAccount;
     public static AdminRight RT_renameCalendarResource;
     public static AdminRight RT_renameDistributionList;
+    public static AdminRight RT_renameCos;
+    public static AdminRight RT_renameServer;
+    public static AdminRight RT_testGlobalConfigRemoveMe;
+    public static AdminRight RT_testGlobalGrantRemoveMe;
     
     enum RightType {
         preset,
@@ -74,7 +78,10 @@ public class AdminRight extends Right {
         RT_renameAccount = rm.getAdminRight("renameAccount");
         RT_renameCalendarResource = rm.getAdminRight("renameCalendarResource");
         RT_renameDistributionList = rm.getAdminRight("renameDistributionList");
-        
+        RT_renameCos = rm.getAdminRight("renameCos");
+        RT_renameServer = rm.getAdminRight("renameServer");
+        RT_testGlobalConfigRemoveMe = rm.getAdminRight("testGlobalConfigRemoveMe");
+        RT_testGlobalGrantRemoveMe = rm.getAdminRight("testGlobalGrantRemoveMe");
     }
     
     AdminRight(String name, RightType rightType) {

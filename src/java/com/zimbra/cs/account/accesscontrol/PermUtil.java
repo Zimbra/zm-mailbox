@@ -5,19 +5,15 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -41,9 +37,9 @@ public class PermUtil {
      */
     public static Set<ZimbraACE> getACEs(Entry target, Set<Right> rights) throws ServiceException {
         ZimbraACL acl = getACL(target); 
-        if (acl != null)
+        if (acl != null) {
             return acl.getACEs(rights);
-        else
+        } else
             return null;
     }
     
@@ -55,13 +51,15 @@ public class PermUtil {
      * @return
      * @throws ServiceException
      */
-    public static void getACEs(Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    public static Set<ZimbraACE> getACEs(Entry target, Right right) throws ServiceException {
         ZimbraACL acl = getACL(target); 
         if (acl != null)
-            acl.getACEs(right, result);
+            return acl.getACEs(right);
+        else
+            return null;
     }
     
-    public static Set<ZimbraACE> grantAccess(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static Set<ZimbraACE> grantRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         for (ZimbraACE ace : aces)
             ZimbraACE.validate(ace);
         
@@ -84,7 +82,7 @@ public class PermUtil {
     /** Removes the right granted to the specified id.  If the right 
      *  was not previously granted to the target, no error is thrown.
      */
-    public static Set<ZimbraACE> revokeAccess(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static Set<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         ZimbraACL acl = getACL(target); 
         if (acl == null)
             return null;
@@ -186,37 +184,6 @@ public class PermUtil {
             return null;
         }
     }
-    
-    //
-    // for admins
-    //
-    public static NamedEntry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
-        return TargetType.lookupTarget(prov, targetType, targetBy, target);
-    }
-    
-    //
-    // for admins
-    //
-    // TODO: move to GranteeType?
-    public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
-        NamedEntry granteeEntry = null;
-        
-        switch (granteeType) {
-        case GT_USER:
-            granteeEntry = prov.get(AccountBy.fromString(granteeBy.name()), grantee);
-            if (granteeEntry == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(grantee); 
-            break;
-        case GT_GROUP:
-            granteeEntry = prov.get(DistributionListBy.fromString(granteeBy.name()), grantee);
-            if (granteeEntry == null)
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
-            break;
-        default:
-            ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + granteeType.getCode(), null);
-        }
-    
-        return granteeEntry;
-    }
+
 
 }

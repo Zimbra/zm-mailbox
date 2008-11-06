@@ -184,7 +184,7 @@ public class ProvUtil implements DebugListener {
         MISC("help on misc commands"),
         MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
-        PERMISSION("help on permission-related commands"),
+        RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"), 
         SERVER("help on server-related commands"),
         FREEBUSY("help on free/busy-related commands");
@@ -201,8 +201,8 @@ public class ProvUtil implements DebugListener {
             try {
                 if (cat == CALENDAR)
                     helpCALENDAR();
-                else if (cat == PERMISSION)
-                    helpPERMISSION();
+                else if (cat == RIGHT)
+                    helpRIGHT();
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
@@ -220,7 +220,7 @@ public class ProvUtil implements DebugListener {
             System.out.println("    op = " + sb.toString());
         }
         
-        static void helpPERMISSION() throws ServiceException {
+        static void helpRIGHT() throws ServiceException {
             
             // target types
             System.out.println();
@@ -326,7 +326,7 @@ public class ProvUtil implements DebugListener {
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-        GRANT_PERMISSION("grantPermission", "gp", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.PERMISSION, 4, 5),
+        GRANT_RIGHT("grantRight", "gr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -354,7 +354,7 @@ public class ProvUtil implements DebugListener {
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
-        REVOKE_PERMISSION("revokePermission", "rp", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.PERMISSION, 4, 5),
+        REVOKE_RIGHT("revokeRight", "rp", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -653,11 +653,11 @@ public class ProvUtil implements DebugListener {
         case GET_XMPP_COMPONENT:
             doGetXMPPComponent(args);
             break;
-        case GRANT_PERMISSION:
-            doGrantPermission(args);
+        case GRANT_RIGHT:
+            doGrantRight(args);
             break;
-        case REVOKE_PERMISSION:
-            doRevokePermission(args);
+        case REVOKE_RIGHT:
+            doRevokeRight(args);
             break;    
         case HELP:
             doHelp(args); 
@@ -2431,7 +2431,7 @@ public class ProvUtil implements DebugListener {
         dumpXMPPComponent(lookupXMPPComponent(args[1]), getArgNameSet(args, 2));
     }
     
-    static private class PermissionArgs {
+    static private class RightArgs {
         TargetType mTargetType;
         String mTargetIdOrName;
         GranteeType mGranteeType;
@@ -2440,7 +2440,7 @@ public class ProvUtil implements DebugListener {
         boolean mDeny;
     }
     
-    private PermissionArgs getPermissionArgs(String[] args) throws ServiceException {
+    private RightArgs getRightArgs(String[] args) throws ServiceException {
         
         int argBase = 3;
         
@@ -2480,45 +2480,45 @@ public class ProvUtil implements DebugListener {
         }
         rt = RightManager.getInstance().getRight(right);
         
-        PermissionArgs pa = new PermissionArgs();
-        pa.mTargetType = tt;
-        pa.mTargetIdOrName = targetIdOrName;
-        pa.mGranteeType = gt;
-        pa.mGranteeIdOrName = granteeIdOrName;
-        pa.mRight = rt;
-        pa.mDeny = deny;
+        RightArgs ra = new RightArgs();
+        ra.mTargetType = tt;
+        ra.mTargetIdOrName = targetIdOrName;
+        ra.mGranteeType = gt;
+        ra.mGranteeIdOrName = granteeIdOrName;
+        ra.mRight = rt;
+        ra.mDeny = deny;
         
-        return pa;
+        return ra;
     }
     
-    private void doGrantPermission(String[] args) throws ServiceException {
-        PermissionArgs pa = getPermissionArgs(args);
+    private void doGrantRight(String[] args) throws ServiceException {
+        RightArgs ra = getRightArgs(args);
         
-        NamedEntry targetEntry = null;
-        if (pa.mTargetIdOrName != null) {
-            TargetBy targetBy = guessTargetBy(pa.mTargetIdOrName);
-            targetEntry = PermUtil.lookupTarget(mProv, pa.mTargetType, targetBy, pa.mTargetIdOrName);
+        Entry targetEntry = null;
+        if (ra.mTargetIdOrName != null) {
+            TargetBy targetBy = guessTargetBy(ra.mTargetIdOrName);
+            targetEntry = TargetType.lookupTarget(mProv, ra.mTargetType, targetBy, ra.mTargetIdOrName);
         }
         
-        GranteeBy granteeBy = guessGranteeBy(pa.mGranteeIdOrName);
-        NamedEntry granteeEntry = PermUtil.lookupGrantee(mProv, pa.mGranteeType, granteeBy, pa.mGranteeIdOrName);
+        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(mProv, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName);
     
-        mProv.grantPermission(pa.mTargetType, targetEntry, pa.mGranteeType, granteeEntry, pa.mRight, pa.mDeny);
+        mProv.grantRight(ra.mTargetType, targetEntry, ra.mGranteeType, granteeEntry, ra.mRight, ra.mDeny);
     }
     
-    private void doRevokePermission(String[] args) throws ServiceException {
-        PermissionArgs pa = getPermissionArgs(args);
+    private void doRevokeRight(String[] args) throws ServiceException {
+        RightArgs ra = getRightArgs(args);
 
-        NamedEntry targetEntry = null;
-        if (pa.mTargetIdOrName != null) {
-            TargetBy targetBy = guessTargetBy(pa.mTargetIdOrName);
-            targetEntry = PermUtil.lookupTarget(mProv, pa.mTargetType, targetBy, pa.mTargetIdOrName);
+        Entry targetEntry = null;
+        if (ra.mTargetIdOrName != null) {
+            TargetBy targetBy = guessTargetBy(ra.mTargetIdOrName);
+            targetEntry = TargetType.lookupTarget(mProv, ra.mTargetType, targetBy, ra.mTargetIdOrName);
         }
         
-        GranteeBy granteeBy = guessGranteeBy(pa.mGranteeIdOrName);
-        NamedEntry granteeEntry = PermUtil.lookupGrantee(mProv, pa.mGranteeType, granteeBy, pa.mGranteeIdOrName);
+        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(mProv, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName);
     
-        mProv.revokePermission(pa.mTargetType, targetEntry, pa.mGranteeType, granteeEntry, pa.mRight, pa.mDeny);
+        mProv.revokeRight(ra.mTargetType, targetEntry, ra.mGranteeType, granteeEntry, ra.mRight, ra.mDeny);
     }
     
     private void doHelp(String[] args) {

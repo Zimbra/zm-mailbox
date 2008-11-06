@@ -30,7 +30,7 @@ public class RevokePermission extends MailDocumentHandler {
         }
 
         // TODO, change to Provisioning.grantPermission?
-        Set<ZimbraACE> revoked = PermUtil.revokeAccess(Provisioning.getInstance(), account, aces);
+        Set<ZimbraACE> revoked = PermUtil.revokeRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.REVOKE_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : revoked)

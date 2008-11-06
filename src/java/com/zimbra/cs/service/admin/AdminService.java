@@ -201,9 +201,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.PUSH_FREE_BUSY_REQUEST, new PushFreeBusy());
         
         // permissions
-        dispatcher.registerHandler(AdminConstants.CHECK_PERMISSION_REQUEST, new CheckPermission());
-        dispatcher.registerHandler(AdminConstants.GRANT_PERMISSION_REQUEST, new GrantPermission());
-        dispatcher.registerHandler(AdminConstants.REVOKE_PERMISSION_REQUEST, new RevokePermission());
+        dispatcher.registerHandler(AdminConstants.CHECK_RIGHT_REQUEST, new CheckRight());
+        dispatcher.registerHandler(AdminConstants.GRANT_RIGHT_REQUEST, new GrantRight());
+        dispatcher.registerHandler(AdminConstants.REVOKE_RIGHT_REQUEST, new RevokeRight());
         
         // admin wait set
         dispatcher.registerHandler(AdminConstants.ADMIN_CREATE_WAIT_SET_REQUEST, new AdminCreateWaitSetRequest());        

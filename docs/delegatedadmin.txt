@@ -465,9 +465,7 @@ Depending on the context, there are three aspects of targets that need to be dea
                - modify attr L on global config
 
 
-3.2.2 Combo Rights - Rights Combining any Rights 
-      (we will probably not support this)
-      
+3.2.2 Combo Rights - Rights Combining any Rights       
           e.g. admin can define a right that combines the following rights:
                - modifyAttrWithinInheritedLimit.zimbraMailQuota
                - configureFooBar
@@ -840,9 +838,9 @@ Depending on the context, there are three aspects of targets that need to be dea
   <target ttype="{target-type}" zid="{target-zimbraId}">
 </GetEffectiveRightsRequest>
 
-    {target-type} = account|resource|cos|dl|domain|globalconfig|right|server|cosbase|domainbase|rightbase|serverbase
+    {target-type} = account|resource|cos|dl|domain|globalconfig|right|server|global
     {target-zimbraId} = zimbraId of the target.  
-                        ignored if ttype is globalconfig|cosbase|domainbase|rightbase|serverbase
+                        ignored if ttype is globalconfig|global
     
 <GetEffectiveRightsResponse>    
   <right n="{right-name}"/>+
@@ -887,19 +885,18 @@ Depending on the context, there are three aspects of targets that need to be dea
     </GetEffectiveRightsRequest>
 
     
-6.2 GrantPermissionRequest
+6.2 GrantRightRequest
 
     Grant right on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets granted to itself 
     to other admins.
     
-<GrantPermissionRequest>
+<GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
   <right [deny="${deny}"]>{right-name}</right>
-</GrantPermissionRequest>    
+</GrantRightRequest>    
 
-  {target-type} = account | resource | distributionlist | domain | cos | server | config |
-                  allcos | allservers | alldomains | allrights
+  {target-type} = account | resource | distributionlist | domain | cos | server | config | global
 
   {target-by}   = name | id
   
@@ -912,23 +909,69 @@ Depending on the context, there are three aspects of targets that need to be dea
   {deny} = 1 | 0(default)
   
   
-<GrantPermissionResponse/>
+<GrantRightResponse/>
 
 
-6.3 RevokePermissionRequest
-    Revoke permission previously granted on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets 
+6.3 RevokeRightRequest
+    Revoke right previously granted on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets 
     granted to itself to other admins.
  
-<RevokePermissionRequest>
+<RevokeRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
   <right [deny="${deny}"]>{right-name}</right>
-</RevokePermissionRequest>    
+</RevokeRightRequest>    
 
-<RevokePermissionResponse/>
+<RevokeRightResponse/>
 
 
-6.4 CreateRightRequest
+6.4 CheckRightRequest
+    Check if a principal has the specified right on target.
+    
+<CheckRightRequest>
+  <target type={target-type} by="{target-by}">{target-by}</target>
+  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+  <right>{right-name}</right>
+</CheckPermissionRequest>
+
+<CheckRightResponse hasRight="{has-right}">
+  [<via>
+    <target type={target-type}>{target-by}</target>
+    <grantee type={grantee-type}>{grantee-name-or-id}</grantee>
+    <right [deny="${deny}"]>{right-name}</right>
+  <via>]
+</CheckRightResponse>  
+
+    A successful return means the principal specified by the <grantee> is allowed
+    for the specified right on the target object.  
+    If PERM_DENIED is thrown, it means the authed user does not have privilege
+    to run this SOAP command(has to be an admin because this command is in admin namespace).
+    Result of CheckRightRequest is in the hasRight="1|0" attribute in CheckRightResponse.
+    <via> in the CheckRightResponse is the grant that decisively
+    lead to the result.  
+    e.g. if a combo C right containing renameAccount is granted to group G on domain D, and
+         admin A is in group G,
+         then <CheckRightRequest>
+                 <target type="account"> by="name">user1@D</target>
+                 <grantee type="usr" by="name">admin@D</grantee>
+                 <right>renameAccount</right>
+              </CheckRightRequest>
+          
+         will return:
+              <CheckRightResponse hasRight="1">
+                 <via>
+                   <target type=domain>D</target>
+                   <grantee type=grp>G</grantee>
+                   <right>C</right>
+                 </via>
+              </CheckRightResponse>
+      
+         Note, <via> is optional.  If the right of interest is not granted at all, there will be no <via>
+         in the response.     Also, <via> will probably be hairy for rights that modify/get
+         selective attrs, it may not be returned for those rights.  TDB...
+         
+
+6.5 CreateRightRequest
     Create an admin defined right.
     
 <CreateRightRequest>
@@ -943,7 +986,7 @@ Depending on the context, there are three aspects of targets that need to be dea
 </CreateRightResponse>
 
 
-6.5 DeleteRightRequest
+6.6 DeleteRightRequest
     Delete an admin defined right.
     
 <DeleteRightRequest>
@@ -953,7 +996,7 @@ Depending on the context, there are three aspects of targets that need to be dea
 <DeleteRightResponse/>
 
 
-6.6 RenameRight
+6.7 RenameRight
     Rename an admin defined right.
     
 <RenameRightRequest>
@@ -968,7 +1011,7 @@ Depending on the context, there are three aspects of targets that need to be dea
 </RenameRightResponse>
 
 
-6.7 ModifyRightRequest 
+6.8 ModifyRightRequest 
     Modify an admin defined right.
     
 <ModifyRightRequest>

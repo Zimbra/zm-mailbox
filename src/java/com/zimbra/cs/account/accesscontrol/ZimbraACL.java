@@ -276,13 +276,13 @@ public class ZimbraACL {
                 mostSpecificInMatchedTrees = new HashMap<Integer, ZimbraACE>();
             boolean inATree = false;
             for (Map.Entry<Integer, ZimbraACE> t : mostSpecificInMatchedTrees.entrySet()) {
-                if (prov.inGroup(ace.getGrantee(), t.getValue().getGrantee())) {
+                if (prov.inAclGroup(ace.getGrantee(), t.getValue().getGrantee())) {
                     // encountered a more specific group, replace it 
                     if (sLog.isDebugEnabled())
                         sLog.debug("hasRightAsGroup: replace " + t.getValue().dump() + " with " + ace.dump() + " in tree " + t.getKey());
                     t.setValue(ace);
                     inATree = true;
-                } else if (prov.inGroup(t.getValue().getGrantee(), ace.getGrantee())) {
+                } else if (prov.inAclGroup(t.getValue().getGrantee(), ace.getGrantee())) {
                     // encountered a less specific group, ignore it
                     if (sLog.isDebugEnabled())
                         sLog.debug("hasRightAsGroup: ignore " + ace.dump() + " for tree " + t.getKey());
@@ -456,28 +456,28 @@ public class ZimbraACL {
      * @return ACEs with right specified in rights
      */
     Set<ZimbraACE> getACEs(Set<Right> rights) {
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        Set<ZimbraACE> result = new HashSet<ZimbraACE>();
         
         if (mAces != null) {
             for (ZimbraACE ace : mAces) {
                 if (rights.contains(ace.getRight()))
-                    aces.add(ace);
+                    result.add(ace);
             }
         }
         if (mAuthuserAces != null) {
             for (ZimbraACE ace : mAuthuserAces) {
                 if (rights.contains(ace.getRight()))
-                    aces.add(ace);
+                    result.add(ace);
             }
         }
         if (mPublicAces != null) {
             for (ZimbraACE ace : mPublicAces) {
                 if (rights.contains(ace.getRight()))
-                    aces.add(ace);
+                    result.add(ace);
             }
         }
         
-        return aces;
+        return result;
     }
     
     /**
@@ -486,7 +486,9 @@ public class ZimbraACL {
      * @param right
      * @param result
      */
-    void getACEs(Right right, Set<ZimbraACE> result) {
+    Set<ZimbraACE> getACEs(Right right) {
+        Set<ZimbraACE> result = new HashSet<ZimbraACE>();
+        
         if (mAces != null) {
             for (ZimbraACE ace : mAces) {
                 if (right == ace.getRight())
@@ -505,6 +507,8 @@ public class ZimbraACL {
                     result.add(ace);
             }
         }
+        
+        return result;
     }
     
     public List<String> serialize() {

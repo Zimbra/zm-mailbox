@@ -2112,21 +2112,6 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 ----------------------------------------
 
-<CheckPermissionRequest>
-  <principal by="id|name">...</principal>
-  <target type="{target-type}" by="id|name">...</target>
-  <right>...</right>
-</CheckPermissionRequest>
 
-{target-type} = account|calresource|cos|distributionlist|domain|server  
-
-    Check if principal has the specified right on target.
- 
-<CheckPermissionResponse/>
-
-    A successful return means the principal is allowed for the specified right on the 
-    target object.  If ServerException.PERM_DENIED is thrown, it indicates either 
-    the authed user does not have privilege to run this SOAP command, 
-    or the principal dose not have the specified right on the target object.
   
                     

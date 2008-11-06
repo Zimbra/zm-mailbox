@@ -51,7 +51,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
-import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.IDedEntryCache;
 import com.zimbra.cs.account.Identity;
@@ -155,7 +154,8 @@ public class LdapProvisioning extends Provisioning {
     private static final String[] sMinimalDlAttrs = {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraId,
-            Provisioning.A_uid
+            Provisioning.A_uid,
+            Provisioning.A_zimbraACE
     };
 
 
@@ -185,9 +185,8 @@ public class LdapProvisioning extends Provisioning {
                 LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
     
 
-    // use the same TTL and max size as those for account, if needed we can add own LC keys
-    private static IDedEntryCache<Group> sGroupCache =
-        new IDedEntryCache<Group>(
+    private static NamedEntryCache<DistributionList> sGroupCache =
+        new NamedEntryCache<DistributionList>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
     
@@ -2509,13 +2508,22 @@ public class LdapProvisioning extends Provisioning {
         String addrs[] = getAllAddrsForDistributionList(list);
         return getDistributionLists(addrs, directOnly, via, false);
     }
+    
+    public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via, boolean minimalData) throws ServiceException {
+        String addrs[] = getAllAddrsForDistributionList(list);
+        return getDistributionLists(addrs, directOnly, via, minimalData);
+    }
 
-    private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc) throws ServiceException {
+    private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc, String[] returnAttrs) throws ServiceException {
         ZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
                 zlc = new ZimbraLdapContext();
-            NamingEnumeration ne = zlc.searchDir(base, query, sSubtreeSC);
+            
+            SearchControls searchControls = 
+                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
+
+            NamingEnumeration ne = zlc.searchDir(base, query, searchControls);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -2644,7 +2652,7 @@ public class LdapProvisioning extends Provisioning {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           LdapFilter.distributionListById(zimbraId),
-                                          zlc);
+                                          zlc, null);
     }
 
     private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
@@ -2680,7 +2688,108 @@ public class LdapProvisioning extends Provisioning {
         listAddress = LdapUtil.escapeSearchFilterArg(listAddress);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           LdapFilter.distributionListByName(listAddress),
-                                          null);
+                                          null, null);
+    }
+    
+    //
+    // ACL group 
+    //
+    
+    @Override
+    /*
+     * - cached
+     * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
+     * - returned entry is not a "general purpose" DistributionList, it should only be used from accesscontrol code
+     */
+    public DistributionList getAclGroup(DistributionListBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case id: 
+                return getAclGroupById(key);
+            case name: 
+                return getAclGroupByName(key);
+            default:
+                return null;
+        }
+    }
+    
+    private DistributionList getAclGroupById(String groupId) throws ServiceException {
+        
+        DistributionList dl = sGroupCache.getById(groupId);
+        if (dl == null) {
+            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                                            LdapFilter.distributionListById(groupId),
+                                            null, sMinimalDlAttrs);
+            if (dl != null) {
+                setUpwardMembership(dl);
+                dl.turnToAclGroup();
+                sGroupCache.put(dl);
+            }
+        }
+        return dl;
+    }
+    
+    private DistributionList getAclGroupByName(String groupName) throws ServiceException {
+
+        DistributionList dl = sGroupCache.getByName(groupName);
+        if (dl == null) {
+            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                                            LdapFilter.distributionListByName(groupName),
+                                            null, sMinimalDlAttrs);
+            if (dl != null) {
+                setUpwardMembership(dl);
+                dl.turnToAclGroup();
+                sGroupCache.put(dl);
+            }
+        }
+        return dl;
+    }
+    
+    private Set<String> setUpwardMembership(DistributionList list) throws ServiceException {
+        Set<String> dls = new HashSet<String>();
+        List<DistributionList> lists = getDistributionLists(list, false, null, true);
+        
+        for (DistributionList dl : lists) {
+            dls.add(dl.getId());
+        }
+        dls = Collections.unmodifiableSet(dls);
+        list.setCachedData(DATA_DL_SET, dls);
+        return dls;
+    }
+    
+    @Override
+    /*
+     * Should only be called if list was obtained from getAclGroup. 
+     * 
+     * DistributionList returned by getAclGroup always have the membership cache set in its data cache.
+     * But the data cache can be cleared by a prov.modifyAttrs call on the object. We recompute the 
+     * upward membership if it is not in cache.  
+     * 
+     */
+    public Set<String> getDistributionLists(DistributionList list) throws ServiceException {
+        
+        // sanity check
+        if (!list.isAclGroup())
+            throw ServiceException.FAILURE("internal error", null);
+        
+        Set<String> dls = (Set<String>) list.getCachedData(DATA_DL_SET);
+        
+        if (dls == null) {
+            // reload the entry from ldap because its zimbraMailAlias was trimmed off.
+            DistributionList dl = get(DistributionListBy.id, list.getId());
+            if (dl == null)
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(list.getName());
+            
+            dls = setUpwardMembership(dl); // was put in data cache also
+        }
+        return dls;
+    }
+    
+    public boolean inAclGroup(String groupInner, String groupOuter) throws ServiceException {
+        DistributionList dl = getAclGroupById(groupInner);
+        if (dl != null)
+            return getDistributionLists(dl).contains(groupOuter);
+        else
+            return false;
     }
     
     public Server getLocalServer() throws ServiceException {
@@ -3697,28 +3806,6 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         return getDistributionLists(acct).contains(zimbraId);        
-    }
-    
-    @Override
-    public boolean inGroup(String groupInner, String groupOuter) throws ServiceException {
-        Group group = sGroupCache.getById(groupInner);
-        if (group == null) {
-            DistributionList inner = Provisioning.getInstance().get(DistributionListBy.id, groupInner);
-            if (inner == null)
-                throw ServiceException.FAILURE("dl " + groupInner + " does not exist", null);
-            
-            List<DistributionList> inDLs = getDistributionLists(inner, false, null);
-            if (ZimbraLog.account.isDebugEnabled()) {
-                StringBuffer sb = new StringBuffer();
-                for (DistributionList d : inDLs)
-                    sb.append("[" + d.getName() + "] ");
-                ZimbraLog.account.debug("inGroup: dl " + inner.getName() + " is in:" + sb.toString());
-            }
-            
-            group = new Group(inner.getName(), inner.getId(), inDLs);
-            sGroupCache.put(group);
-        }
-        return group.isMemberOf(groupOuter);
     }
     
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
@@ -5215,51 +5302,26 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private Entry getGrantTarget(TargetType targetType, NamedEntry target) throws ServiceException {
-        Entry targetEntry;
-        
-        if (target == null) {
-            if (targetType == TargetType.config)
-                targetEntry = getConfig();
-            else if (targetType == TargetType.global)
-                targetEntry = getGlobalGrant();
-            else
-                throw ServiceException.INVALID_REQUEST("missing target", null);
-        } else {
-            // target should be null for target types that are at a fixed, unique location 
-            if (!targetType.needsTargetIdentity())
-                throw ServiceException.INVALID_REQUEST("missing target", null);
-            
-            targetEntry = target;
-        }
-        return targetEntry;
-    }
-    
     @Override
-    public void grantPermission(TargetType targetType, NamedEntry target,
-                                GranteeType granteeType, NamedEntry grantee, 
-                                Right right, boolean deny) throws ServiceException {
-        
-        Entry targetEntry = getGrantTarget(targetType, target);
-        
+    public void grantRight(TargetType targetType, Entry target,
+                           GranteeType granteeType, NamedEntry grantee, 
+                           Right right, boolean deny) throws ServiceException {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(grantee.getId(), granteeType, right, deny, null);
         aces.add(ace);
         
-        PermUtil.grantAccess(this, targetEntry, aces);
+        PermUtil.grantRight(this, target, aces);
     }
 
     @Override
-    public void revokePermission(TargetType targetType, NamedEntry target,
-                                 GranteeType granteeType, NamedEntry grantee, 
-                                 Right right, boolean deny) throws ServiceException {
-        Entry targetEntry = getGrantTarget(targetType, target);
-        
+    public void revokeRight(TargetType targetType, Entry target,
+                            GranteeType granteeType, NamedEntry grantee, 
+                            Right right, boolean deny) throws ServiceException {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(grantee.getId(), granteeType, right, deny, null);
         aces.add(ace);
         
-        PermUtil.revokeAccess(this, targetEntry, aces);
+        PermUtil.revokeRight(this, target, aces);
     }
 
     

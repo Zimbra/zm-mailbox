@@ -456,7 +456,7 @@ class RenameDomain {
             }
         }
     
-        private void handleEntry(NamedEntry entry, boolean isDL) {
+        private void handleEntry(NamedEntry entry, boolean isDL) throws ServiceException {
             LdapEntry ldapEntry = (LdapEntry)entry;
             String[] parts = EmailUtil.getLocalPartAndDomain(entry.getName());
             

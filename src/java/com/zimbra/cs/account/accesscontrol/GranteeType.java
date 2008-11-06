@@ -4,8 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
 
 public enum GranteeType {
     
@@ -59,6 +63,37 @@ public enum GranteeType {
 
     public boolean allowedForAdminRights() {
         return mAllowedForAdminRights;
+    }
+    
+    /**
+     * central place where a grantee should be loaded
+     * 
+     * @param prov
+     * @param granteeType
+     * @param granteeBy
+     * @param grantee
+     * @return
+     * @throws ServiceException
+     */
+    public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
+        NamedEntry granteeEntry = null;
+        
+        switch (granteeType) {
+        case GT_USER:
+            granteeEntry = prov.get(AccountBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(grantee); 
+            break;
+        case GT_GROUP:
+            granteeEntry = prov.getAclGroup(DistributionListBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null)
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
+            break;
+        default:
+            ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + granteeType.getCode(), null);
+        }
+    
+        return granteeEntry;
     }
 
 }

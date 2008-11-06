@@ -1,6 +1,6 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 
 public enum TargetType {
     account(true),
@@ -59,8 +60,18 @@ public enum TargetType {
         return mNeedsTargetIdentity;
     }
     
-    public static NamedEntry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
-        NamedEntry targetEntry = null;
+    /**
+     * central place where a target should be loaded
+     * 
+     * @param prov
+     * @param targetType
+     * @param targetBy
+     * @param target
+     * @return
+     * @throws ServiceException
+     */
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
+        Entry targetEntry = null;
         
         switch (targetType) {
         case account:
@@ -74,7 +85,7 @@ public enum TargetType {
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
             break;
         case distributionlist:
-            targetEntry = prov.get(DistributionListBy.fromString(targetBy.name()), target);
+            targetEntry = prov.getAclGroup(DistributionListBy.fromString(targetBy.name()), target);
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
             break;
@@ -96,6 +107,12 @@ public enum TargetType {
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_SERVER(target); 
             break;
+        case config:
+            targetEntry = prov.getConfig();
+            break;
+        case global:
+            targetEntry = prov.getGlobalGrant();
+            break;
         default:
             ServiceException.INVALID_REQUEST("invallid target type for lookupTarget:" + targetType.toString(), null);
         }
@@ -104,7 +121,7 @@ public enum TargetType {
     }
 
     /**
-     * returns a Map of all <{grantee-id}, GranteeType(usr or grp)> of all grants for the specified right granted 
+     * returns a List of EffectiveACL of all grants for the specified right granted 
      * on the target itself and all entries the target can inherit grants from. 
      * 
      * @param prov
@@ -113,9 +130,9 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    static Set<ZimbraACE> expandTarget(Provisioning prov, Entry target, Right right) throws ServiceException {
+    static List<EffectiveACL> expandTarget(Provisioning prov, Entry target, Right right) throws ServiceException {
         
-        Set<ZimbraACE> result = new HashSet<ZimbraACE>();
+        List<EffectiveACL> result = new ArrayList<EffectiveACL>();
         TargetType targetType = right.getTargetType();
         
         switch (targetType) {
@@ -149,12 +166,15 @@ public enum TargetType {
         return result;
     }
     
-    private static void processTargetEntry(Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
-        PermUtil.getACEs(target, right, result);
-        // that all for now, maybe just have the expandXXX methods call PermUtil.getACEs directly.       
+    private static void processTargetEntry(Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
+        Set<ZimbraACE> aces = PermUtil.getACEs(target, right);
+        if (aces != null && aces.size() > 0) {
+            EffectiveACL effectiveAcl = new EffectiveACL(target.getLabel(), aces);
+            result.add(effectiveAcl);
+        }
    }
     
-    private static void expandAccount(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandAccount(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
         processTargetEntry(target, right, result);
         
@@ -163,7 +183,7 @@ public enum TargetType {
             // groups the account is directly or indirectly a member of
             Set<String> groupIds = prov.getDistributionLists((Account)target);
             for (String groupId : groupIds) {
-                DistributionList dl = prov.get(DistributionListBy.id, groupId);
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
                 processTargetEntry(dl, right, result);
             }
             
@@ -177,8 +197,9 @@ public enum TargetType {
             
         } else if (target instanceof DistributionList) {
             // groups the group is directly or indirectly a member of
-            List<DistributionList> dls = prov.getDistributionLists((DistributionList)target, false, null);
-            for (DistributionList dl : dls) {
+            Set<String> groupIds = prov.getDistributionLists((DistributionList)target);
+            for (String groupId : groupIds) {
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
                 processTargetEntry(dl, right, result);
             }
             
@@ -201,15 +222,23 @@ public enum TargetType {
             throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
     }
     
-    private static void expandDistributionList(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandDistributionList(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
+        // This path is called from Accessmanager.canPerform, the target object can be a 
+        // DistributionList obtained from prov.get(DistributionListBy).  
+        // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
+        if (target instanceof DistributionList)
+            target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
+        
         // get grants on the target itself
         processTargetEntry(target, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof DistributionList) {
-            // groups the group is directly or indirectly a member of
-            List<DistributionList> dls = prov.getDistributionLists((DistributionList)target, false, null);
-            for (DistributionList dl : dls) {
+            
+            
+            Set<String> groupIds = prov.getDistributionLists((DistributionList)target);
+            for (String groupId : groupIds) {
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
                 processTargetEntry(dl, right, result);
             }
             
@@ -232,7 +261,7 @@ public enum TargetType {
             throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
     }
     
-    private static void expandDomain(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandDomain(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
         processTargetEntry(target, right, result);
         
@@ -251,7 +280,7 @@ public enum TargetType {
                                            null);
     }
     
-    private static void expandCos(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandCos(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
         processTargetEntry(target, right, result);
         
@@ -267,7 +296,7 @@ public enum TargetType {
             throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
     }
     
-    private static void expandServer(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandServer(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
         processTargetEntry(target, right, result);
         
@@ -283,7 +312,7 @@ public enum TargetType {
             throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
     }
     
-    private static void expandConfig(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandConfig(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
         processTargetEntry(target, right, result);
         
@@ -299,7 +328,7 @@ public enum TargetType {
             throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
     }
     
-    private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, Set<ZimbraACE> result) throws ServiceException {
+    private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
         processTargetEntry(target, right, result);
         

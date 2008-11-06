@@ -17,19 +17,71 @@
 
 package com.zimbra.cs.account;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import com.zimbra.common.service.ServiceException;
 
 public class DistributionList extends ZAttrDistributionList {
+    
+    /*
+     * This is for sanity checking purpose.
+     * 
+     * Certain calls on DistributionList should only be made if the DistributionList
+     * object was obtained from prov.getAclGroup, *not* prov.get(DistributionListBy), 
+     * *not* prov.searchObjects.   Some calls are vice versa.
+     * 
+     * mIsAclGroup is true if this object was loaded by prov.getAclGroup.
+     */
+    boolean mIsAclGroup;
     
     protected DistributionList(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
     }
 
-    public String[] getAllMembers() {
+    public String[] getAllMembers() throws ServiceException {
+        if (mIsAclGroup)
+            throw ServiceException.FAILURE("internal error", null);
+        
         return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
     }
     
-    public String[] getAliases() {
+    public String[] getAliases() throws ServiceException {
+        if (mIsAclGroup)
+            throw ServiceException.FAILURE("internal error", null);
+        
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
+    }
+    
+    @Override
+    protected void resetData() {
+        super.resetData();
+        if (mIsAclGroup)
+            trimForAclGroup();
+    }
+
+    private void trimForAclGroup() {
+        /*
+         * Hack.
+         * 
+         * We do not want to cache zimbraMailAlias/zimbraMailForwardingAddress, they can be big.
+         * zimbraMailAlias was loaded for computing the upward membership and is now no longer 
+         * needed.  Remove it before caching.
+         */ 
+        Map<String, Object> attrs = getAttrs(false);
+        attrs.remove(Provisioning.A_zimbraMailAlias);
+        attrs.remove(Provisioning.A_zimbraMailForwardingAddress);
+    }
+    
+    public boolean isAclGroup() {
+        return mIsAclGroup;
+    }
+    
+    public void turnToAclGroup() {
+        mIsAclGroup = true;
+        trimForAclGroup();
     }
 }

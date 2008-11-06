@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,10 +21,14 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
@@ -184,6 +189,10 @@ public abstract class TestACL extends TestCase {
         return localPart + "@" + DOMAIN_NAME;
     }
     
+    protected static String getEmailAddr(String testCaseName, String localPartPostfix) {
+        return testCaseName + "-" + localPartPostfix + "@" + DOMAIN_NAME;
+    }
+    
     protected Account guestAccount(String email, String password) {
         return new ACL.GuestAccount(email, password);
     }
@@ -265,14 +274,14 @@ public abstract class TestACL extends TestCase {
     protected ZimbraACE newKeyACE(String nameOrEmail, String accessKey, Right right, AllowOrDeny allowDeny) throws ServiceException {
         return new ZimbraACE(nameOrEmail, GranteeType.GT_KEY, right, allowDeny.deny(), accessKey);
     }
-    
+
     /*
      * verify we always get the expected result, regardless what the default value is
      * This test does NOT use the admin privileges 
      * 
      * This is for testing target entry with some ACL.
      */
-    protected void verify(Account grantee, NamedEntry target, Right right, AllowOrDeny expected) throws Exception {
+    protected void verify(Account grantee, Entry target, Right right, AllowOrDeny expected) throws Exception {
         verify(grantee, target, right, AS_USER, ALLOW, expected);
         verify(grantee, target, right, AS_USER, DENY, expected);
     }
@@ -282,7 +291,7 @@ public abstract class TestACL extends TestCase {
      * 
      * This is for testing target entry with some ACL.
      */
-    protected void verify(Account grantee, NamedEntry target, Right right, AsAdmin asAdmin, AllowOrDeny expected) throws Exception {
+    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny expected) throws Exception {
         // 1. pass allow as the default value, result should not be affected by the default value
         verify(grantee, target, right, asAdmin, ALLOW, expected);
         
@@ -295,7 +304,7 @@ public abstract class TestACL extends TestCase {
      * 
      * This is for testing target entry without any ACL.
      */
-    protected void verifyDefault(Account grantee, NamedEntry target, Right right) throws Exception {
+    protected void verifyDefault(Account grantee, Entry target, Right right) throws Exception {
         AsAdmin asAdmin = AS_USER; // TODO: test admin case
         
         // 1. pass true as the default value, result should be true
@@ -308,7 +317,7 @@ public abstract class TestACL extends TestCase {
     /*
      * verify expected result
      */
-    protected void verify(Account grantee, NamedEntry target, Right right, AsAdmin asAdmin, AllowOrDeny defaultValue, AllowOrDeny expected) throws Exception {
+    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny defaultValue, AllowOrDeny expected) throws Exception {
         boolean result;
         
         // Account interface
@@ -330,5 +339,30 @@ public abstract class TestACL extends TestCase {
         }
         assertEquals(expected.allow(), result);
     }
+    
+       
+    /*
+     * utility methods to grant/revoke right
+     * 
+     * To simulate how grants are done in the real server/zmprov, we first call TargetType.lookupTarget to 
+     * "look for" the taret, then use the returned entry instead of giving the target entry passed in 
+     * directly to PermUtil.
+     * 
+     */
+    protected Set<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+        String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
+        Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+        return PermUtil.grantRight(mProv, targetEntry, aces);
+    }
+        
+    protected Set<ZimbraACE> revokeRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+        // call TargetType.lookupTarget instead of passing the target entry directly for two reasons:
+        // 1. to simulate how grants are done in the real server/zmprov
+        // 2. convert DistributionList to AclGroup
+        String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
+        Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+        return PermUtil.revokeRight(mProv, targetEntry, aces);
+    }
+
    
 }
