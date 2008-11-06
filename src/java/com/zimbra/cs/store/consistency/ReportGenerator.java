@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import com.zimbra.common.localconfig.LC;
+
 
 public class ReportGenerator implements Runnable {
 
@@ -49,26 +51,10 @@ public class ReportGenerator implements Runnable {
     final static String JDBC_URL;
     
     static {
-        final String addr_expr =
-            "/localconfig/key[@name = 'mysql_bind_address']/value";
-        final String port_expr =
-            "/localconfig/key[@name = 'mysql_port']/value";
-        String address;
-        String port;
-        try {
-            address = BlobConsistencyCheck.queryLocalConfig(addr_expr);
-            port    = BlobConsistencyCheck.queryLocalConfig(port_expr);
-        }
-        catch (IOException e) {
-            throw new IllegalStateException("Unable to read localconfig", e);
-        }
+        final String address = LC.get(LC.mysql_bind_address.key());
+        final String port    = LC.get(LC.mysql_port.key());
         
-        if (address == null || "".equals(address.trim()))
-            address = "localhost";
-        if (port == null || "".equals(port.trim()))
-            port = "7306";
         JDBC_URL = "jdbc:mysql://" + address + ":" + port + "/";
-        
     }
     private final static char[] SPINNER = { '|', '/', '-', '\\' };
     

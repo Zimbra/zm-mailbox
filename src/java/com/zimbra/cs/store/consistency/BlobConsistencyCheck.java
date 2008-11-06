@@ -17,24 +17,18 @@
 package com.zimbra.cs.store.consistency;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.xml.sax.InputSource;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.consistency.StatementExecutor.ObjectMapper;
@@ -51,9 +45,6 @@ public class BlobConsistencyCheck {
     final static String LOCAL_CONFIG = "/opt/zimbra/conf/localconfig.xml";
     final static String ZIMBRA_USER  = "zimbra";
     final static String JDBC_DRIVER  = "com.mysql.jdbc.Driver";
-
-    final static String XPATH_EXPR =
-            "/localconfig/key[@name = 'zimbra_mysql_password']/value";
 
     /**
      * "short option", "long option", "description", "has-arg", "required".
@@ -89,7 +80,7 @@ public class BlobConsistencyCheck {
         if (cmdLine.hasOption("p"))
             mysqlPasswd = cmdLine.getOptionValue("p");
         else
-            mysqlPasswd = loadMysqlPassword();
+            mysqlPasswd = LC.get(LC.zimbra_mysql_password.key());
 
         if (!cmdLine.hasOption("l") &&
                 (mysqlPasswd == null || "".equals(mysqlPasswd.trim()))) {
@@ -169,32 +160,5 @@ public class BlobConsistencyCheck {
             opt.setRequired((Boolean) o[4]);
             options.addOption(opt);
         }
-    }
-
-    private static String loadMysqlPassword() throws IOException {
-        return queryLocalConfig(XPATH_EXPR);
-    }
-    
-    static String queryLocalConfig(String xpath) throws IOException {
-        File config = new File(LOCAL_CONFIG);
-        String result = null;
-        if (config.exists() && config.isFile()) {
-            FileInputStream in = null;
-            try {
-                in = new FileInputStream(config);
-                InputSource src = new InputSource(in);
-                XPathFactory xpf = XPathFactory.newInstance();
-                XPath xp = xpf.newXPath();
-                try {
-                    result = xp.evaluate(xpath, src);
-                }
-                catch (XPathExpressionException e) {
-                    e.printStackTrace();
-                }
-            } finally {
-                if (in != null) in.close();
-            }
-        }
-        return result;
     }
 }
