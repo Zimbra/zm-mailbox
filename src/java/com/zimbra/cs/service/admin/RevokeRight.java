@@ -25,11 +25,11 @@ public class RevokeRight extends AdminDocumentHandler {
         TargetType targetType = TargetType.fromString(eTarget.getAttribute(AdminConstants.A_TYPE));
         Entry targetEntry = null;
         if (targetType.needsTargetIdentity())
-            targetEntry = GrantPermission.getTargetEntry(prov, eTarget, targetType);
+            targetEntry = GrantRight.getTargetEntry(prov, eTarget, targetType);
             
         Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
         GranteeType granteeType = GranteeType.fromCode(eGrantee.getAttribute(AdminConstants.A_TYPE));
-        NamedEntry granteeEntry = GrantPermission.getGranteeEntry(prov, eGrantee, granteeType);
+        NamedEntry granteeEntry = GrantRight.getGranteeEntry(prov, eGrantee, granteeType);
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         Right right = RightManager.getInstance().getRight(eRight.getText());
