@@ -109,6 +109,25 @@ limit:
   <targetType>distributionlist</targetType>
 </right>
 
+<right name="renameCos" type="preset">
+  <desc>rename cos</desc>
+  <targetType>cos</targetType>
+</right>
+
+<right name="renameServer" type="preset">
+  <desc>rename server</desc>
+  <targetType>server</targetType>
+</right>
+
+<right name="testGlobalConfigRemoveMe" type="preset">
+  <desc>test global config target for now, delete after test is done</desc>
+  <targetType>config</targetType>
+</right>
+
+<right name="testGlobalGrantRemoveMe" type="preset">
+  <desc>test global grant target for now, delete after test is done</desc>
+  <targetType>global</targetType>
+</right>
 
 <right name="configureQuota" type="modifyAttrs">
   <desc>configure quota</desc>
