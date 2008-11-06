@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -33,6 +34,7 @@ import org.xmpp.muc.LeaveRoom;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Presence;
+import org.xmpp.packet.Presence.Type;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -136,7 +138,8 @@ public class IMChat extends ClassLogger {
         return tmp;
     }
     
-    boolean isMUC() { return mIsMUC; }
+    public boolean isMUC() { return mIsMUC; }
+    String getDestAddr() { return this.mDestJid.toBareJID(); }
     
     @Override
     protected Object formatObject(Object o) {
@@ -246,11 +249,29 @@ public class IMChat extends ClassLogger {
     void handlePresencePacket(boolean toMe, org.xmpp.packet.Presence pres) {
         info("Got a presence update packet for chat: %s", pres);
         if (isMUC()) {
+            String fromNick = pres.getFrom().getResource(); 
             if (pres.getType() == org.xmpp.packet.Presence.Type.error) {
-                addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart("ERROR: "+pres.toXML()), false); 
+                if (mPendingJoin != null && getMyNickname().equals(fromNick)) {
+                    synchronized(mPendingJoin) {
+                        mJoinResponse = pres;
+                        JoinRoom pj = mPendingJoin;
+                        mPendingJoin = null;
+                        pj.notifyAll();
+                    }
+                } else {
+                    addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart("ERROR: "+pres.toXML()), false);
+                }
             } else {
+                if (mPendingJoin != null && getMyNickname().equals(fromNick)) {
+                    synchronized(mPendingJoin) {
+                        mJoinResponse = pres;
+                        JoinRoom pj = mPendingJoin;
+                        mPendingJoin = null;
+                        pj.notifyAll();
+                    }
+                }
+                
                 JID  fromFullJID = null;
-                IMAddr fromNick = new IMAddr(pres.getFrom().getResource());
                 
                 // find the full jid if available
                 org.dom4j.Element x;
@@ -264,7 +285,7 @@ public class IMChat extends ClassLogger {
                 String action = "entered";
                 if (pres.getType()==Presence.Type.unavailable) { 
                     action = "left";
-                    removeParticipant(fromNick);
+                    removeParticipant(new IMAddr(fromNick));
                     if (fromFullJID != null) { 
                         removeParticipant(new IMAddr(fromFullJID));
                         IMLeftChatNotification not = new IMLeftChatNotification(IMAddr.fromJID(fromFullJID), getThreadId());
@@ -276,7 +297,7 @@ public class IMChat extends ClassLogger {
                         IMEnteredChatNotification not = new IMEnteredChatNotification(IMAddr.fromJID(fromFullJID), getThreadId());
                         mPersona.postIMNotification(not);
                     } else {
-                        getParticipant(true, fromNick, "", fromNick.toString());
+                        getParticipant(true, new IMAddr(fromNick), "", fromNick.toString());
                     }
                 }
                 String body = new Formatter().format("%s has %s the chat.",
@@ -381,7 +402,7 @@ public class IMChat extends ClassLogger {
                     String resource = msg.getFrom().getResource();
                     if (resource != null && resource.length() > 0) {
                         messageFrom = msg.getFrom().getResource();
-                        if (!isError && mPersona.getAddr().getNode().equals(messageFrom)) {
+                        if (!isError && getMyNickname().equals(messageFrom)) {
                             info("Skipping MUC message from me: %s", msg);
                             return;
                         }
@@ -538,13 +559,21 @@ public class IMChat extends ClassLogger {
         mPersona.xmppRoute(xmppMsg);
     }
     
+    private String mNickname = null;
+    
+    private String getMyNickname() {
+        if (mNickname == null) {
+            mNickname = mPersona.getAddr().getNode();
+            assert(mNickname != null && mNickname.length() > 0);
+        }
+        return mNickname;
+    }
+    
     private String getMUCJidWithNickname() {
         if (!isMUC())
             throw new IllegalStateException("MUC mode only");
         
-        String myNickname = mPersona.getAddr().getNode();
-        assert(myNickname != null && myNickname.length() > 0);
-        return mDestJid.toString()+"/"+myNickname;
+        return mDestJid.toString()+"/"+getMyNickname();
     }
 
     private void requestCreateChatroom() throws ServiceException {
@@ -566,7 +595,104 @@ public class IMChat extends ClassLogger {
         rc.setTo(getMUCJidWithNickname());
         mPersona.xmppRoute(rc);
     }
+    
+    JoinRoom mPendingJoin = null;
+    Presence mJoinResponse = null;
+    
+    public static enum MucStatusCode {
+        // STATUS codes
+        EnteringRoomJIDAvailable(100),
+        AffiliationChange(101),
+        ShowsUnavailableMembers(102),
+        DoesNotShowUnavailableMembers(103),
+        ConfigurationChange(104),
+        OccupantPresence(110),
+        LoggingEnabled(170),
+        LoggingDisabled(171),
+        NonAnonymous(172),
+        SemiAnonymous(173),
+        FullyAnonymous(174),
+        NewRoomCreated(201),
+        RoomnickChanged(210), // 210 - your nickname is assigned or changed
+        YouHaveBeenBanned(301), // 301 - you have been banned
+        NewRoomNickname(303), // 303
+        KickedFromRoom(307), // 307 -- you have been kicked from room
+        RemovedForAffiliationChange(321), // 321 - you have been removed b/c your affiliation changed
+        RemovedForMembersOnly(322), // 322 - room is now members-only, and you aren't a member
+        RemovedShutdown(332), // 332 - system or conference service is shutting down
+        
+        // FAILURE codes
+        PasswordRequired(401), // 401
+        Banned(403), // 403 - you are banned from this room
+        NoSuchRoom(404), // 404 - room does not exist
+        NotAllowed(405), // 405 - not allowed to create a room
+        MustUseReservedRoomnick(406), // 406
+        NotAMember(407), // 407 - members only and not a member
+        NicknameConflict(409), // 409 - nickname already in use in this room
+        MaxUsers(503), // 503 -
+        
+        Unknown(000),
+        ;
+        
+        private static final Map<Integer, MucStatusCode> sIntToCodeMap;
+        static {
+            sIntToCodeMap = new HashMap<Integer, MucStatusCode>();
+            for (MucStatusCode code : MucStatusCode.values()) {
+                sIntToCodeMap.put(code.mCode, code);
+            }
+        }
 
+        public static MucStatusCode lookup(int value) {
+            MucStatusCode toRet = sIntToCodeMap.get(value);
+            if (toRet == null)
+                return MucStatusCode.Unknown;
+            else
+                return toRet;
+        }
+        
+//        public static MucStatusCode lookup(int value) {
+//            switch (value) {
+//                case 100: return EnteringRoomJIDAvailable;
+//                case 101: return AffiliationChange;
+//                case 102: return ShowsUnavailableMembers;
+//                case 103: return DoesNotShowUnavailableMembers;
+//                case 104: return ConfigurationChange;
+//                case 110: return OccupantPresence;
+//                case 170: return LoggingEnabled;
+//                case 171: return LoggingDisabled;
+//                case 172: return NonAnonymous;
+//                case 173: return SemiAnonymous;
+//                case 174: return FullyAnonymous;
+//                case 201: return NewRoomCreated;
+//                case 210: return RoomnickChanged;
+//                case 301: return YouHaveBeenBanned;
+//                case 303: return NewRoomNickname;
+//                case 307: return KickedFromRoom;
+//                case 321: return RemovedForAffiliationChange;
+//                case 322: return RemovedForMembersOnly;
+//                case 332: return RemovedShutdown;
+//                case 401: return PasswordRequired;
+//                case 403: return Banned;
+//                case 404: return NoSuchRoom;
+//                case 405: return NotAllowed;
+//                case 406: return MustUseReservedRoomnick;
+//                case 407: return NotAMember;
+//                case 409: return NicknameConflict;
+//                case 503: return MaxUsers;
+//                default: return Unknown;
+//            }
+//        }
+        
+        MucStatusCode(int code) {
+            mCode = code; 
+        }
+        public boolean isError() { return mCode >= 400; }
+        
+        private boolean mIsError = false; 
+        private int mCode;
+        
+    }
+    
     void joinMUCChat(String roomAddr) {
         /*
         MUC Example 15. Jabber User Seeks to Enter a Room (Groupchat 1.0)
@@ -576,11 +702,64 @@ public class IMChat extends ClassLogger {
          */
         this.mIsMUC = true;
         mDestJid = new JID(roomAddr);
-        JoinRoom join = new JoinRoom(mPersona.getFullJidAsString(), getMUCJidWithNickname());
-        mPersona.xmppRoute(join);
-        
-        debug("Join MUC: DestJID="+mDestJid);
+        mPendingJoin = new JoinRoom(mPersona.getFullJidAsString(), getMUCJidWithNickname());
+        mPersona.xmppRoute(mPendingJoin);
     }
+
+    List<MucStatusCode> syncJoinMUCChat(String roomAddr, String nickname) {
+        if (nickname != null)
+            mNickname = nickname;
+        
+        /*
+        MUC Example 15. Jabber User Seeks to Enter a Room (Groupchat 1.0)
+        <presence
+            from='hag66@shakespeare.lit/pda'
+            to='darkcave@macbeth.shakespeare.lit/thirdwitch'/>
+         */
+        this.mIsMUC = true;
+        mDestJid = new JID(roomAddr);
+        mPendingJoin = new JoinRoom(mPersona.getFullJidAsString(), getMUCJidWithNickname());
+        boolean success = false;
+        Presence response = null;
+        
+        synchronized(mPendingJoin) {
+            mPersona.xmppRoute(mPendingJoin);
+            try {
+                mPendingJoin.wait(5000);
+            } catch (InterruptedException e) {}
+            if (mJoinResponse != null) {
+                response = mJoinResponse;
+            }
+        }
+        
+        List<MucStatusCode> toRet = new ArrayList<MucStatusCode>();
+        
+        debug("Join MUC: DestJID="+mDestJid+" ResponsePres="+response);
+        if (response != null) {
+            if (response.getType()==Type.error) {
+                org.dom4j.Element error = response.getChildElement("error", "");
+                if (error != null) {
+                    String code = error.attributeValue("code");
+                    int num = Integer.parseInt(code);
+                    toRet.add(MucStatusCode.lookup(num));
+                }
+            } else {
+                org.dom4j.Element x = response.getChildElement("x", "http://jabber.org/protocol/muc#user");
+                if (x != null) {
+                    for (Iterator<org.dom4j.Element> statusIter = x.elementIterator("status"); statusIter.hasNext();) {
+                        org.dom4j.Element status = statusIter.next();
+                        if (status != null) {
+                            String code = status.attributeValue("code");
+                            int num = Integer.parseInt(code);
+                            toRet.add(MucStatusCode.lookup(num));
+                        }
+                    }
+                }
+            }
+        }
+        return toRet;
+    }
+    
 
     void addUserToChat(IMAddr addr, String inviteMessage) throws ServiceException {
         if (!this.mIsMUC) {

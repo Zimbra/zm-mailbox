@@ -112,13 +112,59 @@ To an existing chat:
 
 
 
+IMGetChatConfiguration
+-----------------------
+Get all configuration information about the specified chat.  Note that
+1:1 chats will have almost no configuration while
+
+<IMGetChatConfiguration thread="threadId"/>
+
+<IMGetChatConfigurationResponse thread="threadId" isMUC="1|0">
+   [<var name="name">VALUE</var>]*
+   
+   [
+      <var name="name" multi="1">
+         [<value>VALUE</value>]+
+      </var> 
+   ]*
+</IMGetChatConfigurationResponse>   
+
+   isMUC: if TRUE then this is a chatroom, otherwise it is a 1:1 chat
+
+   Config Vars:
+       hidden           boolean         room is hidden from RoomList
+       nothidden        boolean         opposite of hidden
+       membersonly      boolean         only members may join
+       nonanonymous     boolean         if TRUE, then users are not anonymous
+       semianonymous    boolean         no idea what this means
+       passwordprotect  boolean         password required to join
+       persistent       boolean         room not deleted if server restarts
+       temporary        boolean         opposite of temporary
+       moderated        boolean         
+       unmoderated      boolean
+       numoccupants     integer         number of people currently in the room
+       password         string          the password for the room
+       maxusers         integer         max # users allowed
+       name             string          the XMPP shortname of the room
+       longname         string          natural language name of room
+       owners           MULTI-string    list of room owners (can change config)
+       
    
 IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, etc
 ------------
 <IMModifyChatRequest thread="threadId" op="close"/>
 <IMModifyChatRequest thread="threadId" op="adduser" addr="address>INVITATION_MESSAGE</IMModifyChatRequest>
 
+<IMModifyChatRequest thread="threadId" op="configure">
+    [<var name="name">VALUE</var>]*
+    [<var name="name" multi="1">[<value>VALUE</value>]*</var>]*
+</IMModifyChatRequest>
+        --- see IMGetChatConfiguration for list of supported variables
+
+RESPONSES:
+
 // chat unknown (server restart?  server flushed it due to idleness?)
+// use <IMJoinChatRequest> to join/create a MUC
 <IMModifyChatResponse thread="threadID" error="not_found"/>
 
 // successful
@@ -126,15 +172,78 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 
 
 
-IMJoinChat -- join a multi-user chat you have been invited to
+IMJoinChat -- join OR CREATE a multi-user chat
 ----------
-<IMJoinChatRequest [thread="threadId"] addr="chatAddr"/>
-</IMJoinChatResponse>
+-- Join the specified chat.  If a threadId is specified, then the
+   already-open chat thread is connected to the specified MUC room,
+   otherwise a new chat is created.
+-- If the specified room (specified by "addr") doesn't exist, the room
+   is created
 
-Join the specified chat.  If a threadId is specified, then the already-open chat thread is connected to the chat,
-otherwise a new chat is created.
-// **look for notification: <n type="enteredchat" thread="threadId"/>**
+<IMJoinChatRequest [nickname="nickname] [password="password"] [thread="threadId"] addr="chatAddr"/>
 
+        addr: the full address of the room.  This should be of the form
+              ROOMNAME@CONFERENCE_SERVICE - eg
+              myroom@conference.myhost.com  See IMListConferenceRooms
+              as a way to get a list of CONFERENCE_SERVICEs available 
+ 
+        thread: used for converting a 1:1 chat into a MUC
+
+        nickname: the "nickname" used for you in the room.  All users
+                  in a room are required to have a unique nickname in
+                  that room.  If you don't specify on, the server will
+                  use your bare username (the part of your name before
+                  the @ sign) as your nickname.  If you get a
+                  "NicknameConflict" response, you will have to try a
+                  different name.
+
+        password: used to enter password-protected rooms
+
+
+<IMJoinChatResponse thread="threadId" status="STATUS1,STATUS2,..." [error="ERROR"]
+
+-- If the "NewRoomCreated" status is set, then this is a new room and
+   you're the owner!  The room is created in the "locked" state until
+   configured.  You need to (at the very least) send an
+   <IMModifyChat op=configure> request to the room in order to allow
+   other people to enter the room
+
+STATUS codes:
+        NewRoomCreated  // this is a NEW, LOCKED, ROOM. You must configure it.
+
+        // These are all informational, for future use only.  You can ignore them
+        // for now:
+        EnteringRoomJIDAvailable
+        AffiliationChange
+        ShowsUnavailableMembers
+        DoesNotShowUnavailableMembers
+        ConfigurationChange
+        OccupantPresence
+        LoggingEnabled
+        LoggingDisabled
+        NonAnonymous
+        SemiAnonymous
+        FullyAnonymous
+        RoomnickChanged //  your nickname is assigned or changed
+        YouHaveBeenBanned // 301 - you have been banned
+        NewRoomNickname // 303
+        KickedFromRoom // 307 -- you have been kicked from room
+        RemovedForAffiliationChange // 321 - you have been removed b/c your affiliation changed
+        RemovedForMembersOnly // 322 - room is now members-only, and you aren't a member
+        RemovedShutdown // 332 - system or conference service is shutting down
+
+ERROR codes:
+    PasswordRequired - couldn't enter room password required
+    Banned - room owner has banned you from the room
+    NoSuchRoom - 
+    NotAllowed - Room doesn't exist, and you're not allowed to create a new one
+    MustUseReservedRoomnick - 
+    NotAMember - Room is invite-only, and you aren't a member
+    NicknameConflict - Someone else is already using your nickname
+    MaxUsers - Room has reached capacity
+    Unknown
+
+**also look for notification: <n type="enteredchat" thread="threadId"/>**
 
 
 
@@ -218,8 +327,18 @@ user comes back, otherwise the user's presence will be stuck in the
 "Away" state and the user won't understand why.
 
 
+============================================
+CONFERENCE APIS (Multi-User chats)
+============================================
+See: IMJoinChatRequest
+See: IMModifyChatRequest
+See: IMGetChatConfiguration
+
+
 IMListConferenceServices
 -------------------------
+- List all the known conference services within our cloud
+
 <IMListConferenceServicesRequest/>
 <IMListConferenceServicesResponse>
    <svc name="SERVICE_NAME" addr="SERVICE_ADDRESS"/>
@@ -230,6 +349,8 @@ List all the known conference services (MUC servers)
 
 IMListConferenceRooms
 ----------------------
+- List all the rooms currently active in a given conference service
+
 <IMListConferenceRoomsRequest/>
 <IMListConferenceRoomsResponse>
    <room name="ROOM_NAME" addr="ROOM_ADDRESS"/>

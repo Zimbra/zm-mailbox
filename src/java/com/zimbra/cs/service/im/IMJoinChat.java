@@ -16,12 +16,15 @@
  */
 package com.zimbra.cs.service.im;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMChat.MucStatusCode;
 import com.zimbra.cs.service.im.IMDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -33,11 +36,28 @@ public class IMJoinChat extends IMDocumentHandler {
         
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID, null);
         String addr = request.getAttribute(IMConstants.A_ADDRESS);
+        String nickname = request.getAttribute("nick", null);
         
         IMPersona persona = super.getRequestedPersona(zsc);
-        synchronized(persona.getLock()) {
-            persona.joinChat(addr, threadId);
+        Pair<String, List<MucStatusCode>> results = persona.joinChat(addr, threadId, nickname);
+        StringBuilder errors = new StringBuilder();
+        StringBuilder status = new StringBuilder();
+        for (MucStatusCode code : results.getSecond()) {
+            if (code.isError()) {
+                if (errors.length() > 0)
+                    errors.append(",");
+                errors.append(code.name());
+            } else {
+                if (status.length() > 0)
+                    status.append(",");
+                status.append(code.name());
+            }
         }
+        response.addAttribute(IMConstants.A_THREAD_ID, results.getFirst());
+        if (status.length() > 0)
+            response.addAttribute("status", status.toString());
+        if (errors.length() > 0)
+            response.addAttribute("error", errors.toString()); 
         return response;
     }
 

@@ -30,6 +30,7 @@ import org.dom4j.Element;
 import org.jivesoftware.wildfire.ClientSession;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.AuthToken;
+import org.jivesoftware.wildfire.forms.spi.XDataFormImpl;
 import org.jivesoftware.wildfire.group.Group;
 import org.jivesoftware.wildfire.group.GroupManager;
 import org.jivesoftware.wildfire.group.GroupNotFoundException;
@@ -43,11 +44,13 @@ import org.xmpp.packet.Roster;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.IQ;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.im.IMChat.MucStatusCode;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
 import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.interop.UserStatus;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -916,14 +919,44 @@ public class IMPersona extends ClassLogger {
         public String category;
         public String name;
         public String type;
+        public IQ resultIQ;
         public List<String> features = new ArrayList<String>();
         
         public String toString() {
             return jid+" - "+name+" - "+category+" - "+type;
         }
     }
+
     
-    private static class DiscoItemsResult {
+    private IQ syncIQQuery(IQ iq) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make callback requests while holding Persona lock!");
+        }
+        IQQueryCompletion iqc = new IQQueryCompletion(iq);
+        sendRequest(iq, iqc);
+        synchronized(iqc) {
+            try {
+                iqc.wait(1000);
+            } catch (InterruptedException ex) { }
+        }
+        if (iqc.isError()) {
+            throw ServiceException.FAILURE("Error sending iq query for server: "+iqc.getRespnse(), null);
+        }
+        return iqc.result;
+    }
+    
+    private static class IQQueryCompletion extends RequestCompletionHandler {
+        private IQ result;
+        public IQ getResult() { return result; }
+        IQQueryCompletion(IQ iq) {
+            super(iq);
+        }
+        protected void resultReceived(IQ response) {
+            result = response;
+        }
+    }
+    
+    static class DiscoItemsResult {
         public List<DiscoItemResult> items = new ArrayList<DiscoItemResult>();
     }
     
@@ -1018,7 +1051,7 @@ public class IMPersona extends ClassLogger {
         sendRequest(iq, dic);
         synchronized(dic) {
             try {
-                dic.wait();
+                dic.wait(1000);
             } catch (InterruptedException ex) { }
         }
         if (dic.isError()) {
@@ -1036,6 +1069,8 @@ public class IMPersona extends ClassLogger {
         
 //        DiscoInfoResult serverDI = syncGetDiscoInfo(mAddr.toString());
         DiscoItemsResult serverItems = syncGetDiscoItems(mAddr.getDomain());
+        if (serverItems == null)
+            throw ServiceException.FAILURE("Unable to fetch disco#items result from local XMPP cloud", null);
         for (DiscoItemResult item : serverItems.items) {
             DiscoInfoResult di = syncGetDiscoInfo(item.jid);
             if (di != null && "conference".equals(di.category) && "text".equals(di.type)) {
@@ -1070,6 +1105,122 @@ public class IMPersona extends ClassLogger {
         return toRet;
     }
     
+    public IMConferenceRoom getConferenceRoom(String threadId) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make this request while holding Persona lock!");
+        }
+        
+        IMChat chat = getChat(threadId);
+        if (chat == null)
+            throw MailServiceException.NO_SUCH_CHAT(threadId);
+        
+        if (!chat.isMUC())
+            return null;
+        
+        String addr = chat.getDestAddr();
+        
+        DiscoInfoResult roomDi = syncGetDiscoInfo(addr);
+        if (roomDi == null)
+            throw ServiceException.FAILURE("Could not contact room at: "+addr, null);
+            
+        if (!roomDi.category.equals("conference") || !roomDi.type.equals("text")) 
+            throw ServiceException.FAILURE(addr+" is not a conference room", null);
+        IMConferenceRoom room = IMConferenceRoom.parseRoomInfo(chat, roomDi.resultIQ);
+        
+        return room;
+    }
+    
+    public void createConferenceRoom(String addr, List<Pair<String,List<String>>> config) {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make this request while holding Persona lock!");
+        }
+    }
+
+//    public Element getConferenceRoomConfigurationForm(String addr) throws ServiceException {
+//        if (Thread.holdsLock(this.getLock())) {
+//            throw new IllegalStateException("May not make this request while holding Persona lock!");
+//        }
+//
+//        // request the config form
+//        //          <iq from='crone1@shakespeare.lit/desktop'
+//        //                id='create1'
+//        //                to='darkcave@chat.shakespeare.lit'
+//        //                type='get'>
+//        //              <query xmlns='http://jabber.org/protocol/muc#owner'/>
+//        //            </iq>
+//        IQ iq = new IQ();
+//        synchronized(getLock()) {
+//            iq.setType(Type.get);
+//            iq.setID("IQQuery-"+(mCurRequestId++));
+//            iq.setChildElement("query", "http://jabber.org/protocol/muc#owner");
+//            iq.setTo(addr);
+//        }
+//        
+//        IQ configForm = syncIQQuery(iq);
+//        if (configForm == null) {
+//            throw ServiceException.FAILURE("No response attempting to fetch config form: "+iq.toXML(), null);
+//        }
+//        
+//        if (configForm.getType() == Type.error) {
+//            throw ServiceException.FAILURE("Got error attempting to fetch config form: "+configForm.toXML(), null);
+//        } else {
+//            org.dom4j.Element child = configForm.getChildElement();
+//            
+//            org.dom4j.Element x = child.element("x");
+//            return x;
+////            if (x != null) {
+////                XDataFormImpl form = new XDataFormImpl();
+////                form.parse(x);
+////                return form;
+////            }
+//        }
+////        return null;
+//    }
+    
+    public IQ configureChat(IMChat chat, Map<String, Object> data) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make this request while holding Persona lock!");
+        }
+        IQ iq = new IQ();
+        synchronized(getLock()) {
+            iq.setType(Type.get);
+            iq.setID("IQQuery-"+(mCurRequestId++));
+            iq.setTo(chat.getDestAddr());
+        }
+        IMConferenceRoom.generateConfigIQ(iq, data);
+        
+        
+        IQ configFormResult = syncIQQuery(iq);
+        return configFormResult;
+        
+        
+    }
+    
+    public IQ configureConferenceRoom(String addr, org.dom4j.Element d4Elt) throws ServiceException {
+        if (Thread.holdsLock(this.getLock())) {
+            throw new IllegalStateException("May not make this request while holding Persona lock!");
+        }
+    
+        if (d4Elt == null) {
+            // "instant" room: use defaults
+            
+        } else {
+            IQ iq = new IQ();
+            synchronized(getLock()) {
+                iq.setType(Type.get);
+                iq.setID("IQQuery-"+(mCurRequestId++));
+                Element child = iq.setChildElement("query", "http://jabber.org/protocol/muc#owner");
+                child.add(d4Elt);
+                iq.setTo(addr);
+            }
+            
+            IQ configFormResult = syncIQQuery(iq);
+            return configFormResult;
+            
+        }
+        return null;
+    }
+    
     private static DiscoInfoResult handleDiscoInfoResult(IQ iq) {
         DiscoInfoResult toRet = new DiscoInfoResult();
         
@@ -1082,6 +1233,7 @@ public class IMPersona extends ClassLogger {
         toRet.type = identity.attributeValue("type", "");
         toRet.jid = iq.getFrom().toBareJID();
         toRet.name = identity.attributeValue("name", "");
+        toRet.resultIQ = iq;
         
         // find all the features
         for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)child.elementIterator("feature");iter.hasNext();) {
@@ -1094,7 +1246,7 @@ public class IMPersona extends ClassLogger {
         return toRet;
     }
     
-    private static class DiscoItemResult {
+    static class DiscoItemResult {
         public String name;
         public String jid;
     }
@@ -1425,6 +1577,11 @@ public class IMPersona extends ClassLogger {
         }
     }
     
+    private synchronized void throwIfNotOnline() throws ServiceException {
+        if (!mIsOnline) 
+            throw ServiceException.FAILURE("This account is not currently logged in to IM services", null);
+    }
+    
     public static abstract class RequestCompletionHandler {
         private IQ request = null;
         private IQ response = null;
@@ -1459,13 +1616,12 @@ public class IMPersona extends ClassLogger {
     }
     
     
-    
-    
     private Map<String /*request id*/, RequestCompletionHandler> mPendingRequests =
         new HashMap<String /*request id*/, RequestCompletionHandler>();
     
     
-    private void sendRequest(IQ request, RequestCompletionHandler handler) {
+    private void sendRequest(IQ request, RequestCompletionHandler handler) throws ServiceException {
+        throwIfNotOnline();
         if (mPendingRequests.containsKey(request.getID())) {
             throw new IllegalArgumentException("Request with ID "+request.getID()+" already pending");
         }
@@ -1500,20 +1656,22 @@ public class IMPersona extends ClassLogger {
 //        return mSharedGroups.contains(name);
 //    }
 
-    public void joinChat(String addr, String threadId) throws ServiceException {
+    public Pair<String, List<MucStatusCode>> joinChat(String addr, String threadId, String nickname) throws ServiceException {
+        IMChat chat;
         synchronized(getLock()) {
             if (threadId == null || threadId.length() == 0) {
                 threadId = addr;
                 if (threadId.indexOf('@')>=0) 
                     threadId = addr.substring(0, addr.indexOf('@'));
             }                
-            IMChat chat = mChats.get(threadId);
+            chat = mChats.get(threadId);
             if (chat == null) {
                 chat = new IMChat(this, threadId, null);
                 mChats.put(threadId, chat);
             }
-            chat.joinMUCChat(addr);
         }
+        List<MucStatusCode> status = chat.syncJoinMUCChat(addr, nickname);
+        return new Pair<String, List<MucStatusCode>>(chat.getThreadId(), status);
     }
 
     public void joinSharedGroup(String name) throws ServiceException {
@@ -1555,10 +1713,10 @@ public class IMPersona extends ClassLogger {
     }
     
     void processIntercepted(Packet packet) {
-        debug("Intercepted packet: %s", packet);
-        if (packet instanceof Message) {
-            processInternal(packet, true);
-        }
+        debug("Skipping intercepted packet: %s", packet);
+//        if (packet instanceof Message) {
+//            processInternal(packet, true);
+//        }
     }
 
     /**

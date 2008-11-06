@@ -50,6 +50,7 @@ public class MailServiceException extends ServiceException {
     public static final String NO_SUCH_UPLOAD  = "mail.NO_SUCH_UPLOAD";
     public static final String NO_SUCH_WAITSET = "mail.NO_SUCH_WAITSET";
     public static final String NO_SUCH_BLOB    = "mail.NO_SUCH_BLOB";
+    public static final String NO_SUCH_CHAT    = "mail.NO_SUCH_CHAT";
     
     public static final String ALREADY_EXISTS  = "mail.ALREADY_EXISTS";
 
@@ -264,6 +265,10 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("No such blob: mailbox=" + mboxId + ", item=" + itemId + ", change=" + revision, NO_SUCH_BLOB, SENDERS_FAULT);
     }
 
+    public static MailServiceException NO_SUCH_CHAT(String threadId) {
+        return new MailServiceException("No such chat: threadId="+threadId, NO_SUCH_CHAT, SENDERS_FAULT);
+    }
+    
     public static MailServiceException SCAN_ERROR(String file) {
         return new MailServiceException("upload could not be scanned: file '" + file + "'", SCAN_ERROR, RECEIVERS_FAULT, new Argument(NAME, file, Argument.Type.STR));
     }
