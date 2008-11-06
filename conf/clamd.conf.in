@@ -287,7 +287,7 @@ User zimbra
 # Note: disabling this limit or setting it too high may result in severe damage
 # to the system.
 # Default: 100M
-#MaxScanSize 150M
+MaxScanSize %%zimbraMtaMaxMessageSize%%
 
 # Files larger than this limit won't be scanned. Affects the input file itself
 # as well as files contained inside it (when the input file is an archive, a
@@ -296,7 +296,7 @@ User zimbra
 # Note: disabling this limit or setting it too high may result in severe damage
 # to the system.
 # Default: 25M
-MaxFileSize 100M
+MaxFileSize %%zimbraMtaMaxMessageSize%%
 
 # Nested archives are scanned recursively, e.g. if a Zip archive contains a RAR
 # file, all files within it will also be scanned. This options specifies how
