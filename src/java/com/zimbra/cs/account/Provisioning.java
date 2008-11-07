@@ -2809,4 +2809,8 @@ public abstract class Provisioning {
             return true;
         return false;
     }
+    
+    public String getProxyAuthToken(String acctId) throws ServiceException {
+        return null;
+    }
 }

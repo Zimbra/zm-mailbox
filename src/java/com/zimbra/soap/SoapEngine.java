@@ -232,6 +232,12 @@ public class SoapEngine {
             } catch (ServiceException e) {
                 // mLog.warn("cannot get mailbox for account " + rid, null);
             }
+            
+            try {
+                zsc.getAuthToken().setProxyAuthToken(prov.getProxyAuthToken(rid));
+            } catch (ServiceException e) {
+                mLog.warn("failed to set proxy auth token: " + e.getMessage());
+            }
         }
         
         String ip = (String) context.get(SOAP_REQUEST_IP);

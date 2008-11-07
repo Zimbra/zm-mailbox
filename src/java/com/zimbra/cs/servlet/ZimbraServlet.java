@@ -66,6 +66,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.ZimbraAuthProvider;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -292,14 +293,30 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
+    private boolean hasZimbraAuthCookie(HttpState state) {
+        Cookie[] cookies = state.getCookies();
+        if (cookies == null)
+            return false;
+        
+        for (Cookie c: cookies) {
+            if (c.getName().equals(COOKIE_ZM_AUTH_TOKEN))
+                return true;
+        }
+        return false;
+    }
+    
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
     throws IOException, ServiceException {
         // create an HTTP client with the same cookies
         javax.servlet.http.Cookie cookies[] = req.getCookies();
         String hostname = method.getURI().getHost();
+        boolean hasZMAuth = hasZimbraAuthCookie(state);
         if (cookies != null) {
-        	for (int i = 0; i < cookies.length; i++)
+        	for (int i = 0; i < cookies.length; i++) {
+        	    if (cookies[i].getName().equals(COOKIE_ZM_AUTH_TOKEN) && hasZMAuth)
+        	        continue;
         		state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
+        	}
         }
         HttpClient client = new HttpClient();
         if (state != null)
@@ -426,13 +443,7 @@ public class ZimbraServlet extends HttpServlet {
     
 
     public static String getAccountPath(Account acct) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
-        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        if (defaultDomain == null || !defaultDomain.equalsIgnoreCase(acct.getDomainName()))
-            return "/" + acct.getName();
-        else
-            return "/" + acct.getUid();
+        return "/" + acct.getName();
     }
     
     public static String getServiceUrl(Account acct, String path) throws ServiceException {

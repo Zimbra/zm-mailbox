@@ -440,7 +440,11 @@ public class ZimbraSoapContext {
      *  Notification is expressly declined. */
     public Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
-        if (mRawAuthToken != null)
+        
+        String pxyAuthToken = mAuthToken.getProxyAuthToken();
+        if (pxyAuthToken != null)
+            (new ZAuthToken(pxyAuthToken)).encodeSoapCtxt(ctxt);
+        else if (mRawAuthToken != null)
             mRawAuthToken.encodeSoapCtxt(ctxt);
         if (mResponseProtocol != mRequestProtocol)
             ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);

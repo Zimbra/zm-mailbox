@@ -99,6 +99,7 @@ public class ZimbraAuthToken extends AuthToken {
     private boolean mIsCCAdmin;     
     private int mCCTier;
     /* Zimbra Customer Care*/
+    private String mProxyAuthToken;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -410,7 +411,17 @@ public class ZimbraAuthToken extends AuthToken {
     }
     
     public ZAuthToken toZAuthToken() throws ServiceException {
-        return new ZAuthToken(getOrigAuthData());
+        return new ZAuthToken(getOrigAuthData(), mProxyAuthToken);
+    }
+    
+    @Override
+    public void setProxyAuthToken(String encoded) {
+        mProxyAuthToken = encoded;
+    }
+    
+    @Override
+    public String getProxyAuthToken() {
+        return mProxyAuthToken;
     }
     
     /*

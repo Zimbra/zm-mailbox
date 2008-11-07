@@ -66,6 +66,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -406,13 +407,23 @@ public class UserServlet extends ZimbraServlet {
         return true;
     }
 
+    private AuthToken getProxyAuthToken(Context context) throws ServiceException {            
+        String encoded = Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId());
+        if (encoded != null) {
+            return new ZimbraAuthTokenEncoded(encoded);
+        } else if (context.basicAuthHappened) {
+            return context.authToken;
+        } else {
+            return null;
+        }
+    }
+    
     private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
 
-        if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {
-            Provisioning prov = Provisioning.getInstance();                
-            proxyServletRequest(req, resp, prov.getServer(context.targetAccount), context.basicAuthHappened ? context.authToken : null);
+        if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {                                                           
+            proxyServletRequest(req, resp, Provisioning.getInstance().getServer(context.targetAccount), getProxyAuthToken(context));
             return true;
         }
 
@@ -732,7 +743,7 @@ public class UserServlet extends ZimbraServlet {
         if (targetAccount == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errNoSuchAccount, req));
 
-        proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, context.basicAuthHappened ? context.authToken : null);
+        proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, getProxyAuthToken(context));
         return true;
     }
 
