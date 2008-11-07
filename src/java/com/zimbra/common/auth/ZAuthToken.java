@@ -55,6 +55,7 @@ public class ZAuthToken {
 
     private String mType;
     private String mValue;
+    private String mProxyAuthToken;
     private Map<String, String> mAttrs;
     
 
@@ -98,6 +99,11 @@ public class ZAuthToken {
     // AP-TODO: retire them
     public ZAuthToken(String value) {
         init(null, value, null);
+    }
+    
+    public ZAuthToken(String value, String proxyAuthToken) {
+        this(value);
+        mProxyAuthToken = proxyAuthToken;
     }
     
     /**
@@ -222,7 +228,9 @@ public class ZAuthToken {
     
     private Element toSoap(Element parent, String authTokenElem, String attrElem, String nameAttr) {
         Element eAuthToken = parent.addElement(authTokenElem);
-        if (mValue != null) {
+        if (mProxyAuthToken != null) {
+            eAuthToken.setText(mProxyAuthToken);
+        } else if (mValue != null) {
             eAuthToken.setText(mValue);
         } else if (mAttrs != null) {
             for (Map.Entry<String, String> attr : mAttrs.entrySet())
