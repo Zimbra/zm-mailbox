@@ -92,6 +92,7 @@ public class ZimbraAuthToken extends AuthToken {
     private String mExternalUserEmail;
     private String mDigest;
     private String mAccessKey; // just a dummy placeholder for now until accesskey auth is implemented in ZimbraAuthToken
+    private String mProxyAuthToken;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -375,7 +376,17 @@ public class ZimbraAuthToken extends AuthToken {
     }
     
     public ZAuthToken toZAuthToken() throws ServiceException {
-        return new ZAuthToken(getOrigAuthData());
+        return new ZAuthToken(getOrigAuthData(), mProxyAuthToken);
+    }
+    
+    @Override
+    public void setProxyAuthToken(String encoded) {
+        mProxyAuthToken = encoded;
+    }
+    
+    @Override
+    public String getProxyAuthToken() {
+        return mProxyAuthToken;
     }
     
     /*

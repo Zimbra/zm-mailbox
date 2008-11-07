@@ -42,6 +42,7 @@ public class ProxyTarget {
     private Server mServer;
     private AuthToken mAuthToken;
     private String mURL;
+    private boolean mIsOfflineProxy = false;
 
     public ProxyTarget(String serverId, AuthToken authToken, HttpServletRequest req) throws ServiceException {
         mServer = Provisioning.getInstance().get(ServerBy.id, serverId);
@@ -49,7 +50,8 @@ public class ProxyTarget {
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
 
         mAuthToken = authToken;
-
+        mIsOfflineProxy = authToken.getProxyAuthToken() != null;
+        
         String url;
         
         String requestStr = req.getRequestURI();
@@ -58,7 +60,7 @@ public class ProxyTarget {
             requestStr =  requestStr + "?" + qs;
 
         int localAdminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
-        if (req.getLocalPort() == localAdminPort) {
+        if (!mIsOfflineProxy && req.getLocalPort() == localAdminPort) {
             url = URLUtil.getAdminURL(mServer, requestStr, true);
         } else {
             url = URLUtil.getServiceURL(mServer, requestStr, false);

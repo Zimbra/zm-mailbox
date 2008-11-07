@@ -1625,4 +1625,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return true;
         return false;
     }
+    
+    public String getProxyAuthToken(String acctId) throws ServiceException {
+        return null;
+    }
 }

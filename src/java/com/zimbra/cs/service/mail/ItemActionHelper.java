@@ -28,6 +28,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -427,7 +428,12 @@ public class ItemActionHelper {
     
     private void executeRemote() throws ServiceException, IOException {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
-        ZMailbox.Options zoptions = new ZMailbox.Options(getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(target));
+        
+        AuthToken at = getAuthToken();
+        String pxyAuthToken = at.getProxyAuthToken();
+        ZAuthToken zat = pxyAuthToken == null ? at.toZAuthToken() : new ZAuthToken(pxyAuthToken);
+        
+        ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         zoptions.setResponseProtocol(mResponseProtocol);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
