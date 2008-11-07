@@ -3,150 +3,34 @@
 <!-- 
 
 <right name="{name}"
-       [userRight="0|1"]
-       [type="{right-type}"]
+       <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
        
+       [<doc>a more detailed description, may include use cases, examples, etc. 
+             This is to be displayed by the zmmailbox listPermission command in verbose mode.
+       </doc>]
        
-    <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
-       
-    [<doc>
-         a more detailed description, may include use cases, examples, etc. 
-         This is to be displayed by the zmmailbox listPermission command in verbose mode.
-     </doc>]
-       
-    [<default>TRUE/FALSE</default>]
-    
-    [
-      <attrs>
-          <a onEntry="{comma-separated-entry-types}" limit="0|1">{attribute-name}</a>+
-      </attrs>
-    ]
-    
+       [<default>TRUE/FALSE</default>]
 </right>
-
-name: 
-    name of the right
-
-userRight: 
-    Whether the right is grantable by users
-	1: the right is grantable by user
-	0(default): the right is only grantable by admins
-           
-type: 
-    Right type.  Is only applicable and required for admin rights(i.e. userRight="0" or not set)  
-	preset      : rights with predefined capabilities     
-	getAttrs    : rights for reading attributes
-	modifyAttrs : rights for reading and writing attributes
-      
-onEntry:
-    Only applicable when right type is getAttrs or modifyAttrs  
-    Comma separated entry types on which the attribute can be:
-        read: if right type is getAttrs
-        read and modified: if right type is modifyAttrs  
-    If not present, it means all entry types.
-                  
-limit: 
-    If the attribute can be modified to any value or within inherited limit.
-    Only applicable and required when right type is modifyAttrs.
-    0: the attribute can be modified to any value allowed by the attribute definition
-	1: the attribute can only be modified within inherited limit
 
 -->
 
 <rights>
 
-<!-- 
-*******************
-    user rights
-*******************
--->
-<right name="invite" userRight="1">
+<right name="invite">
   <desc>automatically add meeting invites from grantee to the target's calendar</desc>
   <doc>e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G.
             (2) Conf room Y can only be booked by users A, B, C and group G.
   </doc>
 </right>
 
-<right name="loginAs" userRight="1">
-  <desc>login as</desc>
-  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
-</right>
-
-<right name="sendAs" userRight="1">
-  <desc>send as</desc>
-  <doc>reply to messages in a shared folder as the owner of the folder</doc>
-</right>
-
-<right name="viewFreeBusy" userRight="1">
+<right name="viewFreeBusy">
   <desc>view free/busy</desc>
   <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
 </right>
 
-
-
-<!-- 
-********************
-    admin rights
-********************
--->
-<right name="createAccount" type="preset">
-  <desc>create account</desc>
-  <targetType>domain</targetType>
-</right>
-
-<right name="renameAccount" type="preset">
-  <desc>rename account</desc>
-  <targetType>account</targetType>
-</right>
-
-<right name="renameCalendarResource" type="preset">
-  <desc>rename calendar resource</desc>
-  <targetType>resource</targetType>
-</right>
-
-<right name="renameDistributionList" type="preset">
-  <desc>rename distribution list</desc>
-  <targetType>distributionlist</targetType>
-</right>
-
-<right name="renameCos" type="preset">
-  <desc>rename cos</desc>
-  <targetType>cos</targetType>
-</right>
-
-<right name="renameServer" type="preset">
-  <desc>rename server</desc>
-  <targetType>server</targetType>
-</right>
-
-<right name="testGlobalConfigRemoveMe" type="preset">
-  <desc>test global config target for now, delete after test is done</desc>
-  <targetType>config</targetType>
-</right>
-
-<right name="testGlobalGrantRemoveMe" type="preset">
-  <desc>test global grant target for now, delete after test is done</desc>
-  <targetType>global</targetType>
-</right>
-
-<right name="configureQuota" type="modifyAttrs">
-  <desc>configure quota</desc>
-  <attrs>
-      <attr onEntry="account,cos" limit="0">zimbraMailQuota</attr>
-      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnPercent</attr>
-      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnInterval</attr>
-      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnMessage</attr>
-  </attrs>
-</right>
-
-<right name="configureQuotaWithinLimit" type="modifyAttrs">
-  <desc>configure quota</desc>
-  <attrs>
-      <attr onEntry="account,cos" limit="1">zimbraMailQuota</attr>
-      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnPercent</attr>
-      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnInterval</attr>
-      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnMessage</attr>
-  </attrs>
+<right name="loginAs">
+  <desc>login as</desc>
+  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
 </right>
 
 </rights>
