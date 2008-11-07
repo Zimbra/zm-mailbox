@@ -28,11 +28,11 @@ import com.zimbra.cs.im.IMChat.MucStatusCode;
 import com.zimbra.cs.service.im.IMDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class IMJoinChat extends IMDocumentHandler {
+public class IMJoinConferenceRoom extends IMDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(IMConstants.IM_JOIN_CHAT_RESPONSE);
+        Element response = zsc.createElement(IMConstants.IM_JOIN_CONFERENCE_ROOM_RESPONSE);
         
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID, null);
         String addr = request.getAttribute(IMConstants.A_ADDRESS);

@@ -1,3 +1,22 @@
+IM Soap API Reference
+=======================
+
+Some terms:
+
+ROSTER: your list of buddies
+
+CHAT: an ongoing threaded conversation between you and one or more
+other participants.  Some chats are 1:1 and some are multi-user (part
+of a conference room)
+
+
+GATEWAY: a service that allows the user to connect to 3rd party IM
+services, e.g. the Yahoo! IM service.
+
+
+
+
+
 IMGetRoster -- get buddy list
 -----------
 <IMGetRosterRequest/>
@@ -53,30 +72,6 @@ IMSetPresence -- modify your presence state
 <IMSetPresenceResponse>
 
 
-IMGetChat -- return the chat history (param = num messages)
----------
-<IMGetChatRequest thread="threadID" [seq="1st-sequence-to-retrieve"]/>
-
-// chat unknown (server restart?  server flushed it due to idleness?)
-<IMGetChatResponse thread="threadID" error="not_found"/>
-
-// chat known:
-<IMGetChatResponse>
-   <chat thread="threadID">
-      <pcps> // like email-element-cache -- only valid for this single message!
-         <p id="num" addr="foo@bar.com" [name="friendly"] [resource="resource"]/>*
-      </pcps>
-      <messages>
-         <message seq="sequence-number" ts="timestamp" from="id">
-            [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
-            [<body [lang="LANGUAGE">PLAINTEXT BODY</body>]              // plaintext
-            [<html>HTML BODY</html>]
-         </message>
-      </messages>   
-   </chat>
-</IMGetChatResponse>
-
-
 IMSendMessage -- send a new message, optional chat parameter
 -------------
 To an existing chat:
@@ -111,6 +106,106 @@ To an existing chat:
 **Send a blank message to indicate/stop typing indicator by itself**
 
 
+
+IMGetChat -- return the chat history (param = num messages)
+---------
+<IMGetChatRequest thread="threadID" [seq="1st-sequence-to-retrieve"]/>
+
+// chat unknown (server restart?  server flushed it due to idleness?)
+<IMGetChatResponse thread="threadID" error="not_found"/>
+
+// chat known:
+<IMGetChatResponse>
+   <chat thread="threadID">
+      <pcps> // like email-element-cache -- only valid for this single message!
+         <p id="num" addr="foo@bar.com" [name="friendly"] [resource="resource"]/>*
+      </pcps>
+      <messages>
+         <message seq="sequence-number" ts="timestamp" from="id">
+            [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
+            [<body [lang="LANGUAGE">PLAINTEXT BODY</body>]              // plaintext
+            [<html>HTML BODY</html>]
+         </message>
+      </messages>   
+   </chat>
+</IMGetChatResponse>
+
+
+IMJoinConferenceRoom
+---------------------
+-- This API joins specified conference room, creating it if it didn't
+   already exists.
+-- The API returns a CHAT.  The <IMGetChatConfiguration>,
+   <IMModifyChatRequest>, and <IMGetChat> APIs can be used on that
+   chat.
+-- Use the "threadID" paremeter to <IMSendMessageRequest> to send a
+   message to this existing chat.   
+
+<IMJoinChatRequest [nickname="nickname] [password="password"] [thread="threadId"] addr="chatAddr"/>
+
+        addr: the full address of the room.  This should be of the form
+              ROOMNAME@CONFERENCE_SERVICE - eg
+              myroom@conference.myhost.com  See IMListConferenceRooms
+              as a way to get a list of CONFERENCE_SERVICEs available 
+ 
+        thread: used for converting a 1:1 chat into a MUC
+
+        nickname: the "nickname" used for you in the room.  All users
+                  in a room are required to have a unique nickname in
+                  that room.  If you don't specify on, the server will
+                  use your bare username (the part of your name before
+                  the @ sign) as your nickname.  If you get a
+                  "NicknameConflict" response, you will have to try a
+                  different name.
+
+        password: used to enter password-protected rooms
+
+<IMJoinChatResponse thread="threadId" status="STATUS1,STATUS2,..." [error="ERROR"]
+
+-- If the "NewRoomCreated" status is set, then this is a new room and
+   you're the owner!  The room is created in the "locked" state until
+   configured.  You need to (at the very least) send an
+   <IMModifyChat op=configure> request to the room in order to allow
+   other people to enter the room
+
+STATUS codes:
+        NewRoomCreated  // this is a NEW, LOCKED, ROOM. You must configure it.
+
+        // These are all informational, for future use only.  You can ignore them
+        // for now:
+        EnteringRoomJIDAvailable
+        AffiliationChange
+        ShowsUnavailableMembers
+        DoesNotShowUnavailableMembers
+        ConfigurationChange
+        OccupantPresence
+        LoggingEnabled
+        LoggingDisabled
+        NonAnonymous
+        SemiAnonymous
+        FullyAnonymous
+        RoomnickChanged //  your nickname is assigned or changed
+        YouHaveBeenBanned // 301 - you have been banned
+        NewRoomNickname // 303
+        KickedFromRoom // 307 -- you have been kicked from room
+        RemovedForAffiliationChange // 321 - you have been removed b/c your affiliation changed
+        RemovedForMembersOnly // 322 - room is now members-only, and you aren't a member
+        RemovedShutdown // 332 - system or conference service is shutting down
+
+ERROR codes:
+    PasswordRequired - couldn't enter room password required
+    Banned - room owner has banned you from the room
+    NoSuchRoom - 
+    NotAllowed - Room doesn't exist, and you're not allowed to create a new one
+    MustUseReservedRoomnick - 
+    NotAMember - Room is invite-only, and you aren't a member
+    NicknameConflict - Someone else is already using your nickname
+    MaxUsers - Room has reached capacity
+    Unknown
+
+**also look for notification: <n type="enteredchat" thread="threadId"/>**
+
+        
 
 IMGetChatConfiguration
 -----------------------
@@ -169,82 +264,6 @@ RESPONSES:
 
 // successful
 <IMModifyChatResponse thread="threadId"/>
-
-
-
-IMJoinChat -- join OR CREATE a multi-user chat
-----------
--- Join the specified chat.  If a threadId is specified, then the
-   already-open chat thread is connected to the specified MUC room,
-   otherwise a new chat is created.
--- If the specified room (specified by "addr") doesn't exist, the room
-   is created
-
-<IMJoinChatRequest [nickname="nickname] [password="password"] [thread="threadId"] addr="chatAddr"/>
-
-        addr: the full address of the room.  This should be of the form
-              ROOMNAME@CONFERENCE_SERVICE - eg
-              myroom@conference.myhost.com  See IMListConferenceRooms
-              as a way to get a list of CONFERENCE_SERVICEs available 
- 
-        thread: used for converting a 1:1 chat into a MUC
-
-        nickname: the "nickname" used for you in the room.  All users
-                  in a room are required to have a unique nickname in
-                  that room.  If you don't specify on, the server will
-                  use your bare username (the part of your name before
-                  the @ sign) as your nickname.  If you get a
-                  "NicknameConflict" response, you will have to try a
-                  different name.
-
-        password: used to enter password-protected rooms
-
-
-<IMJoinChatResponse thread="threadId" status="STATUS1,STATUS2,..." [error="ERROR"]
-
--- If the "NewRoomCreated" status is set, then this is a new room and
-   you're the owner!  The room is created in the "locked" state until
-   configured.  You need to (at the very least) send an
-   <IMModifyChat op=configure> request to the room in order to allow
-   other people to enter the room
-
-STATUS codes:
-        NewRoomCreated  // this is a NEW, LOCKED, ROOM. You must configure it.
-
-        // These are all informational, for future use only.  You can ignore them
-        // for now:
-        EnteringRoomJIDAvailable
-        AffiliationChange
-        ShowsUnavailableMembers
-        DoesNotShowUnavailableMembers
-        ConfigurationChange
-        OccupantPresence
-        LoggingEnabled
-        LoggingDisabled
-        NonAnonymous
-        SemiAnonymous
-        FullyAnonymous
-        RoomnickChanged //  your nickname is assigned or changed
-        YouHaveBeenBanned // 301 - you have been banned
-        NewRoomNickname // 303
-        KickedFromRoom // 307 -- you have been kicked from room
-        RemovedForAffiliationChange // 321 - you have been removed b/c your affiliation changed
-        RemovedForMembersOnly // 322 - room is now members-only, and you aren't a member
-        RemovedShutdown // 332 - system or conference service is shutting down
-
-ERROR codes:
-    PasswordRequired - couldn't enter room password required
-    Banned - room owner has banned you from the room
-    NoSuchRoom - 
-    NotAllowed - Room doesn't exist, and you're not allowed to create a new one
-    MustUseReservedRoomnick - 
-    NotAMember - Room is invite-only, and you aren't a member
-    NicknameConflict - Someone else is already using your nickname
-    MaxUsers - Room has reached capacity
-    Unknown
-
-**also look for notification: <n type="enteredchat" thread="threadId"/>**
-
 
 
 IMGetPrivacyList -- request the privacy list
@@ -328,7 +347,9 @@ user comes back, otherwise the user's presence will be stuck in the
 
 
 ============================================
-CONFERENCE APIS (Multi-User chats)
+CONFERENCE APIS
+  - A "conference service" can host one or more Conferences.  A user
+    can join a Conference (thereby creating a "Chat")
 ============================================
 See: IMJoinChatRequest
 See: IMModifyChatRequest
