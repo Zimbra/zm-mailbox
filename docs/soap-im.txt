@@ -141,7 +141,7 @@ IMJoinConferenceRoom
 -- Use the "threadID" paremeter to <IMSendMessageRequest> to send a
    message to this existing chat.   
 
-<IMJoinChatRequest [nickname="nickname] [password="password"] [thread="threadId"] addr="chatAddr"/>
+<IMJoinConferenceRoomRequest [nickname="nickname] [password="password"] [thread="threadId"] addr="chatAddr"/>
 
         addr: the full address of the room.  This should be of the form
               ROOMNAME@CONFERENCE_SERVICE - eg
@@ -152,7 +152,7 @@ IMJoinConferenceRoom
 
         nickname: the "nickname" used for you in the room.  All users
                   in a room are required to have a unique nickname in
-                  that room.  If you don't specify on, the server will
+                  that room.  If you don't specify one, the server will
                   use your bare username (the part of your name before
                   the @ sign) as your nickname.  If you get a
                   "NicknameConflict" response, you will have to try a
@@ -160,7 +160,7 @@ IMJoinConferenceRoom
 
         password: used to enter password-protected rooms
 
-<IMJoinChatResponse thread="threadId" status="STATUS1,STATUS2,..." [error="ERROR"]
+<IMJoinConferenceRoomResponse thread="threadId" status="STATUS1,STATUS2,..." [error="ERROR"]
 
 -- If the "NewRoomCreated" status is set, then this is a new room and
    you're the owner!  The room is created in the "locked" state until
@@ -259,7 +259,7 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 RESPONSES:
 
 // chat unknown (server restart?  server flushed it due to idleness?)
-// use <IMJoinChatRequest> to join/create a MUC
+// use <IMJoinConferenceRoomRequest> to join/create a MUC
 <IMModifyChatResponse thread="threadID" error="not_found"/>
 
 // successful
@@ -351,7 +351,7 @@ CONFERENCE APIS
   - A "conference service" can host one or more Conferences.  A user
     can join a Conference (thereby creating a "Chat")
 ============================================
-See: IMJoinChatRequest
+See: IMJoinConferenceRoomRequest
 See: IMModifyChatRequest
 See: IMGetChatConfiguration
 
@@ -378,7 +378,7 @@ IMListConferenceRooms
 </IMListConferenceRoomsResponse>   
 
 List all the available conference rooms on the requested server.
-Rooms can be joined via the <IMJoinChatRequest> API.
+Rooms can be joined via the <IMJoinConferenceRoomRequest> API.
 
 
 
