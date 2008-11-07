@@ -175,7 +175,7 @@ public class ParseMailboxID
     
     
     protected ParseMailboxID(String idStr, boolean forceRemote) throws ServiceException, IllegalArgumentException {
-           
+        mInitialString = idStr;
         Account acct = null;  
         if (idStr.indexOf('@') >= 0) {
             // account
