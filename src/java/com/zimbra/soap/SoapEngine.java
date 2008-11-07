@@ -113,6 +113,7 @@ public class SoapEngine {
         mLog.warn(msg, e);
         return soapProto.soapFault(e);
     }
+
     
     /*
      * This is for callers that need to:
@@ -129,6 +130,17 @@ public class SoapEngine {
         mLog.warn(e.getMessage() + ": " + msg);     // do not log stack
         mLog.debug(msg, e); // log stack
         return soapProto.soapFault(e);
+    }
+    
+    
+    private void logDebugSoapRequest(Map<String, Object> context, Element envelope) {
+        if (ZimbraLog.soap.isDebugEnabled()) {
+            Boolean logged = (Boolean)context.get(SoapEngine.SOAP_REQUEST_LOGGED);
+            if (logged == null || !logged) {
+                ZimbraLog.soap.debug("SOAP request:\n" + envelope.prettyPrint());
+                context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
+            }
+        }
     }
     
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
@@ -152,7 +164,22 @@ public class SoapEngine {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
         }
-        return dispatch(path, document, context);
+        Element resp = dispatch(path, document, context);
+        
+        /*
+         * For requests(e.g. AuthRequest) that don't have account info in time when they 
+         * are normally added to the logging context in dispatch after zsc is established 
+         * from the SOAP request header.  Thus account logging for zimbra.soap won't be 
+         * effective when the SOAP request is logged in DEBUG level normally.
+         * 
+         * For AuthRequest, we call Account.addAccountToLogContext from the handler as 
+         * soon as the account, which is only available in the SOAP body, is discovered.  
+         * Account info should be available after dispatch() so account logger can be 
+         * triggered.
+         */
+        logDebugSoapRequest(context, document);
+
+        return resp;
     }
 
     /**
@@ -220,10 +247,7 @@ public class SoapEngine {
         if (zsc.getUserAgent() != null)
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 
-        if (ZimbraLog.soap.isDebugEnabled()) {
-            ZimbraLog.soap.debug("SOAP request:\n" + envelope.prettyPrint());
-            context.put(SOAP_REQUEST_LOGGED, true);
-        }
+        logDebugSoapRequest(context, envelope);
 
         context.put(ZIMBRA_CONTEXT, zsc);
         context.put(ZIMBRA_ENGINE, this);
