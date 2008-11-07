@@ -685,7 +685,7 @@ public class LdapProvisioning extends Provisioning {
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
         
-    	validate("createAccount", emailAddress, additionalObjectClasses);
+    	validate("createAccount", emailAddress, additionalObjectClasses, acctAttrs);
         emailAddress = emailAddress.toLowerCase().trim();
         
         String parts[] = emailAddress.split("@");

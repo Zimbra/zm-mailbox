@@ -63,6 +63,12 @@ public class Validators {
                             LdapProvisioning.C_zimbraCalendarResource)) {
                 return; // as in LicenseManager, don't want to count calendar resources
             }
+            if (args.length > 2 && args[2] instanceof Map) {
+                Map<String,Object> acctAttrs = (Map) args[2];
+                Object o = acctAttrs.get(Provisioning.A_zimbraIsSystemResource);
+                if (o != null && "true".equalsIgnoreCase(o.toString()))
+                    return; // is system resource, do not check
+            }
             
             String emailAddr = (String)args[0];
             String domain = null;
