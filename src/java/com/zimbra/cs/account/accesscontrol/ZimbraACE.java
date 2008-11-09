@@ -260,10 +260,16 @@ public class ZimbraACE {
         return ((GuestAccount) acct).matchesAccessKey(mGrantee, mSecret);
     }
     
+    /*
     boolean matches(Account grantee, Right rightNeeded) throws ServiceException {
         if (rightNeeded == mRight)
             return matches(grantee);
         return false;
+    }
+    */
+    
+    boolean matchesGrantee(Account grantee) throws ServiceException {
+        return matches(grantee);
     }
     
     public String getGranteeDisplayName() {
@@ -313,7 +319,7 @@ public class ZimbraACE {
     
     // for logging, debugging
     public String dump() {
-        return "[" + serialize() + "]";
+        return "[(" + getGranteeDisplayName() + ") " + serialize() + "]";
     }
 
     public static void validate(ZimbraACE ace) throws ServiceException {

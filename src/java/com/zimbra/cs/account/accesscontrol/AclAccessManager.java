@@ -1,5 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -9,6 +11,7 @@ import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -64,10 +67,12 @@ public class AclAccessManager extends DomainAccessManager {
                 }
             }
             
+            Provisioning prov = Provisioning.getInstance();
+            
             // 3. check ACL
-            ZimbraACL acl = PermUtil.getACL(target);
-            if (acl != null && acl.containsRight(rightNeeded))
-                return acl.hasRight(grantee, rightNeeded);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
+            if (effectiveACLs.size() > 0)
+                return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, null);
             else {
                 // no ACL, see if there is a configured default 
                 Boolean defaultValue = rightNeeded.getDefault();

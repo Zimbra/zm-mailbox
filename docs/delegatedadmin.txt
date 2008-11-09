@@ -729,10 +729,10 @@ Depending on the context, there are three aspects of targets that need to be dea
     C) Combining Target Scope and Grantee Scope: Grantee Relativity takes Precedence over Target Relativity
        For example, for this target hierarchy:
            domain D
-               group G1 (allow right R for group GA)
-                   group G2 (deny right R for group GB)
-                       group G3 (deny right R for group GC)
-                           account A1   
+               group G1 (allow right R to group GC)
+                   group G2 (deny right R to group GB)
+                       group G3 (deny right R to group GA)
+                           user account U   
                        
        And this grantee hierarchy:
            group GA
@@ -740,10 +740,10 @@ Depending on the context, there are three aspects of targets that need to be dea
                    group GC
                        (admin) account A
                    
-       The A is *allowed* for right R on target account A1, because GC is more specific to A than GA and GB.
-       Even if on the target side, grant on G3(grant to GC) and G2(grant to GB) is more specific than the 
-       grant on G1(grant to GA).
-                   
+       Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
+       Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
+       grant on G1(grant to GC).
+                           
 
 5.2 Negative Grants Takes Precedence Over Positive Grants
     If grants are all equal in both target and grantee scope, and they conflict with each other, 

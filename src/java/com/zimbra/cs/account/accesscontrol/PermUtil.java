@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,14 +14,19 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class PermUtil {
     
-    public static Set<ZimbraACE> getAllACEs(Entry target) throws ServiceException {
-        ZimbraACL acl = getACL(target); 
+    /**
+     * Returns all ACEs granted on the entry.  
+     * 
+     * @param entry the entry on which rights are granted
+     * @return all ACEs granted on the entry.  
+     * @throws ServiceException
+     */
+    public static Set<ZimbraACE> getAllACEs(Entry entry) throws ServiceException {
+        ZimbraACL acl = getACL(entry); 
         if (acl != null)
             return acl.getAllACEs();
         else
@@ -28,15 +34,15 @@ public class PermUtil {
     }
     
     /**
-     * Get ACEs granted on target with specified rights
+     * Returns a Set of ACEs with the specified rights granted on the entry.  
      * 
-     * @param target 
-     * @param rights specified rights.
-     * @return ACEs with right specified in rights
+     * @param entry the entry on which rights are granted
+     * @param rights rights of interest
+     * @return a Set of ACEs with the specified rights granted on the entry.  
      * @throws ServiceException
      */
-    public static Set<ZimbraACE> getACEs(Entry target, Set<Right> rights) throws ServiceException {
-        ZimbraACL acl = getACL(target); 
+    public static Set<ZimbraACE> getACEs(Entry entry, Set<Right> rights) throws ServiceException {
+        ZimbraACL acl = getACL(entry); 
         if (acl != null) {
             return acl.getACEs(rights);
         } else
@@ -44,21 +50,32 @@ public class PermUtil {
     }
     
     /**
-     * Get ACEs granted on target with the specified right
+     * Returns a List of ACEs with the specified right granted on the entry.  
+     * Negative grants are in the front, positive grants are put in the rear of the 
+     * returned List.
      * 
-     * @param target
-     * @param right
-     * @return
+     * @param entry the entry on which rights are granted
+     * @param right right of interest
+     * @return a List of ACEs with the specified right granted on the entry. 
      * @throws ServiceException
      */
-    public static Set<ZimbraACE> getACEs(Entry target, Right right) throws ServiceException {
-        ZimbraACL acl = getACL(target); 
+    public static List<ZimbraACE> getACEs(Entry entry, Right right) throws ServiceException {
+        ZimbraACL acl = getACL(entry); 
         if (acl != null)
             return acl.getACEs(right);
         else
             return null;
     }
     
+    /**
+     * Grant rights on a target entry.
+     * 
+     * @param prov
+     * @param target
+     * @param aces
+     * @return
+     * @throws ServiceException
+     */
     public static Set<ZimbraACE> grantRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         for (ZimbraACE ace : aces)
             ZimbraACE.validate(ace);
@@ -79,8 +96,15 @@ public class PermUtil {
         return granted;
     }
     
-    /** Removes the right granted to the specified id.  If the right 
-     *  was not previously granted to the target, no error is thrown.
+    /**
+     * Revoke(remove) rights from a target entry.
+     * If a right was not previously granted on the target, NO error is thrown.
+     * 
+     * @param prov
+     * @param target
+     * @param aces
+     * @return a Set of grants that are actually revoked by this call
+     * @throws ServiceException
      */
     public static Set<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         ZimbraACL acl = getACL(target); 
@@ -94,17 +118,32 @@ public class PermUtil {
         return revoked;
     }
     
-    private static void serialize(Provisioning prov, Entry target, ZimbraACL acl) throws ServiceException {
+    /**
+     * Persists grants in LDAP
+     * 
+     * @param prov
+     * @param entry
+     * @param acl
+     * @throws ServiceException
+     */
+    private static void serialize(Provisioning prov, Entry entry, ZimbraACL acl) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraACE, acl.serialize());
         // modifyAttrs will erase cached ACL on the target
-        prov.modifyAttrs(target, attrs);
+        prov.modifyAttrs(entry, attrs);
     }
     
 
     private static final String ACL_CACHE_KEY = "ENTRY.ACL_CACHE";
     
-    static ZimbraACL getACL(Entry entry) throws ServiceException {
+    /**
+     * Get cached grants, if not in cache, load from LDAP.
+     * 
+     * @param entry
+     * @return
+     * @throws ServiceException
+     */
+    private static ZimbraACL getACL(Entry entry) throws ServiceException {
         ZimbraACL acl = (ZimbraACL)entry.getCachedData(ACL_CACHE_KEY);
         if (acl != null)
             return acl;
@@ -120,11 +159,15 @@ public class PermUtil {
         return acl;
     }
 
+    
     /*
+     * lookupEmailAddress, lookupGranteeByName, lookupGranteeByZimbraId are borrowed from FolderAction
+     * and transplanted to work with ACL in accesscontrol package for usr space account level rights.
      * 
-     * lookupEmailAddress, lookupGranteeByName, lookupGranteeByZimbraId borrowed from FolderAction
-     * and transplanted to work with ACL in accesscontrol package.
-     * 
+     * The purpose is to match the existing folder grant SOAP interface, which is more flexible/liberal 
+     * on identifying grantee and target.
+     *   
+     * These methods are *not* used for admin space ACL SOAPs. 
      */
     
     // orig: FolderAction.lookupEmailAddress

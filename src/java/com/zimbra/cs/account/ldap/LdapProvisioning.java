@@ -76,6 +76,7 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
@@ -2694,12 +2695,15 @@ public class LdapProvisioning extends Provisioning {
     //
     // ACL group
     //
-
+    static final String DATA_ACLGROUP_LIST = "AG_LIST";
+    
     @Override
     /*
-     * - cached
+     * - cached inLdapProvisioning
      * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
-     * - returned entry is not a "general purpose" DistributionList, it should only be used from accesscontrol code
+     * - returned entry is not a "general purpose" DistributionList, it should only be used for ACL purposes 
+     *   to check upward membership.
+     * 
      */
     public DistributionList getAclGroup(DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
@@ -2720,8 +2724,14 @@ public class LdapProvisioning extends Provisioning {
                                             LdapFilter.distributionListById(groupId),
                                             null, sMinimalDlAttrs);
             if (dl != null) {
-                setUpwardMembership(dl);
+                // while we have the members, compute upward membership and cache it
+                List<MemberOf> groups = computeUpwardMembership(dl);
+                dl.setCachedData(DATA_ACLGROUP_LIST, groups);
+                
+                // done computing upward membership, trim off big attrs that contain all members
                 dl.turnToAclGroup();
+                
+                // cache it
                 sGroupCache.put(dl);
             }
         }
@@ -2736,23 +2746,69 @@ public class LdapProvisioning extends Provisioning {
                                             LdapFilter.distributionListByName(groupName),
                                             null, sMinimalDlAttrs);
             if (dl != null) {
-                setUpwardMembership(dl);
+                // while we have the members, compute upward membership and cache it
+                List<MemberOf> groups = computeUpwardMembership(dl);
+                dl.setCachedData(DATA_ACLGROUP_LIST, groups);
+                
+                // done computing upward membership, trim off big attrs that contain all members
                 dl.turnToAclGroup();
+                
+                // cache it
                 sGroupCache.put(dl);
             }
         }
         return dl;
     }
 
-    private Set<String> setUpwardMembership(DistributionList list) throws ServiceException {
-        Set<String> dls = new HashSet<String>();
-        List<DistributionList> lists = getDistributionLists(list, false, null, true);
+    private List<MemberOf> computeUpwardMembership(DistributionList list) throws ServiceException {
+        Map<String, String> via = new HashMap<String, String>();
+        List<DistributionList> lists = getDistributionLists(list, false, via, true);
+        return computeUpwardMembership(lists, via);
+    }
 
+    private static final Comparator<MemberOf> MEMBER_OF_COMPARATOR =
+        new Comparator<MemberOf>() {
+            public int compare(MemberOf mo1, MemberOf mo2) {
+                Integer dist1 = Integer.valueOf(mo1.getDistance());
+                Integer dist2 = Integer.valueOf(mo2.getDistance());
+                return dist1.compareTo(dist2);
+            }
+        };
+        
+
+    private List<MemberOf> computeUpwardMembership(List<DistributionList> lists, Map<String, String> via) {
+        List<MemberOf> groups = new ArrayList<MemberOf>();
+        
         for (DistributionList dl : lists) {
-            dls.add(dl.getId());
+            String dlName = dl.getName();
+            
+            int dist = 0;
+            String viaName = dlName;
+            do {
+                viaName = via.get(viaName);
+                dist++;
+            } while (viaName != null);
+            
+            groups.add(new MemberOf(dl.getId(), dist));
         }
-        dls = Collections.unmodifiableSet(dls);
-        list.setCachedData(DATA_DL_SET, dls);
+        
+        Collections.sort(groups, MEMBER_OF_COMPARATOR);
+        groups = Collections.unmodifiableList(groups);
+        
+        return groups;
+    }
+    
+    @Override
+    public List<MemberOf> getAclGroups(Account acct) throws ServiceException {
+        List<MemberOf> dls = (List<MemberOf>)acct.getCachedData(DATA_ACLGROUP_LIST);
+        if (dls != null) 
+            return dls;
+     
+        Map<String, String> via = new HashMap<String, String>();
+        List<DistributionList> lists = getDistributionLists(acct, false, via, true);
+        
+        dls = computeUpwardMembership(lists, via);
+        acct.setCachedData(DATA_ACLGROUP_LIST, dls);
         return dls;
     }
 
@@ -2760,37 +2816,32 @@ public class LdapProvisioning extends Provisioning {
     /*
      * Should only be called if list was obtained from getAclGroup.
      *
-     * DistributionList returned by getAclGroup always have the membership cache set in its data cache.
+     * DistributionList returned by getAclGroup always have the upward membership cached in its data cache.
      * But the data cache can be cleared by a prov.modifyAttrs call on the object. We recompute the
      * upward membership if it is not in cache.
      *
      */
-    public Set<String> getDistributionLists(DistributionList list) throws ServiceException {
+    public List<MemberOf> getAclGroups(DistributionList list) throws ServiceException {
 
         // sanity check
         if (!list.isAclGroup())
             throw ServiceException.FAILURE("internal error", null);
 
-        Set<String> dls = (Set<String>) list.getCachedData(DATA_DL_SET);
+        List<MemberOf> dls = (List<MemberOf>)list.getCachedData(DATA_ACLGROUP_LIST);
+        if (dls != null) 
+            return dls;
+        
+        // reload the entry from ldap because its zimbraMailAlias was trimmed off.
+        DistributionList dl = get(DistributionListBy.id, list.getId());
+        if (dl == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(list.getName());
 
-        if (dls == null) {
-            // reload the entry from ldap because its zimbraMailAlias was trimmed off.
-            DistributionList dl = get(DistributionListBy.id, list.getId());
-            if (dl == null)
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(list.getName());
-
-            dls = setUpwardMembership(dl); // was put in data cache also
-        }
+        dls = computeUpwardMembership(dl);
+        dl.setCachedData(DATA_ACLGROUP_LIST, dls);
+        
         return dls;
     }
 
-    public boolean inAclGroup(String groupInner, String groupOuter) throws ServiceException {
-        DistributionList dl = getAclGroupById(groupInner);
-        if (dl != null)
-            return getDistributionLists(dl).contains(groupOuter);
-        else
-            return false;
-    }
 
     public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
@@ -3801,6 +3852,7 @@ public class LdapProvisioning extends Provisioning {
         dls = Collections.unmodifiableSet(dls);
         acct.setCachedData(DATA_DL_SET, dls);
         return dls;
+
     }
     
     @Override

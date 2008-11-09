@@ -5,6 +5,7 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
@@ -98,6 +99,21 @@ public class RoleAccessManager extends AccessManager {
 
     @Override
     public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+    }
+    
+    @Override
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+    }
+    
+    @Override
+    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return canPerform(granteeEmail, target, rightNeeded, asAdmin, defaultGrant, null);
+    }
+    
+    @Override
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             if (grantee == null) {
                 if (rightNeeded.isUserRight())
@@ -117,7 +133,7 @@ public class RoleAccessManager extends AccessManager {
             // 2. check ACL
             List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
             if (effectiveACLs.size() > 0)
-                return RightChecker.canDo(effectiveACLs, grantee, rightNeeded);
+                return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, via);
             else {
                 // no ACL, see if there is a configured default 
                 Boolean defaultValue = rightNeeded.getDefault();
@@ -139,7 +155,7 @@ public class RoleAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             Account granteeAcct;
             if (grantee == null) {
@@ -156,7 +172,7 @@ public class RoleAccessManager extends AccessManager {
                     return false;
             }
             
-            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
+            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " +
                                    "grantee=" + grantee.getAccountId() +
@@ -169,7 +185,7 @@ public class RoleAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             Account granteeAcct = null;
             
@@ -182,7 +198,7 @@ public class RoleAccessManager extends AccessManager {
                     return false;
             }
             
-            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
+            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + granteeEmail + 

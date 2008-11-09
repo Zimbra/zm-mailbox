@@ -1,16 +1,21 @@
 package com.zimbra.qa.unittest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
+
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -33,22 +38,23 @@ public class TestACLGrantee extends TestACL {
      * test Zimbra user grantee
      */
     public void testGranteeUser() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account goodguy = mProv.createAccount(getEmailAddr("testGranteeUser-goodguy"), PASSWORD, null);
-        Account badguy = mProv.createAccount(getEmailAddr("testGranteeUser-badguy"), PASSWORD, null);
-        Account nobody = mProv.createAccount(getEmailAddr("testGranteeUser-nobody"), PASSWORD, null);
+        Account goodguy = mProv.createAccount(getEmailAddr(testName, "goodguy"), PASSWORD, null);
+        Account badguy = mProv.createAccount(getEmailAddr(testName, "badguy"), PASSWORD, null);
+        Account nobody = mProv.createAccount(getEmailAddr(testName, "nobody"), PASSWORD, null);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, Provisioning.TRUE);
-        Account admin = mProv.createAccount(getEmailAddr("testGranteeUser-admin"), PASSWORD, attrs);
+        Account admin = mProv.createAccount(getEmailAddr(testName, "admin"), PASSWORD, attrs);
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGranteeUser-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(goodguy, UserRight.RT_viewFreeBusy, ALLOW));
         aces.add(newUsrACE(goodguy, UserRight.RT_invite, ALLOW));
@@ -57,55 +63,65 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // self should always be allowed
-        verify(target, target, UserRight.RT_invite, ALLOW);
+        verify(target, target, UserRight.RT_invite, ALLOW, null);
         
         // admin access using admin privileges
         if (AccessManager.getInstance() instanceof RoleAccessManager) // *all* decisions are based on ACL, admins don't have special rights 
-            verify(admin, target, UserRight.RT_invite, AS_ADMIN, DENY);
+            verify(admin, target, UserRight.RT_invite, AS_ADMIN, DENY, null);
         else
-            verify(admin, target, UserRight.RT_invite, AS_ADMIN, ALLOW);
+            verify(admin, target, UserRight.RT_invite, AS_ADMIN, ALLOW, null);
         
         // admin access NOT using admin privileges
-        verify(admin, target, UserRight.RT_invite, AS_USER, DENY);
+        verify(admin, target, UserRight.RT_invite, AS_USER, DENY, null);
+        
+        TestViaGrant via;
         
         // specifically allowed
-        verify(goodguy, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(goodguy, target, UserRight.RT_invite, ALLOW);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, goodguy.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(goodguy, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, goodguy.getName(), UserRight.RT_invite, POSITIVE);
+        verify(goodguy, target, UserRight.RT_invite, ALLOW, via);
         
         // specifically denied
-        verify(badguy, target, UserRight.RT_viewFreeBusy, DENY);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, badguy.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(badguy, target, UserRight.RT_viewFreeBusy, DENY, via);
         
         // not specifically allowed or denied, but PUB is allowed
-        verify(nobody, target, UserRight.RT_viewFreeBusy, ALLOW);
+        verify(nobody, target, UserRight.RT_viewFreeBusy, ALLOW, null);
         
         // not specifically allowed or denied
-        verify(nobody, target, UserRight.RT_invite, DENY);
+        verify(nobody, target, UserRight.RT_invite, DENY, null);
     }
     
     /*
      * test all(all authed Zimbra users) grantee
      */
     public void testGranteeAllAuthUser() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
         Account guest = guestAccount("guest@external.com", "whocares");
-        Account zimbra = mProv.createAccount(getEmailAddr("testGranteeAllAuthUser-zimbra"), PASSWORD, null);
+        Account zimbra = mProv.createAccount(getEmailAddr(testName, "zimbra"), PASSWORD, null);
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGranteeAllAuthUser-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newAllACE(UserRight.RT_viewFreeBusy, ALLOW));
         grantRight(TargetType.account, target, aces);
         
+        TestViaGrant via;
+        
         // zimbra user should be allowed
-        verify(zimbra, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new AuthUserViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(zimbra, target, UserRight.RT_viewFreeBusy, ALLOW, via);
         
         // external usr should not be allowed
-        verify(guest, target, UserRight.RT_viewFreeBusy, DENY);
+        verify(guest, target, UserRight.RT_viewFreeBusy, DENY, null);
         
         // non granted right should honor callsite default
         verifyDefault(zimbra, target, UserRight.RT_invite);
@@ -117,6 +133,7 @@ public class TestACLGrantee extends TestACL {
      * Note: GST grantee is not yet implemented for now, the result will be the same as PUB grantee, which is supported)
      */
     public void testGranteeGuest() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
@@ -126,13 +143,16 @@ public class TestACLGrantee extends TestACL {
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGranteeGuest-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, ALLOW));
         grantRight(TargetType.account, target, aces);
         
+        TestViaGrant via;
+        
         // right allowed for PUB
-        verify(guest, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(guest, target, UserRight.RT_viewFreeBusy, ALLOW, via);
         
         // right not in ACL
         verifyDefault(guest, target, UserRight.RT_invite);
@@ -143,6 +163,7 @@ public class TestACLGrantee extends TestACL {
      * Note: GST grantee is not yet implemented for now, the result will be the same as PUB grantee, which is supported)
      */
     public void testGranteeKey() throws Exception {
+        String testName = getName();
         
         final String GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED          = "allowedKeyProvided with space";
         final String KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED  = "allowed my access key";
@@ -157,7 +178,7 @@ public class TestACLGrantee extends TestACL {
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGranteeKey-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newKeyACE(GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED, UserRight.RT_viewFreeBusy, ALLOW));
         aces.add(newKeyACE(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, null, UserRight.RT_viewFreeBusy, ALLOW));
@@ -182,16 +203,26 @@ public class TestACLGrantee extends TestACL {
         Account allowedKeyGenerated = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED);
         Account allowedKeyGeneratedWrongAccessKey = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED+"bogus");
         Account deniedKeyProvided = keyAccount(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED);
-        Account deniedKeyGenerated = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_GENERATED);
+        Account deniedKeyGenerated = keyAccount(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_GENERATED);
+        
+        TestViaGrant via;
         
         /*
          * test allowed
          */
-        verify(allowedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(allowedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(allowedKeyGeneratedWrongAccessKey, target, UserRight.RT_viewFreeBusy, DENY);
-        verify(deniedKeyProvided, target, UserRight.RT_viewFreeBusy, DENY);
-        verify(deniedKeyGenerated, target, UserRight.RT_viewFreeBusy, DENY);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, allowedKeyProvided.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, allowedKeyGenerated.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        verify(allowedKeyGeneratedWrongAccessKey, target, UserRight.RT_viewFreeBusy, DENY, null);
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, deniedKeyProvided.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(deniedKeyProvided, target, UserRight.RT_viewFreeBusy, DENY, via);
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, deniedKeyGenerated.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(deniedKeyGenerated, target, UserRight.RT_viewFreeBusy, DENY, via);
         
         /*
          * add a pub grant
@@ -202,11 +233,21 @@ public class TestACLGrantee extends TestACL {
         /*
          * verify the effect
          */
-        verify(allowedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW);  // still allowed
-        verify(allowedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW); // still allowed
-        verify(allowedKeyGeneratedWrongAccessKey, target, UserRight.RT_viewFreeBusy, ALLOW); // wrong key doesn't matter now, because it will be allowed via the puv grant
-        verify(deniedKeyProvided, target, UserRight.RT_viewFreeBusy, DENY);  // specifically denied should still be denied
-        verify(deniedKeyGenerated, target, UserRight.RT_viewFreeBusy, DENY); // specifically denied should still be denied
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, allowedKeyProvided.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW, via);  // still allowed
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, allowedKeyGenerated.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW, via); // still allowed
+        
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyGeneratedWrongAccessKey, target, UserRight.RT_viewFreeBusy, ALLOW, via); // wrong key doesn't matter now, because it will be allowed via the pub grant
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, deniedKeyProvided.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(deniedKeyProvided, target, UserRight.RT_viewFreeBusy, DENY, via);  // specifically denied should still be denied
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, deniedKeyGenerated.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(deniedKeyGenerated, target, UserRight.RT_viewFreeBusy, DENY, via); // specifically denied should still be denied
+        
         
         /*
          * revoke the denied grants
@@ -219,20 +260,31 @@ public class TestACLGrantee extends TestACL {
         /*
          * now everybody should be allowed
          */
-        verify(allowedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(allowedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(allowedKeyGeneratedWrongAccessKey, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(deniedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW);
-        verify(deniedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, allowedKeyProvided.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_KEY, allowedKeyGenerated.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(allowedKeyGeneratedWrongAccessKey, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(deniedKeyProvided, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(deniedKeyGenerated, target, UserRight.RT_viewFreeBusy, ALLOW, via);
 
         // right not in ACL
         verifyDefault(allowedKeyGenerated, target, UserRight.RT_invite);
     }
     
     public void testGranteeKeyInvalidParams() throws Exception {
-        Account user1 = mProv.createAccount(getEmailAddr("testGranteeKeyInvalidParams-user1"), PASSWORD, null);
+        String testName = getName();
         
-        Account target = mProv.createAccount(getEmailAddr("testGranteeKeyInvalidParams-target"), PASSWORD, null);
+        Account user1 = mProv.createAccount(getEmailAddr(testName, "user1"), PASSWORD, null);
+        
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newKeyACE("good", "abc", UserRight.RT_viewFreeBusy, ALLOW));
         aces.add(newKeyACE("bad:aaa:bbb", "xxx:yyy", UserRight.RT_viewFreeBusy, ALLOW));  // bad name/accesskey, containing ":"
@@ -254,6 +306,7 @@ public class TestACLGrantee extends TestACL {
      * test anonymous(without any identity) grantee
      */
     public void testGranteeAnon() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
@@ -263,33 +316,40 @@ public class TestACLGrantee extends TestACL {
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGranteeAnon-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newPubACE(UserRight.RT_viewFreeBusy, ALLOW));
         grantRight(TargetType.account, target, aces);
         
+        TestViaGrant via;
+        
         // anon grantee
-        verify(anon, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(anon, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
         verifyDefault(anon, target, UserRight.RT_invite);
         
         // null grantee
-        verify(null, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new PubViaGrant(TargetType.account, target, UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(null, target, UserRight.RT_viewFreeBusy, ALLOW, via);
+        
         verifyDefault(null, target, UserRight.RT_invite);
     }
     
     public void testGranteeGroupSimple() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account user1 = mProv.createAccount(getEmailAddr("testGranteeGroupSimple-user1"), PASSWORD, null);
-        Account user2 = mProv.createAccount(getEmailAddr("testGranteeGroupSimple-user2"), PASSWORD, null);
-        Account user3 = mProv.createAccount(getEmailAddr("testGranteeGroupSimple-user3"), PASSWORD, null);
+        Account user1 = mProv.createAccount(getEmailAddr(testName, "user1"), PASSWORD, null);
+        Account user2 = mProv.createAccount(getEmailAddr(testName, "user2"), PASSWORD, null);
+        Account user3 = mProv.createAccount(getEmailAddr(testName, "user3"), PASSWORD, null);
         
         /*
          * setup groups
          */
-        DistributionList groupA = mProv.createDistributionList(getEmailAddr("testGranteeGroupSimple-groupA"), new HashMap<String, Object>());
+        DistributionList groupA = mProv.createDistributionList(getEmailAddr(testName, "groupA"), new HashMap<String, Object>());
         mProv.addMembers(groupA, new String[] {user1.getName(), user2.getName()});
         
         /*
@@ -301,18 +361,22 @@ public class TestACLGrantee extends TestACL {
         aces.add(newGrpACE(groupA, UserRight.RT_viewFreeBusy, ALLOW));
         grantRight(TargetType.account, target, aces);
         
+        TestViaGrant via;
+        
         // group member, but account is specifically denied
-        verify(user1, target, UserRight.RT_viewFreeBusy, DENY);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user1.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(user1, target, UserRight.RT_viewFreeBusy, DENY, via);
         
         // group member
-        verify(user2, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, groupA.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(user2, target, UserRight.RT_viewFreeBusy, ALLOW, via);
         
         // not group member
-        verify(user3, target, UserRight.RT_viewFreeBusy, DENY);
+        verify(user3, target, UserRight.RT_viewFreeBusy, DENY, null);
     }
     
     /*
-     * Test this insane membership: user1 should be DENIED via G6(D)
+     * Test this membership: user1 should be DENIED via G2(D) or G4(D), G6(D) - they all have the same distance to user1.
      * 
      *          G1(A)                      G4(D)
      *          / \                        / \
@@ -324,21 +388,22 @@ public class TestACLGrantee extends TestACL {
      * 
      */
     public void testGranteeGroup() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account user1 = mProv.createAccount(getEmailAddr("testGranteeGroup-user1"), PASSWORD, null);
+        Account user1 = mProv.createAccount(getEmailAddr(testName, "user1"), PASSWORD, null);
         
         /*
          * setup groups
          */
-        DistributionList G1 = mProv.createDistributionList(getEmailAddr("testGranteeGroup-G1"), new HashMap<String, Object>());
-        DistributionList G2 = mProv.createDistributionList(getEmailAddr("testGranteeGroup-G2"), new HashMap<String, Object>());
-        DistributionList G3 = mProv.createDistributionList(getEmailAddr("testGranteeGroup-G3"), new HashMap<String, Object>());
-        DistributionList G4 = mProv.createDistributionList(getEmailAddr("testGranteeGroup-G4"), new HashMap<String, Object>());
-        DistributionList G5 = mProv.createDistributionList(getEmailAddr("testGranteeGroup-G5"), new HashMap<String, Object>());
-        DistributionList G6 = mProv.createDistributionList(getEmailAddr("testGranteeGroup-G6"), new HashMap<String, Object>());
+        DistributionList G1 = mProv.createDistributionList(getEmailAddr(testName, "G1"), new HashMap<String, Object>());
+        DistributionList G2 = mProv.createDistributionList(getEmailAddr(testName, "G2"), new HashMap<String, Object>());
+        DistributionList G3 = mProv.createDistributionList(getEmailAddr(testName, "G3"), new HashMap<String, Object>());
+        DistributionList G4 = mProv.createDistributionList(getEmailAddr(testName, "G4"), new HashMap<String, Object>());
+        DistributionList G5 = mProv.createDistributionList(getEmailAddr(testName, "G5"), new HashMap<String, Object>());
+        DistributionList G6 = mProv.createDistributionList(getEmailAddr(testName, "G6"), new HashMap<String, Object>());
 
         mProv.addMembers(G1, new String[] {user1.getName(), G2.getName()});
         mProv.addMembers(G2, new String[] {user1.getName(), G3.getName()});
@@ -351,7 +416,7 @@ public class TestACLGrantee extends TestACL {
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGranteeGroup-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newGrpACE(G1, UserRight.RT_viewFreeBusy, ALLOW));
         aces.add(newGrpACE(G2, UserRight.RT_viewFreeBusy, DENY));
@@ -361,25 +426,31 @@ public class TestACLGrantee extends TestACL {
         aces.add(newGrpACE(G6, UserRight.RT_viewFreeBusy, DENY));
         grantRight(TargetType.account, target, aces);
         
-        verify(user1, target, UserRight.RT_viewFreeBusy, DENY);
+        TestViaGrant via;
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, G2.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        via.addCanAlsoVia(new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, G4.getName(), UserRight.RT_viewFreeBusy, NEGATIVE));
+        via.addCanAlsoVia(new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, G6.getName(), UserRight.RT_viewFreeBusy, NEGATIVE));
+        verify(user1, target, UserRight.RT_viewFreeBusy, DENY, via);
     }
     
     /*
      * test target with no ACL, should return caller default regardless who is the grantee and which right to ask for
      */
     public void testNoACL() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account zimbraUser = mProv.createAccount(getEmailAddr("testNoACL-user"), PASSWORD, null);
+        Account zimbraUser = mProv.createAccount(getEmailAddr(testName, "user"), PASSWORD, null);
         Account guest = guestAccount("guest@external.com", "whocares");
         Account anon = anonAccount();
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testNoACL-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         
         for (Right right : RightManager.getInstance().getAllUserRights().values()) {
             verifyDefault(zimbraUser, target, right);
@@ -394,11 +465,12 @@ public class TestACLGrantee extends TestACL {
      * should allow/disallow for the rights according to the ACE.
      */
     public void testDefaultWithNonEmptyACL() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account zimbraUser = mProv.createAccount(getEmailAddr("testDefaultWithNonEmptyACL-user"), PASSWORD, null);
+        Account zimbraUser = mProv.createAccount(getEmailAddr(testName, "user"), PASSWORD, null);
         Account guest = guestAccount("guest@external.com", "whocares");
         Account anon = anonAccount();
         
@@ -408,10 +480,12 @@ public class TestACLGrantee extends TestACL {
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testDefaultWithNonEmptyACL-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(zimbraUser, rightGranted, ALLOW));
         grantRight(TargetType.account, target, aces);
+        
+        TestViaGrant via;
         
         // verify callsite default is honored for not granted right
         verifyDefault(zimbraUser, target, rightNotGranted);
@@ -419,24 +493,27 @@ public class TestACLGrantee extends TestACL {
         verifyDefault(anon, target, rightNotGranted);
         
         // verify granted right is properly processed
-        verify(zimbraUser, target, rightGranted, ALLOW);
-        verify(guest, target, rightGranted, DENY);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, zimbraUser.getName(), rightGranted, POSITIVE);
+        verify(zimbraUser, target, rightGranted, ALLOW, via);
+        
+        verify(guest, target, rightGranted, DENY, null);
     }    
     
     public void testGrantConflict() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account conflict = mProv.createAccount(getEmailAddr("testGrantConflict-conflict"), PASSWORD, null);
+        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGrantConflict-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newUsrACE(conflict, UserRight.RT_viewFreeBusy, DENY));
-        aces.add(newUsrACE(conflict, UserRight.RT_viewFreeBusy, ALLOW));
+        aces.add(newUsrACE(grantee, UserRight.RT_viewFreeBusy, ALLOW));
+        aces.add(newUsrACE(grantee, UserRight.RT_viewFreeBusy, DENY));
         grantRight(TargetType.account, target, aces);
         
         // verify that only one is added 
@@ -444,17 +521,53 @@ public class TestACLGrantee extends TestACL {
         assertEquals(1, acl.size());
     }
     
-    public void testGrantDuplicate() throws Exception {
+    public void testGrantConflictDirectLdapModify() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account duplicate = mProv.createAccount(getEmailAddr("testGrantDuplicate-duplicate"), PASSWORD, null);
+        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGrantDuplicate-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(newUsrACE(grantee, UserRight.RT_viewFreeBusy, ALLOW));
+        aces.add(newUsrACE(grantee, UserRight.RT_viewFreeBusy, DENY));
+        
+        // skip granting code and do direct ldap modify
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        List<String> values = new ArrayList<String>();
+        for (ZimbraACE ace : aces)
+            values.add(ace.serialize());
+        attrs.put(Provisioning.A_zimbraACE, values);
+        mProv.modifyAttrs(target, attrs);
+        
+        // verify that both are indeed added
+        Set<ZimbraACE> acl = PermUtil.getAllACEs(target);
+        assertEquals(2, acl.size());
+        
+        TestViaGrant via;
+        
+        // verify that the negative grant is honored
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, grantee.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
+        verify(grantee, target, UserRight.RT_viewFreeBusy, DENY, via);
+    }
+    
+    public void testGrantDuplicate() throws Exception {
+        String testName = getName();
+        
+        /*
+         * setup grantees
+         */
+        Account duplicate = mProv.createAccount(getEmailAddr(testName, "duplicate"), PASSWORD, null);
+        
+        /*
+         * setup targets
+         */
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(duplicate, UserRight.RT_viewFreeBusy, DENY));
         aces.add(newUsrACE(duplicate, UserRight.RT_viewFreeBusy, DENY));
@@ -466,17 +579,18 @@ public class TestACLGrantee extends TestACL {
     }
     
     public void testGrant() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account user = mProv.createAccount(getEmailAddr("testGrant-user"), PASSWORD, null);
-        DistributionList group = mProv.createDistributionList(getEmailAddr("testGrant-group"), new HashMap<String, Object>());
+        Account user = mProv.createAccount(getEmailAddr(testName, "user"), PASSWORD, null);
+        DistributionList group = mProv.createDistributionList(getEmailAddr(testName, "group"), new HashMap<String, Object>());
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testGrant-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
@@ -509,16 +623,19 @@ public class TestACLGrantee extends TestACL {
     }
     
     public void testLoginAsRight() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account user = mProv.createAccount(getEmailAddr("testLoginAsRight-user"), PASSWORD, null);
+        Account user = mProv.createAccount(getEmailAddr(testName, "user"), PASSWORD, null);
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testLoginAsRight-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
+        
+        TestViaGrant via;
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
@@ -528,7 +645,8 @@ public class TestACLGrantee extends TestACL {
         // verify the grant was added
         Set<ZimbraACE> acl = PermUtil.getAllACEs(target);
         assertEquals(1, acl.size());
-        verify(user, target, UserRight.RT_loginAs, ALLOW);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), UserRight.RT_loginAs, POSITIVE);
+        verify(user, target, UserRight.RT_loginAs, ALLOW, via);
         
         // verify user can access target's account
         boolean canAccessAccount = mAM.canAccessAccount(user, target);
@@ -537,16 +655,19 @@ public class TestACLGrantee extends TestACL {
     }
     
     public void testRevoke() throws Exception {
+        String testName = getName();
         
         /*
          * setup grantees
          */
-        Account user = mProv.createAccount(getEmailAddr("testRevoke-user"), PASSWORD, null);
+        Account user = mProv.createAccount(getEmailAddr(testName, "user"), PASSWORD, null);
         
         /*
          * setup targets
          */
-        Account target = mProv.createAccount(getEmailAddr("testRevoke-target"), PASSWORD, null);
+        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
+        
+        TestViaGrant via;
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
@@ -557,7 +678,9 @@ public class TestACLGrantee extends TestACL {
         // verify the grant was added
         Set<ZimbraACE> acl = PermUtil.getAllACEs(target);
         assertEquals(2, acl.size());
-        verify(user, target, UserRight.RT_invite, ALLOW);
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), UserRight.RT_invite, POSITIVE);
+        verify(user, target, UserRight.RT_invite, ALLOW, via);
         
         // revoke one right
         Set<ZimbraACE> acesToRevoke = new HashSet<ZimbraACE>();
@@ -570,7 +693,8 @@ public class TestACLGrantee extends TestACL {
         verifyDefault(user, target, UserRight.RT_invite); // callsite default should now apply
         
         // verify the other right is still there
-        verify(user, target, UserRight.RT_viewFreeBusy, ALLOW);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), UserRight.RT_viewFreeBusy, POSITIVE);
+        verify(user, target, UserRight.RT_viewFreeBusy, ALLOW, via);
         
         // revoke the other right
         acesToRevoke = new HashSet<ZimbraACE>();
@@ -592,7 +716,7 @@ public class TestACLGrantee extends TestACL {
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
-
+        
         TestUtil.runTest(TestACLGrantee.class);
     }
 }

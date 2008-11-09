@@ -12,30 +12,25 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 
 public enum GranteeType {
-    
-    GT_USER("usr", true),   // compare grantee ID with Account's zimbraId
-    GT_GROUP("grp", true),  // compare grantee ID with Account's zimbraMemberOf values
-    GT_AUTHUSER("all"),     // the caller needs to present a valid Zimbra credential
-    GT_GUEST("gst"),        // the caller needs to present a non-Zimbra email address and password
-    GT_KEY("key"),          // the caller needs to present an access key
-    GT_PUBLIC("pub");       // always succeeds
+
+    GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL)),
+    GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
+    GT_AUTHUSER("all", GranteeFlag.F_AUTHUSER),
+    GT_GUEST("gst",    GranteeFlag.F_INDIVIDUAL),
+    GT_KEY("key",      GranteeFlag.F_INDIVIDUAL),
+    GT_PUBLIC("pub",   GranteeFlag.F_PUBLIC);
 
     private static class GT {
         static Map<String, GranteeType> sCodeMap = new HashMap<String, GranteeType>();
     }
     
     private String mCode;
-    private boolean mAllowedForAdminRights;
-    
-    GranteeType(String code) {
+    private short mFlags;
+        
+    GranteeType(String code, short flags) {
         mCode = code;
         GT.sCodeMap.put(code, this);
-    }
-    
-    GranteeType(String code, boolean allowedForAdminRights) {
-        mCode = code;
-        GT.sCodeMap.put(code, this);
-        mAllowedForAdminRights = allowedForAdminRights;
+        mFlags = flags;
     }
     
     public static GranteeType fromCode(String granteeType) throws ServiceException {
@@ -62,7 +57,11 @@ public enum GranteeType {
     }
 
     public boolean allowedForAdminRights() {
-        return mAllowedForAdminRights;
+        return hasFlags(GranteeFlag.F_ADMIN);
+    }
+    
+    public boolean hasFlags(short flags) {
+        return ((flags & mFlags) != 0);
     }
     
     /**

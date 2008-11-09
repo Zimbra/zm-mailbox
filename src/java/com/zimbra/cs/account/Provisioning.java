@@ -378,7 +378,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract Set<String> getDistributionLists(Account acct) throws ServiceException; 
 
-
     /**
      *      
      * @param directOnly return only DLs this account is a direct member of
@@ -388,16 +387,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException; 
-
-    /**
-     *
-     * @param distList
-     * @return set of all the zimbraId's of lists this list belongs to, including any list in other list.
-     * @throws ServiceException
-     */
-    public Set<String> getDistributionLists(DistributionList list) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
 
     /**
      *      
@@ -417,16 +406,53 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
+    
     /**
-     * @param groupInner
-     * @param groupOuter
-     * @return true if groupInner is a member groupOuter
+     * represents a super group in which the perspective object(account, cr, dl) is 
+     * directly or indirectly a member of
+     */
+    public static class MemberOf {
+        private int mDistance;  // distance to the perspective object(account, cr, dl)
+        private String mId;     // zimbraId of this group
+        
+        public MemberOf(String id, int distance) {
+            mId = id;
+            mDistance = distance;
+        }
+        
+        public String getId() {
+            return mId;
+        }
+        
+        public int getDistance() {
+            return mDistance;
+        }
+    }
+    
+    /**
+     * 
+     * @param acct
+     * @return List of all direct and indirect groups this account belongs to.
+     *         The returned List is sorted by "shortest distance" to the account, 
+     *         the sorter the distance is, the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public boolean inAclGroup(String groupInner, String groupOuter) throws ServiceException {
+    public List<MemberOf> getAclGroups(Account acct) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
+    /**
+     * 
+     * @param list
+     * @return List of all the zimbraId's of lists this list belongs to, including any list in other list.
+     *         The returned List is sorted by "shortest distance" to the list, the sorter the distance is, 
+     *         the earlier it appears in the returned List.
+     * @throws ServiceException
+     */
+    public List<MemberOf> getAclGroups(DistributionList list) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
     /**
      * @return the domain of the distribution list
      * @throws ServiceException

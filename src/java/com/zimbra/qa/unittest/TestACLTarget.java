@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
@@ -19,7 +21,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.PermUtil;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -27,11 +29,11 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 
 public class TestACLTarget extends TestACL {
 
-    /*
-        <key name="zimbra_class_accessmanager">
-            <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
-        </key>
-     */
+/*
+  <key name="zimbra_class_accessmanager">
+    <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
+  </key>
+*/
     
     /*
      * ======================
@@ -64,11 +66,13 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target account itself 
         Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         grantRight(TargetType.account, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.account, target, aces);
         
         // grant on a group the target account is in
@@ -77,19 +81,22 @@ public class TestACLTarget extends TestACL {
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
         grantRight(TargetType.distributionlist, group1, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.distributionlist, group1, aces);
         
         // grant on the domain the target account is in
         Domain domain = mProv.getDomain(target);
         grantRight(TargetType.domain, domain, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.domain, domain, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.domain, domain, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, null, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, null, aces);
     }
         
@@ -115,14 +122,16 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target calendar resource itself 
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_displayName, "foo");
         attrs.put(Provisioning.A_zimbraCalResType, "Equipment");
-        Account target = mProv.createCalendarResource(getEmailAddr(testName, "target"), PASSWORD, attrs);
+        CalendarResource target = mProv.createCalendarResource(getEmailAddr(testName, "target"), PASSWORD, attrs);
         grantRight(TargetType.resource, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.resource, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.resource, target, aces);
         
         // grant on a group the target account is in
@@ -131,19 +140,22 @@ public class TestACLTarget extends TestACL {
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
         grantRight(TargetType.distributionlist, group1, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.distributionlist, group1, aces);
         
         // grant on the domain the target account is in
         Domain domain = mProv.getDomain(target);
         grantRight(TargetType.domain, domain, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.domain, domain, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.domain, domain, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, globalGrant, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, globalGrant, aces);
     }
     
@@ -169,11 +181,13 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target group itself 
         DistributionList target = mProv.createDistributionList(getEmailAddr(testName, "target"), new HashMap<String, Object>());
         grantRight(TargetType.distributionlist, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.distributionlist, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.distributionlist, target, aces);
         
         // grant on a group the target group is in
@@ -182,19 +196,22 @@ public class TestACLTarget extends TestACL {
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
         grantRight(TargetType.distributionlist, group1, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.distributionlist, group1, aces);
         
         // grant on the domain the target account is in
         Domain domain = mProv.getDomain(target);
         grantRight(TargetType.domain, domain, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.domain, domain, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.domain, domain, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, globalGrant, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, globalGrant, aces);
     }
 
@@ -218,17 +235,20 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target domain itself
         Domain target = mProv.get(DomainBy.name, DOMAIN_NAME);
         grantRight(TargetType.domain, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.domain, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.domain, target, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, globalGrant, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, globalGrant, aces);
     }
     
@@ -252,17 +272,20 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target cos itself
         Cos target = mProv.get(CosBy.name, "default");
         grantRight(TargetType.cos, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.cos, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.cos, target, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, globalGrant, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, globalGrant, aces);
     }
     
@@ -286,17 +309,20 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target server itself
         Server target = mProv.getLocalServer();
         grantRight(TargetType.server, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.server, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.server, target, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, globalGrant, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, globalGrant, aces);
     }
     
@@ -320,17 +346,20 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on target server itself
         Config target = mProv.getConfig();
         grantRight(TargetType.config, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.config, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.config, target, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
         grantRight(TargetType.global, globalGrant, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, globalGrant, aces);
 
     }
@@ -354,11 +383,13 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
+        TestViaGrant via;
         
         // grant on the global grant
         GlobalGrant target = mProv.getGlobalGrant();
         grantRight(TargetType.global, target, aces);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.global, target, aces);
 
     }
@@ -427,48 +458,55 @@ public class TestACLTarget extends TestACL {
         /*
          * test targets
          */
-        verify(grantee, target, right, ALLOW);
+        TestViaGrant via;
+        
+        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         
         // revoke the grant on target account, then grant on group2 should take effect
         revokeRight(TargetType.account, target, allowedGrants);
-        verify(grantee, target, right, DENY);
+        via = new TestViaGrant(TargetType.distributionlist, group2, GranteeType.GT_USER, grantee.getName(), right, NEGATIVE);
+        verify(grantee, target, right, DENY, via);
         
         // revoke the grant on group2, then grant on group1 should take effect
         revokeRight(TargetType.distributionlist, group2, deniedGrants);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         
         // revoke the grant on group1, then grant on domain should take effect
         revokeRight(TargetType.distributionlist, group1, allowedGrants);
-        verify(grantee, target, right, DENY);
+        via = new TestViaGrant(TargetType.domain, domain, GranteeType.GT_USER, grantee.getName(), right, NEGATIVE);
+        verify(grantee, target, right, DENY, via);
         
         // revoke the grant on domain, then grant on globalgrant shuld take effect
         revokeRight(TargetType.domain, domain, deniedGrants);
-        verify(grantee, target, right, ALLOW);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
         
-        // revoke the grant on globalgrant, then there is no grant and should be denied.
+        // revoke the grant on globalgrant, then there is no grant and callsite default should be honored 
         revokeRight(TargetType.global, globalGrant, allowedGrants);
-        verify(grantee, target, right, DENY);
+        verifyDefault(grantee, target, right);
         
     }
     
     /*
-     * Test this scenario:
-     *
-       For this target hierarchy:
-           group G1 (allow right R for group GA)
-               group G2 (deny right R for group GB)
-                   group G3 (allow right R for group GC)
-                       account target 
+     Combining Target Scope and Grantee Scope: Grantee Relativity takes Precedence over Target Relativity
+       For example, for this target hierarchy:
+           domain D
+               group G1 (allow right R to group GC)
+                   group G2 (deny right R to group GB)
+                       group G3 (deny right R to group GA)
+                           user account U   
                        
        And this grantee hierarchy:
            group GA
                group GB
                    group GC
-                       account grantee
+                       (admin) account A
                    
-       The A is *allowed* for right R on target account A1, because GC is more specific to A than GA and GB.
-       Even if on the target side, grant on G3(grant to GC) and G2(grant to GB) is more specific than the 
-       grant on G1(grant to GA).                
+       Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
+       Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
+       grant on G1(grant to GC).          
                    
      */
     public void testTargetGranteeGroupConflict() throws Exception {
@@ -494,6 +532,8 @@ public class TestACLTarget extends TestACL {
         /*
          * setup targets
          */
+        TestViaGrant via;
+        
         Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
         
         DistributionList G1 = mProv.createDistributionList(getEmailAddr(testName, "G1"), new HashMap<String, Object>());
@@ -504,26 +544,116 @@ public class TestACLTarget extends TestACL {
         mProv.addMembers(G2, new String[] {G3.getName()});
         mProv.addMembers(G3, new String[] {target.getName()});
         
-        
+        Right right = UserRight.RT_viewFreeBusy;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newGrpACE(GA, UserRight.RT_viewFreeBusy, ALLOW));
+        aces.add(newGrpACE(GC, right, ALLOW));
         grantRight(TargetType.distributionlist, G1, aces);
         
         aces.clear();
-        aces.add(newGrpACE(GB, UserRight.RT_viewFreeBusy, DENY));
+        aces.add(newGrpACE(GB, right, DENY));
         grantRight(TargetType.distributionlist, G2, aces);
         
         aces.clear();
-        aces.add(newGrpACE(GC, UserRight.RT_viewFreeBusy, ALLOW));
+        aces.add(newGrpACE(GA, right, DENY));
         grantRight(TargetType.distributionlist, G3, aces);
         
-        verify(grantee, target, UserRight.RT_viewFreeBusy, ALLOW);
+        // the right should be allowed via the grant on G1, granted to group GC 
+        via = new TestViaGrant(TargetType.distributionlist, G1, GranteeType.GT_GROUP, GC.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
     }
+    
+    /*
+     * Number in () is the shortest distance to the account
+     *                     
+     *                          G(2)     H(3)
+     *                          |       /
+     *                          E(1)   F(2)
+     *                          |     /
+     *                  C(2)    |    D(1) 
+     *                   \      |   /  \    
+     *                    A(1)  |  /    B(1)
+     *                     \    | /    /
+     *                      \   |/    /
+     *                        account    
+     *                     
+     */
+    public void testGroupExpansion() throws Exception {
+        String testName = getName();
+        
+        Account acct = mProv.createAccount(getEmailAddr(testName, "account"), PASSWORD, null);
+        DistributionList A = mProv.createDistributionList(getEmailAddr(testName, "A"), new HashMap<String, Object>());
+        DistributionList B = mProv.createDistributionList(getEmailAddr(testName, "B"), new HashMap<String, Object>());
+        DistributionList C = mProv.createDistributionList(getEmailAddr(testName, "C"), new HashMap<String, Object>());
+        DistributionList D = mProv.createDistributionList(getEmailAddr(testName, "D"), new HashMap<String, Object>());
+        DistributionList E = mProv.createDistributionList(getEmailAddr(testName, "E"), new HashMap<String, Object>());
+        DistributionList F = mProv.createDistributionList(getEmailAddr(testName, "F"), new HashMap<String, Object>());
+        DistributionList G = mProv.createDistributionList(getEmailAddr(testName, "G"), new HashMap<String, Object>());
+        DistributionList H = mProv.createDistributionList(getEmailAddr(testName, "H"), new HashMap<String, Object>());
+        
+        mProv.addMembers(A, new String[] {acct.getName()});
+        mProv.addMembers(B, new String[] {acct.getName()});
+        mProv.addMembers(C, new String[] {A.getName()});
+        mProv.addMembers(D, new String[] {acct.getName(), B.getName()});
+        mProv.addMembers(E, new String[] {acct.getName(), D.getName()});
+        mProv.addMembers(F, new String[] {D.getName()});
+        mProv.addMembers(G, new String[] {E.getName()});
+        mProv.addMembers(H, new String[] {F.getName()});
+        
+        Map<String, String> via = new HashMap<String, String>();
+        List<DistributionList> dls = mProv.getDistributionLists(acct, false, via);
+        
+        /*
+        for (DistributionList dl : dls) {
+            System.out.println(dl.getName());
+        }
+        System.out.println();
+        System.out.println("via:");
+        for (Map.Entry dl : via.entrySet()) {
+            System.out.println(dl.getKey() + ": " + dl.getValue());
+        }
+        System.out.println();
+        */
+        
+        for (DistributionList dl : dls) {
+            int dist = 0;
+            String dlName = dl.getName();
+            String viaName = dlName;
+            do {
+                viaName = via.get(viaName);
+                dist++;
+            } while (viaName != null);
+            
+            // System.out.println(dl.getName() + ": " + dist);
+            
+            if (dlName.equals(A.getName()))
+                assertEquals(1, dist);
+            else if (dlName.equals(B.getName()))
+                assertEquals(1, dist);
+            else if (dlName.equals(C.getName()))
+                assertEquals(2, dist);
+            else if (dlName.equals(D.getName()))
+                assertEquals(1, dist);
+            else if (dlName.equals(E.getName()))
+                assertEquals(1, dist);
+            else if (dlName.equals(F.getName()))
+                assertEquals(2, dist); 
+            else if (dlName.equals(G.getName()))
+                assertEquals(2, dist);
+            else if (dlName.equals(H.getName()))
+                assertEquals(3, dist);
+        }
+        
+    }    
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
 
         TestUtil.runTest(TestACLTarget.class);
+        
+        /*
+        TestACLTarget test = new TestACLTarget();
+        test.testGroupExpansion();
+        */
     }
 }

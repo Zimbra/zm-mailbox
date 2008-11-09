@@ -9,19 +9,20 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
@@ -166,55 +167,62 @@ public enum TargetType {
         return result;
     }
     
-    private static void processTargetEntry(Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        Set<ZimbraACE> aces = PermUtil.getACEs(target, right);
+    private static void processTargetEntry(TargetType grantedOnEntryType, Entry grantedOn, int distanceToTarget, Right right, List<EffectiveACL> result) throws ServiceException {
+        List<ZimbraACE> aces = PermUtil.getACEs(grantedOn, right);
         if (aces != null && aces.size() > 0) {
-            EffectiveACL effectiveAcl = new EffectiveACL(target.getLabel(), aces);
+            EffectiveACL effectiveAcl = new EffectiveACL(grantedOnEntryType, grantedOn, distanceToTarget, aces);
             result.add(effectiveAcl);
         }
    }
     
     private static void expandAccount(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry((target instanceof CalendarResource)?TargetType.resource:TargetType.account, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof Account) {
             // groups the account is directly or indirectly a member of
-            Set<String> groupIds = prov.getDistributionLists((Account)target);
-            for (String groupId : groupIds) {
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
-                processTargetEntry(dl, right, result);
+            List<MemberOf> groups = prov.getAclGroups((Account)target);
+            int dist = distance;
+            for (MemberOf group : groups) {
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
+                dist = distance + group.getDistance();
+                processTargetEntry(TargetType.distributionlist, dl, dist, right, result);
             }
+            distance = dist;
             
             // domain of the account
             Domain domain = prov.getDomain((Account)target);
-            processTargetEntry(domain, right, result);
+            processTargetEntry(TargetType.domain, domain, ++distance, right, result);
             
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof DistributionList) {
             // groups the group is directly or indirectly a member of
-            Set<String> groupIds = prov.getDistributionLists((DistributionList)target);
-            for (String groupId : groupIds) {
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
-                processTargetEntry(dl, right, result);
+            List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
+            int dist = distance;
+            for (MemberOf group : groups) {
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
+                dist = distance + group.getDistance();
+                processTargetEntry(TargetType.distributionlist, dl, dist, right, result);
             }
+            distance = dist;
             
             // domain of the group
             Domain domain = prov.getDomain((DistributionList)target);
-            processTargetEntry(domain, right, result);
+            processTargetEntry(TargetType.domain, domain, ++distance, right, result);
             
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
 
         } else if (target instanceof Domain) {
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof GlobalGrant) {
             // nothing
@@ -223,37 +231,39 @@ public enum TargetType {
     }
     
     private static void expandDistributionList(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        // This path is called from Accessmanager.canPerform, the target object can be a 
+        // This path is called from AccessManager.canPerform, the target object can be a 
         // DistributionList obtained from prov.get(DistributionListBy).  
         // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
         if (target instanceof DistributionList)
             target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
         
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry(TargetType.distributionlist, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof DistributionList) {
-            
-            
-            Set<String> groupIds = prov.getDistributionLists((DistributionList)target);
-            for (String groupId : groupIds) {
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
-                processTargetEntry(dl, right, result);
+            List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
+            int dist = distance;
+            for (MemberOf group : groups) {
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
+                dist = distance + group.getDistance();
+                processTargetEntry(TargetType.distributionlist, dl, dist, right, result);
             }
+            distance = dist;
             
             // domain of the group
             Domain domain = prov.getDomain((DistributionList)target);
-            processTargetEntry(domain, right, result);
+            processTargetEntry(TargetType.domain, domain, ++distance, right, result);
             
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
 
         } else if (target instanceof Domain) {
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof GlobalGrant) {
             // nothing
@@ -263,13 +273,14 @@ public enum TargetType {
     
     private static void expandDomain(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry(TargetType.domain, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof Domain) {
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof GlobalGrant) {
             // nothing
@@ -282,13 +293,14 @@ public enum TargetType {
     
     private static void expandCos(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry(TargetType.cos, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof Cos) {
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof GlobalGrant) {
             // nothing
@@ -298,13 +310,14 @@ public enum TargetType {
     
     private static void expandServer(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry(TargetType.server, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof Server) {
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof GlobalGrant) {
             // nothing
@@ -314,13 +327,14 @@ public enum TargetType {
     
     private static void expandConfig(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry(TargetType.config, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof Config) {
             // global grant
             Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(globalGrant, right, result);
+            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
             
         } else if (target instanceof GlobalGrant) {
             // nothing
@@ -330,7 +344,8 @@ public enum TargetType {
     
     private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // get grants on the target itself
-        processTargetEntry(target, right, result);
+        int distance = 0;
+        processTargetEntry(TargetType.global, target, distance, right, result);
         
         // get grants on entries where the target can inherit from
         if (target instanceof GlobalGrant) {

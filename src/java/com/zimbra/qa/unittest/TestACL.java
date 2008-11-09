@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -10,12 +11,14 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 
 import junit.framework.TestCase;
+import junit.framework.AssertionFailedError;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -25,9 +28,11 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.AclAccessManager;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
@@ -43,6 +48,11 @@ public abstract class TestACL extends TestCase {
     protected static final String PASSWORD = "test123";
     
     static {
+        
+        System.out.println();
+        System.out.println("AccessManager: " + mAM.getClass().getName());
+        System.out.println();
+        
         try {
             // create a domain
             Domain domain = mProv.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
@@ -190,7 +200,10 @@ public abstract class TestACL extends TestCase {
     }
     
     protected static String getEmailAddr(String testCaseName, String localPartPostfix) {
-        return testCaseName + "-" + localPartPostfix + "@" + DOMAIN_NAME;
+        if (testCaseName == null)
+            return localPartPostfix + "@" + DOMAIN_NAME;
+        else
+            return testCaseName + "-" + localPartPostfix + "@" + DOMAIN_NAME;
     }
     
     protected Account guestAccount(String email, String password) {
@@ -255,7 +268,7 @@ public abstract class TestACL extends TestCase {
         return new ZimbraACE(ACL.GUID_PUBLIC, GranteeType.GT_PUBLIC, right, allowDeny.deny(), null);
     }
     
-    // construct a ACE with "all" grantee type
+    // construct a ACE with "all" authuser grantee type
     protected ZimbraACE newAllACE(Right right, AllowOrDeny allowDeny) throws ServiceException {
         return new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, right, allowDeny.deny(), null);
     }
@@ -274,6 +287,116 @@ public abstract class TestACL extends TestCase {
     protected ZimbraACE newKeyACE(String nameOrEmail, String accessKey, Right right, AllowOrDeny allowDeny) throws ServiceException {
         return new ZimbraACE(nameOrEmail, GranteeType.GT_KEY, right, allowDeny.deny(), accessKey);
     }
+    
+    // another shorthand so we don't have to remember true/false.
+    static final boolean POSITIVE = false;
+    static final boolean NEGATIVE = true;
+    
+    static class TestViaGrant extends ViaGrant {
+        String mTargetType;
+        String mTargetName;
+        String mGranteeType;
+        String mGranteeName;
+        String mRight;
+        boolean mIsNegativeGrant;
+        
+        Set<TestViaGrant> mCanAlsoVia;
+        
+        TestViaGrant(TargetType targetType,
+                     Entry target,
+                     GranteeType granteeType,
+                     String granteeName,
+                     Right right,
+                     boolean isNegativeGrant) {
+            mTargetType = targetType.getCode();
+            mTargetName = target.getLabel();
+            mGranteeType = granteeType.getCode();
+            mGranteeName = granteeName;
+            mRight = right.getName();
+            mIsNegativeGrant = isNegativeGrant;
+        }
+        
+        public String getTargetType() { 
+            return mTargetType;
+        } 
+        
+        public String getTargetName() {
+            return mTargetName;
+        }
+        
+        public String getGranteeType() {
+            return mGranteeType;
+        }
+        
+        public String getGranteeName() {
+            return mGranteeName;
+        }
+        
+        public String getRight() {
+            return mRight;
+        }
+        
+        public boolean isNegativeGrant() {
+            return mIsNegativeGrant;
+        }
+        
+        public void addCanAlsoVia(TestViaGrant canAlsoVia) {
+            if (mCanAlsoVia == null)
+                mCanAlsoVia = new HashSet<TestViaGrant>();
+            mCanAlsoVia.add(canAlsoVia);
+        }
+        
+        public void verify(ViaGrant actual) {
+            try {
+                assertEquals(getTargetType(),   actual.getTargetType());
+                assertEquals(getTargetName(),   actual.getTargetName());
+                assertEquals(getGranteeType(),  actual.getGranteeType());
+                assertEquals(getGranteeName(),  actual.getGranteeName());
+                assertEquals(getRight(),        actual.getRight());
+                assertEquals(isNegativeGrant(), actual.isNegativeGrant());
+            } catch (AssertionFailedError e) {
+                if (mCanAlsoVia == null)
+                    throw e;
+                
+                // see if any canAlsoVia matches
+                try {
+                    for (TestViaGrant canAlsoVia : mCanAlsoVia) {
+                        canAlsoVia.verify(actual);
+                        // good, at least one of the canAlsoVia matches
+                        return;
+                    }
+                } catch (AssertionFailedError eAlso) {
+                    // ignore 
+                }
+                
+                // if we get here, none of the canAlsoVia matches
+                // throw the assertion exception on the main via
+                throw e;
+            }
+        }
+    }
+    
+    static class AuthUserViaGrant extends TestViaGrant {
+        AuthUserViaGrant(TargetType targetType,
+                         Entry target,
+                         Right right,
+                         boolean isNegativeGrant) {
+            super(targetType, target, GranteeType.GT_AUTHUSER, null, right, isNegativeGrant);
+        }
+    }
+    
+    static class PubViaGrant extends TestViaGrant {
+        PubViaGrant(TargetType targetType,
+                    Entry target,
+                    Right right,
+                    boolean isNegativeGrant) {
+            super(targetType, target, GranteeType.GT_PUBLIC, null, right, isNegativeGrant);
+        }
+    }
+
+    static class TodoViaGrant extends ViaGrant {
+
+    }
 
     /*
      * verify we always get the expected result, regardless what the default value is
@@ -281,9 +404,9 @@ public abstract class TestACL extends TestCase {
      * 
      * This is for testing target entry with some ACL.
      */
-    protected void verify(Account grantee, Entry target, Right right, AllowOrDeny expected) throws Exception {
-        verify(grantee, target, right, AS_USER, ALLOW, expected);
-        verify(grantee, target, right, AS_USER, DENY, expected);
+    protected void verify(Account grantee, Entry target, Right right, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
+        verify(grantee, target, right, AS_USER, ALLOW, expected, expectedVia);
+        verify(grantee, target, right, AS_USER, DENY, expected, expectedVia);
     }
     
     /*
@@ -291,12 +414,12 @@ public abstract class TestACL extends TestCase {
      * 
      * This is for testing target entry with some ACL.
      */
-    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny expected) throws Exception {
+    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
         // 1. pass allow as the default value, result should not be affected by the default value
-        verify(grantee, target, right, asAdmin, ALLOW, expected);
+        verify(grantee, target, right, asAdmin, ALLOW, expected, expectedVia);
         
         // 2. pass deny as the default value, result should not be affected by the default value
-        verify(grantee, target, right, asAdmin, DENY, expected);
+        verify(grantee, target, right, asAdmin, DENY, expected, expectedVia);
     }
     
     /*
@@ -308,28 +431,47 @@ public abstract class TestACL extends TestCase {
         AsAdmin asAdmin = AS_USER; // TODO: test admin case
         
         // 1. pass true as the default value, result should be true
-        verify(grantee, target, right, asAdmin, ALLOW, ALLOW);
+        verify(grantee, target, right, asAdmin, ALLOW, ALLOW, null);
             
         // 2. pass false as the default value, result should be false
-        verify(grantee, target, right, asAdmin, DENY, DENY);
+        verify(grantee, target, right, asAdmin, DENY, DENY, null);
+    }
+    
+    void assertEquals(ViaGrant expected, ViaGrant actual) {
+        
+        if (expected == null && actual == null)
+            return;
+        
+        if (!(AccessManager.getInstance() instanceof RoleAccessManager))
+            return;
+        
+        if (expected instanceof TodoViaGrant)
+            return; // TODO
+        
+        ((TestViaGrant)expected).verify(actual);
     }
     
     /*
      * verify expected result
      */
-    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny defaultValue, AllowOrDeny expected) throws Exception {
+    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny defaultValue, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
         boolean result;
         
         // Account interface
-        result = mAM.canPerform(grantee==null?null:grantee, target, right, asAdmin.yes(), defaultValue.allow());
+        ViaGrant via = (expectedVia==null)?null:new ViaGrant();
+        result = mAM.canPerform(grantee==null?null:grantee, target, right, asAdmin.yes(), defaultValue.allow(), via);
         assertEquals(expected.allow(), result);
+        assertEquals(expectedVia, via);
         
         // AuthToken interface
-        result = mAM.canPerform(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin.yes(), defaultValue.allow());
+        via = (expectedVia==null)?null:new ViaGrant();
+        result = mAM.canPerform(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin.yes(), defaultValue.allow(), via);
         assertEquals(expected.allow(), result);
+        assertEquals(expectedVia, via);
         
         // String interface
-        result = mAM.canPerform(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), defaultValue.allow());
+        via = (expectedVia==null)?null:new ViaGrant();
+        result = mAM.canPerform(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), defaultValue.allow(), via);
         if (grantee instanceof ACL.GuestAccount && ((ACL.GuestAccount)grantee).getAccessKey() != null) {
             // string interface always return denied for key grantee unless there is a pub grant
             // skip the test for now, unless we want to pass yet another parameter to this method
@@ -338,6 +480,7 @@ public abstract class TestACL extends TestCase {
             return;
         }
         assertEquals(expected.allow(), result);
+        assertEquals(expectedVia, via);
     }
     
        
@@ -364,5 +507,4 @@ public abstract class TestACL extends TestCase {
         return PermUtil.revokeRight(mProv, targetEntry, aces);
     }
 
-   
 }

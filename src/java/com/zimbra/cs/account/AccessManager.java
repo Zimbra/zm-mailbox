@@ -90,6 +90,30 @@ public abstract class AccessManager {
     public abstract boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
     public abstract boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
 
+    // for admin calls to return the decisive grant that lead to the result 
+    public static class ViaGrant {
+        private ViaGrant mImpl;
+        public void setImpl(ViaGrant impl) { mImpl = impl;}
+        public String getTargetType()   { return (mImpl==null)?null:mImpl.getTargetType(); } 
+        public String getTargetName()   { return (mImpl==null)?null:mImpl.getTargetName(); } 
+        public String getGranteeType()  { return (mImpl==null)?null:mImpl.getGranteeType(); } 
+        public String getGranteeName()  { return (mImpl==null)?null:mImpl.getGranteeName(); } 
+        public String getRight()        { return (mImpl==null)?null:mImpl.getRight(); } 
+        public boolean isNegativeGrant(){ return (mImpl==null)?null:mImpl.isNegativeGrant(); } 
+    }
+    
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
+        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant);
+    }
+    
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
+        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant);
+    }
+    
+    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
+        return canPerform(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
+    }
+
     /**
      * Returns true if authAccount should be allowed access to private data in appointments owned
      * by targetAccount.  Returns true if authAccount and targetAccount are the same account or if
