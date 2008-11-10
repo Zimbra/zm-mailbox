@@ -823,72 +823,11 @@ Depending on the context, there are three aspects of targets that need to be dea
 ===============
 6. Admin SOAP
 ===============
-6.1 GetEffectiveRightsRequest
-    Given a target entry, returns all *effective* rights the authenticated admin has.
+6.1 Granting/Revoking/Checking/Getting Rights on a Target
     
-    Effective rights are the right the admin is actually allowed.  It is the net result of 
-    applying "5. Granting Rules" on the target and grantee.  Specifically denied rights 
-    will *not* be returned.
-    
-    The result can help the admin console decide on what tabs to display after a target 
-    is selected.  For example, after user1 is selected, if the admin does not have right 
-    to setPassword, it should probably hide or gray out the setPassword tab.
-    
-<GetEffectiveRightsRequest>
-  <target ttype="{target-type}" zid="{target-zimbraId}">
-</GetEffectiveRightsRequest>
-
-    {target-type} = account|resource|cos|dl|domain|globalconfig|right|server|global
-    {target-zimbraId} = zimbraId of the target.  
-                        ignored if ttype is globalconfig|global
-    
-<GetEffectiveRightsResponse>    
-  <right n="{right-name}"/>+
-  <modifyAttrs>
-    <a n="..." [l="{inherited-limit}"]>+
-  </modifyAttrs>
-  <getAttrs>
-    <a n="...">+
-  </getAttrs>
-</GetEffectiveRightsResponse>   
-
-    {right-name} = name of the right
-    {inherited-limit} = inherited limit of the value 
-                        if present, this admin can only set the attribute within the inherited limit
-                        if not present, this admin can set the attribute to any value
-    
-    <right>       : all effective type 'fixed' rights
-    <modifyAttrs> : all attrs that can be modified
-    <getAttrs>    : all attrs that can be get
-    
-    e.g. 
-    <GetEffectiveRightsRequest>
-      <target ttype="account" zid="bba95d7d-0b13-401f-a343-03a8f5a96f7c">
-    </GetEffectiveRightsRequest>
-    
-    <GetEffectiveRightsRequest>
-      <account>
-        <right n="setPassword"/>
-        <right n="renameAccount"/>
-        <right n="deleteAccount"/>
-        <modifyAttrs>
-          <a n="zimbraMailQuota" [l="62914560"]>
-          <a n="..."/>
-          ...
-        </modifyAttrs>
-        <getAttrs>
-          <a n="...">
-          <a n="..."/>
-          ...
-        </getAttrs>
-      </account>
-    </GetEffectiveRightsRequest>
-
-    
-6.2 GrantRightRequest
-
-    Grant right on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets granted to itself 
-    to other admins.
+6.1.1 GrantRightRequest
+      Grant right on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets granted to itself 
+      to other admins.
     
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
@@ -896,25 +835,25 @@ Depending on the context, there are three aspects of targets that need to be dea
   <right [deny="${deny}"]>{right-name}</right>
 </GrantRightRequest>    
 
-  {target-type} = account | resource | distributionlist | domain | cos | server | config | global
+{target-type} = account | resource | distributionlist | domain | cos | server | config | global
 
-  {target-by}   = name | id
+{target-by}   = name | id
   
-  {grantee-type} = usr | grp
+{grantee-type} = usr | grp
   
-  {grantee-bt}   = name | id
+{grantee-bt}   = name | id
 
-  {right-name} = right name
+{right-name} = right name
   
-  {deny} = 1 | 0(default)
+{deny} = 1 | 0(default)
   
   
 <GrantRightResponse/>
 
 
-6.3 RevokeRightRequest
-    Revoke right previously granted on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets 
-    granted to itself to other admins.
+6.1.2 RevokeRightRequest
+      Revoke right previously granted on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets 
+      granted to itself to other admins.
  
 <RevokeRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
@@ -925,8 +864,8 @@ Depending on the context, there are three aspects of targets that need to be dea
 <RevokeRightResponse/>
 
 
-6.4 CheckRightRequest
-    Check if a principal has the specified right on target.
+6.1.3 CheckRightRequest
+      Check if a principal has the specified right on target.
     
 <CheckRightRequest>
   <target type={target-type} by="{target-by}">{target-by}</target>
@@ -969,62 +908,228 @@ Depending on the context, there are three aspects of targets that need to be dea
          Note, <via> is optional.  If the right of interest is not granted at all, there will be no <via>
          in the response.     Also, <via> will probably be hairy for rights that modify/get
          selective attrs, it may not be returned for those rights.  TDB...
-         
 
-6.5 CreateRightRequest
-    Create an admin defined right.
+         
+6.1.4 GetGrantsRequest
+      Returns all grants on the specified target entry.
+      The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
+      
+<GetGrantsRequest>
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+</GetGrantsRequest>
+
+<GetGrantsResponse>
+    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" right="{right-name}" deny="{deny}"/>+
+</GetGrantsResponse>  
+   
+         
+6.1.4 GetEffectiveRightsRequest
+      Returns all *effective* rights the authenticated admin has on the specified target entry.
+    
+      Effective rights are the rights the admin is actually allowed.  It is the net result of 
+      applying "5. Granting Rules" on the target and grantee.  Specifically denied rights 
+      will *not* be returned.
+    
+      The result can help the admin console decide on what tabs to display after a target 
+      is selected.  For example, after user1 is selected, if the admin does not have right 
+      to setPassword, it should probably hide or gray out the setPassword tab.
+    
+<GetEffectiveRightsRequest>
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+</GetEffectiveRightsRequest>
+    
+<GetEffectiveRightsResponse>    
+  <right n="{right-name}"/>+
+  <setAttrs>
+    <a n="..." [l="{limit}"]>+
+  </setAttrs>
+  <getAttrs>
+    <a n="...">+
+  </getAttrs>
+</GetEffectiveRightsResponse>   
+
+    <right>       : all effective system rights
+                    - getAttrs/setAttrs rights will not appear in the list because they will be 
+                      expanded to a list of attributes that can be get/set, which appear in the 
+                      <getAttrs> and <setAttrs> elements in the response.
+                    - Combo rights will not appear in the list because they will be expanded to 
+                      system rights and/or a set of attributes that can be get/set.
+    <modifyAttrs> : all attrs can be set
+    <getAttrs>    : all attrs can be get
+    
+    e.g. 
+    <GetEffectiveRightsRequest>
+      <target type="account" by="id">bba95d7d-0b13-401f-a343-03a8f5a96f7c"/>
+    </GetEffectiveRightsRequest>
+    
+    <GetEffectiveRightsResponse>
+      <account>
+        <right n="setPassword"/>
+        <right n="renameAccount"/>
+        <right n="deleteAccount"/>
+        <setAttrs>
+          <a n="zimbraMailQuota" l="1"/>
+          <a n="..."/>
+          ...
+        </setAttrs>
+        <getAttrs>
+          <a n="..."/>
+          <a n="..."/>
+          ...
+        </getAttrs>
+      </account>
+    </GetEffectiveRightsRequest>
+
+         
+6.2 Create/Delete/Get/Rename/Modify Custom Rights
+
+6.2.1 CreateRightRequest
+      Create a custom right right.
     
 <CreateRightRequest>
-  <name>{right-name}</name>
-  <a n="...">...</a>+
+  <right name="{right-name}" type="{right-type}">
+    <desc>{right-description}</desc>
+    [<attrs>
+       <a n="{attr-name}" l="{limit}"/>+
+     </attrs>]
+    [<rights>
+       <r n="{right-name}"/>+
+     </rights>]
+  </right>
 </CreateRightRequest>
 
+{right-type}: getAttrs | setAttrs | combo
+              getAttrs - can read attributes
+              setAttrs - can read and write attributes
+              combo    - combo right containing other already defined rights
+              
+              If {right-type} is "getAttrs" or "setAttrs", attributes can be get/set by the right 
+              is defined in the <attrs> element. 
+              If {right-type} is is "combo", rghts covered by the right is defined in the <rights>
+              element.
+  
+<attrs>: Attributes covered by the right.
+         Required if {right-type} is "getAttrs" or "setAttrs".  Ignored otherwise.
+         
+         {attr-name} in <a> elements can contain any attrs from any type of entries.
+         e.g.  attrs A, B, C (acount/cos attrs)
+               attrs X, Y, Z (domain attrs)
+               attrs M, N    (server attrs)
+               attrs P, Q    (account/cos/server/domain/distributionlist attrs)
+               
+         Out of all attrs defined for a get/setAttrs right, the "effective" attrs at right checking time 
+         are those that exist on the target entry on which the operation is to be performed.
+         e.g. if the right in the above example is granted on a domain entry, then the grantee can (or cannot 
+              if the right granted as negative right) access:
+                - attributes A, B, C on all account under the domain
+                - attributes X, Y, Z, P, Q on the domain
+                - attributes P, Q on all account/distributionlist in the domain
+                  
+{l}: 
+    If the attribute can be modified to any value or only within inherited limit.
+    Only applicable and required when {right-type} is "setAttrs".
+    0: (default) the attribute can be modified to any value allowed by the attribute definition
+    1: the attribute can only be modified within inherited limit
+
+{attr-name}:
+    Attribute name covered by the right
+    
+<rights>: Rights covered by the right.
+          Required if {right-type} is "combo".  Ignored otherwise.
+          {right-name} in <r> elements can contain any right name that is already defined, including any 
+          system right and custom rights.
+
+    
 <CreateRightResponse>
-  <right name="{right-name}" id="{right-id}">
-    <a n="...">...</a>+
+  <right name="{right-name}" type="{right-type}">
+    <desc>{right-description}</desc>
+    [<attrs>
+       <a n="{attr-name}" l="{limit}"/>+
+     </attrs>]
+    [<rights>
+       <r n="{right-name}"/>+
+     </rights>]
   </right>
 </CreateRightResponse>
 
 
-6.6 DeleteRightRequest
-    Delete an admin defined right.
+6.2.2 DeleteRightRequest
+      Delete a custom right.
     
 <DeleteRightRequest>
-  <id>{right-id}</id>
+  <name>{right-name}</name>
 </DeleteRightRequest>
 
 <DeleteRightResponse/>
 
 
-6.7 RenameRight
-    Rename an admin defined right.
+6.2.3 GetRightRequest
+      Get a custom right.
+    
+<GetRightRequest>
+  <name>{right-name}</name>
+</DeleteRightRequest>
+
+<GetRightResponse>
+  <right name="{right-name}" type="{right-type}">
+    <desc>{right-description}</desc>
+    [<attrs>
+       <a n="{attr-name}" l="{limit}"/>+
+     </attrs>]
+    [<rights>
+       <r n="{right-name}"/>+
+     </rights>]
+  </right>
+</GetRightResponse>
+
+
+6.2.4 RenameRight
+      Rename a custom right.
     
 <RenameRightRequest>
-  <id>{right-id}</id>
+  <name>{right-name}</name>
   <newName>{new-right-name}</newName>
 </RenameRightRequest>
 
-<RenameRightResponse>
-  <right name="{name}" id="{id}">
-    <a n="...">...</a>+
-  </right>  
+<RenameRightResponse/>
+  <right name="{new-right-name}"/>
 </RenameRightResponse>
 
 
-6.8 ModifyRightRequest 
-    Modify an admin defined right.
+6.2.5 ModifyRightRequest 
+      Modify a custom right.
     
 <ModifyRightRequest>
-  <id>{right-id}</id>
-  <a n="...">...</a>+
+  <right name="{right-name}">
+    <desc>{right-description}</desc>
+    [<attrs>
+       <a n="{modifier}{attr-name}" l="{limit}"/>+
+     </attrs>]
+    [<rights>
+       <r n="{modifier}{right-name}"/>+
+     </rights>]
+  </right>
 </ModifyRightRequest>
 
+{modifier}: + | -
+            +: add attr for getAttrs/setAttrs right; right for combo right
+            -: remove attr for getAttrs/setAttrs right; right for combo right
+
+Note: right type cannot be modified.
+
 <ModifyRightResponse>
-  <right name="{name}" id="{id}">
-    <a n="...">...</a>+
-  </right>  
+  <right name="{right-name}" type="{right-type}">
+    <desc>{right-description}</desc>
+    [<attrs>
+       <a n="{attr-name}" l="{limit}"/>+
+     </attrs>]
+    [<rights>
+       <r n="{right-name}"/>+
+     </rights>]
+  </right>
 </ModifyRightResponse>
 
+ModifyRightResponse contains the new right definition.
 
 ===========
 7. zmprov
