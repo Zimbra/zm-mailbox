@@ -92,7 +92,7 @@ public class SaveDocument extends WikiDocumentHandler {
             if (doc.contentType == null || doc.contentType.trim().equals(""))
                 throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
 
-            ItemId fid = new ItemId(docElem.getAttribute(MailConstants.A_ID, DEFAULT_DOCUMENT_FOLDER), zsc);
+            ItemId fid = new ItemId(docElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_DOCUMENT_FOLDER), zsc);
 
             String id = docElem.getAttribute(MailConstants.A_ID, null);
             int itemId = (id == null ? 0 : new ItemId(id, zsc).getId());
