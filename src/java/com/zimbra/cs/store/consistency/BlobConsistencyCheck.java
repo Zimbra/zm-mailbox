@@ -117,12 +117,18 @@ public class BlobConsistencyCheck {
                 String userName = cmdLine.getOptionValue("u");
                 try {
                     mailboxId[0] = Integer.parseInt(userName);
+                    mboxGroupId[0] = mailboxId[0] % 100;
+                    if (mboxGroupId[0] == 0) mboxGroupId[0] = 100;
                 }
                 catch (NumberFormatException e) { } // ignore
                 if (mailboxId[0] == -1) {
                     System.out.println("Looking up user: " + userName);
                     Provisioning p = Provisioning.getInstance();
                     Account acct = p.getAccount(userName);
+                    if (acct == null) {
+                        System.out.println("ERROR: " + userName + " not found!");
+                        return;
+                    }
                     String uuid = acct.getId();
                     if (!userName.equals(uuid)) {
                         System.out.println(userName + ": resolves to " + uuid);
