@@ -1683,7 +1683,8 @@ public final class ZimbraQuery {
                     p.setSlop(0); // TODO configurable?
                     for (int i=0; i<mTokens.size(); i++) 
                         p.add(new Term(fieldName, mTokens.get(i)));
-                    lop.addClause(this.getQueryOperatorString()+mOrigText, p,calcTruth(truth));
+                    String qos = this.getQueryOperatorString();
+                    lop.addClause(qos+mOrigText, p,calcTruth(truth));
                 }
 
                 if (mOredTokens.size() > 0) {
@@ -1925,7 +1926,10 @@ public final class ZimbraQuery {
         unquotedTokenImage = new String[ZimbraQueryParserConstants.tokenImage.length];
         for (int i = 0; i < ZimbraQueryParserConstants.tokenImage.length; i++) {
             String str = ZimbraQueryParserConstants.tokenImage[i].substring(1, ZimbraQueryParserConstants.tokenImage[i].length()-1);
-            unquotedTokenImage[i] = str;
+            if ("FIELD".equals(str))
+                unquotedTokenImage[i] = "#"; // bug 22969 -- problem with proxying field queries
+            else
+                unquotedTokenImage[i] = str;
             sTokenImageMap.put(str, i);
         }
     }
