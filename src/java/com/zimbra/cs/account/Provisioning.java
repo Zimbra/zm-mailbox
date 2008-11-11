@@ -2813,4 +2813,8 @@ public abstract class Provisioning {
     public String getProxyAuthToken(String acctId) throws ServiceException {
         return null;
     }
+    
+    public boolean isOfflineProxyServer(Server server) {
+        return false; 
+    }
 }
