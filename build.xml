@@ -915,14 +915,24 @@
         <delete dir="${webserver.root.dir}/webapps/service"/>
         <delete file="${webserver.root.dir}/webapps/service.war"/>
 
-        <delete dir="${zimbra.home.dir}/data"/>
-
-        <mkdir dir="${zimbra.home.dir}/data"/>
-    	<mkdir dir="${zimbra.home.dir}/data/ldap"/>
-    	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb"/>
-    	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/db"/>
-    	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/logs"/>
-    	<mkdir dir="${zimbra.home.dir}/data/ldap/config"/>
+    	<!-- Quanah, remove if-else after LDAP for windows is upgraded -->
+        <if>
+            <isset property="is-windows"/>
+            <then>
+            	<delete dir="${zimbra.home.dir}/openldap-data"/>
+            	<mkdir dir="${zimbra.home.dir}/openldap-data"/>
+            </then>
+        	<else>
+        		<delete dir="${zimbra.home.dir}/data"/>
+        		<mkdir dir="${zimbra.home.dir}/data"/>
+            	<mkdir dir="${zimbra.home.dir}/data/ldap"/>
+            	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb"/>
+            	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/db"/>
+            	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/logs"/>
+            	<mkdir dir="${zimbra.home.dir}/data/ldap/config"/>       	
+        	</else>
+        </if>
+    	
     	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
