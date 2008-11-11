@@ -464,8 +464,9 @@ public class ZimbraServlet extends HttpServlet {
 
     protected static String getProxyUrl(HttpServletRequest req, Server server, String path) throws ServiceException {
     	int servicePort = (req == null) ? -1 : req.getLocalPort();
-    	Server localServer = Provisioning.getInstance().getLocalServer();
-    	if (servicePort == localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
+    	Provisioning prov = Provisioning.getInstance();
+    	Server localServer = prov.getLocalServer();
+    	if (!prov.isOfflineProxyServer(server) && servicePort == localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
     		return URLUtil.getAdminURL(server, path);
     	else
     		return URLUtil.getServiceURL(server, path, servicePort == localServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0));
