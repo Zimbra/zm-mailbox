@@ -127,6 +127,8 @@ public class ContactAutoComplete {
     public static final int FOLDER_ID_UNKNOWN = -1;
     
     private String mAccountId;
+    private boolean mIncludeGal;
+    
     private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
     
     private Collection<Integer> mDefaultFolders;
@@ -159,6 +161,10 @@ public class ContactAutoComplete {
 		mAccountId = accountId;
 		if (mDefaultFolders == null)
 			mDefaultFolders = Arrays.asList(DEFAULT_FOLDERS);
+		if (mDefaultFolders.contains(FOLDER_ID_GAL)) {
+			mDefaultFolders.remove(FOLDER_ID_GAL);
+			mIncludeGal = true;
+		}
 		if (mEmailKeys == null)
 			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
 	}
@@ -167,30 +173,44 @@ public class ContactAutoComplete {
 		mEmailKeys.add(key);
 	}
 	
-	public void setIncludeGal() {
-		if (!mDefaultFolders.contains(FOLDER_ID_GAL))
-			mDefaultFolders.add(FOLDER_ID_GAL);
+	public boolean includeGal() {
+		return mIncludeGal;
 	}
+	public void setIncludeGal(boolean includeGal) {
+		mIncludeGal = includeGal;
+	}
+	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
 		ZimbraLog.gal.debug("querying "+str);
 		AutoCompleteResult result = new AutoCompleteResult();
-		ContactRankings rankings = new ContactRankings(mAccountId);
+		if (limit <= 0)
+			return result;
 		if (folders == null)
 			folders = mDefaultFolders;
-		for (ContactEntry e : rankings.query(str, folders))
+		
+		queryRankingTable(str, folders, limit, result);
+		if (result.entries.size() >= limit)
+			return result;
+		
+		// search other folders
+		if (mIncludeGal)
+			queryGal(str, limit, result);
+		if (result.entries.size() >= limit)
+			return result;
+		
+		queryFolders(str, folders, limit, result);
+		return result;
+	}
+	
+	private void queryRankingTable(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
+		ContactRankings rankings = new ContactRankings(mAccountId);
+		for (ContactEntry e : rankings.query(str, folders)) {
 			result.addEntry(e);
-		if (result.entries.size() < limit) {
-			// search other folders
-    		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-    		Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
-			for (int fid : folders) {
-				if (fid == FOLDER_ID_GAL)
-					queryGal(str, limit, result);
-				else
-					queryFolder(mbox, octxt, str, fid, limit, result);
+			if (result.entries.size() == limit) {
+				result.canBeCached = false;
+				break;
 			}
 		}
-		return result;
 	}
 	
 	private void queryGal(String str, int limit, AutoCompleteResult result) throws ServiceException {
@@ -203,7 +223,7 @@ public class ContactAutoComplete {
 		ZimbraLog.gal.debug("querying gal");
 		Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.ALL;
 		Domain d = prov.getDomain(account);
-        SearchGalResult sgr = prov.autoCompleteGal(d, str, type, limit);
+        SearchGalResult sgr = prov.autoCompleteGal(d, str, type, limit - result.entries.size());
         if (sgr.getHadMore() || sgr.getTokenizeKey() != null) {
         	result.canBeCached = false;
     		ZimbraLog.gal.debug("result can't be cached by client");
@@ -247,19 +267,16 @@ public class ContactAutoComplete {
 		return text.toLowerCase().startsWith(query);
 	}
 	
-	private void queryFolder(Mailbox mbox, Mailbox.OperationContext octxt, String str, int fid, int limit, AutoCompleteResult result) throws ServiceException {
-		ZimbraLog.gal.debug("querying folder "+fid);
+	private void queryFolders(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
 		str = str.toLowerCase();
-		String query = generateQuery(fid, str);
+		String query = generateQuery(str, folders);
+		ZimbraLog.gal.debug("querying folders: "+query);
         ZimbraQueryResults qres = null;
         try {
+    		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+    		Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
 			qres = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, 100);
             while (qres.hasNext()) {
-            	if (result.entries.size() > limit) {
-                	result.canBeCached = false;
-            		ZimbraLog.gal.debug("exceeded request limit "+limit);
-            		return;
-            	}
                 ZimbraHit hit = qres.getNext();
                 if (!(hit instanceof ContactHit))
                 	continue;
@@ -308,6 +325,11 @@ public class ContactAutoComplete {
                 	result.addEntry(entry);
                 	ZimbraLog.gal.debug("adding "+entry.getEmail());
                 }
+    			if (result.entries.size() == limit) {
+            		ZimbraLog.gal.debug("mbox query result exceeded request limit "+limit);
+    				result.canBeCached = false;
+    				break;
+    			}
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
@@ -319,10 +341,18 @@ public class ContactAutoComplete {
         }
 	}
 	
-	private String generateQuery(int fid, String query) {
+	private String generateQuery(String query, Collection<Integer> folders) {
 		StringBuilder buf = new StringBuilder();
-		if (fid > 0)
-			buf.append("inid:").append(fid).append(" ");
+		boolean first = true;
+		buf.append("(");
+		for (int fid : folders) {
+			if (!first)
+				buf.append(" OR ");
+			first = false;
+			buf.append("inid:").append(fid);
+		}
+		buf.append(")");
+		
 		buf.append("(#lastName:").append(query).append("*");
 		buf.append(" OR #fullName:").append(query).append("*");
 		buf.append(" OR #nickName:").append(query).append("*");

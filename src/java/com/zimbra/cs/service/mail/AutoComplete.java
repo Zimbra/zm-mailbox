@@ -44,11 +44,10 @@ public class AutoComplete extends MailDocumentHandler {
 		ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
 		if (folders.isEmpty())
 			folders = null;
-		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, false);
 
 		ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
-		if (includeGal)
-			autoComplete.setIncludeGal();
+		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
+		autoComplete.setIncludeGal(includeGal);
 		AutoCompleteResult result = autoComplete.query(n, folders, limit);
 		Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
 		toXML(response, result);
