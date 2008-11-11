@@ -126,7 +126,7 @@ public abstract class AccessManager {
      *     allow none
      * 
      * empty map: 
-     *     allow all attrs on hte entry (also can go beyond inherited limit, we do NOT have a notion of 
+     *     allow all attrs on the entry (also can go beyond inherited limit, we do NOT have a notion of 
      *     "allow all within inherited limit")
      *             
      * map of <attrName, limit>: 

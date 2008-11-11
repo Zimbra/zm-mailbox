@@ -29,12 +29,6 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 
 public class TestACLTarget extends TestACL {
 
-/*
-  <key name="zimbra_class_accessmanager">
-    <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
-  </key>
-*/
-    
     /*
      * ======================
      * ======================

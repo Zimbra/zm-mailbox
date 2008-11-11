@@ -69,7 +69,7 @@ public class AclAccessManager extends DomainAccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 3. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded, null);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
             if (effectiveACLs.size() > 0)
                 return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, null);
             else {

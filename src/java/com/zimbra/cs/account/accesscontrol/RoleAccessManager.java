@@ -132,7 +132,7 @@ public class RoleAccessManager extends AccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded, null);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
             if (effectiveACLs.size() > 0)
                 return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, via);
             else {
@@ -222,9 +222,9 @@ public class RoleAccessManager extends AccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded, attrs);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
             if (effectiveACLs.size() > 0)
-                return RightChecker.canAccessAttrs(effectiveACLs, grantee, rightNeeded, attrs);
+                return RightChecker.canAccessAttrs(effectiveACLs, grantee, rightNeeded, TargetType.getAttributeClass(target));
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + grantee.getName() + 

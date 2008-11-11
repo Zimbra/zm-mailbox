@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +43,14 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
 
+
+/*
+  <key name="zimbra_class_accessmanager">
+    <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
+  </key>
+*/
+    
+
 public abstract class TestACL extends TestCase {
     
     // private static final AclAccessManager mAM = new AclAccessManager();
@@ -62,6 +71,7 @@ public abstract class TestACL extends TestCase {
     protected static final Right ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
     protected static final Right ADMIN_RIGHT_GLOBALGRANT       = AdminRight.R_testGlobalGrantRemoveMe;
     protected static final Right ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
+
     
     static {
         
@@ -496,6 +506,22 @@ public abstract class TestACL extends TestCase {
         }
         assertEquals(expected.allow(), result);
         assertEquals(expectedVia, via);
+    }
+    
+    protected void verify(Account grantee, Entry target, Map<String, Object> attrs, AllowOrDeny allowOrDeny) {
+        Map<String, Boolean> allowedAttrs = mAM.canGetAttrs(grantee, target, attrs);
+        if (allowOrDeny == ALLOW) {
+            for (String attr : attrs.keySet())
+                assertTrue(allowedAttrs.keySet().contains(attr));
+        } else {
+            try {
+                for (String attr : attrs.keySet())
+                    assertTrue(allowedAttrs.keySet().contains(attr));
+            } catch (AssertionFailedError e) {
+                return;
+            }
+            fail(); 
+        }
     }
     
        

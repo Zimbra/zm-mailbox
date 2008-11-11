@@ -245,7 +245,7 @@ public class ZimbraACL {
      * @param attrs
      * @return
      */
-    List<ZimbraACE> getACEs(Right rightNeeded, TargetType targetType, Set<String> attrs) {
+    List<ZimbraACE> getACEs(Right rightNeeded, TargetType targetType) {
         List<ZimbraACE> result = new ArrayList<ZimbraACE>();
         
         RightType rightTypeNeeded = rightNeeded.getRightType();

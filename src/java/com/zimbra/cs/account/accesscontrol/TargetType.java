@@ -9,6 +9,7 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -149,6 +150,27 @@ public enum TargetType {
             return false;
     }
     
+    static AttributeClass getAttributeClass(Entry target) throws ServiceException{
+        if (target instanceof GlobalGrant)
+            return AttributeClass.aclTarget;
+        else if (target instanceof Config)
+            return AttributeClass.globalConfig;
+        else if (target instanceof Server)
+            return AttributeClass.server;
+        else if (target instanceof Cos)
+            return AttributeClass.cos;
+        else if (target instanceof Domain)
+            return AttributeClass.domain;
+        else if (target instanceof DistributionList)
+            return AttributeClass.distributionList;
+        else if (target instanceof CalendarResource)
+            return AttributeClass.calendarResource;
+        else if (target instanceof Account)
+            return AttributeClass.account;
+        else
+            throw ServiceException.FAILURE("internal error", null);
+    }
+    
     /**
      * returns a List of EffectiveACL of all grants for the specified right granted 
      * on the target itself and all entries the target can inherit grants from. 
@@ -160,26 +182,26 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    static List<EffectiveACL> expandTarget(Provisioning prov, Entry target, Right right, Map<String, Object> attrs) throws ServiceException {
+    static List<EffectiveACL> expandTarget(Provisioning prov, Entry target, Right right) throws ServiceException {
         
         List<EffectiveACL> result = new ArrayList<EffectiveACL>();
         
         if (target instanceof GlobalGrant)
-            expandGlobalGrant(prov, target, right, attrs, result);
+            expandGlobalGrant(prov, target, right, result);
         else if (target instanceof Config)
-            expandConfig(prov, target, right, attrs, result);
+            expandConfig(prov, target, right, result);
         else if (target instanceof Server)
-            expandServer(prov, target, right, attrs, result);
+            expandServer(prov, target, right, result);
         else if (target instanceof Cos)
-            expandCos(prov, target, right, attrs, result);
+            expandCos(prov, target, right, result);
         else if (target instanceof Domain)
-            expandDomain(prov, target, right, attrs, result);
+            expandDomain(prov, target, right, result);
         else if (target instanceof DistributionList)
-            expandDistributionList(prov, target, right, attrs, result);
+            expandDistributionList(prov, target, right, result);
         else if (target instanceof CalendarResource)
-            expandAccount(prov, target, right, attrs, result);
+            expandAccount(prov, target, right, result);
         else if (target instanceof Account)
-            expandAccount(prov, target, right, attrs, result);
+            expandAccount(prov, target, right, result);
         else
             throw ServiceException.FAILURE("internal error", null);
         
@@ -200,11 +222,11 @@ public enum TargetType {
      */
     private static void processTargetEntry(TargetType grantedOnEntryType, Entry grantedOn, int distanceToTarget, 
                                            TargetType targetType,
-                                           Right right, Map<String, Object> attrs, 
+                                           Right right,
                                            List<EffectiveACL> result) throws ServiceException {
         List<ZimbraACE> aces;
         if (right == AdminRight.R_PSEUDO_GET_ATTRS || right == AdminRight.R_PSEUDO_SET_ATTRS)
-            aces = PermUtil.getACEs(grantedOn, right, targetType, attrs.keySet());
+            aces = PermUtil.getACEs(grantedOn, right, targetType);
         else
             aces = PermUtil.getACEs(grantedOn, right);
         if (aces != null && aces.size() > 0) {
@@ -213,12 +235,12 @@ public enum TargetType {
         }
    }
     
-    private static void expandAccount(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandAccount(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         TargetType targeTtype = (target instanceof CalendarResource)?TargetType.resource:TargetType.account;
         
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(targeTtype, target, distance, targeTtype, right, attrs, result);
+        processTargetEntry(targeTtype, target, distance, targeTtype, right, result);
         
         // groups the account is directly or indirectly a member of
         List<MemberOf> groups = prov.getAclGroups((Account)target);
@@ -226,21 +248,21 @@ public enum TargetType {
         for (MemberOf group : groups) {
             DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
             dist = distance + group.getDistance();
-            processTargetEntry(TargetType.distributionlist, dl, dist, targeTtype, right, attrs, result);
+            processTargetEntry(TargetType.distributionlist, dl, dist, targeTtype, right, result);
         }
         distance = dist;
         
         // domain of the account
         Domain domain = prov.getDomain((Account)target);
-        processTargetEntry(TargetType.domain, domain, ++distance, targeTtype, right, attrs, result);
+        processTargetEntry(TargetType.domain, domain, ++distance, targeTtype, right, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();
-        processTargetEntry(TargetType.global, globalGrant, ++distance, targeTtype, right, attrs, result);
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeTtype, right, result);
         
     }
     
-    private static void expandDistributionList(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandDistributionList(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         // This path is called from AccessManager.canPerform, the target object can be a 
         // DistributionList obtained from prov.get(DistributionListBy).  
         // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
@@ -251,80 +273,80 @@ public enum TargetType {
             
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.distributionlist, target, distance, targetType, right, attrs, result);
+        processTargetEntry(TargetType.distributionlist, target, distance, targetType, right, result);
         
         List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
         int dist = distance;
         for (MemberOf group : groups) {
             DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
             dist = distance + group.getDistance();
-            processTargetEntry(TargetType.distributionlist, dl, dist, targetType, right, attrs, result);
+            processTargetEntry(TargetType.distributionlist, dl, dist, targetType, right, result);
         }
         distance = dist;
         
         // domain of the group
         Domain domain = prov.getDomain((DistributionList)target);
-        processTargetEntry(TargetType.domain, domain, ++distance, targetType, right, attrs, result);
+        processTargetEntry(TargetType.domain, domain, ++distance, targetType, right, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();
-        processTargetEntry(TargetType.global, globalGrant, ++distance, targetType, right, attrs, result);
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targetType, right, result);
     }
     
-    private static void expandDomain(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandDomain(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         TargetType targeType = TargetType.domain;
         
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.domain, target, distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.domain, target, distance, targeType, right, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();
-        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, result);
     }
     
-    private static void expandCos(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandCos(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         TargetType targeType = TargetType.cos;
         
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.cos, target, distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.cos, target, distance, targeType, right, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();
-        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, result);
     }
     
-    private static void expandServer(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandServer(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         TargetType targeType = TargetType.server;
         
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.server, target, distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.server, target, distance, targeType, right, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();
-        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, result);
     }
     
-    private static void expandConfig(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandConfig(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         TargetType targeType = TargetType.config;
         
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.config, target, distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.config, target, distance, targeType, right, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();
-        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, result);
     }
     
-    private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+    private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
         TargetType targeType = TargetType.global;
         
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.global, target, distance, targeType, right, attrs, result);
+        processTargetEntry(TargetType.global, target, distance, targeType, right, result);
     }
 
 
