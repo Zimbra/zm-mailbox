@@ -42,13 +42,13 @@ public class AutoComplete extends MailDocumentHandler {
 			n = n.substring(0, n.length() - 1);
         int limit = (int) request.getAttributeLong(MailConstants.A_LIMIT, 20);
 		ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
-		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, false);
-		if (includeGal)
-			folders.add(ContactAutoComplete.FOLDER_ID_GAL);
 		if (folders.isEmpty())
 			folders = null;
+		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, false);
 
 		ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
+		if (includeGal)
+			autoComplete.setIncludeGal();
 		AutoCompleteResult result = autoComplete.query(n, folders, limit);
 		Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
 		toXML(response, result);
@@ -78,9 +78,12 @@ public class AutoComplete extends MailDocumentHandler {
 	        cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
 	        cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
+            int id = entry.getId();
+            if (id > 0)
+            	cn.addAttribute(MailConstants.A_ID, Integer.toString(id));
             int folderId = entry.getFolderId();
             if (folderId > 0)
-            	cn.addAttribute(MailConstants.A_FOLDER, Integer.toString(entry.getFolderId()));
+            	cn.addAttribute(MailConstants.A_FOLDER, Integer.toString(folderId));
             if (entry.isDlist())
             	cn.addAttribute(MailConstants.A_DISPLAYNAME, entry.getDisplayName());
 		}

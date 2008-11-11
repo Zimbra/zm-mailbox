@@ -329,7 +329,6 @@ public class ZMailbox implements ToZJSONObject {
     private ZFilterRules mRules;
     private ZAuthResult mAuthResult;
     private String mClientIp;
-    private ZContactAutoCompleteCache mAutoCompleteCache;
     private List<ZPhoneAccount> mPhoneAccounts;
     private Map<String, ZPhoneAccount> mPhoneAccountMap;
 	private VoiceStorePrincipal mVoiceStorePrincipal;
@@ -1327,12 +1326,16 @@ public class ZMailbox implements ToZJSONObject {
         return result;
     }
 
-    public synchronized List<ZContact> autoComplete(String query, int limit) throws ServiceException {
-        if (mAutoCompleteCache == null) {
-            mAutoCompleteCache = new ZContactAutoCompleteCache();
-            mHandlers.add(mAutoCompleteCache);
-        }
-        return mAutoCompleteCache.autoComplete(query, limit, this);
+    public synchronized List<ZAutoCompleteMatch> autoComplete(String query, int limit) throws ServiceException {
+    	Element req = newRequestElement(MailConstants.AUTO_COMPLETE_REQUEST);
+    	req.addAttribute(MailConstants.A_LIMIT, limit);
+    	req.addAttribute(MailConstants.A_INCLUDE_GAL, getFeatures().getGalAutoComplete());
+    	req.addUniqueElement(MailConstants.E_NAME).setText(query);
+        Element response = invoke(req);
+        List<ZAutoCompleteMatch> matches = new ArrayList<ZAutoCompleteMatch>();
+        for (Element match : response.listElements(MailConstants.E_MATCH))
+        	matches.add(new ZAutoCompleteMatch(match, this));
+    	return matches;
     }
 
     private Element contactAction(String op, String id) {

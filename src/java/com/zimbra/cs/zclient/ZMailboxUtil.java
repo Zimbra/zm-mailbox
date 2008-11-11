@@ -2179,6 +2179,54 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
+    private void dumpAutoCompleteMatches(List<ZAutoCompleteMatch> matches) throws ServiceException {
+    	if (matches.isEmpty()) {
+    		stdout.println("no matches");
+    		return;
+    	}
+    	int idLen = 2;
+    	int fidLen = 3;
+    	int displayLen = 7;
+		for (ZAutoCompleteMatch match : matches) {
+			String id = match.getId();
+			if (id != null && id.length() > idLen)
+				idLen = id.length();
+			String fid = match.getFolderId();
+			if (fid != null && fid.length() > fidLen)
+				fidLen = fid.length();
+			String display = match.getDisplayName();
+			if (display != null && display.length() > displayLen)
+				displayLen = display.length();
+		}
+		String format = "%7s %7s";
+		if (verboseOpt()) {
+			format += String.format(" %%%d.%ds", idLen, idLen);
+			format += String.format(" %%%d.%ds", fidLen, fidLen);
+			format += String.format(" %%%d.%ds", displayLen, displayLen);
+		}
+		format += " %s %n";
+		if (verboseOpt()) {
+			stdout.format(format, "Ranking", "type", "id", "fid", "display", "email");
+			stdout.println("-------------------------------------------------------------------");
+		} else {
+			stdout.format(format, "Ranking", "type", "email");
+			stdout.println("-------------------------------------------------------------------");
+		}
+		for (ZAutoCompleteMatch match : matches) {
+	    	if (verboseOpt()) {
+	    		String folderId = match.getFolderId();
+	    		String id = match.getId();
+	    		String display = match.getDisplayName();
+	    		if (folderId == null) folderId = "";
+	    		if (id == null) id = "";
+	    		if (display == null) display = "";
+				stdout.format(format, match.getRanking(), match.getType(), id, folderId, display, match.getEmail());
+	    	} else {
+				stdout.format(format, match.getRanking(), match.getType(), match.getEmail());
+	    	}
+		}
+    }
+    
     private void doGetAllContacts(String[] args) throws ServiceException {
         dumpContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
     }        
@@ -2188,8 +2236,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doAutoComplete(String[] args) throws ServiceException {
-        List<ZContact> hits = mMbox.autoComplete(args[0], 0);
-        dumpContacts(hits);
+    	dumpAutoCompleteMatches(mMbox.autoComplete(args[0], 20));
     }
 
     private void doAutoCompleteGal(String[] args) throws ServiceException {
