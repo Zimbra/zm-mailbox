@@ -208,6 +208,7 @@ onEntry:  (don't need this, TODO, remove)
 <right name="domainAdmin" type="combo">
   <desc>domain admin</desc>
   <rights>
+    <r n="createAccount"/>
     <r n="renameAccount"/>
     <r n="configureQuotaWithinLimit"/>
   </rights>
