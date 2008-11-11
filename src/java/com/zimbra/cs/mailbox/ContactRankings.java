@@ -113,7 +113,8 @@ public class ContactRankings {
 		for (String k : mEntryMap.tailMap(str).keySet()) {
 			if (k.startsWith(str)) {
 				for (ContactEntry entry : mEntryMap.get(k)) {
-					if (folders.contains(entry.mFolderId)) {
+					if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
+							folders.contains(entry.mFolderId)) {
 						entries.add(entry);
 						ZimbraLog.gal.debug("adding "+entry.toString());
 					}
