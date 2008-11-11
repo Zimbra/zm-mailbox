@@ -1,11 +1,15 @@
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
@@ -96,6 +100,9 @@ public class RightChecker {
             return mGrantedOnEntry;
         }
        
+        int getDistanceToTarget() {
+            return mDistanceToTarget;
+        }
         
         /*
          * ({entry name on which the right is granted}: [grant] [grant] ...)
@@ -202,6 +209,34 @@ public class RightChecker {
         return false;
     }
     
+    
+    static Map<String, Boolean> canAccessAttrs(List<EffectiveACL> effectiveACLs, Account grantee, Right right, Map<String, Object> attrs) throws ServiceException {
+        Map<String, Integer> allowed = new HashMap<String, Integer>();
+        Set<String> allowedWithLimit = new HashSet<String>();
+        Map<String, Integer> denied = new HashMap<String, Integer>();
+        
+        int baseDistance = 0;
+        baseDistance = expandEffectiveACLs(effectiveACLs, grantee, attrs.keySet(), (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN), baseDistance, allowed, allowedWithLimit, denied);
+        baseDistance = expandEffectiveACLs(effectiveACLs, grantee, attrs.keySet(), (short)(GranteeFlag.F_GROUP | GranteeFlag.F_ADMIN), baseDistance, allowed, allowedWithLimit, denied);
+
+        // now allowed/denied contain all attrs allowed/denied and their shortest distance to the target
+        // remove the denied ones from allowed if they's got a shorter distance
+        Set<String> conflicts = SetUtil.intersect(allowed.keySet(), denied.keySet());
+        if (!conflicts.isEmpty()) {
+            for (String attr : conflicts) {
+                if (denied.get(attr) < allowed.get(attr))
+                    allowed.remove(attr);
+            }
+        }
+        
+        // now allowed contains attrs that are really allowed
+        Map result = new HashMap<String, Boolean>();
+        for (String attr : allowed.keySet()) 
+            result.put(attr, allowedWithLimit.contains(attr));
+        
+        return result;
+    }
+
     
     /**
      * Iterate through the effective ACLs to determine if the right is allowed or denied to the grantee.
@@ -341,6 +376,44 @@ public class RightChecker {
                                             ace.deny()));
             return Boolean.TRUE;
         }
+    }
+    
+    
+    private static int expandEffectiveACLs(List<EffectiveACL> effectiveACLs, Account grantee, Set<String> attrsNeeded,
+                                           short granteeFlags, int baseDistance,
+                                           Map<String, Integer> allowed, Set<String> allowedWithLimit, Map<String, Integer> denied) throws ServiceException {
+        
+        int dist = baseDistance;
+        
+        for (EffectiveACL acl : effectiveACLs) {
+            for (ZimbraACE ace : acl.getAces()) {
+                GranteeType granteeType = ace.getGranteeType();
+                if (!granteeType.hasFlags(granteeFlags))
+                    continue;
+                
+                if (ace.matchesGrantee(grantee)) {
+                    // must be an AttrRight by now
+                    AttrRight right = (AttrRight)ace.getRight();
+                    Set<String> attrs = SetUtil.intersect(attrsNeeded, right.getAttrs());
+                    if (!attrs.isEmpty()) {
+                        dist = baseDistance + acl.getDistanceToTarget();
+                        for (String attr : attrs) {
+                            if (ace.deny()) {
+                                if (!denied.containsKey(attr))
+                                    denied.put(attr, dist);
+                            } else {
+                                if (!allowed.containsKey(attr))
+                                    allowed.put(attr, dist);
+                                if (right.getAttrLimit(attr) == Boolean.TRUE)
+                                    allowedWithLimit.add(attr);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return dist; // base distance for the next rank of grantee types
     }
     
     // dump a List of EffectiveACL as ({entry name on which the right is granted}: [grant] [grant] ...)

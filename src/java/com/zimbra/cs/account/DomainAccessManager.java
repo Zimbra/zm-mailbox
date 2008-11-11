@@ -17,10 +17,12 @@
 
 package com.zimbra.cs.account;
 
+import java.util.Map;
 import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.accesscontrol.Right;
 
 public class DomainAccessManager extends AccessManager {
@@ -226,25 +228,46 @@ public class DomainAccessManager extends AccessManager {
     
     
     /* ===========================================================================================
-     * ACL based accesses
+     * ACL based access methods
      * 
-     * - not allowed by DomainAccessManager
+     * - not supported by DomainAccessManager
      * - DomainAccessManager will be retired after ACL based access control is fully implemented.
      * 
      * ===========================================================================================
      */
-    
+    @Override
     public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return defaultGrant;
     }
     
+    @Override
     public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return defaultGrant;
     }
     
+    @Override
     public boolean canPerform(String grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return defaultGrant;
     }
 
-
+    @Override
+    public Map<String, Boolean> canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+        return DENY_ALL_ATTRS;
+    }
+    
+    @Override
+    public Map<String, Boolean> canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
+        return DENY_ALL_ATTRS;
+    }
+    
+    @Override
+    public Map<String, Boolean> canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+        return DENY_ALL_ATTRS;
+    }
+    
+    @Override
+    public Map<String, Boolean> canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
+        return DENY_ALL_ATTRS;
+    }
+    
 }

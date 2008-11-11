@@ -8,7 +8,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DomainAccessManager;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
@@ -70,7 +69,7 @@ public class AclAccessManager extends DomainAccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 3. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded, null);
             if (effectiveACLs.size() > 0)
                 return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, null);
             else {

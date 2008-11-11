@@ -121,6 +121,34 @@ public enum TargetType {
         return targetEntry;
     }
 
+    boolean IsRightApplicableOnTarget(Right right, Entry target) {
+        
+        if (target instanceof GlobalGrant)
+            return true;
+        else if (target instanceof Config)
+            return right.applicableOnTargetType(TargetType.config);
+        else if (target instanceof Server)
+            return right.applicableOnTargetType(TargetType.server);
+        else if (target instanceof Cos)
+            return right.applicableOnTargetType(TargetType.cos);
+        else if (target instanceof Domain)
+            return right.applicableOnTargetType(TargetType.domain) ||
+                   right.applicableOnTargetType(TargetType.distributionlist) ||
+                   right.applicableOnTargetType(TargetType.resource) ||
+                   right.applicableOnTargetType(TargetType.account);
+        else if (target instanceof DistributionList)
+            return right.applicableOnTargetType(TargetType.distributionlist) ||
+                   right.applicableOnTargetType(TargetType.resource) ||
+                   right.applicableOnTargetType(TargetType.account);
+        else if (target instanceof CalendarResource)
+            return right.applicableOnTargetType(TargetType.resource) ||
+                   right.applicableOnTargetType(TargetType.account);
+        else if (target instanceof Account)
+            return right.applicableOnTargetType(TargetType.account);
+        else
+            return false;
+    }
+    
     /**
      * returns a List of EffectiveACL of all grants for the specified right granted 
      * on the target itself and all entries the target can inherit grants from. 
@@ -128,229 +156,177 @@ public enum TargetType {
      * @param prov
      * @param target
      * @param right
+     * @param attrs for RT_PSEUDO_GET_ATTRS/RT_PSEUDO_SET_ATTRS rights
      * @return
      * @throws ServiceException
      */
-    static List<EffectiveACL> expandTarget(Provisioning prov, Entry target, Right right) throws ServiceException {
+    static List<EffectiveACL> expandTarget(Provisioning prov, Entry target, Right right, Map<String, Object> attrs) throws ServiceException {
         
         List<EffectiveACL> result = new ArrayList<EffectiveACL>();
-        TargetType targetType = right.getTargetType();
         
-        switch (targetType) {
-        case account:
-        case resource:
-            expandAccount(prov, target, right, result);
-            break;
-        case distributionlist:
-            expandDistributionList(prov, target, right, result);
-            break;
-        case domain:
-            expandDomain(prov, target, right, result);
-            break;
-        case cos:
-            expandCos(prov, target, right, result);
-            break;
-        case right:
-            throw ServiceException.FAILURE("TODO", null);
-            // break;
-        case server:
-            expandServer(prov, target, right, result);
-            break;
-        case config:
-            expandConfig(prov, target, right, result);
-            break;
-        case global:
-            expandGlobalGrant(prov, target, right, result);
-            break;
-        }
+        if (target instanceof GlobalGrant)
+            expandGlobalGrant(prov, target, right, attrs, result);
+        else if (target instanceof Config)
+            expandConfig(prov, target, right, attrs, result);
+        else if (target instanceof Server)
+            expandServer(prov, target, right, attrs, result);
+        else if (target instanceof Cos)
+            expandCos(prov, target, right, attrs, result);
+        else if (target instanceof Domain)
+            expandDomain(prov, target, right, attrs, result);
+        else if (target instanceof DistributionList)
+            expandDistributionList(prov, target, right, attrs, result);
+        else if (target instanceof CalendarResource)
+            expandAccount(prov, target, right, attrs, result);
+        else if (target instanceof Account)
+            expandAccount(prov, target, right, attrs, result);
+        else
+            throw ServiceException.FAILURE("internal error", null);
         
         return result;
     }
     
-    private static void processTargetEntry(TargetType grantedOnEntryType, Entry grantedOn, int distanceToTarget, Right right, List<EffectiveACL> result) throws ServiceException {
-        List<ZimbraACE> aces = PermUtil.getACEs(grantedOn, right);
+    
+    /**
+     * 
+     * @param grantedOnEntryType  TargetType of the entry on which the right is granted
+     * @param grantedOn           Target entry on which the right is granted
+     * @param distanceToTarget    Distance to the actual target to be operated on
+     * @param targetType          Target type of the actual target entry
+     * @param right               the right
+     * @param attrs               attrs to be operated on for get/set attrs rights
+     * @param result              result to be appended to
+     * @throws ServiceException
+     */
+    private static void processTargetEntry(TargetType grantedOnEntryType, Entry grantedOn, int distanceToTarget, 
+                                           TargetType targetType,
+                                           Right right, Map<String, Object> attrs, 
+                                           List<EffectiveACL> result) throws ServiceException {
+        List<ZimbraACE> aces;
+        if (right == AdminRight.R_PSEUDO_GET_ATTRS || right == AdminRight.R_PSEUDO_SET_ATTRS)
+            aces = PermUtil.getACEs(grantedOn, right, targetType, attrs.keySet());
+        else
+            aces = PermUtil.getACEs(grantedOn, right);
         if (aces != null && aces.size() > 0) {
             EffectiveACL effectiveAcl = new EffectiveACL(grantedOnEntryType, grantedOn, distanceToTarget, aces);
             result.add(effectiveAcl);
         }
    }
     
-    private static void expandAccount(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
+    private static void expandAccount(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeTtype = (target instanceof CalendarResource)?TargetType.resource:TargetType.account;
+        
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry((target instanceof CalendarResource)?TargetType.resource:TargetType.account, target, distance, right, result);
+        processTargetEntry(targeTtype, target, distance, targeTtype, right, attrs, result);
         
-        // get grants on entries where the target can inherit from
-        if (target instanceof Account) {
-            // groups the account is directly or indirectly a member of
-            List<MemberOf> groups = prov.getAclGroups((Account)target);
-            int dist = distance;
-            for (MemberOf group : groups) {
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
-                dist = distance + group.getDistance();
-                processTargetEntry(TargetType.distributionlist, dl, dist, right, result);
-            }
-            distance = dist;
-            
-            // domain of the account
-            Domain domain = prov.getDomain((Account)target);
-            processTargetEntry(TargetType.domain, domain, ++distance, right, result);
-            
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof DistributionList) {
-            // groups the group is directly or indirectly a member of
-            List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
-            int dist = distance;
-            for (MemberOf group : groups) {
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
-                dist = distance + group.getDistance();
-                processTargetEntry(TargetType.distributionlist, dl, dist, right, result);
-            }
-            distance = dist;
-            
-            // domain of the group
-            Domain domain = prov.getDomain((DistributionList)target);
-            processTargetEntry(TargetType.domain, domain, ++distance, right, result);
-            
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-
-        } else if (target instanceof Domain) {
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
+        // groups the account is directly or indirectly a member of
+        List<MemberOf> groups = prov.getAclGroups((Account)target);
+        int dist = distance;
+        for (MemberOf group : groups) {
+            DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
+            dist = distance + group.getDistance();
+            processTargetEntry(TargetType.distributionlist, dl, dist, targeTtype, right, attrs, result);
+        }
+        distance = dist;
+        
+        // domain of the account
+        Domain domain = prov.getDomain((Account)target);
+        processTargetEntry(TargetType.domain, domain, ++distance, targeTtype, right, attrs, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeTtype, right, attrs, result);
+        
     }
     
-    private static void expandDistributionList(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
+    private static void expandDistributionList(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
         // This path is called from AccessManager.canPerform, the target object can be a 
         // DistributionList obtained from prov.get(DistributionListBy).  
         // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
         if (target instanceof DistributionList)
             target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
         
+        TargetType targetType = TargetType.distributionlist;
+            
         // get grants on the target itself
         int distance = 0;
-        processTargetEntry(TargetType.distributionlist, target, distance, right, result);
+        processTargetEntry(TargetType.distributionlist, target, distance, targetType, right, attrs, result);
         
-        // get grants on entries where the target can inherit from
-        if (target instanceof DistributionList) {
-            List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
-            int dist = distance;
-            for (MemberOf group : groups) {
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
-                dist = distance + group.getDistance();
-                processTargetEntry(TargetType.distributionlist, dl, dist, right, result);
-            }
-            distance = dist;
-            
-            // domain of the group
-            Domain domain = prov.getDomain((DistributionList)target);
-            processTargetEntry(TargetType.domain, domain, ++distance, right, result);
-            
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
+        List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
+        int dist = distance;
+        for (MemberOf group : groups) {
+            DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
+            dist = distance + group.getDistance();
+            processTargetEntry(TargetType.distributionlist, dl, dist, targetType, right, attrs, result);
+        }
+        distance = dist;
+        
+        // domain of the group
+        Domain domain = prov.getDomain((DistributionList)target);
+        processTargetEntry(TargetType.domain, domain, ++distance, targetType, right, attrs, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targetType, right, attrs, result);
+    }
+    
+    private static void expandDomain(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.domain;
+        
+        // get grants on the target itself
+        int distance = 0;
+        processTargetEntry(TargetType.domain, target, distance, targeType, right, attrs, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+    }
+    
+    private static void expandCos(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.cos;
+        
+        // get grants on the target itself
+        int distance = 0;
+        processTargetEntry(TargetType.cos, target, distance, targeType, right, attrs, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+    }
+    
+    private static void expandServer(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.server;
+        
+        // get grants on the target itself
+        int distance = 0;
+        processTargetEntry(TargetType.server, target, distance, targeType, right, attrs, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+    }
+    
+    private static void expandConfig(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.config;
+        
+        // get grants on the target itself
+        int distance = 0;
+        processTargetEntry(TargetType.config, target, distance, targeType, right, attrs, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        processTargetEntry(TargetType.global, globalGrant, ++distance, targeType, right, attrs, result);
+    }
+    
+    private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, Map<String, Object> attrs, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.global;
+        
+        // get grants on the target itself
+        int distance = 0;
+        processTargetEntry(TargetType.global, target, distance, targeType, right, attrs, result);
+    }
 
-        } else if (target instanceof Domain) {
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
-    }
-    
-    private static void expandDomain(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        // get grants on the target itself
-        int distance = 0;
-        processTargetEntry(TargetType.domain, target, distance, right, result);
-        
-        // get grants on entries where the target can inherit from
-        if (target instanceof Domain) {
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right: " + 
-                                           "entry="+target.getLabel() + ", right=" + right.getName() + 
-                                           "(right is only allowed on domain or global grant entries)",
-                                           null);
-    }
-    
-    private static void expandCos(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        // get grants on the target itself
-        int distance = 0;
-        processTargetEntry(TargetType.cos, target, distance, right, result);
-        
-        // get grants on entries where the target can inherit from
-        if (target instanceof Cos) {
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
-    }
-    
-    private static void expandServer(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        // get grants on the target itself
-        int distance = 0;
-        processTargetEntry(TargetType.server, target, distance, right, result);
-        
-        // get grants on entries where the target can inherit from
-        if (target instanceof Server) {
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
-    }
-    
-    private static void expandConfig(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        // get grants on the target itself
-        int distance = 0;
-        processTargetEntry(TargetType.config, target, distance, right, result);
-        
-        // get grants on entries where the target can inherit from
-        if (target instanceof Config) {
-            // global grant
-            Entry globalGrant = prov.getGlobalGrant();
-            processTargetEntry(TargetType.global, globalGrant, ++distance, right, result);
-            
-        } else if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
-    }
-    
-    private static void expandGlobalGrant(Provisioning prov, Entry target, Right right, List<EffectiveACL> result) throws ServiceException {
-        // get grants on the target itself
-        int distance = 0;
-        processTargetEntry(TargetType.global, target, distance, right, result);
-        
-        // get grants on entries where the target can inherit from
-        if (target instanceof GlobalGrant) {
-            // nothing
-        } else
-            throw ServiceException.FAILURE("invalid target entry for right:" + "entry="+target.getLabel() + ", right=" + right.getName(), null);
-    }
+
+
 }

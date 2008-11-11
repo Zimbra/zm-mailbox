@@ -18,7 +18,7 @@ public class UserRight extends Right {
     }
     
     UserRight(String name) {
-        super(name);
+        super(name, RightType.preset);
     }
     
 }

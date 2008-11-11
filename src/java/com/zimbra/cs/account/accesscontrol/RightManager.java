@@ -15,20 +15,25 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class RightManager {
+    private static final String E_A            = "a";
     private static final String E_ATTRS        = "attrs";
     private static final String E_DEFAULT      = "default";
     private static final String E_DESC         = "desc";
     private static final String E_DOC          = "doc";
+    private static final String E_R            = "r";
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
-    private static final String E_TARGET_TYPE  = "targetType";
     
-    private static final String A_ATTR         = "attr";
-    private static final String A_LIMIT        = "limit";
+    private static final String A_LIMIT        = "l";
+    private static final String A_N            = "n";
     private static final String A_NAME         = "name";
     private static final String A_ON_ENTRY     = "onEntry";
+    private static final String A_R            = "r";
+    private static final String A_TARGET_TYPE  = "targetType";
     private static final String A_TYPE         = "type";
     private static final String A_USER_RIGHT   = "userRight";
+    
+    private static final String TARGET_TYPE_DELIMITER   = ",";
     
     private static RightManager mInstance;
     
@@ -123,48 +128,54 @@ public class RightManager {
             throw ServiceException.PARSE_ERROR("invalid default value: " + defaultValue, null);
     }
     
-    private void parseTargetType(Element eTargetType, Right right) throws ServiceException {
-        if (right.isUserRight())
-            throw ServiceException.PARSE_ERROR(E_TARGET_TYPE + " is not allowed for user right", null);
+    private void parseAttr(Element eAttr, AttrRight right) throws ServiceException {
+        String attrName = eAttr.attributeValue(A_N);
+        if (attrName == null)
+            throw ServiceException.PARSE_ERROR("missing attr name", null);   
         
-        TargetType targetType = TargetType.fromString(eTargetType.getText());
-        right.setTargetType(targetType);
-    }
-    
-    private void parseAttr(Element eAttr, AdminRight right) throws ServiceException {
-        
-        // parse attribute name
-        String attrName = eAttr.getTextTrim();
-        // TODO, validate if the attribute exists and if it is on all entry types
-        AdminRight.AttrRight attrRight = right.addAttr(attrName);
-            
-        // parse onEntry
-        String onEntries = eAttr.attributeValue(A_ON_ENTRY);
-        if (onEntries == null)
-            attrRight.setOnAllEntries();
-        else {
-            String[] entryTypes = onEntries.split(",");
-            for (String entryType :entryTypes) {
-                AdminRight.EntryType et = AdminRight.EntryType.fromString(entryType);
-                attrRight.addOnEntry(et);
-            }
-        }
-        
-        // parse limit
         boolean limit = getBooleanAttr(eAttr, A_LIMIT);
-        attrRight.setLimit(limit);
+        
+        // TODO, validate if the attribute exists
+        right.addAttr(attrName, limit);
     }
     
     private void parseAttrs(Element eAttrs, Right right) throws ServiceException {
-        if (!(right instanceof AdminRight))
-            throw ServiceException.PARSE_ERROR(E_ATTRS + " is only allowed for admin right", null);
+        if (!(right instanceof AttrRight))
+            throw ServiceException.PARSE_ERROR(E_ATTRS + " is only allowed for admin getAttrs or setAttrs right", null);
         
-        AdminRight adminRight = (AdminRight)right;
+        AttrRight attrRight = (AttrRight)right;
+        attrRight.initAttrs();
         
         for (Iterator elemIter = eAttrs.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
-            if (elem.getName().equals(A_ATTR))
-                parseAttr(elem, adminRight);
+            if (elem.getName().equals(E_A))
+                parseAttr(elem, attrRight);
+            else
+                throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);   
+        }
+    }
+    
+    private void parseRight(Element eAttr, ComboRight right) throws ServiceException {
+        String rightName = eAttr.attributeValue(A_N);
+        if (rightName == null)
+            throw ServiceException.PARSE_ERROR("missing right name", null);   
+            
+        Right r = getRight(rightName);
+        if (r == null)
+            throw ServiceException.PARSE_ERROR("unknown right: " + rightName, null);   
+        right.addRight(r);
+    }
+    
+    private void parseRights(Element eAttrs, Right right) throws ServiceException {
+        if (!(right instanceof ComboRight))
+            throw ServiceException.PARSE_ERROR(E_RIGHTS + " is only allowed for admin combo right", null);
+        
+        ComboRight comboRight = (ComboRight)right;
+        
+        for (Iterator elemIter = eAttrs.elementIterator(); elemIter.hasNext();) {
+            Element elem = (Element)elemIter.next();
+            if (elem.getName().equals(E_R))
+                parseRight(elem, comboRight);
             else
                 throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);   
         }
@@ -175,16 +186,32 @@ public class RightManager {
         boolean userRight = getBooleanAttr(eRight, A_USER_RIGHT, false);
         
         // System.out.println("Parsing right " + "(" +  (userRight?"user":"admin") + ") " + name);
+        Right right;
         
         AdminRight.RightType rightType = null;
-        if (!userRight) {
+        String targetTypeStr = eRight.attributeValue(A_TARGET_TYPE, null);
+        
+        if (userRight) {
+            if (targetTypeStr != null)
+                throw ServiceException.PARSE_ERROR(A_TARGET_TYPE + " is not allowed for user right", null);
+
+            right = new UserRight(name);
+            right.setTargetType(TargetType.account);
+        } else {
             String rt = eRight.attributeValue(A_TYPE);
             if (rt == null)
                 throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "]", null);
             rightType = AdminRight.RightType.fromString(rt);
-        }
             
-        Right right = userRight? new UserRight(name) : new AdminRight(name, rightType);
+            right = AdminRight.newAdminRight(name, rightType);
+            if (targetTypeStr != null) {
+                String taregtTypes[] = targetTypeStr.split(TARGET_TYPE_DELIMITER);
+                for (String tt : taregtTypes) {
+                    TargetType targetType = TargetType.fromString(tt);
+                    right.setTargetType(targetType);
+                }
+            }
+        }
 
         for (Iterator elemIter = eRight.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
@@ -194,24 +221,17 @@ public class RightManager {
                 parseDoc(elem, right);
             else if (elem.getName().equals(E_DEFAULT))
                 parseDefault(elem, right);
-            else if (elem.getName().equals(E_TARGET_TYPE))
-                parseTargetType(elem, right);
             else if (elem.getName().equals(E_ATTRS))
                 parseAttrs(elem, right);
+            else if (elem.getName().equals(E_RIGHTS))
+                parseRights(elem, right);
             else
                 throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);
         }
-        if (right.getDesc() == null)
-            throw ServiceException.PARSE_ERROR("missing element [" + E_DESC + "]", null);
+        
+        // verify that all required fields are set
+        right.verify();
 
-        if (right.isUserRight()) {
-            // user right can only be on accounts
-            right.setTargetType(TargetType.account);
-        } else {
-            // preset rights requires a target type
-            if (right.getTargetType() == null && ((AdminRight)right).getRightType() == AdminRight.RightType.preset)
-                throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "] for preset admin right", null);
-        }
         return right;
     }
     

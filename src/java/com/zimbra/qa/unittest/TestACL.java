@@ -12,10 +12,12 @@ import org.apache.commons.httpclient.HttpState;
 
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
+import junit.framework.ComparisonFailure;  
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
@@ -29,11 +31,13 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AclAccessManager;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
@@ -46,6 +50,18 @@ public abstract class TestACL extends TestCase {
     protected static final String TEST_ID = TestProvisioningUtil.genTestId();
     protected static final String DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-ACL", TEST_ID);
     protected static final String PASSWORD = "test123";
+    
+    // user right
+    protected static final Right USER_RIGHT = UserRight.RT_viewFreeBusy;
+    
+    // account right
+    protected static final Right ADMIN_RIGHT_ACCOUNT           = AdminRight.R_renameAccount;
+    protected static final Right ADMIN_RIGHT_CALENDAR_RESOURCE = AdminRight.R_renameCalendarResource;
+    protected static final Right ADMIN_RIGHT_CONFIG            = AdminRight.R_testGlobalConfigRemoveMe;protected static final Right ADMIN_RIGHT_COS               = AdminRight.R_renameCos;
+    protected static final Right ADMIN_RIGHT_DISTRIBUTION_LIST = AdminRight.R_renameDistributionList;
+    protected static final Right ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
+    protected static final Right ADMIN_RIGHT_GLOBALGRANT       = AdminRight.R_testGlobalGrantRemoveMe;
+    protected static final Right ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
     
     static {
         
@@ -359,16 +375,15 @@ public abstract class TestACL extends TestCase {
                     throw e;
                 
                 // see if any canAlsoVia matches
-                try {
-                    for (TestViaGrant canAlsoVia : mCanAlsoVia) {
+                for (TestViaGrant canAlsoVia : mCanAlsoVia) {
+                    try {
                         canAlsoVia.verify(actual);
                         // good, at least one of the canAlsoVia matches
                         return;
+                    } catch (AssertionFailedError     eAlso) {
+                        // ignore, see if next one matches
                     }
-                } catch (AssertionFailedError eAlso) {
-                    // ignore 
                 }
-                
                 // if we get here, none of the canAlsoVia matches
                 // throw the assertion exception on the main via
                 throw e;
@@ -505,6 +520,16 @@ public abstract class TestACL extends TestCase {
         String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
         Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
         return PermUtil.revokeRight(mProv, targetEntry, aces);
+    }
+    
+    public static void main(String[] args) throws Exception {
+        CliUtil.toolSetup("INFO");
+        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        
+        // run all ACL tests
+        TestUtil.runTest(TestACLGrantee.class);
+        TestUtil.runTest(TestACLTarget.class);
+        TestUtil.runTest(TestACLPrecedence.class);
     }
 
 }

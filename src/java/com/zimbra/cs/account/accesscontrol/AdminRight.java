@@ -8,31 +8,25 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 
 public class AdminRight extends Right {
+    // pseudo rights, should never actually be granted on any entry 
+    public static AdminRight R_PSEUDO_GET_ATTRS;
+    public static AdminRight R_PSEUDO_SET_ATTRS;
     
     // known rights
-    public static AdminRight RT_createAccount;
-    public static AdminRight RT_renameAccount;
-    public static AdminRight RT_renameCalendarResource;
-    public static AdminRight RT_renameDistributionList;
-    public static AdminRight RT_renameCos;
-    public static AdminRight RT_renameServer;
-    public static AdminRight RT_testGlobalConfigRemoveMe;
-    public static AdminRight RT_testGlobalGrantRemoveMe;
+    public static AdminRight R_createAccount;
+    public static AdminRight R_renameAccount;
+    public static AdminRight R_renameCalendarResource;
+    public static AdminRight R_renameDistributionList;
+    public static AdminRight R_renameCos;
+    public static AdminRight R_renameServer;
+    public static AdminRight R_testGlobalConfigRemoveMe;
+    public static AdminRight R_testGlobalGrantRemoveMe;
     
-    enum RightType {
-        preset,
-        getAttrs,
-        modifyAttrs;
-        
-        public static RightType fromString(String s) throws ServiceException {
-            try {
-                return RightType.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR("unknown right type: " + s, e);
-            }
-        }
-    }
+    public static AdminRight R_modifyAccount;
+    public static AdminRight R_configureQuota;
+    public static AdminRight R_configureQuotaWithinLimit;
     
+    /*
     enum EntryType {
         account,
         cos;
@@ -45,60 +39,39 @@ public class AdminRight extends Right {
             }
         }
     }
-    
-    class AttrRight {
-        
-        private String mAttrName;
-        private Set<EntryType> mOnEntries = new HashSet<EntryType>();
-        private boolean mLimit;
-        
-        AttrRight(String name) {
-            mAttrName = name;
-        }
-        
-        void addOnEntry(EntryType entryType) {
-            mOnEntries.add(entryType);
-        }
-    
-        void setOnAllEntries() {
-            for (EntryType et : EntryType.values())
-                addOnEntry(et);
-        }
-        
-        void setLimit(boolean limit) {
-            mLimit = limit;
-        }
-    }
-    
-    private RightType mRightType;
-    private Map<String, AttrRight> mAttrs;
+    */
     
     static void initKnownAdminRights(RightManager rm) throws ServiceException {
-        RT_createAccount = rm.getAdminRight("createAccount");
-        RT_renameAccount = rm.getAdminRight("renameAccount");
-        RT_renameCalendarResource = rm.getAdminRight("renameCalendarResource");
-        RT_renameDistributionList = rm.getAdminRight("renameDistributionList");
-        RT_renameCos = rm.getAdminRight("renameCos");
-        RT_renameServer = rm.getAdminRight("renameServer");
-        RT_testGlobalConfigRemoveMe = rm.getAdminRight("testGlobalConfigRemoveMe");
-        RT_testGlobalGrantRemoveMe = rm.getAdminRight("testGlobalGrantRemoveMe");
+        
+        R_PSEUDO_GET_ATTRS = new AttrRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
+        R_PSEUDO_SET_ATTRS = new AttrRight("PSEUDO_SET_ATTRS", RightType.setAttrs);
+        
+        R_createAccount = rm.getAdminRight("createAccount");
+        R_renameAccount = rm.getAdminRight("renameAccount");
+        R_renameCalendarResource = rm.getAdminRight("renameCalendarResource");
+        R_renameDistributionList = rm.getAdminRight("renameDistributionList");
+        R_renameCos = rm.getAdminRight("renameCos");
+        R_renameServer = rm.getAdminRight("renameServer");
+        R_testGlobalConfigRemoveMe = rm.getAdminRight("testGlobalConfigRemoveMe");
+        R_testGlobalGrantRemoveMe = rm.getAdminRight("testGlobalGrantRemoveMe");
+        
+        R_modifyAccount = rm.getAdminRight("modifyAccount");
+        R_configureQuota = rm.getAdminRight("configureQuota");
+        R_configureQuotaWithinLimit= rm.getAdminRight("configureQuotaWithinLimit");
     }
     
-    AdminRight(String name, RightType rightType) {
-        super(name);
-        mRightType = rightType;
-        if (mRightType == RightType.getAttrs || mRightType == RightType.modifyAttrs)
-            mAttrs = new HashMap<String, AttrRight>();
+    static AdminRight newAdminRight(String name, RightType rightType) {
+        if (rightType == RightType.getAttrs || rightType == RightType.setAttrs)
+            return new AttrRight(name, rightType);
+        else if (rightType == RightType.combo)
+            return new ComboRight(name, rightType);
+        else
+            return new AdminRight(name, rightType);
     }
     
-    AttrRight addAttr(String attrName) {
-        AttrRight attrRight = new AttrRight(attrName);
-        mAttrs.put(attrName, attrRight);
-        return attrRight;
+    protected AdminRight(String name, RightType rightType) {
+        super(name, rightType);
     }
-    
-    RightType getRightType() {
-        return mRightType;
-    }
+
     
 }

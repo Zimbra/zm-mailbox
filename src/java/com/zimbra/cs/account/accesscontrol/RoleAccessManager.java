@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -122,8 +123,8 @@ public class RoleAccessManager extends AccessManager {
                     return false;
             }
 
-            // 1. always allow self
-            if (target instanceof Account) {
+            // 1. always allow self for user right
+            if (rightNeeded.isUserRight() && target instanceof Account) {
                 if (((Account)target).getId().equals(grantee.getId()))
                     return true;
             }
@@ -131,7 +132,7 @@ public class RoleAccessManager extends AccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded, null);
             if (effectiveACLs.size() > 0)
                 return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, via);
             else {
@@ -208,6 +209,73 @@ public class RoleAccessManager extends AccessManager {
         }
         
         return false;
+    }
+    
+    private Map<String, Boolean> canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) {
+        if (grantee == null)
+            return DENY_ALL_ATTRS;
+        
+        try {
+            // do NOT check for self.  If an admin auth as an admin and want to get/set  
+            // his own attrs, he has to have the proper right to do so.
+            
+            Provisioning prov = Provisioning.getInstance();
+            
+            // 2. check ACL
+            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded, attrs);
+            if (effectiveACLs.size() > 0)
+                return RightChecker.canAccessAttrs(effectiveACLs, grantee, rightNeeded, attrs);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("ACL checking failed: " + 
+                                   "grantee=" + grantee.getName() + 
+                                   ", target=" + target.getLabel() + 
+                                   ", right=(GetAttrs)" +
+                                   " => denied", e);
+        }
+        return DENY_ALL_ATTRS;
+    }
+    
+    @Override
+    public Map<String, Boolean> canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+        return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, attrs);
+    }
+
+        
+    @Override
+    public Map<String, Boolean> canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
+        try {
+            Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+            return canGetAttrs(granteeAcct, target, attrs);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("ACL checking failed: " +
+                                   "grantee=" + grantee.getAccountId() +
+                                   ", target=" + target.getLabel() +
+                                   ", right=(GetAttrs)" +
+                                   " => denied", e);
+        }
+        
+        return null;
+    }
+    
+    @Override
+    public Map<String, Boolean> canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+        return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, attrs);
+    }
+    
+    @Override
+    public Map<String, Boolean> canSetAttrs(AuthToken grantee, Entry target,  Map<String, Object> attrs) {
+        try {
+            Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+            return canSetAttrs(granteeAcct, target, attrs);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("ACL checking failed: " +
+                                   "grantee=" + grantee.getAccountId() +
+                                   ", target=" + target.getLabel() +
+                                   ", right=(GetAttrs)" +
+                                   " => denied", e);
+        }
+        
+        return null;
     }
     
     /**

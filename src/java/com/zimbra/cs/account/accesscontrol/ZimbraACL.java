@@ -8,8 +8,10 @@ import java.util.Set;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 
 public class ZimbraACL {
     private static final Log sLog = LogFactory.getLog(ZimbraACL.class);
@@ -227,11 +229,41 @@ public class ZimbraACL {
         
         for (ZimbraACE ace : mAces) {
             if (right == ace.getRight()) {
-                if (ace.deny())
-                    result.add(0, ace);
-                else
-                    result.add(ace);
+                result.add(ace);
             }
+        }
+
+        return result;
+    }
+    
+    /**
+     * 
+     * For get/setAttrs rights
+     * 
+     * @param rightNeeded  AdminRight.RT_PSEUDO_GET_ATTRS or AdminRight.RT_PSEUDO_SET_ATTRS
+     * @param targetType   target type of the actual enrty this operation is to be performed
+     * @param attrs
+     * @return
+     */
+    List<ZimbraACE> getACEs(Right rightNeeded, TargetType targetType, Set<String> attrs) {
+        List<ZimbraACE> result = new ArrayList<ZimbraACE>();
+        
+        RightType rightTypeNeeded = rightNeeded.getRightType();
+        
+        for (ZimbraACE ace : mAces) {
+            Right rightGranted = ace.getRight();
+            RightType rightTypeGranted = rightGranted.getRightType();
+                
+            // setAttrs imply getAttrs on the same set of attrs
+            boolean matched = (rightTypeNeeded == rightTypeGranted ||
+                               (rightTypeNeeded == RightType.getAttrs && rightTypeGranted == RightType.setAttrs));
+            if (!matched)
+                continue;
+            
+            if (!rightGranted.applicableOnTargetType(targetType))
+                continue;
+
+            result.add(ace);
         }
 
         return result;

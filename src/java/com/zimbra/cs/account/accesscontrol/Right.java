@@ -1,22 +1,50 @@
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 
 public abstract class Right {
     
+    enum RightType {
+        preset,
+        getAttrs,
+        setAttrs,
+        combo;
+        
+        public static RightType fromString(String s) throws ServiceException {
+            try {
+                return RightType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.PARSE_ERROR("unknown right type: " + s, e);
+            }
+        }
+    }
+    
+    protected RightType mRightType;
     private final String mName;
     private String mDesc;  // a brief description
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
     private TargetType mTargetType;
     
+    
     static void initKnownRights(RightManager rm) throws ServiceException {
         UserRight.initKnownUserRights(rm);
         AdminRight.initKnownAdminRights(rm);
     }
-
-    Right(String name) {
+    
+    
+    Right(String name, RightType rightType) {
+        mRightType = rightType;
         mName = name;
+    }
+    
+    public boolean isUserRight() {
+        return (this instanceof UserRight);
+    }
+    
+    RightType getRightType() {
+        return mRightType;
     }
     
     /**
@@ -33,37 +61,46 @@ public abstract class Right {
     public String getDesc() {
         return mDesc;
     }
+        
+    void setDesc(String desc) {
+        mDesc = desc;
+    }
     
     public String getDoc() {
         return mDoc;
+    }
+        
+    void setDoc(String doc) {
+        mDoc = doc;
     }
     
     public Boolean getDefault() {
         return mDefault;
     }
     
-    public TargetType getTargetType() {
-        return mTargetType;
-    }
-    
-    public boolean isUserRight() {
-        return (this instanceof UserRight);
-    }
-    
-    void setDesc(String desc) {
-        mDesc = desc;
-    }
-    
-    void setDoc(String doc) {
-        mDoc = doc;
-    }
-
     void setDefault(Boolean defaultValue) {
         mDefault = defaultValue;
     }
     
-    void setTargetType(TargetType targetType) {
-        mTargetType = targetType;
+    public boolean applicableOnTargetType(TargetType targetType) {
+        return (mTargetType == targetType);
     }
 
+    void setTargetType(TargetType targetType) throws ServiceException {
+        if (mTargetType != null)
+            throw ServiceException.PARSE_ERROR("target type already set", null);
+        
+        mTargetType = targetType;
+    }
+    
+    void verifyTargetType() throws ServiceException {
+        if (mTargetType == null)
+            throw ServiceException.PARSE_ERROR("missing target type", null);
+    }
+    
+    void verify() throws ServiceException {
+        if (getDesc() == null)
+            throw ServiceException.PARSE_ERROR("missing description", null);
+        verifyTargetType();
+    }
 }

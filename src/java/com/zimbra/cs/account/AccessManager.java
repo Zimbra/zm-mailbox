@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -84,12 +87,14 @@ public abstract class AccessManager {
 
     public abstract boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException;
     
-    
+    //
     // ACL based methods
-    public abstract boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    //
+    
+    public abstract boolean canPerform(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canPerform(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
     public abstract boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-
+    
     // for admin calls to return the decisive grant that lead to the result 
     public static class ViaGrant {
         private ViaGrant mImpl;
@@ -113,6 +118,31 @@ public abstract class AccessManager {
     public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
         return canPerform(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
+    
+    
+    /*
+     * returns
+     * null: 
+     *     allow none
+     * 
+     * empty map: 
+     *     allow all attrs on hte entry (also can go beyond inherited limit, we do NOT have a notion of 
+     *     "allow all within inherited limit")
+     *             
+     * map of <attrName, limit>: 
+     *     allow those in the map, limit indicates if the attr can only be set to values within the 
+     *     inherited limit.
+     * 
+     */
+    public static final Map<String, Boolean> DENY_ALL_ATTRS = null;
+    public static final Map<String, Boolean> ALLOW_ALL_ATTRS = new HashMap<String, Boolean>();
+    
+    public abstract Map<String, Boolean> canGetAttrs(Account grantee,   Entry target, Map<String, Object> attrs);
+    public abstract Map<String, Boolean> canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs);
+    public abstract Map<String, Boolean> canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs);
+    public abstract Map<String, Boolean> canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs);
+
+
 
     /**
      * Returns true if authAccount should be allowed access to private data in appointments owned

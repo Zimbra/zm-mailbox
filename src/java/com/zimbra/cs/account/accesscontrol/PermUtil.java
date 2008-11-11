@@ -67,6 +67,14 @@ public class PermUtil {
             return null;
     }
     
+    public static List<ZimbraACE> getACEs(Entry entry, Right right, TargetType targetType, Set<String> attrs) throws ServiceException {
+        ZimbraACL acl = getACL(entry); 
+        if (acl != null)
+            return acl.getACEs(right, targetType, attrs);
+        else
+            return null;
+    }
+    
     /**
      * Grant rights on a target entry.
      * 

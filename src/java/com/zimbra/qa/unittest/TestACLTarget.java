@@ -59,7 +59,7 @@ public class TestACLTarget extends TestACL {
          *   - domain the account is in
          *   - global grant
          */
-        Right right = AdminRight.RT_renameAccount;
+        Right right = ADMIN_RIGHT_ACCOUNT;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -115,7 +115,7 @@ public class TestACLTarget extends TestACL {
          *   - domain the account is in
          *   - global grant
          */
-        Right right = AdminRight.RT_renameCalendarResource;
+        Right right = ADMIN_RIGHT_CALENDAR_RESOURCE;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -174,7 +174,7 @@ public class TestACLTarget extends TestACL {
          *   - domain the account is in
          *   - global grant
          */
-        Right right = AdminRight.RT_renameDistributionList;
+        Right right = ADMIN_RIGHT_DISTRIBUTION_LIST;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -228,7 +228,7 @@ public class TestACLTarget extends TestACL {
          *   - the target domain
          *   - global grant
          */
-        Right right = AdminRight.RT_createAccount;
+        Right right = ADMIN_RIGHT_DOMAIN;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -265,7 +265,7 @@ public class TestACLTarget extends TestACL {
          *   - the target cos
          *   - global grant
          */
-        Right right = AdminRight.RT_renameCos;
+        Right right = ADMIN_RIGHT_COS;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -302,7 +302,7 @@ public class TestACLTarget extends TestACL {
          *   - the target server
          *   - global grant
          */
-        Right right = AdminRight.RT_renameServer;
+        Right right = ADMIN_RIGHT_SERVER;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -339,7 +339,7 @@ public class TestACLTarget extends TestACL {
          *   - the target config
          *   - global grant
          */
-        Right right = AdminRight.RT_testGlobalConfigRemoveMe;
+        Right right = ADMIN_RIGHT_CONFIG;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -376,7 +376,7 @@ public class TestACLTarget extends TestACL {
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
          *   - global grant
          */
-        Right right = AdminRight.RT_testGlobalGrantRemoveMe;
+        Right right = ADMIN_RIGHT_GLOBALGRANT;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(grantee, right, ALLOW));
         
@@ -426,7 +426,7 @@ public class TestACLTarget extends TestACL {
          *   - domain the account is in
          *   - global grant
          */
-        Right right = AdminRight.RT_renameAccount;
+        Right right = ADMIN_RIGHT_ACCOUNT;
         Set<ZimbraACE> allowedGrants = new HashSet<ZimbraACE>();
         allowedGrants.add(newUsrACE(grantee, right, ALLOW));
         Set<ZimbraACE> deniedGrants = new HashSet<ZimbraACE>();
@@ -488,79 +488,7 @@ public class TestACLTarget extends TestACL {
         verifyDefault(grantee, target, right);
         
     }
-    
-    /*
-     Combining Target Scope and Grantee Scope: Grantee Relativity takes Precedence over Target Relativity
-       For example, for this target hierarchy:
-           domain D
-               group G1 (allow right R to group GC)
-                   group G2 (deny right R to group GB)
-                       group G3 (deny right R to group GA)
-                           user account U   
-                       
-       And this grantee hierarchy:
-           group GA
-               group GB
-                   group GC
-                       (admin) account A
-                   
-       Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
-       Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
-       grant on G1(grant to GC).          
-                   
-     */
-    public void testTargetGranteeGroupConflict() throws Exception {
-        String testName = getName();
-        
-        /*
-         * setup grantees
-         */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
-        
-        /*
-         * setup groups
-         */
-        DistributionList GA = mProv.createDistributionList(getEmailAddr(testName, "GA"), new HashMap<String, Object>());
-        DistributionList GB = mProv.createDistributionList(getEmailAddr(testName, "GB"), new HashMap<String, Object>());
-        DistributionList GC = mProv.createDistributionList(getEmailAddr(testName, "GC"), new HashMap<String, Object>());
 
-        mProv.addMembers(GA, new String[] {GB.getName()});
-        mProv.addMembers(GB, new String[] {GC.getName()});
-        mProv.addMembers(GC, new String[] {grantee.getName()});
-        
-        
-        /*
-         * setup targets
-         */
-        TestViaGrant via;
-        
-        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
-        
-        DistributionList G1 = mProv.createDistributionList(getEmailAddr(testName, "G1"), new HashMap<String, Object>());
-        DistributionList G2 = mProv.createDistributionList(getEmailAddr(testName, "G2"), new HashMap<String, Object>());
-        DistributionList G3 = mProv.createDistributionList(getEmailAddr(testName, "G3"), new HashMap<String, Object>());
-        
-        mProv.addMembers(G1, new String[] {G2.getName()});
-        mProv.addMembers(G2, new String[] {G3.getName()});
-        mProv.addMembers(G3, new String[] {target.getName()});
-        
-        Right right = UserRight.RT_viewFreeBusy;
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newGrpACE(GC, right, ALLOW));
-        grantRight(TargetType.distributionlist, G1, aces);
-        
-        aces.clear();
-        aces.add(newGrpACE(GB, right, DENY));
-        grantRight(TargetType.distributionlist, G2, aces);
-        
-        aces.clear();
-        aces.add(newGrpACE(GA, right, DENY));
-        grantRight(TargetType.distributionlist, G3, aces);
-        
-        // the right should be allowed via the grant on G1, granted to group GC 
-        via = new TestViaGrant(TargetType.distributionlist, G1, GranteeType.GT_GROUP, GC.getName(), right, POSITIVE);
-        verify(grantee, target, right, ALLOW, via);
-    }
     
     /*
      * Number in () is the shortest distance to the account

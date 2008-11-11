@@ -374,65 +374,7 @@ public class TestACLGrantee extends TestACL {
         // not group member
         verify(user3, target, UserRight.RT_viewFreeBusy, DENY, null);
     }
-    
-    /*
-     * Test this membership: user1 should be DENIED via G2(D) or G4(D), G6(D) - they all have the same distance to user1.
-     * 
-     *          G1(A)                      G4(D)
-     *          / \                        / \
-     *      user1  G2(D)                usr1  G5(A)
-     *             / \                        / \
-     *         user1  G3(A)               user1  G6(D)
-     *                 |                          |
-     *               user1                      user1
-     * 
-     */
-    public void testGranteeGroup() throws Exception {
-        String testName = getName();
-        
-        /*
-         * setup grantees
-         */
-        Account user1 = mProv.createAccount(getEmailAddr(testName, "user1"), PASSWORD, null);
-        
-        /*
-         * setup groups
-         */
-        DistributionList G1 = mProv.createDistributionList(getEmailAddr(testName, "G1"), new HashMap<String, Object>());
-        DistributionList G2 = mProv.createDistributionList(getEmailAddr(testName, "G2"), new HashMap<String, Object>());
-        DistributionList G3 = mProv.createDistributionList(getEmailAddr(testName, "G3"), new HashMap<String, Object>());
-        DistributionList G4 = mProv.createDistributionList(getEmailAddr(testName, "G4"), new HashMap<String, Object>());
-        DistributionList G5 = mProv.createDistributionList(getEmailAddr(testName, "G5"), new HashMap<String, Object>());
-        DistributionList G6 = mProv.createDistributionList(getEmailAddr(testName, "G6"), new HashMap<String, Object>());
 
-        mProv.addMembers(G1, new String[] {user1.getName(), G2.getName()});
-        mProv.addMembers(G2, new String[] {user1.getName(), G3.getName()});
-        mProv.addMembers(G3, new String[] {user1.getName()});
-        mProv.addMembers(G4, new String[] {user1.getName(), G5.getName()});
-        mProv.addMembers(G5, new String[] {user1.getName(), G6.getName()});
-        mProv.addMembers(G6, new String[] {user1.getName()});
-        
-        
-        /*
-         * setup targets
-         */
-        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newGrpACE(G1, UserRight.RT_viewFreeBusy, ALLOW));
-        aces.add(newGrpACE(G2, UserRight.RT_viewFreeBusy, DENY));
-        aces.add(newGrpACE(G3, UserRight.RT_viewFreeBusy, ALLOW));
-        aces.add(newGrpACE(G4, UserRight.RT_viewFreeBusy, DENY));
-        aces.add(newGrpACE(G5, UserRight.RT_viewFreeBusy, ALLOW));
-        aces.add(newGrpACE(G6, UserRight.RT_viewFreeBusy, DENY));
-        grantRight(TargetType.account, target, aces);
-        
-        TestViaGrant via;
-        
-        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, G2.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
-        via.addCanAlsoVia(new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, G4.getName(), UserRight.RT_viewFreeBusy, NEGATIVE));
-        via.addCanAlsoVia(new TestViaGrant(TargetType.account, target, GranteeType.GT_GROUP, G6.getName(), UserRight.RT_viewFreeBusy, NEGATIVE));
-        verify(user1, target, UserRight.RT_viewFreeBusy, DENY, via);
-    }
     
     /*
      * test target with no ACL, should return caller default regardless who is the grantee and which right to ask for
@@ -521,41 +463,7 @@ public class TestACLGrantee extends TestACL {
         assertEquals(1, acl.size());
     }
     
-    public void testGrantConflictDirectLdapModify() throws Exception {
-        String testName = getName();
-        
-        /*
-         * setup grantees
-         */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
-        
-        /*
-         * setup targets
-         */
-        Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newUsrACE(grantee, UserRight.RT_viewFreeBusy, ALLOW));
-        aces.add(newUsrACE(grantee, UserRight.RT_viewFreeBusy, DENY));
-        
-        // skip granting code and do direct ldap modify
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        List<String> values = new ArrayList<String>();
-        for (ZimbraACE ace : aces)
-            values.add(ace.serialize());
-        attrs.put(Provisioning.A_zimbraACE, values);
-        mProv.modifyAttrs(target, attrs);
-        
-        // verify that both are indeed added
-        Set<ZimbraACE> acl = PermUtil.getAllACEs(target);
-        assertEquals(2, acl.size());
-        
-        TestViaGrant via;
-        
-        // verify that the negative grant is honored
-        via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, grantee.getName(), UserRight.RT_viewFreeBusy, NEGATIVE);
-        verify(grantee, target, UserRight.RT_viewFreeBusy, DENY, via);
-    }
-    
+
     public void testGrantDuplicate() throws Exception {
         String testName = getName();
         
