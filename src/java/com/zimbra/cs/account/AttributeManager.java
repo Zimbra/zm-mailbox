@@ -1889,6 +1889,9 @@ public class AttributeManager {
                 case TYPE_GENTIME:
                     generateGetter(result, ai, false);
                     generateGetter(result, ai, true);
+                    generateSetter(result, ai, false, SetterType.set);
+                    if (ai.getType() == AttributeType.TYPE_GENTIME) generateSetter(result, ai, true, SetterType.set);
+                    generateSetter(result, ai, false, SetterType.unset);
                     break;
                 default:
                     if (ai.getName().equalsIgnoreCase("zimbraLocale")) {
@@ -1896,6 +1899,12 @@ public class AttributeManager {
                     } else {
                         generateGetter(result, ai, false);
                     }
+                    generateSetter(result, ai, false, SetterType.set);
+                    if (ai.getCardinality() == AttributeCardinality.multi) {
+                        generateSetter(result, ai, false, SetterType.add);
+                        generateSetter(result, ai, false, SetterType.remove);
+                    }
+                    generateSetter(result, ai, false, SetterType.unset);
                     break;
             }
         }
@@ -1983,6 +1992,105 @@ public class AttributeManager {
         result.append("     */\n");
         result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
         result.append(String.format("    public %s %s() {%n        %s%n    }%n", javaType, methodName, javaBody));
+    }
+
+    private static enum SetterType { set, add, unset, remove }
+
+    private static void generateSetter(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType) throws ServiceException {
+        String javaType;
+        String putParam;
+
+        String name = ai.getName();
+
+        AttributeType type = asString ? AttributeType.TYPE_STRING : ai.getType();
+
+        String methodNamePrefix;
+        String methodName = ai.getName();
+        if (methodName.startsWith("zimbra")) methodName = methodName.substring(6);
+        methodName = setterType.name()+methodName.substring(0,1).toUpperCase() + methodName.substring(1);
+        if (asString) methodName += "AsString";
+
+        switch (type) {
+            case TYPE_BOOLEAN:
+                javaType = "boolean";
+                putParam = String.format("Boolean.toString(%s)", name);
+                break;
+            case TYPE_INTEGER:
+                javaType = "int";
+                putParam = String.format("Integer.toString(%s)", name);
+                break;
+            case TYPE_LONG:
+                javaType = "long";
+                putParam = String.format("Long.toString(%s)", name);
+                break;
+            case TYPE_GENTIME:
+                javaType = "Date";
+                putParam = String.format("DateUtil.toGeneralizedTime(%s)", name);
+                break;
+            default:
+                if (ai.getCardinality() != AttributeCardinality.multi) {
+                    javaType = "String";
+                    putParam = String.format("%s", name);
+                } else {
+                    if (setterType == SetterType.set) javaType = "String[]";
+                    else javaType = "String";
+                    putParam = String.format("%s", name);
+                }
+                break;
+        }
+
+        String  mapType= "Map<String,Object>";
+        
+        result.append("\n    /**\n");
+        if (ai.getDescription() != null) {
+            result.append(wrapComments(StringUtil.escapeHtml(ai.getDescription()), 70, "     * "));
+            result.append("\n");
+        }
+        if (ai.getType() == AttributeType.TYPE_ENUM) {
+            result.append("     *\n");
+            result.append(String.format("     * <p>Valid values: %s%n", ai.getEnumSet().toString()));
+        }
+        result.append("     *\n");
+
+        String paramDoc = "";
+        String  body = "";
+
+         switch(setterType) {
+            case set:
+                body = String.format("        attrs.put(Provisioning.A_%s, %s);%n", name, putParam);
+                paramDoc = String.format("     * @param %s new value%n", name);
+                break;
+            case add:
+                body = String.format("        StringUtil.addToMultiMap(attrs, \"+\" + Provisioning.A_%s, %s);%n",name, name);
+                paramDoc = String.format("     * @param %s new to add to existing values%n", name);
+                break;
+            case remove:
+                body = String.format("        StringUtil.addToMultiMap(attrs, \"-\" + Provisioning.A_%s, %s);%n",name, name);
+                paramDoc = String.format("     * @param %s existing value to remove%n", name);
+                break;
+            case unset:
+                body = String.format("        attrs.put(Provisioning.A_%s, \"\");%n", name);
+                paramDoc = null;
+                break;
+        }
+
+        if (paramDoc != null) result.append(paramDoc);
+        result.append(String.format("     * @param attrs existing map to populate, or null to create a new map%n"));
+        result.append("     * @return populated map to pass into Provisioning.modifyAttrs\n");
+        if (ai.getSince() != null) {
+            result.append("     *\n");
+            result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
+        }
+        result.append("     */\n");
+        result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
+        if (setterType !=  SetterType.unset)
+            result.append(String.format("    public %s %s(%s %s, %s attrs) {%n", mapType, methodName, javaType, name, mapType));
+        else
+            result.append(String.format("    public %s %s(%s attrs) {%n", mapType, methodName, mapType));
+        result.append(String.format("        if (attrs == null) attrs = new HashMap<String,Object>();%n"));
+        result.append(body);
+        result.append(String.format("        return attrs;%n"));
+        result.append(String.format("    }%n"));
     }
 
     private static String wrapComments(String comments, int maxLineLength, String prefix) {
