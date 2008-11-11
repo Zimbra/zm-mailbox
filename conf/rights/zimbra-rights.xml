@@ -3,8 +3,9 @@
 <!-- 
 
 <right name="{name}"
-       [userRight="0|1"]
+       [userRight="{user-right}"]
        [type="{right-type}"]
+       [targetType="{target-type}"]
        
        
     <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
@@ -18,48 +19,104 @@
     
     [
       <attrs>
-          <a onEntry="{comma-separated-entry-types}" limit="0|1">{attribute-name}</a>+
+          <a n="{attribute-name}" l="{limit}"/>+
       </attrs>
     ]
     
+    [
+      <rights>
+          <r n="{right-name}"/>+
+      </rights>
+    ]
+    
+    
 </right>
 
-name: 
+{name}: 
     name of the right
 
-userRight: 
+{user-right}: 
     Whether the right is grantable by users
 	1: the right is grantable by user
 	0(default): the right is only grantable by admins
            
-type: 
-    Right type.  Is only applicable and required for admin rights(i.e. userRight="0" or not set)  
+{right-type}: 
+    Only applicable and required for admin rights(i.e. userRight="0" or not set)  
 	preset      : rights with predefined capabilities     
 	getAttrs    : rights for reading attributes
-	modifyAttrs : rights for reading and writing attributes
+	setAttrs    : rights for reading and writing attributes
+	combo       : combo right containing other defined preset/getAttrs/setAttrs/combo rights
       
-onEntry:
+onEntry:  (don't need this, TODO, remove)
     Only applicable when right type is getAttrs or modifyAttrs  
     Comma separated entry types on which the attribute can be:
         read: if right type is getAttrs
         read and modified: if right type is modifyAttrs  
     If not present, it means all entry types.
                   
-limit: 
+{target-type}:
+    Target type on which the right is applicable.
+    1. For preset rights (i.e. type="preset"):
+           Required and can have only one value.
+    
+    2. For getAttrs/setAttrs rights:
+           Optional and can have multiple values separated by comma.
+           
+           e.g. If a get/setAttrs right has:
+                    account/cos attrs A, B, C
+	                domain attrs X, Y, Z
+	                server attrs M, N
+	                account/cos/domain/server attrs P, Q
+           
+		   - If <targetType> is set:
+		         The right is only effective when granted on one of the specified entry types.
+		         e.g.
+		         - if <targetType> contains "account" only, then the right is effective 
+		           only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
+
+		         -  if <targetType> contains "account,cos,server" then the right is effective 
+		            for: account attrs A, B, C, P, Q
+		                 cos attrs A, B, C, P, Q
+		                 server attrs P, Q
+  
+           - If <targetType> is omitted:
+                 It means the right is not affiliated with a particular target type.  
+    
+    3. For combo rights:
+           Not allowed.
+           
+<attrs>:
+    Attributes covered by the right.
+    It can contain any attrs from any type of entries.
+    e.g.  account attrs A, B, C
+          domain attrs X, Y, Z
+          server attrs M, N
+                  
+{l}: 
     If the attribute can be modified to any value or within inherited limit.
     Only applicable and required when right type is modifyAttrs.
-    0: the attribute can be modified to any value allowed by the attribute definition
+    0: (default) the attribute can be modified to any value allowed by the attribute definition
 	1: the attribute can only be modified within inherited limit
 
+{attribute-name}:
+    Attribute name covered by the right
+    
+<rights>:    
+
+<rights>
+    Rights covered by this combo right.
+    Rights appear in <r n=""> must be defined before this right.
+    
 -->
 
 <rights>
-
+    
 <!-- 
 *******************
     user rights
 *******************
 -->
+
 <right name="invite" userRight="1">
   <desc>automatically add meeting invites from grantee to the target's calendar</desc>
   <doc>e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G.
@@ -83,70 +140,77 @@ limit:
 </right>
 
 
-
 <!-- 
 ********************
     admin rights
 ********************
 -->
-<right name="createAccount" type="preset">
+<right name="createAccount" type="preset" targetType="domain">
   <desc>create account</desc>
-  <targetType>domain</targetType>
 </right>
 
-<right name="renameAccount" type="preset">
+<right name="renameAccount" type="preset" targetType="account">
   <desc>rename account</desc>
-  <targetType>account</targetType>
 </right>
 
-<right name="renameCalendarResource" type="preset">
+<right name="renameCalendarResource" type="preset" targetType="resource">
   <desc>rename calendar resource</desc>
-  <targetType>resource</targetType>
 </right>
 
-<right name="renameDistributionList" type="preset">
+<right name="renameDistributionList" type="preset" targetType="distributionlist">
   <desc>rename distribution list</desc>
-  <targetType>distributionlist</targetType>
 </right>
 
-<right name="renameCos" type="preset">
+<right name="renameCos" type="preset" targetType="cos">
   <desc>rename cos</desc>
-  <targetType>cos</targetType>
 </right>
 
-<right name="renameServer" type="preset">
+<right name="renameServer" type="preset" targetType="server">
   <desc>rename server</desc>
-  <targetType>server</targetType>
 </right>
 
-<right name="testGlobalConfigRemoveMe" type="preset">
+<right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
   <desc>test global config target for now, delete after test is done</desc>
-  <targetType>config</targetType>
 </right>
 
-<right name="testGlobalGrantRemoveMe" type="preset">
+<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
   <desc>test global grant target for now, delete after test is done</desc>
-  <targetType>global</targetType>
 </right>
 
-<right name="configureQuota" type="modifyAttrs">
+<right name="getAccount" type="getAttrs" targetType="account">
+  <desc>get all account attrs</desc>
+</right>
+
+<right name="modifyAccount" type="setAttrs" targetType="account">
+  <desc>set all account attrs</desc>
+</right>
+
+<right name="configureQuota" type="setAttrs" targetType="account,cos">
   <desc>configure quota</desc>
   <attrs>
-      <attr onEntry="account,cos" limit="0">zimbraMailQuota</attr>
-      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnPercent</attr>
-      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnInterval</attr>
-      <attr onEntry="account,cos" limit="0">zimbraQuotaWarnMessage</attr>
+      <a l="0" n="zimbraMailQuota"/>
+      <a l="0" n="zimbraQuotaWarnPercent"/>
+      <a l="0" n="zimbraQuotaWarnInterval"/>
+      <a l="0" n="zimbraQuotaWarnMessage"/>
   </attrs>
 </right>
 
-<right name="configureQuotaWithinLimit" type="modifyAttrs">
-  <desc>configure quota</desc>
+<right name="configureQuotaWithinLimit" type="setAttrs" targetType="account,cos">
+  <desc>configure quota with inherited limit</desc>
   <attrs>
-      <attr onEntry="account,cos" limit="1">zimbraMailQuota</attr>
-      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnPercent</attr>
-      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnInterval</attr>
-      <attr onEntry="account,cos" limit="1">zimbraQuotaWarnMessage</attr>
+    <a l="1" n="zimbraMailQuota"/>
+    <a l="1" n="zimbraQuotaWarnPercent"/>
+    <a l="1" n="zimbraQuotaWarnInterval"/>
+    <a l="1" n="zimbraQuotaWarnMessage"/>
   </attrs>
+</right>
+
+<right name="domainAdmin" type="combo">
+  <desc>domain admin</desc>
+  <rights>
+    <r n="renameAccount"/>
+    <r n="configureQuotaWithinLimit"/>
+  </rights>
 </right>
 
 </rights>
