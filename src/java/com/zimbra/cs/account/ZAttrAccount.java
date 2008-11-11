@@ -30,8 +30,8 @@ import java.util.Map;
 
 public class ZAttrAccount  extends MailTarget {
 
-    public ZAttrAccount(String name, String id, Map<String,Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, defaults);
+    public ZAttrAccount(String name, String id, Map<String,Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE

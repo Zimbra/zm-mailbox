@@ -28,8 +28,8 @@ import java.util.Map;
  */
 public class ZAttrDistributionList extends MailTarget {
 
-    protected ZAttrDistributionList(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+    protected ZAttrDistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(name, id, attrs, null, prov);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE

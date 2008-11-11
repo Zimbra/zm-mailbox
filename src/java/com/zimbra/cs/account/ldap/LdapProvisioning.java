@@ -399,7 +399,7 @@ public class LdapProvisioning extends Provisioning {
                         String configDn = mDIT.configDN();
                         zlc = new ZimbraLdapContext();
                         Attributes attrs = zlc.getAttributes(configDn);
-                        sConfig = new LdapConfig(configDn, attrs);
+                        sConfig = new LdapConfig(configDn, attrs, this);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
                     } finally {
@@ -423,7 +423,7 @@ public class LdapProvisioning extends Provisioning {
                         String globalGrantDn = mDIT.globalGrantDN();
                         zlc = new ZimbraLdapContext();
                         Attributes attrs = zlc.getAttributes(globalGrantDn);
-                        sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs);
+                        sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get globalgrant", e);
                     } finally {
@@ -445,7 +445,7 @@ public class LdapProvisioning extends Provisioning {
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));
+                mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();
             return mimeTypes;
@@ -469,7 +469,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.mimeBaseDN(), LdapFilter.allMimeEntries(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));
+                mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();
             return mimeTypes;
@@ -1135,8 +1135,8 @@ public class LdapProvisioning extends Provisioning {
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeAccount(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraAlias)) visitor.visit(makeAlias(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));
-                        else if (objectclass.contains(C_zimbraCOS)) visitor.visit(new LdapCos(dn, attrs));
+                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults(), this));
+                        else if (objectclass.contains(C_zimbraCOS)) visitor.visit(new LdapCos(dn, attrs, this));
                     }
                     cookie = zlc.getCookie();
                 } while (cookie != null);
@@ -1558,7 +1558,7 @@ public class LdapProvisioning extends Provisioning {
                     throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: "+query+" returned multiple entries at "+dups);
                 }
                 ne.close();
-                return new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults());
+                return new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1692,7 +1692,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.domainBaseDN(), LdapFilter.allDomains(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults()));
+                result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults(), this));
             }
             ne.close();
         } catch (NamingException e) {
@@ -1831,7 +1831,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapCos(sr.getNameInNamespace(), sr.getAttributes());
+                return new LdapCos(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1899,7 +1899,7 @@ public class LdapProvisioning extends Provisioning {
                 zlc = new ZimbraLdapContext();
             String dn = mDIT.cosNametoDN(name);
             Attributes attrs = zlc.getAttributes(dn);
-            cos  = new LdapCos(dn, attrs);
+            cos  = new LdapCos(dn, attrs, this);
             sCosCache.put(cos);
             return cos;
         } catch (NameNotFoundException e) {
@@ -1925,7 +1925,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.cosBaseDN(), LdapFilter.allCoses(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
+                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();
         } catch (NamingException e) {
@@ -2237,7 +2237,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults());
+                return new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -2318,7 +2318,7 @@ public class LdapProvisioning extends Provisioning {
             zlc = new ZimbraLdapContext();
             String dn = mDIT.serverNametoDN(name);
             Attributes attrs = zlc.getAttributes(dn);
-            LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults());
+            LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
             sServerCache.put(s);
             return s;
         } catch (NameNotFoundException e) {
@@ -2350,7 +2350,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.serverBaseDN(), filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults());
+                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults(), this);
                 result.add(s);
             }
             ne.close();
@@ -2374,7 +2374,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.cosBaseDN(), query, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
+                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();
         } catch (NameNotFoundException e) {
@@ -3445,7 +3445,7 @@ public class LdapProvisioning extends Provisioning {
         		}
         		String dn = mDIT.zimletNameToDN(name);            
         		Attributes attrs = zlc.getAttributes(dn);
-        		zimlet = new LdapZimlet(dn, attrs);
+        		zimlet = new LdapZimlet(dn, attrs, this);
         		if (useCache) {
         			ZimletUtil.reloadZimlet(name);
         			sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
@@ -3473,7 +3473,7 @@ public class LdapProvisioning extends Provisioning {
     		NamingEnumeration ne = zlc.searchDir(mDIT.configBranchBaseDN(), LdapFilter.allZimlets(), sSubtreeSC);
     		while (ne.hasMore()) {
     			SearchResult sr = (SearchResult) ne.next();
-             result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes()));
+             result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes(), this));
     		}
     		ne.close();
     	} catch (NamingException e) {
@@ -3668,7 +3668,7 @@ public class LdapProvisioning extends Provisioning {
         if (emailAddress == null)
             emailAddress = mDIT.dnToEmail(dn, attrs);
         
-        Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null) : new LdapCalendarResource(dn, emailAddress, attrs, null);
+        Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) : new LdapCalendarResource(dn, emailAddress, attrs, null, this);
         Cos cos = getCOS(acct);
         acct.setDefaults(cos.getAccountDefaults());
         Domain domain = getDomain(acct);
@@ -3679,13 +3679,13 @@ public class LdapProvisioning extends Provisioning {
     
     private Alias makeAlias(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
         String emailAddress = mDIT.dnToEmail(dn, attrs);
-        Alias alias = new LdapAlias(dn, emailAddress, attrs);
+        Alias alias = new LdapAlias(dn, emailAddress, attrs, prov);
         return alias;
     }
     
     private DistributionList makeDistributionList(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
         String emailAddress = mDIT.dnToEmail(dn, attrs);
-        DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs);
+        DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs, this);
         return dl;
     }
 
@@ -4353,7 +4353,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapIdentity((Account)entry, sr.getNameInNamespace(), sr.getAttributes()));
+                result.add(new LdapIdentity((Account)entry, sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();            
         } catch (NameNotFoundException e) {
@@ -4591,7 +4591,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapSignature(acct, sr.getNameInNamespace(), sr.getAttributes()));
+                result.add(new LdapSignature(acct, sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();            
         } catch (NameNotFoundException e) {
@@ -4871,7 +4871,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapDataSource((Account)entry, sr.getNameInNamespace(), sr.getAttributes()));
+                result.add(new LdapDataSource((Account)entry, sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();            
         } catch (NameNotFoundException e) {
@@ -5202,7 +5202,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapXMPPComponent(sr.getNameInNamespace(), sr.getAttributes());
+                return new LdapXMPPComponent(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -5228,7 +5228,7 @@ public class LdapProvisioning extends Provisioning {
             zlc = new ZimbraLdapContext();
             String dn = mDIT.xmppcomponentNameToDN(name);            
             Attributes attrs = zlc.getAttributes(dn);
-            XMPPComponent x = new LdapXMPPComponent(dn, attrs);
+            XMPPComponent x = new LdapXMPPComponent(dn, attrs, this);
             sXMPPComponentCache.put(x);            
             return x;
         } catch (NameNotFoundException e) {
@@ -5268,7 +5268,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.xmppcomponentBaseDN(), filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                LdapXMPPComponent x = new LdapXMPPComponent(sr.getNameInNamespace(), sr.getAttributes());
+                LdapXMPPComponent x = new LdapXMPPComponent(sr.getNameInNamespace(), sr.getAttributes(), this);
                 result.add(x);
             }
             ne.close();

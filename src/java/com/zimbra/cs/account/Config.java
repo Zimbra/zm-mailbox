@@ -37,8 +37,8 @@ public class Config extends ZAttrConfig {
     private Map<String, Object> mDomainDefaults = new HashMap<String, Object>();
     private Map<String, Object> mServerDefaults = new HashMap<String, Object>();    
 
-    public Config(Map<String, Object> attrs) {
-        super(attrs);
+    public Config(Map<String, Object> attrs, Provisioning provisioning) {
+        super(attrs, provisioning);
         resetData();
     }
     

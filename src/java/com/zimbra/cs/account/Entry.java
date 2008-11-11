@@ -42,9 +42,11 @@ public abstract class Entry implements ToZJSONObject {
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Locale mLocale;
+    private Provisioning mProvisioning;
     
     protected static String[] sEmptyMulti = new String[0];
 
+    /*
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults) {
         mAttrs = attrs;
         mDefaults = defaults;
@@ -54,6 +56,24 @@ public abstract class Entry implements ToZJSONObject {
         mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
+    }
+    */
+    
+    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Provisioning provisioning) {
+    	mProvisioning = provisioning;
+        mAttrs = attrs;
+        mDefaults = defaults;
+    }
+    
+    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Provisioning provisioning) {
+    	mProvisioning = provisioning;
+        mAttrs = attrs;
+        mDefaults = defaults;
+        mSecondaryDefaults = secondaryDefaults;
+    }
+    
+    public Provisioning getProvisioning() {
+    	return mProvisioning;
     }
     
     // for debugging/logging, subclass should define a proper "label" for the entry by that it is best identified

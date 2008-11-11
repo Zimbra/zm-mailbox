@@ -451,7 +451,7 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_NAME).setText(emailAddress);
         req.addElement(AdminConstants.E_PASSWORD).setText(password);
         addAttrElements(req, attrs);
-        return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
+        return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT), this);
     }
 
     @Override
@@ -461,7 +461,7 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_NAME).setText(emailAddress);
         req.addElement(AdminConstants.E_PASSWORD).setText(password);
         addAttrElements(req, attrs);
-        return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE));
+        return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE), this);
     }
 
     @Override
@@ -470,7 +470,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.CREATE_COS_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(name);
         addAttrElements(req, attrs);
-        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
+        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS), this);
     }
 
     @Override
@@ -479,7 +479,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.COPY_COS_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(destCosName);
         req.addElement(AdminConstants.E_COS).addAttribute(AdminConstants.A_BY, CosBy.id.name()).setText(srcCosId);
-        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
+        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS), this);
     }
 
     @Override
@@ -488,7 +488,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.CREATE_DISTRIBUTION_LIST_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(listAddress);
         addAttrElements(req, listAttrs);
-        return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL));
+        return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL), this);
     }
 
     @Override
@@ -497,7 +497,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.CREATE_DOMAIN_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(name);
         addAttrElements(req, attrs);
-        return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
+        return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN), this);
     }
 
     @Override
@@ -506,7 +506,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.CREATE_SERVER_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(name);
         addAttrElements(req, attrs);
-        return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER));
+        return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER), this);
     }
 
     /**
@@ -659,7 +659,7 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
+            return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
                 return null;
@@ -680,7 +680,7 @@ public class SoapProvisioning extends Provisioning {
         req.addAttribute(AdminConstants.A_APPLY_COS, applyDefault);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
-            result.add(new SoapAccount(a));
+            result.add(new SoapAccount(a, this));
         }
         return result;
     }
@@ -691,7 +691,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_COS_REQUEST);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_COS)) {
-            result.add(new SoapCos(a));
+            result.add(new SoapCos(a, this));
         }
         return result;        
     }
@@ -708,7 +708,7 @@ public class SoapProvisioning extends Provisioning {
         req.addAttribute(AdminConstants.A_APPLY_CONFIG, applyDefault);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_DOMAIN)) {
-            result.add(new SoapDomain(a));
+            result.add(new SoapDomain(a, this));
         }
         return result;        
     }
@@ -941,7 +941,7 @@ public class SoapProvisioning extends Provisioning {
         req.addAttribute(AdminConstants.A_APPLY_CONFIG, applyDefault);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_SERVER)) {
-            result.add(new SoapServer(a));
+            result.add(new SoapServer(a, this));
         }
         return result;        
     }
@@ -953,7 +953,7 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE));
+            return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_CALENDAR_RESOURCE))
                 return null;
@@ -965,7 +965,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Config getConfig() throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_CONFIG_REQUEST);
-        return new SoapConfig(invoke(req));
+        return new SoapConfig(invoke(req), this);
     }
     
     public GlobalGrant getGlobalGrant() throws ServiceException {
@@ -979,7 +979,7 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
+            return new SoapCos(invoke(req).getElement(AdminConstants.E_COS), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_COS))
                 return null;
@@ -995,7 +995,7 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL));
+            return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST))
                 return null;
@@ -1011,7 +1011,7 @@ public class SoapProvisioning extends Provisioning {
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
             Element d = invoke(req).getOptionalElement(AdminConstants.E_DOMAIN);
-            return d == null ? null : new SoapDomain(d);
+            return d == null ? null : new SoapDomain(d, this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_DOMAIN))
                 return null;
@@ -1033,7 +1033,7 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
+            return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_DOMAIN))
                 return null;
@@ -1091,7 +1091,7 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER));
+            return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_SERVER))
                 return null;
@@ -1297,7 +1297,7 @@ public class SoapProvisioning extends Provisioning {
         for (Element a: resp.listElements(AdminConstants.E_DL)) {
             String viaList = a.getAttribute(AdminConstants.A_VIA, null);
             if (directOnly && viaList != null) continue;
-            DistributionList dl = new SoapDistributionList(a);
+            DistributionList dl = new SoapDistributionList(a, this);
             if (via != null && viaList != null) {
                 via.put(dl.getName(), viaList);
             }
@@ -1322,7 +1322,7 @@ public class SoapProvisioning extends Provisioning {
         for (Element a: resp.listElements(AdminConstants.E_DL)) {
             String viaList = a.getAttribute(AdminConstants.A_VIA, null);
             if (directOnly && viaList != null) continue;
-            DistributionList dl = new SoapDistributionList(a);
+            DistributionList dl = new SoapDistributionList(a, this);
             if (via != null && viaList != null) {
                 via.put(dl.getName(), viaList);
             }
@@ -1342,7 +1342,7 @@ public class SoapProvisioning extends Provisioning {
         }
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
-            result.add(new SoapAccount(a));
+            result.add(new SoapAccount(a, this));
         }
         return result;
     }
@@ -1355,7 +1355,7 @@ public class SoapProvisioning extends Provisioning {
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
-            visitor.visit(new SoapAccount(a));
+            visitor.visit(new SoapAccount(a, this));
         }
     }
     
@@ -1375,7 +1375,7 @@ public class SoapProvisioning extends Provisioning {
         
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
-            visitor.visit(new SoapAccount(a));
+            visitor.visit(new SoapAccount(a, this));
         }
     }
 
@@ -1388,7 +1388,7 @@ public class SoapProvisioning extends Provisioning {
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
-            result.add(new SoapCalendarResource(a));
+            result.add(new SoapCalendarResource(a, this));
         }
         return result;
     }
@@ -1402,7 +1402,7 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
             
-            visitor.visit(new SoapCalendarResource(a));
+            visitor.visit(new SoapCalendarResource(a, this));
         }
     }
 
@@ -1423,7 +1423,7 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
             
-            visitor.visit(new SoapCalendarResource(a));
+            visitor.visit(new SoapCalendarResource(a, this));
         }
     }
 
@@ -1436,7 +1436,7 @@ public class SoapProvisioning extends Provisioning {
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_DL)) {
-            result.add(new SoapDistributionList(a));
+            result.add(new SoapDistributionList(a, this));
         }
         return result;
     }
@@ -1482,13 +1482,13 @@ public class SoapProvisioning extends Provisioning {
         // TODO: handle ApplyCos, limit, offset?
         Element resp = invoke(req);
         for (Element e: resp.listElements(AdminConstants.E_DL))
-            result.add(new SoapDistributionList(e));
+            result.add(new SoapDistributionList(e, this));
 
         for (Element e: resp.listElements(AdminConstants.E_ALIAS))
-            result.add(new SoapAlias(e));
+            result.add(new SoapAlias(e, this));
         
         for (Element e: resp.listElements(AdminConstants.E_ACCOUNT))
-            result.add(new SoapAccount(e));
+            result.add(new SoapAccount(e, this));
         
         return result;
     }
@@ -1508,16 +1508,16 @@ public class SoapProvisioning extends Provisioning {
         // TODO: handle ApplyCos, limit, offset?
         Element resp = invoke(req);
         for (Element e: resp.listElements(AdminConstants.E_DL))
-            result.add(new SoapDistributionList(e));
+            result.add(new SoapDistributionList(e, this));
 
         for (Element e: resp.listElements(AdminConstants.E_ALIAS))
-            result.add(new SoapAlias(e));
+            result.add(new SoapAlias(e, this));
 
         for (Element e: resp.listElements(AdminConstants.E_ACCOUNT))
-            result.add(new SoapAccount(e));
+            result.add(new SoapAccount(e, this));
 
         for (Element e: resp.listElements(AdminConstants.E_DOMAIN))
-            result.add(new SoapDomain(e));
+            result.add(new SoapDomain(e, this));
         return result;
     }
 
@@ -1623,7 +1623,7 @@ public class SoapProvisioning extends Provisioning {
         identity.addAttribute(AccountConstants.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_IDENTITY);
-        return new SoapIdentity(account, response);
+        return new SoapIdentity(account, response, this);
     }
 
     @Override
@@ -1640,7 +1640,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AccountConstants.GET_IDENTITIES_REQUEST);
         Element resp = invokeOnTargetAccount(req, account.getId());
         for (Element identity: resp.listElements(AccountConstants.E_IDENTITY)) {
-            result.add(new SoapIdentity(account, identity));
+            result.add(new SoapIdentity(account, identity, this));
         }
         return result;
     }
@@ -1664,7 +1664,7 @@ public class SoapProvisioning extends Provisioning {
         signature.addAttribute(AccountConstants.A_NAME, signatureName);
         SoapSignature.toXML(signature, attrs);
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_SIGNATURE);
-        return new SoapSignature(account, response);
+        return new SoapSignature(account, response, this);
     }
     
     @Override
@@ -1693,7 +1693,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AccountConstants.GET_SIGNATURES_REQUEST);
         Element resp = invokeOnTargetAccount(req, account.getId());
         for (Element signature: resp.listElements(AccountConstants.E_SIGNATURE)) {
-            result.add(new SoapSignature(account, signature));
+            result.add(new SoapSignature(account, signature, this));
         }
         return result;
     }
@@ -1707,7 +1707,7 @@ public class SoapProvisioning extends Provisioning {
         ds.addAttribute(AccountConstants.A_TYPE, dsType.name());
         addAttrElements(ds, attrs);
         Element response = invoke(req).getElement(AccountConstants.E_DATA_SOURCE);
-        return new SoapDataSource(account, response);
+        return new SoapDataSource(account, response, this);
     }
 
     @Override
@@ -1731,7 +1731,7 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_ID).setText(account.getId());
         Element resp = invoke(req);
         for (Element dataSource: resp.listElements(AccountConstants.E_DATA_SOURCE)) {
-            result.add(new SoapDataSource(account, dataSource));
+            result.add(new SoapDataSource(account, dataSource, this));
         }
         return result;        
     }
@@ -1772,7 +1772,7 @@ public class SoapProvisioning extends Provisioning {
         
         List<XMPPComponent> toRet = new ArrayList<XMPPComponent>();
         for (Element e : response.listElements(AdminConstants.E_XMPP_COMPONENT)) {
-            toRet.add(new SoapXMPPComponent(e));
+            toRet.add(new SoapXMPPComponent(e, this));
         }
         return toRet;
     }
@@ -1795,7 +1795,7 @@ public class SoapProvisioning extends Provisioning {
         addAttrElements(c, attrs);
         Element response = invoke(req);
         response = response.getElement(AccountConstants.E_XMPP_COMPONENT);
-        return new SoapXMPPComponent(response);
+        return new SoapXMPPComponent(response, this);
     }
 
     public XMPPComponent get(XMPPComponentBy keyType, String key) throws ServiceException {
@@ -1806,7 +1806,7 @@ public class SoapProvisioning extends Provisioning {
         c.setText(key);
         Element response = invoke(req);
         response = response.getElement(AccountConstants.E_XMPP_COMPONENT);
-        return new SoapXMPPComponent(response);
+        return new SoapXMPPComponent(response, this);
     }
     
     @Override

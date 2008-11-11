@@ -26,8 +26,8 @@ import java.util.Map;
  */
 public class ZAttrCalendarResource extends Account {
 
-    public ZAttrCalendarResource(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, defaults);
+    public ZAttrCalendarResource(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE

@@ -7,8 +7,8 @@ import com.zimbra.common.service.ServiceException;
 public abstract class AccountProperty extends NamedEntry {
     private final String mAcctId;
     
-    AccountProperty(Account acct, String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, null);
+    AccountProperty(Account acct, String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, null, prov);
         mAcctId = acct.getId();
     }
     

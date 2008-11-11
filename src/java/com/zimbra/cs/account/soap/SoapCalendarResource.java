@@ -22,18 +22,19 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 
 class SoapCalendarResource extends CalendarResource implements SoapEntry {
 
-    SoapCalendarResource(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+    SoapCalendarResource(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(name, id, attrs, null, prov);
     }
 
-    SoapCalendarResource(Element e) throws ServiceException {
-        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e), null);
+    SoapCalendarResource(Element e, Provisioning prov) throws ServiceException {
+        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e), null, prov);
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

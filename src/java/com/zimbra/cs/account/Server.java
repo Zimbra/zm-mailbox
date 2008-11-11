@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public class Server extends ZAttrServer {
     
-    public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults) {
-        super(name, id, attrs, defaults);
+    public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
     }
 }

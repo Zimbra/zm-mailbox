@@ -27,8 +27,8 @@ import java.util.Map;
  */
 public class Account extends ZAttrAccount  {
     
-    public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, defaults);
+    public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
     }
 
     public static enum CalendarUserType {

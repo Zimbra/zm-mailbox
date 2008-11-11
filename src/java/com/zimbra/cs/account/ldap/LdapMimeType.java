@@ -35,8 +35,8 @@ class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
 
     private String mDn;
     
-    LdapMimeType(String dn, Attributes attrs) throws NamingException {
-        super(LdapUtil.getAttrs(attrs), null);
+    LdapMimeType(String dn, Attributes attrs, Provisioning prov) throws NamingException {
+        super(LdapUtil.getAttrs(attrs), null, prov);
         mDn = dn;
     }
     

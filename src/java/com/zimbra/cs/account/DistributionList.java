@@ -38,8 +38,8 @@ public class DistributionList extends ZAttrDistributionList {
      */
     boolean mIsAclGroup;
     
-    protected DistributionList(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+    protected DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(name, id, attrs, prov);
     }
 
     public String[] getAllMembers() throws ServiceException {

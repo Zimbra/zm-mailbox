@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class GlobalGrant extends Entry {
     
-    public GlobalGrant(Map<String, Object> attrs) {
-        super(attrs, null);
+    public GlobalGrant(Map<String, Object> attrs, Provisioning provisioning) {
+        super(attrs, null, provisioning);
         resetData();
     }
     

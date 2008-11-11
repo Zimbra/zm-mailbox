@@ -117,8 +117,8 @@ public class DataSource extends AccountProperty {
     
     private Type mType;
 
-    public DataSource(Account acct, Type type, String name, String id, Map<String, Object> attrs) {
-        super(acct, name, id, attrs, null);
+    public DataSource(Account acct, Type type, String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(acct, name, id, attrs, null, prov);
         mType = type;
     }
     

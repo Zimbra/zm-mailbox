@@ -30,12 +30,12 @@ import com.zimbra.common.soap.Element.XMLElement;
 
 class SoapDistributionList extends DistributionList implements SoapEntry {
 
-    SoapDistributionList(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+    SoapDistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(name, id, attrs, prov);
     }
 
-    SoapDistributionList(Element e) throws ServiceException {
-        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e));
+    SoapDistributionList(Element e, Provisioning prov) throws ServiceException {
+        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e), prov);
         addDlm(e, getRawAttrs());
     }
 

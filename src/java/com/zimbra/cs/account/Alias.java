@@ -40,8 +40,8 @@ public class Alias extends MailTarget {
     private static final String ALIAS_TARGET_NAME = "targetName";
     private static final String ALIAS_TARGET_TYPE = "targetType";
 
-    public Alias(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+    public Alias(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(name, id, attrs, null, prov);
     }
     
     private String getTargetInfo(Provisioning prov, String forInfo) throws ServiceException {

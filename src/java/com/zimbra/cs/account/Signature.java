@@ -32,8 +32,8 @@ public class Signature extends AccountProperty implements Comparable {
         sAttrTypeMap.put(Provisioning.A_zimbraPrefMailSignatureHTML, "text/html");
     }
     
-    public Signature(Account acct, String name, String id, Map<String, Object> attrs) {
-        super(acct, name, id, attrs, null);
+    public Signature(Account acct, String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(acct, name, id, attrs, null, prov);
     }
     
     /**

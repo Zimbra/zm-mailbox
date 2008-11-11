@@ -38,8 +38,8 @@ public class Domain extends ZAttrDomain {
     private String mUnicodeName;
     private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
     
-    public Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, defaults);
+    public Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
         if (name == null)
             mUnicodeName = name;
         else

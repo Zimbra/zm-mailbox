@@ -37,10 +37,10 @@ public class LdapDomain extends Domain implements LdapEntry {
 
     private String mDn;
 
-    LdapDomain(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
+    LdapDomain(String dn, Attributes attrs, Map<String, Object> defaults, Provisioning prov) throws NamingException {
         super(LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDomainName), 
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(attrs), defaults);
+                LdapUtil.getAttrs(attrs), defaults, prov);
         mDn = dn;
     }
 

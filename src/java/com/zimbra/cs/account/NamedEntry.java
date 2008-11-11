@@ -35,8 +35,8 @@ public abstract class NamedEntry extends Entry implements Comparable {
         public void visit(NamedEntry entry) throws ServiceException;
     }
 
-    protected NamedEntry(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(attrs, defaults);
+    protected NamedEntry(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(attrs, defaults, prov);
         mName = name;
         mId = id;
     }

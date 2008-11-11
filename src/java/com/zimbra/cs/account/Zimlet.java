@@ -23,8 +23,8 @@ import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.zimlet.ZimletUtil;
 
 public class Zimlet extends NamedEntry {
-	protected Zimlet(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+	protected Zimlet(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(name, id, attrs, null, prov);
     }
 
     public boolean isEnabled() {

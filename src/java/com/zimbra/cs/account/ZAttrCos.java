@@ -35,8 +35,8 @@ import java.util.Map;
  */
 public class ZAttrCos extends NamedEntry {
 
-    public ZAttrCos(String name, String id, Map<String,Object> attrs) {
-        super(name, id, attrs, null);
+    public ZAttrCos(String name, String id, Map<String,Object> attrs, Provisioning prov) {
+        super(name, id, attrs, null, prov);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE

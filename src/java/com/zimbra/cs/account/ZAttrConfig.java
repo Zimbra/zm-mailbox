@@ -34,8 +34,8 @@ import java.util.Map;
  */
 public class ZAttrConfig extends Entry {
 
-    public ZAttrConfig(Map<String, Object> attrs) {
-        super(attrs, null);
+    public ZAttrConfig(Map<String, Object> attrs, Provisioning provisioning) {
+        super(attrs, null, provisioning);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE

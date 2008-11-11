@@ -16,8 +16,8 @@ public class XMPPComponent extends NamedEntry implements Comparable {
     private static final String SIMPLE_CLASS_NAME =
         StringUtil.getSimpleClassName(XMPPComponent.class.getName());
     
-    public XMPPComponent(String name, String id, Map<String,Object> attrs) {
-        super(name, id, attrs, null);
+    public XMPPComponent(String name, String id, Map<String,Object> attrs, Provisioning prov) {
+        super(name, id, attrs, null, prov);
     }
     
     public String getComponentCategory() {

@@ -36,8 +36,8 @@ class LdapCos extends Cos implements LdapEntry {
 
     private String mDn;
 
-    LdapCos(String dn, Attributes attrs) throws NamingException, ServiceException {
-        super(LdapUtil.getAttrString(attrs, Provisioning.A_cn), LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), LdapUtil.getAttrs(attrs));
+    LdapCos(String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
+        super(LdapUtil.getAttrString(attrs, Provisioning.A_cn), LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), LdapUtil.getAttrs(attrs), prov);
         mDn = dn;
     }
 

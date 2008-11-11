@@ -22,17 +22,18 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 
 class SoapConfig extends Config implements SoapEntry {
     
-    SoapConfig(Map<String, Object> attrs) {
-        super(attrs);
+    SoapConfig(Map<String, Object> attrs, Provisioning provisioning) {
+        super(attrs, provisioning);
     }
 
-    SoapConfig(Element e) throws ServiceException {
-        super(SoapProvisioning.getAttrs(e));
+    SoapConfig(Element e, Provisioning provisioning) throws ServiceException {
+        super(SoapProvisioning.getAttrs(e), provisioning);
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

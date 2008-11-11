@@ -111,7 +111,7 @@ public class TestDataSource extends MailDocumentHandler {
         ModifyDataSource.processCommonOptionalAttrs(testAttrs, eDataSource);
         
         // Perform test and assemble response
-        DataSource ds = new DataSource(account, type, "Test", testId, testAttrs);
+        DataSource ds = new DataSource(account, type, "Test", testId, testAttrs, null);
         Element response = zsc.createElement(MailConstants.TEST_DATA_SOURCE_RESPONSE);
         
         /*

@@ -24,8 +24,8 @@ public abstract class MailTarget extends NamedEntry {
     protected String mUnicodeDomain;
     protected String mUnicodeName;
     
-    public MailTarget(String name, String id, Map<String,Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, defaults);
+    public MailTarget(String name, String id, Map<String,Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
         int index = name.indexOf('@');
         if (index != -1)  {
             String local = name.substring(0, index);

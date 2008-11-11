@@ -26,10 +26,10 @@ class LdapZimlet extends Zimlet implements LdapEntry {
 
     private String mDn;
     
-	public LdapZimlet(String dn, Attributes attrs) throws NamingException {
+	public LdapZimlet(String dn, Attributes attrs, Provisioning prov) throws NamingException {
         super(LdapUtil.getAttrString(attrs, Provisioning.A_cn),
                 LdapUtil.getAttrString(attrs, Provisioning.A_cn),                 
-                LdapUtil.getAttrs(attrs));
+                LdapUtil.getAttrs(attrs), prov);
         mDn = dn;
 	}
 	

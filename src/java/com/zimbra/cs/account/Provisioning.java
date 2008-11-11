@@ -1400,7 +1400,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                     attrs.put(A_zimbraPrefForwardReplyFormat, composeFormat);
             }
         }
-        return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs);
+        return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs, this);
     }
 
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;

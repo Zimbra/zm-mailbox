@@ -61,7 +61,7 @@ public class DomainCache {
     
     public static class NonExistingDomain extends Domain {
         private NonExistingDomain() {
-            super(null, null, null, null);
+            super(null, null, null, null, null);
         }
     }
     

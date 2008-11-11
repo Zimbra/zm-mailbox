@@ -40,10 +40,10 @@ import com.zimbra.common.service.ServiceException;
 class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
 
-    LdapDistributionList(String dn, String email, Attributes attrs) throws NamingException {
+    LdapDistributionList(String dn, String email, Attributes attrs, Provisioning prov) throws NamingException {
         super(email,
               LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-              LdapUtil.getAttrs(attrs));
+              LdapUtil.getAttrs(attrs), prov);
         mDn = dn;
     }
     

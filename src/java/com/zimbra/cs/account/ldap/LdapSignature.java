@@ -38,11 +38,11 @@ import javax.naming.directory.Attributes;
 
     private String mDn;
 
-    LdapSignature(Account acct, String dn, Attributes attrs) throws NamingException {
+    LdapSignature(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
         super(  acct,
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureName),
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureId),
-                LdapUtil.getAttrs(attrs));
+                LdapUtil.getAttrs(attrs), prov);
         mDn = dn;
     }
 
@@ -111,7 +111,7 @@ import javax.naming.directory.Attributes;
         if (putbackAttrs.size() > 0)
             prov.modifyAttrs(acct, putbackAttrs);
                 
-        return new Signature(acct, sigName, sigId, attrs);        
+        return new Signature(acct, sigName, sigId, attrs, prov);        
     }
     
     /*

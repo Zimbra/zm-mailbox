@@ -59,12 +59,12 @@ class LdapDataSource extends DataSource implements LdapEntry {
 
 	private String mDn;
 
-	LdapDataSource(Account acct, String dn, Attributes attrs) throws NamingException, ServiceException {
+	LdapDataSource(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
 		super(acct, 
 				getObjectType(attrs),
 				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),
 				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceId),                
-				LdapUtil.getAttrs(attrs));
+				LdapUtil.getAttrs(attrs), prov);
 		mDn = dn;
 	}
 	public String getDN() {

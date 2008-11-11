@@ -25,8 +25,8 @@ import com.zimbra.common.service.ServiceException;
  */
 public class Identity extends AccountProperty implements Comparable {
 
-    public Identity(Account acct, String name, String id, Map<String, Object> attrs) {
-        super(acct, name, id, attrs, null);
+    public Identity(Account acct, String name, String id, Map<String, Object> attrs, Provisioning prov) {
+        super(acct, name, id, attrs, null, prov);
     }
     
     /**

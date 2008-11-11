@@ -31,10 +31,11 @@ public class LdapXMPPComponent extends XMPPComponent implements LdapEntry {
     
     private String mDn;
 
-    LdapXMPPComponent(String dn, Attributes attrs) throws NamingException, ServiceException {
+    LdapXMPPComponent(String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
         super(LdapUtil.getAttrString(attrs, Provisioning.A_cn),
               LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId),
-              LdapUtil.getAttrs(attrs)
+              LdapUtil.getAttrs(attrs),
+              prov
         );
         mDn = dn;
     }

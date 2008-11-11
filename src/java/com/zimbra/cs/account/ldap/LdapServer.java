@@ -37,10 +37,10 @@ class LdapServer extends Server implements LdapEntry {
 
     private String mDn;
 
-    LdapServer(String dn, Attributes attrs, Map<String,Object> defaults) throws NamingException {
+    LdapServer(String dn, Attributes attrs, Map<String,Object> defaults, Provisioning prov) throws NamingException {
         super(LdapUtil.getAttrString(attrs, Provisioning.A_cn), 
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(attrs), defaults);
+                LdapUtil.getAttrs(attrs), defaults, prov);
         mDn = dn;
     }
 

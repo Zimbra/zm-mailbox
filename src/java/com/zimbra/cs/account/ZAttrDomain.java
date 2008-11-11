@@ -33,8 +33,8 @@ import java.util.Map;
  */
 public class ZAttrDomain extends NamedEntry {
 
-    public ZAttrDomain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, defaults);
+    public ZAttrDomain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
 
     }
 
