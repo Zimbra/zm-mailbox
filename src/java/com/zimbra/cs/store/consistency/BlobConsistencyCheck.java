@@ -24,6 +24,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
@@ -69,11 +70,18 @@ public class BlobConsistencyCheck {
         Options options = new Options();
         loadOptions(options);
         PosixParser parser = new PosixParser();
-        CommandLine cmdLine = parser.parse(options, args);
+        CommandLine cmdLine;
+        try {
+            cmdLine = parser.parse(options, args);
+        }
+        catch (MissingArgumentException e) {
+            System.err.println(e.getMessage());
+            usage(options);
+            return;
+        }
 
         if (cmdLine.hasOption("h")) {
-            HelpFormatter fmt = new HelpFormatter();
-            fmt.printHelp("zmblobchk", options);
+            usage(options);
             return;
         }
 
@@ -166,5 +174,9 @@ public class BlobConsistencyCheck {
             opt.setRequired((Boolean) o[4]);
             options.addOption(opt);
         }
+    }
+    private static void usage(Options options) {
+        HelpFormatter fmt = new HelpFormatter();
+        fmt.printHelp("zmblobchk", options);
     }
 }
