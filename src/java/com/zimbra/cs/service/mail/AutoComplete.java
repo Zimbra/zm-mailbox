@@ -43,9 +43,6 @@ public class AutoComplete extends MailDocumentHandler {
 			n = n.substring(0, n.length() - 1);
         int limit = (int) request.getAttributeLong(MailConstants.A_LIMIT, 20);
 		ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
-		if (folders.isEmpty())
-			folders = null;
-
 		ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
 		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
 		autoComplete.setIncludeGal(includeGal);
@@ -62,9 +59,9 @@ public class AutoComplete extends MailDocumentHandler {
 	}
 	
 	private ArrayList<Integer> csvToArray(String csv) {
-		ArrayList<Integer> array = new ArrayList<Integer>();
 		if (csv == null)
-			return array;
+			return null;
+		ArrayList<Integer> array = new ArrayList<Integer>();
 		for (String f : csv.split(",")) {
 			array.add(Integer.parseInt(f));
 		}

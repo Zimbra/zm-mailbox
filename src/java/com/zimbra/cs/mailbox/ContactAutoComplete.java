@@ -140,7 +140,7 @@ public class ContactAutoComplete {
     private Collection<String> mEmailKeys;
     
     private static final Integer[] DEFAULT_FOLDERS = {
-    	FOLDER_ID_UNKNOWN, FOLDER_ID_GAL
+    	Mailbox.ID_FOLDER_CONTACTS, FOLDER_ID_GAL
     };
 	private static final String[] DEFAULT_EMAIL_KEYS = {
 		Contact.A_email, Contact.A_email2, Contact.A_email3
@@ -301,10 +301,10 @@ public class ContactAutoComplete {
                 	id = new ItemId(c);
                 	folderId = c.getFolderId();
                 } else if (hit instanceof ProxiedHit) {
-                    ZimbraLog.gal.debug("hit: ");
                     fields = new HashMap<String, String>();
                     Element top = ((ProxiedHit)hit).getElement();
                     id = new ItemId(top.getAttribute(MailConstants.A_ID), (String) null);
+                    ZimbraLog.gal.debug("hit: "+id);
                     ItemId fiid = new ItemId(top.getAttribute(MailConstants.A_FOLDER), (String) null);
                     folderId = mountpoints.get(fiid);
                     for (Element elt : top.listElements(MailConstants.E_ATTRIBUTE)) {
@@ -381,6 +381,8 @@ public class ContactAutoComplete {
 		boolean first = true;
 		buf.append("(");
 		for (int fid : folders) {
+			if (fid < 1)
+				continue;
 			if (!first)
 				buf.append(" OR ");
 			first = false;
