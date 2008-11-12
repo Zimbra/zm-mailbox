@@ -23,12 +23,7 @@ package com.zimbra.cs.filter;
 
 import org.apache.jsieve.exception.SieveException;
 
-/**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+@SuppressWarnings("serial")
 public class ZimbraSieveException extends SieveException {
     private Throwable mCause;
     

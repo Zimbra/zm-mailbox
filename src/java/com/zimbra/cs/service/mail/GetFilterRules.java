@@ -32,10 +32,10 @@ public class GetFilterRules extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
 
         if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+            throw ServiceException.PERM_DENIED("cannot access account");
 
         Element response = zsc.createElement(MailConstants.GET_FILTER_RULES_RESPONSE);
-        Element rules = RuleManager.getInstance().getRulesAsXML(response.getFactory(), account, true);
+        Element rules = RuleManager.getRulesAsXML(response.getFactory(), account, true);
         response.addElement(rules);
         return response;
     }

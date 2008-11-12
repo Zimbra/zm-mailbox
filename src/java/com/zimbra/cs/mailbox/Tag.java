@@ -221,7 +221,7 @@ public class Tag extends MailItem {
                 if (folder.getItemCount() > 0)
                     folder.updateHighestMODSEQ();
             }
-            RuleManager.getInstance().tagRenamed(getAccount(), originalName, name);
+            RuleManager.tagRenamed(getAccount(), originalName, name);
         }
     }
 

@@ -111,6 +111,9 @@ public class BodyTest extends AbstractTest {
     private boolean test(MailAdapter mail, String substring) {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = zimbraMail.getParsedMessage();
+        if (pm == null) {
+            return false;
+        }
 
         Account acct = null;
         try {

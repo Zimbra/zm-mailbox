@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.mail.MessagingException;
-
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
@@ -362,7 +360,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     // Get msgid first, to avoid having to reopen and reparse the blob
                                     // file if Mailbox.addMessageInternal() closes it.
                                     msgid = pm.getMessageID();
-                                    addedMessageIds = RuleManager.getInstance().applyRules(mbox, pm,
+                                    addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm,
                                         rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
                                 } else {
                                     msgid = pm.getMessageID();

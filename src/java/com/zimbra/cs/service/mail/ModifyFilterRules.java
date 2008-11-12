@@ -15,9 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Jan 7, 2005
- */
 package com.zimbra.cs.service.mail;
 
 import java.util.Map;
@@ -38,11 +35,10 @@ public class ModifyFilterRules extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
 
         if (!canModifyOptions(zsc, account))
-            throw ServiceException.PERM_DENIED("can not modify options");
+            throw ServiceException.PERM_DENIED("cannot modify options");
 
-        RuleManager mgr = RuleManager.getInstance();
         Element rulesElem = request.getElement(MailConstants.E_FILTER_RULES);
-        mgr.setXMLRules(account, rulesElem, true);
+        RuleManager.setXMLRules(account, rulesElem, true);
         
         Element response = zsc.createElement(MailConstants.MODIFY_FILTER_RULES_RESPONSE);
         return response;

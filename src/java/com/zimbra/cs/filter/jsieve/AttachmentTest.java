@@ -27,6 +27,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mime.ParsedMessage;
 
 public class AttachmentTest extends AbstractTest {
 
@@ -34,7 +35,11 @@ public class AttachmentTest extends AbstractTest {
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) {
         if (!(mail instanceof ZimbraMailAdapter))
             return false;
-        // arguments already validated by superclass's validateArguments
-        return ((ZimbraMailAdapter) mail).getParsedMessage().hasAttachments();
+        ParsedMessage pm = ((ZimbraMailAdapter) mail).getParsedMessage();
+        if (pm == null) {
+            return false;
+        } else {
+            return pm.hasAttachments();
+        }
     }
 }

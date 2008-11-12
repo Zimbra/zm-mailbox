@@ -2469,6 +2469,20 @@ index is an integer, used to maintain the order of filter tests and actions.
 
 ---------------------------
 
+<ApplyFilterRulesRequest>
+  <filterRule name="{name}"/>+
+  [<ids>{list}</ids>]
+  [<query>{query-string}</query>]
+</ApplyFilterRulesRequest>
+
+<ApplyFilterRulesResponse affectedIds="[id1,id2,id3,...]" /> 
+
+Applies one or more filter rules to messages specified by a comma-
+separated ID list, or returned by a search query.  One or the other
+can be specified, but not both.
+
+--------------------------
+
 Synchronization:
 
    *** PLEASE SEE sync.txt FOR SYNC-RELATED DOCUMENTATION ***

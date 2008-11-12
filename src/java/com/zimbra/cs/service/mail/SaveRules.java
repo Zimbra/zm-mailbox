@@ -41,9 +41,8 @@ public class SaveRules extends MailDocumentHandler {
 
         ZimbraLog.soap.warn("The %s SOAP API is deprecated as of ZCS 6.0.  Please use %s instead.",
             SaveRules.class.getSimpleName(), ModifyFilterRules.class.getSimpleName());
-        RuleManager mgr = RuleManager.getInstance();
         Element rulesElem = document.getElement(MailConstants.E_RULES);
-        mgr.setXMLRules(account, rulesElem);
+        RuleManager.setXMLRules(account, rulesElem);
         
         Element response = zsc.createElement(MailConstants.SAVE_RULES_RESPONSE);
         return response;

@@ -53,7 +53,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -67,8 +66,6 @@ import com.zimbra.cs.service.util.ItemId;
 public class ZimbraMailAdapter implements MailAdapter
 {
     private Mailbox mMailbox;
-
-    protected SharedDeliveryContext mSharedDeliveryCtxt;
     private FilterHandler mHandler;
     private Integer mFlagBitmask;
     private String mTags;
@@ -79,12 +76,6 @@ public class ZimbraMailAdapter implements MailAdapter
      */
     private Set<String> mFiledIntoPaths = new HashSet<String>();
    
-    /**
-     * The id of the folder that contains messages that don't match any
-     * filter rules.  The default is {@link Mailbox#ID_FOLDER_INBOX}.
-     */
-    private int mDefaultFolderId = Mailbox.ID_FOLDER_INBOX;
-    
     /**
      * Set of address headers that need to be processed for IDN.
      */
@@ -110,41 +101,33 @@ public class ZimbraMailAdapter implements MailAdapter
         sAddrHdrs.add("to");
     }
     
-            
-    /**
-     * Constructor for ZimbraMailAdapter.
-     */
-    private ZimbraMailAdapter() {
-        super();
-    }
-    
-    /**
-     * Constructor for ZimbraMailAdapter.
-     * @param pm
-     * @throws MessagingException 
-     */
-    public ZimbraMailAdapter(Mailbox mailbox, ParsedMessage pm,
-                             String recipient, SharedDeliveryContext sharedDeliveryCtxt, int defaultFolderId)
-    throws MessagingException, ServiceException
-    {
-        this();
+    public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         mMailbox = mailbox;
-        mSharedDeliveryCtxt = sharedDeliveryCtxt;
-        if (defaultFolderId != Mailbox.ID_FOLDER_INBOX) {
-            // Validate folder id.
-            mMailbox.getFolderById(null, defaultFolderId);
-        }
-        mDefaultFolderId = defaultFolderId;
-        // XXX bburtin: extract this later
-        mHandler = new IncomingMessageHandler(sharedDeliveryCtxt, mailbox, recipient, pm, defaultFolderId);
+        mHandler = handler;
     }    
 
+    /**
+     * Returns the <tt>ParsedMessage</tt>, or <tt>null</tt> if it is not available.
+     */
     public ParsedMessage getParsedMessage() {
-        return mHandler.getParsedMessage();
+        try {
+            return mHandler.getParsedMessage();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to get ParsedMessage.", e);
+        }
+        return null;
     }
-    
+
+    /**
+     * Returns the <tt>MimeMessage</tt>, or <tt>null</tt> if it is not available.
+     */
     public MimeMessage getMimeMessage() {
-        return mHandler.getMimeMessage();
+        try {
+            return mHandler.getMimeMessage();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to get MimeMessage.", e);
+        }
+        return null;
     }
     
     /**
@@ -169,6 +152,8 @@ public class ZimbraMailAdapter implements MailAdapter
     
     public void executeActions() throws SieveException {
         try {
+            mHandler.beforeFiltering();
+            
             String messageId = Mime.getMessageID(mHandler.getMimeMessage());
 
             // If the Sieve script has no actions, JSieve generates an implicit keep.  If
@@ -206,7 +191,7 @@ public class ZimbraMailAdapter implements MailAdapter
                         fileInto(folderPath);
                     } catch (ServiceException e) {
                         ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
-                            folderPath, getDefaultFolderName());
+                            folderPath, mHandler.getDefaultFolderPath(), e);
                         explicitKeep();
                     }
                 } else if (action instanceof ActionRedirect) {
@@ -218,28 +203,19 @@ public class ZimbraMailAdapter implements MailAdapter
                         mHandler.redirect(addr);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
-                            addr, getDefaultFolderName());
+                            addr, mHandler.getDefaultFolderPath(), e);
                         explicitKeep();
                     }
                 } else {
                     throw new SieveException("unknown action " + action);
                 }
             }
+            mHandler.afterFiltering();
         } catch (ServiceException e) {
             throw new ZimbraSieveException(e);
         }
     }
     
-    private String getDefaultFolderName() {
-        String name = null;
-        try {
-            name = mMailbox.getFolderById(null, mDefaultFolderId).getName();
-        } catch (ServiceException e) {
-            ZimbraLog.filter.warn("Could not determine the name of folder %d.", mDefaultFolderId, e);
-        }
-        return name;
-    }
-
     private List<Action> getDeliveryActions() {
         List<Action> actions = new ArrayList<Action>();
         for (Action action : mActions) {
@@ -277,7 +253,7 @@ public class ZimbraMailAdapter implements MailAdapter
      * of the folder path, to make sure we don't file to the same
      * folder twice.
      */
-    Message doDefaultFiling()
+    public Message doDefaultFiling()
     throws ServiceException {
         String folderPath = mHandler.getDefaultFolderPath();
         Message msg = null;
@@ -370,7 +346,7 @@ public class ZimbraMailAdapter implements MailAdapter
     
     private int getFlagBitmask() {
         if (mFlagBitmask == null) {
-            int flagBits = Flag.BITMASK_UNREAD;
+            int flagBits = mHandler.getDefaultFlagBitmask();
             for (Action action : getFlagActions()) {
                 ActionFlag flagAction = (ActionFlag) action;
                 int flagId = flagAction.getFlagId();
@@ -437,28 +413,43 @@ public class ZimbraMailAdapter implements MailAdapter
     }
     
     public List<String> getHeader(String name) {
-        String[] headers = Mime.getHeaders(mHandler.getMimeMessage(), name);
+        MimeMessage msg = null;
+        try {
+            msg = mHandler.getMimeMessage();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to get MimeMessage.", e);
+            return Collections.emptyList();
+        }
+        
+        String[] headers = Mime.getHeaders(msg, name);
+        if (headers == null) {
+            return Collections.emptyList();
+        }
         
         if (sAddrHdrs.contains(name.toLowerCase()))
             return handleIDN(name, headers);
         else
-            return (headers == null ? new ArrayList<String>(0) : Arrays.asList(headers));
+            return Arrays.asList(headers);
     }
 
     public List<String> getHeaderNames() throws SieveMailException {
         Set<String> headerNames = new HashSet<String>();
-        try
-        {
+        MimeMessage msg = null;
+        try {
+            msg = mHandler.getMimeMessage();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to get MimeMessage.", e);
+            return Collections.emptyList();
+        }
+
+        try {
             @SuppressWarnings("unchecked")
-            Enumeration<Header> allHeaders = mHandler.getMimeMessage().getAllHeaders();
-            while (allHeaders.hasMoreElements())
-            {
+            Enumeration<Header> allHeaders = msg.getAllHeaders();
+            while (allHeaders.hasMoreElements()) {
                 headerNames.add(allHeaders.nextElement().getName());
             }
             return new ArrayList<String>(headerNames);
-        }
-        catch (MessagingException ex)
-        {
+        } catch (MessagingException ex) {
             throw new SieveMailException(ex);
         }
     }
@@ -499,7 +490,15 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     public Address[] parseAddresses(String headerName) {
-        String[] addresses = Mime.getHeaders(mHandler.getMimeMessage(), headerName);
+        MimeMessage msg = null;
+        try {
+            msg = mHandler.getMimeMessage();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to get MimeMessage.", e);
+            return FilterAddress.EMPTY_ADDRESS_ARRAY;
+        }
+        
+        String[] addresses = Mime.getHeaders(msg, headerName);
         if (addresses == null) {
             return FilterAddress.EMPTY_ADDRESS_ARRAY;
         }

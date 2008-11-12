@@ -1993,6 +1993,12 @@ public class ZMailbox implements ToZJSONObject {
         }
         return cm.zm;
     }
+    
+    public synchronized ZMessage getMessageById(String id) throws ServiceException {
+        ZGetMessageParams params = new ZGetMessageParams();
+        params.setId(id);
+        return getMessage(params);
+    }
 
     /**
      * hard delete message(s)

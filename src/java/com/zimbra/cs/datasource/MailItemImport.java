@@ -36,8 +36,6 @@ public abstract class MailItemImport implements DataSource.DataImport {
     protected final DataSource dataSource;
     protected final Mailbox mbox;
 
-    private static final RuleManager RULE_MANAGER = RuleManager.getInstance();
-
     protected MailItemImport(DataSource ds) throws ServiceException {
         dataSource = ds;
         mbox = ds.getMailbox();
@@ -75,7 +73,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         switch (folderId) {
         case Mailbox.ID_FOLDER_INBOX:
             try {
-                List<ItemId> addedMessageIds = RULE_MANAGER.applyRules(mbox, pm, 
+                List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, 
                     dataSource.getEmailAddress(), context, Mailbox.ID_FOLDER_INBOX);
                 Integer newMessageId = getFirstLocalId(addedMessageIds);
                 if (newMessageId == null) {

@@ -15,9 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Oct 28, 2004
- */
 package com.zimbra.cs.filter;
 
 import java.io.BufferedReader;
@@ -31,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.mail.MessagingException;
 
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveFactory;
@@ -49,7 +44,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
@@ -59,7 +53,8 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 
 /**
- * Handles setting and getting filter rules for an <tt>Account</tt>.
+ * Handles setting and getting filter rules for an <tt>Account</tt>,
+ * and executing filter rules on a message.
  */
 public class RuleManager {
     /**
@@ -69,7 +64,6 @@ public class RuleManager {
      */
     private static final String FILTER_RULES_CACHE_KEY =
         StringUtil.getSimpleClassName(RuleManager.class.getName()) + ".FILTER_RULES_CACHE";
-    private static RuleManager mInstance = new RuleManager();
 
     static {
         // Initialize custom jSieve extensions
@@ -89,10 +83,6 @@ public class RuleManager {
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to initialize mail filtering extensions.", e);
         }
-    }
-    
-    public static RuleManager getInstance() {
-        return mInstance;
     }
     
     private RuleManager() {
@@ -139,7 +129,7 @@ public class RuleManager {
      * 
      * @param account the account for which the cached parsed rules are to be cleared
      */
-    public void clearCachedRules(Account account) {
+    public static void clearCachedRules(Account account) {
         account.setCachedData(FILTER_RULES_CACHE_KEY, null);
     }
 
@@ -159,7 +149,7 @@ public class RuleManager {
      * @see Account#setCachedData(String, Object)
      * @throws ParseException if there was an error while parsing the Sieve script
      */
-    private Node getRulesNode(Account account)
+    private static Node getRulesNode(Account account)
     throws ParseException {
         Node node = (Node) account.getCachedData(FILTER_RULES_CACHE_KEY);
         if (node == null) {
@@ -180,7 +170,7 @@ public class RuleManager {
      * @param factory used to create new XML elements
      * @param account the account
      */
-    public Element getRulesAsXML(ElementFactory factory, Account account) throws ServiceException {
+    public static Element getRulesAsXML(ElementFactory factory, Account account) throws ServiceException {
         return getRulesAsXML(factory, account, false);
     }
     
@@ -192,7 +182,7 @@ public class RuleManager {
      * @param useNewFormat if <tt>true</tt>, returns the new response format instead of
      *                     the old Sieve-style one
      */
-    public Element getRulesAsXML(ElementFactory factory, Account account, boolean useNewFormat)
+    public static Element getRulesAsXML(ElementFactory factory, Account account, boolean useNewFormat)
     throws ServiceException {
         Node node = null;
         try {
@@ -216,7 +206,7 @@ public class RuleManager {
         }
     }
     
-    private static final Pattern PAT_RULE_NAME = Pattern.compile("# (.*)");
+    private static final Pattern PAT_RULE_NAME = Pattern.compile("# (.+)");
     
     /**
      * Kind of hacky, but works for now.  Rule names are encoded into the comment preceding
@@ -240,16 +230,58 @@ public class RuleManager {
         }
         return names;
     }
+    
+    /**
+     * Returns the portion of the Sieve script for the rule with the given name,
+     * or <tt>null</tt> if it doesn't exist.
+     */
+    public static String getRuleByName(String script, String ruleName) {
+        if (script == null) {
+            return null;
+        }
+        
+        StringBuilder buf = new StringBuilder();
+        boolean found = false;
+        BufferedReader reader = new BufferedReader(new StringReader(script));
+        String line = null;
+        
+        try {
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = PAT_RULE_NAME.matcher(line);
+                if (matcher.matches()) {
+                    String currentName = matcher.group(1);
+                    if (currentName.equals(ruleName)) {
+                        // First line of rule.
+                        found = true;
+                    } else if (found) {
+                        // First line of next rule.
+                        break;
+                    }
+                }
+                if (found) {
+                    buf.append(line).append("\n");
+                }
+            }
+        } catch (IOException e) {
+            ZimbraLog.filter.warn("Unable to get rule %s from script:\n%s.", ruleName, script, e);
+        }
+
+        if (buf.length() > 0) {
+            return buf.toString();
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Sets filter rules, specified as an XML element tree.  Uses the old
      * Sieve-style XML format.
      */
-    public void setXMLRules(Account account, Element eltRules) throws ServiceException {
+    public static void setXMLRules(Account account, Element eltRules) throws ServiceException {
         setXMLRules(account, eltRules, false);
     }
     
-    public void setXMLRules(Account account, Element eltRules, boolean useNewFormat)
+    public static void setXMLRules(Account account, Element eltRules, boolean useNewFormat)
     throws ServiceException {
         if (!useNewFormat) {
             RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
@@ -268,23 +300,25 @@ public class RuleManager {
      * 
      * @return the list of message id's that were added, or an empty list.
      */
-    public List<ItemId> applyRules(Mailbox mailbox, ParsedMessage pm,
-            String recipient, SharedDeliveryContext sharedDeliveryCtxt, int incomingFolderId)
-    throws IOException, MessagingException, ServiceException {
+    public static List<ItemId> applyRulesToIncomingMessage(
+        Mailbox mailbox, ParsedMessage pm, String recipient,
+        SharedDeliveryContext sharedDeliveryCtxt, int incomingFolderId)
+    throws ServiceException {
         List<ItemId> addedMessageIds = null;
+        IncomingMessageHandler handler = new IncomingMessageHandler(
+            sharedDeliveryCtxt, mailbox, recipient, pm, incomingFolderId);
+        ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
         
         try {
             Account account = mailbox.getAccount();
             Node node = getRulesNode(account);
-            ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(
-                    mailbox, pm, recipient, sharedDeliveryCtxt, incomingFolderId);
             
             // Determine whether to apply rules
             boolean applyRules = true;
             if (node == null) {
             	applyRules = false;
             }
-            if (SpamHandler.isSpam(pm.getMimeMessage()) &&
+            if (SpamHandler.isSpam(handler.getMimeMessage()) &&
             		!account.getBooleanAttr(Provisioning.A_zimbraSpamApplyUserFilters, false)) {
             	// Don't apply user filters to spam by default
             	applyRules = false;
@@ -294,56 +328,43 @@ public class RuleManager {
                 SieveFactory.getInstance().evaluate(mailAdapter, node);
                 // multiple fileinto may result in multiple copies of the messages in different folders
                 addedMessageIds = mailAdapter.getAddedMessageIds(); 
-            } else {
-                addedMessageIds = new ArrayList<ItemId>(1);
-                Message msg = mailAdapter.doDefaultFiling();
-                if (msg != null) {
-                    addedMessageIds.add(new ItemId(msg));
-                }
             }
-        } catch (SieveException e) {
-            if (e instanceof ZimbraSieveException) {
-                Throwable t = ((ZimbraSieveException) e).getCause();
-                if (t instanceof ServiceException) {
-                    throw (ServiceException) t;
-                } else if (t instanceof IOException) {
-                    throw (IOException) t;
-                } else if (t instanceof MessagingException) {
-                    throw (MessagingException) t;
-                }
-            } else {
-                ZimbraLog.filter.warn("Sieve error:", e);
-                // filtering system generates errors; 
-                // ignore filtering and file the message into INBOX
-                Message msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                        false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
-                addedMessageIds = new ArrayList<ItemId>(1);
-                addedMessageIds.add(new ItemId(msg));
-            }
-        } catch (ParseException e) {
-            ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
-            // filtering system generates errors; 
-            // ignore filtering and file the message into INBOX
-            Message msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                    false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
-            addedMessageIds = new ArrayList<ItemId>(1);
-            addedMessageIds.add(new ItemId(msg));
+        } catch (Exception e) {
+            ZimbraLog.filter.warn("An error occurred while processing filter rules. Filing message to %s.",
+                handler.getDefaultFolderPath(), e);
         } catch (TokenMgrError e) {
-            ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
-            // filtering system generates errors; 
-            // ignore filtering and file the message into INBOX
-            Message msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                    false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
+            // Workaround for bug 19576.  Certain parse errors can cause JavaCC to throw an Error
+            // instead of an Exception.  Woo.
+            ZimbraLog.filter.warn("An error occurred while processing filter rules. Filing message to %s.",
+                handler.getDefaultFolderPath(), e);
+        }
+        if (addedMessageIds == null) {
+            // Filter rules were not processed.  File to the default folder.
+            Message msg = mailAdapter.doDefaultFiling();
             addedMessageIds = new ArrayList<ItemId>(1);
             addedMessageIds.add(new ItemId(msg));
         }
         return addedMessageIds;
     }
     
+    public static boolean applyRulesToExistingMessage(Mailbox mbox, int messageId, Node node)
+    throws ServiceException {
+        ExistingMessageHandler handler = new ExistingMessageHandler(mbox, messageId);
+        ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mbox, handler);
+        
+        try {
+            SieveFactory.getInstance().evaluate(mailAdapter, node);
+        } catch (SieveException e) {
+            throw ServiceException.FAILURE("Unable to evaluate script", e);
+        }
+        
+        return handler.filtered();
+    }
+    
     /**
-     * Parses the sieve script and returns the result. 
+     * Parses the sieve script and returns the root to the resulting node tree. 
      */
-    private static Node parse(String script) throws ParseException {
+    public static Node parse(String script) throws ParseException {
         ByteArrayInputStream sin = null;
         try {
             sin = new ByteArrayInputStream(script.getBytes("UTF-8"));
@@ -393,7 +414,7 @@ public class RuleManager {
      * When a tag is renamed, updates any filter rules that reference
      * that tag.
      */
-    public void tagRenamed(Account account, String originalName, String newName)
+    public static void tagRenamed(Account account, String originalName, String newName)
     throws ServiceException {
         String rules = getRules(account);
         if (rules != null) {

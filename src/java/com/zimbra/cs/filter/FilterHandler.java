@@ -27,43 +27,74 @@ import com.zimbra.cs.service.util.ItemId;
 /**
  * Interface implemented by classes that handle filter rule actions. 
  */
-public interface FilterHandler {
+public abstract class FilterHandler {
 
-    public ParsedMessage getParsedMessage();
-    public MimeMessage getMimeMessage();
+    public abstract ParsedMessage getParsedMessage() throws ServiceException;
+    public abstract MimeMessage getMimeMessage() throws ServiceException;
+    public abstract int getDefaultFlagBitmask();
     
     /**
-     * Discards the message.
+     * Returns the path to the default folder (usually <tt>Inbox</tt>).
      */
-    public void discard();
+    public abstract String getDefaultFolderPath() throws ServiceException;
+
+    /**
+     * Executed before mail filtering begins.
+     */
+    @SuppressWarnings("unused")
+    public void beforeFiltering() throws ServiceException { }
+    
+    /**
+     * Discards the message.  This method will only be called when there
+     * are no <tt>fileinto</tt> or <tt>keep</tt> actions.
+     */
+    @SuppressWarnings("unused")
+    public void discard() throws ServiceException { }
     
     /**
      * Files the message into either the default folder or the
-     * spam folder.
+     * spam folder.  This method will not be called multiple times
+     * for the same message.
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    public Message implicitKeep(int flagBitmask, String tags) throws ServiceException;
+    @SuppressWarnings("unused")
+    public Message implicitKeep(int flagBitmask, String tags)
+    throws ServiceException {
+        return null;
+    }
     
     /**
      * Files the message into the default folder without taking
-     * spam filtering into account. 
+     * spam filtering into account.  This method will not be called multiple times
+     * for the same message. 
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    public Message explicitKeep(int flagBitmask, String tags) throws ServiceException;
+    @SuppressWarnings("unused")
+    public Message explicitKeep(int flagBitmask, String tags)
+    throws ServiceException {
+        return null;
+    }
     
     /**
      * Files the message into the given folder.  May be local or remote.
+     * This method will not be called multiple times for the same path.
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    public ItemId fileInto(String folderPath, int flagBitmask, String tags) throws ServiceException;
+    @SuppressWarnings("unused")
+    public ItemId fileInto(String folderPath, int flagBitmask, String tags)
+    throws ServiceException {
+        return null;
+    }
     
     /**
      * Redirects the message to another address.
      */
-    public void redirect(String destinationAddress) throws ServiceException, MessagingException;
+    @SuppressWarnings("unused")
+    public void redirect(String destinationAddress) throws ServiceException, MessagingException { }
 
     /**
-     * Returns the path to the default folder (usually <tt>Inbox</tt>).
+     * Executed after mail filtering ends.
      */
-    public String getDefaultFolderPath() throws ServiceException;
+    @SuppressWarnings("unused")
+    public void afterFiltering() throws ServiceException { }
 }

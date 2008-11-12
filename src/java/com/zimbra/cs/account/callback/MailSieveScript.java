@@ -35,23 +35,20 @@ public class MailSieveScript extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
-        SingleValueMod mod = singleValueMod(attrName, value);
+        singleValueMod(attrName, value);
         
         if (!(entry instanceof Account)) 
             return;
         
         Account acct = (Account)entry;
         
-        Provisioning prov = Provisioning.getInstance();
-        
-        if (!prov.onLocalServer(acct))
+        if (!Provisioning.onLocalServer(acct))
             return;
         
         // clear it from the in memory parsed filter rule cache
-        RuleManager.getInstance().clearCachedRules(acct);
+        RuleManager.clearCachedRules(acct);
     }
 
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
     }
 }

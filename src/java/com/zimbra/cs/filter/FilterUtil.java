@@ -264,7 +264,7 @@ public class FilterUtil {
                 String msgId = remoteMbox.addMessage(remoteFolder.getId(),
                     com.zimbra.cs.mailbox.Flag.bitmaskToFlags(flags),
                     null, 0, content, false);
-                return new ItemId(remoteAccountId, Integer.valueOf(msgId));
+                return new ItemId(msgId, remoteAccountId);
             } else {
                 String msg = String.format("Unable to find remote folder %s for mountpoint %s.",
                     remainingPath, mountpoint.getName());
@@ -352,7 +352,7 @@ public class FilterUtil {
      * specified in one of the X-Zimbra-Forwarded headers.
      */
     private static boolean isMailLoop(Mailbox sourceMbox, MimeMessage msg)
-    throws MessagingException, ServiceException {
+    throws ServiceException {
         String[] forwards = Mime.getHeaders(msg, HEADER_FORWARDED);
         String userName = sourceMbox.getAccount().getName();
         for (String forward : forwards) {

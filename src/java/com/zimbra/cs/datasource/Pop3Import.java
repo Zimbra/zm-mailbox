@@ -254,13 +254,14 @@ public class Pop3Import extends MailItemImport {
     }
 
     private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
-    throws ServiceException, IOException, MessagingException {
+    throws ServiceException, IOException {
         Mailbox mbox = dataSource.getMailbox();
         com.zimbra.cs.mailbox.Message msg = null;
         if (isOffline()) {
             msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
         } else {
-            List<ItemId> ids = RuleManager.getInstance().applyRules(mbox, pm, dataSource.getEmailAddress(),
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                mbox, pm, dataSource.getEmailAddress(),
                 new SharedDeliveryContext(), dataSource.getFolderId());
             Integer localId = getFirstLocalId(ids);
             if (localId != null) {
