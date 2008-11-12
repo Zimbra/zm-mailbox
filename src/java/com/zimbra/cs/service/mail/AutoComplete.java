@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.ContactAutoComplete;
 import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class AutoComplete extends MailDocumentHandler {
@@ -50,7 +51,7 @@ public class AutoComplete extends MailDocumentHandler {
 		autoComplete.setIncludeGal(includeGal);
 		AutoCompleteResult result = autoComplete.query(n, folders, limit);
 		Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
-		toXML(response, result);
+		toXML(response, result, zsc.getAuthtokenAccountId());
 		
 		return response;
 	}
@@ -70,16 +71,16 @@ public class AutoComplete extends MailDocumentHandler {
 		return array;
 	}
 	
-	private void toXML(Element response, AutoCompleteResult result) {
+	private void toXML(Element response, AutoCompleteResult result, String authAccountId) {
 		response.addAttribute(MailConstants.A_CANBECACHED, result.canBeCached);
 		for (ContactEntry entry : result.entries) {
 	        Element cn = response.addElement(MailConstants.E_MATCH);
 	        cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
 	        cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
-            int id = entry.getId();
-            if (id > 0)
-            	cn.addAttribute(MailConstants.A_ID, Integer.toString(id));
+            ItemId id = entry.getId();
+            if (id != null)
+            	cn.addAttribute(MailConstants.A_ID, id.toString(authAccountId));
             int folderId = entry.getFolderId();
             if (folderId > 0)
             	cn.addAttribute(MailConstants.A_FOLDER, Integer.toString(folderId));

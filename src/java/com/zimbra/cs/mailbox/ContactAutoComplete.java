@@ -20,10 +20,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -32,9 +35,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ProxiedHit;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.service.util.ItemId;
 
 public class ContactAutoComplete {
 	public static class AutoCompleteResult {
@@ -63,7 +68,7 @@ public class ContactAutoComplete {
         String mDisplayName;
         String mLastName;
         String mDlist;
-        int mId;
+        ItemId mId;
         int mFolderId;
         int mRanking;
         public String getEmail() {
@@ -78,7 +83,7 @@ public class ContactAutoComplete {
         	buf.append("<").append(mEmail).append(">");
         	return buf.toString();
 		}
-        public int getId() {
+        public ItemId getId() {
         	return mId;
         }
         public int getFolderId() {
@@ -275,19 +280,49 @@ public class ContactAutoComplete {
         try {
     		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
     		Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
+    		HashMap<ItemId,Integer> mountpoints = new HashMap<ItemId,Integer>();
+    		for (int fid : folders) {
+    			Folder f = mbox.getFolderById(octxt, fid);
+    			if (f instanceof Mountpoint) {
+    				Mountpoint mp = (Mountpoint) f;
+    				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), fid);
+    			}
+    		}
 			qres = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, 100);
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
-                if (!(hit instanceof ContactHit))
+                Map<String,String> fields = null;
+                ItemId id = null;
+                int folderId = 0;
+                if (hit instanceof ContactHit) {
+                    Contact c = ((ContactHit) hit).getContact();
+                    ZimbraLog.gal.debug("hit: "+c.getId());
+                	fields = c.getFields();
+                	id = new ItemId(c);
+                	folderId = c.getFolderId();
+                } else if (hit instanceof ProxiedHit) {
+                    ZimbraLog.gal.debug("hit: ");
+                    fields = new HashMap<String, String>();
+                    Element top = ((ProxiedHit)hit).getElement();
+                    id = new ItemId(top.getAttribute(MailConstants.A_ID), (String) null);
+                    ItemId fiid = new ItemId(top.getAttribute(MailConstants.A_FOLDER), (String) null);
+                    folderId = mountpoints.get(fiid);
+                    for (Element elt : top.listElements(MailConstants.E_ATTRIBUTE)) {
+                    	try {
+                            String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
+                            fields.put(name, elt.getText());
+                    	} catch (ServiceException se) {
+                			ZimbraLog.gal.warn("error handling proxied query result "+hit);
+                    	}
+                    }
+                } else
                 	continue;
                 
-                Contact c = ((ContactHit) hit).getContact();
-                ZimbraLog.gal.debug("hit: "+c.getId());
-            	String firstName = c.get(Contact.A_firstName);
-            	String lastName = c.get(Contact.A_lastName);
-            	String fullName = c.get(Contact.A_fullName);
-            	String nickname = c.get(Contact.A_nickname);
-                if (c.get(Contact.A_dlist) == null) {
+            	String firstName = fields.get(Contact.A_firstName);
+            	String lastName = fields.get(Contact.A_lastName);
+            	String fullName = fields.get(Contact.A_fullName);
+            	String nickname = fields.get(Contact.A_nickname);
+                if (fields.get(Contact.A_dlist) == null) {
                 	boolean nameMatches = 
                 		matches(str, firstName) ||
                         matches(str, lastName) ||
@@ -295,7 +330,7 @@ public class ContactAutoComplete {
                         matches(str, nickname);
                 				
                 	for (String emailKey : mEmailKeys) {
-                		String email = c.get(emailKey);
+                		String email = fields.get(emailKey);
                 		if (email != null && (nameMatches || matches(str, email))) {
                 			ContactEntry entry = new ContactEntry();
                 			entry.mEmail = email;
@@ -309,8 +344,8 @@ public class ContactAutoComplete {
                 					entry.mLastName = "";
                 				entry.mDisplayName = (firstName == null) ? "" : firstName + " " + entry.mLastName;
                 			}
-                			entry.mId = c.getId();
-                			entry.mFolderId = c.getFolderId();
+                			entry.mId = id;
+                			entry.mFolderId = folderId;
                 			result.addEntry(entry);
                 			ZimbraLog.gal.debug("adding "+entry.getEmail());
                 		}
@@ -319,9 +354,9 @@ public class ContactAutoComplete {
                 	// distribution list
                 	ContactEntry entry = new ContactEntry();
                 	entry.mDisplayName = nickname;
-                	entry.mDlist = c.get(Contact.A_dlist);
-                	entry.mId = c.getId();
-                	entry.mFolderId = c.getFolderId();
+                	entry.mDlist = fields.get(Contact.A_dlist);
+                	entry.mId = id;
+                	entry.mFolderId = folderId;
                 	result.addEntry(entry);
                 	ZimbraLog.gal.debug("adding "+entry.getEmail());
                 }
