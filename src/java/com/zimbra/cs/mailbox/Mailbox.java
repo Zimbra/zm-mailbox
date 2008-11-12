@@ -6036,6 +6036,11 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    //for offline override to filter flags
+    public String getItemFlagString(MailItem mi) {
+    	return mi.getFlagString();
+    }
 
     public synchronized ACL.Grant grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, String args) throws ServiceException {
         GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, args);

@@ -278,7 +278,7 @@ public class ToXML {
         }
 
         if (needToOutput(fields, Change.MODIFIED_FLAGS)) {
-            String flags = folder.getFlagString();
+            String flags = folder.getMailbox().getItemFlagString(folder); //so that offline override can filter flags
             if (fields != NOTIFY_FIELDS || !flags.equals(""))
                 elem.addAttribute(MailConstants.A_FLAGS, flags);
         }

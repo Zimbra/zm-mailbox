@@ -257,6 +257,10 @@ public class DataSource extends AccountProperty {
     	return null;
     }
     
+    public boolean isSyncInboxOnly() {
+    	return false;
+    }
+    
     public boolean isSyncCapable(Folder folder) {
     	return true;
     }
