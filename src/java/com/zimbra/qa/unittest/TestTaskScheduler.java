@@ -16,78 +16,51 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.common.util.TaskScheduler;
-
 
 public class TestTaskScheduler
 extends TestCase
 {
-    private static class TestTask
+    private class TestTask
     implements Callable<Integer> {
-        static List<Integer> sResults =
-            Collections.synchronizedList(new ArrayList<Integer>());
-        
-        int mValue;
-        
-        TestTask(int value) {
-            mValue = value;
-        }
+        int mNumCalls = 0;
+        String mName;
         
         public Integer call() throws Exception {
-            sResults.add(mValue);
-            return mValue;
+            mNumCalls++;
+            return mNumCalls;
         }
     }
     
     /**
-     * Submits the following tasks and confirms the result:
-     * 
-     * <ul>
-     *   <li>0 ms: 1</li>
-     *   <li>200ms: 2</li>
-     *   <li>400ms: 2</li>
-     *   <li>500ms: 1</li>
-     *   <li>600ms: 2</li>
-     *   <li>800ms: 2</li>
-     * </ul>
-     * @throws Exception
+     * Submits two tasks and confirms that they were executed the correct
+     * number of times.
      */
     public void testTaskScheduler()
     throws Exception {
         
         TaskScheduler<Integer> scheduler = null;
         
-        // Run test
-        TestTask task1 = new TestTask(1);
-        TestTask task2 = new TestTask(2);
+        // Run test.
+        TestTask task1 = new TestTask();
+        TestTask task2 = new TestTask();
         scheduler = new TaskScheduler<Integer>("TestTaskScheduler", 1, 2);
         scheduler.schedule(1, task1, true, 1000, 0);
-        scheduler.schedule(2, task2, true, 400, 400);
-        Thread.sleep(2000);
+        scheduler.schedule(2, task2, true, 1500, 1500);
+        Thread.sleep(1800);
         scheduler.cancel(2, false);
         scheduler.cancel(1, false);
-        int numResults = TestTask.sResults.size();
 
-        // Wait some more to make sure no more tasks run
-        Thread.sleep(500);
-        assertEquals("Result count", TestTask.sResults.size(), numResults);
+        // Wait some more to make sure no more tasks run.
+        Thread.sleep(1000);
 
-        // Validate results
-        assertEquals("Task 1's last result", 1, scheduler.getLastResult(1).intValue());
-        assertEquals("Task 2's last result", 2, scheduler.getLastResult(2).intValue());
-
-        int[] expected = new int[] { 1, 2, 2, 1, 2, 2 };
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals("Result " + i, expected[i], TestTask.sResults.get(i).intValue());
-        }
+        // Validate number of calls.
+        assertEquals("Task 1 calls", 2, scheduler.getLastResult(1).intValue());
+        assertEquals("Task 2 calls", 1, scheduler.getLastResult(2).intValue());
     }
     
     public static void main(String[] args)
