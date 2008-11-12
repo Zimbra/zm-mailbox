@@ -104,6 +104,8 @@ class ImapFolderSync {
     public ImapFolder syncFolder(ListData ld)
         throws ServiceException, IOException {
         String path = ld.getMailbox();
+    	if (ds.isSyncInboxOnly() && !path.equalsIgnoreCase("Inbox"))
+    		return null;
         remoteFolder = new RemoteFolder(connection, path);
         tracker = imapSync.getTrackedFolders().getByRemotePath(path);
         if (tracker != null) {
