@@ -2475,7 +2475,7 @@ index is an integer, used to maintain the order of filter tests and actions.
   [<query>{query-string}</query>]
 </ApplyFilterRulesRequest>
 
-<ApplyFilterRulesResponse affectedIds="[id1,id2,id3,...]" /> 
+<ApplyFilterRulesResponse [affectedIds="id1,id2,id3,..."] /> 
 
 Applies one or more filter rules to messages specified by a comma-
 separated ID list, or returned by a search query.  One or the other
