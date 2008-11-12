@@ -134,7 +134,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         return response;
     }
 
-    private static Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint)
+    private Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"

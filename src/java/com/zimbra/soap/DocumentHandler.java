@@ -95,6 +95,8 @@ public abstract class DocumentHandler {
      * @param userObj
      */
     public void postHandle(Object userObj) { }
+    
+    public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
 
@@ -398,7 +400,7 @@ public abstract class DocumentHandler {
         return null;
     }
 
-    protected static Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws ServiceException {
+    protected Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
@@ -406,7 +408,7 @@ public abstract class DocumentHandler {
         return proxyRequest(request, context, getServer(acctId), zscTarget);
     }
 
-    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)
+    protected Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
@@ -425,6 +427,8 @@ public abstract class DocumentHandler {
                 throw new SoapFaultException("error in proxied request", true, response);
             }
         } else {
+            preProxy(request, context);
+            
             // executing remotely; find out target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);

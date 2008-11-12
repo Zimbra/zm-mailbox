@@ -157,7 +157,7 @@ public class GetContacts extends MailDocumentHandler  {
 		}
 	}
 
-	static List<Element> proxyRemote(Element request, Map<String, StringBuffer> remote, Map<String,Object> context)
+	List<Element> proxyRemote(Element request, Map<String, StringBuffer> remote, Map<String,Object> context)
 	throws ServiceException {
 		List<Element> responses = new ArrayList<Element>();
 
