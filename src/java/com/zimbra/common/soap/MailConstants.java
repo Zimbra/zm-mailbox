@@ -121,6 +121,8 @@ public class MailConstants {
     public static final QName GET_FILTER_RULES_RESPONSE = QName.get("GetFilterRulesResponse", NAMESPACE);
     public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get("ModifyFilterRulesRequest", NAMESPACE);
     public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get("ModifyFilterRulesResponse", NAMESPACE);
+    public static final QName APPLY_FILTER_RULES_REQUEST = QName.get("ApplyFilterRulesRequest", NAMESPACE);
+    public static final QName APPLY_FILTER_RULES_RESPONSE = QName.get("ApplyFilterRulesResponse", NAMESPACE);
 
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
@@ -283,6 +285,9 @@ public class MailConstants {
     public static final String A_FLAG_NAME = "flagName";
     public static final String A_TAG_NAME = "tagName";
     public static final String A_INDEX = "index";
+
+    public static final String E_IDS = "ids";
+    public static final String A_AFFECTED_IDS = "affectedIds";
     
     // grants
     public static final String E_ACL = "acl";
