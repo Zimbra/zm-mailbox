@@ -188,7 +188,8 @@ public abstract class Element implements Cloneable {
     /** Returns all an <tt>Element</tt>'s sub-elements. */
     public List<Element> listElements()  { return listElements(null); }
     /** Returns all the sub-elements with the given name.  If <tt>name></tt>
-     *  is <tt>null</tt>, returns <u>all</u> sub-elements. */
+     *  is <tt>null</tt>, returns <u>all</u> sub-elements.  If no elements
+     *  with the given name exist, returns an empty <tt>List</tt> */
     public abstract List<Element> listElements(String name);
 
     public List<KeyValuePair> listKeyValuePairs()  { return listKeyValuePairs(null, null); }
