@@ -377,13 +377,20 @@ public class ZimbraLog {
         return sContextString.get();
     }
     
+    //this is called from offline and only at LC init so we are taking chances with race
+    private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
+    public static void addContextFilters(String filters) {
+    	for (String item : filters.split(","))
+    		CONTEXT_FILTER.add(item);
+    }
+    
     /**
      * Adds a key/value pair to the current thread's logging context.  If
      * <tt>key</tt> is null, does nothing.  If <tt>value</tt> is null,
      * removes the context entry.
      */
     public static void addToContext(String key, String value) {
-        if (key == null)
+        if (key == null || CONTEXT_FILTER.contains(key))
             return;
         if (key.equals(C_NAME) || key.equals(C_ANAME)) {
             addAccountForThread(value);
