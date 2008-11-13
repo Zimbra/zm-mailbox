@@ -26,9 +26,7 @@ import javax.naming.NameAlreadyBoundException;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
-import javax.naming.directory.DirContext;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Log;
@@ -42,12 +40,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
-import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 
 class RenameDomain {
@@ -474,7 +466,7 @@ class RenameDomain {
             }
         
             // Step 1. move the all aliases of the entry that are in the old domain to the new domain 
-            String[] aliases = (isDL)?((DistributionList)entry).getAliases():((Account)entry).getAliases();
+            String[] aliases = (isDL)?((DistributionList)entry).getAliases():((Account)entry).getMailAlias();
             handleAliases(entry, aliases, newDn);
          
             // Step 2. move the entry to the new domain and fixup all the addr attrs that contain the old domain

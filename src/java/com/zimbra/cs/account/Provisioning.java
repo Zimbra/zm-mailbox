@@ -352,7 +352,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // CACHE. If we get reloaded from LDAP, cached data is cleared
         Cos cos = (Cos) acct.getCachedData(DATA_COS);
         if (cos == null) {
-            String id = acct.getAccountCOSId();
+            String id = acct.getCOSId();
                 if (id != null) cos = get(CosBy.id, id); 
                 if (cos == null) {
                     Domain domain = getDomain(acct);

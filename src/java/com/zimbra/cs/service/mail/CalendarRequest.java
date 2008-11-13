@@ -268,7 +268,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // Never send a notification to the person making the SOAP request
             // in a non-delegated request.
             if (!onBehalfOf) {
-                String[] aliases = acct.getAliases();
+                String[] aliases = acct.getMailAlias();
                 String[] addrs;
                 if (aliases != null && aliases.length > 0) {
                     addrs = new String[aliases.length + 1];

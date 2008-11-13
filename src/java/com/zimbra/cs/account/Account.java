@@ -30,27 +30,6 @@ public class Account extends ZAttrAccount  {
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
     }
-
-    public static enum CalendarUserType {
-        USER,       // regular person account
-        RESOURCE    // calendar resource
-    }
-
-
-    /**
-     * Returns calendar user type
-     * @return USER (default) or RESOURCE
-     * @throws ServiceException
-     */
-    public CalendarUserType getCalendarUserType() {
-        String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
-                CalendarUserType.USER.toString());
-        return CalendarUserType.valueOf(cutype);
-    }
-
-    public boolean saveToSent() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
-    }
     
     public String getAccountStatus(Provisioning prov) {
         
@@ -96,18 +75,4 @@ public class Account extends ZAttrAccount  {
             return Provisioning.ACCOUNT_STATUS_CLOSED;
         }
     }
-    
-    public String[] getAliases() {
-        return getMultiAttr(Provisioning.A_zimbraMailAlias);
-    }
-
-    /**
-     * Returns the *account's* COSId, that is, returns the zimbraCOSId directly set on the account, or null if not set.
-     * Use Provisioning.getCos(account) to get the actual COS object.
-     * @return 
-     */
-    public String getAccountCOSId() {
-        return getAttr(Provisioning.A_zimbraCOSId);
-    }
-
 }

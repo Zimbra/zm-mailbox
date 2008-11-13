@@ -211,7 +211,7 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
             if (acct != null) {
                 addrs.setIsAccount(true);
                 primary = acct.getName();
-                aliases = acct.getAliases();
+                aliases = acct.getMailAlias();
             } else {
                 DistributionList dl = prov.get(Provisioning.DistributionListBy.name, name);
                 if (dl != null) {

@@ -78,7 +78,7 @@ public class AccountUtil {
     public static boolean isDirectRecipient(Account acct, String[] otherAccountAddrs, MimeMessage mm, int maxToCheck) throws ServiceException, MessagingException {
         String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
-        String[] accountAliases = acct.getAliases();
+        String[] accountAliases = acct.getMailAlias();
         Address[] recipients = mm.getAllRecipients();
         
         if (recipients == null) {
@@ -160,7 +160,7 @@ public class AccountUtil {
             return false;
         String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
-        String[] accountAliases = acct.getAliases();
+        String[] accountAliases = acct.getMailAlias();
         return addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, givenAddress);
     }
     
@@ -234,7 +234,7 @@ public class AccountUtil {
 //        int maxToCheck = -1;
 //        String accountAddress = acct.getName();
 //        String canonicalAddress = getCanonicalAddress(acct);
-//        String[] accountAliases = acct.getAliases();
+//        String[] accountAliases = acct.getMailAlias();
 //        Address[] recipients = mm.getAllRecipients();
 //        
 //        if (recipients != null) {

@@ -1366,7 +1366,7 @@ public final class ZimbraQuery {
                 clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.CC, acct.getName())); 
             }
             
-            String[] aliases = acct.getAliases();
+            String[] aliases = acct.getMailAlias();
             for (String alias : aliases) {
 //                if ((operatorBitmask & ADDR_BITMASK_FROM) !=0) {
 //                    if (atFirst) {

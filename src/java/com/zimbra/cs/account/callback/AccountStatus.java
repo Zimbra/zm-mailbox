@@ -92,7 +92,7 @@ public class AccountStatus extends AttributeCallback {
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
             ZimbraLog.misc.info("removing closed account and all its aliases from all distribution lists");
             
-            String aliases[] = account.getAliases();
+            String aliases[] = account.getMailAlias();
             String addrs[] = new String[aliases.length+1];
             addrs[0] = account.getName();
             if (aliases.length > 0)

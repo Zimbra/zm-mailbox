@@ -33,7 +33,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -52,7 +51,6 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.IDedEntryCache;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntryCache;
@@ -76,7 +74,6 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
@@ -1251,7 +1248,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public void removeAlias(Account acct, String alias) throws ServiceException {
-        removeAliasInternal(acct, alias, (acct==null)?null:acct.getAliases());
+        removeAliasInternal(acct, alias, (acct==null)?null:acct.getMailAlias());
     }
 
     public void addAlias(DistributionList dl, String alias) throws ServiceException {
@@ -1949,7 +1946,7 @@ public class LdapProvisioning extends Provisioning {
 
         removeAddressFromAllDistributionLists(acc.getName()); // this doesn't throw any exceptions
 
-        String aliases[] = acc.getAliases();
+        String aliases[] = acc.getMailAlias();
         if (aliases != null)
             for (int i=0; i < aliases.length; i++)
                 removeAlias(acc, aliases[i]); // this also removes each alias from any DLs
@@ -3542,7 +3539,7 @@ public class LdapProvisioning extends Provisioning {
         emailAddress = emailAddress.toLowerCase().trim();
 
         calResAttrs.put(Provisioning.A_zimbraAccountCalendarUserType,
-                        Account.CalendarUserType.RESOURCE.toString());
+                        AccountCalendarUserType.RESOURCE.toString());
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
         
@@ -3662,7 +3659,7 @@ public class LdapProvisioning extends Provisioning {
 
     private Account makeAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
         Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
-        boolean isAccount = (a == null) || a.contains(CalendarUserType.USER.toString());
+        boolean isAccount = (a == null) || a.contains(AccountCalendarUserType.USER.toString());
         
         String emailAddress = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraMailDeliveryAddress);
         if (emailAddress == null)
@@ -3865,7 +3862,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     private List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via, boolean minimal) throws ServiceException {
-        String aliases[] = acct.getAliases();
+        String aliases[] = acct.getMailAlias();
         String addrs[] = new String[aliases.length+1];
         addrs[0] = acct.getName();
         for (int i=0; i < aliases.length; i++)
