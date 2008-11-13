@@ -30,6 +30,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,7 +42,7 @@ import com.zimbra.common.service.ServiceException;
  * @author schemers
  */
 public class StringUtil {
-    
+
     /** A user-friendly equal that handles one or both nulls easily. */
     public static boolean equal(String s1, String s2) {
         if (s1 == null || s2 == null)
@@ -568,5 +571,90 @@ public class StringUtil {
             } catch (Exception e) {}
         }
         return "utf-8";
+    }
+
+    private static Set<String> sJavaReservedWords =
+            new HashSet<String>(Arrays.asList(
+                    "abstract",
+                    "assert",
+                    "boolean",
+                    "break",
+                    "byte",
+                    "case",
+                    "catch",
+                    "char",
+                    "class",
+                    "const",
+                    "continue",
+                    "default",
+                    "do",
+                    "double",
+                    "else",
+                    "enum",
+                    "extends",
+                    "false",
+                    "final",
+                    "finally",
+                    "float",
+                    "for",
+                    "goto",
+                    "if",
+                    "implements",
+                    "import",
+                    "instanceof",
+                    "int",
+                    "interface",
+                    "long",
+                    "native",
+                    "new",
+                    "null",
+                    "package",
+                    "private",
+                    "protected",
+                    "public",
+                    "return",
+                    "short",
+                    "static",
+                    "strictfp",
+                    "super",
+                    "switch",
+                    "synchronized",
+                    "this",
+                    "throw",
+                    "throws",
+                    "transient",
+                    "true",
+                    "try",
+                    "void",
+                    "volatile",
+                    "while"
+            ));
+
+    public static boolean isJavaReservedWord(String s) {
+        return sJavaReservedWords.contains(s);
+    }
+
+    /**
+     * Escape (if needed) given identifer. Invalid characters are replaced with an "_".
+     * If the whole word is a Java Identifier, then it is prefixed with a "_".
+     * @param s identifier that potentially needs escaping
+     * @return escaped (if needed) identifier
+     */
+    public static String escapeJavaIdentifier(String s) {
+        if (isNullOrEmpty(s)) return s;
+        else if (isJavaReservedWord(s)) return "_"+s;
+
+        StringBuilder result = new StringBuilder();
+
+        for (int i=0; i<s.length(); i++) {
+            char ch = s.charAt(i);
+            if (i == 0) result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
+            else result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
+         }
+         return result.toString();
+    }
+
+    public static String capitalize(String s) {
+        return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 }
