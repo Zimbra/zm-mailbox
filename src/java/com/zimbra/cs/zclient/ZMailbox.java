@@ -74,6 +74,7 @@ import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -199,18 +200,18 @@ public class ZMailbox implements ToZJSONObject {
             mAccount = account;
             mAccountBy = accountBy;
             mPassword = password;
-            mUri = uri;
+            setUri(uri);
         }
 
         // AP-TODO-7: retire
         public Options(String authToken, String uri) {
             mAuthToken = new ZAuthToken(null, authToken, null);
-            mUri = uri;
+            setUri(uri);
         }
 
         public Options(ZAuthToken authToken, String uri) {
             mAuthToken = authToken;
-            mUri = uri;
+            setUri(uri);
         }
 
         public void setProxy(String proxyHost, int proxyPort) {
@@ -261,7 +262,17 @@ public class ZMailbox implements ToZJSONObject {
         public void setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null); } 
 
         public String getUri() { return mUri; }
-        public void setUri(String uri) { mUri = uri; }
+        public void setUri(String uri) {
+            setUri(uri, false);
+        }
+
+        public void setUri(String uri, boolean isAdmin) {
+            try {
+                mUri = resolveUrl(uri, isAdmin);
+            } catch (ZClientException e) {
+                mUri = uri;
+            }
+        }
 
         public String getUserAgentName() { return mUserAgentName; }
         public String getUserAgentVersion() { return mUserAgentVersion; }
@@ -359,6 +370,18 @@ public class ZMailbox implements ToZJSONObject {
         mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
         mailbox.initPreAuth(options);
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
+    }
+
+    public static ZMailbox getByName(String name, String password, String uri) throws ServiceException {
+        return new ZMailbox(new Options(name, AccountBy.name, password, uri));
+    }
+
+    public static ZMailbox getByAuthToken(String authToken, String uri) throws ServiceException {
+        return new ZMailbox(new Options(authToken, uri));
+    }
+
+    public static ZMailbox getByAuthToken(ZAuthToken authToken, String uri) throws ServiceException {
+        return new ZMailbox(new Options(authToken, uri));
     }
 
     public ZMailbox(Options options) throws ServiceException {
@@ -4410,5 +4433,29 @@ public class ZMailbox implements ToZJSONObject {
 
     public ZSearchContext searchContext(String query) {
         return new ZSearchContext(new ZSearchParams(query), this);
+    }
+
+    private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
+    
+    public static String resolveUrl(String url, boolean isAdmin) throws ZClientException {
+        try {
+            URI uri = new URI(url);
+
+            if (isAdmin && uri.getPort() == -1) {
+                uri = new URI("https", uri.getUserInfo(), uri.getHost(), ADMIN_PORT, uri.getPath(), uri.getQuery(), uri.getFragment());
+                url = uri.toString();
+            }
+
+            String service = (uri.getPort() == ADMIN_PORT) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
+            if (uri.getPath() == null || uri.getPath().length() <= 1) {
+                if (url.charAt(url.length()-1) == '/')
+                    url = url.substring(0, url.length()-1) + service;
+                else
+                    url = url + service;
+            }
+            return url;
+        } catch (URISyntaxException e) {
+            throw ZClientException.CLIENT_ERROR("invalid URL: "+url, e);
+        }
     }
 }

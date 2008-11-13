@@ -170,30 +170,8 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    public String resolveUrl(String url, boolean isAdmin) throws ZClientException {
-        try {
-            URI uri = new URI(url);
-
-            if (isAdmin && uri.getPort() == -1) {
-                uri = new URI("https", uri.getUserInfo(), uri.getHost(), ADMIN_PORT, uri.getPath(), uri.getQuery(), uri.getFragment());
-                url = uri.toString();
-            }
-
-            String service = (uri.getPort() == ADMIN_PORT) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
-            if (uri.getPath() == null || uri.getPath().length() <= 1) {
-                if (url.charAt(url.length()-1) == '/')
-                    url = url.substring(0, url.length()-1) + service;
-                else
-                    url = url + service;
-            }
-            return url;
-        } catch (URISyntaxException e) {
-            throw ZClientException.CLIENT_ERROR("invalid URL: "+url, e);
-        }
-    }
-
     public void setUrl(String url, boolean admin) throws ServiceException {
-        mUrl = resolveUrl(url, admin);
+        mUrl = ZMailbox.resolveUrl(url, admin);
     }
 
     private void usage() {
@@ -588,7 +566,7 @@ public class ZMailboxUtil implements DebugListener {
         mPassword = password;
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
-        mProv.soapSetURI(resolveUrl(uri, true));
+        mProv.soapSetURI(ZMailbox.resolveUrl(uri, true));
         if (listener != null) mProv.soapSetTransportDebugListener(listener);
         mProv.soapAdminAuthenticate(name, password);
     }
@@ -596,7 +574,7 @@ public class ZMailboxUtil implements DebugListener {
     private void adminAuth(ZAuthToken zat, String uri) throws ServiceException {
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
-        mProv.soapSetURI(resolveUrl(uri, true));
+        mProv.soapSetURI(ZMailbox.resolveUrl(uri, true));
         if (listener != null) mProv.soapSetTransportDebugListener(listener);
         mProv.soapAdminAuthenticate(zat);
     }
@@ -608,7 +586,7 @@ public class ZMailboxUtil implements DebugListener {
         options.setAccount(mMailboxName);
         options.setAccountBy(AccountBy.name);
         options.setPassword(mPassword);
-        options.setUri(resolveUrl(uri, false));
+        options.setUri(ZMailbox.resolveUrl(uri, false));
         options.setDebugListener(mDebug ? this : null);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
