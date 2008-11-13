@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081111-0947 */
+    /* build: 5.0 schemers 20081112-1636 */
 
     /**
      * Zimbra access control list
@@ -1014,10 +1014,22 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [Auto-Grouped, Standard]
      *
+     * @return zimbraBackupMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=512)
+    public ZAttrProvisioning.BackupMode getBackupMode() {
+        try { String v = getAttr(Provisioning.A_zimbraBackupMode); return v == null ? null : ZAttrProvisioning.BackupMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * backup mode
+     *
+     * <p>Valid values: [Auto-Grouped, Standard]
+     *
      * @return zimbraBackupMode, or null unset
      */
     @ZAttr(id=512)
-    public String getBackupMode() {
+    public String getBackupModeAsString() {
         return getAttr(Provisioning.A_zimbraBackupMode);
     }
 
@@ -1031,7 +1043,23 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=512)
-    public Map<String,Object> setBackupMode(String zimbraBackupMode, Map<String,Object> attrs) {
+    public Map<String,Object> setBackupMode(ZAttrProvisioning.BackupMode zimbraBackupMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupMode, zimbraBackupMode.toString());
+        return attrs;
+    }
+
+    /**
+     * backup mode
+     *
+     * <p>Valid values: [Auto-Grouped, Standard]
+     *
+     * @param zimbraBackupMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=512)
+    public Map<String,Object> setBackupModeAsString(String zimbraBackupMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupMode, zimbraBackupMode);
         return attrs;
@@ -1437,10 +1465,22 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [exchange, standard]
      *
+     * @return zimbraCalendarCompatibilityMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=243)
+    public ZAttrProvisioning.CalendarCompatibilityMode getCalendarCompatibilityMode() {
+        try { String v = getAttr(Provisioning.A_zimbraCalendarCompatibilityMode); return v == null ? null : ZAttrProvisioning.CalendarCompatibilityMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * compatibility mode for calendar server
+     *
+     * <p>Valid values: [exchange, standard]
+     *
      * @return zimbraCalendarCompatibilityMode, or null unset
      */
     @ZAttr(id=243)
-    public String getCalendarCompatibilityMode() {
+    public String getCalendarCompatibilityModeAsString() {
         return getAttr(Provisioning.A_zimbraCalendarCompatibilityMode);
     }
 
@@ -1454,7 +1494,23 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=243)
-    public Map<String,Object> setCalendarCompatibilityMode(String zimbraCalendarCompatibilityMode, Map<String,Object> attrs) {
+    public Map<String,Object> setCalendarCompatibilityMode(ZAttrProvisioning.CalendarCompatibilityMode zimbraCalendarCompatibilityMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCompatibilityMode, zimbraCalendarCompatibilityMode.toString());
+        return attrs;
+    }
+
+    /**
+     * compatibility mode for calendar server
+     *
+     * <p>Valid values: [exchange, standard]
+     *
+     * @param zimbraCalendarCompatibilityMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=243)
+    public Map<String,Object> setCalendarCompatibilityModeAsString(String zimbraCalendarCompatibilityMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarCompatibilityMode, zimbraCalendarCompatibilityMode);
         return attrs;
@@ -1901,10 +1957,24 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [Veritas, none, RedHat]
      *
+     * @return zimbraClusterType, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=508)
+    public ZAttrProvisioning.ClusterType getClusterType() {
+        try { String v = getAttr(Provisioning.A_zimbraClusterType); return v == null ? null : ZAttrProvisioning.ClusterType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Type of HA cluster software in use; &quot;none&quot; by default,
+     * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
+     * Veritas Cluster Server from Symantec
+     *
+     * <p>Valid values: [Veritas, none, RedHat]
+     *
      * @return zimbraClusterType, or null unset
      */
     @ZAttr(id=508)
-    public String getClusterType() {
+    public String getClusterTypeAsString() {
         return getAttr(Provisioning.A_zimbraClusterType);
     }
 
@@ -1920,7 +1990,25 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=508)
-    public Map<String,Object> setClusterType(String zimbraClusterType, Map<String,Object> attrs) {
+    public Map<String,Object> setClusterType(ZAttrProvisioning.ClusterType zimbraClusterType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClusterType, zimbraClusterType.toString());
+        return attrs;
+    }
+
+    /**
+     * Type of HA cluster software in use; &quot;none&quot; by default,
+     * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
+     * Veritas Cluster Server from Symantec
+     *
+     * <p>Valid values: [Veritas, none, RedHat]
+     *
+     * @param zimbraClusterType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=508)
+    public Map<String,Object> setClusterTypeAsString(String zimbraClusterType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraClusterType, zimbraClusterType);
         return attrs;
@@ -2395,10 +2483,38 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
+     * @return zimbraDomainStatus, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=535)
+    public ZAttrProvisioning.DomainStatus getDomainStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraDomainStatus); return v == null ? null : ZAttrProvisioning.DomainStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * domain status. enum values are akin to those of zimbraAccountStatus
+     * zimbraAccountStatus values: active - active lockout - no login until
+     * lockout duration is over locked - no login maintenance - no login, no
+     * delivery(try again, no bouncing) closed - no login, no
+     * delivery(bouncing mails) zimbraDomainStatus values: all values for
+     * zimbraAccountStatus (except for lockout, see mapping below) suspended
+     * - maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + no modifying domain attrs (can only be
+     * set internally, cannot be set in admin console or zmprov) How
+     * zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
+     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
+     * closed, else locked maintenance zimbraAccountStatus if it is closed,
+     * else maintenance suspended zimbraAccountStatus if it is closed, else
+     * maintenance shutdown zimbraAccountStatus if it is closed, else
+     * maintenance closed closed
+     *
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
+     *
      * @return zimbraDomainStatus, or null unset
      */
     @ZAttr(id=535)
-    public String getDomainStatus() {
+    public String getDomainStatusAsString() {
         return getAttr(Provisioning.A_zimbraDomainStatus);
     }
 
@@ -2428,7 +2544,39 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=535)
-    public Map<String,Object> setDomainStatus(String zimbraDomainStatus, Map<String,Object> attrs) {
+    public Map<String,Object> setDomainStatus(ZAttrProvisioning.DomainStatus zimbraDomainStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainStatus, zimbraDomainStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * domain status. enum values are akin to those of zimbraAccountStatus
+     * zimbraAccountStatus values: active - active lockout - no login until
+     * lockout duration is over locked - no login maintenance - no login, no
+     * delivery(try again, no bouncing) closed - no login, no
+     * delivery(bouncing mails) zimbraDomainStatus values: all values for
+     * zimbraAccountStatus (except for lockout, see mapping below) suspended
+     * - maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + no modifying domain attrs (can only be
+     * set internally, cannot be set in admin console or zmprov) How
+     * zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
+     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
+     * closed, else locked maintenance zimbraAccountStatus if it is closed,
+     * else maintenance suspended zimbraAccountStatus if it is closed, else
+     * maintenance shutdown zimbraAccountStatus if it is closed, else
+     * maintenance closed closed
+     *
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
+     *
+     * @param zimbraDomainStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=535)
+    public Map<String,Object> setDomainStatusAsString(String zimbraDomainStatus, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainStatus, zimbraDomainStatus);
         return attrs;
@@ -2544,10 +2692,22 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [basic, form]
      *
+     * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=611)
+    public ZAttrProvisioning.FreebusyExchangeAuthScheme getFreebusyExchangeAuthScheme() {
+        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme); return v == null ? null : ZAttrProvisioning.FreebusyExchangeAuthScheme.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
      * @return zimbraFreebusyExchangeAuthScheme, or null unset
      */
     @ZAttr(id=611)
-    public String getFreebusyExchangeAuthScheme() {
+    public String getFreebusyExchangeAuthSchemeAsString() {
         return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme);
     }
 
@@ -2561,7 +2721,23 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=611)
-    public Map<String,Object> setFreebusyExchangeAuthScheme(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
+    public Map<String,Object> setFreebusyExchangeAuthScheme(ZAttrProvisioning.FreebusyExchangeAuthScheme zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme.toString());
+        return attrs;
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
+     * @param zimbraFreebusyExchangeAuthScheme new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=611)
+    public Map<String,Object> setFreebusyExchangeAuthSchemeAsString(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme);
         return attrs;
@@ -4790,10 +4966,23 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [both, https, redirect, http, mixed]
      *
+     * @return zimbraMailMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=308)
+    public ZAttrProvisioning.MailMode getMailMode() {
+        try { String v = getAttr(Provisioning.A_zimbraMailMode); return v == null ? null : ZAttrProvisioning.MailMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
+     * also related attributes zimbraMailPort and zimbraMailSSLPort
+     *
+     * <p>Valid values: [both, https, redirect, http, mixed]
+     *
      * @return zimbraMailMode, or null unset
      */
     @ZAttr(id=308)
-    public String getMailMode() {
+    public String getMailModeAsString() {
         return getAttr(Provisioning.A_zimbraMailMode);
     }
 
@@ -4808,7 +4997,24 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=308)
-    public Map<String,Object> setMailMode(String zimbraMailMode, Map<String,Object> attrs) {
+    public Map<String,Object> setMailMode(ZAttrProvisioning.MailMode zimbraMailMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailMode, zimbraMailMode.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
+     * also related attributes zimbraMailPort and zimbraMailSSLPort
+     *
+     * <p>Valid values: [both, https, redirect, http, mixed]
+     *
+     * @param zimbraMailMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=308)
+    public Map<String,Object> setMailModeAsString(String zimbraMailMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailMode, zimbraMailMode);
         return attrs;
@@ -4968,10 +5174,26 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [wronghost, always, reverse-proxied]
      *
+     * @return zimbraMailReferMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=613)
+    public ZAttrProvisioning.MailReferMode getMailReferMode() {
+        try { String v = getAttr(Provisioning.A_zimbraMailReferMode); return v == null ? null : ZAttrProvisioning.MailReferMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * whether to send back a refer tag in an auth response to force a client
+     * redirect. always - always send refer wronghost - send refer if only if
+     * the account being authenticated does not live on this mail host
+     * reverse-proxied - reverse proxy is in place and should never send
+     * refer
+     *
+     * <p>Valid values: [wronghost, always, reverse-proxied]
+     *
      * @return zimbraMailReferMode, or null unset
      */
     @ZAttr(id=613)
-    public String getMailReferMode() {
+    public String getMailReferModeAsString() {
         return getAttr(Provisioning.A_zimbraMailReferMode);
     }
 
@@ -4989,7 +5211,27 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=613)
-    public Map<String,Object> setMailReferMode(String zimbraMailReferMode, Map<String,Object> attrs) {
+    public Map<String,Object> setMailReferMode(ZAttrProvisioning.MailReferMode zimbraMailReferMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailReferMode, zimbraMailReferMode.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to send back a refer tag in an auth response to force a client
+     * redirect. always - always send refer wronghost - send refer if only if
+     * the account being authenticated does not live on this mail host
+     * reverse-proxied - reverse proxy is in place and should never send
+     * refer
+     *
+     * <p>Valid values: [wronghost, always, reverse-proxied]
+     *
+     * @param zimbraMailReferMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=613)
+    public Map<String,Object> setMailReferModeAsString(String zimbraMailReferMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReferMode, zimbraMailReferMode);
         return attrs;
@@ -8740,10 +8982,24 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [only, off, on]
      *
+     * @return zimbraReverseProxyImapStartTlsMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=641)
+    public ZAttrProvisioning.ReverseProxyImapStartTlsMode getReverseProxyImapStartTlsMode() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyImapStartTlsMode); return v == null ? null : ZAttrProvisioning.ReverseProxyImapStartTlsMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
+     * is offered on plain port only - you have to use starttls before clear
+     * text login
+     *
+     * <p>Valid values: [only, off, on]
+     *
      * @return zimbraReverseProxyImapStartTlsMode, or null unset
      */
     @ZAttr(id=641)
-    public String getReverseProxyImapStartTlsMode() {
+    public String getReverseProxyImapStartTlsModeAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxyImapStartTlsMode);
     }
 
@@ -8759,7 +9015,25 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=641)
-    public Map<String,Object> setReverseProxyImapStartTlsMode(String zimbraReverseProxyImapStartTlsMode, Map<String,Object> attrs) {
+    public Map<String,Object> setReverseProxyImapStartTlsMode(ZAttrProvisioning.ReverseProxyImapStartTlsMode zimbraReverseProxyImapStartTlsMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyImapStartTlsMode, zimbraReverseProxyImapStartTlsMode.toString());
+        return attrs;
+    }
+
+    /**
+     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
+     * is offered on plain port only - you have to use starttls before clear
+     * text login
+     *
+     * <p>Valid values: [only, off, on]
+     *
+     * @param zimbraReverseProxyImapStartTlsMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=641)
+    public Map<String,Object> setReverseProxyImapStartTlsModeAsString(String zimbraReverseProxyImapStartTlsMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyImapStartTlsMode, zimbraReverseProxyImapStartTlsMode);
         return attrs;
@@ -8899,12 +9173,26 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [debug, info, crit, warn, error, notice]
      *
+     * @return zimbraReverseProxyLogLevel, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.10
+     */
+    @ZAttr(id=723)
+    public ZAttrProvisioning.ReverseProxyLogLevel getReverseProxyLogLevel() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyLogLevel); return v == null ? null : ZAttrProvisioning.ReverseProxyLogLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Log level for NGINX Proxy error log
+     *
+     * <p>Valid values: [debug, info, crit, warn, error, notice]
+     *
      * @return zimbraReverseProxyLogLevel, or null unset
      *
      * @since ZCS 5.0.10
      */
     @ZAttr(id=723)
-    public String getReverseProxyLogLevel() {
+    public String getReverseProxyLogLevelAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxyLogLevel);
     }
 
@@ -8920,7 +9208,25 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 5.0.10
      */
     @ZAttr(id=723)
-    public Map<String,Object> setReverseProxyLogLevel(String zimbraReverseProxyLogLevel, Map<String,Object> attrs) {
+    public Map<String,Object> setReverseProxyLogLevel(ZAttrProvisioning.ReverseProxyLogLevel zimbraReverseProxyLogLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLogLevel, zimbraReverseProxyLogLevel.toString());
+        return attrs;
+    }
+
+    /**
+     * Log level for NGINX Proxy error log
+     *
+     * <p>Valid values: [debug, info, crit, warn, error, notice]
+     *
+     * @param zimbraReverseProxyLogLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.10
+     */
+    @ZAttr(id=723)
+    public Map<String,Object> setReverseProxyLogLevelAsString(String zimbraReverseProxyLogLevel, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyLogLevel, zimbraReverseProxyLogLevel);
         return attrs;
@@ -9135,10 +9441,24 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [both, https, redirect, http, mixed]
      *
+     * @return zimbraReverseProxyMailMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=685)
+    public ZAttrProvisioning.ReverseProxyMailMode getReverseProxyMailMode() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyMailMode); return v == null ? null : ZAttrProvisioning.ReverseProxyMailMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.
+     * See also related attributes zimbraMailProxyPort and
+     * zimbraMailSSLProxyPort
+     *
+     * <p>Valid values: [both, https, redirect, http, mixed]
+     *
      * @return zimbraReverseProxyMailMode, or null unset
      */
     @ZAttr(id=685)
-    public String getReverseProxyMailMode() {
+    public String getReverseProxyMailModeAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxyMailMode);
     }
 
@@ -9154,7 +9474,25 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=685)
-    public Map<String,Object> setReverseProxyMailMode(String zimbraReverseProxyMailMode, Map<String,Object> attrs) {
+    public Map<String,Object> setReverseProxyMailMode(ZAttrProvisioning.ReverseProxyMailMode zimbraReverseProxyMailMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailMode, zimbraReverseProxyMailMode.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.
+     * See also related attributes zimbraMailProxyPort and
+     * zimbraMailSSLProxyPort
+     *
+     * <p>Valid values: [both, https, redirect, http, mixed]
+     *
+     * @param zimbraReverseProxyMailMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=685)
+    public Map<String,Object> setReverseProxyMailModeAsString(String zimbraReverseProxyMailMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyMailMode, zimbraReverseProxyMailMode);
         return attrs;
@@ -9502,10 +9840,24 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [only, off, on]
      *
+     * @return zimbraReverseProxyPop3StartTlsMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=642)
+    public ZAttrProvisioning.ReverseProxyPop3StartTlsMode getReverseProxyPop3StartTlsMode() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyPop3StartTlsMode); return v == null ? null : ZAttrProvisioning.ReverseProxyPop3StartTlsMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
+     * is offered on plain port only - you have to use starttls before clear
+     * text login
+     *
+     * <p>Valid values: [only, off, on]
+     *
      * @return zimbraReverseProxyPop3StartTlsMode, or null unset
      */
     @ZAttr(id=642)
-    public String getReverseProxyPop3StartTlsMode() {
+    public String getReverseProxyPop3StartTlsModeAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxyPop3StartTlsMode);
     }
 
@@ -9521,7 +9873,25 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=642)
-    public Map<String,Object> setReverseProxyPop3StartTlsMode(String zimbraReverseProxyPop3StartTlsMode, Map<String,Object> attrs) {
+    public Map<String,Object> setReverseProxyPop3StartTlsMode(ZAttrProvisioning.ReverseProxyPop3StartTlsMode zimbraReverseProxyPop3StartTlsMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPop3StartTlsMode, zimbraReverseProxyPop3StartTlsMode.toString());
+        return attrs;
+    }
+
+    /**
+     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
+     * is offered on plain port only - you have to use starttls before clear
+     * text login
+     *
+     * <p>Valid values: [only, off, on]
+     *
+     * @param zimbraReverseProxyPop3StartTlsMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=642)
+    public Map<String,Object> setReverseProxyPop3StartTlsModeAsString(String zimbraReverseProxyPop3StartTlsMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyPop3StartTlsMode, zimbraReverseProxyPop3StartTlsMode);
         return attrs;
@@ -11769,10 +12139,24 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
+     * @return zimbraTableMaintenanceOperation, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=170)
+    public ZAttrProvisioning.TableMaintenanceOperation getTableMaintenanceOperation() {
+        try { String v = getAttr(Provisioning.A_zimbraTableMaintenanceOperation); return v == null ? null : ZAttrProvisioning.TableMaintenanceOperation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Deprecated since: 4.5.7. We now maintain all tables unconditionally.
+     * See bug 19145. Orig desc: table maintenance operation that will be
+     * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
+     *
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     *
      * @return zimbraTableMaintenanceOperation, or ampty array if unset
      */
     @ZAttr(id=170)
-    public String[] getTableMaintenanceOperation() {
+    public String[] getTableMaintenanceOperationAsString() {
         return getMultiAttr(Provisioning.A_zimbraTableMaintenanceOperation);
     }
 
@@ -11788,45 +12172,27 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=170)
-    public Map<String,Object> setTableMaintenanceOperation(String[] zimbraTableMaintenanceOperation, Map<String,Object> attrs) {
+    public Map<String,Object> setTableMaintenanceOperation(ZAttrProvisioning.TableMaintenanceOperation zimbraTableMaintenanceOperation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTableMaintenanceOperation, zimbraTableMaintenanceOperation.toString());
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 4.5.7. We now maintain all tables unconditionally.
+     * See bug 19145. Orig desc: table maintenance operation that will be
+     * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
+     *
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     *
+     * @param zimbraTableMaintenanceOperation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=170)
+    public Map<String,Object> setTableMaintenanceOperationAsString(String[] zimbraTableMaintenanceOperation, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTableMaintenanceOperation, zimbraTableMaintenanceOperation);
-        return attrs;
-    }
-
-    /**
-     * Deprecated since: 4.5.7. We now maintain all tables unconditionally.
-     * See bug 19145. Orig desc: table maintenance operation that will be
-     * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
-     *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
-     *
-     * @param zimbraTableMaintenanceOperation new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=170)
-    public Map<String,Object> addTableMaintenanceOperation(String zimbraTableMaintenanceOperation, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTableMaintenanceOperation, zimbraTableMaintenanceOperation);
-        return attrs;
-    }
-
-    /**
-     * Deprecated since: 4.5.7. We now maintain all tables unconditionally.
-     * See bug 19145. Orig desc: table maintenance operation that will be
-     * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
-     *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
-     *
-     * @param zimbraTableMaintenanceOperation existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=170)
-    public Map<String,Object> removeTableMaintenanceOperation(String zimbraTableMaintenanceOperation, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTableMaintenanceOperation, zimbraTableMaintenanceOperation);
         return attrs;
     }
 

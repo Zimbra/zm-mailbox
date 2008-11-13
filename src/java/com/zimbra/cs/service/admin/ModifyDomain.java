@@ -59,7 +59,7 @@ public class ModifyDomain extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access domain"); 
         
         if (domain.isShutdown())
-            throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatus() + " status");
+            throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
         
         if (isDomainAdminOnly(zsc)) {
             for (String attrName : attrs.keySet()) {

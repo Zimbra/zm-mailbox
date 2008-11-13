@@ -32,7 +32,7 @@ public class ZAttrCalendarResource extends Account {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081111-0947 */
+    /* build: 5.0 schemers 20081112-1636 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
@@ -76,10 +76,22 @@ public class ZAttrCalendarResource extends Account {
      *
      * <p>Valid values: [USER, RESOURCE]
      *
+     * @return zimbraAccountCalendarUserType, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=313)
+    public ZAttrProvisioning.AccountCalendarUserType getAccountCalendarUserType() {
+        try { String v = getAttr(Provisioning.A_zimbraAccountCalendarUserType); return v == null ? null : ZAttrProvisioning.AccountCalendarUserType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * calendar user type - USER (default) or RESOURCE
+     *
+     * <p>Valid values: [USER, RESOURCE]
+     *
      * @return zimbraAccountCalendarUserType, or null unset
      */
     @ZAttr(id=313)
-    public String getAccountCalendarUserType() {
+    public String getAccountCalendarUserTypeAsString() {
         return getAttr(Provisioning.A_zimbraAccountCalendarUserType);
     }
 
@@ -93,7 +105,23 @@ public class ZAttrCalendarResource extends Account {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=313)
-    public Map<String,Object> setAccountCalendarUserType(String zimbraAccountCalendarUserType, Map<String,Object> attrs) {
+    public Map<String,Object> setAccountCalendarUserType(ZAttrProvisioning.AccountCalendarUserType zimbraAccountCalendarUserType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountCalendarUserType, zimbraAccountCalendarUserType.toString());
+        return attrs;
+    }
+
+    /**
+     * calendar user type - USER (default) or RESOURCE
+     *
+     * <p>Valid values: [USER, RESOURCE]
+     *
+     * @param zimbraAccountCalendarUserType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=313)
+    public Map<String,Object> setAccountCalendarUserTypeAsString(String zimbraAccountCalendarUserType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAccountCalendarUserType, zimbraAccountCalendarUserType);
         return attrs;
@@ -572,10 +600,22 @@ public class ZAttrCalendarResource extends Account {
      *
      * <p>Valid values: [Equipment, Location]
      *
+     * @return zimbraCalResType, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=314)
+    public ZAttrProvisioning.CalResType getCalResType() {
+        try { String v = getAttr(Provisioning.A_zimbraCalResType); return v == null ? null : ZAttrProvisioning.CalResType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * calendar resource type - Location or Equipment
+     *
+     * <p>Valid values: [Equipment, Location]
+     *
      * @return zimbraCalResType, or null unset
      */
     @ZAttr(id=314)
-    public String getCalResType() {
+    public String getCalResTypeAsString() {
         return getAttr(Provisioning.A_zimbraCalResType);
     }
 
@@ -589,7 +629,23 @@ public class ZAttrCalendarResource extends Account {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=314)
-    public Map<String,Object> setCalResType(String zimbraCalResType, Map<String,Object> attrs) {
+    public Map<String,Object> setCalResType(ZAttrProvisioning.CalResType zimbraCalResType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResType, zimbraCalResType.toString());
+        return attrs;
+    }
+
+    /**
+     * calendar resource type - Location or Equipment
+     *
+     * <p>Valid values: [Equipment, Location]
+     *
+     * @param zimbraCalResType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=314)
+    public Map<String,Object> setCalResTypeAsString(String zimbraCalResType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResType, zimbraCalResType);
         return attrs;

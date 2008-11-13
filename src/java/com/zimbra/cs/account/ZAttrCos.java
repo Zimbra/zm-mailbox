@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081111-0947 */
+    /* build: 5.0 schemers 20081112-1636 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3204,10 +3204,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [basic, form]
      *
+     * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=611)
+    public ZAttrProvisioning.FreebusyExchangeAuthScheme getFreebusyExchangeAuthScheme() {
+        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme); return v == null ? null : ZAttrProvisioning.FreebusyExchangeAuthScheme.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
      * @return zimbraFreebusyExchangeAuthScheme, or null unset
      */
     @ZAttr(id=611)
-    public String getFreebusyExchangeAuthScheme() {
+    public String getFreebusyExchangeAuthSchemeAsString() {
         return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme);
     }
 
@@ -3221,7 +3233,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=611)
-    public Map<String,Object> setFreebusyExchangeAuthScheme(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
+    public Map<String,Object> setFreebusyExchangeAuthScheme(ZAttrProvisioning.FreebusyExchangeAuthScheme zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme.toString());
+        return attrs;
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
+     * @param zimbraFreebusyExchangeAuthScheme new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=611)
+    public Map<String,Object> setFreebusyExchangeAuthSchemeAsString(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme);
         return attrs;
@@ -5794,10 +5822,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [list, month, schedule, day, workWeek, week]
      *
+     * @return zimbraPrefCalendarInitialView, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=240)
+    public ZAttrProvisioning.PrefCalendarInitialView getPrefCalendarInitialView() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarInitialView); return v == null ? null : ZAttrProvisioning.PrefCalendarInitialView.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * initial calendar view to use
+     *
+     * <p>Valid values: [list, month, schedule, day, workWeek, week]
+     *
      * @return zimbraPrefCalendarInitialView, or null unset
      */
     @ZAttr(id=240)
-    public String getPrefCalendarInitialView() {
+    public String getPrefCalendarInitialViewAsString() {
         return getAttr(Provisioning.A_zimbraPrefCalendarInitialView);
     }
 
@@ -5811,7 +5851,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=240)
-    public Map<String,Object> setPrefCalendarInitialView(String zimbraPrefCalendarInitialView, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefCalendarInitialView(ZAttrProvisioning.PrefCalendarInitialView zimbraPrefCalendarInitialView, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, zimbraPrefCalendarInitialView.toString());
+        return attrs;
+    }
+
+    /**
+     * initial calendar view to use
+     *
+     * <p>Valid values: [list, month, schedule, day, workWeek, week]
+     *
+     * @param zimbraPrefCalendarInitialView new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=240)
+    public Map<String,Object> setPrefCalendarInitialViewAsString(String zimbraPrefCalendarInitialView, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, zimbraPrefCalendarInitialView);
         return attrs;
@@ -6213,10 +6269,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [standard, advanced]
      *
+     * @return zimbraPrefClientType, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=453)
+    public ZAttrProvisioning.PrefClientType getPrefClientType() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefClientType); return v == null ? null : ZAttrProvisioning.PrefClientType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * user preference of client type
+     *
+     * <p>Valid values: [standard, advanced]
+     *
      * @return zimbraPrefClientType, or null unset
      */
     @ZAttr(id=453)
-    public String getPrefClientType() {
+    public String getPrefClientTypeAsString() {
         return getAttr(Provisioning.A_zimbraPrefClientType);
     }
 
@@ -6230,7 +6298,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=453)
-    public Map<String,Object> setPrefClientType(String zimbraPrefClientType, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefClientType(ZAttrProvisioning.PrefClientType zimbraPrefClientType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefClientType, zimbraPrefClientType.toString());
+        return attrs;
+    }
+
+    /**
+     * user preference of client type
+     *
+     * <p>Valid values: [standard, advanced]
+     *
+     * @param zimbraPrefClientType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=453)
+    public Map<String,Object> setPrefClientTypeAsString(String zimbraPrefClientType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefClientType, zimbraPrefClientType);
         return attrs;
@@ -6256,10 +6340,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [html, text]
      *
+     * @return zimbraPrefComposeFormat, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=217)
+    public ZAttrProvisioning.PrefComposeFormat getPrefComposeFormat() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? null : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * whether or not to compose in html or text.
+     *
+     * <p>Valid values: [html, text]
+     *
      * @return zimbraPrefComposeFormat, or null unset
      */
     @ZAttr(id=217)
-    public String getPrefComposeFormat() {
+    public String getPrefComposeFormatAsString() {
         return getAttr(Provisioning.A_zimbraPrefComposeFormat);
     }
 
@@ -6273,7 +6369,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=217)
-    public Map<String,Object> setPrefComposeFormat(String zimbraPrefComposeFormat, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefComposeFormat(ZAttrProvisioning.PrefComposeFormat zimbraPrefComposeFormat, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeFormat, zimbraPrefComposeFormat.toString());
+        return attrs;
+    }
+
+    /**
+     * whether or not to compose in html or text.
+     *
+     * <p>Valid values: [html, text]
+     *
+     * @param zimbraPrefComposeFormat new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=217)
+    public Map<String,Object> setPrefComposeFormatAsString(String zimbraPrefComposeFormat, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefComposeFormat, zimbraPrefComposeFormat);
         return attrs;
@@ -6336,10 +6448,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [list, cards]
      *
+     * @return zimbraPrefContactsInitialView, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=167)
+    public ZAttrProvisioning.PrefContactsInitialView getPrefContactsInitialView() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefContactsInitialView); return v == null ? null : ZAttrProvisioning.PrefContactsInitialView.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * initial contact view to use
+     *
+     * <p>Valid values: [list, cards]
+     *
      * @return zimbraPrefContactsInitialView, or null unset
      */
     @ZAttr(id=167)
-    public String getPrefContactsInitialView() {
+    public String getPrefContactsInitialViewAsString() {
         return getAttr(Provisioning.A_zimbraPrefContactsInitialView);
     }
 
@@ -6353,7 +6477,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=167)
-    public Map<String,Object> setPrefContactsInitialView(String zimbraPrefContactsInitialView, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefContactsInitialView(ZAttrProvisioning.PrefContactsInitialView zimbraPrefContactsInitialView, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsInitialView, zimbraPrefContactsInitialView.toString());
+        return attrs;
+    }
+
+    /**
+     * initial contact view to use
+     *
+     * <p>Valid values: [list, cards]
+     *
+     * @param zimbraPrefContactsInitialView new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=167)
+    public Map<String,Object> setPrefContactsInitialViewAsString(String zimbraPrefContactsInitialView, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefContactsInitialView, zimbraPrefContactsInitialView);
         return attrs;
@@ -6416,10 +6556,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
      *
+     * @return zimbraPrefDedupeMessagesSentToSelf, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=144)
+    public ZAttrProvisioning.PrefDedupeMessagesSentToSelf getPrefDedupeMessagesSentToSelf() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf); return v == null ? null : ZAttrProvisioning.PrefDedupeMessagesSentToSelf.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
+     *
+     * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
+     *
      * @return zimbraPrefDedupeMessagesSentToSelf, or null unset
      */
     @ZAttr(id=144)
-    public String getPrefDedupeMessagesSentToSelf() {
+    public String getPrefDedupeMessagesSentToSelfAsString() {
         return getAttr(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf);
     }
 
@@ -6433,7 +6585,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=144)
-    public Map<String,Object> setPrefDedupeMessagesSentToSelf(String zimbraPrefDedupeMessagesSentToSelf, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefDedupeMessagesSentToSelf(ZAttrProvisioning.PrefDedupeMessagesSentToSelf zimbraPrefDedupeMessagesSentToSelf, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, zimbraPrefDedupeMessagesSentToSelf.toString());
+        return attrs;
+    }
+
+    /**
+     * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
+     *
+     * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
+     *
+     * @param zimbraPrefDedupeMessagesSentToSelf new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=144)
+    public Map<String,Object> setPrefDedupeMessagesSentToSelfAsString(String zimbraPrefDedupeMessagesSentToSelf, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, zimbraPrefDedupeMessagesSentToSelf);
         return attrs;
@@ -6574,10 +6742,23 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
      *
+     * @return zimbraPrefForwardIncludeOriginalText, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=134)
+    public ZAttrProvisioning.PrefForwardIncludeOriginalText getPrefForwardIncludeOriginalText() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText); return v == null ? null : ZAttrProvisioning.PrefForwardIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * what part of the original message to include during forwards
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     *
      * @return zimbraPrefForwardIncludeOriginalText, or null unset
      */
     @ZAttr(id=134)
-    public String getPrefForwardIncludeOriginalText() {
+    public String getPrefForwardIncludeOriginalTextAsString() {
         return getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText);
     }
 
@@ -6592,7 +6773,24 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=134)
-    public Map<String,Object> setPrefForwardIncludeOriginalText(String zimbraPrefForwardIncludeOriginalText, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefForwardIncludeOriginalText(ZAttrProvisioning.PrefForwardIncludeOriginalText zimbraPrefForwardIncludeOriginalText, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardIncludeOriginalText, zimbraPrefForwardIncludeOriginalText.toString());
+        return attrs;
+    }
+
+    /**
+     * what part of the original message to include during forwards
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     *
+     * @param zimbraPrefForwardIncludeOriginalText new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=134)
+    public Map<String,Object> setPrefForwardIncludeOriginalTextAsString(String zimbraPrefForwardIncludeOriginalText, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardIncludeOriginalText, zimbraPrefForwardIncludeOriginalText);
         return attrs;
@@ -6620,10 +6818,23 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [same, html, text]
      *
+     * @return zimbraPrefForwardReplyFormat, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=413)
+    public ZAttrProvisioning.PrefForwardReplyFormat getPrefForwardReplyFormat() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefForwardReplyFormat); return v == null ? null : ZAttrProvisioning.PrefForwardReplyFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * what format we reply/forward messages in (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [same, html, text]
+     *
      * @return zimbraPrefForwardReplyFormat, or null unset
      */
     @ZAttr(id=413)
-    public String getPrefForwardReplyFormat() {
+    public String getPrefForwardReplyFormatAsString() {
         return getAttr(Provisioning.A_zimbraPrefForwardReplyFormat);
     }
 
@@ -6638,7 +6849,24 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=413)
-    public Map<String,Object> setPrefForwardReplyFormat(String zimbraPrefForwardReplyFormat, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefForwardReplyFormat(ZAttrProvisioning.PrefForwardReplyFormat zimbraPrefForwardReplyFormat, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyFormat, zimbraPrefForwardReplyFormat.toString());
+        return attrs;
+    }
+
+    /**
+     * what format we reply/forward messages in (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [same, html, text]
+     *
+     * @param zimbraPrefForwardReplyFormat new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=413)
+    public Map<String,Object> setPrefForwardReplyFormatAsString(String zimbraPrefForwardReplyFormat, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplyFormat, zimbraPrefForwardReplyFormat);
         return attrs;
@@ -6825,10 +7053,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [conversation, message]
      *
+     * @return zimbraPrefGroupMailBy, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=54)
+    public ZAttrProvisioning.PrefGroupMailBy getPrefGroupMailBy() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefGroupMailBy); return v == null ? null : ZAttrProvisioning.PrefGroupMailBy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * how to group mail by default
+     *
+     * <p>Valid values: [conversation, message]
+     *
      * @return zimbraPrefGroupMailBy, or null unset
      */
     @ZAttr(id=54)
-    public String getPrefGroupMailBy() {
+    public String getPrefGroupMailByAsString() {
         return getAttr(Provisioning.A_zimbraPrefGroupMailBy);
     }
 
@@ -6842,7 +7082,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=54)
-    public Map<String,Object> setPrefGroupMailBy(String zimbraPrefGroupMailBy, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefGroupMailBy(ZAttrProvisioning.PrefGroupMailBy zimbraPrefGroupMailBy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGroupMailBy, zimbraPrefGroupMailBy.toString());
+        return attrs;
+    }
+
+    /**
+     * how to group mail by default
+     *
+     * <p>Valid values: [conversation, message]
+     *
+     * @param zimbraPrefGroupMailBy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=54)
+    public Map<String,Object> setPrefGroupMailByAsString(String zimbraPrefGroupMailBy, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGroupMailBy, zimbraPrefGroupMailBy);
         return attrs;
@@ -7201,10 +7457,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
+     * @return zimbraPrefIMIdleStatus, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=560)
+    public ZAttrProvisioning.PrefIMIdleStatus getPrefIMIdleStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefIMIdleStatus); return v == null ? null : ZAttrProvisioning.PrefIMIdleStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * IM idle status
+     *
+     * <p>Valid values: [away, xa, offline, invisible]
+     *
      * @return zimbraPrefIMIdleStatus, or null unset
      */
     @ZAttr(id=560)
-    public String getPrefIMIdleStatus() {
+    public String getPrefIMIdleStatusAsString() {
         return getAttr(Provisioning.A_zimbraPrefIMIdleStatus);
     }
 
@@ -7218,7 +7486,23 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=560)
-    public Map<String,Object> setPrefIMIdleStatus(String zimbraPrefIMIdleStatus, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefIMIdleStatus(ZAttrProvisioning.PrefIMIdleStatus zimbraPrefIMIdleStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMIdleStatus, zimbraPrefIMIdleStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * IM idle status
+     *
+     * <p>Valid values: [away, xa, offline, invisible]
+     *
+     * @param zimbraPrefIMIdleStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=560)
+    public Map<String,Object> setPrefIMIdleStatusAsString(String zimbraPrefIMIdleStatus, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMIdleStatus, zimbraPrefIMIdleStatus);
         return attrs;
@@ -8154,10 +8438,23 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [outlook, internet]
      *
+     * @return zimbraPrefMailSignatureStyle, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=156)
+    public ZAttrProvisioning.PrefMailSignatureStyle getPrefMailSignatureStyle() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefMailSignatureStyle); return v == null ? null : ZAttrProvisioning.PrefMailSignatureStyle.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * mail signature style outlook|internet (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [outlook, internet]
+     *
      * @return zimbraPrefMailSignatureStyle, or null unset
      */
     @ZAttr(id=156)
-    public String getPrefMailSignatureStyle() {
+    public String getPrefMailSignatureStyleAsString() {
         return getAttr(Provisioning.A_zimbraPrefMailSignatureStyle);
     }
 
@@ -8172,7 +8469,24 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=156)
-    public Map<String,Object> setPrefMailSignatureStyle(String zimbraPrefMailSignatureStyle, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefMailSignatureStyle(ZAttrProvisioning.PrefMailSignatureStyle zimbraPrefMailSignatureStyle, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureStyle, zimbraPrefMailSignatureStyle.toString());
+        return attrs;
+    }
+
+    /**
+     * mail signature style outlook|internet (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [outlook, internet]
+     *
+     * @param zimbraPrefMailSignatureStyle new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=156)
+    public Map<String,Object> setPrefMailSignatureStyleAsString(String zimbraPrefMailSignatureStyle, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailSignatureStyle, zimbraPrefMailSignatureStyle);
         return attrs;
@@ -8558,10 +8872,23 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
      *
+     * @return zimbraPrefReplyIncludeOriginalText, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=133)
+    public ZAttrProvisioning.PrefReplyIncludeOriginalText getPrefReplyIncludeOriginalText() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText); return v == null ? null : ZAttrProvisioning.PrefReplyIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * what part of the original message to include during replies
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
+     *
      * @return zimbraPrefReplyIncludeOriginalText, or null unset
      */
     @ZAttr(id=133)
-    public String getPrefReplyIncludeOriginalText() {
+    public String getPrefReplyIncludeOriginalTextAsString() {
         return getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText);
     }
 
@@ -8576,7 +8903,24 @@ public class ZAttrCos extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=133)
-    public Map<String,Object> setPrefReplyIncludeOriginalText(String zimbraPrefReplyIncludeOriginalText, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefReplyIncludeOriginalText(ZAttrProvisioning.PrefReplyIncludeOriginalText zimbraPrefReplyIncludeOriginalText, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyIncludeOriginalText, zimbraPrefReplyIncludeOriginalText.toString());
+        return attrs;
+    }
+
+    /**
+     * what part of the original message to include during replies
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
+     *
+     * @param zimbraPrefReplyIncludeOriginalText new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=133)
+    public Map<String,Object> setPrefReplyIncludeOriginalTextAsString(String zimbraPrefReplyIncludeOriginalText, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefReplyIncludeOriginalText, zimbraPrefReplyIncludeOriginalText);
         return attrs;

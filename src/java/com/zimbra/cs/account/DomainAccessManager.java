@@ -22,7 +22,6 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.accesscontrol.Right;
 
 public class DomainAccessManager extends AccessManager {
@@ -222,7 +221,7 @@ public class DomainAccessManager extends AccessManager {
     private void accessDomain(Domain domain) throws ServiceException {
         if (domain != null) {
             if (domain.isSuspended() || domain.isShutdown())
-                throw ServiceException.PERM_DENIED("domain is " + domain.getDomainStatus());
+                throw ServiceException.PERM_DENIED("domain is " + domain.getDomainStatusAsString());
         }
     }
     

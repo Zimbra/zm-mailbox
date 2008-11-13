@@ -16,6 +16,10 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+
+import java.util.Arrays;
+
 /**
  * AUTO-GENERATED. DO NOT EDIT.
  * 
@@ -26,7 +30,629 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081111-0947 */
+    /* build: 5.0 schemers 20081112-1636 */
+
+    public static enum AccountCalendarUserType {
+        USER("USER"),
+        RESOURCE("RESOURCE");
+        private String mValue;
+        private AccountCalendarUserType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AccountCalendarUserType fromString(String s) throws ServiceException {
+            for (AccountCalendarUserType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isUSER() { return this == USER;}
+        public boolean isRESOURCE() { return this == RESOURCE;}
+    }
+
+    public static enum AccountStatus {
+        active("active"),
+        lockout("lockout"),
+        locked("locked"),
+        maintenance("maintenance"),
+        closed("closed");
+        private String mValue;
+        private AccountStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AccountStatus fromString(String s) throws ServiceException {
+            for (AccountStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isActive() { return this == active;}
+        public boolean isLockout() { return this == lockout;}
+        public boolean isLocked() { return this == locked;}
+        public boolean isMaintenance() { return this == maintenance;}
+        public boolean isClosed() { return this == closed;}
+    }
+
+    public static enum BackupMode {
+        Auto_Grouped("Auto-Grouped"),
+        Standard("Standard");
+        private String mValue;
+        private BackupMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static BackupMode fromString(String s) throws ServiceException {
+            for (BackupMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAuto_Grouped() { return this == Auto_Grouped;}
+        public boolean isStandard() { return this == Standard;}
+    }
+
+    public static enum CalendarCompatibilityMode {
+        exchange("exchange"),
+        standard("standard");
+        private String mValue;
+        private CalendarCompatibilityMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static CalendarCompatibilityMode fromString(String s) throws ServiceException {
+            for (CalendarCompatibilityMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExchange() { return this == exchange;}
+        public boolean isStandard() { return this == standard;}
+    }
+
+    public static enum CalResType {
+        Equipment("Equipment"),
+        Location("Location");
+        private String mValue;
+        private CalResType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static CalResType fromString(String s) throws ServiceException {
+            for (CalResType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEquipment() { return this == Equipment;}
+        public boolean isLocation() { return this == Location;}
+    }
+
+    public static enum ClusterType {
+        none("none"),
+        RedHat("RedHat"),
+        Veritas("Veritas");
+        private String mValue;
+        private ClusterType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ClusterType fromString(String s) throws ServiceException {
+            for (ClusterType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNone() { return this == none;}
+        public boolean isRedHat() { return this == RedHat;}
+        public boolean isVeritas() { return this == Veritas;}
+    }
+
+    public static enum DataSourceConnectionType {
+        starttls("starttls"),
+        ssl("ssl"),
+        cleartext("cleartext");
+        private String mValue;
+        private DataSourceConnectionType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DataSourceConnectionType fromString(String s) throws ServiceException {
+            for (DataSourceConnectionType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isStarttls() { return this == starttls;}
+        public boolean isSsl() { return this == ssl;}
+        public boolean isCleartext() { return this == cleartext;}
+    }
+
+    public static enum DomainStatus {
+        active("active"),
+        locked("locked"),
+        maintenance("maintenance"),
+        suspended("suspended"),
+        closed("closed"),
+        shutdown("shutdown");
+        private String mValue;
+        private DomainStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DomainStatus fromString(String s) throws ServiceException {
+            for (DomainStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isActive() { return this == active;}
+        public boolean isLocked() { return this == locked;}
+        public boolean isMaintenance() { return this == maintenance;}
+        public boolean isSuspended() { return this == suspended;}
+        public boolean isClosed() { return this == closed;}
+        public boolean isShutdown() { return this == shutdown;}
+    }
+
+    public static enum DomainType {
+        local("local"),
+        alias("alias");
+        private String mValue;
+        private DomainType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DomainType fromString(String s) throws ServiceException {
+            for (DomainType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isLocal() { return this == local;}
+        public boolean isAlias() { return this == alias;}
+    }
+
+    public static enum FreebusyExchangeAuthScheme {
+        basic("basic"),
+        form("form");
+        private String mValue;
+        private FreebusyExchangeAuthScheme(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FreebusyExchangeAuthScheme fromString(String s) throws ServiceException {
+            for (FreebusyExchangeAuthScheme value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBasic() { return this == basic;}
+        public boolean isForm() { return this == form;}
+    }
+
+    public static enum GalLdapAuthMech {
+        none("none"),
+        kerberos5("kerberos5"),
+        simple("simple");
+        private String mValue;
+        private GalLdapAuthMech(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalLdapAuthMech fromString(String s) throws ServiceException {
+            for (GalLdapAuthMech value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNone() { return this == none;}
+        public boolean isKerberos5() { return this == kerberos5;}
+        public boolean isSimple() { return this == simple;}
+    }
+
+    public static enum GalMode {
+        zimbra("zimbra"),
+        ldap("ldap"),
+        both("both");
+        private String mValue;
+        private GalMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalMode fromString(String s) throws ServiceException {
+            for (GalMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isZimbra() { return this == zimbra;}
+        public boolean isLdap() { return this == ldap;}
+        public boolean isBoth() { return this == both;}
+    }
+
+    public static enum GalSyncLdapAuthMech {
+        none("none"),
+        kerberos5("kerberos5"),
+        simple("simple");
+        private String mValue;
+        private GalSyncLdapAuthMech(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalSyncLdapAuthMech fromString(String s) throws ServiceException {
+            for (GalSyncLdapAuthMech value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNone() { return this == none;}
+        public boolean isKerberos5() { return this == kerberos5;}
+        public boolean isSimple() { return this == simple;}
+    }
+
+    public static enum GalTokenizeAutoCompleteKey {
+        and("and"),
+        or("or");
+        private String mValue;
+        private GalTokenizeAutoCompleteKey(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalTokenizeAutoCompleteKey fromString(String s) throws ServiceException {
+            for (GalTokenizeAutoCompleteKey value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAnd() { return this == and;}
+        public boolean isOr() { return this == or;}
+    }
+
+    public static enum GalTokenizeSearchKey {
+        and("and"),
+        or("or");
+        private String mValue;
+        private GalTokenizeSearchKey(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalTokenizeSearchKey fromString(String s) throws ServiceException {
+            for (GalTokenizeSearchKey value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAnd() { return this == and;}
+        public boolean isOr() { return this == or;}
+    }
+
+    public static enum MailMode {
+        https("https"),
+        http("http"),
+        both("both"),
+        redirect("redirect"),
+        mixed("mixed");
+        private String mValue;
+        private MailMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MailMode fromString(String s) throws ServiceException {
+            for (MailMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isHttps() { return this == https;}
+        public boolean isHttp() { return this == http;}
+        public boolean isBoth() { return this == both;}
+        public boolean isRedirect() { return this == redirect;}
+        public boolean isMixed() { return this == mixed;}
+    }
+
+    public static enum MailReferMode {
+        always("always"),
+        reverse_proxied("reverse-proxied"),
+        wronghost("wronghost");
+        private String mValue;
+        private MailReferMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MailReferMode fromString(String s) throws ServiceException {
+            for (MailReferMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAlways() { return this == always;}
+        public boolean isReverse_proxied() { return this == reverse_proxied;}
+        public boolean isWronghost() { return this == wronghost;}
+    }
+
+    public static enum MailStatus {
+        enabled("enabled"),
+        disabled("disabled");
+        private String mValue;
+        private MailStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MailStatus fromString(String s) throws ServiceException {
+            for (MailStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEnabled() { return this == enabled;}
+        public boolean isDisabled() { return this == disabled;}
+    }
+
+    public static enum PrefCalendarInitialView {
+        month("month"),
+        list("list"),
+        day("day"),
+        workWeek("workWeek"),
+        schedule("schedule"),
+        week("week");
+        private String mValue;
+        private PrefCalendarInitialView(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefCalendarInitialView fromString(String s) throws ServiceException {
+            for (PrefCalendarInitialView value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isMonth() { return this == month;}
+        public boolean isList() { return this == list;}
+        public boolean isDay() { return this == day;}
+        public boolean isWorkWeek() { return this == workWeek;}
+        public boolean isSchedule() { return this == schedule;}
+        public boolean isWeek() { return this == week;}
+    }
+
+    public static enum PrefClientType {
+        advanced("advanced"),
+        standard("standard");
+        private String mValue;
+        private PrefClientType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefClientType fromString(String s) throws ServiceException {
+            for (PrefClientType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAdvanced() { return this == advanced;}
+        public boolean isStandard() { return this == standard;}
+    }
+
+    public static enum PrefComposeFormat {
+        text("text"),
+        html("html");
+        private String mValue;
+        private PrefComposeFormat(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefComposeFormat fromString(String s) throws ServiceException {
+            for (PrefComposeFormat value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isText() { return this == text;}
+        public boolean isHtml() { return this == html;}
+    }
+
+    public static enum PrefContactsInitialView {
+        list("list"),
+        cards("cards");
+        private String mValue;
+        private PrefContactsInitialView(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefContactsInitialView fromString(String s) throws ServiceException {
+            for (PrefContactsInitialView value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isList() { return this == list;}
+        public boolean isCards() { return this == cards;}
+    }
+
+    public static enum PrefDedupeMessagesSentToSelf {
+        dedupeAll("dedupeAll"),
+        dedupeNone("dedupeNone"),
+        secondCopyifOnToOrCC("secondCopyifOnToOrCC");
+        private String mValue;
+        private PrefDedupeMessagesSentToSelf(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefDedupeMessagesSentToSelf fromString(String s) throws ServiceException {
+            for (PrefDedupeMessagesSentToSelf value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDedupeAll() { return this == dedupeAll;}
+        public boolean isDedupeNone() { return this == dedupeNone;}
+        public boolean isSecondCopyifOnToOrCC() { return this == secondCopyifOnToOrCC;}
+    }
+
+    public static enum PrefForwardIncludeOriginalText {
+        includeBody("includeBody"),
+        includeBodyWithPrefix("includeBodyWithPrefix"),
+        includeAsAttachment("includeAsAttachment"),
+        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix");
+        private String mValue;
+        private PrefForwardIncludeOriginalText(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefForwardIncludeOriginalText fromString(String s) throws ServiceException {
+            for (PrefForwardIncludeOriginalText value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isIncludeBody() { return this == includeBody;}
+        public boolean isIncludeBodyWithPrefix() { return this == includeBodyWithPrefix;}
+        public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
+        public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
+    }
+
+    public static enum PrefForwardReplyFormat {
+        text("text"),
+        html("html"),
+        same("same");
+        private String mValue;
+        private PrefForwardReplyFormat(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefForwardReplyFormat fromString(String s) throws ServiceException {
+            for (PrefForwardReplyFormat value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isText() { return this == text;}
+        public boolean isHtml() { return this == html;}
+        public boolean isSame() { return this == same;}
+    }
+
+    public static enum PrefGroupMailBy {
+        message("message"),
+        conversation("conversation");
+        private String mValue;
+        private PrefGroupMailBy(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefGroupMailBy fromString(String s) throws ServiceException {
+            for (PrefGroupMailBy value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isMessage() { return this == message;}
+        public boolean isConversation() { return this == conversation;}
+    }
+
+    public static enum PrefIMIdleStatus {
+        offline("offline"),
+        xa("xa"),
+        away("away"),
+        invisible("invisible");
+        private String mValue;
+        private PrefIMIdleStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefIMIdleStatus fromString(String s) throws ServiceException {
+            for (PrefIMIdleStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOffline() { return this == offline;}
+        public boolean isXa() { return this == xa;}
+        public boolean isAway() { return this == away;}
+        public boolean isInvisible() { return this == invisible;}
+    }
+
+    public static enum PrefMailSignatureStyle {
+        outlook("outlook"),
+        internet("internet");
+        private String mValue;
+        private PrefMailSignatureStyle(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefMailSignatureStyle fromString(String s) throws ServiceException {
+            for (PrefMailSignatureStyle value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOutlook() { return this == outlook;}
+        public boolean isInternet() { return this == internet;}
+    }
+
+    public static enum PrefReplyIncludeOriginalText {
+        includeBody("includeBody"),
+        includeBodyWithPrefix("includeBodyWithPrefix"),
+        includeAsAttachment("includeAsAttachment"),
+        includeNone("includeNone"),
+        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix"),
+        includeSmart("includeSmart");
+        private String mValue;
+        private PrefReplyIncludeOriginalText(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefReplyIncludeOriginalText fromString(String s) throws ServiceException {
+            for (PrefReplyIncludeOriginalText value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isIncludeBody() { return this == includeBody;}
+        public boolean isIncludeBodyWithPrefix() { return this == includeBodyWithPrefix;}
+        public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
+        public boolean isIncludeNone() { return this == includeNone;}
+        public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
+        public boolean isIncludeSmart() { return this == includeSmart;}
+    }
+
+    public static enum ReverseProxyImapStartTlsMode {
+        only("only"),
+        on("on"),
+        off("off");
+        private String mValue;
+        private ReverseProxyImapStartTlsMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyImapStartTlsMode fromString(String s) throws ServiceException {
+            for (ReverseProxyImapStartTlsMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOnly() { return this == only;}
+        public boolean isOn() { return this == on;}
+        public boolean isOff() { return this == off;}
+    }
+
+    public static enum ReverseProxyLogLevel {
+        debug("debug"),
+        info("info"),
+        crit("crit"),
+        warn("warn"),
+        notice("notice"),
+        error("error");
+        private String mValue;
+        private ReverseProxyLogLevel(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyLogLevel fromString(String s) throws ServiceException {
+            for (ReverseProxyLogLevel value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDebug() { return this == debug;}
+        public boolean isInfo() { return this == info;}
+        public boolean isCrit() { return this == crit;}
+        public boolean isWarn() { return this == warn;}
+        public boolean isNotice() { return this == notice;}
+        public boolean isError() { return this == error;}
+    }
+
+    public static enum ReverseProxyMailMode {
+        https("https"),
+        http("http"),
+        both("both"),
+        redirect("redirect"),
+        mixed("mixed");
+        private String mValue;
+        private ReverseProxyMailMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyMailMode fromString(String s) throws ServiceException {
+            for (ReverseProxyMailMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isHttps() { return this == https;}
+        public boolean isHttp() { return this == http;}
+        public boolean isBoth() { return this == both;}
+        public boolean isRedirect() { return this == redirect;}
+        public boolean isMixed() { return this == mixed;}
+    }
+
+    public static enum ReverseProxyPop3StartTlsMode {
+        only("only"),
+        on("on"),
+        off("off");
+        private String mValue;
+        private ReverseProxyPop3StartTlsMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyPop3StartTlsMode fromString(String s) throws ServiceException {
+            for (ReverseProxyPop3StartTlsMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOnly() { return this == only;}
+        public boolean isOn() { return this == on;}
+        public boolean isOff() { return this == off;}
+    }
+
+    public static enum TableMaintenanceOperation {
+        ANALYZE("ANALYZE"),
+        OPTIMIZE("OPTIMIZE");
+        private String mValue;
+        private TableMaintenanceOperation(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static TableMaintenanceOperation fromString(String s) throws ServiceException {
+            for (TableMaintenanceOperation value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isANALYZE() { return this == ANALYZE;}
+        public boolean isOPTIMIZE() { return this == OPTIMIZE;}
+    }
 
     /**
      */

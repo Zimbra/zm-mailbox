@@ -25,6 +25,7 @@ package com.zimbra.cs.account;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ZAttrProvisioning.DomainStatus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,23 +64,19 @@ public class Domain extends ZAttrDomain {
     public String getUnicodeName() {
         return mUnicodeName;
     }
-    
+
     public boolean isSuspended() {
-        String domainStatus = getDomainStatus();
-        boolean suspended = false;
-        if (domainStatus != null)
-            suspended = domainStatus.equals(Provisioning.DOMAIN_STATUS_SUSPENDED);
-        
+        DomainStatus status = getDomainStatus();
+        boolean suspended = status != null && status.isSuspended();
+
         if (suspended)
             ZimbraLog.account.warn("domain " + mName + " is " + Provisioning.DOMAIN_STATUS_SUSPENDED);
         return suspended;
     }
     
     public boolean isShutdown() {
-        String domainStatus = getDomainStatus();
-        boolean shutdown = false;
-        if (domainStatus != null)
-            shutdown = domainStatus.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN);
+        DomainStatus status = getDomainStatus();
+        boolean shutdown = status != null && status.isShutdown();
         
         if (shutdown)
             ZimbraLog.account.warn("domain " + mName + " is " + Provisioning.DOMAIN_STATUS_SHUTDOWN);

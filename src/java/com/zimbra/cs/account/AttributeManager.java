@@ -1832,6 +1832,13 @@ public class AttributeManager {
 
         for (String a : list) {
             AttributeInfo ai = mAttrs.get(a.toLowerCase());
+            if (ai == null || ai.getType() != AttributeType.TYPE_ENUM)
+                continue;
+            generateEnum(result, ai);
+        }
+
+        for (String a : list) {
+            AttributeInfo ai = mAttrs.get(a.toLowerCase());
             if (ai == null)
                 continue;
 
@@ -1852,6 +1859,46 @@ public class AttributeManager {
 
         replaceJavaFile(javaFile, result.toString());
 
+    }
+
+    private static String enumName(AttributeInfo ai) {
+        String enumName = ai.getName();
+        if (enumName.startsWith("zimbra")) enumName = enumName.substring(6);
+        enumName = StringUtil.escapeJavaIdentifier(enumName.substring(0,1).toUpperCase() + enumName.substring(1));
+        return enumName;
+    }
+    
+    private static void generateEnum(StringBuilder result, AttributeInfo ai) throws ServiceException {
+
+        Map<String,String> values = new HashMap<String, String>();
+        for (String v : ai.getEnumSet()) {
+            values.put(v, StringUtil.escapeJavaIdentifier(v));
+        }
+
+        String enumName = enumName(ai);
+
+        result.append(String.format("%n"));
+        result.append(String.format("    public static enum %s {%n", enumName));
+        Set<Map.Entry<String,String>> set = values.entrySet();
+        int i =1;
+        for (Map.Entry<String,String> entry : set) {
+            result.append(String.format("        %s(\"%s\")%s%n", entry.getValue(), entry.getKey(), i == set.size() ? ";" : ","));
+            i++;
+        }
+
+        result.append(String.format("        private String mValue;%n"));
+        result.append(String.format("        private %s(String value) { mValue = value; }%n", enumName));
+        result.append(String.format("        public String toString() { return mValue; }%n"));
+        result.append(String.format("        public static %s fromString(String s) throws ServiceException {%n", enumName));
+        result.append(String.format("            for (%s value : values()) {%n", enumName));
+        result.append(String.format("                if (value.mValue.equals(s)) return value;%n"));
+        result.append(String.format("             }%n"));
+        result.append(String.format("             throw ServiceException.INVALID_REQUEST(\"invalid value: \"+s+\", valid values: \"+ Arrays.asList(values()), null);%n"));
+        result.append(String.format("        }%n"));
+        for (Map.Entry<String,String> entry : set) {
+            result.append(String.format("        public boolean is%s() { return this == %s;}%n", StringUtil.capitalize(entry.getValue()), entry.getValue()));
+        }
+        result.append(String.format("    }%n"));
     }
 
     /**
@@ -1887,10 +1934,13 @@ public class AttributeManager {
             switch (ai.getType()) {
                 case TYPE_DURATION:
                 case TYPE_GENTIME:
+                case TYPE_ENUM:
                     generateGetter(result, ai, false);
                     generateGetter(result, ai, true);
                     generateSetter(result, ai, false, SetterType.set);
-                    if (ai.getType() == AttributeType.TYPE_GENTIME) generateSetter(result, ai, true, SetterType.set);
+                    if (ai.getType() == AttributeType.TYPE_GENTIME || ai.getType() == AttributeType.TYPE_ENUM) {
+                        generateSetter(result, ai, true, SetterType.set);
+                    }
                     generateSetter(result, ai, false, SetterType.unset);
                     break;
                 default:
@@ -1937,6 +1987,11 @@ public class AttributeManager {
                 javaType = "int";
                 javaBody = String.format("return getIntAttr(Provisioning.A_%s, -1);", name);
                 javaDocReturns = ", or -1 if unset";
+                break;
+            case TYPE_ENUM:
+                javaType = "ZAttrProvisioning." + enumName(ai);
+                javaBody = String.format("try { String v = getAttr(Provisioning.A_%s); return v == null ? null : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }", name, enumName(ai));
+                javaDocReturns = ", or null if unset and/or has invalid value";
                 break;
             case TYPE_LONG:
                 javaType = "long";
@@ -2026,6 +2081,10 @@ public class AttributeManager {
             case TYPE_GENTIME:
                 javaType = "Date";
                 putParam = String.format("DateUtil.toGeneralizedTime(%s)", name);
+                break;
+            case TYPE_ENUM:
+                javaType = "ZAttrProvisioning." + enumName(ai);
+                putParam = String.format("%s.toString()", name);
                 break;
             default:
                 if (ai.getCardinality() != AttributeCardinality.multi) {

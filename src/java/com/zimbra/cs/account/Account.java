@@ -68,7 +68,7 @@ public class Account extends ZAttrAccount  {
             try {
                 Domain domain = prov.getDomain(this);
                 if (domain != null) {
-                    domainStatus = domain.getDomainStatus();
+                    domainStatus = domain.getDomainStatusAsString();
                 }
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to get domain for account " + getName(), e);

@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081111-0947 */
+    /* build: 5.0 schemers 20081112-1636 */
 
     /**
      * RFC2256: descriptive information
@@ -1204,10 +1204,38 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
+     * @return zimbraDomainStatus, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=535)
+    public ZAttrProvisioning.DomainStatus getDomainStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraDomainStatus); return v == null ? null : ZAttrProvisioning.DomainStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * domain status. enum values are akin to those of zimbraAccountStatus
+     * zimbraAccountStatus values: active - active lockout - no login until
+     * lockout duration is over locked - no login maintenance - no login, no
+     * delivery(try again, no bouncing) closed - no login, no
+     * delivery(bouncing mails) zimbraDomainStatus values: all values for
+     * zimbraAccountStatus (except for lockout, see mapping below) suspended
+     * - maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + no modifying domain attrs (can only be
+     * set internally, cannot be set in admin console or zmprov) How
+     * zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
+     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
+     * closed, else locked maintenance zimbraAccountStatus if it is closed,
+     * else maintenance suspended zimbraAccountStatus if it is closed, else
+     * maintenance shutdown zimbraAccountStatus if it is closed, else
+     * maintenance closed closed
+     *
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
+     *
      * @return zimbraDomainStatus, or null unset
      */
     @ZAttr(id=535)
-    public String getDomainStatus() {
+    public String getDomainStatusAsString() {
         return getAttr(Provisioning.A_zimbraDomainStatus);
     }
 
@@ -1237,7 +1265,39 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=535)
-    public Map<String,Object> setDomainStatus(String zimbraDomainStatus, Map<String,Object> attrs) {
+    public Map<String,Object> setDomainStatus(ZAttrProvisioning.DomainStatus zimbraDomainStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainStatus, zimbraDomainStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * domain status. enum values are akin to those of zimbraAccountStatus
+     * zimbraAccountStatus values: active - active lockout - no login until
+     * lockout duration is over locked - no login maintenance - no login, no
+     * delivery(try again, no bouncing) closed - no login, no
+     * delivery(bouncing mails) zimbraDomainStatus values: all values for
+     * zimbraAccountStatus (except for lockout, see mapping below) suspended
+     * - maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + no modifying domain attrs (can only be
+     * set internally, cannot be set in admin console or zmprov) How
+     * zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
+     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
+     * closed, else locked maintenance zimbraAccountStatus if it is closed,
+     * else maintenance suspended zimbraAccountStatus if it is closed, else
+     * maintenance shutdown zimbraAccountStatus if it is closed, else
+     * maintenance closed closed
+     *
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
+     *
+     * @param zimbraDomainStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=535)
+    public Map<String,Object> setDomainStatusAsString(String zimbraDomainStatus, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainStatus, zimbraDomainStatus);
         return attrs;
@@ -1279,10 +1339,22 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [local, alias]
      *
+     * @return zimbraDomainType, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=212)
+    public ZAttrProvisioning.DomainType getDomainType() {
+        try { String v = getAttr(Provisioning.A_zimbraDomainType); return v == null ? null : ZAttrProvisioning.DomainType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * should be one of: local, alias
+     *
+     * <p>Valid values: [local, alias]
+     *
      * @return zimbraDomainType, or null unset
      */
     @ZAttr(id=212)
-    public String getDomainType() {
+    public String getDomainTypeAsString() {
         return getAttr(Provisioning.A_zimbraDomainType);
     }
 
@@ -1296,7 +1368,23 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=212)
-    public Map<String,Object> setDomainType(String zimbraDomainType, Map<String,Object> attrs) {
+    public Map<String,Object> setDomainType(ZAttrProvisioning.DomainType zimbraDomainType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainType, zimbraDomainType.toString());
+        return attrs;
+    }
+
+    /**
+     * should be one of: local, alias
+     *
+     * <p>Valid values: [local, alias]
+     *
+     * @param zimbraDomainType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=212)
+    public Map<String,Object> setDomainTypeAsString(String zimbraDomainType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainType, zimbraDomainType);
         return attrs;
@@ -1359,10 +1447,22 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [basic, form]
      *
+     * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=611)
+    public ZAttrProvisioning.FreebusyExchangeAuthScheme getFreebusyExchangeAuthScheme() {
+        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme); return v == null ? null : ZAttrProvisioning.FreebusyExchangeAuthScheme.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
      * @return zimbraFreebusyExchangeAuthScheme, or null unset
      */
     @ZAttr(id=611)
-    public String getFreebusyExchangeAuthScheme() {
+    public String getFreebusyExchangeAuthSchemeAsString() {
         return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme);
     }
 
@@ -1376,7 +1476,23 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=611)
-    public Map<String,Object> setFreebusyExchangeAuthScheme(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
+    public Map<String,Object> setFreebusyExchangeAuthScheme(ZAttrProvisioning.FreebusyExchangeAuthScheme zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme.toString());
+        return attrs;
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
+     * @param zimbraFreebusyExchangeAuthScheme new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=611)
+    public Map<String,Object> setFreebusyExchangeAuthSchemeAsString(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme);
         return attrs;
@@ -1767,10 +1883,25 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [kerberos5, none, simple]
      *
+     * @return zimbraGalLdapAuthMech, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=549)
+    public ZAttrProvisioning.GalLdapAuthMech getGalLdapAuthMech() {
+        try { String v = getAttr(Provisioning.A_zimbraGalLdapAuthMech); return v == null ? null : ZAttrProvisioning.GalLdapAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * external LDAP GAL authentication mechanism none: anonymous binding
+     * simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be
+     * set kerberos5: zimbraGalLdapKerberos5Principal and
+     * zimbraGalLdapKerberos5Keytab has to be set
+     *
+     * <p>Valid values: [kerberos5, none, simple]
+     *
      * @return zimbraGalLdapAuthMech, or null unset
      */
     @ZAttr(id=549)
-    public String getGalLdapAuthMech() {
+    public String getGalLdapAuthMechAsString() {
         return getAttr(Provisioning.A_zimbraGalLdapAuthMech);
     }
 
@@ -1787,7 +1918,26 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=549)
-    public Map<String,Object> setGalLdapAuthMech(String zimbraGalLdapAuthMech, Map<String,Object> attrs) {
+    public Map<String,Object> setGalLdapAuthMech(ZAttrProvisioning.GalLdapAuthMech zimbraGalLdapAuthMech, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapAuthMech, zimbraGalLdapAuthMech.toString());
+        return attrs;
+    }
+
+    /**
+     * external LDAP GAL authentication mechanism none: anonymous binding
+     * simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be
+     * set kerberos5: zimbraGalLdapKerberos5Principal and
+     * zimbraGalLdapKerberos5Keytab has to be set
+     *
+     * <p>Valid values: [kerberos5, none, simple]
+     *
+     * @param zimbraGalLdapAuthMech new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=549)
+    public Map<String,Object> setGalLdapAuthMechAsString(String zimbraGalLdapAuthMech, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalLdapAuthMech, zimbraGalLdapAuthMech);
         return attrs;
@@ -2230,10 +2380,23 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
+     * @return zimbraGalMode, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=46)
+    public ZAttrProvisioning.GalMode getGalMode() {
+        try { String v = getAttr(Provisioning.A_zimbraGalMode); return v == null ? null : ZAttrProvisioning.GalMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * should be internal (query internal only), external (external only), or
+     * both
+     *
+     * <p>Valid values: [both, ldap, zimbra]
+     *
      * @return zimbraGalMode, or null unset
      */
     @ZAttr(id=46)
-    public String getGalMode() {
+    public String getGalModeAsString() {
         return getAttr(Provisioning.A_zimbraGalMode);
     }
 
@@ -2248,7 +2411,24 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=46)
-    public Map<String,Object> setGalMode(String zimbraGalMode, Map<String,Object> attrs) {
+    public Map<String,Object> setGalMode(ZAttrProvisioning.GalMode zimbraGalMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalMode, zimbraGalMode.toString());
+        return attrs;
+    }
+
+    /**
+     * should be internal (query internal only), external (external only), or
+     * both
+     *
+     * <p>Valid values: [both, ldap, zimbra]
+     *
+     * @param zimbraGalMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=46)
+    public Map<String,Object> setGalModeAsString(String zimbraGalMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalMode, zimbraGalMode);
         return attrs;
@@ -2325,10 +2505,26 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [kerberos5, none, simple]
      *
+     * @return zimbraGalSyncLdapAuthMech, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=592)
+    public ZAttrProvisioning.GalSyncLdapAuthMech getGalSyncLdapAuthMech() {
+        try { String v = getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech); return v == null ? null : ZAttrProvisioning.GalSyncLdapAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * external LDAP GAL authentication mechanism for GAL sync none:
+     * anonymous binding simple: zimbraGalLdapBindDn and
+     * zimbraGalLdapBindPassword has to be set kerberos5:
+     * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
+     * to be set if not set fallback to zimbraGalLdapAuthMech
+     *
+     * <p>Valid values: [kerberos5, none, simple]
+     *
      * @return zimbraGalSyncLdapAuthMech, or null unset
      */
     @ZAttr(id=592)
-    public String getGalSyncLdapAuthMech() {
+    public String getGalSyncLdapAuthMechAsString() {
         return getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech);
     }
 
@@ -2346,7 +2542,27 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=592)
-    public Map<String,Object> setGalSyncLdapAuthMech(String zimbraGalSyncLdapAuthMech, Map<String,Object> attrs) {
+    public Map<String,Object> setGalSyncLdapAuthMech(ZAttrProvisioning.GalSyncLdapAuthMech zimbraGalSyncLdapAuthMech, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncLdapAuthMech, zimbraGalSyncLdapAuthMech.toString());
+        return attrs;
+    }
+
+    /**
+     * external LDAP GAL authentication mechanism for GAL sync none:
+     * anonymous binding simple: zimbraGalLdapBindDn and
+     * zimbraGalLdapBindPassword has to be set kerberos5:
+     * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
+     * to be set if not set fallback to zimbraGalLdapAuthMech
+     *
+     * <p>Valid values: [kerberos5, none, simple]
+     *
+     * @param zimbraGalSyncLdapAuthMech new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=592)
+    public Map<String,Object> setGalSyncLdapAuthMechAsString(String zimbraGalSyncLdapAuthMech, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalSyncLdapAuthMech, zimbraGalSyncLdapAuthMech);
         return attrs;
@@ -2773,10 +2989,23 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [and, or]
      *
+     * @return zimbraGalTokenizeAutoCompleteKey, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=599)
+    public ZAttrProvisioning.GalTokenizeAutoCompleteKey getGalTokenizeAutoCompleteKey() {
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey); return v == null ? null : ZAttrProvisioning.GalTokenizeAutoCompleteKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
      * @return zimbraGalTokenizeAutoCompleteKey, or null unset
      */
     @ZAttr(id=599)
-    public String getGalTokenizeAutoCompleteKey() {
+    public String getGalTokenizeAutoCompleteKeyAsString() {
         return getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey);
     }
 
@@ -2791,7 +3020,24 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=599)
-    public Map<String,Object> setGalTokenizeAutoCompleteKey(String zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
+    public Map<String,Object> setGalTokenizeAutoCompleteKey(ZAttrProvisioning.GalTokenizeAutoCompleteKey zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, zimbraGalTokenizeAutoCompleteKey.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeAutoCompleteKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=599)
+    public Map<String,Object> setGalTokenizeAutoCompleteKeyAsString(String zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, zimbraGalTokenizeAutoCompleteKey);
         return attrs;
@@ -2819,10 +3065,23 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [and, or]
      *
+     * @return zimbraGalTokenizeSearchKey, or null if unset and/or has invalid value
+     */
+    @ZAttr(id=600)
+    public ZAttrProvisioning.GalTokenizeSearchKey getGalTokenizeSearchKey() {
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeSearchKey); return v == null ? null : ZAttrProvisioning.GalTokenizeSearchKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
      * @return zimbraGalTokenizeSearchKey, or null unset
      */
     @ZAttr(id=600)
-    public String getGalTokenizeSearchKey() {
+    public String getGalTokenizeSearchKeyAsString() {
         return getAttr(Provisioning.A_zimbraGalTokenizeSearchKey);
     }
 
@@ -2837,7 +3096,24 @@ public class ZAttrDomain extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=600)
-    public Map<String,Object> setGalTokenizeSearchKey(String zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
+    public Map<String,Object> setGalTokenizeSearchKey(ZAttrProvisioning.GalTokenizeSearchKey zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, zimbraGalTokenizeSearchKey.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeSearchKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=600)
+    public Map<String,Object> setGalTokenizeSearchKeyAsString(String zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, zimbraGalTokenizeSearchKey);
         return attrs;
