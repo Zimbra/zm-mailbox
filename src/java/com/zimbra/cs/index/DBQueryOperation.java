@@ -27,8 +27,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.Log;
@@ -569,6 +571,7 @@ class DBQueryOperation extends QueryOperation
             mLuceneOp.resetDocNum();
         }
         mNextHits.clear();
+        mSeenHits.clear();
         if (!atStart) {
             mOffset = 0;
             mDBHitsIter = null;
@@ -600,6 +603,7 @@ class DBQueryOperation extends QueryOperation
             toRet = mNextHits.get(0);
         } else {
             // we don't have any buffered SearchResults, try to get more
+            while (toRet == null) {
 
             //
             // Check to see if we need to refil mDBHits
@@ -682,19 +686,65 @@ class DBQueryOperation extends QueryOperation
 
                 if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.type)) {
                     ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null, mExtra);
+                        if (toAdd != null) {
+                            // make sure we only return each hit once
+                            if (!mSeenHits.containsKey(toAdd)) {
+                                mSeenHits.put(toAdd, toAdd);
                     mNextHits.add(toAdd);
+                            }
+                        }
                 } else {
                     for (Document doc : docs) {
                         ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc, mExtra);
+                            if (toAdd != null) {
+                                // make sure we only return each hit once
+                                if (!mSeenHits.containsKey(toAdd)) {
+                                    mSeenHits.put(toAdd, toAdd);
                         mNextHits.add(toAdd);
                     }
                 }
+                        }
+                    }
+                    
+                    if (mNextHits.size() > 0)
                 toRet = mNextHits.get(0);
+                } else {
+                    return null;
             }
+        }
         }
 
         return toRet;
     }
+
+    /**
+     * There are some situations where the lower-level code might return a given hit multiple times
+     * for example an Appointment might have hits from multiple Exceptions (each of which has
+     * its own Lucene document) and they will return the same AppointmentHit to us.  This is 
+     * the place where we collapse those hits down to single hits.
+     * 
+     * Note that in the case of matching multiple MessageParts, the ZimbraHit that is returned is
+     * different (since MP is an actual ZimbraHit subclass)....therefore MessageParts are NOT
+     * coalesced at this level.  That is done at the top level grouper.
+     */
+    private LRUHashMap<ZimbraHit> mSeenHits = new LRUHashMap<ZimbraHit>(2048, 100);
+    
+    static final class LRUHashMap<T> extends LinkedHashMap<T, T> {
+        private final int mMaxSize;
+        LRUHashMap(int maxSize) {
+            super(maxSize, 0.75f, true);
+            mMaxSize = maxSize;
+        }
+        LRUHashMap(int maxSize, int tableSize) {
+            super(tableSize, 0.75f, true);
+            mMaxSize = maxSize;
+        }
+        
+        protected boolean removeEldestEntry(Map.Entry eldest) {  
+            return size() > mMaxSize;
+          }          
+    }
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraQueryResults#getNext()
@@ -958,6 +1008,7 @@ class DBQueryOperation extends QueryOperation
             
             // this is horrible and hideous and for bug 15511
             boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
+            forceOneHitPerChunk = true;
 
             long luceneStart = 0;
             if (mLog.isDebugEnabled())
