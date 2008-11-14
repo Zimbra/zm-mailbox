@@ -27,8 +27,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.Log;
@@ -569,6 +571,7 @@ class DBQueryOperation extends QueryOperation
             mLuceneOp.resetDocNum();
         }
         mNextHits.clear();
+        mSeenHits.clear();
         if (!atStart) {
             mOffset = 0;
             mDBHitsIter = null;
@@ -600,103 +603,150 @@ class DBQueryOperation extends QueryOperation
             toRet = mNextHits.get(0);
         } else {
             // we don't have any buffered SearchResults, try to get more
+            while (toRet == null) {
 
-            //
-            // Check to see if we need to refil mDBHits
-            //
-            if ((mDBHitsIter == null || !mDBHitsIter.hasNext()) && !mEndOfHits) {
-                if (mExtra == null) {
-                    mExtra = SearchResult.ExtraData.NONE;
-                    switch (getResultsSet().getSearchMode()) {
-                        case NORMAL:
-                            if (isTopLevelQueryOp()) {
-                                mExtra = SearchResult.ExtraData.MAIL_ITEM;
-                            } else {
+                //
+                // Check to see if we need to refil mDBHits
+                //
+                if ((mDBHitsIter == null || !mDBHitsIter.hasNext()) && !mEndOfHits) {
+                    if (mExtra == null) {
+                        mExtra = SearchResult.ExtraData.NONE;
+                        switch (getResultsSet().getSearchMode()) {
+                            case NORMAL:
+                                if (isTopLevelQueryOp()) {
+                                    mExtra = SearchResult.ExtraData.MAIL_ITEM;
+                                } else {
+                                    mExtra = SearchResult.ExtraData.NONE;
+                                }
+                                break;
+                            case IMAP:
+                                mExtra = SearchResult.ExtraData.IMAP_MSG;
+                                break;
+                            case IDS:
                                 mExtra = SearchResult.ExtraData.NONE;
-                            }
-                            break;
-                        case IMAP:
-                            mExtra = SearchResult.ExtraData.IMAP_MSG;
-                            break;
-                        case IDS:
-                            mExtra = SearchResult.ExtraData.NONE;
-                            break;
-                        case MODSEQ:
-                            mExtra = SearchResult.ExtraData.MODSEQ;
-                            break;
-                        case PARENT:
-                            mExtra = SearchResult.ExtraData.PARENT;
+                                break;
+                            case MODSEQ:
+                                mExtra = SearchResult.ExtraData.MODSEQ;
+                                break;
+                            case PARENT:
+                                mExtra = SearchResult.ExtraData.PARENT;
+                        }
                     }
+
+                    if (mExecuteMode == null) {
+                        BooleanQuery origQuery = null;
+                        if (mLuceneOp != null)
+                            origQuery = mLuceneOp.getCurrentQuery();
+
+                        if (hasNoResults() || !prepareSearchConstraints()) {
+                            mExecuteMode = QueryExecuteMode.NO_RESULTS;
+                        } else if (mLuceneOp == null) {
+                            mExecuteMode = QueryExecuteMode.NO_LUCENE;
+                        } else if (shouldExecuteDbFirst()) {
+                            // make sure the Lucene search is reset -- we might have executed it partially
+                            // in order to determine DB-First 
+                            mLuceneOp.resetQuery(origQuery);
+                            mExecuteMode = QueryExecuteMode.DB_FIRST;
+                        } else {
+                            mExecuteMode = QueryExecuteMode.LUCENE_FIRST;
+                        }
+                    }
+
+                    getNextChunk();
                 }
 
-                if (mExecuteMode == null) {
-                    BooleanQuery origQuery = null;
-                    if (mLuceneOp != null)
-                        origQuery = mLuceneOp.getCurrentQuery();
+                //
+                // at this point, we've filled mDBHits if possible (and initialized its iterator)
+                //
+                if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
+                    SearchResult sr = mDBHitsIter.next();
+
+                    // Sometimes, a single search result might yield more than one Lucene
+                    // document -- e.g. an RFC822 message with separately-indexed mimeparts.
+                    // Each of these parts will turn into a separate ZimbraHit at this point,
+                    // although they might be combined together at a higher level (via a HitGrouper)
+                    List <Document> docs = null;
+                    float score = 1.0f;
+                    if (mLuceneChunk != null) {
+                        TextResultsChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
+                        if (sh != null) { 
+                            docs = sh.mDocs;
+                            score = sh.mScore;
+                        } else {
+                            // This could conceivably happen if we're doing a db-first query and we got multiple LuceneChunks
+                            // from a single MAX_DBFIRST_RESULTS set of db-IDs....In practice, this should never happen
+                            // since we only pull IDs out of the DB 200 at a time, and the max hits per LuceneChunk is 2000....
+                            // ...but I am leaving this log message here temporarily so that I can know if this edge cases
+                            // is really happening.  If it *does* somehow happen it isn't the end of the world: we don't lose hits,
+                            // we only lose separate part hits -- the net result would be that a document which had a match in multiple
+                            // parts would only be returned as a single hit for the document.
+                            mLog.info("Missing ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type+" part hits may be list");
+                            docs = null;
+                            score = 1.0f;
+                        }
+                    }
                     
-                    if (hasNoResults() || !prepareSearchConstraints()) {
-                        mExecuteMode = QueryExecuteMode.NO_RESULTS;
-                    } else if (mLuceneOp == null) {
-                        mExecuteMode = QueryExecuteMode.NO_LUCENE;
-                    } else if (shouldExecuteDbFirst()) {
-                        // make sure the Lucene search is reset -- we might have executed it partially
-                        // in order to determine DB-First 
-                        mLuceneOp.resetQuery(origQuery);
-                        mExecuteMode = QueryExecuteMode.DB_FIRST;
+                    if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.type)) {
+                        ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null, mExtra);
+                        if (toAdd != null) {
+                            // make sure we only return each hit once
+                            if (!mSeenHits.containsKey(toAdd)) {
+                                mSeenHits.put(toAdd, toAdd);
+                                mNextHits.add(toAdd); 
+                            }
+                        }
                     } else {
-                        mExecuteMode = QueryExecuteMode.LUCENE_FIRST;
+                        for (Document doc : docs) {
+                            ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc, mExtra);
+                            if (toAdd != null) {
+                                // make sure we only return each hit once
+                                if (!mSeenHits.containsKey(toAdd)) {
+                                    mSeenHits.put(toAdd, toAdd);
+                                    mNextHits.add(toAdd); 
+                                }
+                            }
+                        }
                     }
-                }
-
-                getNextChunk();
-            }
-
-            //
-            // at this point, we've filled mDBHits if possible (and initialized its iterator)
-            //
-            if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
-                SearchResult sr = mDBHitsIter.next();
-
-                // Sometimes, a single search result might yield more than one Lucene
-                // document -- e.g. an RFC822 message with separately-indexed mimeparts.
-                // Each of these parts will turn into a separate ZimbraHit at this point,
-                // although they might be combined together at a higher level (via a HitGrouper)
-                List <Document> docs = null;
-                float score = 1.0f;
-                if (mLuceneChunk != null) {
-                    TextResultsChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
-                    if (sh != null) { 
-                        docs = sh.mDocs;
-                        score = sh.mScore;
-                    } else {
-                        // This could conceivably happen if we're doing a db-first query and we got multiple LuceneChunks
-                        // from a single MAX_DBFIRST_RESULTS set of db-IDs....In practice, this should never happen
-                        // since we only pull IDs out of the DB 200 at a time, and the max hits per LuceneChunk is 2000....
-                        // ...but I am leaving this log message here temporarily so that I can know if this edge cases
-                        // is really happening.  If it *does* somehow happen it isn't the end of the world: we don't lose hits,
-                        // we only lose separate part hits -- the net result would be that a document which had a match in multiple
-                        // parts would only be returned as a single hit for the document.
-                        mLog.info("Missing ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type+" part hits may be list");
-                        docs = null;
-                        score = 1.0f;
-                    }
-                }
-
-                if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.type)) {
-                    ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null, mExtra);
-                    mNextHits.add(toAdd);
+                    
+                    if (mNextHits.size() > 0)
+                        toRet = mNextHits.get(0);
                 } else {
-                    for (Document doc : docs) {
-                        ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc, mExtra);
-                        mNextHits.add(toAdd);
-                    }
+                    return null;
                 }
-                toRet = mNextHits.get(0);
             }
         }
 
         return toRet;
     }
+    
+    /**
+     * There are some situations where the lower-level code might return a given hit multiple times
+     * for example an Appointment might have hits from multiple Exceptions (each of which has
+     * its own Lucene document) and they will return the same AppointmentHit to us.  This is 
+     * the place where we collapse those hits down to single hits.
+     * 
+     * Note that in the case of matching multiple MessageParts, the ZimbraHit that is returned is
+     * different (since MP is an actual ZimbraHit subclass)....therefore MessageParts are NOT
+     * coalesced at this level.  That is done at the top level grouper.
+     */
+    private LRUHashMap<ZimbraHit> mSeenHits = new LRUHashMap<ZimbraHit>(2048, 100);
+    
+    static final class LRUHashMap<T> extends LinkedHashMap<T, T> {
+        private final int mMaxSize;
+        LRUHashMap(int maxSize) {
+            super(maxSize, 0.75f, true);
+            mMaxSize = maxSize;
+        }
+        LRUHashMap(int maxSize, int tableSize) {
+            super(tableSize, 0.75f, true);
+            mMaxSize = maxSize;
+        }
+        
+        protected boolean removeEldestEntry(Map.Entry eldest) {  
+            return size() > mMaxSize;
+          }          
+    }
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraQueryResults#getNext()
@@ -960,6 +1010,7 @@ class DBQueryOperation extends QueryOperation
             
             // this is horrible and hideous and for bug 15511
             boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
+            forceOneHitPerChunk = true;
 
             long luceneStart = 0;
             if (mLog.isDebugEnabled())
@@ -1001,7 +1052,7 @@ class DBQueryOperation extends QueryOperation
                 mEndOfHits = true;
             } else {
                 long dbStart = System.currentTimeMillis();
-                
+
                 // must not ask for offset,limit here b/c of indexId constraints!,  
                 DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
                 

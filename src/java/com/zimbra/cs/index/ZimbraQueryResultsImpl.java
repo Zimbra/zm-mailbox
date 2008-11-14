@@ -44,11 +44,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     static final class LRUHashMap<T, U> extends LinkedHashMap<T, U> {
         private final int mMaxSize;
         LRUHashMap(int maxSize) {
-            super(maxSize);
+            super(maxSize, 0.75f, true);
             mMaxSize = maxSize;
         }
         LRUHashMap(int maxSize, int tableSize) {
-            super(tableSize);
+            super(tableSize, 0.75f, true);
             mMaxSize = maxSize;
         }
         
