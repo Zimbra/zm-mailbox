@@ -2470,16 +2470,21 @@ index is an integer, used to maintain the order of filter tests and actions.
 ---------------------------
 
 <ApplyFilterRulesRequest>
-  <filterRule name="{name}"/>+
-  [<ids>{list}</ids>]
+  <filterRules>
+    <filterRule name="{name}"/>+
+  </filterRules>
+  [<m ids="{msg-id-list}"/>]
   [<query>{query-string}</query>]
 </ApplyFilterRulesRequest>
 
-<ApplyFilterRulesResponse [affectedIds="id1,id2,id3,..."] /> 
+<ApplyFilterRulesResponse>
+  <m ids="{msg-id-list}"/>
+</ApplyFilterRulesResponse>
 
 Applies one or more filter rules to messages specified by a comma-
 separated ID list, or returned by a search query.  One or the other
-can be specified, but not both.
+can be specified, but not both.  Returns the list of ids of
+existing messages that were affected.
 
 --------------------------
 

@@ -249,11 +249,12 @@ extends TestCase {
         
         // Assemble request.
         Element request = new XMLElement(MailConstants.APPLY_FILTER_RULES_REQUEST);
+        Element rulesEl = request.addElement(MailConstants.E_FILTER_RULES);
         for (String ruleName : ruleNames) {
-            request.addElement(MailConstants.E_FILTER_RULE).addAttribute(MailConstants.A_NAME, ruleName);
+            rulesEl.addElement(MailConstants.E_FILTER_RULE).addAttribute(MailConstants.A_NAME, ruleName);
         }
         if (idList != null) {
-            request.addElement(MailConstants.E_IDS).setText(idList);
+            request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, idList);
         }
         if (query != null) {
             request.addElement(MailConstants.E_QUERY).setText(query);
@@ -262,9 +263,9 @@ extends TestCase {
         // Invoke and parse response.
         Element response = mbox.invoke(request);
         Set<String> affectedIds = new TreeSet<String>();
-        String responseIdList = response.getAttribute(MailConstants.A_AFFECTED_IDS, null);
-        if (responseIdList != null) {
-            for (String id : responseIdList.split(",")) {
+        Element msgEl = response.getOptionalElement(MailConstants.E_MSG);
+        if (msgEl != null) {
+            for (String id : msgEl.getAttribute(MailConstants.A_ID).split(",")) {
                 affectedIds.add(id);
             }
         }

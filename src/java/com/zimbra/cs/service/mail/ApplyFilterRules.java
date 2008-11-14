@@ -55,7 +55,8 @@ public class ApplyFilterRules extends MailDocumentHandler {
             throw ServiceException.INVALID_REQUEST("Account has no filter rules defined.", null);
         }
         
-        List<Element> ruleElements = request.listElements(MailConstants.E_FILTER_RULE);
+        List<Element> ruleElements =
+            request.getElement(MailConstants.E_FILTER_RULES).listElements(MailConstants.E_FILTER_RULE);
         if (ruleElements.size() == 0) {
             String msg = String.format("No %s elements specified.", MailConstants.E_FILTER_RULE);
             throw ServiceException.INVALID_REQUEST(msg, null);
@@ -82,11 +83,11 @@ public class ApplyFilterRules extends MailDocumentHandler {
         }
         
         // Get the ids of the messages to filter.
-        String idCsv = getElementText(request, MailConstants.E_IDS);
+        Element msgEl = request.getOptionalElement(MailConstants.E_MSG);
         String query = getElementText(request, MailConstants.E_QUERY);
-        if (idCsv != null && query != null) {
+        if (msgEl != null && query != null) {
             String msg = String.format("Cannot specify both %s and %s elements.",
-                MailConstants.E_IDS, MailConstants.E_QUERY);
+                MailConstants.E_MSG, MailConstants.E_QUERY);
             throw ServiceException.INVALID_REQUEST(msg, null);
         }
 
@@ -94,8 +95,8 @@ public class ApplyFilterRules extends MailDocumentHandler {
         List<Integer> messageIds = new ArrayList<Integer>();
         List<Integer> affectedIds = new ArrayList<Integer>();
         
-        if (idCsv != null) {
-            String[] ids = idCsv.split(",");
+        if (msgEl != null) {
+            String[] ids = msgEl.getAttribute(MailConstants.A_ID).split(",");
             for (String id : ids) {
                 messageIds.add(Integer.valueOf(id));
             }
@@ -120,7 +121,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
             }
         } else {
             String msg = String.format("Must specify either the %s or %s element.",
-                MailConstants.E_IDS, MailConstants.E_QUERY);
+                MailConstants.E_MSG, MailConstants.E_QUERY);
             throw ServiceException.INVALID_REQUEST(msg, null);
         }
         
@@ -134,7 +135,8 @@ public class ApplyFilterRules extends MailDocumentHandler {
         // Send response.
         Element response = zsc.createElement(MailConstants.APPLY_FILTER_RULES_RESPONSE);
         if (affectedIds.size() > 0) {
-            response.addAttribute(MailConstants.A_AFFECTED_IDS, StringUtil.join(",", affectedIds));
+            response.addElement(MailConstants.E_MSG)
+                .addAttribute(MailConstants.A_ID, StringUtil.join(",", affectedIds));
         }
         return response;
     }
