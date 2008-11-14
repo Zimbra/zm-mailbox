@@ -163,7 +163,7 @@ public interface CalendarObject {
             while (iter.hasNext()) {
                 ICalTimeZone tz = (ICalTimeZone) iter.next();
                 CharArrayWriter wr = new CharArrayWriter();
-                tz.newToVTimeZone().toICalendar(wr);
+                tz.newToVTimeZone().toICalendar(wr, true);
                 wr.flush();
                 buf.append(wr.toCharArray());
                 wr.close();
@@ -179,7 +179,7 @@ public interface CalendarObject {
                     ZCalendar.ZComponent vcomp = inv.newToVComponent(false, allowPrivateAccess);
                     if (filter != null && !filter.match(vcomp))
                         continue;
-                    vcomp.toICalendar(wr);
+                    vcomp.toICalendar(wr, true);
                 } catch (ServiceException se) {
                     ZimbraLog.dav.warn("cannot convert to ICalendar", se);
                     continue;

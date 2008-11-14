@@ -286,7 +286,7 @@ public class CalDavDataImport extends MailItemImport {
         while (iter.hasNext()) {
             ICalTimeZone tz = iter.next();
             CharArrayWriter wr = new CharArrayWriter();
-            tz.newToVTimeZone().toICalendar(wr);
+            tz.newToVTimeZone().toICalendar(wr, true);
             wr.flush();
             buf.append(wr.toCharArray());
             wr.close();
@@ -297,7 +297,7 @@ public class CalDavDataImport extends MailItemImport {
             ZCalendar.ZProperty organizer = vcomp.getProperty(ZCalendar.ICalTok.ORGANIZER);
             if (organizer != null)
                 organizer.setValue("mailto:" + getUsername());
-            vcomp.toICalendar(wr);
+            vcomp.toICalendar(wr, true);
             wr.flush();
             buf.append(wr.toCharArray());
             wr.close();
