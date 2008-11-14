@@ -1010,7 +1010,6 @@ class DBQueryOperation extends QueryOperation
             
             // this is horrible and hideous and for bug 15511
             boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
-            forceOneHitPerChunk = true;
 
             long luceneStart = 0;
             if (mLog.isDebugEnabled())
