@@ -229,7 +229,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 throw MailServiceException.UPLOAD_REJECTED(filename, "upload too large");
 
             Upload up = new Upload(accountId, fi);
-            ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
+            mLog.info("Received file: name=%s, size=%d, id=%s", up.getName(), up.getSize(), up.getId());
             synchronized (mPending) {
                 mPending.put(up.uuid, up);
             }

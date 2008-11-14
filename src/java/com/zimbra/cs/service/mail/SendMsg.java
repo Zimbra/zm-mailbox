@@ -96,8 +96,6 @@ public class SendMsg extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        sLog.info("<SendMsg> " + zsc.toString());
-
         // <m>
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
