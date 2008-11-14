@@ -286,9 +286,6 @@ public class MailConstants {
     public static final String A_TAG_NAME = "tagName";
     public static final String A_INDEX = "index";
 
-    public static final String E_IDS = "ids";
-    public static final String A_AFFECTED_IDS = "affectedIds";
-    
     // grants
     public static final String E_ACL = "acl";
     public static final String E_GRANT = "grant";
