@@ -185,6 +185,16 @@ onEntry:  (don't need this, TODO, remove)
   <desc>set all account attrs</desc>
 </right>
 
+<right name="viewDummy" type="getAttrs" targetType="account,cos">
+  <desc>for unittest only, do we have a use case for this?</desc>
+  <attrs>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
+  </attrs>
+</right>
+
 <right name="configureQuota" type="setAttrs" targetType="account,cos">
   <desc>configure quota</desc>
   <attrs>
