@@ -954,7 +954,7 @@ Depending on the context, there are three aspects of targets that need to be dea
                       <getAttrs> and <setAttrs> elements in the response.
                     - Combo rights will not appear in the list because they will be expanded to 
                       system rights and/or a set of attributes that can be get/set.
-    <modifyAttrs> : all attrs can be set
+    <setAttrs>    : all attrs can be set
     <getAttrs>    : all attrs can be get
     
     e.g. 

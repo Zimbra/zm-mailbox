@@ -21,4 +21,10 @@ public class UserRight extends Right {
         super(name, RightType.preset);
     }
     
+    /*
+    String dump(StringBuilder sb) {
+        // nothing in user right to dump
+        return super.dump(sb);
+    }
+    */
 }

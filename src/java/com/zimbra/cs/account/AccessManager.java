@@ -19,6 +19,7 @@ package com.zimbra.cs.account;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -120,27 +121,65 @@ public abstract class AccessManager {
     }
     
     
-    /*
-     * returns
-     * null: 
-     *     allow none
-     * 
-     * empty map: 
-     *     allow all attrs on the entry (also can go beyond inherited limit, we do NOT have a notion of 
-     *     "allow all within inherited limit")
-     *             
-     * map of <attrName, limit>: 
-     *     allow those in the map, limit indicates if the attr can only be set to values within the 
-     *     inherited limit.
-     * 
-     */
-    public static final Map<String, Boolean> DENY_ALL_ATTRS = null;
-    public static final Map<String, Boolean> ALLOW_ALL_ATTRS = new HashMap<String, Boolean>();
+    public static class AllowedAttrs {
+        public enum Result {
+            ALLOW_ALL,
+            DENY_ALL,
+            ALLOW_SOME;
+        }
+        private Result mResult;
+        private Set<String> mAllowSome;
+        private Set<String> mAllowSomeWithLimit;
+        
+        private AllowedAttrs(Result result, Set<String> allowSome, Set<String> allowSomeWithLimit) {
+            mResult = result;
+            mAllowSome = allowSome;
+            mAllowSomeWithLimit = allowSomeWithLimit;
+        }
+        
+        public Result getResult() {
+            return mResult;
+        }
+        
+        public Set<String> getAllowed() {
+            return mAllowSome;
+        }
+        
+        public Set<String> getAllowedWithLimit() {
+            return mAllowSomeWithLimit;
+        }
+        
+        public String dump() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("result = " + mResult + "\n");
+            
+            if (mResult == Result.ALLOW_SOME) {
+                sb.append("allowed = (");
+                for (String a : mAllowSome)
+                    sb.append(a + " ");
+                sb.append(")\n");
+                
+                sb.append("allowed with limit = (");
+                for (String a : mAllowSomeWithLimit)
+                    sb.append(a + " ");
+                sb.append(")\n");
+            }
+            
+            return sb.toString();
+        }
+    }
     
-    public abstract Map<String, Boolean> canGetAttrs(Account grantee,   Entry target, Map<String, Object> attrs);
-    public abstract Map<String, Boolean> canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs);
-    public abstract Map<String, Boolean> canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs);
-    public abstract Map<String, Boolean> canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs);
+    public static final AllowedAttrs ALLOW_ALL_ATTRS = new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null, null);
+    public static final AllowedAttrs DENY_ALL_ATTRS = new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null, null);
+    
+    public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome, Set<String> allowSomeWithLimit) {
+        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome, allowSomeWithLimit);
+    }
+    
+    public abstract AllowedAttrs canGetAttrs(Account grantee,   Entry target, Map<String, Object> attrs);
+    public abstract AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs);
+    public abstract AllowedAttrs canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs);
+    public abstract AllowedAttrs canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs);
 
 
 

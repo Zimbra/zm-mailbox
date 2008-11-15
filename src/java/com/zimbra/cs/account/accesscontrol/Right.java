@@ -20,8 +20,8 @@ public abstract class Right {
         }
     }
     
-    protected RightType mRightType;
     private final String mName;
+    protected RightType mRightType;
     private String mDesc;  // a brief description
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
@@ -37,6 +37,20 @@ public abstract class Right {
     Right(String name, RightType rightType) {
         mRightType = rightType;
         mName = name;
+    }
+    
+    String dump(StringBuilder sb) {
+        if (sb == null)
+            sb = new StringBuilder();
+        
+        sb.append("name         = " + mName + "\n");
+        sb.append("type         = " + mRightType.name() + "\n");
+        sb.append("desc         = " + mDesc + "\n");
+        sb.append("doc          = " + mDoc + "\n");
+        sb.append("default      = " + mDefault + "\n");
+        sb.append("target Type  = " + mTargetType + "\n");
+
+        return sb.toString();
     }
     
     public boolean isUserRight() {

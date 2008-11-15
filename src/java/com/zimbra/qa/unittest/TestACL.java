@@ -21,6 +21,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -86,6 +87,10 @@ public abstract class TestACL extends TestCase {
             e.printStackTrace();
             fail();
         }
+    }
+    
+    String getTestName() {
+        return getName().substring(4);
     }
     
     /*
@@ -267,6 +272,7 @@ public abstract class TestACL extends TestCase {
             return mAllow;
         }
     }
+    
     // shorthand notion so we don't have to refer to AllowOrDeny from callsites
     protected static final AllowOrDeny ALLOW = AllowOrDeny.ALLOW;
     protected static final AllowOrDeny DENY = AllowOrDeny.DENY;
@@ -288,6 +294,47 @@ public abstract class TestACL extends TestCase {
     // shorthand notion so we don't have to refer to AllowOrDeny from callsites
     protected static final AsAdmin AS_ADMIN = AsAdmin.AS_ADMIN;
     protected static final AsAdmin AS_USER = AsAdmin.AS_USER;
+    
+    
+    protected static enum LimitOrNoLimit {
+        LIMIT(true),
+        NOLIMIT(false),
+        NULLLIMIT(false); // for tests in that limit doesn't matter
+        
+        boolean mLimit;
+        
+        LimitOrNoLimit(boolean limit) {
+            mLimit = limit;
+        }
+        
+        boolean limit() {
+            // should nver be called for NULLLIMIT
+            if (this == NULLLIMIT)
+                fail();
+            
+            return mLimit;
+        }
+    }
+    protected static final LimitOrNoLimit LIMIT = LimitOrNoLimit.LIMIT;
+    protected static final LimitOrNoLimit NOLIMIT = LimitOrNoLimit.NOLIMIT;
+    protected static final LimitOrNoLimit NULLLIMIT = LimitOrNoLimit.NULLLIMIT;
+    
+    protected static enum GetOrSet {
+        GET(true),
+        SET(false);
+        
+        boolean mGet;
+        
+        GetOrSet(boolean get) {
+            mGet = get;
+        }
+        
+        boolean isGet() {
+            return mGet;
+        }
+    }
+    protected static final GetOrSet GET = GetOrSet.GET;
+    protected static final GetOrSet SET = GetOrSet.SET;
     
     // construct a ACE with "pub" grantee type
     protected ZimbraACE newPubACE(Right right, AllowOrDeny allowDeny) throws ServiceException {
@@ -508,20 +555,26 @@ public abstract class TestACL extends TestCase {
         assertEquals(expectedVia, via);
     }
     
-    protected void verify(Account grantee, Entry target, Map<String, Object> attrs, AllowOrDeny allowOrDeny) {
-        Map<String, Boolean> allowedAttrs = mAM.canGetAttrs(grantee, target, attrs);
-        if (allowOrDeny == ALLOW) {
-            for (String attr : attrs.keySet())
-                assertTrue(allowedAttrs.keySet().contains(attr));
-        } else {
-            try {
-                for (String attr : attrs.keySet())
-                    assertTrue(allowedAttrs.keySet().contains(attr));
-            } catch (AssertionFailedError e) {
-                return;
-            }
-            fail(); 
+    void assertEquals(Set<String> expected, Set<String> actual) {
+        assertEquals(expected.size(), actual.size());
+        for (String s: expected)
+            assertTrue(actual.contains(s));
+    }
+    
+    void assertEquals(AllowedAttrs expected, AllowedAttrs actual) {
+        assertEquals(expected.getResult(), actual.getResult());
+        if (actual.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
+            assertEquals(expected.getAllowed(), actual.getAllowed());
+            assertEquals(expected.getAllowedWithLimit(), actual.getAllowedWithLimit());
         }
+    }
+    
+    protected void verify(Account grantee, Entry target, Map<String, Object> attrs, GetOrSet getOrSet, AllowedAttrs expected) {
+        AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
+                                        mAM.canGetAttrs(grantee, target, attrs) :
+                                        mAM.canSetAttrs(grantee, target, attrs);
+        // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
+        assertEquals(expected, allowedAttrs);
     }
     
        
@@ -556,6 +609,9 @@ public abstract class TestACL extends TestCase {
         TestUtil.runTest(TestACLGrantee.class);
         TestUtil.runTest(TestACLTarget.class);
         TestUtil.runTest(TestACLPrecedence.class);
+        
+        if (mAM instanceof RoleAccessManager)
+            TestUtil.runTest(TestACLAttrAccess.class);
     }
 
 }

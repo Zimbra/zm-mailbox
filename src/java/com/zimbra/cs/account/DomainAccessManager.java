@@ -250,22 +250,22 @@ public class DomainAccessManager extends AccessManager {
     }
 
     @Override
-    public Map<String, Boolean> canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
         return DENY_ALL_ATTRS;
     }
     
     @Override
-    public Map<String, Boolean> canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
         return DENY_ALL_ATTRS;
     }
     
     @Override
-    public Map<String, Boolean> canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
         return DENY_ALL_ATTRS;
     }
     
     @Override
-    public Map<String, Boolean> canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
         return DENY_ALL_ATTRS;
     }
     

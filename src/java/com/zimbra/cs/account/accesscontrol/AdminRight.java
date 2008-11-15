@@ -22,6 +22,8 @@ public class AdminRight extends Right {
     public static AdminRight R_testGlobalConfigRemoveMe;
     public static AdminRight R_testGlobalGrantRemoveMe;
     
+    public static AdminRight R_getAccount;
+    public static AdminRight R_viewDummy;
     public static AdminRight R_modifyAccount;
     public static AdminRight R_configureQuota;
     public static AdminRight R_configureQuotaWithinLimit;
@@ -55,9 +57,12 @@ public class AdminRight extends Right {
         R_testGlobalConfigRemoveMe = rm.getAdminRight("testGlobalConfigRemoveMe");
         R_testGlobalGrantRemoveMe = rm.getAdminRight("testGlobalGrantRemoveMe");
         
+        R_getAccount = rm.getAdminRight("getAccount");
+        R_viewDummy = rm.getAdminRight("viewDummy");
         R_modifyAccount = rm.getAdminRight("modifyAccount");
         R_configureQuota = rm.getAdminRight("configureQuota");
         R_configureQuotaWithinLimit= rm.getAdminRight("configureQuotaWithinLimit");
+
     }
     
     static AdminRight newAdminRight(String name, RightType rightType) {
@@ -73,5 +78,10 @@ public class AdminRight extends Right {
         super(name, rightType);
     }
 
-    
+    /*
+    String dump(StringBuilder sb) {
+        // nothing in user right to dump
+        return super.dump(sb);
+    }
+    */
 }

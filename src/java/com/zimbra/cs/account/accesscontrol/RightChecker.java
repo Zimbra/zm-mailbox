@@ -12,6 +12,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
@@ -123,6 +124,15 @@ public class RightChecker {
             
             return sb.toString();
         }
+        
+        // dump a List of EffectiveACL as ({entry name on which the right is granted}: [grant] [grant] ...)
+        static String dump(List<EffectiveACL> effectiveACLs) {
+            StringBuffer sb = new StringBuffer();
+            for (EffectiveACL acl : effectiveACLs) {
+                sb.append(acl.dump() + " ");
+            }
+            return sb.toString();
+        }
     }
     
     static class ACEViaGrant extends ViaGrant {
@@ -172,6 +182,39 @@ public class RightChecker {
         }
     }
     
+    private static class AttrDist {
+        int mDistance;
+        boolean mLimit;
+        
+        AttrDist(AttrRight.Attr attr, int distance) {
+            mLimit = attr.getLimit();
+            mDistance = distance;
+        }
+        
+        static String dump(Map<String, AttrDist> attrs) {
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, AttrDist> a : attrs.entrySet())
+                sb.append("(" + a.getKey() + ", " + a.getValue().mDistance +  ", " + a.getValue().mLimit + ")");
+            return sb.toString();
+        }
+    }
+    
+    private static class CollectAttrsResult {
+        enum Result {
+            SOME,
+            ALLOW_ALL,
+            DENY_ALL;
+        }
+        
+        CollectAttrsResult(Result result, int distance) {
+            mResult = result;
+            mDistance = distance;
+        }
+        
+        Result mResult;
+        int mDistance;  // distance for next rank of grants
+    }
+    
     /**
      * returns if grantee 
      * 
@@ -184,7 +227,7 @@ public class RightChecker {
         Boolean result = null;
         
         if (sLog.isDebugEnabled()) {
-            sLog.debug("RightChecker.canDo: effectiveACLs=" + dump(effectiveACLs));
+            sLog.debug("RightChecker.canDo: effectiveACLs=" + EffectiveACL.dump(effectiveACLs));
         }
         
         short adminFlag = (right.isUserRight()? 0 : GranteeFlag.F_ADMIN);
@@ -215,63 +258,81 @@ public class RightChecker {
         return false;
     }
     
-    /*
-     * for allowSome, if an attr is allowed at the same distance as the denyAll grant, denied takes precedence,
-     * thusthe operator is <
-     */
-    static HashMap<String, Boolean> allowSome(Map<String, Integer> allowed, int withDistanceShorterthan, Set<String> allowedWithLimit) {
-        HashMap<String, Boolean> result = new HashMap<String, Boolean>();
-        for (Map.Entry<String, Integer> a : allowed.entrySet()) {
-            if (a.getValue() < withDistanceShorterthan)
-                result.put(a.getKey(), allowedWithLimit.contains(a.getKey()));
+    private static Set<String> buildAllowedWithLimit(Map<String, AttrDist> allowSome) {
+        // build the limited set
+        Set<String> allowedWithlimit = new HashSet<String>();
+        for (Map.Entry<String, AttrDist> a : allowSome.entrySet()) {
+            if (a.getValue().mLimit) 
+                allowedWithlimit.add(a.getKey());
         }
-        return result;
+        return allowedWithlimit;
     }
     
-    /*
-     * for denySome, if an attr is denied at the same distance as the allowAll grant, denied takes precedence, 
-     * thus the operator is <=
-     */
-    static HashMap<String, Boolean> denySome(Set<String> all, Map<String, Integer> denied, int withDistanceShorterthanOrEqualTo, Set<String> allowedWithLimit) {
-        HashMap<String, Boolean> result = new HashMap<String, Boolean>();
-
-        for (Map.Entry<String, Integer> d : denied.entrySet()) {
-            if (d.getValue() <= withDistanceShorterthanOrEqualTo)
-                all.remove(d.getKey());
-        }
-        
-        for (String d : all)
-            result.put(d, allowedWithLimit.contains(d));
-        return result;
-    }
-    
-    static private Map<String, Boolean> encounteredDenyAll(Map<String, Integer> allowSome, int shortestDenyAllAt, Set<String> allowSomeWithLimit) {
+    private static AllowedAttrs processDenyAll(Map<String, AttrDist> allowSome, Map<String, AttrDist> denySome, AttributeClass klass) throws ServiceException {
         if (allowSome.isEmpty())
             return AccessManager.DENY_ALL_ATTRS;
-        else 
-            return allowSome(allowSome, shortestDenyAllAt, allowSomeWithLimit); 
+        else {
+            Set<String> allowed = allowSome.keySet();
+            Set<String> allowedWithlimit = buildAllowedWithLimit(allowSome);
+            return AccessManager.ALLOW_SOME_ATTRS(allowed, allowedWithlimit);
+        }
     }
 
-    static private Map<String, Boolean> encounteredAllowAll(Map<String, Integer> denySome,  int shortestAllowAllAt, Set<String> allowSomeWithLimit, AttributeClass klass) throws ServiceException {
-        if (denySome.isEmpty())
-            return AccessManager.ALLOW_ALL_ATTRS;
-        else {
-            Set<String> all = new HashSet<String>();
-            all.addAll(AttributeManager.getInstance().getAttrsInClass(klass));
-            return denySome(all, denySome, shortestAllowAllAt, allowSomeWithLimit);
+
+    private static AllowedAttrs processAllowAll(Map<String, AttrDist> allowSome, Map<String, AttrDist> denySome, AttributeClass klass) throws ServiceException {
+        
+        if (denySome.isEmpty()) {
+            // return AccessManager.ALLOW_ALL_ATTRS;
+            if (allowSome.isEmpty())
+                return AccessManager.ALLOW_ALL_ATTRS;
+            else {
+                // there could be some attrs with limit in the allowSome list,
+                // remove those from allowed and put them in the allowed with limit set
+             
+                Set<String> allowed = new HashSet<String>();
+                allowed.addAll(AttributeManager.getInstance().getAttrsInClass(klass));
+                
+                // build the limited set
+                Set<String> allowedWithlimit = new HashSet<String>();
+                for (Map.Entry<String, AttrDist> a : allowSome.entrySet()) {
+                    if (a.getValue().mLimit && allowed.contains(a.getKey())) {
+                        allowedWithlimit.add(a.getKey());
+                        allowed.remove(a.getKey());
+                    }
+                }
+                
+                return allowedWithlimit.isEmpty()? 
+                           AccessManager.ALLOW_ALL_ATTRS:  // didn't find any with limit attrs in allowSome, so return allow all
+                           AccessManager.ALLOW_SOME_ATTRS(allowed, allowedWithlimit);
+            }
+
+        } else {
+            // get all attrs that can appear on the target entry
+            Set<String> allowed = new HashSet<String>();
+            allowed.addAll(AttributeManager.getInstance().getAttrsInClass(klass));
+            
+            // remove denied from all
+            for (String d : denySome.keySet())
+                allowed.remove(d);
+            
+            // build the limited set
+            Set<String> allowedWithlimit = new HashSet<String>();
+            for (Map.Entry<String, AttrDist> a : allowSome.entrySet()) {
+                if (a.getValue().mLimit && allowed.contains(a.getKey())) 
+                    allowedWithlimit.add(a.getKey());
+            }
+            
+            return AccessManager.ALLOW_SOME_ATTRS(allowed, allowedWithlimit);
         }
     }
     
-    static Map<String, Boolean> canAccessAttrs(List<EffectiveACL> effectiveACLs, Account grantee, Right right, AttributeClass klass) throws ServiceException {
+    static AllowedAttrs canAccessAttrs(List<EffectiveACL> effectiveACLs, Account grantee, Right right, AttributeClass klass) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         
-        Map<String, Boolean> result = null;
+        AllowedAttrs result = null;
         
-        Map<String, Integer> allowSome = new HashMap<String, Integer>();
-        Map<String, Integer> denySome = new HashMap<String, Integer>();
-        List<Integer> allowAll = new ArrayList<Integer>();
-        List<Integer> denyAll = new ArrayList<Integer>();
-        Set<String> allowSomeWithLimit = new HashSet<String>();
+        Map<String, AttrDist> allowSome = new HashMap<String, AttrDist>();
+        Map<String, AttrDist> denySome = new HashMap<String, AttrDist>();
         
         /*
          * traverse the effective ACLs, which is sorted in the order of most to least specific targets.
@@ -279,48 +340,48 @@ public class RightChecker {
          */
         
         int baseDistance = 0;
-        
+        CollectAttrsResult car;
         // collect attrs in grants that are granted directly to the authed account
-        baseDistance = collectAttrs(effectiveACLs, grantee.getId(), baseDistance, 
-                                    allowSome, denySome, allowAll, denyAll, allowSomeWithLimit);
+        // begin with base distance 0
+        car = collectAttrs(effectiveACLs, grantee.getId(), 0, allowSome, denySome);
         
-        // walk up the group hierarchy of the authed account, collect attrs that are granted to the group
-        List<MemberOf> groups = prov.getAclGroups((Account)grantee);
-        for (MemberOf group : groups) {
-            baseDistance = collectAttrs(effectiveACLs, group.getId(), baseDistance, 
-                                        allowSome, denySome, allowAll, denyAll, allowSomeWithLimit);
+        if (car.mResult == CollectAttrsResult.Result.SOME) {
+            // walk up the group hierarchy of the authed account, collect attrs that are granted to the group
+            // use the distance from previous call to collectAttrs as the base instance
+            List<MemberOf> groups = prov.getAclGroups((Account)grantee);
+            for (MemberOf group : groups) {
+                car = collectAttrs(effectiveACLs, group.getId(), car.mDistance, allowSome, denySome);
+                if (car.mResult != CollectAttrsResult.Result.SOME)
+                    break; // stop if allow/deny all was encountered
+            }
         }
-
-        // now allowed/denied contain all attrs allowed/denied and their shortest distance to the target
-        // remove the denied ones from allowed if they've got a shorter distance
-        Map<String, Integer> some = null;
-        if (!denyAll.isEmpty() && !allowAll.isEmpty()) {
-            int shortestDenyAllAt = denyAll.get(0);
-            int shortestAllowAllAt = allowAll.get(0);
-            if (shortestDenyAllAt <= shortestAllowAllAt)
-                result = encounteredDenyAll(allowSome, shortestDenyAllAt, allowSomeWithLimit);
-            else
-                result = encounteredAllowAll(denySome, shortestAllowAllAt, allowSomeWithLimit, klass);
-                 
-        } else if (!denyAll.isEmpty()) {
-            int shortestDenyAllAt = denyAll.get(0);
-            result = encounteredDenyAll(allowSome, shortestDenyAllAt, allowSomeWithLimit);
+        
+        if (sLog.isDebugEnabled()) {
+            if (car.mResult == CollectAttrsResult.Result.ALLOW_ALL)
+                sLog.debug("allow all at: " + car.mDistance);
+            else if (car.mResult == CollectAttrsResult.Result.DENY_ALL)
+                sLog.debug("deny all at: " + car.mDistance);
             
-        } else if (!allowAll.isEmpty()) {
-            int shortestAllowAllAt = allowAll.get(0);
-            result = encounteredAllowAll(denySome, shortestAllowAllAt, allowSomeWithLimit, klass);
-            
-        } else {
+            sLog.debug("allowSome: " + AttrDist.dump(allowSome));
+            sLog.debug("denySome: " + AttrDist.dump(denySome));
+        }
+        
+        if (car.mResult == CollectAttrsResult.Result.ALLOW_ALL)
+            result = processAllowAll(allowSome, denySome, klass);
+        else if (car.mResult == CollectAttrsResult.Result.DENY_ALL)
+            result = processDenyAll(allowSome, denySome, klass);
+        else {
+            // now allowSome and denySome contain attrs allowed/denied and their shortest distance 
+            // to the target, remove denied ones from allowed if they've got a shorter distance
             Set<String> conflicts = SetUtil.intersect(allowSome.keySet(), denySome.keySet());
             if (!conflicts.isEmpty()) {
                 for (String attr : conflicts) {
-                    if (denySome.get(attr) <= allowSome.get(attr))
+                    if (denySome.get(attr).mDistance <= allowSome.get(attr).mDistance)
                         allowSome.remove(attr);
                 }
             }
-            result = new HashMap<String, Boolean>();
-            for (String attr : allowSome.keySet()) 
-                result.put(attr, allowSomeWithLimit.contains(attr));
+            Set<String> allowSomeWithLimit = buildAllowedWithLimit(allowSome);
+            result = AccessManager.ALLOW_SOME_ATTRS(allowSome.keySet(), allowSomeWithLimit);
         }
         
         return result;
@@ -466,63 +527,66 @@ public class RightChecker {
             return Boolean.TRUE;
         }
     }
+
     
-    
-    private static int collectAttrs(List<EffectiveACL> effectiveACLs, String granteeId, int baseDistance,
-                                    Map<String, Integer> allowSome, Map<String, Integer> denySome,
-                                    List<Integer> allowAll, List<Integer> denyAll,
-                                    Set<String> allowSomeWithLimit) throws ServiceException {
+    private static CollectAttrsResult collectAttrs(List<EffectiveACL> effectiveACLs, String granteeId, int baseDistance,
+                                    Map<String, AttrDist> allowSome, Map<String, AttrDist> denySome) throws ServiceException {
         
         int dist = baseDistance;
         
+        CollectAttrsResult seenAllowAll = null;
+        
         for (EffectiveACL acl : effectiveACLs) {
+            // next farther target
             dist++;
             
             for (ZimbraACE ace : acl.getAces()) {
                 dist++;
+                
                 Integer distance = Integer.valueOf(dist);
                 
                 if (ace.getGrantee().equals(granteeId)) {
                     // must be an AttrRight by now
                     AttrRight right = (AttrRight)ace.getRight();
+                    
                     if (right.allAttrs()) {
-                        // all attrs
+                        // all attrs, return if we hit a grant with all attrs
                         if (ace.deny())
-                            denyAll.add(distance);
-                        else
-                            allowAll.add(distance);
-                        
+                            return new CollectAttrsResult(CollectAttrsResult.Result.DENY_ALL, dist);
+                        else {
+                            /*
+                             * allow all, still need to visit all grants on the same target
+                             * this is needed because for allow-all and allow-some-with-limit on the 
+                             * same distance, those in allow-some-with limit should be allowed with 
+                             * limit.  Grants on the same target are sorted so denied are in the 
+                             * front, but allowed(with/wo limit) and allow-all can appear in random 
+                             * order.   Remember the allow-all grant, and return it after we've gone 
+                             * through all grants on this target to this grantee.
+                             */
+                            
+                            // return new CollectAttrsResult(CollectAttrsResult.Result.ALLOW_ALL, dist);
+                            seenAllowAll = new CollectAttrsResult(CollectAttrsResult.Result.ALLOW_ALL, dist);
+                        }
                     } else {
-                        for (String attr : right.getAttrs()) {
-                            // put the attr in the result list only if it had not appear yet in earlier
-                            // iterations, since we are traversing from the most specific to the lest 
-                            // specific.
-                            if (ace.deny()) {
-                                if (!denySome.containsKey(attr))
-                                    denySome.put(attr, distance);
-                            } else {
-                                if (!allowSome.containsKey(attr))
-                                    allowSome.put(attr, distance);
-                                if (right.getAttrLimit(attr) == Boolean.TRUE)
-                                    allowSomeWithLimit.add(attr);
-                            }
+                        // some attrs
+                        for (AttrRight.Attr attr : right.getAttrs()) {
+                            if (ace.deny())
+                                denySome.put(attr.getAttrName(), new AttrDist(attr, distance));
+                            else
+                                allowSome.put(attr.getAttrName(), new AttrDist(attr, distance));
                         }
                     }
                 }
             }
+            
+            if (seenAllowAll != null)
+                return seenAllowAll;
+            
         }
         
-        return dist; // base distance for the next rank of grantee types
+        return new CollectAttrsResult(CollectAttrsResult.Result.SOME, dist);
     }
-    
-    // dump a List of EffectiveACL as ({entry name on which the right is granted}: [grant] [grant] ...)
-    private static String dump(List<EffectiveACL> effectiveACLs) {
-        StringBuffer sb = new StringBuffer();
-        for (EffectiveACL acl : effectiveACLs) {
-            sb.append(acl.dump() + " ");
-        }
-        return sb.toString();
-    }
+
 
     
     /**

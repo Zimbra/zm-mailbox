@@ -211,7 +211,7 @@ public class RoleAccessManager extends AccessManager {
         return false;
     }
     
-    private Map<String, Boolean> canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) {
+    private AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) {
         if (grantee == null)
             return DENY_ALL_ATTRS;
         
@@ -236,13 +236,13 @@ public class RoleAccessManager extends AccessManager {
     }
     
     @Override
-    public Map<String, Boolean> canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
         return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, attrs);
     }
 
         
     @Override
-    public Map<String, Boolean> canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
         try {
             Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
             return canGetAttrs(granteeAcct, target, attrs);
@@ -258,12 +258,12 @@ public class RoleAccessManager extends AccessManager {
     }
     
     @Override
-    public Map<String, Boolean> canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
         return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, attrs);
     }
     
     @Override
-    public Map<String, Boolean> canSetAttrs(AuthToken grantee, Entry target,  Map<String, Object> attrs) {
+    public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target,  Map<String, Object> attrs) {
         try {
             Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
             return canSetAttrs(granteeAcct, target, attrs);

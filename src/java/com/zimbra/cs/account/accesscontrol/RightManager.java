@@ -133,7 +133,10 @@ public class RightManager {
         if (attrName == null)
             throw ServiceException.PARSE_ERROR("missing attr name", null);   
         
-        boolean limit = getBooleanAttr(eAttr, A_LIMIT);
+        boolean limit = false;
+        // limit is required for setAttrs, ignored for getAttrs
+        if (right.getRightType() == Right.RightType.setAttrs)
+            limit = getBooleanAttr(eAttr, A_LIMIT);
         
         // TODO, validate if the attribute exists
         right.addAttr(attrName, limit);
@@ -298,12 +301,38 @@ public class RightManager {
     public Map<String, AdminRight> getAllAdminRights() {
         return sAdminRights;
     }
+    
+    private String dump(StringBuilder sb) {
+        if (sb == null)
+            sb = new StringBuilder();
+        
+        sb.append("============\n");
+        sb.append("user rights:\n");
+        sb.append("============\n");
+        for (Map.Entry<String, UserRight> ur : getAllUserRights().entrySet()) {
+            sb.append("\n------------------------------\n");
+            ur.getValue().dump(sb);
+        }
+        
+        sb.append("\n");
+        sb.append("\n");
+        sb.append("=============\n");
+        sb.append("admin rights:\n");
+        sb.append("=============\n");
+        for (Map.Entry<String, AdminRight> ar : getAllAdminRights().entrySet()) {
+            sb.append("\n------------------------------\n");
+            ar.getValue().dump(sb);
+        }
+        
+        return sb.toString();
+    }
 
     /**
      * @param args
      */
     public static void main(String[] args) throws ServiceException {
         RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
+        System.out.println(rm.dump(null));
         /*
         for (Right r : RightManager.getInstance().getAllRights().values()) {
             System.out.println(r.getName());
