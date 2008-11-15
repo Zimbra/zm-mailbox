@@ -35,6 +35,7 @@ import java.util.Set;
 import javax.servlet.http.*;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 
 public class L10nUtil {
 
@@ -335,37 +336,106 @@ public class L10nUtil {
         // and sorting each time for a GetLocale request
         static Map<Locale, Locale[]> sLocalizedLocalesSorted = null;
         
-        private static void loadBundles() {
-            sLocalizedLocales = new HashSet<Locale>();
+        /*
+         * load only those supported by JAVA
+         */ 
+        private static void loadBundlesByJavaLocal(Set<Locale> locales, String msgsDir) {
             
-            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/messages";
-            String msgsDir = LC.localized_client_msgs_directory.value();
-            ZimbraLog.misc.info("Scanning installed locales from " + msgsDir);
             ClassLoader classLoader = getClassLoader(msgsDir);
             Locale[] allLocales = Locale.getAvailableLocales();
             
-            // the en_US locale is always available
-            ZimbraLog.misc.info("Adding locale " + Locale.US.toString() + " (always added)");
-            sLocalizedLocales.add(Locale.US);
-            
-            for (Locale lc : allLocales) {
+            for (Locale locale : allLocales) {
                 for (ClientResource clientRes : ClientResource.values()) {
                     try {
-                        ResourceBundle rb = ResourceBundle.getBundle(clientRes.name(), lc, classLoader);
+                        ResourceBundle rb = ResourceBundle.getBundle(clientRes.name(), locale, classLoader);
                         Locale rbLocale = rb.getLocale();
-                        if (rbLocale.equals(lc)) {
+                        if (rbLocale.equals(locale)) {
                             /*
                              * found a resource for the locale, a locale is considered "installed" as long as 
                              * any of its resource (the list in ClientResource) is present
                              */ 
-                            ZimbraLog.misc.info("Adding locale " + lc.toString());
-                            sLocalizedLocales.add(lc);
+                            ZimbraLog.misc.info("Adding locale " + locale.toString());
+                            locales.add(locale);
                             break;
                         }
                     } catch (MissingResourceException e) {
                     }
                 }
             }
+        }
+        
+        
+        /*
+         * scan disk
+         */
+        private static void loadBundlesByDiskScan(Set<Locale> locales, String msgsDir) {
+            File dir = new File(msgsDir);
+            if (!dir.exists()) {
+                ZimbraLog.misc.info("message directory does not exist:" + msgsDir);
+                return;
+            }
+            if (!dir.isDirectory()) {
+                ZimbraLog.misc.info("message directory is not a directory:" + msgsDir);
+                return;
+            }
+            
+            for (File file : dir.listFiles()) {
+                
+                String fileName = file.getName();
+                ZimbraLog.misc.debug("loadBundlesByDiskScan processing file: " + fileName);
+                
+                String[] parts = fileName.split("\\.");
+                if (parts.length >=2 && parts[parts.length-1].equals("properties")) {
+                    ZimbraLog.misc.debug("    found property file:" + fileName);
+                    
+                    String[] localeParts = parts[0].split("_");
+                    if (localeParts.length >= 2) {
+                        ClientResource resource = null;
+                        try {
+                            resource = ClientResource.valueOf(localeParts[0]);
+                        } catch (IllegalArgumentException e) {
+                            // not a resource file
+                        }
+                        
+                        if (resource != null) {
+                            ZimbraLog.misc.debug("        found resource file: " + fileName);
+                            
+                            Locale locale = null;
+                            if (localeParts.length == 2) {
+                                locale = new Locale(localeParts[1]);
+                                ZimbraLog.misc.debug("        found locale: " + localeParts[1]);
+                            } else if (localeParts.length == 3) {
+                                locale = new Locale(localeParts[1], localeParts[2]);
+                                ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2]);
+                            } else if (localeParts.length == 4) {
+                                locale = new Locale(localeParts[1], localeParts[2], localeParts[3]);
+                                ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2] + " " + localeParts[3]);
+                            }
+                            
+                            if (locale != null && !locales.contains(locale)) {
+                                ZimbraLog.misc.info("Adding locale " + locale.toString());
+                                locales.add(locale);
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+        
+        private static void loadBundles() {
+            sLocalizedLocales = new HashSet<Locale>();
+            
+            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/messages";
+            String msgsDir = LC.localized_client_msgs_directory.value();
+            ZimbraLog.misc.info("Scanning installed locales from " + msgsDir);
+            
+            // the en_US locale is always available
+            ZimbraLog.misc.info("Adding locale " + Locale.US.toString() + " (always added)");
+            sLocalizedLocales.add(Locale.US);
+            
+            // loadBundlesByJavaLocal(sLocalizedLocales, msgsDir);
+            loadBundlesByDiskScan(sLocalizedLocales, msgsDir);
             
             /*
              * UI displays locales with country in sub menus. 
@@ -379,7 +449,7 @@ public class L10nUtil {
              *                   Chinese (China)
              *                   Chinese (Hong Kong)
              *
-             *      The UI relies on the presence of a "language only" entry 
+             *      UI relies on the presence of a "language only" entry 
              *      for the top level label "Chinese".    
              *      i.e. id: "zh", name: "Chinese"
              *          
