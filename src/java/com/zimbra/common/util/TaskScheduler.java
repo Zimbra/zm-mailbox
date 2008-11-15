@@ -99,7 +99,7 @@ public class TaskScheduler<V> {
                 ZimbraLog.scheduler.debug("Task returned result %s", mLastResult);
                 
                 if (mCallbacks != null) {
-                    for (ScheduledTaskCallback<V2> callback : mCallbacks) {
+                    for (ScheduledTaskCallback callback : mCallbacks) {
                         callback.afterTaskRun(mTask);
                     }
                 }

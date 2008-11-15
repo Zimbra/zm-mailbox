@@ -29,9 +29,6 @@ public class AdminConstants {
     public static final QName CHECK_HEALTH_REQUEST = QName.get("CheckHealthRequest", NAMESPACE);
     public static final QName CHECK_HEALTH_RESPONSE = QName.get("CheckHealthResponse", NAMESPACE);
 
-    public static final QName GET_ALL_LOCALES_REQUEST = QName.get("GetAllLocalesRequest", NAMESPACE);
-    public static final QName GET_ALL_LOCALES_RESPONSE = QName.get("GetAllLocalesResponse", NAMESPACE);
-    
     public static final QName EXPORTMAILBOX_REQUEST = QName.get("ExportMailboxRequest", NAMESPACE);
     public static final QName EXPORTMAILBOX_RESPONSE = QName.get("ExportMailboxResponse", NAMESPACE);
 
@@ -320,6 +317,10 @@ public class AdminConstants {
     public static final QName PUSH_FREE_BUSY_REQUEST = QName.get("PushFreeBusyRequest", NAMESPACE);
     public static final QName PUSH_FREE_BUSY_RESPONSE = QName.get("PushFreeBusyResponse", NAMESPACE);
     
+    // permissions
+    public static final QName CHECK_PERMISSION_REQUEST = QName.get("CheckPermissionRequest", NAMESPACE);
+    public static final QName CHECK_PERMISSION_RESPONSE = QName.get("CheckPermissionResponse", NAMESPACE);
+    
     // admin-version of WaitSetRequest
     public static final QName ADMIN_CREATE_WAIT_SET_REQUEST = QName.get("AdminCreateWaitSetRequest", NAMESPACE);
     public static final QName ADMIN_CREATE_WAIT_SET_RESPONSE = QName.get("AdminCreateWaitSetResponse", NAMESPACE);
@@ -330,24 +331,6 @@ public class AdminConstants {
     public static final QName QUERY_WAIT_SET_REQUEST = QName.get("QueryWaitSetRequest", NAMESPACE);
     public static final QName QUERY_WAIT_SET_RESPONSE = QName.get("QueryWaitSetResponse", NAMESPACE);
     
-    // XMPPComponent
-    public static final QName CREATE_XMPPCOMPONENT_REQUEST = QName.get("CreateXMPPComponentRequest", NAMESPACE);
-    public static final QName CREATE_XMPPCOMPONENT_RESPONSE = QName.get("CreateXMPPComponentResponse", NAMESPACE);
-    public static final QName GET_XMPPCOMPONENT_REQUEST = QName.get("GetXMPPComponentRequest", NAMESPACE);
-    public static final QName GET_XMPPCOMPONENT_RESPONSE = QName.get("GetXMPPComponentResponse", NAMESPACE);
-    public static final QName GET_ALL_XMPPCOMPONENTS_REQUEST = QName.get("GetAllXMPPComponentsRequest", NAMESPACE);
-    public static final QName GET_ALL_XMPPCOMPONENTS_RESPONSE = QName.get("GetAllXMPPComponentsResponse", NAMESPACE);
-    public static final QName DELETE_XMPPCOMPONENT_REQUEST = QName.get("DeleteXMPPComponentRequest", NAMESPACE);
-    public static final QName DELETE_XMPPCOMPONENT_RESPONSE = QName.get("DeleteXMPPComponentResponse", NAMESPACE);
-    
-    // rights
-    public static final QName GRANT_RIGHT_REQUEST = QName.get("GrantRightRequest", NAMESPACE);
-    public static final QName GRANT_RIGHT_RESPONSE = QName.get("GrantRightResponse", NAMESPACE);
-    public static final QName REVOKE_RIGHT_REQUEST = QName.get("RevokeRightRequest", NAMESPACE);
-    public static final QName REVOKE_RIGHT_RESPONSE = QName.get("RevokeRightResponse", NAMESPACE);
-    public static final QName CHECK_RIGHT_REQUEST = QName.get("CheckRightRequest", NAMESPACE);
-    public static final QName CHECK_RIGHT_RESPONSE = QName.get("CheckRightResponse", NAMESPACE);
-
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -394,7 +377,6 @@ public class AdminConstants {
     public static final String E_QUEUE = "queue";
     public static final String E_ACTION = "action";
     public static final String E_SERVER = "server";
-    public static final String E_XMPP_COMPONENT = "xmppcomponent";
     public static final String E_STATUS = "status";
     public static final String E_END_TIME = "endTime";
     public static final String E_START_TIME = "startTime";
@@ -425,7 +407,6 @@ public class AdminConstants {
     public static final String E_PRINCIPAL = "principal";
     public static final String E_RIGHT = "right";
     public static final String E_TARGET = "target";
-    public static final String E_GRANTEE = "grantee";
     
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
@@ -573,8 +554,10 @@ public class AdminConstants {
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     
-    // right
-    public static final String A_DENY = "deny";
-    
+
     public static final String E_WAITSET = "waitSet";
+    
+    //extension targets
+    public static final String T_ADMIN_MAIN = "admin-main";
+    public static final String T_ADMIN_DOMAIN = "admin-domain";     
 }
