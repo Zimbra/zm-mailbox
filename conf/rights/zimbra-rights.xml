@@ -3,270 +3,34 @@
 <!-- 
 
 <right name="{name}"
-       [userRight="{user-right}"]
-       [type="{right-type}"]
-       [targetType="{target-type}"]
+       <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
        
+       [<doc>a more detailed description, may include use cases, examples, etc. 
+             This is to be displayed by the zmmailbox listPermission command in verbose mode.
+       </doc>]
        
-    <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
-       
-    [<doc>
-         a more detailed description, may include use cases, examples, etc. 
-         This is to be displayed by the zmmailbox listPermission command in verbose mode.
-     </doc>]
-       
-    [<default>TRUE/FALSE</default>]
-    
-    [
-      <attrs>
-          <a n="{attribute-name}" l="{limit}"/>+
-      </attrs>
-    ]
-    
-    [
-      <rights>
-          <r n="{right-name}"/>+
-      </rights>
-    ]
-    
-    
+       [<default>TRUE/FALSE</default>]
 </right>
 
-{name}: 
-    name of the right
-
-{user-right}: 
-    Whether the right is grantable by users
-	1: the right is grantable by user
-	0(default): the right is only grantable by admins
-           
-{right-type}: 
-    Only applicable and required for admin rights(i.e. userRight="0" or not set)  
-	preset      : rights with predefined capabilities     
-	getAttrs    : rights for reading attributes
-	setAttrs    : rights for reading and writing attributes
-	combo       : combo right containing other defined preset/getAttrs/setAttrs/combo rights
-      
-onEntry:  (don't need this, TODO, remove)
-    Only applicable when right type is getAttrs or modifyAttrs  
-    Comma separated entry types on which the attribute can be:
-        read: if right type is getAttrs
-        read and modified: if right type is modifyAttrs  
-    If not present, it means all entry types.
-                  
-{target-type}:
-    Target type on which the right is applicable.
-    1. For preset rights (i.e. type="preset"):
-           Required and can have only one value.
-    
-    2. For getAttrs/setAttrs rights:
-           Optional and can have multiple values separated by comma.
-           
-           e.g. If a get/setAttrs right has:
-                    account/cos attrs A, B, C
-	                domain attrs X, Y, Z
-	                server attrs M, N
-	                account/cos/domain/server attrs P, Q
-           
-		   - If <targetType> is set:
-		         The right is only effective when granted on one of the specified entry types.
-		         e.g.
-		         - if <targetType> contains "account" only, then the right is effective 
-		           only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
-
-		         -  if <targetType> contains "account,cos,server" then the right is effective 
-		            for: account attrs A, B, C, P, Q
-		                 cos attrs A, B, C, P, Q
-		                 server attrs P, Q
-  
-           - If <targetType> is omitted:
-                 It means the right is not affiliated with a particular target type.  
-    
-    3. For combo rights:
-           Not allowed.
-           
-<attrs>:
-    Attributes covered by the right.
-    It can contain any attrs from any type of entries.
-    e.g.  account attrs A, B, C
-          domain attrs X, Y, Z
-          server attrs M, N
-                  
-{l}: 
-    If the attribute can be modified to any value or within inherited limit.
-    Only applicable and required when right type is modifyAttrs.
-    0: (default) the attribute can be modified to any value allowed by the attribute definition
-	1: the attribute can only be modified within inherited limit
-
-{attribute-name}:
-    Attribute name covered by the right
-    
-<rights>:    
-
-<rights>
-    Rights covered by this combo right.
-    Rights appear in <r n=""> must be defined before this right.
-    
 -->
 
 <rights>
-    
-<!-- 
-*******************
-    user rights
-*******************
--->
 
-<right name="invite" userRight="1">
+<right name="invite">
   <desc>automatically add meeting invites from grantee to the target's calendar</desc>
   <doc>e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G.
             (2) Conf room Y can only be booked by users A, B, C and group G.
   </doc>
 </right>
 
-<right name="loginAs" userRight="1">
-  <desc>login as</desc>
-  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
-</right>
-
-<right name="sendAs" userRight="1">
-  <desc>send as</desc>
-  <doc>reply to messages in a shared folder as the owner of the folder</doc>
-</right>
-
-<right name="viewFreeBusy" userRight="1">
+<right name="viewFreeBusy">
   <desc>view free/busy</desc>
   <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
 </right>
 
-
-<!-- 
-********************
-    admin rights
-********************
--->
-
-
-<!-- 
-    domain rights
--->
-
-<right name="createAccount" type="preset" targetType="domain">
-  <desc>create account in the domain</desc>
-</right>
-
-<right name="getDomain" type="getAttrs" targetType="domain">
-  <desc>get all domain attributes</desc>
-</right>
-
-<right name="modifyDomain" type="setAttrs" targetType="domain">
-  <desc>modify all domain attributes</desc>
-</right>
-
-<right name="modifyDomainWithinInheritedLimit" type="setAttrs" targetType="domain">
-  <desc>modify all domain attributes</desc>
-</right>
-
-- getDomain                         : get all domain attributes
-          - modifyDomain                      : modify all domain attributes
-          - modifyDomainWithinInheritedLimit  : modify all domain attributes within global config limit
-          
-<!-- 
-    account rights
--->
-<right name="renameAccount" type="preset" targetType="account">
-  <desc>rename account</desc>
-</right>
-
-<right name="renameCalendarResource" type="preset" targetType="resource">
-  <desc>rename calendar resource</desc>
-</right>
-
-<right name="renameDistributionList" type="preset" targetType="distributionlist">
-  <desc>rename distribution list</desc>
-</right>
-
-<right name="renameCos" type="preset" targetType="cos">
-  <desc>rename cos</desc>
-</right>
-
-<right name="renameServer" type="preset" targetType="server">
-  <desc>rename server</desc>
-</right>
-
-<right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
-  <desc>test global config target for now, delete after test is done</desc>
-</right>
-
-<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
-  <desc>test global grant target for now, delete after test is done</desc>
-</right>
-
-<right name="getAccount" type="getAttrs" targetType="account">
-  <desc>get all account attrs</desc>
-</right>
-
-<right name="modifyAccount" type="setAttrs" targetType="account">
-  <desc>set all account attrs</desc>
-</right>
-
-<right name="viewDummy" type="getAttrs" targetType="account,cos">
-  <desc>for unittest only, do we have a use case for this?</desc>
-  <attrs>
-      <a n="zimbraMailQuota"/>
-      <a n="zimbraQuotaWarnPercent"/>
-      <a n="zimbraQuotaWarnInterval"/>
-      <a n="zimbraQuotaWarnMessage"/>
-  </attrs>
-</right>
-
-<right name="configureQuota" type="setAttrs" targetType="account,cos">
-  <desc>configure quota</desc>
-  <attrs>
-      <a l="0" n="zimbraMailQuota"/>
-      <a l="0" n="zimbraQuotaWarnPercent"/>
-      <a l="0" n="zimbraQuotaWarnInterval"/>
-      <a l="0" n="zimbraQuotaWarnMessage"/>
-  </attrs>
-</right>
-
-<right name="configureQuotaWithinLimit" type="setAttrs" targetType="account,cos">
-  <desc>configure quota with inherited limit</desc>
-  <attrs>
-    <a l="1" n="zimbraMailQuota"/>
-    <a l="1" n="zimbraQuotaWarnPercent"/>
-    <a l="1" n="zimbraQuotaWarnInterval"/>
-    <a l="1" n="zimbraQuotaWarnMessage"/>
-  </attrs>
-</right>
-
-<right name="accountAdmin" type="combo">
-  <desc>domain admin</desc>
-  <rights>
-    <r n="createAccount"/>
-    <r n="renameAccount"/>
-    <r n="configureQuotaWithinLimit"/>
-  </rights>
-</right>
-
-<!-- 
-    current domainAdminModifiable attrs in zimbra-attrs.xml
- -->
-<right name="modifyDomainAdminAttrs" type="setAttrs" targetType="account">
-  <desc>modify attributes that are currently tagged domainAdminModifiable in zimbra-attrs.xml</desc>
-  <attrs>
-    <a l="0" n="displayName"/>
-    <a l="0" n="description"/>
-    <!-- todo -->
-  </attrs>
-</right>
-
-<right name="domainAdmin" type="combo">
-  <desc>domain admin</desc>
-  <rights>
-    <r n="accountAdmin"/>
-    <r n="modifyDomainAdminAttrs"/>
-  </rights>
+<right name="loginAs">
+  <desc>login as</desc>
+  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
 </right>
 
 </rights>
