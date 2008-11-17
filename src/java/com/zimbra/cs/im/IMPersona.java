@@ -332,14 +332,17 @@ public class IMPersona extends ClassLogger {
                 throws ServiceException {
         synchronized(getLock()) {
             mPendingSubscribes.remove(toAddress);
-            if (authorized) {
-                Presence subscribed = new Presence(Presence.Type.subscribed);
-                subscribed.setTo(toAddress.makeJID());
-                xmppRoute(subscribed);
-            }
-            if (add) {
+            Presence pres;
+            if (authorized)
+                pres = new Presence(Presence.Type.subscribed);
+            else
+                pres = new Presence(Presence.Type.unsubscribed);
+            
+            pres.setTo(toAddress.makeJID());
+            xmppRoute(pres);
+            
+            if (add)
                 addOutgoingSubscription(octxt, toAddress, name, groups);
-            }
         }
     }
 
