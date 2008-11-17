@@ -223,10 +223,10 @@ onEntry:  (don't need this, TODO, remove)
 <right name="configureQuota" type="setAttrs" targetType="account,cos">
   <desc>configure quota</desc>
   <attrs>
-      <a l="0" n="zimbraMailQuota"/>
-      <a l="0" n="zimbraQuotaWarnPercent"/>
-      <a l="0" n="zimbraQuotaWarnInterval"/>
-      <a l="0" n="zimbraQuotaWarnMessage"/>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
   </attrs>
 </right>
 
@@ -255,8 +255,8 @@ onEntry:  (don't need this, TODO, remove)
 <right name="modifyDomainAdminAttrs" type="setAttrs" targetType="account">
   <desc>modify attributes that are currently tagged domainAdminModifiable in zimbra-attrs.xml</desc>
   <attrs>
-    <a l="0" n="displayName"/>
-    <a l="0" n="description"/>
+    <a n="displayName"/>
+    <a n="description"/>
     <!-- todo -->
   </attrs>
 </right>
@@ -268,5 +268,15 @@ onEntry:  (don't need this, TODO, remove)
     <r n="modifyDomainAdminAttrs"/>
   </rights>
 </right>
+
+<right name="configureAdminUI" type="setAttrs" targetType="account">
+  <desc>configure admin UI</desc>
+  <attrs>
+    <a n="zimbraAdminConsoleListView"/>
+    <a n="zimbraAdminConsoleStatsView"/>
+  </attrs>
+</right>
+
+
 
 </rights>
