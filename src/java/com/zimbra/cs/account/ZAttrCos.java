@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081117-1135 */
+    /* build: 5.0 pshao 20081117-1433 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3613,6 +3613,87 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetIMAvailableInteropGateways(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMAvailableInteropGateways, "");
+        return attrs;
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @return zimbraIMService, or null if unset and/or has invalid value
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=763)
+    public ZAttrProvisioning.IMService getIMService() {
+        try { String v = getAttr(Provisioning.A_zimbraIMService); return v == null ? null : ZAttrProvisioning.IMService.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @return zimbraIMService, or null unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=763)
+    public String getIMServiceAsString() {
+        return getAttr(Provisioning.A_zimbraIMService);
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @param zimbraIMService new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=763)
+    public Map<String,Object> setIMService(ZAttrProvisioning.IMService zimbraIMService, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMService, zimbraIMService.toString());
+        return attrs;
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @param zimbraIMService new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=763)
+    public Map<String,Object> setIMServiceAsString(String zimbraIMService, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMService, zimbraIMService);
+        return attrs;
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=763)
+    public Map<String,Object> unsetIMService(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMService, "");
         return attrs;
     }
 

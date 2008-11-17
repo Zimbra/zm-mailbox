@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081117-1135 */
+    /* build: 5.0 pshao 20081117-1433 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -294,6 +294,22 @@ public class ZAttrProvisioning {
         }
         public boolean isAnd() { return this == and;}
         public boolean isOr() { return this == or;}
+    }
+
+    public static enum IMService {
+        zimbra("zimbra"),
+        yahoo("yahoo");
+        private String mValue;
+        private IMService(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static IMService fromString(String s) throws ServiceException {
+            for (IMService value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isZimbra() { return this == zimbra;}
+        public boolean isYahoo() { return this == yahoo;}
     }
 
     public static enum MailMode {
@@ -2647,6 +2663,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=567)
     public static final String A_zimbraIMBindAddress = "zimbraIMBindAddress";
+
+    /**
+     * IM service
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=763)
+    public static final String A_zimbraIMService = "zimbraIMService";
 
     /**
      * Deprecated since: 5.0. Installed skin list is a per server property,
