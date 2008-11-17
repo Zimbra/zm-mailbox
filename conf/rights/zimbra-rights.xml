@@ -145,10 +145,35 @@ onEntry:  (don't need this, TODO, remove)
     admin rights
 ********************
 -->
+
+
+<!-- 
+    domain rights
+-->
+
 <right name="createAccount" type="preset" targetType="domain">
-  <desc>create account</desc>
+  <desc>create account in the domain</desc>
 </right>
 
+<right name="getDomain" type="getAttrs" targetType="domain">
+  <desc>get all domain attributes</desc>
+</right>
+
+<right name="modifyDomain" type="setAttrs" targetType="domain">
+  <desc>modify all domain attributes</desc>
+</right>
+
+<right name="modifyDomainWithinInheritedLimit" type="setAttrs" targetType="domain">
+  <desc>modify all domain attributes</desc>
+</right>
+
+- getDomain                         : get all domain attributes
+          - modifyDomain                      : modify all domain attributes
+          - modifyDomainWithinInheritedLimit  : modify all domain attributes within global config limit
+          
+<!-- 
+    account rights
+-->
 <right name="renameAccount" type="preset" targetType="account">
   <desc>rename account</desc>
 </right>
@@ -215,12 +240,32 @@ onEntry:  (don't need this, TODO, remove)
   </attrs>
 </right>
 
-<right name="domainAdmin" type="combo">
+<right name="accountAdmin" type="combo">
   <desc>domain admin</desc>
   <rights>
     <r n="createAccount"/>
     <r n="renameAccount"/>
     <r n="configureQuotaWithinLimit"/>
+  </rights>
+</right>
+
+<!-- 
+    current domainAdminModifiable attrs in zimbra-attrs.xml
+ -->
+<right name="modifyDomainAdminAttrs" type="setAttrs" targetType="account">
+  <desc>modify attributes that are currently tagged domainAdminModifiable in zimbra-attrs.xml</desc>
+  <attrs>
+    <a l="0" n="displayName"/>
+    <a l="0" n="description"/>
+    <!-- todo -->
+  </attrs>
+</right>
+
+<right name="domainAdmin" type="combo">
+  <desc>domain admin</desc>
+  <rights>
+    <r n="accountAdmin"/>
+    <r n="modifyDomainAdminAttrs"/>
   </rights>
 </right>
 
