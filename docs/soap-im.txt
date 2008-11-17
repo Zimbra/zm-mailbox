@@ -1,3 +1,20 @@
+
+
+
+
+------------------------------------------
+
+Additional IM error codes (see soap.txt for explanation of error
+codes):
+
+     im.INVALID_ADDRESS  - IM address is invalid (missing @ sign and
+                           not able to find in default domain)
+
+
+------------------------------------------
+
+
+
 IMGetRoster -- get buddy list
 -----------
 <IMGetRosterRequest/>
@@ -112,7 +129,7 @@ To an existing chat:
 
 
 
-   
+
 IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, etc
 ------------
 <IMModifyChatRequest thread="threadId" op="close"/>
