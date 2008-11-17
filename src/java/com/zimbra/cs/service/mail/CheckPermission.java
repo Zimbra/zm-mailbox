@@ -70,7 +70,7 @@ public class CheckPermission extends MailDocumentHandler {
         Element r = request.getElement(MailConstants.E_RIGHT);
         Right right = RightManager.getInstance().getUserRight(r.getText());
         
-        if (!AccessManager.getInstance().canPerform(zsc.getAuthToken(), entry, right, false, false))
+        if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), entry, right, false, false))
             throw ServiceException.PERM_DENIED("credential " + zsc.getAuthtokenAccountId() + " is not allowed for right " + right.getName() + " on target " + entry.getName());
 
         Element response = zsc.createElement(MailConstants.CHECK_PERMISSION_RESPONSE);

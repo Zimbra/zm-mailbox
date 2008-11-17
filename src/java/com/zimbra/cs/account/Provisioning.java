@@ -24,9 +24,7 @@ package com.zimbra.cs.account;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
@@ -1546,14 +1544,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-
-    public abstract void grantRight(TargetType targetType, Entry target,
-                                    GranteeType granteeType, NamedEntry grantee,
-                                    Right right, boolean deny) throws ServiceException;
     
-    public abstract void revokeRight(TargetType targetType, Entry target,
-                                     GranteeType granteeType, NamedEntry grantee,
-                                     Right right, boolean deny) throws ServiceException;
+    public abstract boolean checkRight(String targetType, TargetBy targetBy, String target,
+                                       GranteeBy granteeBy, String grantee,
+                                       String right,
+                                       AccessManager.ViaGrant via) throws ServiceException;
+
+    public abstract RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
+                                                                    GranteeBy granteeBy, String grantee) throws ServiceException;
+    
+    public abstract RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException;
+            
+    public abstract void grantRight(String targetType, TargetBy targetBy, String target,
+                                    String granteeType, GranteeBy granteeBy, String grantee,
+                                    String right, boolean deny) throws ServiceException;
+    
+    public abstract void revokeRight(String targetType, TargetBy targetBy, String target,
+                                     String granteeType, GranteeBy granteeBy, String grantee,
+                                     String right, boolean deny) throws ServiceException;
     
 
 

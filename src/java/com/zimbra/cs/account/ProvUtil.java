@@ -66,8 +66,8 @@ import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
@@ -270,6 +270,7 @@ public class ProvUtil implements DebugListener {
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
+        CHECK_RIGHT("checkRight", "cr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
@@ -321,7 +322,9 @@ public class ProvUtil implements DebugListener {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
+        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name}", Category.RIGHT, 2, 3),
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
+        GET_GRANTS("getGrants", "gg", "{target-type} [{target-id|target-name}]", Category.RIGHT, 1, 2),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
@@ -354,7 +357,7 @@ public class ProvUtil implements DebugListener {
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
-        REVOKE_RIGHT("revokeRight", "rp", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
+        REVOKE_RIGHT("revokeRight", "rr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -652,6 +655,15 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_XMPP_COMPONENT:
             doGetXMPPComponent(args);
+            break;
+        case CHECK_RIGHT:
+            doCheckRight(args);
+            break;
+        case GET_EFFECTIVE_RIGHTS:
+            doGetEffectiveRights(args);
+            break;
+        case GET_GRANTS:
+            doGetGrants(args);
             break;
         case GRANT_RIGHT:
             doGrantRight(args);
@@ -2432,93 +2444,177 @@ public class ProvUtil implements DebugListener {
     }
     
     static private class RightArgs {
-        TargetType mTargetType;
+        String mTargetType;
         String mTargetIdOrName;
-        GranteeType mGranteeType;
+        String mGranteeType;
         String mGranteeIdOrName;
-        Right mRight;
+        String mRight;
         boolean mDeny;
+        
+        String[] mArgs;
+        int mCurPos = 1;
+        
+        RightArgs(String[] args) {
+            mArgs = args;
+            mCurPos = 1;
+        }
     }
     
-    private RightArgs getRightArgs(String[] args) throws ServiceException {
-        
-        int argBase = 3;
-        
-        String targetType = args[1];
-        TargetType tt = TargetType.fromString(targetType);
-        String targetIdOrName = null;
-        String granteeType = null;
-        GranteeType gt = null;
-        String granteeIdOrName = null;
-        boolean deny = false;
-        String right = null;
-        Right rt = null;
-        
+    private void getRightArgsTarget(RightArgs ra) throws ServiceException, ArgException {
+        if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
+        ra.mTargetType = ra.mArgs[ra.mCurPos++];
+        TargetType tt = TargetType.fromString(ra.mTargetType);
         if (tt.needsTargetIdentity()) {
-            if (args.length != 6) {
-                usage();
-                return null;
-            } else
-                targetIdOrName = args[2];
-        } else {
-            if (args.length != 5) {
-                usage();
-                return null;
-            } else
-                argBase = 2;
+            if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
+            ra.mTargetIdOrName = ra.mArgs[ra.mCurPos++];
+        } else
+            ra.mTargetIdOrName = null;
+    }
+    
+    private void getRightArgsGrantee(RightArgs ra, boolean needGranteeType) throws ServiceException, ArgException {
+        if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
+        
+        if (needGranteeType)
+            ra.mGranteeType = ra.mArgs[ra.mCurPos++];
+        else
+            ra.mGranteeType = null;
+        
+        if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
+        ra.mGranteeIdOrName = ra.mArgs[ra.mCurPos++];
+    }
+    
+    private void getRightArgsRight(RightArgs ra) throws ServiceException, ArgException {
+        if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
+        
+        ra.mRight = ra.mArgs[ra.mCurPos++];
+        
+        if (ra.mRight.charAt(0) == '-') {
+            ra.mDeny = true;
+            ra.mRight = ra.mRight.substring(1);
+        }
+    }
+    
+    private void getRightArgs(RightArgs ra, boolean needGranteeType) throws ServiceException, ArgException {
+        getRightArgsTarget(ra);
+        getRightArgsGrantee(ra, needGranteeType);
+        getRightArgsRight(ra);
+    }
+    
+    private void doCheckRight(String[] args) throws ServiceException, ArgException {
+        RightArgs ra = new RightArgs(args);
+        getRightArgs(ra, false);
+        
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+    
+        AccessManager.ViaGrant via = new AccessManager.ViaGrant();
+        boolean allow = mProv.checkRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
+                                         granteeBy, ra.mGranteeIdOrName, 
+                                         ra.mRight, via);
+        
+        System.out.println(allow? "ALLOWED" : "DENIED");
+        if (via.available()) {
+            System.out.println("Via:");
+            System.out.println("    target type  : " + via.getTargetType());
+            System.out.println("    target       : " + via.getTargetName());
+            System.out.println("    grantee type : " + via.getGranteeType());
+            System.out.println("    grantee      : " + via.getGranteeName());
+            System.out.println("    right        : " + (via.isNegativeGrant()?"DENY ":"") + via.getRight());
+            System.out.println();
+        }
+    }
+    
+    private void doGetEffectiveRights(String[] args) throws ServiceException, ArgException {
+        RightArgs ra = new RightArgs(args);
+        getRightArgsTarget(ra);
+        getRightArgsGrantee(ra, false);
+        
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+    
+        RightCommand.EffectiveRights effRights = mProv.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
+                                                                          granteeBy, ra.mGranteeIdOrName);
+        
+        System.out.println("Account " + ra.mGranteeIdOrName + " has the following rights on target " + ra.mTargetType + " " + ra.mTargetIdOrName);
+       
+        System.out.println("Preset rights");
+        System.out.println("-------------");
+        if (effRights.presetRights() != null) {
+            for (String r : effRights.presetRights())
+                System.out.println("    " + r);
         }
         
-        granteeType = args[argBase++];
-        granteeIdOrName = args[argBase++];
-        right = args[argBase++];
-        
-        gt = GranteeType.fromCode(granteeType);
+        System.out.println();
+        if (effRights.canSetAllAttrs())
+            System.out.println("Can set all attributes without limit");
+        else {
+            System.out.println("Can set the following attributes without limit");
+            System.out.println("----------------------------------------------");
+            for (String a : effRights.canSetAttrs())
+                System.out.println("    " + a);
             
-        if (right.charAt(0) == '-') {
-            deny = true;
-            right = right.substring(1);
+            System.out.println();
+            System.out.println("Can set the following attributes within inherited limit");
+            System.out.println("-------------------------------------------------------");
+            for (String a : effRights.canSetAttrsWithLimit())
+                System.out.println("    " + a);
         }
-        rt = RightManager.getInstance().getRight(right);
         
-        RightArgs ra = new RightArgs();
-        ra.mTargetType = tt;
-        ra.mTargetIdOrName = targetIdOrName;
-        ra.mGranteeType = gt;
-        ra.mGranteeIdOrName = granteeIdOrName;
-        ra.mRight = rt;
-        ra.mDeny = deny;
-        
-        return ra;
+        System.out.println();
+        if (effRights.canGetAllAttrs())
+            System.out.println("Can get all attributes");
+        else {
+            System.out.println("Can get the following attributes");
+            System.out.println("--------------------------------");
+            for (String a : effRights.canGetAttrs())
+                System.out.println("    " + a);
+        }
     }
     
-    private void doGrantRight(String[] args) throws ServiceException {
-        RightArgs ra = getRightArgs(args);
-        
-        Entry targetEntry = null;
-        if (ra.mTargetIdOrName != null) {
-            TargetBy targetBy = guessTargetBy(ra.mTargetIdOrName);
-            targetEntry = TargetType.lookupTarget(mProv, ra.mTargetType, targetBy, ra.mTargetIdOrName);
-        }
-        
-        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(mProv, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName);
     
-        mProv.grantRight(ra.mTargetType, targetEntry, ra.mGranteeType, granteeEntry, ra.mRight, ra.mDeny);
+    private void doGetGrants(String[] args) throws ServiceException, ArgException {
+        RightArgs ra = new RightArgs(args);
+        getRightArgsTarget(ra);
+        
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+    
+        RightCommand.ACL acl = mProv.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName);
+        
+        String format = "%20.20s  %20.20s  %s\n";
+        System.out.printf(format, "grantee", "grantee type", "right");
+        System.out.printf(format, "--------------------", "--------------------", "--------------------");
+        for (RightCommand.ACE ace : acl.getACEs()) {
+            String deny = ace.deny()?"-":"";
+            System.out.printf(format, 
+                              ace.granteeName(),
+                              ace.granteeType(),
+                              deny + ace.right());
+        }
+        System.out.println();
     }
     
-    private void doRevokeRight(String[] args) throws ServiceException {
-        RightArgs ra = getRightArgs(args);
-
-        Entry targetEntry = null;
-        if (ra.mTargetIdOrName != null) {
-            TargetBy targetBy = guessTargetBy(ra.mTargetIdOrName);
-            targetEntry = TargetType.lookupTarget(mProv, ra.mTargetType, targetBy, ra.mTargetIdOrName);
-        }
+    private void doGrantRight(String[] args) throws ServiceException, ArgException {
+        RightArgs ra = new RightArgs(args);
+        getRightArgs(ra, true);
         
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(mProv, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName);
     
-        mProv.revokeRight(ra.mTargetType, targetEntry, ra.mGranteeType, granteeEntry, ra.mRight, ra.mDeny);
+        mProv.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
+                         ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
+                         ra.mRight, ra.mDeny);
+    }
+    
+    private void doRevokeRight(String[] args) throws ServiceException, ArgException {
+        RightArgs ra = new RightArgs(args);
+        getRightArgs(ra, true);
+        
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+    
+        mProv.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
+                         ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
+                         ra.mRight, ra.mDeny);
     }
     
     private void doHelp(String[] args) {

@@ -454,10 +454,10 @@ public class Message extends MailItem {
                 if (octxt != null && octxt.getAuthenticatedUser() != null) {
                     Account authAcct = octxt.getAuthenticatedUser();
                     senderEmail = authAcct.getName();
-                    canInvite = accessMgr.canPerform(authAcct, getAccount(), UserRight.RT_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canDo(authAcct, getAccount(), UserRight.R_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
                 } else {
                     senderEmail = pm != null ? pm.getSenderEmail(false) : null;
-                    canInvite = accessMgr.canPerform(senderEmail, getAccount(), UserRight.RT_invite, false, allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canDo(senderEmail, getAccount(), UserRight.R_invite, false, allowInviteIfNoAceDefined);
                 }
                 if (!canInvite) {
                     if ((getAccount() instanceof CalendarResource) && senderEmail != null &&

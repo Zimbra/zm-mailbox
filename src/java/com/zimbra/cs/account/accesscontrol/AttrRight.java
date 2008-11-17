@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 
 public class AttrRight extends AdminRight {
 
@@ -101,6 +102,15 @@ public class AttrRight extends AdminRight {
 
     Set<Attr> getAttrs() {
         return mAttrs;
+    }
+    
+    // setAttrs imply getAttrs on the same set of attrs
+    boolean applicableToRightType(RightType needed) {
+        if (needed == mRightType ||
+            needed == RightType.getAttrs && mRightType == RightType.setAttrs)
+            return true;
+        else
+            return false;
     }
 
 }

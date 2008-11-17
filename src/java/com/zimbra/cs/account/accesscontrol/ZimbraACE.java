@@ -136,6 +136,15 @@ public class ZimbraACE {
         }
     }
     
+    
+    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, boolean deny, String secret) throws ServiceException {
+        mGrantee = granteeId;
+        mGranteeType = granteeType;
+        mDeny = deny;
+        mRight = right;
+        mSecret = secret;
+    }
+    
     /**
      * copy ctor for cloning
      * 
@@ -176,14 +185,7 @@ public class ZimbraACE {
     private String decodeSecret(String secret) throws ServiceException {
         return secret;
     }
-    
-    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, boolean deny, String secret) throws ServiceException {
-        mGrantee = granteeId;
-        mGranteeType = granteeType;
-        mDeny = deny;
-        mRight = right;
-        mSecret = secret;
-    }
+
     
     /** Returns whether the principal id exactly matches the grantee.
      *  <tt>principalId</tt> must be {@link ACL#GUID_PUBLIC} (<tt>null</tt>
@@ -227,6 +229,11 @@ public class ZimbraACE {
     
     void setDeny(boolean deny) {
         mDeny = deny;
+    }
+    
+    // or setting right in pseudo ZimbraACE expaneded from a combo right for attr rights
+    void setRight(Right right) {
+        mRight = right;
     }
     
     /** Returns whether this grant applies to the given {@link Account}.

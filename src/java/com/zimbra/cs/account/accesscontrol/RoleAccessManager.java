@@ -43,7 +43,7 @@ public class RoleAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
-        return canPerform(at, target, UserRight.RT_loginAs, asAdmin, false);
+        return canDo(at, target, UserRight.R_loginAs, asAdmin, false);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class RoleAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(Account credentials, Account target,
             boolean asAdmin) throws ServiceException {
-        return canPerform(credentials, target, UserRight.RT_loginAs, asAdmin, false);
+        return canDo(credentials, target, UserRight.R_loginAs, asAdmin, false);
     }
 
     @Override
@@ -99,22 +99,22 @@ public class RoleAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
     }
     
     @Override
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
     }
     
     @Override
-    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return canPerform(granteeEmail, target, rightNeeded, asAdmin, defaultGrant, null);
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant, null);
     }
     
     @Override
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             if (grantee == null) {
                 if (rightNeeded.isUserRight())
@@ -132,8 +132,8 @@ public class RoleAccessManager extends AccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
-            if (effectiveACLs.size() > 0)
+            List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
+            if (effectiveACLs != null && effectiveACLs.size() > 0)
                 return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, via);
             else {
                 // no ACL, see if there is a configured default 
@@ -156,7 +156,7 @@ public class RoleAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             Account granteeAcct;
             if (grantee == null) {
@@ -173,7 +173,7 @@ public class RoleAccessManager extends AccessManager {
                     return false;
             }
             
-            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
+            return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " +
                                    "grantee=" + grantee.getAccountId() +
@@ -186,7 +186,7 @@ public class RoleAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             Account granteeAcct = null;
             
@@ -199,7 +199,7 @@ public class RoleAccessManager extends AccessManager {
                     return false;
             }
             
-            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
+            return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + granteeEmail + 
@@ -222,8 +222,8 @@ public class RoleAccessManager extends AccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
-            if (effectiveACLs.size() > 0)
+            List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
+            if (effectiveACLs != null && effectiveACLs.size() > 0)
                 return RightChecker.canAccessAttrs(effectiveACLs, grantee, rightNeeded, TargetType.getAttributeClass(target));
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " + 

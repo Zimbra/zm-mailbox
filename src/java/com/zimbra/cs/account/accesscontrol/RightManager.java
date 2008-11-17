@@ -233,7 +233,7 @@ public class RightManager {
         }
         
         // verify that all required fields are set
-        right.verify();
+        right.postParse();
 
         return right;
     }

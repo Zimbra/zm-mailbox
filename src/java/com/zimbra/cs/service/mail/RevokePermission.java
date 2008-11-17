@@ -9,7 +9,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.PermUtil;
+import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -30,7 +30,7 @@ public class RevokePermission extends MailDocumentHandler {
         }
 
         // TODO, change to Provisioning.grantPermission?
-        Set<ZimbraACE> revoked = PermUtil.revokeRight(Provisioning.getInstance(), account, aces);
+        Set<ZimbraACE> revoked = RightUtil.revokeRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.REVOKE_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : revoked)

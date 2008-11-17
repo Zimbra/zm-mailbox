@@ -868,14 +868,14 @@ Depending on the context, there are three aspects of targets that need to be dea
       Check if a principal has the specified right on target.
     
 <CheckRightRequest>
-  <target type={target-type} by="{target-by}">{target-by}</target>
-  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  <grantee by="{grantee-by}">{grantee-name-or-id}</grantee>
   <right>{right-name}</right>
 </CheckPermissionRequest>
 
-<CheckRightResponse hasRight="{has-right}">
+<CheckRightResponse allow="{1|0}">
   [<via>
-    <target type={target-type}>{target-by}</target>
+    <target type={target-type}>{target-name-or-id}</target>
     <grantee type={grantee-type}>{grantee-name-or-id}</grantee>
     <right [deny="${deny}"]>{right-name}</right>
   <via>]
@@ -885,14 +885,15 @@ Depending on the context, there are three aspects of targets that need to be dea
     for the specified right on the target object.  
     If PERM_DENIED is thrown, it means the authed user does not have privilege
     to run this SOAP command(has to be an admin because this command is in admin namespace).
-    Result of CheckRightRequest is in the hasRight="1|0" attribute in CheckRightResponse.
+    Result of CheckRightRequest is in the allow="1|0" attribute in CheckRightResponse.
     <via> in the CheckRightResponse is the grant that decisively
     lead to the result.  
-    e.g. if a combo C right containing renameAccount is granted to group G on domain D, and
-         admin A is in group G,
-         then <CheckRightRequest>
+    
+    e.g. if a combo right C containing renameAccount is granted to group G on domain D, and
+         admin A is in group G, then
+              <CheckRightRequest>
                  <target type="account"> by="name">user1@D</target>
-                 <grantee type="usr" by="name">admin@D</grantee>
+                 <grantee by="name">admin@D</grantee>
                  <right>renameAccount</right>
               </CheckRightRequest>
           
@@ -939,13 +940,15 @@ Depending on the context, there are three aspects of targets that need to be dea
 </GetEffectiveRightsRequest>
     
 <GetEffectiveRightsResponse>    
-  <right n="{right-name}"/>+
-  <setAttrs>
-    <a n="..." [l="{limit}"]>+
-  </setAttrs>
-  <getAttrs>
-    <a n="...">+
-  </getAttrs>
+  <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
+      <right n="{right-name}"/>+
+      <setAttrs [all="{all}"]>
+        <a n="..." [l="{limit}"]>+
+      </setAttrs>
+      <getAttrs [all="{all}"]>
+        <a n="...">+
+      </getAttrs>
+  </target>
 </GetEffectiveRightsResponse>   
 
     <right>       : all effective system rights
@@ -957,13 +960,17 @@ Depending on the context, there are three aspects of targets that need to be dea
     <setAttrs>    : all attrs can be set
     <getAttrs>    : all attrs can be get
     
+    {all} : 0(default) | 1
+            1 - all attributes on the target entry are accessible
+                if 1, no <a> elements will appear under the <setAttrs>/<getAttrs>
+    
     e.g. 
     <GetEffectiveRightsRequest>
       <target type="account" by="id">bba95d7d-0b13-401f-a343-03a8f5a96f7c"/>
     </GetEffectiveRightsRequest>
     
     <GetEffectiveRightsResponse>
-      <account>
+      <target type="account" name="user1@test.com" id="bba95d7d-0b13-401f-a343-03a8f5a96f7c">
         <right n="setPassword"/>
         <right n="renameAccount"/>
         <right n="deleteAccount"/>
@@ -977,7 +984,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           <a n="..."/>
           ...
         </getAttrs>
-      </account>
+      </target>
     </GetEffectiveRightsRequest>
 
          

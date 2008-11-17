@@ -26,6 +26,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -42,25 +43,26 @@ public class CreateAccount extends AdminDocumentHandler {
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
+
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
-        if (!canAccessEmail(lc, name))
-            throw ServiceException.PERM_DENIED("can not access account:"+name);
+	    if (!checkDomainRight(zsc, name, AdminRight.R_createAccount))
+	        throw ServiceException.PERM_DENIED("can not access account:" + name);
 
 	    Account account = prov.createAccount(name, password, attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateAccount","name", name}, attrs));         
 
-	    Element response = lc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
 
         ToXML.encodeAccountOld(response, account);
 

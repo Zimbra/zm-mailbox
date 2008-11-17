@@ -92,9 +92,9 @@ public abstract class AccessManager {
     // ACL based methods
     //
     
-    public abstract boolean canPerform(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canPerform(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canDo(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canDo(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
     
     // for admin calls to return the decisive grant that lead to the result 
     public static class ViaGrant {
@@ -106,18 +106,20 @@ public abstract class AccessManager {
         public String getGranteeName()  { return (mImpl==null)?null:mImpl.getGranteeName(); } 
         public String getRight()        { return (mImpl==null)?null:mImpl.getRight(); } 
         public boolean isNegativeGrant(){ return (mImpl==null)?null:mImpl.isNegativeGrant(); } 
+        
+        public boolean available() { return mImpl != null; }
     }
     
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
-        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant);
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
+        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
-        return canPerform(grantee, target, rightNeeded, asAdmin, defaultGrant);
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
+        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
-        return canPerform(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
+        return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
     
     

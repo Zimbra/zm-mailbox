@@ -29,7 +29,7 @@ public class AclAccessManager extends DomainAccessManager {
         if (super.canAccessAccount(at, target, asAdmin))
             return true;
         else
-            return canPerform(at, target, UserRight.RT_loginAs, asAdmin, false);
+            return canDo(at, target, UserRight.R_loginAs, asAdmin, false);
     }
     
     public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
@@ -40,14 +40,14 @@ public class AclAccessManager extends DomainAccessManager {
         if (super.canAccessAccount(credentials, target, asAdmin))
             return true;
         else
-            return canPerform(credentials, target, UserRight.RT_loginAs, asAdmin, false);
+            return canDo(credentials, target, UserRight.R_loginAs, asAdmin, false);
     }
     
     public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
         return canAccessAccount(credentials, target, true);
     }
     
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             if (grantee == null)
                 grantee = ACL.ANONYMOUS_ACCT;
@@ -59,7 +59,7 @@ public class AclAccessManager extends DomainAccessManager {
             }
             
             // 2. check admin access - if the right being asked for is not loginAs
-            if (rightNeeded != UserRight.RT_loginAs) {
+            if (rightNeeded != UserRight.R_loginAs) {
                 if (target instanceof Account) {
                     if (canAccessAccount(grantee, (Account)target, asAdmin))
                         return true;
@@ -69,8 +69,8 @@ public class AclAccessManager extends DomainAccessManager {
             Provisioning prov = Provisioning.getInstance();
             
             // 3. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTarget(prov, target, rightNeeded);
-            if (effectiveACLs.size() > 0)
+            List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
+            if (effectiveACLs != null && effectiveACLs.size() > 0)
                 return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, null);
             else {
                 // no ACL, see if there is a configured default 
@@ -92,7 +92,7 @@ public class AclAccessManager extends DomainAccessManager {
         return false;
     }
     
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct;
             if (grantee == null)
@@ -102,7 +102,7 @@ public class AclAccessManager extends DomainAccessManager {
             else
                 granteeAcct = new ACL.GuestAccount(grantee);
             
-            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
+            return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " +
                                    "grantee=" + grantee.getAccountId() +
@@ -114,7 +114,7 @@ public class AclAccessManager extends DomainAccessManager {
         return false;
     }
 
-    public boolean canPerform(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct = null;
             
@@ -123,7 +123,7 @@ public class AclAccessManager extends DomainAccessManager {
             if (granteeAcct == null)
                 granteeAcct = ACL.ANONYMOUS_ACCT;
             
-            return canPerform(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
+            return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + granteeEmail + 

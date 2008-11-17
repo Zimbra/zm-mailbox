@@ -32,6 +32,7 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -46,14 +47,14 @@ import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -1865,55 +1866,111 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
     }
 
+    
     //
     // rights
     //
     
-    private void encodeRightReq(Element req,
-                                TargetType targetType, 
-                                com.zimbra.cs.account.Entry target,
-                                GranteeType granteeType, 
-                                NamedEntry grantee, 
-                                Right right, boolean deny) {
+    // target
+    private void toXML(Element req,
+                       String targetType, TargetBy targetBy, String target) {
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
-        eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
-        if (target != null && (target instanceof NamedEntry)) {
-            eTarget.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
-            eTarget.setText(((NamedEntry)target).getId());
+        eTarget.addAttribute(AdminConstants.A_TYPE, targetType);
+        if (target != null) {
+            eTarget.addAttribute(AdminConstants.A_BY, targetBy.toString());
+            eTarget.setText(target);
         }
+    }
         
+    // grantee
+    private void toXML(Element req,
+                       String granteeType, GranteeBy granteeBy, String grantee) {
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
-        eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType.getCode());
-        eGrantee.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
-        eGrantee.setText(grantee.getId());
-        
+        if (granteeType != null)
+            eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType);
+        eGrantee.addAttribute(AdminConstants.A_BY, granteeBy.toString());
+        eGrantee.setText(grantee);
+    }
+    
+    // right
+    private void toXML(Element req,
+                       String right, boolean deny) {
         Element eRight = req.addElement(AdminConstants.E_RIGHT);
-        eRight.addAttribute(AdminConstants.A_DENY, deny);
-        eRight.setText(right.getName());
+        if (deny)
+         eRight.addAttribute(AdminConstants.A_DENY, deny);
+        eRight.setText(right);
     }
     
     @Override
-    public void grantRight(TargetType targetType, 
-                           com.zimbra.cs.account.Entry target,
-                           GranteeType granteeType, 
-                           NamedEntry grantee, 
-                           Right right, 
-                           boolean deny) throws ServiceException {
+    public boolean checkRight(String targetType, TargetBy targetBy, String target,
+                              GranteeBy granteeBy, String grantee,
+                              String right,
+                              AccessManager.ViaGrant via) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CHECK_RIGHT_REQUEST);
+        toXML(req, targetType, targetBy, target);
+        toXML(req, null, granteeBy, grantee);
+        toXML(req, right, false);
+        
+        Element resp = invoke(req);
+        boolean result = resp.getAttributeBool(AdminConstants.A_ALLOW);
+        if (via != null) {
+            Element eVia = resp.getOptionalElement(AdminConstants.E_VIA);
+            if (eVia != null) {
+                Element eTarget = eVia.getElement(AdminConstants.E_TARGET);
+                Element eGrantee = eVia.getElement(AdminConstants.E_GRANTEE);
+                Element eRight = eVia.getElement(AdminConstants.E_RIGHT);
+                via.setImpl(new ViaGrantImpl(eTarget.getAttribute(AdminConstants.A_TYPE),
+                                             eTarget.getText(),
+                                             eGrantee.getAttribute(AdminConstants.A_TYPE),
+                                             eGrantee.getText(),
+                                             eRight.getText(),
+                                             eRight.getAttributeBool(AdminConstants.A_DENY, false)));
+            }
+        }
+        return result;
+    }
+    
+    @Override
+    public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
+            GranteeBy granteeBy, String grantee) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST);
+        toXML(req, targetType, targetBy, target);
+        toXML(req, null, granteeBy, grantee);
+        
+        Element resp = invoke(req);
+        return new RightCommand.EffectiveRights(resp);
+    }
+    
+    @Override
+    public RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_GRANTS_REQUEST);
+        toXML(req, targetType, targetBy, target);
+        
+        Element resp = invoke(req);
+        return new RightCommand.ACL(resp);
+    }
+    
+    @Override
+    public void grantRight(String targetType, TargetBy targetBy, String target,
+                           String granteeType, GranteeBy granteeBy, String grantee,
+                           String right, boolean deny) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GRANT_RIGHT_REQUEST);
-        encodeRightReq(req, targetType, target, granteeType, grantee, right, deny);
+        toXML(req, targetType, targetBy, target);
+        toXML(req, granteeType, granteeBy, grantee);
+        toXML(req, right, deny);
+        
         Element resp = invoke(req);
     }
     
     @Override
-    public void revokeRight(TargetType targetType,
-                            com.zimbra.cs.account.Entry target,
-                            GranteeType granteeType,
-                            NamedEntry grantee,
-                            Right right,
-                            boolean deny)  throws ServiceException {
+    public void revokeRight(String targetType, TargetBy targetBy, String target,
+                            String granteeType, GranteeBy granteeBy, String grantee,
+                            String right, boolean deny)  throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GRANT_RIGHT_REQUEST);
+        toXML(req, targetType, targetBy, target);
+        toXML(req, granteeType, granteeBy, grantee);
+        toXML(req, right, deny);
         
-        XMLElement req = new XMLElement(AdminConstants.REVOKE_RIGHT_REQUEST);
-        encodeRightReq(req, targetType, target, granteeType, grantee, right, deny);
         Element resp = invoke(req);
     }
      

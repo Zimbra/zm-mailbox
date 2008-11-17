@@ -68,7 +68,7 @@ public class LocalFreeBusyProvider {
         }
 
         AccessManager accessMgr = AccessManager.getInstance();
-        boolean accountAceAllowed = accessMgr.canPerform(authAcct, mbox.getAccount(), UserRight.RT_viewFreeBusy, asAdmin, true);
+        boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), UserRight.R_viewFreeBusy, asAdmin, true);
 
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 

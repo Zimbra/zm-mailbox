@@ -25,25 +25,26 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 public class TestACLAttrAccess extends TestACL {
     
     
-    protected static final Right ATTR_RIGHT_GET_ALL   = AdminRight.R_getAccount;
-    protected static final Right ATTR_RIGHT_GET_SOME  = AdminRight.R_viewDummy;
+    static final Right ATTR_RIGHT_GET_ALL   = AdminRight.R_getAccount;
+    static final Right ATTR_RIGHT_GET_SOME  = AdminRight.R_viewDummy;
     
-    protected static final Right ATTR_RIGHT_SET_ALL  = AdminRight.R_modifyAccount;
-    
-    protected static final Right ATTR_RIGHT_SET_SOME = AdminRight.R_configureQuota;
-    protected static final Right ATTR_RIGHT_SET_SOME_WITH_LIMIT = AdminRight.R_configureQuotaWithinLimit;
+    static final Right ATTR_RIGHT_SET_ALL  = AdminRight.R_modifyAccount;
+    static final Right ATTR_RIGHT_SET_SOME = AdminRight.R_configureQuota;
+    static final Right ATTR_RIGHT_SET_SOME_WITH_LIMIT = AdminRight.R_configureQuotaWithinLimit;
     
     // attrs covered by the ATTR_RIGHT_SOME right
-    private static final Map<String, Object> ATTRS_SOME;
-    private static final AllowedAttrs EXPECTED_SOME_NO_LIMIT;
-    private static final AllowedAttrs EXPECTED_SOME_WITH_LIMIT;
-    private static final AllowedAttrs EXPECTED_SOME_EMPTY;
-    private static final AllowedAttrs EXPECTED_ALL_MINUS_SOME_NO_LIMIT;
-    private static final AllowedAttrs EXPECTED_ALL_SOME_WITH_LIMIT;
+    static final Map<String, Object> ATTRS_SOME;
+    static final AllowedAttrs EXPECTED_SOME_NO_LIMIT;
+    static final AllowedAttrs EXPECTED_SOME_WITH_LIMIT;
+    static final AllowedAttrs EXPECTED_SOME_EMPTY;
+    static final AllowedAttrs EXPECTED_ALL_MINUS_SOME_NO_LIMIT;
+    static final AllowedAttrs EXPECTED_ALL_SOME_WITH_LIMIT;
     
-    private static final Map<String, Object> ATTRS_SOME_MORE;
+    static final Map<String, Object> ATTRS_SOME_MORE;
     
     static {
+        Set<String> EMPTY_SET = new HashSet<String>();
+        
         ATTRS_SOME = new HashMap<String, Object>();
         ATTRS_SOME.put(Provisioning.A_zimbraMailQuota, "123");
         ATTRS_SOME.put(Provisioning.A_zimbraQuotaWarnPercent, "123");
@@ -62,28 +63,14 @@ public class TestACLAttrAccess extends TestACL {
             System.exit(1);
         }
         Set<String> ALL_ACCOUNT_ATTRS_MINUS_SOME = SetUtil.subtract(ALL_ACCOUNT_ATTRS, ATTRS_SOME.keySet());
-        Set<String> EMPTY_SET = new HashSet<String>();
         
-        EXPECTED_SOME_NO_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), new HashSet<String>());
+        EXPECTED_SOME_NO_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), EMPTY_SET);
         EXPECTED_SOME_WITH_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), ATTRS_SOME.keySet());
         EXPECTED_SOME_EMPTY = AccessManager.ALLOW_SOME_ATTRS(EMPTY_SET, EMPTY_SET);
         EXPECTED_ALL_MINUS_SOME_NO_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME, EMPTY_SET);
         EXPECTED_ALL_SOME_WITH_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME, ATTRS_SOME.keySet());
-        
-        
     }
     
-    Set<ZimbraACE> makeUsrGrant(Account grantee, Right right, AllowOrDeny alloworDeny) throws ServiceException {
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newUsrACE(grantee, right, alloworDeny));
-        return aces;
-    }
-    
-    Set<ZimbraACE> makeGrpGrant(DistributionList grantee, Right right, AllowOrDeny alloworDeny) throws ServiceException {
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(newGrpACE(grantee, right, alloworDeny));
-        return aces;
-    }
     
     public void oneGrantSome(AllowOrDeny grant, LimitOrNoLimit limit, GetOrSet getOrSet, AllowedAttrs expected) throws Exception {
         String testName = "oneGrantSome-" + grant.name() + "-" + limit.name() + "-" + getOrSet.name();
@@ -315,6 +302,8 @@ public class TestACLAttrAccess extends TestACL {
         someAllDiffLevel(DENY,  DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS);
         
     }
+    
+    // TODO: add test for adding/substracting attrs between two allow/deny SOME rights 
     
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");

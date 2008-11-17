@@ -5,16 +5,16 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RevokeRight extends RightDocumentHandler {
-
+public class GetEffectiveRights  extends RightDocumentHandler {
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
@@ -28,21 +28,19 @@ public class RevokeRight extends RightDocumentHandler {
         }
             
         Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
-        String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
+        String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
+        if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER)
+            throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
         GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
+            
+        RightCommand.EffectiveRights er = RightCommand.getEffectiveRights(Provisioning.getInstance(),
+                                                         targetType, targetBy, target,
+                                                         granteeBy, grantee);
         
-        Element eRight = request.getElement(AdminConstants.E_RIGHT);
-        String right = eRight.getText();
-        boolean deny = eRight.getAttributeBool(MailConstants.A_DENY, false);
-        
-        RightCommand.revokeRight(Provisioning.getInstance(),
-                                 targetType, targetBy, target,
-                                 granteeType, granteeBy, grantee,
-                                 right, deny);
-        
-        Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
-        return response;
+        Element resp = zsc.createElement(AdminConstants.GET_EFFECTIVE_RIGHTS_RESPONSE);
+        er.toXML(resp);
+        return resp;
     }
 
 }

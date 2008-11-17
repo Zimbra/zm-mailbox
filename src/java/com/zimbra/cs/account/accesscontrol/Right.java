@@ -57,6 +57,18 @@ public abstract class Right {
         return (this instanceof UserRight);
     }
     
+    public boolean isPresetRight() {
+        return mRightType==RightType.preset;
+    }
+    
+    public boolean isAttrRight() {
+        return mRightType==RightType.getAttrs || mRightType==RightType.setAttrs;
+    }
+    
+    public boolean isComboRight() {
+        return mRightType==RightType.combo;
+    }
+    
     RightType getRightType() {
         return mRightType;
     }
@@ -112,7 +124,13 @@ public abstract class Right {
             throw ServiceException.PARSE_ERROR("missing target type", null);
     }
     
-    void verify() throws ServiceException {
+    /*
+     * - verify that all things are well with this object, catch loose ends
+     *   that were not catched during paring
+     * 
+     * - populate internal aux data structures   
+     */
+    void postParse() throws ServiceException {
         if (getDesc() == null)
             throw ServiceException.PARSE_ERROR("missing description", null);
         verifyTargetType();

@@ -32,10 +32,13 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -60,11 +63,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.PermUtil;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -5352,26 +5351,47 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public void grantRight(TargetType targetType, Entry target,
-                           GranteeType granteeType, NamedEntry grantee,
-                           Right right, boolean deny) throws ServiceException {
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        ZimbraACE ace = new ZimbraACE(grantee.getId(), granteeType, right, deny, null);
-        aces.add(ace);
-        
-        PermUtil.grantRight(this, target, aces);
+    public boolean checkRight(String targetType, TargetBy targetBy, String target,
+                              GranteeBy granteeBy, String grantee,
+                              String right,
+                              AccessManager.ViaGrant via) throws ServiceException {
+        return RightCommand.checkRight(this, 
+                                       targetType, targetBy, target,
+                                       granteeBy, grantee,
+                                       right, via);  
     }
 
     @Override
-    public void revokeRight(TargetType targetType, Entry target,
-                            GranteeType granteeType, NamedEntry grantee,
-                            Right right, boolean deny) throws ServiceException {
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        ZimbraACE ace = new ZimbraACE(grantee.getId(), granteeType, right, deny, null);
-        aces.add(ace);
-        
-        PermUtil.revokeRight(this, target, aces);
+    public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
+                                                           GranteeBy granteeBy, String grantee) throws ServiceException {
+        return RightCommand.getEffectiveRights(this, targetType, targetBy, target, granteeBy, grantee);
     }
+    
+    @Override
+    public RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException {
+        return RightCommand.getGrants(this, targetType, targetBy, target);
+    }
+    
+    @Override
+    public void grantRight(String targetType, TargetBy targetBy, String target,
+                           String granteeType, GranteeBy granteeBy, String grantee,
+                           String right, boolean deny) throws ServiceException {
+        RightCommand.grantRight(this, 
+                                targetType, targetBy, target,
+                                granteeType, granteeBy, grantee,
+                                right, deny);          
+    }
+
+    @Override
+    public void revokeRight(String targetType, TargetBy targetBy, String target,
+                            String granteeType, GranteeBy granteeBy, String grantee,
+                            String right, boolean deny) throws ServiceException {
+         RightCommand.revokeRight(this, 
+                                  targetType, targetBy, target,
+                                  granteeType, granteeBy, grantee,
+                                  right, deny);               
+    }
+
 
     
     public long countAccounts(String domain) throws ServiceException {

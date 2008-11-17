@@ -13,7 +13,6 @@ import org.apache.commons.httpclient.HttpState;
 
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
-import junit.framework.ComparisonFailure;  
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -32,11 +31,10 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.accesscontrol.AclAccessManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -62,7 +60,7 @@ public abstract class TestACL extends TestCase {
     protected static final String PASSWORD = "test123";
     
     // user right
-    protected static final Right USER_RIGHT = UserRight.RT_viewFreeBusy;
+    protected static final Right USER_RIGHT = UserRight.R_viewFreeBusy;
     
     // account right
     protected static final Right ADMIN_RIGHT_ACCOUNT           = AdminRight.R_renameAccount;
@@ -361,6 +359,19 @@ public abstract class TestACL extends TestCase {
         return new ZimbraACE(nameOrEmail, GranteeType.GT_KEY, right, allowDeny.deny(), accessKey);
     }
     
+    Set<ZimbraACE> makeUsrGrant(Account grantee, Right right, AllowOrDeny alloworDeny) throws ServiceException {
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(newUsrACE(grantee, right, alloworDeny));
+        return aces;
+    }
+    
+    Set<ZimbraACE> makeGrpGrant(DistributionList grantee, Right right, AllowOrDeny alloworDeny) throws ServiceException {
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(newGrpACE(grantee, right, alloworDeny));
+        return aces;
+    }
+    
+    
     // another shorthand so we don't have to remember true/false.
     static final boolean POSITIVE = false;
     static final boolean NEGATIVE = true;
@@ -531,19 +542,19 @@ public abstract class TestACL extends TestCase {
         
         // Account interface
         ViaGrant via = (expectedVia==null)?null:new ViaGrant();
-        result = mAM.canPerform(grantee==null?null:grantee, target, right, asAdmin.yes(), defaultValue.allow(), via);
+        result = mAM.canDo(grantee==null?null:grantee, target, right, asAdmin.yes(), defaultValue.allow(), via);
         assertEquals(expected.allow(), result);
         assertEquals(expectedVia, via);
         
         // AuthToken interface
         via = (expectedVia==null)?null:new ViaGrant();
-        result = mAM.canPerform(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin.yes(), defaultValue.allow(), via);
+        result = mAM.canDo(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin.yes(), defaultValue.allow(), via);
         assertEquals(expected.allow(), result);
         assertEquals(expectedVia, via);
         
         // String interface
         via = (expectedVia==null)?null:new ViaGrant();
-        result = mAM.canPerform(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), defaultValue.allow(), via);
+        result = mAM.canDo(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), defaultValue.allow(), via);
         if (grantee instanceof ACL.GuestAccount && ((ACL.GuestAccount)grantee).getAccessKey() != null) {
             // string interface always return denied for key grantee unless there is a pub grant
             // skip the test for now, unless we want to pass yet another parameter to this method
@@ -583,13 +594,13 @@ public abstract class TestACL extends TestCase {
      * 
      * To simulate how grants are done in the real server/zmprov, we first call TargetType.lookupTarget to 
      * "look for" the taret, then use the returned entry instead of giving the target entry passed in 
-     * directly to PermUtil.
+     * directly to RightUtil.
      * 
      */
     protected Set<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
         Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
-        return PermUtil.grantRight(mProv, targetEntry, aces);
+        return RightUtil.grantRight(mProv, targetEntry, aces);
     }
         
     protected Set<ZimbraACE> revokeRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
@@ -598,7 +609,7 @@ public abstract class TestACL extends TestCase {
         // 2. convert DistributionList to AclGroup
         String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
         Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
-        return PermUtil.revokeRight(mProv, targetEntry, aces);
+        return RightUtil.revokeRight(mProv, targetEntry, aces);
     }
     
     public static void main(String[] args) throws Exception {
@@ -612,6 +623,8 @@ public abstract class TestACL extends TestCase {
         
         if (mAM instanceof RoleAccessManager)
             TestUtil.runTest(TestACLAttrAccess.class);
+        
+        TestUtil.runTest(TestACLComboRight.class);
     }
 
 }

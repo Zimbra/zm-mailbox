@@ -28,12 +28,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.BlockingOperation;
@@ -232,15 +234,36 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return Provisioning.getInstance().get(Provisioning.DomainBy.name, parts[1]);
     }
     
+    /*
     public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded) {
-        return AccessManager.getInstance().canPerform(grantee, target, rightNeeded, true, false);
+        return AccessManager.getInstance().canDo(grantee, target, rightNeeded, true, false);
     }
     
     public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded) {
-        return AccessManager.getInstance().canPerform(grantee, target, rightNeeded, true, false);
+        return AccessManager.getInstance().canDo(grantee, target, rightNeeded, true, false);
     }
     
     public boolean canPerform(String grantee, NamedEntry target, Right rightNeeded) {
-        return AccessManager.getInstance().canPerform(grantee, target, rightNeeded, true, false);
+        return AccessManager.getInstance().canDo(grantee, target, rightNeeded, true, false);
+    }
+    */
+    
+    /*
+     * checkDomainRight methods are for backward compatibility with domain admins, 
+     * so if access manager in LC is set to DomainAccessManager or subclass of it, 
+     * the domain based admin support can be brought back.
+     */
+    protected boolean checkDomainRight(ZimbraSoapContext zsc, String domainName, AdminRight right) throws ServiceException {
+        AccessManager am = AccessManager.getInstance();
+        
+        if (am instanceof DomainAccessManager) {
+            return canAccessEmail(zsc, domainName);
+        } else {
+            Domain domain = getDomainFromEmailAddr(domainName);
+            if (domain == null)
+                throw ServiceException.PERM_DENIED("no such domain: " + domainName);
+            
+            return am.canDo(zsc.getAuthToken(), domain, right, true, false);
+        }
     }
 }

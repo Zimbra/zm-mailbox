@@ -8,7 +8,6 @@ import java.util.Set;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
@@ -32,7 +31,7 @@ public class ZimbraACL {
      * @param aces
      * @throws ServiceException
      */
-    public ZimbraACL(String[] aces, RightManager rm) throws ServiceException {
+    ZimbraACL(String[] aces, RightManager rm) throws ServiceException {
         for (String aceStr : aces) {
             ZimbraACE ace = new ZimbraACE(aceStr, rm);
             addACE(ace);
@@ -40,14 +39,14 @@ public class ZimbraACL {
     }
     
     /**
-     * ctor for setting initial ACL (when there is currently no ACL on an entry)
+     * ctor for granting initial ACL (when there is currently no ACL on an entry)
      * 
      * This ctor DOES check for duplicate/conflict(allow and deny a right to the same grantee).
      * 
      * @param aces
      * @throws ServiceException
      */
-    public ZimbraACL(Set<ZimbraACE> aces) throws ServiceException {
+    ZimbraACL(Set<ZimbraACE> aces) throws ServiceException {
         grantAccess(aces);
     }
     
@@ -156,7 +155,7 @@ public class ZimbraACL {
     }
     
     
-    public Set<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
+    Set<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
         Set<ZimbraACE> granted = new HashSet<ZimbraACE>();
         for (ZimbraACE ace : acesToGrant) {
             if (grant(ace))
@@ -180,7 +179,7 @@ public class ZimbraACL {
      * @param aceToRevoke ace to revoke
      * @return the set of ZimbraACE that are successfully revoked.
      */
-    public Set<ZimbraACE> revokeAccess(Set<ZimbraACE> acesToRevoke) {
+    Set<ZimbraACE> revokeAccess(Set<ZimbraACE> acesToRevoke) {
         Set<ZimbraACE> revoked = new HashSet<ZimbraACE>();
         for (ZimbraACE ace : acesToRevoke) {
             if (revoke(ace))
@@ -216,24 +215,89 @@ public class ZimbraACL {
         return result;
     }
     
+    List<ZimbraACE> getACEsByGranteeId(Set<String> granteeIds, TargetType targetType) {
+        List<ZimbraACE> result = new ArrayList<ZimbraACE>();
+        
+        for (ZimbraACE ace : mAces) {
+            if (granteeIds.contains(ace.getGrantee())) {
+                Right rightGranted = ace.getRight();
+                
+                if (rightGranted.isComboRight()) {
+                    // always pass in needing get, because get will get us both get and set
+                    expandComboRightForAttrRights(ace, RightType.getAttrs, targetType, result);
+                    
+                    // also, add the combo right itself
+                    result.add(ace);
+                    
+                } else if (rightGranted.isAttrRight()) {
+                    AttrRight attrRight = (AttrRight)rightGranted; 
+                    
+                    // setAttrs imply getAttrs on the same set of attrs
+                    // unlike getACEsByAttrRight, we don't check get/set here.
+                    // here we need both get/setAttrs rights
+                    /*
+                    if (!attrRight.applicableToRightType(rightTypeNeeded))
+                        continue;
+                    */
+                    
+                    if (!rightGranted.applicableOnTargetType(targetType))
+                        continue;
+                    
+                    result.add(ace);
+                } else {
+                    // preset right
+                    result.add(ace);
+                }
+            }
+        }
+
+        return result;
+    }
+    
     /**
-     * Returns a List of ACEs with the specified right.
+     * Returns a List of ACEs with the specified preset right.
+     * 
      * Negative grants are in the front, positive grants are in the rear of the 
      * returned List. 
      * 
      * @param right
      * @param result 
      */
-    List<ZimbraACE> getACEs(Right right) {
+    List<ZimbraACE> getACEsByPresetRight(Right right) {
         List<ZimbraACE> result = new ArrayList<ZimbraACE>();
         
         for (ZimbraACE ace : mAces) {
-            if (right == ace.getRight()) {
+            if (ace.getRight().isComboRight()) {
+                ComboRight comboRight = (ComboRight)ace.getRight();
+                if (comboRight.containsPresetRight(right))
+                    result.add(ace);
+            } else if (right == ace.getRight()) {
                 result.add(ace);
             }
         }
 
         return result;
+    }
+    
+    private void expandComboRightForAttrRights(ZimbraACE ace, RightType rightTypeNeeded, TargetType targetType, List<ZimbraACE> result) {
+        Right rightGranted = ace.getRight();
+        
+        ComboRight comboRight = (ComboRight)rightGranted;
+        Set<AttrRight> attrRights = comboRight.getAttrRights();
+        
+        for (AttrRight attrRight : attrRights) {
+            // setAttrs imply getAttrs on the same set of attrs
+            if (!attrRight.applicableToRightType(rightTypeNeeded))
+                continue;
+            
+            if (!rightGranted.applicableOnTargetType(targetType))
+                continue;
+            
+            // create a pseudo ZimbraACE that represent this expanded right
+            ZimbraACE pseudoACE = ace.clone();
+            pseudoACE.setRight(attrRight);
+            result.add(pseudoACE);
+        }
     }
     
     /**
@@ -245,31 +309,38 @@ public class ZimbraACL {
      * @param attrs
      * @return
      */
-    List<ZimbraACE> getACEs(Right rightNeeded, TargetType targetType) {
+    List<ZimbraACE> getACEsByAttrRight(Right rightNeeded, TargetType targetType) {
         List<ZimbraACE> result = new ArrayList<ZimbraACE>();
         
         RightType rightTypeNeeded = rightNeeded.getRightType();
         
         for (ZimbraACE ace : mAces) {
             Right rightGranted = ace.getRight();
-            RightType rightTypeGranted = rightGranted.getRightType();
-                
-            // setAttrs imply getAttrs on the same set of attrs
-            boolean matched = (rightTypeNeeded == rightTypeGranted ||
-                               (rightTypeNeeded == RightType.getAttrs && rightTypeGranted == RightType.setAttrs));
-            if (!matched)
-                continue;
             
-            if (!rightGranted.applicableOnTargetType(targetType))
+            if (rightGranted.isComboRight()) {
+                expandComboRightForAttrRights(ace, rightTypeNeeded, targetType, result);
+                
+            } else if (rightGranted.isAttrRight()) {
+                AttrRight attrRight = (AttrRight)rightGranted; 
+                
+                // setAttrs imply getAttrs on the same set of attrs
+                if (!attrRight.applicableToRightType(rightTypeNeeded))
+                    continue;
+                
+                if (!rightGranted.applicableOnTargetType(targetType))
+                    continue;
+
+                result.add(ace);
+                
+            } else
                 continue;
 
-            result.add(ace);
         }
 
         return result;
     }
     
-    public List<String> serialize() {
+    List<String> serialize() {
         List<String> aces = new ArrayList<String>();
         
         for (ZimbraACE ace : mAces)

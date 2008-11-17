@@ -8,12 +8,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
@@ -36,7 +39,7 @@ public class GrantPermission extends MailDocumentHandler {
         }
 
         // TODO, change to Provisioning.grantPermission?
-        Set<ZimbraACE> granted = PermUtil.grantRight(Provisioning.getInstance(), account, aces);
+        Set<ZimbraACE> granted = RightUtil.grantRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted)
@@ -75,7 +78,7 @@ public class GrantPermission extends MailDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
             // make sure they didn't accidentally specify "guest" instead of "usr"
             try {
-                nentry = PermUtil.lookupGranteeByName(zid, GranteeType.GT_USER, zsc);
+                nentry = lookupGranteeByName(zid, GranteeType.GT_USER, zsc);
                 zid = nentry.getId();
                 gtype = nentry instanceof DistributionList ? GranteeType.GT_GROUP : GranteeType.GT_USER;
             } catch (ServiceException e) {
@@ -95,9 +98,9 @@ public class GrantPermission extends MailDocumentHandler {
             secret = eACE.getAttribute(MailConstants.A_ACCESSKEY, null);
          
         } else if (zid != null) {
-            nentry = PermUtil.lookupGranteeByZimbraId(zid, gtype);
+            nentry = lookupGranteeByZimbraId(zid, gtype);
         } else {
-            nentry = PermUtil.lookupGranteeByName(eACE.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
+            nentry = lookupGranteeByName(eACE.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
             zid = nentry.getId();
             // make sure they didn't accidentally specify "usr" instead of "grp"
             if (gtype == GranteeType.GT_USER && nentry instanceof DistributionList)
@@ -107,5 +110,75 @@ public class GrantPermission extends MailDocumentHandler {
         return new ZimbraACE(zid, gtype, right, deny, secret);
 
     }
+    
+    
+    /*
+     * lookupEmailAddress, lookupGranteeByName, lookupGranteeByZimbraId are borrowed from FolderAction
+     * and transplanted to work with ACL in accesscontrol package for usr space account level rights.
+     * 
+     * The purpose is to match the existing folder grant SOAP interface, which is more flexible/liberal 
+     * on identifying grantee and target.
+     *   
+     * These methods are *not* used for admin space ACL SOAPs. 
+     */
+    
+    // orig: FolderAction.lookupEmailAddress
+    private static NamedEntry lookupEmailAddress(String name) throws ServiceException {
+        NamedEntry nentry = null;
+        Provisioning prov = Provisioning.getInstance();
+        nentry = prov.get(AccountBy.name, name);
+        if (nentry == null)
+            nentry = prov.get(DistributionListBy.name, name);
+        return nentry;
+    }
+    
+    // orig: FolderAction.lookupGranteeByName
+    private static NamedEntry lookupGranteeByName(String name, GranteeType type, ZimbraSoapContext zsc) throws ServiceException {
+        if (type == GranteeType.GT_AUTHUSER || type == GranteeType.GT_PUBLIC || type == GranteeType.GT_GUEST || type == GranteeType.GT_KEY)
+            return null;
+
+        Provisioning prov = Provisioning.getInstance();
+        // for addresses, default to the authenticated user's domain
+        if ((type == GranteeType.GT_USER || type == GranteeType.GT_GROUP) && name.indexOf('@') == -1) {
+            Account authacct = prov.get(AccountBy.id, zsc.getAuthtokenAccountId(), zsc.getAuthToken());
+            String authname = (authacct == null ? null : authacct.getName());
+            if (authacct != null)
+                name += authname.substring(authname.indexOf('@'));
+        }
+
+        NamedEntry nentry = null;
+        if (name != null)
+            switch (type) {
+                case GT_USER:    nentry = lookupEmailAddress(name);                 break;
+                case GT_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
+            }
+
+        if (nentry != null)
+            return nentry;
+        switch (type) {
+            case GT_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
+            case GT_GROUP:   throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(name);
+            default:  throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
+        }
+    }
+
+    // orig: FolderAction.lookupGranteeByZimbraId
+    private static NamedEntry lookupGranteeByZimbraId(String zid, GranteeType type) {
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            switch (type) {
+                case GT_USER:    return prov.get(AccountBy.id, zid);
+                case GT_GROUP:   return prov.get(DistributionListBy.id, zid);
+                case GT_GUEST:
+                case GT_KEY:    
+                case GT_AUTHUSER:
+                case GT_PUBLIC:
+                default:         return null;
+            }
+        } catch (ServiceException e) {
+            return null;
+        }
+    }
+
 
 }
