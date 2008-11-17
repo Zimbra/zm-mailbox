@@ -13,7 +13,16 @@ of a conference room)
 GATEWAY: a service that allows the user to connect to 3rd party IM
 services, e.g. the Yahoo! IM service.
 
+------------------------------------------
 
+Additional IM error codes (see soap.txt for explanation of error
+codes):
+
+     im.INVALID_ADDRESS  - IM address is invalid (missing @ sign and
+                           not able to find in default domain)
+
+
+------------------------------------------
 
 
 
