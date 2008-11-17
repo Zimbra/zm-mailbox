@@ -131,29 +131,45 @@ public class RightCommand {
     }
     
     public static class EffectiveRights {
+        private static final Set<String> EMPTY_SET = new HashSet<String>();
+        
         String mTargetType;
         String mTargetId;
         String mTargetName;
+        String mGranteeId;
+        String mGranteeName;
         
         // preset
-        Set<String> mPresetRights;
+        Set<String> mPresetRights = new HashSet<String>();
         
         // setAttrs
-        boolean mCanSetAllAttrs;
-        Set<String> mCanSetAttrs;
-        Set<String> mCanSetAttrsWithLimit;
+        boolean mCanSetAllAttrs = false;
+        Set<String> mCanSetAttrs = EMPTY_SET;
+        Set<String> mCanSetAttrsWithLimit = EMPTY_SET;
         
         // getAttrs
-        boolean mCanGetAllAttrs;
-        Set<String> mCanGetAttrs;
+        boolean mCanGetAllAttrs = false;
+        Set<String> mCanGetAttrs = EMPTY_SET;
         
-        EffectiveRights(String targetType, String targetId, String targetName) {
+        EffectiveRights(String targetType, String targetId, String targetName, String granteeId, String granteeName) {
             mTargetType = targetType;
             mTargetId = targetId;
             mTargetName = targetName;
+            mGranteeId = granteeId;
+            mGranteeName = granteeName;
         }
         
         public EffectiveRights(Element parent) throws ServiceException {
+            //
+            // grantee
+            //
+            Element eGrantee = parent.getElement(AdminConstants.E_GRANTEE);
+            mGranteeId = eGrantee.getAttribute(AdminConstants.A_ID);
+            mGranteeName= eGrantee.getAttribute(AdminConstants.A_NAME);
+            
+            //
+            // target
+            //
             Element eTarget = parent.getElement(AdminConstants.E_TARGET);
             mTargetType = eTarget.getAttribute(AdminConstants.A_TYPE);
             mTargetId = eTarget.getAttribute(AdminConstants.A_ID);
@@ -194,6 +210,16 @@ public class RightCommand {
         }
         
         public void toXML(Element parent) {
+            //
+            // grantee
+            //
+            Element eGrantee = parent.addElement(AdminConstants.E_GRANTEE);
+            eGrantee.addAttribute(AdminConstants.A_ID, mGranteeId);
+            eGrantee.addAttribute(AdminConstants.A_NAME, mGranteeName);
+            
+            //
+            // target
+            //
             Element eTarget = parent.addElement(AdminConstants.E_TARGET);
             eTarget.addAttribute(AdminConstants.A_TYPE, mTargetType);
             eTarget.addAttribute(AdminConstants.A_ID, mTargetId);
@@ -228,17 +254,20 @@ public class RightCommand {
         }
         
         void addPresetRight(String right) {
-            if (mPresetRights == null)
-                mPresetRights = new HashSet<String>();
             mPresetRights.add(right);
         }
-        
+
         void setCanSetAllAttrs() { mCanSetAllAttrs = true; }
         void setCanSetAttrs(Set<String> canSetAttrs) { mCanSetAttrs = canSetAttrs; }
         void setCanSetAttrsWithLimit(Set<String> canSetAttrsWithLimit) { mCanSetAttrsWithLimit = canSetAttrsWithLimit; }
         void setCanGetAllAttrs() { mCanGetAllAttrs = true; }
         void setCanGetAttrs(Set<String> canGetAttrs) { mCanGetAttrs = canGetAttrs; }
         
+        public String targetType() { return mTargetType; }
+        public String targetId()   { return mTargetId; }
+        public String targetName() { return mTargetName; }
+        public String granteeId() { return mGranteeId; }
+        public String granteeName() { return mGranteeName; }
         public Set<String> presetRights() { return mPresetRights; }
         public boolean canSetAllAttrs() { return mCanSetAllAttrs; } 
         public Set<String> canSetAttrs() { return mCanSetAttrs; }
@@ -286,7 +315,7 @@ public class RightCommand {
         List<EffectiveACL> effectiveACLs = TargetType.expandTargetByGrantee(prov, targetEntry, granteeAcct);
         
         String targetId = (targetEntry instanceof NamedEntry)? ((NamedEntry)targetEntry).getId() : "";
-        EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel());
+        EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel(), granteeAcct.getId(), granteeAcct.getName());
         
         if (effectiveACLs != null && effectiveACLs.size() > 0)
             RightChecker.getEffectiveRights(effectiveACLs, granteeAcct, TargetType.getAttributeClass(targetEntry), er);

@@ -322,7 +322,7 @@ public class ProvUtil implements DebugListener {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
-        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name}", Category.RIGHT, 2, 3),
+        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name}", Category.RIGHT, 1, 3),
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_GRANTS("getGrants", "gg", "{target-type} [{target-id|target-name}]", Category.RIGHT, 1, 2),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
@@ -2527,15 +2527,23 @@ public class ProvUtil implements DebugListener {
     private void doGetEffectiveRights(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
         getRightArgsTarget(ra);
-        getRightArgsGrantee(ra, false);
+        
+        if (mProv instanceof LdapProvisioning) {
+            // must provide grantee info
+            getRightArgsGrantee(ra, false);
+        } else {
+            // has more args, use it for the requested grantee
+            if (ra.mCurPos < args.length - 1)
+                getRightArgsGrantee(ra, false);
+        }
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
     
         RightCommand.EffectiveRights effRights = mProv.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
                                                                           granteeBy, ra.mGranteeIdOrName);
         
-        System.out.println("Account " + ra.mGranteeIdOrName + " has the following rights on target " + ra.mTargetType + " " + ra.mTargetIdOrName);
+        System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
        
         System.out.println("Preset rights");
         System.out.println("-------------");

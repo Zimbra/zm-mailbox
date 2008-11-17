@@ -27,13 +27,20 @@ public class GetEffectiveRights  extends RightDocumentHandler {
             target = eTarget.getText();
         }
             
-        Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
-        String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
-        if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER)
-            throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
-        GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
-        String grantee = eGrantee.getText();
-            
+        Element eGrantee = request.getOptionalElement(AdminConstants.E_GRANTEE);
+        GranteeBy granteeBy;
+        String grantee;
+        if (eGrantee != null) {
+            String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
+            if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER)
+                throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
+            granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+            grantee = eGrantee.getText();
+        } else {
+            granteeBy = GranteeBy.id;
+            grantee = zsc.getRequestedAccountId();  // TODO: need to check if the authe user has right to do this the request account, if they are not the same
+        }
+        
         RightCommand.EffectiveRights er = RightCommand.getEffectiveRights(Provisioning.getInstance(),
                                                          targetType, targetBy, target,
                                                          granteeBy, grantee);

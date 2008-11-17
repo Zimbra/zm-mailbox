@@ -1935,7 +1935,8 @@ public class SoapProvisioning extends Provisioning {
             GranteeBy granteeBy, String grantee) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST);
         toXML(req, targetType, targetBy, target);
-        toXML(req, null, granteeBy, grantee);
+        if (granteeBy != null && grantee != null)
+            toXML(req, null, granteeBy, grantee);
         
         Element resp = invoke(req);
         return new RightCommand.EffectiveRights(resp);

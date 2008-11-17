@@ -136,7 +136,7 @@ public class RightManager {
         boolean limit = false;
         // limit is required for setAttrs, ignored for getAttrs
         if (right.getRightType() == Right.RightType.setAttrs)
-            limit = getBooleanAttr(eAttr, A_LIMIT);
+            limit = getBooleanAttr(eAttr, A_LIMIT, false);
         
         // TODO, validate if the attribute exists
         right.addAttr(attrName, limit);

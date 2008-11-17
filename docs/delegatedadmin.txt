@@ -937,9 +937,13 @@ Depending on the context, there are three aspects of targets that need to be dea
     
 <GetEffectiveRightsRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  [<grantee by="{grantee-by}">{grantee-name-or-id}</grantee>]
 </GetEffectiveRightsRequest>
+
+if <grantee> is omitted, it means the account identified by the auth token.
     
 <GetEffectiveRightsResponse>    
+  <grantee id"{grantee-id}" name="{grantee-name}">
   <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
       <right n="{right-name}"/>+
       <setAttrs [all="{all}"]>
@@ -967,9 +971,11 @@ Depending on the context, there are three aspects of targets that need to be dea
     e.g. 
     <GetEffectiveRightsRequest>
       <target type="account" by="id">bba95d7d-0b13-401f-a343-03a8f5a96f7c"/>
+      <grantee by="name">admin@test.com</grantee>
     </GetEffectiveRightsRequest>
     
     <GetEffectiveRightsResponse>
+      <grantee name="admin@test.com</grantee" id=""/>
       <target type="account" name="user1@test.com" id="bba95d7d-0b13-401f-a343-03a8f5a96f7c">
         <right n="setPassword"/>
         <right n="renameAccount"/>

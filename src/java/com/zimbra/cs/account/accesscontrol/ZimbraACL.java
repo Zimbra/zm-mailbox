@@ -240,6 +240,7 @@ public class ZimbraACL {
                         continue;
                     */
                     
+                    // if the right is applicable to the target type on which the right is granted
                     if (!rightGranted.applicableOnTargetType(targetType))
                         continue;
                     
@@ -290,7 +291,8 @@ public class ZimbraACL {
             if (!attrRight.applicableToRightType(rightTypeNeeded))
                 continue;
             
-            if (!rightGranted.applicableOnTargetType(targetType))
+            // if the right is applicable to the target type on which the right is granted
+            if (!attrRight.applicableOnTargetType(targetType))
                 continue;
             
             // create a pseudo ZimbraACE that represent this expanded right
@@ -327,6 +329,7 @@ public class ZimbraACL {
                 if (!attrRight.applicableToRightType(rightTypeNeeded))
                     continue;
                 
+                // if the right is applicable to the target type on which the right is granted
                 if (!rightGranted.applicableOnTargetType(targetType))
                     continue;
 
