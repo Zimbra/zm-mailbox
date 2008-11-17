@@ -341,6 +341,10 @@ public class AdminConstants {
     public static final QName DELETE_XMPPCOMPONENT_RESPONSE = QName.get("DeleteXMPPComponentResponse", NAMESPACE);
     
     // rights
+    public static final QName GET_EFFECTIVE_RIGHTS_REQUEST = QName.get("GetEffectiveRightsRequest", NAMESPACE);
+    public static final QName GET_EFFECTIVE_RIGHTS_RESPONSE = QName.get("GetEffectiveRightsResponse", NAMESPACE);
+    public static final QName GET_GRANTS_REQUEST = QName.get("GetGrantsRequest", NAMESPACE);
+    public static final QName GET_GRANTS_RESPONSE = QName.get("GetGrantsResponse", NAMESPACE);
     public static final QName GRANT_RIGHT_REQUEST = QName.get("GrantRightRequest", NAMESPACE);
     public static final QName GRANT_RIGHT_RESPONSE = QName.get("GrantRightResponse", NAMESPACE);
     public static final QName REVOKE_RIGHT_REQUEST = QName.get("RevokeRightRequest", NAMESPACE);
@@ -422,10 +426,7 @@ public class AdminConstants {
     public static final String E_DIRECTORY = "directory";
     public static final String E_PROVIDER = "provider";
     public static final String E_STATS = "stats";
-    public static final String E_PRINCIPAL = "principal";
-    public static final String E_RIGHT = "right";
-    public static final String E_TARGET = "target";
-    public static final String E_GRANTEE = "grantee";
+
     
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
@@ -574,7 +575,19 @@ public class AdminConstants {
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     
     // right
-    public static final String A_DENY = "deny";
+    public static final String E_GET_ATTRS  = "getAttrs";
+    public static final String E_GRANT      = "grant";
+    public static final String E_GRANTEE    = "grantee";
+    public static final String E_RIGHT      = "right";
+    public static final String E_TARGET     = "target";
+    public static final String E_SET_ATTRS  = "setAttrs";
+    public static final String E_VIA        = "via";
+    public static final String A_ALL        = "all";
+    public static final String A_ALLOW      = "allow";
+    public static final String A_DENY       = "deny";
+    public static final String A_ATTR_LIMIT = "l";
+    public static final String A_RIGHT      = "right";
+    
     
     public static final String E_WAITSET = "waitSet";
 }
