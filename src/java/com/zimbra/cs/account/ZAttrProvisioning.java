@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081112-1636 */
+    /* build: 5.0 pshao 20081117-1135 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1003,6 +1003,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminConsoleDNSCheckEnabled = "zimbraAdminConsoleDNSCheckEnabled";
 
     /**
+     * list views available for the authed admin in admin console
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=761)
+    public static final String A_zimbraAdminConsoleListView = "zimbraAdminConsoleListView";
+
+    /**
      * logout URL for admin console to send the user to upon explicit loggin
      * out
      */
@@ -1023,6 +1031,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=751)
     public static final String A_zimbraAdminConsoleSkinEnabled = "zimbraAdminConsoleSkinEnabled";
+
+    /**
+     * stats views available for the authed admin in admin console
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=762)
+    public static final String A_zimbraAdminConsoleStatsView = "zimbraAdminConsoleStatsView";
 
     /**
      * SSL port for admin UI
@@ -1511,6 +1527,8 @@ public class ZAttrProvisioning {
      * set of fields are used for GAL contacts as well because LDAP
      * attributes for GAL objects are mapped to Contact compatible attributes
      * via zimbraGalLdapAttrMap.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=760)
     public static final String A_zimbraContactAutoCompleteEmailFields = "zimbraContactAutoCompleteEmailFields";
@@ -1519,6 +1537,8 @@ public class ZAttrProvisioning {
      * Comma separates list of folder Ids that should be used to search for
      * contacts when generating auto-complete contact list. Folder id of 0 is
      * used to include GAL contacts in the response.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=759)
     public static final String A_zimbraContactAutoCompleteFolderIds = "zimbraContactAutoCompleteFolderIds";
@@ -1534,6 +1554,8 @@ public class ZAttrProvisioning {
      * of most heavily used contacts in outgoing email. Contacts in the
      * ranking table are given the priority when generating the auto-complete
      * contact list.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=758)
     public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";

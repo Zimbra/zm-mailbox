@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081112-1636 */
+    /* build: 5.0 pshao 20081117-1135 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -814,6 +814,8 @@ public class ZAttrCos extends NamedEntry {
      * via zimbraGalLdapAttrMap.
      *
      * @return zimbraContactAutoCompleteEmailFields, or null unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=760)
     public String getContactAutoCompleteEmailFields() {
@@ -830,6 +832,8 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraContactAutoCompleteEmailFields new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=760)
     public Map<String,Object> setContactAutoCompleteEmailFields(String zimbraContactAutoCompleteEmailFields, Map<String,Object> attrs) {
@@ -847,6 +851,8 @@ public class ZAttrCos extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=760)
     public Map<String,Object> unsetContactAutoCompleteEmailFields(Map<String,Object> attrs) {
@@ -861,6 +867,8 @@ public class ZAttrCos extends NamedEntry {
      * used to include GAL contacts in the response.
      *
      * @return zimbraContactAutoCompleteFolderIds, or null unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=759)
     public String getContactAutoCompleteFolderIds() {
@@ -875,6 +883,8 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraContactAutoCompleteFolderIds new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=759)
     public Map<String,Object> setContactAutoCompleteFolderIds(String zimbraContactAutoCompleteFolderIds, Map<String,Object> attrs) {
@@ -890,6 +900,8 @@ public class ZAttrCos extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=759)
     public Map<String,Object> unsetContactAutoCompleteFolderIds(Map<String,Object> attrs) {
@@ -942,6 +954,8 @@ public class ZAttrCos extends NamedEntry {
      * contact list.
      *
      * @return zimbraContactRankingTableSize, or -1 if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=758)
     public int getContactRankingTableSize() {
@@ -957,6 +971,8 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraContactRankingTableSize new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=758)
     public Map<String,Object> setContactRankingTableSize(int zimbraContactRankingTableSize, Map<String,Object> attrs) {
@@ -973,6 +989,8 @@ public class ZAttrCos extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=758)
     public Map<String,Object> unsetContactRankingTableSize(Map<String,Object> attrs) {

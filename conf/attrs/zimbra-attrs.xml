@@ -3737,7 +3737,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>last used yahoo id</desc>
 </attr>
 
-<attr id="758" name="zimbraContactRankingTableSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="758" name="zimbraContactRankingTableSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
   <defaultCOSValue>40</defaultCOSValue>
   <desc>
     Size of the contact ranking table.  Ranking table is used to keep track of
@@ -3746,7 +3746,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="759" name="zimbraContactAutoCompleteFolderIds" type="string" max="16" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="759" name="zimbraContactAutoCompleteFolderIds" type="string" max="16" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
   <defaultCOSValue>0,7</defaultCOSValue>
   <desc>
     Comma separates list of folder Ids that should be used to search for
@@ -3755,7 +3755,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
   <defaultCOSValue>email,email2,email3</defaultCOSValue>
   <desc>
     Comma separates list of attributes in contact object to search for
@@ -3766,4 +3766,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="761" name="zimbraAdminConsoleListView" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="future">
+  <desc>list views available for the authed admin in admin console</desc>
+</attr>
+
+<attr id="762" name="zimbraAdminConsoleStatsView" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="future">
+  <desc>stats views available for the authed admin in admin console</desc>
+</attr>
+
+    
 </attrs>
