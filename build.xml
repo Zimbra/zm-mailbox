@@ -566,6 +566,9 @@
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-l -v mc default zimbraFeatureInstantNotify TRUE"/>
         </java>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="cxc conference ${defaultdomain.name} ${zimbra.server.hostname} conference text"/>
+        </java>
         <antcall target="stop-webserver"/>
         <antcall target="start-webserver"/>
     </target>
@@ -576,6 +579,9 @@
         </java>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-l -v mcf zimbraXMPPEnabled FALSE"/>
+        </java>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="false">
+            <arg line="dxc conference.${defaultdomain.name}"/>
         </java>
         <antcall target="stop-webserver"/>
         <antcall target="start-webserver"/>
