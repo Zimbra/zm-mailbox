@@ -192,8 +192,8 @@ onEntry:  (don't need this, TODO, remove)
   <desc>rename server</desc>
 </right>
 
-<right name="modifyZimlet" type="setAttrs" targetType="zimlet">
-  <desc>modify all zimlet attributes</desc>
+<right name="deleteZimlet" type="preset" targetType="zimlet">
+  <desc>delete zimlet</desc>
 </right>
 
 <right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
