@@ -19,7 +19,7 @@ public class AdminRight extends Right {
     public static AdminRight R_renameDistributionList;
     public static AdminRight R_renameCos;
     public static AdminRight R_renameServer;
-    public static AdminRight R_modifyZimlet;
+    public static AdminRight R_deleteZimlet;
     public static AdminRight R_testGlobalConfigRemoveMe;
     public static AdminRight R_testGlobalGrantRemoveMe;
     
@@ -57,7 +57,7 @@ public class AdminRight extends Right {
         R_renameDistributionList = rm.getAdminRight("renameDistributionList");
         R_renameCos = rm.getAdminRight("renameCos");
         R_renameServer = rm.getAdminRight("renameServer");
-        R_modifyZimlet = rm.getAdminRight("modifyZimlet");
+        R_deleteZimlet = rm.getAdminRight("deleteZimlet");
         R_testGlobalConfigRemoveMe = rm.getAdminRight("testGlobalConfigRemoveMe");
         R_testGlobalGrantRemoveMe = rm.getAdminRight("testGlobalGrantRemoveMe");
         

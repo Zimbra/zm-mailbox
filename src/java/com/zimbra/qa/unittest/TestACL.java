@@ -71,7 +71,7 @@ public abstract class TestACL extends TestCase {
     protected static final Right ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
     protected static final Right ADMIN_RIGHT_GLOBALGRANT       = AdminRight.R_testGlobalGrantRemoveMe;
     protected static final Right ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
-    protected static final Right ADMIN_RIGHT_ZIMLET            = AdminRight.R_modifyZimlet;
+    protected static final Right ADMIN_RIGHT_ZIMLET            = AdminRight.R_deleteZimlet;
     
     static {
         
@@ -615,8 +615,15 @@ public abstract class TestACL extends TestCase {
         // call TargetType.lookupTarget instead of passing the target entry directly for two reasons:
         // 1. to simulate how grants are done in the real server/zmprov
         // 2. convert DistributionList to AclGroup
+        Entry targetEntry;
+        if (target instanceof Zimlet) {
+            // must be by name
+            String targetName = ((Zimlet)target).getName();
+            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.name, targetName);
+        } else {
         String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
-        Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+        }
         return RightUtil.revokeRight(mProv, targetEntry, aces);
     }
     
@@ -630,7 +637,7 @@ public abstract class TestACL extends TestCase {
         TestUtil.runTest(TestACLPrecedence.class);
         
         if (mAM instanceof RoleAccessManager)
-            TestUtil.runTest(TestACLAttrAccess.class);
+            TestUtil.runTest(TestACLAttrRight.class);
         
         TestUtil.runTest(TestACLComboRight.class);
     }

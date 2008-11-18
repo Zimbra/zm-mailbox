@@ -222,8 +222,8 @@ public enum TargetType {
         }
         
         public void visit(TargetType grantedOnEntryType, Entry grantedOn, int distanceToTarget, 
-                         TargetType targetType,
-                         List<EffectiveACL> result) throws ServiceException {
+                          TargetType targetType,
+                          List<EffectiveACL> result) throws ServiceException {
             List<ZimbraACE> aces;
             if (mRight == AdminRight.R_PSEUDO_GET_ATTRS || mRight == AdminRight.R_PSEUDO_SET_ATTRS)
                 aces = RightUtil.getACEs(grantedOn, mRight, targetType);

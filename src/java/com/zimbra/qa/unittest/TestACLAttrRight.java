@@ -22,7 +22,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 
-public class TestACLAttrAccess extends TestACL {
+public class TestACLAttrRight extends TestACL {
     
     
     static final Right ATTR_RIGHT_GET_ALL   = AdminRight.R_getAccount;
@@ -309,7 +309,7 @@ public class TestACLAttrAccess extends TestACL {
         CliUtil.toolSetup("INFO");
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
         
-        TestUtil.runTest(TestACLAttrAccess.class);
+        TestUtil.runTest(TestACLAttrRight.class);
     }
     
 }
