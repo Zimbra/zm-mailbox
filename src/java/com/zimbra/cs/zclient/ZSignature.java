@@ -21,6 +21,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import org.json.JSONException;
+import com.zimbra.cs.account.Signature;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class ZSignature implements Comparable, ToZJSONObject {
     private String mName;
     private String mId;
     private String mValue;
+    private String mType = "text/plain";
 
     public ZSignature(Element e) throws ServiceException {
         mName = e.getAttribute(AccountConstants.A_NAME);
@@ -37,11 +39,18 @@ public class ZSignature implements Comparable, ToZJSONObject {
         
         for (Element c : e.listElements(AccountConstants.E_CONTENT)) {
             String type = c.getAttribute(AccountConstants.A_TYPE, null);
-            if (type.equals("text/plain"))
+            if (type.equals("text/plain") || type.equals("text/html")) {
                 mValue = c.getText();
+                mType = type;
+            }
         }
     }
 
+    public ZSignature(String id, String name, String value, String type) {
+        this(id, name, value);
+        mType = type;
+    }
+    
     public ZSignature(String id, String name, String value) {
         mId = id;
         mName = name;
@@ -59,15 +68,21 @@ public class ZSignature implements Comparable, ToZJSONObject {
 
     public String getId() {
         return mId;
-    }
+    }    
 
-    public String getValue() { return mValue; }
+    public String getValue() { 
+        return mValue; 
+    }
+    
+    public String getType() {
+        return mType;
+    }
     
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraSignatureId, mId);
         attrs.put(Provisioning.A_zimbraSignatureName, mName);
-        attrs.put(Provisioning.A_zimbraPrefMailSignature, mValue);
+        attrs.put(Signature.mimeTypeToAttrName(mType), mValue);
         return attrs;
     }
     
@@ -78,7 +93,7 @@ public class ZSignature implements Comparable, ToZJSONObject {
         if (mName != null) sig.addAttribute(AccountConstants.A_NAME, mName);
         if (mValue != null) {
             Element content = sig.addElement(AccountConstants.E_CONTENT);
-            content.addAttribute(AccountConstants.A_TYPE, "text/plain");
+            content.addAttribute(AccountConstants.A_TYPE, mType);
             content.setText(mValue);
         }
         return sig;
@@ -89,6 +104,7 @@ public class ZSignature implements Comparable, ToZJSONObject {
         zjo.put("name", mName);
         zjo.put("id", mId);
         zjo.put("value", mValue);
+        zjo.put("type", mType);
         return zjo;
     }
 
