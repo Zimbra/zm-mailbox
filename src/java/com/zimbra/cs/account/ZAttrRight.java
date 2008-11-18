@@ -41,7 +41,7 @@ public class ZAttrRight extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081118-1208 */
+    /* build: 5.0 pshao 20081118-1352 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -226,7 +226,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=768)
+    @ZAttr(id=767)
     public String[] getRightAttrs() {
         return getMultiAttr(Provisioning.A_zimbraRightAttrs);
     }
@@ -240,7 +240,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=768)
+    @ZAttr(id=767)
     public Map<String,Object> setRightAttrs(String[] zimbraRightAttrs, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
@@ -256,7 +256,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=768)
+    @ZAttr(id=767)
     public Map<String,Object> addRightAttrs(String zimbraRightAttrs, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
@@ -272,7 +272,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=768)
+    @ZAttr(id=767)
     public Map<String,Object> removeRightAttrs(String zimbraRightAttrs, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
@@ -287,7 +287,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=768)
+    @ZAttr(id=767)
     public Map<String,Object> unsetRightAttrs(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightAttrs, "");
@@ -301,7 +301,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public String[] getRightRights() {
         return getMultiAttr(Provisioning.A_zimbraRightRights);
     }
@@ -315,7 +315,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> setRightRights(String[] zimbraRightRights, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightRights, zimbraRightRights);
@@ -331,7 +331,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> addRightRights(String zimbraRightRights, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightRights, zimbraRightRights);
@@ -347,7 +347,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> removeRightRights(String zimbraRightRights, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightRights, zimbraRightRights);
@@ -362,7 +362,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> unsetRightRights(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightRights, "");
@@ -378,7 +378,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public ZAttrProvisioning.RightTargetType getRightTargetType() {
         try { String v = getAttr(Provisioning.A_zimbraRightTargetType); return v == null ? null : ZAttrProvisioning.RightTargetType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
@@ -392,7 +392,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public String[] getRightTargetTypeAsString() {
         return getMultiAttr(Provisioning.A_zimbraRightTargetType);
     }
@@ -408,7 +408,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> setRightTargetType(ZAttrProvisioning.RightTargetType zimbraRightTargetType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightTargetType, zimbraRightTargetType.toString());
@@ -426,7 +426,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> setRightTargetTypeAsString(String[] zimbraRightTargetType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightTargetType, zimbraRightTargetType);
@@ -443,7 +443,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> unsetRightTargetType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightTargetType, "");
@@ -459,7 +459,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=765)
+    @ZAttr(id=764)
     public ZAttrProvisioning.RightType getRightType() {
         try { String v = getAttr(Provisioning.A_zimbraRightType); return v == null ? null : ZAttrProvisioning.RightType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
@@ -473,7 +473,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=765)
+    @ZAttr(id=764)
     public String getRightTypeAsString() {
         return getAttr(Provisioning.A_zimbraRightType);
     }
@@ -489,7 +489,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=765)
+    @ZAttr(id=764)
     public Map<String,Object> setRightType(ZAttrProvisioning.RightType zimbraRightType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightType, zimbraRightType.toString());
@@ -507,7 +507,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=765)
+    @ZAttr(id=764)
     public Map<String,Object> setRightTypeAsString(String zimbraRightType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightType, zimbraRightType);
@@ -524,7 +524,7 @@ public class ZAttrRight extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=765)
+    @ZAttr(id=764)
     public Map<String,Object> unsetRightType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightType, "");

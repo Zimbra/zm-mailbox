@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081118-1208 */
+    /* build: 5.0 pshao 20081118-1352 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -1111,67 +1111,67 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * list views available for the authed admin in admin console
+     * UI components available for the authed admin in admin console
      *
-     * @return zimbraAdminConsoleListView, or ampty array if unset
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=761)
-    public String[] getAdminConsoleListView() {
-        return getMultiAttr(Provisioning.A_zimbraAdminConsoleListView);
-    }
-
-    /**
-     * list views available for the authed admin in admin console
-     *
-     * @param zimbraAdminConsoleListView new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
+     * @return zimbraAdminConsoleUIComponents, or ampty array if unset
      *
      * @since ZCS future
      */
     @ZAttr(id=761)
-    public Map<String,Object> setAdminConsoleListView(String[] zimbraAdminConsoleListView, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminConsoleListView, zimbraAdminConsoleListView);
-        return attrs;
+    public String[] getAdminConsoleUIComponents() {
+        return getMultiAttr(Provisioning.A_zimbraAdminConsoleUIComponents);
     }
 
     /**
-     * list views available for the authed admin in admin console
+     * UI components available for the authed admin in admin console
      *
-     * @param zimbraAdminConsoleListView new to add to existing values
+     * @param zimbraAdminConsoleUIComponents new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS future
      */
     @ZAttr(id=761)
-    public Map<String,Object> addAdminConsoleListView(String zimbraAdminConsoleListView, Map<String,Object> attrs) {
+    public Map<String,Object> setAdminConsoleUIComponents(String[] zimbraAdminConsoleUIComponents, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminConsoleListView, zimbraAdminConsoleListView);
+        attrs.put(Provisioning.A_zimbraAdminConsoleUIComponents, zimbraAdminConsoleUIComponents);
         return attrs;
     }
 
     /**
-     * list views available for the authed admin in admin console
+     * UI components available for the authed admin in admin console
      *
-     * @param zimbraAdminConsoleListView existing value to remove
+     * @param zimbraAdminConsoleUIComponents new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS future
      */
     @ZAttr(id=761)
-    public Map<String,Object> removeAdminConsoleListView(String zimbraAdminConsoleListView, Map<String,Object> attrs) {
+    public Map<String,Object> addAdminConsoleUIComponents(String zimbraAdminConsoleUIComponents, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAdminConsoleListView, zimbraAdminConsoleListView);
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminConsoleUIComponents, zimbraAdminConsoleUIComponents);
         return attrs;
     }
 
     /**
-     * list views available for the authed admin in admin console
+     * UI components available for the authed admin in admin console
+     *
+     * @param zimbraAdminConsoleUIComponents existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=761)
+    public Map<String,Object> removeAdminConsoleUIComponents(String zimbraAdminConsoleUIComponents, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAdminConsoleUIComponents, zimbraAdminConsoleUIComponents);
+        return attrs;
+    }
+
+    /**
+     * UI components available for the authed admin in admin console
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1179,84 +1179,9 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS future
      */
     @ZAttr(id=761)
-    public Map<String,Object> unsetAdminConsoleListView(Map<String,Object> attrs) {
+    public Map<String,Object> unsetAdminConsoleUIComponents(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminConsoleListView, "");
-        return attrs;
-    }
-
-    /**
-     * stats views available for the authed admin in admin console
-     *
-     * @return zimbraAdminConsoleStatsView, or ampty array if unset
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=762)
-    public String[] getAdminConsoleStatsView() {
-        return getMultiAttr(Provisioning.A_zimbraAdminConsoleStatsView);
-    }
-
-    /**
-     * stats views available for the authed admin in admin console
-     *
-     * @param zimbraAdminConsoleStatsView new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=762)
-    public Map<String,Object> setAdminConsoleStatsView(String[] zimbraAdminConsoleStatsView, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminConsoleStatsView, zimbraAdminConsoleStatsView);
-        return attrs;
-    }
-
-    /**
-     * stats views available for the authed admin in admin console
-     *
-     * @param zimbraAdminConsoleStatsView new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=762)
-    public Map<String,Object> addAdminConsoleStatsView(String zimbraAdminConsoleStatsView, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminConsoleStatsView, zimbraAdminConsoleStatsView);
-        return attrs;
-    }
-
-    /**
-     * stats views available for the authed admin in admin console
-     *
-     * @param zimbraAdminConsoleStatsView existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=762)
-    public Map<String,Object> removeAdminConsoleStatsView(String zimbraAdminConsoleStatsView, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAdminConsoleStatsView, zimbraAdminConsoleStatsView);
-        return attrs;
-    }
-
-    /**
-     * stats views available for the authed admin in admin console
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=762)
-    public Map<String,Object> unsetAdminConsoleStatsView(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminConsoleStatsView, "");
+        attrs.put(Provisioning.A_zimbraAdminConsoleUIComponents, "");
         return attrs;
     }
 
@@ -5257,7 +5182,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public ZAttrProvisioning.IMService getIMService() {
         try { String v = getAttr(Provisioning.A_zimbraIMService); return v == null ? null : ZAttrProvisioning.IMService.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
@@ -5271,7 +5196,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public String getIMServiceAsString() {
         return getAttr(Provisioning.A_zimbraIMService);
     }
@@ -5287,7 +5212,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public Map<String,Object> setIMService(ZAttrProvisioning.IMService zimbraIMService, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, zimbraIMService.toString());
@@ -5305,7 +5230,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public Map<String,Object> setIMServiceAsString(String zimbraIMService, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, zimbraIMService);
@@ -5322,7 +5247,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public Map<String,Object> unsetIMService(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, "");

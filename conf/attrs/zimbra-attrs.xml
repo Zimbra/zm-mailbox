@@ -3766,37 +3766,33 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="761" name="zimbraAdminConsoleListView" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="future">
-  <desc>list views available for the authed admin in admin console</desc>
+<attr id="761" name="zimbraAdminConsoleUIComponents" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="future">
+  <desc>UI components available for the authed admin in admin console</desc>
 </attr>
 
-<attr id="762" name="zimbraAdminConsoleStatsView" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="future">
-  <desc>stats views available for the authed admin in admin console</desc>
-</attr>
-
-<attr id="763" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
+<attr id="762" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
   <defaultCOSValue>zimbra</defaultCOSValue>
   <desc>IM service</desc>
 </attr>
  
-<attr id="764" name="zimbraRightExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="future">
+<attr id="763" name="zimbraRightExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="future">
   <desc>Object classes to add when creating a zimbra right object.
   </desc>
 </attr>
 
-<attr id="765" name="zimbraRightType" type="enum" value="preset,setAttrs,getAttrs,combo" cardinality="single" requiredIn="right" since="future">
+<attr id="764" name="zimbraRightType" type="enum" value="preset,setAttrs,getAttrs,combo" cardinality="single" requiredIn="right" since="future">
   <desc>right type</desc>
 </attr>
 
-<attr id="766" name="zimbraRightTargetType" type="enum" value="account,resource,distributionlist,domain,cos,right,server,xmppcomponent,zimlet,config,global" cardinality="multi" optionalIn="right" since="future">
+<attr id="765" name="zimbraRightTargetType" type="enum" value="account,resource,distributionlist,domain,cos,right,server,xmppcomponent,zimlet,config,global" cardinality="multi" optionalIn="right" since="future">
   <desc>right target type</desc>
 </attr>
 
-<attr id="767" name="zimbraRightRights" type="string" cardinality="multi" optionalIn="right" since="future">
+<attr id="766" name="zimbraRightRights" type="string" cardinality="multi" optionalIn="right" since="future">
   <desc>rights contained in a combo right</desc>
 </attr>
 
-<attr id="768" name="zimbraRightAttrs" type="string" cardinality="multi" optionalIn="right" since="future">
+<attr id="767" name="zimbraRightAttrs" type="string" cardinality="multi" optionalIn="right" since="future">
   <desc>attributes contained in a getAttrs or setAttrs right</desc>
 </attr>
 

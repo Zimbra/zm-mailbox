@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081118-1208 */
+    /* build: 5.0 pshao 20081118-1352 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3625,7 +3625,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public ZAttrProvisioning.IMService getIMService() {
         try { String v = getAttr(Provisioning.A_zimbraIMService); return v == null ? null : ZAttrProvisioning.IMService.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
@@ -3639,7 +3639,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public String getIMServiceAsString() {
         return getAttr(Provisioning.A_zimbraIMService);
     }
@@ -3655,7 +3655,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public Map<String,Object> setIMService(ZAttrProvisioning.IMService zimbraIMService, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, zimbraIMService.toString());
@@ -3673,7 +3673,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public Map<String,Object> setIMServiceAsString(String zimbraIMService, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, zimbraIMService);
@@ -3690,7 +3690,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public Map<String,Object> unsetIMService(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, "");

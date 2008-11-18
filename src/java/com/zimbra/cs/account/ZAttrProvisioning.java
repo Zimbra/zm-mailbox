@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081118-1208 */
+    /* build: 5.0 pshao 20081118-1352 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1073,14 +1073,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminConsoleDNSCheckEnabled = "zimbraAdminConsoleDNSCheckEnabled";
 
     /**
-     * list views available for the authed admin in admin console
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=761)
-    public static final String A_zimbraAdminConsoleListView = "zimbraAdminConsoleListView";
-
-    /**
      * logout URL for admin console to send the user to upon explicit loggin
      * out
      */
@@ -1103,12 +1095,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminConsoleSkinEnabled = "zimbraAdminConsoleSkinEnabled";
 
     /**
-     * stats views available for the authed admin in admin console
+     * UI components available for the authed admin in admin console
      *
      * @since ZCS future
      */
-    @ZAttr(id=762)
-    public static final String A_zimbraAdminConsoleStatsView = "zimbraAdminConsoleStatsView";
+    @ZAttr(id=761)
+    public static final String A_zimbraAdminConsoleUIComponents = "zimbraAdminConsoleUIComponents";
 
     /**
      * SSL port for admin UI
@@ -2723,7 +2715,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=763)
+    @ZAttr(id=762)
     public static final String A_zimbraIMService = "zimbraIMService";
 
     /**
@@ -5043,7 +5035,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=768)
+    @ZAttr(id=767)
     public static final String A_zimbraRightAttrs = "zimbraRightAttrs";
 
     /**
@@ -5051,7 +5043,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=764)
+    @ZAttr(id=763)
     public static final String A_zimbraRightExtraObjectClass = "zimbraRightExtraObjectClass";
 
     /**
@@ -5059,7 +5051,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public static final String A_zimbraRightRights = "zimbraRightRights";
 
     /**
@@ -5067,7 +5059,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public static final String A_zimbraRightTargetType = "zimbraRightTargetType";
 
     /**
@@ -5075,7 +5067,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=765)
+    @ZAttr(id=764)
     public static final String A_zimbraRightType = "zimbraRightType";
 
     /**

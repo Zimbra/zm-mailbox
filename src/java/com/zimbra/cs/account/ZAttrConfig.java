@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081118-1208 */
+    /* build: 5.0 pshao 20081118-1352 */
 
     /**
      * Zimbra access control list
@@ -10452,7 +10452,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=764)
+    @ZAttr(id=763)
     public String[] getRightExtraObjectClass() {
         return getMultiAttr(Provisioning.A_zimbraRightExtraObjectClass);
     }
@@ -10466,7 +10466,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=764)
+    @ZAttr(id=763)
     public Map<String,Object> setRightExtraObjectClass(String[] zimbraRightExtraObjectClass, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightExtraObjectClass, zimbraRightExtraObjectClass);
@@ -10482,7 +10482,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=764)
+    @ZAttr(id=763)
     public Map<String,Object> addRightExtraObjectClass(String zimbraRightExtraObjectClass, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightExtraObjectClass, zimbraRightExtraObjectClass);
@@ -10498,7 +10498,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=764)
+    @ZAttr(id=763)
     public Map<String,Object> removeRightExtraObjectClass(String zimbraRightExtraObjectClass, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightExtraObjectClass, zimbraRightExtraObjectClass);
@@ -10513,7 +10513,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=764)
+    @ZAttr(id=763)
     public Map<String,Object> unsetRightExtraObjectClass(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightExtraObjectClass, "");
