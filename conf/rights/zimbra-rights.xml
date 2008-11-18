@@ -47,13 +47,7 @@
 	setAttrs    : rights for reading and writing attributes
 	combo       : combo right containing other defined preset/getAttrs/setAttrs/combo rights
       
-onEntry:  (don't need this, TODO, remove)
-    Only applicable when right type is getAttrs or modifyAttrs  
-    Comma separated entry types on which the attribute can be:
-        read: if right type is getAttrs
-        read and modified: if right type is modifyAttrs  
-    If not present, it means all entry types.
-                  
+
 {target-type}:
     Target type on which the right is applicable.
     1. For preset rights (i.e. type="preset"):
