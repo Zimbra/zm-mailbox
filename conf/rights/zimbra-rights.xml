@@ -268,8 +268,7 @@
 <right name="configureAdminUI" type="setAttrs" targetType="account">
   <desc>configure admin UI</desc>
   <attrs>
-    <a n="zimbraAdminConsoleListView"/>
-    <a n="zimbraAdminConsoleStatsView"/>
+    <a n="zimbraAdminConsoleUIComponents"/>
   </attrs>
 </right>
 
