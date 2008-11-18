@@ -66,12 +66,10 @@ public class AclAccessManager extends DomainAccessManager {
                 }
             }
             
-            Provisioning prov = Provisioning.getInstance();
-            
             // 3. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
-            if (effectiveACLs != null && effectiveACLs.size() > 0)
-                return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, null);
+            Boolean result = RightChecker.canDo(grantee, target, rightNeeded, null);
+            if (result != null)
+                return result.booleanValue();
             else {
                 // no ACL, see if there is a configured default 
                 Boolean defaultValue = rightNeeded.getDefault();

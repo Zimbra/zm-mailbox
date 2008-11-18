@@ -129,12 +129,10 @@ public class RoleAccessManager extends AccessManager {
                     return true;
             }
             
-            Provisioning prov = Provisioning.getInstance();
-            
             // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
-            if (effectiveACLs != null && effectiveACLs.size() > 0)
-                return RightChecker.canDo(effectiveACLs, grantee, rightNeeded, via);
+            Boolean result = RightChecker.canDo(grantee, target, rightNeeded, via);
+            if (result != null)
+                return result.booleanValue();
             else {
                 // no ACL, see if there is a configured default 
                 Boolean defaultValue = rightNeeded.getDefault();
@@ -211,71 +209,43 @@ public class RoleAccessManager extends AccessManager {
         return false;
     }
     
-    private AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) {
-        if (grantee == null)
-            return DENY_ALL_ATTRS;
-        
-        try {
-            // do NOT check for self.  If an admin auth as an admin and want to get/set  
-            // his own attrs, he has to have the proper right to do so.
+    private AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) throws ServiceException {
+        // Do NOT check for self.  If an admin auth as an admin and want to get/set  
+        // his own attrs, he has to have the proper right to do so.
             
-            Provisioning prov = Provisioning.getInstance();
-            
-            // 2. check ACL
-            List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
-            if (effectiveACLs != null && effectiveACLs.size() > 0)
-                return RightChecker.canAccessAttrs(effectiveACLs, grantee, rightNeeded, TargetType.getAttributeClass(target));
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " + 
-                                   "grantee=" + grantee.getName() + 
-                                   ", target=" + target.getLabel() + 
-                                   ", right=(GetAttrs)" +
-                                   " => denied", e);
-        }
-        return DENY_ALL_ATTRS;
+        // check ACL
+        return RightChecker.canAccessAttrs(grantee, target, rightNeeded, attrs);
     }
     
     @Override
-    public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
         return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, attrs);
     }
 
         
     @Override
-    public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
-        try {
-            Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-            return canGetAttrs(granteeAcct, target, attrs);
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " +
-                                   "grantee=" + grantee.getAccountId() +
-                                   ", target=" + target.getLabel() +
-                                   ", right=(GetAttrs)" +
-                                   " => denied", e);
-        }
+    public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
+        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
+        if (granteeAcct == null)
+            throw ServiceException.PERM_DENIED("cannot access attr");
         
-        return null;
+        return canGetAttrs(granteeAcct, target, attrs);
     }
     
     @Override
-    public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
+    public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) throws ServiceException{
         return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, attrs);
     }
     
     @Override
-    public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target,  Map<String, Object> attrs) {
-        try {
-            Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-            return canSetAttrs(granteeAcct, target, attrs);
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " +
-                                   "grantee=" + grantee.getAccountId() +
-                                   ", target=" + target.getLabel() +
-                                   ", right=(GetAttrs)" +
-                                   " => denied", e);
-        }
+    public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target,  Map<String, Object> attrs) throws ServiceException {
+        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
+        if (granteeAcct == null)
+            throw ServiceException.PERM_DENIED("cannot access attr");
         
-        return null;
+        return canSetAttrs(granteeAcct, target, attrs);
     }
     
     /**

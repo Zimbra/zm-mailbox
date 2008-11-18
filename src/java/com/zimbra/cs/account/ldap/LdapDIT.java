@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Right;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.util.Zimbra;
@@ -85,6 +86,7 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_ACCOUNT      = "ou=people";
     protected final String DEFAULT_BASE_RDN_COS          = "cn=cos";
     protected final String DEFAULT_BASE_RDN_MIME         = "cn=mime";
+    protected final String DEFAULT_BASE_RDN_RIGHT        = "cn=rights";
     protected final String DEFAULT_BASE_RDN_SERVER       = "cn=servers";
     protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT= "cn=xmppcomponents";
     protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
@@ -95,6 +97,7 @@ public class LdapDIT {
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG     = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT      = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME             = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_RIGHT            = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_SERVER           = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT    = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET           = "cn";
@@ -113,6 +116,7 @@ public class LdapDIT {
     protected String BASE_DN_ACCOUNT;
     protected String BASE_DN_COS; 
     protected String BASE_DN_MIME;
+    protected String BASE_DN_RIGHT;
     protected String BASE_DN_SERVER;
     protected String BASE_DN_XMPPCOMPONENT;
     protected String BASE_DN_ZIMLET;
@@ -123,6 +127,7 @@ public class LdapDIT {
     protected String NAMING_RDN_ATTR_GLOBALCONFIG;
     protected String NAMING_RDN_ATTR_GLOBALGRANT;
     protected String NAMING_RDN_ATTR_MIME;
+    protected String NAMING_RDN_ATTR_RIGHT;
     protected String NAMING_RDN_ATTR_SERVER;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
     protected String NAMING_RDN_ATTR_ZIMLET;    
@@ -149,6 +154,7 @@ public class LdapDIT {
         NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
         NAMING_RDN_ATTR_GLOBALGRANT   = DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
+        NAMING_RDN_ATTR_RIGHT         = DEFAULT_NAMING_RDN_ATTR_RIGHT;
         NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
         NAMING_RDN_ATTR_XMPPCOMPONENT = DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT;
         NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
@@ -160,6 +166,7 @@ public class LdapDIT {
         BASE_DN_APPADMIN     = DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_COS          = DEFAULT_BASE_RDN_COS           + "," + BASE_DN_CONFIG_BRANCH; 
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG;
+        BASE_DN_RIGHT        = DEFAULT_BASE_RDN_RIGHT         + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_XMPPCOMPONENT= DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET        + "," + BASE_DN_CONFIG_BRANCH;
@@ -178,12 +185,14 @@ public class LdapDIT {
             NAMING_RDN_ATTR_GLOBALCONFIG == null ||
             NAMING_RDN_ATTR_GLOBALGRANT == null ||
             NAMING_RDN_ATTR_MIME == null ||
+            NAMING_RDN_ATTR_RIGHT == null ||
             NAMING_RDN_ATTR_SERVER == null ||
             NAMING_RDN_ATTR_ZIMLET == null ||
             BASE_DN_ADMIN == null ||
             BASE_DN_APPADMIN == null ||
             BASE_DN_COS == null ||
             BASE_DN_MIME == null ||
+            BASE_DN_RIGHT == null ||
             BASE_DN_SERVER == null ||
             BASE_DN_XMPPCOMPONENT == null ||
             BASE_DN_ZIMLET == null ||
@@ -464,6 +473,18 @@ public class LdapDIT {
         return BASE_DN_MIME;
     }
     
+    /*
+     * ==========
+     *   right
+     * ==========
+     */
+    public String rightBaseDN() {
+        return BASE_DN_RIGHT;
+    }
+    
+    public String rightNametoDN(String name) {
+        return NAMING_RDN_ATTR_RIGHT + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_RIGHT;
+    }
     
     /*
      * ==========
@@ -536,6 +557,8 @@ public class LdapDIT {
             return Provisioning.A_zimbraPrefIdentityName;   
         else if (entry instanceof GlobalGrant) 
             return NAMING_RDN_ATTR_GLOBALGRANT;
+        else if (entry instanceof Right)
+            return NAMING_RDN_ATTR_RIGHT;
         else if (entry instanceof Server)
             return NAMING_RDN_ATTR_SERVER;
         else if (entry instanceof Zimlet)

@@ -60,13 +60,13 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.MailMode;
+import com.zimbra.cs.account.Provisioning.RightBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -255,7 +255,7 @@ public class ProvUtil implements DebugListener {
             // rights
             System.out.println();
             System.out.println("    right: (if right is prefixed with a '-', it means negative right, i.e., specifically deny)");
-            for (Right r : RightManager.getInstance().getAllAdminRights().values()) {
+            for (com.zimbra.cs.account.accesscontrol.Right r : RightManager.getInstance().getAllAdminRights().values()) {
                 System.out.println("        " + r.getName());
             }
             System.out.println();
@@ -270,7 +270,7 @@ public class ProvUtil implements DebugListener {
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
-        CHECK_RIGHT("checkRight", "cr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
+        CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
@@ -282,6 +282,7 @@ public class ProvUtil implements DebugListener {
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
+        CREATE_RIGHT("createRight", "cr", "{name} [attr1 value1 [attr2 value2...]]", Category.RIGHT, 1, Integer.MAX_VALUE),
         CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 5, Integer.MAX_VALUE),
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
@@ -291,6 +292,7 @@ public class ProvUtil implements DebugListener {
         DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST, 1, 1),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
+        DELETE_RIGHT("deleteRight", "dr", "{name|id}", Category.RIGHT, 1, 1),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{domain}", Category.CONFIG, 1, 1),
@@ -313,6 +315,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
+        GET_ALL_RIGHTS("getAllRights", "gar", "[-v]", Category.RIGHT, 0, 1),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
         GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
@@ -343,6 +346,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
+        MODIFY_RIGHT("modifyRight", "mr", "{name|id} [attr1 value1 [attr2 value2...]]", Category.RIGHT, 3, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
@@ -545,6 +549,9 @@ public class ProvUtil implements DebugListener {
         case CREATE_IDENTITY:
             mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
             break;
+        case CREATE_RIGHT:
+            System.out.println(mProv.createRight(args[1], getMap(args, 2)).getId());
+            break; 
         case CREATE_SIGNATURE:
             System.out.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMap(args, 3)).getId());
             break;      
@@ -622,6 +629,9 @@ public class ProvUtil implements DebugListener {
         		System.out.println(fbprov.toString());
         	break;
         }
+        case GET_ALL_RIGHTS:
+            doGetAllRights(args); 
+            break;    
         case GET_ALL_SERVERS:
             doGetAllServers(args); 
             break;
@@ -697,6 +707,9 @@ public class ProvUtil implements DebugListener {
         case MODIFY_DOMAIN:
             mProv.modifyAttrs(lookupDomain(args[1]), getMap(args, 2), true);            
             break; 
+        case MODIFY_RIGHT:
+            mProv.modifyAttrs(lookupRight(args[1]), getMap(args, 2), true);            
+            break;      
         case MODIFY_SERVER:
             mProv.modifyAttrs(lookupServer(args[1]), getMap(args, 2), true);            
             break;            
@@ -719,7 +732,10 @@ public class ProvUtil implements DebugListener {
         case DELETE_DATA_SOURCE:
             account = lookupAccount(args[1]);
             mProv.deleteDataSource(account, lookupDataSourceId(account, args[2]));
-            break;                        
+            break;     
+        case DELETE_RIGHT:
+            mProv.deleteRight(lookupRight(args[1]).getId());
+            break;
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
             break;
@@ -1540,6 +1556,26 @@ public class ProvUtil implements DebugListener {
         Map<String, Object> attrs = alias.getAttrs();
         dumpAttrs(attrs, null);        
     }
+    
+    private void doGetAllRights(String[] args) throws ServiceException {
+        boolean verbose = args.length > 1 && args[1].equals("-v");
+        Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
+        List allRights = mProv.getAllRights();
+        for (Iterator it=allRights.iterator(); it.hasNext(); ) {
+            Right right = (Right) it.next();
+            if (verbose)
+                dumpRight(right, attrNames);
+            else 
+                System.out.println(right.getName());
+        }
+    } 
+    
+    private void dumpRight(Right right, Set<String> attrNames) throws ServiceException {
+        System.out.println("# name "+right.getName());
+        Map<String, Object> attrs = right.getAttrs();
+        dumpAttrs(attrs, attrNames);
+        System.out.println();
+    }
 
     private void doGetAllServers(String[] args) throws ServiceException {
         boolean verbose = false;
@@ -1948,6 +1984,14 @@ public class ProvUtil implements DebugListener {
         else
             return c;
     }
+    
+    private Right lookupRight(String key) throws ServiceException {
+        Right r = mProv.get(guessRightBy(key), key);
+        if (r == null)
+            throw AccountServiceException.NO_SUCH_RIGHT(key);
+        else
+            return r;
+    }
 
     private Server lookupServer(String key) throws ServiceException {
         return lookupServer(key, true);
@@ -2022,6 +2066,12 @@ public class ProvUtil implements DebugListener {
         if (Provisioning.isUUID(value))
             return CosBy.id;
         return CosBy.name;
+    }
+    
+    public static RightBy guessRightBy(String value) {
+        if (Provisioning.isUUID(value))
+            return RightBy.id;
+        return RightBy.name;
     }
     
     public static DomainBy guessDomainBy(String value) {

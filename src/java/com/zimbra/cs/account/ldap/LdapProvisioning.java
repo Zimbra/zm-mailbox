@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.RightBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
@@ -59,6 +60,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Right;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
@@ -125,6 +127,7 @@ public class LdapProvisioning extends Provisioning {
     public static final String C_zimbraDomain = "zimbraDomain";
     public static final String C_zimbraMailList = "zimbraDistributionList";
     public static final String C_zimbraMailRecipient = "zimbraMailRecipient";
+    public static final String C_zimbraRight = "zimbraRight";
     public static final String C_zimbraServer = "zimbraServer";
     public static final String C_zimbraCalendarResource = "zimbraCalendarResource";
     public static final String C_zimbraAlias = "zimbraAlias";
@@ -171,6 +174,11 @@ public class LdapProvisioning extends Provisioning {
                 LC.ldap_cache_domain_maxsize.intValue(),
                 LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);         
 
+    private static NamedEntryCache<LdapRight> sRightCache =
+        new NamedEntryCache<LdapRight>(
+                LC.ldap_cache_right_maxsize.intValue(),
+                LC.ldap_cache_right_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
+    
     private static NamedEntryCache<Server> sServerCache =
         new NamedEntryCache<Server>(
                 LC.ldap_cache_server_maxsize.intValue(),
@@ -1790,9 +1798,6 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
-     */
     public void renameCos(String zimbraId, String newName) throws ServiceException {
         LdapCos cos = (LdapCos) get(CosBy.id, zimbraId);
         if (cos == null)
@@ -5350,6 +5355,199 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
+    
+    //
+    // rights
+    //
+    
+    private Right getRightById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
+        if (zimbraId == null)
+            return null;
+
+        LdapRight right = sRightCache.getById(zimbraId);
+        if (right == null) {
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            right = getRightByQuery(LdapFilter.rightById(zimbraId), zlc);
+            sRightCache.put(right);
+        }
+        return right;
+    }
+
+    private Right getFromCache(RightBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name:
+                return sRightCache.getByName(key);
+            case id:
+                return sRightCache.getById(key);
+            default:
+                return null;
+        }
+    }
+
+    private LdapRight getRightByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
+        try {
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            NamingEnumeration ne = zlc.searchDir(mDIT.rightBaseDN(), query, sSubtreeSC);
+            if (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                ne.close();
+                return new LdapRight(sr.getNameInNamespace(), sr.getAttributes(), this);
+            }
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup right via query: "+query+ " message: "+e.getMessage(), e);
+        } finally {
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
+        }
+        return null;
+    }
+    
+    private Right getRightByName(String name, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
+        LdapRight right = sRightCache.getByName(name);
+        if (right != null)
+            return right;
+
+        try {
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            String dn = mDIT.rightNametoDN(name);
+            Attributes attrs = zlc.getAttributes(dn);
+            right  = new LdapRight(dn, attrs, this);
+            sRightCache.put(right);
+            return right;
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup right by name: "+name+" message: "+e.getMessage(), e);
+        } finally {
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    @Override
+    public Right get(RightBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name:
+                return getRightByName(key, null);
+            case id:
+                return getRightById(key, null);
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public List<Right> getAllRights() throws ServiceException {
+        List<Right> result = new ArrayList<Right>();
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext();
+            NamingEnumeration ne = zlc.searchDir(mDIT.rightBaseDN(), LdapFilter.allRights(), sSubtreeSC);
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                result.add(new LdapRight(sr.getNameInNamespace(), sr.getAttributes(), this));
+            }
+            ne.close();
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to list all rights", e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+
+        Collections.sort(result);
+        return result;
+    }
+    
+    @Override
+    public Right createRight(String name, Map<String, Object> rightAttrs) throws ServiceException {
+        // the naming attribute cn is case-insensitrive, but we want to preserve the case when a right is created
+        // name = name.toLowerCase().trim();
+
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().preModify(rightAttrs, null, attrManagerContext, true, true);
+
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+
+            Attributes attrs = new BasicAttributes(true);
+            LdapUtil.mapToAttrs(rightAttrs, attrs);
+
+            Set<String> ocs = LdapObjectClass.getRightObjectClasses(this);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
+
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
+            attrs.put(A_cn, name);
+            String dn = mDIT.rightNametoDN(name);
+
+            zlc.createEntry(dn, attrs, "createRight");
+
+            Right right = getRightById(zimbraIdStr, zlc);
+            AttributeManager.getInstance().postModify(rightAttrs, right, attrManagerContext, true);
+            return right;
+
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.RIGHT_EXISTS(name);
+        } catch (NamingException e) {
+            //if (e instanceof )
+            throw ServiceException.FAILURE("unable to create right: "+name+" message: "+e.getMessage(), e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    @Override
+    public void deleteRight(String zimbraId) throws ServiceException {
+        LdapRight c = (LdapRight) get(RightBy.id, zimbraId);
+        if (c == null)
+            throw AccountServiceException.NO_SUCH_RIGHT(zimbraId);
+
+        // TODO: should we go through all grants that contain this right? probably not
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+            zlc.unbindEntry(c.getDN());
+            sRightCache.remove(c);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to purge right: "+zimbraId, e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+
+    public void renameRight(String zimbraId, String newName) throws ServiceException {
+        LdapRight right = (LdapRight) get(RightBy.id, zimbraId);
+        if (right == null)
+            throw AccountServiceException.NO_SUCH_RIGHT(zimbraId);
+
+       newName = newName.toLowerCase().trim();
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+            String newDn = mDIT.rightNametoDN(newName);
+            zlc.renameEntry(right.getDN(), newDn);
+            // remove old right from cache
+            sRightCache.remove(right);
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.RIGHT_EXISTS(newName);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to rename right: "+zimbraId, e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
                               GranteeBy granteeBy, String grantee,
@@ -5459,6 +5657,8 @@ public class LdapProvisioning extends Provisioning {
             return ((LdapIdentity)entry).getDN();
         else if (entry instanceof LdapSignature)
             return ((LdapSignature)entry).getDN();
+        else if (entry instanceof LdapRight)
+            return ((LdapRight)entry).getDN();
         else if (entry instanceof LdapServer)
             return ((LdapServer)entry).getDN();
         else if (entry instanceof LdapZimlet)
@@ -5750,6 +5950,17 @@ public class LdapProvisioning extends Provisioning {
                     "general",
                     "account DN",
                     LdapFilter.signatureById("{signature id}"));
+        
+        // right
+        printFilter("all rights", 
+                    "general",
+                    mDIT.rightBaseDN(), 
+                    LdapFilter.allRights());
+        
+        printFilter("right by id",
+                    "general",
+                    mDIT.serverBaseDN(),
+                    LdapFilter.rightById("{right id}"));
         
         // server
         printFilter("all servers", 

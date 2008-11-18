@@ -163,7 +163,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>From Microsoft Schema</desc>
 </attr>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry,xmppComponent,aclTarget" flags="domainAdminModifiable,accountInfo">
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry,xmppComponent,aclTarget,right" flags="domainAdminModifiable,accountInfo">
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
@@ -179,7 +179,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: first name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="description" type="string" optionalIn="account,distributionList,cos,domain,server,mimeEntry,objectEntry,aclTarget" flags="domainAdminModifiable">
+<attr name="description" type="string" optionalIn="account,distributionList,cos,domain,server,mimeEntry,objectEntry,aclTarget,right" flags="domainAdminModifiable">
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
@@ -252,7 +252,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource,xmppComponent" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource,xmppComponent,right" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -3262,7 +3262,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Yahoo ID</desc>
 </attr>
 
-<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,zimletEntry,xmppComponent,aclTarget">
+<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,zimletEntry,xmppComponent,aclTarget,right">
   <desc>Zimbra access control list</desc>
 </attr>
 
@@ -3778,5 +3778,27 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>zimbra</defaultCOSValue>
   <desc>IM service</desc>
 </attr>
+ 
+<attr id="764" name="zimbraRightExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="future">
+  <desc>Object classes to add when creating a zimbra right object.
+  </desc>
+</attr>
+
+<attr id="765" name="zimbraRightType" type="enum" value="preset,setAttrs,getAttrs,combo" cardinality="single" requiredIn="right" since="future">
+  <desc>right type</desc>
+</attr>
+
+<attr id="766" name="zimbraRightTargetType" type="enum" value="account,resource,distributionlist,domain,cos,right,server,xmppcomponent,zimlet,config,global" cardinality="multi" optionalIn="right" since="future">
+  <desc>right target type</desc>
+</attr>
+
+<attr id="767" name="zimbraRightRights" type="string" cardinality="multi" optionalIn="right" since="future">
+  <desc>rights contained in a combo right</desc>
+</attr>
+
+<attr id="768" name="zimbraRightAttrs" type="string" cardinality="multi" optionalIn="right" since="future">
+  <desc>attributes contained in a getAttrs or setAttrs right</desc>
+</attr>
+
     
 </attrs>

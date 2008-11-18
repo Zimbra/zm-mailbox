@@ -133,26 +133,84 @@ public class RightChecker {
             return sb.toString();
         }
     }
-        
     
+
+    /*
+     * canDo(for preset rights) and canAccessAttrs(for attr rights) methods traverse a EffectiveACL list, 
+     * which was expanded on the target.
+     * 
+     * The traversing order is:
+     * 
+     *     (loop 1 - grantees) For each identity(user or group, to which a right can granted) the perspective grantee(the account) can be matched 
+     *     {
+     *         (loop 2 - targets) walk up the target chain (the List<EffectiveACL> returned by expanding the perspective target) 
+     *         {
+     *                 (loop 3 - grants) iterate each grant on the target entry 
+     *                 {
+     *                     examine the grant
+     *                 }
+     *         }
+     *     }
+     *     
+     *     1 - grantee: is sorted in the most -> least relative order
+     *                  - i.e. the perspective account and all groups the account is a direct/indirect member of
+     *                  - e.g  account foo@test.com -> group password-admins@test.com -> group domain-admins@test.com
+     *               
+     *     2 - target : - is sorted in the most -> least relative order
+     *                  - i.e. the perspective target and all other targets from which the right can be inherited
+     *                  - e.g. 1  account bar@test.com -> group server-team@test.com -> domain test.com -> global grant
+     *                    e.g. 2  cos -> global grant
+     *     
+     *     3 - grants : - is sorted in the deny -> allow 
+     *                  - i.e. all negative grants appear before positive grants
+     *                  
+     * 
+     *  For example, for this target hierarchy:
+     *      domain D
+     *          group G1 (allow right R to group GC)
+     *              group G2 (deny right R to group GB)
+     *                  group G3 (deny right R to group GA)
+     *                      user account U   
+     *                  
+     *  And this grantee hierarchy:
+     *      group GA
+     *          group GB
+     *              group GC
+     *                  (admin) account A
+     *              
+     *  Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
+     *  Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
+     *  grant on G1(grant to GC).                          
+     *                  
+     */
+        
+        
     /**
-     * ======================================================================
+     * Check if grantee is allowed for rightNeeded on target entry.
      * 
-     *  Given a list of EffectiveACL, return if the perspective grantee can 
-     *  do right.
-     *  
-     *  Called from AccessManager.canDo()
-     *  
-     * ======================================================================
-     * 
-     * @param effectiveACLs
      * @param grantee
-     * @param right
-     * @param via
-     * @return
+     * @param target
+     * @param rightNeeded
+     * @param via if not null, will be populated with the grant info via which the result was decided.
+     * @return Boolean.TRUE if allowed, Boolean.FALSE if denied, null if there is no grant applicable to the rightNeeded.
      * @throws ServiceException
-     */    
-    static boolean canDo(List<EffectiveACL> effectiveACLs, Account grantee, Right right, ViaGrant via) throws ServiceException {
+     */
+    static Boolean canDo(Account grantee, Entry target, Right rightNeeded, ViaGrant via) throws ServiceException {
+        
+        if (!rightNeeded.isPresetRight())
+            throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
+                                                   rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
+            
+        Provisioning prov = Provisioning.getInstance();
+        
+        List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
+        if (effectiveACLs != null && effectiveACLs.size() > 0)
+            return checkPresetRight(effectiveACLs, grantee, rightNeeded, via);
+        else
+            return null;
+    }
+    
+    private static boolean checkPresetRight(List<EffectiveACL> effectiveACLs, Account grantee, Right right, ViaGrant via) throws ServiceException {
         Boolean result = null;
         
         if (sLog.isDebugEnabled()) {
@@ -193,11 +251,6 @@ public class RightChecker {
         }
         if (tempResult != null)
             return tempResult;
-        /* old
-        result = checkGroup(effectiveACLs, grantee, right, via, (short)(GranteeFlag.F_GROUP | adminFlag));
-        if (result != null)
-            return result;
-        */
         
         if (right.isUserRight()) {
             // as an authed user
@@ -248,8 +301,15 @@ public class RightChecker {
         return result;
     }
     
+
     /*
-     * The "Account grantee" parameter is just for pass to gotResult for logging purpose.
+     * @param effectiveACLs
+     * @param groupId
+     * @param grantee not used in this method, just for passing to gotResult for logging purpose.
+     * @param right
+     * @param via
+     * @return
+     * @throws ServiceException
      */
     private static Boolean checkGroup(List<EffectiveACL> effectiveACLs, String groupId, Account grantee, Right right, ViaGrant via) throws ServiceException {
         Boolean result = null;
@@ -263,84 +323,6 @@ public class RightChecker {
         return result;
     }
 
-    /*
-     * Check group grantees.  Group grantees are checked differently because we need to take consideration 
-     * relativity of a group grantee to the perspective authed user - relativity on target hierarchy and 
-     * grantee hierarchy can conflict.  
-     * 
-     * For example, for this target hierarchy:
-     *      domain D
-     *          group G1 (allow right R to group GC)
-     *              group G2 (deny right R to group GB)
-     *                  group G3 (deny right R to group GA)
-     *                      user account U   
-     *                  
-     *  And this grantee hierarchy:
-     *      group GA
-     *          group GB
-     *              group GC
-     *                  (admin) account A
-     *              
-     *  Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
-     *  Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
-     *  grant on G1(grant to GC).          
-     * 
-     * @param effectiveACLs
-     * @param grantee
-     * @param right
-     * @param via
-     * @param granteeFlags
-     * @return
-     * @throws ServiceException
-     */
-    private static Boolean checkGroup_old(List<EffectiveACL> effectiveACLs, Account grantee, Right right, ViaGrant via, short granteeFlags) throws ServiceException {
-        
-        EffectiveACL mostSpecificToGrantee_theTarget = null;
-        ZimbraACE    mostSpecificToGrantee_theGrant = null;
-        int          mostSpecificToGrantee_theDistance = -1;
-        
-        List<MemberOf> memberOf = Provisioning.getInstance().getAclGroups(grantee);
-        
-        for (EffectiveACL acl : effectiveACLs) {
-            for (ZimbraACE ace : acl.getAces()) {
-                GranteeType granteeType = ace.getGranteeType();
-                if (!granteeType.hasFlags(granteeFlags))
-                    continue;
-                
-                if (ace.matchesGrantee(grantee)) {
-                    
-                    int distance = -1;
-                    String granteeId = ace.getGrantee();
-                    for (MemberOf mo : memberOf) {
-                        if (mo.getId().equals(granteeId)) {
-                            distance = mo.getDistance();
-                            break;
-                        }
-                    }
-                    
-                    // not really possible, since we've already passed the matchesGrantee test
-                    if (distance == -1)
-                        continue;  // log?
-                    
-                    if (mostSpecificToGrantee_theDistance == -1 ||
-                        distance < mostSpecificToGrantee_theDistance ||
-                        (distance == mostSpecificToGrantee_theDistance && ace.deny())) {
-                        // found a more specific grant, or an ace with the same distance to 
-                        // grantee but is a negative grant.
-                        mostSpecificToGrantee_theTarget = acl;
-                        mostSpecificToGrantee_theGrant = ace;
-                        mostSpecificToGrantee_theDistance = distance;
-                    }
-                }
-            }
-        }
-        
-        if (mostSpecificToGrantee_theGrant == null)
-            return null;  // nothing matched
-        else
-            return gotResult(mostSpecificToGrantee_theTarget, mostSpecificToGrantee_theGrant, 
-                             grantee, right, via);
-    }
     
     private static Boolean gotResult(EffectiveACL acl, ZimbraACE ace, Account grantee, Right right, ViaGrant via) {
         if (ace.deny()) {
@@ -370,7 +352,85 @@ public class RightChecker {
         }
     }
 
-
+    
+    static AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) throws ServiceException {
+        if (rightNeeded != AdminRight.R_PSEUDO_GET_ATTRS && rightNeeded != AdminRight.R_PSEUDO_SET_ATTRS)
+            throw ServiceException.FAILURE("internal error", null); 
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        List<EffectiveACL> effectiveACLs = TargetType.expandTargetByRight(prov, target, rightNeeded);
+        AllowedAttrs result;
+        if (effectiveACLs != null && effectiveACLs.size() > 0)
+            result = canAccessAttrs(effectiveACLs, grantee, rightNeeded, TargetType.getAttributeClass(target));
+        else     
+            result = AccessManager.DENY_ALL_ATTRS();
+        
+        computeConDo(result, target, rightNeeded, attrs);
+        return result;
+    }
+    
+    /*
+     * if we set canDo to false, we must give it an attribute name if there is one in attrs
+     */
+    private static void computeConDo(AllowedAttrs result, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) {
+        
+        if (attrs == null) {
+            // caller just wants to get the allowed attr set, doesn't really care about the canDo result, so we set it to 
+            // null and don't bother computing it, even when the attr result is allow/deny all.
+            result.setCanDo(null);
+            
+        } else if (result.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
+            result.setCanDo(Boolean.TRUE);
+            
+        } else if (result.getResult() == AllowedAttrs.Result.DENY_ALL) {
+            // pick any attr from the requested attrs
+            String deniedAttr = "";
+            for (String a : attrs.keySet()) {
+                deniedAttr = a;
+                break;  // got one, break
+            }
+            result.setCanDo(Boolean.FALSE, deniedAttr);
+            
+        } else {
+            // allow some, check if result can accommodate rightNeeded/attrs
+            Set<String> allowed = result.getAllowed();
+            if (rightNeeded.getRightType() == Right.RightType.getAttrs) {
+                // get
+                for (String a : attrs.keySet()) {
+                    if (!allowed.contains(a)) {
+                        result.setCanDo(Boolean.FALSE, a);
+                        return;
+                    }
+                }
+                result.setCanDo(Boolean.TRUE);
+                
+            } else {
+                // set
+                Set<String> allowedWithLimit = result.getAllowedWithLimit();
+                for (String a : attrs.keySet()) {
+                    if (!allowed.contains(a)) {
+                        result.setCanDo(Boolean.FALSE, a);
+                        return;
+                    } 
+                    // allowed, see if the value it's setting to is within the inherited limit
+                    if (allowedWithLimit.contains(a)) {
+                        if (!valueWithinLimit(target, a, attrs.get(a))) {
+                            result.setCanDo(Boolean.FALSE, a);
+                            return;
+                        }
+                    }
+                }
+                result.setCanDo(Boolean.TRUE);
+            }
+        }
+    }
+    
+    private static boolean valueWithinLimit(Entry target, String attrName, Object value) {
+        return true; // TODO 
+    }
+    
+    
     /**
      * ======================================================================
      * 
@@ -390,7 +450,7 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    static AllowedAttrs canAccessAttrs(List<EffectiveACL> effectiveACLs, Account grantee, Right right, AttributeClass klass) throws ServiceException {
+    private static AllowedAttrs canAccessAttrs(List<EffectiveACL> effectiveACLs, Account grantee, Right right, AttributeClass klass) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         
         AllowedAttrs result = null;
@@ -556,7 +616,7 @@ public class RightChecker {
     
     private static AllowedAttrs processDenyAll(Map<String, AttrDist> allowSome, Map<String, AttrDist> denySome, AttributeClass klass) throws ServiceException {
         if (allowSome.isEmpty())
-            return AccessManager.DENY_ALL_ATTRS;
+            return AccessManager.DENY_ALL_ATTRS();
         else {
             Set<String> allowed = allowSome.keySet();
             Set<String> allowedWithlimit = buildAllowedWithLimit(allowSome);
@@ -567,9 +627,8 @@ public class RightChecker {
     private static AllowedAttrs processAllowAll(Map<String, AttrDist> allowSome, Map<String, AttrDist> denySome, AttributeClass klass) throws ServiceException {
         
         if (denySome.isEmpty()) {
-            // return AccessManager.ALLOW_ALL_ATTRS;
             if (allowSome.isEmpty())
-                return AccessManager.ALLOW_ALL_ATTRS;
+                return AccessManager.ALLOW_ALL_ATTRS();
             else {
                 // there could be some attrs with limit in the allowSome list,
                 // remove those from allowed and put them in the allowed with limit set
@@ -587,7 +646,7 @@ public class RightChecker {
                 }
                 
                 return allowedWithlimit.isEmpty()? 
-                           AccessManager.ALLOW_ALL_ATTRS:  // didn't find any with limit attrs in allowSome, so return allow all
+                           AccessManager.ALLOW_ALL_ATTRS():  // didn't find any with limit attrs in allowSome, so return allow all
                            AccessManager.ALLOW_SOME_ATTRS(allowed, allowedWithlimit);
             }
 

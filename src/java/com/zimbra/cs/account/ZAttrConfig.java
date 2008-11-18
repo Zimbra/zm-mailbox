@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081117-1638 */
+    /* build: 5.0 pshao 20081118-1208 */
 
     /**
      * Zimbra access control list
@@ -10442,6 +10442,81 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyWorkerProcesses(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyWorkerProcesses, "");
+        return attrs;
+    }
+
+    /**
+     * Object classes to add when creating a zimbra right object.
+     *
+     * @return zimbraRightExtraObjectClass, or ampty array if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public String[] getRightExtraObjectClass() {
+        return getMultiAttr(Provisioning.A_zimbraRightExtraObjectClass);
+    }
+
+    /**
+     * Object classes to add when creating a zimbra right object.
+     *
+     * @param zimbraRightExtraObjectClass new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public Map<String,Object> setRightExtraObjectClass(String[] zimbraRightExtraObjectClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightExtraObjectClass, zimbraRightExtraObjectClass);
+        return attrs;
+    }
+
+    /**
+     * Object classes to add when creating a zimbra right object.
+     *
+     * @param zimbraRightExtraObjectClass new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public Map<String,Object> addRightExtraObjectClass(String zimbraRightExtraObjectClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightExtraObjectClass, zimbraRightExtraObjectClass);
+        return attrs;
+    }
+
+    /**
+     * Object classes to add when creating a zimbra right object.
+     *
+     * @param zimbraRightExtraObjectClass existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public Map<String,Object> removeRightExtraObjectClass(String zimbraRightExtraObjectClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightExtraObjectClass, zimbraRightExtraObjectClass);
+        return attrs;
+    }
+
+    /**
+     * Object classes to add when creating a zimbra right object.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public Map<String,Object> unsetRightExtraObjectClass(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightExtraObjectClass, "");
         return attrs;
     }
 

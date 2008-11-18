@@ -217,6 +217,14 @@
   </comment>
 </objectclass>
 
+<objectclass id="24" name="zimbraRight" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>admin defined rights</desc>
+  <comment>
+    custom right definition
+  </comment>
+</objectclass>
+
 </objectclasses>
 
 

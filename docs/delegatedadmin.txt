@@ -999,7 +999,7 @@ if <grantee> is omitted, it means the account identified by the auth token.
       Create a custom right right.
     
 <CreateRightRequest>
-  <right name="{right-name}" type="{right-type}">
+  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs>
        <a n="{attr-name}" l="{limit}"/>+
@@ -1017,8 +1017,37 @@ if <grantee> is omitted, it means the account identified by the auth token.
               
               If {right-type} is "getAttrs" or "setAttrs", attributes can be get/set by the right 
               is defined in the <attrs> element. 
-              If {right-type} is is "combo", rghts covered by the right is defined in the <rights>
+              If {right-type} is is "combo", rights covered by the right is defined in the <rights>
               element.
+  
+{target-type}:
+    Target type on which the right is applicable.
+    1. For getAttrs/setAttrs rights:
+           Optional and can have multiple values separated by comma.
+           
+           e.g. If a get/setAttrs right has:
+                    account/cos attrs A, B, C
+                    domain attrs X, Y, Z
+                    server attrs M, N
+                    account/cos/domain/server attrs P, Q
+           
+           - If <targetType> is set:
+                 The right is only effective when granted on one of the specified entry types.
+                 e.g.
+                 - if <targetType> contains "account" only, then the right is effective 
+                   only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
+
+                 -  if <targetType> contains "account,cos,server" then the right is effective 
+                    for: account attrs A, B, C, P, Q
+                         cos attrs A, B, C, P, Q
+                         server attrs P, Q
+  
+           - If <targetType> is omitted:
+                 It means the right is not affiliated with a particular target type.  
+    
+    2. For combo rights:
+           Not allowed.
+
   
 <attrs>: Attributes covered by the right.
          Required if {right-type} is "getAttrs" or "setAttrs".  Ignored otherwise.
@@ -1049,11 +1078,11 @@ if <grantee> is omitted, it means the account identified by the auth token.
 <rights>: Rights covered by the right.
           Required if {right-type} is "combo".  Ignored otherwise.
           {right-name} in <r> elements can contain any right name that is already defined, including any 
-          system right and custom rights.
+          system rights and custom rights.
 
     
 <CreateRightResponse>
-  <right name="{right-name}" type="{right-type}">
+  <right name="{right-name}" id="right-id" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs>
        <a n="{attr-name}" l="{limit}"/>+
@@ -1069,21 +1098,21 @@ if <grantee> is omitted, it means the account identified by the auth token.
       Delete a custom right.
     
 <DeleteRightRequest>
-  <name>{right-name}</name>
+  <id>{value-of-zimbraId}</id>
 </DeleteRightRequest>
 
 <DeleteRightResponse/>
 
 
 6.2.3 GetRightRequest
-      Get a custom right.
+      Get a custom or system right.
     
 <GetRightRequest>
-  <name>{right-name}</name>
-</DeleteRightRequest>
+  <right by="id|name">...</right>
+</GetRightRequest>
 
 <GetRightResponse>
-  <right name="{right-name}" type="{right-type}">
+  <right name="{right-name}" [id="{right-id}"] type="{right-type}" [targetType="{target-type}"] definedBy="{defined-by}">
     <desc>{right-description}</desc>
     [<attrs>
        <a n="{attr-name}" l="{limit}"/>+
@@ -1094,12 +1123,25 @@ if <grantee> is omitted, it means the account identified by the auth token.
   </right>
 </GetRightResponse>
 
+{right-name}: right name
+
+{right-id}: only present if the right is a custom right
+
+{right-type}: getAttrs | setAttrs | combo | preset
+
+{target-type}: if {right-type} is:
+               - preset: always present
+               - getAttrs/setAtrts: optional
+               - combo: always not present
+
+{defined-by}: system | custom
+
 
 6.2.4 RenameRight
       Rename a custom right.
     
 <RenameRightRequest>
-  <name>{right-name}</name>
+  <id>{value-of-zimbraId}</id>
   <newName>{new-right-name}</newName>
 </RenameRightRequest>
 
@@ -1112,7 +1154,7 @@ if <grantee> is omitted, it means the account identified by the auth token.
       Modify a custom right.
     
 <ModifyRightRequest>
-  <right name="{right-name}">
+  <right id="{right-id}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs>
        <a n="{modifier}{attr-name}" l="{limit}"/>+
@@ -1127,10 +1169,15 @@ if <grantee> is omitted, it means the account identified by the auth token.
             +: add attr for getAttrs/setAttrs right; right for combo right
             -: remove attr for getAttrs/setAttrs right; right for combo right
 
+{target-type}:
+    see CreateRight
+    Optional for setAttrs/getAttrs rights
+    Now allowed for combo rights
+    
 Note: right type cannot be modified.
 
 <ModifyRightResponse>
-  <right name="{right-name}" type="{right-type}">
+  <right name="right-name" id="{right-id}" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs>
        <a n="{attr-name}" l="{limit}"/>+
@@ -1142,6 +1189,27 @@ Note: right type cannot be modified.
 </ModifyRightResponse>
 
 ModifyRightResponse contains the new right definition.
+
+
+6.2.6 GetAllRights
+
+<GetAllRightsRequest/>
+
+Get all system and custom rights
+
+<GetAllRightsResponse>
+  <right name="{right-name}" [id="{right-id}"] type="{right-type}" [targetType="{target-type}"] definedBy="{defined-by}">
+    <desc>{right-description}</desc>
+    [<attrs>
+       <a n="{attr-name}" l="{limit}"/>+
+     </attrs>]
+    [<rights>
+       <r n="{right-name}"/>+
+     </rights>]
+  </right>+
+</GetAllCosResponse>
+
+See <GetRightResponse> for description of each <right> in the response. 
 
 ===========
 7. zmprov

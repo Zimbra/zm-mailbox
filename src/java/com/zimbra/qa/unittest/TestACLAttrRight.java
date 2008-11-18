@@ -245,61 +245,61 @@ public class TestACLAttrRight extends TestACL {
     }
     
     public void testOneGrantAll() throws Exception {
-        oneGrantAll(ALLOW, SET, AccessManager.ALLOW_ALL_ATTRS);
-        oneGrantAll(DENY,  SET, AccessManager.DENY_ALL_ATTRS);
+        oneGrantAll(ALLOW, SET, AccessManager.ALLOW_ALL_ATTRS());
+        oneGrantAll(DENY,  SET, AccessManager.DENY_ALL_ATTRS());
         
         // result should the same as SET
-        oneGrantAll(ALLOW, GET, AccessManager.ALLOW_ALL_ATTRS);
-        oneGrantAll(DENY,  GET, AccessManager.DENY_ALL_ATTRS);
+        oneGrantAll(ALLOW, GET, AccessManager.ALLOW_ALL_ATTRS());
+        oneGrantAll(DENY,  GET, AccessManager.DENY_ALL_ATTRS());
     }
     
     public void testTwoGrantsSameLevel() throws Exception {
-        someAllSameLevel(ALLOW, ALLOW, NOLIMIT, SET, AccessManager.ALLOW_ALL_ATTRS);
+        someAllSameLevel(ALLOW, ALLOW, NOLIMIT, SET, AccessManager.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, NOLIMIT, SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllSameLevel(ALLOW, DENY,  NOLIMIT, SET, AccessManager.DENY_ALL_ATTRS);
-        someAllSameLevel(DENY,  DENY,  NOLIMIT, SET, AccessManager.DENY_ALL_ATTRS);
+        someAllSameLevel(ALLOW, DENY,  NOLIMIT, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  NOLIMIT, SET, AccessManager.DENY_ALL_ATTRS());
         someAllSameLevel(ALLOW, ALLOW, LIMIT,   SET, EXPECTED_ALL_SOME_WITH_LIMIT);
         someAllSameLevel(DENY,  ALLOW, LIMIT,   SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllSameLevel(ALLOW, DENY,  LIMIT,   SET, AccessManager.DENY_ALL_ATTRS);
-        someAllSameLevel(DENY,  DENY,  LIMIT,   SET, AccessManager.DENY_ALL_ATTRS);
+        someAllSameLevel(ALLOW, DENY,  LIMIT,   SET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  LIMIT,   SET, AccessManager.DENY_ALL_ATTRS());
         
         // limit doesn't matter, result should the same as SET with no NOLIMIT
-        someAllSameLevel(ALLOW, ALLOW, NULLLIMIT, GET, AccessManager.ALLOW_ALL_ATTRS);
+        someAllSameLevel(ALLOW, ALLOW, NULLLIMIT, GET, AccessManager.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, NULLLIMIT, GET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllSameLevel(ALLOW, DENY,  NULLLIMIT, GET, AccessManager.DENY_ALL_ATTRS);
-        someAllSameLevel(DENY,  DENY,  NULLLIMIT, GET, AccessManager.DENY_ALL_ATTRS);
+        someAllSameLevel(ALLOW, DENY,  NULLLIMIT, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  NULLLIMIT, GET, AccessManager.DENY_ALL_ATTRS());
         
     }
 
     public void testTwoGrantsDiffLevel() throws Exception {
         //               some   all    limit  some-is-closer
-        someAllDiffLevel(ALLOW, ALLOW, NOLIMIT, true, SET, AccessManager.ALLOW_ALL_ATTRS);
+        someAllDiffLevel(ALLOW, ALLOW, NOLIMIT, true, SET, AccessManager.ALLOW_ALL_ATTRS());
         someAllDiffLevel(DENY,  ALLOW, NOLIMIT, true, SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
         someAllDiffLevel(ALLOW, DENY,  NOLIMIT, true, SET, EXPECTED_SOME_NO_LIMIT);
-        someAllDiffLevel(DENY,  DENY,  NOLIMIT, true, SET, AccessManager.DENY_ALL_ATTRS);
+        someAllDiffLevel(DENY,  DENY,  NOLIMIT, true, SET, AccessManager.DENY_ALL_ATTRS());
         someAllDiffLevel(ALLOW, ALLOW, LIMIT,   true, SET, EXPECTED_ALL_SOME_WITH_LIMIT);
         someAllDiffLevel(DENY,  ALLOW, LIMIT,   true, SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
         someAllDiffLevel(ALLOW, DENY,  LIMIT,   true, SET, EXPECTED_SOME_WITH_LIMIT);
-        someAllDiffLevel(DENY,  DENY,  LIMIT,   true, SET, AccessManager.DENY_ALL_ATTRS);
+        someAllDiffLevel(DENY,  DENY,  LIMIT,   true, SET, AccessManager.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, NOLIMIT, false, SET, AccessManager.ALLOW_ALL_ATTRS);
-        someAllDiffLevel(DENY,  ALLOW, NOLIMIT, false, SET, AccessManager.ALLOW_ALL_ATTRS);
-        someAllDiffLevel(ALLOW, DENY,  NOLIMIT, false, SET, AccessManager.DENY_ALL_ATTRS);
-        someAllDiffLevel(DENY,  DENY,  NOLIMIT, false, SET, AccessManager.DENY_ALL_ATTRS);
-        someAllDiffLevel(ALLOW, ALLOW, LIMIT,   false, SET, AccessManager.ALLOW_ALL_ATTRS);
-        someAllDiffLevel(DENY,  ALLOW, LIMIT,   false, SET, AccessManager.ALLOW_ALL_ATTRS);
-        someAllDiffLevel(ALLOW, DENY,  LIMIT,   false, SET, AccessManager.DENY_ALL_ATTRS);
-        someAllDiffLevel(DENY,  DENY,  LIMIT,   false, SET, AccessManager.DENY_ALL_ATTRS);
+        someAllDiffLevel(ALLOW, ALLOW, NOLIMIT, false, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, NOLIMIT, false, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  NOLIMIT, false, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  NOLIMIT, false, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, LIMIT,   false, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, LIMIT,   false, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  LIMIT,   false, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  LIMIT,   false, SET, AccessManager.DENY_ALL_ATTRS());
         
         // limit doesn't matter, result should the same as SET with no NOLIMIT
-        someAllDiffLevel(ALLOW, ALLOW, NULLLIMIT, true,  GET, AccessManager.ALLOW_ALL_ATTRS);
+        someAllDiffLevel(ALLOW, ALLOW, NULLLIMIT, true,  GET, AccessManager.ALLOW_ALL_ATTRS());
         someAllDiffLevel(DENY,  ALLOW, NULLLIMIT, true,  GET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
         someAllDiffLevel(ALLOW, DENY,  NULLLIMIT, true,  GET, EXPECTED_SOME_NO_LIMIT);
-        someAllDiffLevel(DENY,  DENY,  NULLLIMIT, true,  GET, AccessManager.DENY_ALL_ATTRS);
-        someAllDiffLevel(ALLOW, ALLOW, NULLLIMIT, false, GET, AccessManager.ALLOW_ALL_ATTRS);
-        someAllDiffLevel(DENY,  ALLOW, NULLLIMIT, false, GET, AccessManager.ALLOW_ALL_ATTRS);
-        someAllDiffLevel(ALLOW, DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS);
-        someAllDiffLevel(DENY,  DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS);
+        someAllDiffLevel(DENY,  DENY,  NULLLIMIT, true,  GET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, NULLLIMIT, false, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, NULLLIMIT, false, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS());
         
     }
     

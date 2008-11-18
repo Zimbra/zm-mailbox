@@ -251,22 +251,22 @@ public class DomainAccessManager extends AccessManager {
 
     @Override
     public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS;
+        return DENY_ALL_ATTRS();
     }
     
     @Override
     public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS;
+        return DENY_ALL_ATTRS();
     }
     
     @Override
     public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS;
+        return DENY_ALL_ATTRS();
     }
     
     @Override
     public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS;
+        return DENY_ALL_ATTRS();
     }
     
 }

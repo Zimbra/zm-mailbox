@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081117-1638 */
+    /* build: 5.0 pshao 20081118-1208 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -652,6 +652,60 @@ public class ZAttrProvisioning {
         public boolean isOnly() { return this == only;}
         public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
+    }
+
+    public static enum RightTargetType {
+        right("right"),
+        cos("cos"),
+        zimlet("zimlet"),
+        config("config"),
+        distributionlist("distributionlist"),
+        account("account"),
+        domain("domain"),
+        xmppcomponent("xmppcomponent"),
+        resource("resource"),
+        server("server"),
+        global("global");
+        private String mValue;
+        private RightTargetType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static RightTargetType fromString(String s) throws ServiceException {
+            for (RightTargetType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isRight() { return this == right;}
+        public boolean isCos() { return this == cos;}
+        public boolean isZimlet() { return this == zimlet;}
+        public boolean isConfig() { return this == config;}
+        public boolean isDistributionlist() { return this == distributionlist;}
+        public boolean isAccount() { return this == account;}
+        public boolean isDomain() { return this == domain;}
+        public boolean isXmppcomponent() { return this == xmppcomponent;}
+        public boolean isResource() { return this == resource;}
+        public boolean isServer() { return this == server;}
+        public boolean isGlobal() { return this == global;}
+    }
+
+    public static enum RightType {
+        setAttrs("setAttrs"),
+        combo("combo"),
+        getAttrs("getAttrs"),
+        preset("preset");
+        private String mValue;
+        private RightType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static RightType fromString(String s) throws ServiceException {
+            for (RightType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSetAttrs() { return this == setAttrs;}
+        public boolean isCombo() { return this == combo;}
+        public boolean isGetAttrs() { return this == getAttrs;}
+        public boolean isPreset() { return this == preset;}
     }
 
     public static enum TableMaintenanceOperation {
@@ -4983,6 +5037,46 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=724)
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
+
+    /**
+     * attributes contained in a getAttrs or setAttrs right
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=768)
+    public static final String A_zimbraRightAttrs = "zimbraRightAttrs";
+
+    /**
+     * Object classes to add when creating a zimbra right object.
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public static final String A_zimbraRightExtraObjectClass = "zimbraRightExtraObjectClass";
+
+    /**
+     * rights contained in a combo right
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public static final String A_zimbraRightRights = "zimbraRightRights";
+
+    /**
+     * right target type
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public static final String A_zimbraRightTargetType = "zimbraRightTargetType";
+
+    /**
+     * right type
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public static final String A_zimbraRightType = "zimbraRightType";
 
     /**
      * Maximum number of scheduled tasks that can run simultaneously.

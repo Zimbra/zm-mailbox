@@ -1515,7 +1515,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
     
     //
-    // permissions
+    // rights
     //
     public static enum TargetBy {
         
@@ -1544,6 +1544,30 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
+    
+    public static enum RightBy {
+        
+        // case must match protocol
+        id, name;
+        
+        public static RightBy fromString(String s) throws ServiceException {
+            try {
+                return RightBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+    
+    public abstract Right get(RightBy keyType, String key) throws ServiceException;
+    
+    public abstract List<Right> getAllRights()  throws ServiceException;
+    
+    public abstract Right createRight(String name, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void deleteRight(String rightName) throws ServiceException;
+    
+    public abstract void renameRight(String zimbraId, String newName) throws ServiceException;
     
     public abstract boolean checkRight(String targetType, TargetBy targetBy, String target,
                                        GranteeBy granteeBy, String grantee,

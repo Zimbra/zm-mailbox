@@ -49,7 +49,6 @@ import com.zimbra.cs.service.AuthProvider;
     <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
   </key>
 */
-    
 
 public abstract class TestACL extends TestCase {
     
@@ -582,11 +581,15 @@ public abstract class TestACL extends TestCase {
     }
     
     protected void verify(Account grantee, Entry target, Map<String, Object> attrs, GetOrSet getOrSet, AllowedAttrs expected) {
-        AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
-                                        mAM.canGetAttrs(grantee, target, attrs) :
-                                        mAM.canSetAttrs(grantee, target, attrs);
-        // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
-        assertEquals(expected, allowedAttrs);
+        try {
+            AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
+                                            mAM.canGetAttrs(grantee, target, attrs) :
+                                            mAM.canSetAttrs(grantee, target, attrs);
+            // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
+            assertEquals(expected, allowedAttrs);
+        } catch (ServiceException e) {
+            fail();
+        }
     }
     
        
@@ -636,10 +639,11 @@ public abstract class TestACL extends TestCase {
         TestUtil.runTest(TestACLTarget.class);
         TestUtil.runTest(TestACLPrecedence.class);
         
-        if (mAM instanceof RoleAccessManager)
+        if (mAM instanceof RoleAccessManager) {
             TestUtil.runTest(TestACLAttrRight.class);
-        
-        TestUtil.runTest(TestACLComboRight.class);
+            TestUtil.runTest(TestACLComboRight.class);
+            TestUtil.runTest(TestACLRight.class);
+        }
     }
 
 }

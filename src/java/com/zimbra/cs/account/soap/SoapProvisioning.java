@@ -46,8 +46,10 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Right;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.RightBy;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
@@ -1899,6 +1901,31 @@ public class SoapProvisioning extends Provisioning {
         if (deny)
          eRight.addAttribute(AdminConstants.A_DENY, deny);
         eRight.setText(right);
+    }
+    
+    @Override
+    public Right get(RightBy keyType, String key) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    @Override
+    public List<Right> getAllRights()  throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    @Override
+    public Right createRight(String name, Map<String, Object> attrs) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    @Override
+    public void deleteRight(String rightName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    @Override
+    public void renameRight(String zimbraId, String newName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
     }
     
     @Override

@@ -148,6 +148,18 @@ public class LdapFilter {
     }
     
     /*
+     * right
+     */
+    public static String allRights() {
+        return "(objectclass=zimbraRight)";
+    }
+    
+    public static String rightById(String id) {
+        return "(&(zimbraId=" + id + ")(objectclass=zimbraRight))";
+    }
+    
+    
+    /*
      * server
      */
     public static String allServers() {

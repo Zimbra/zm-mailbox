@@ -48,7 +48,7 @@ public class TestACLComboRight extends TestACL {
         EXPECTED_SOME_WITH_LIMIT =  AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), ATTRS_CONFIGURE_QUOTA_WITHIN_LIMIT.keySet());
     }
     
-    public void test1() throws Exception {
+    public void testComboRight() throws Exception {
         String testName = getTestName();
         
         System.out.println("Testing " + testName);
@@ -72,7 +72,6 @@ public class TestACLComboRight extends TestACL {
         
         TestViaGrant via;
         
-        // verify that the negative grant is honored
         via = new TestViaGrant(TargetType.account, TA, GranteeType.GT_USER, GA.getName(), AdminRight.R_domainAdmin, POSITIVE);
         
         // createAcount is not applicable on account, thus the grant will be ignored, which is 
