@@ -445,6 +445,21 @@ public class Contact extends MailItem {
                 }
                 break;
         }
+        
+        if (result.length() == 0) { //fall back to email as last resort
+        	String fallback = fields.get(A_email);
+        	if (fallback == null || fallback.trim().length() == 0) {
+        		fallback = fields.get(A_imAddress1);
+        		if (fallback != null) {
+        			fallback = fallback.trim();
+        			int prefix = fallback.indexOf("://");
+        			if (prefix >= 0)
+        				fallback = fallback.substring(prefix + 3);
+        		}
+        	}
+        	result.append(fallback == null ? "" : fallback);
+        }
+        
         return result.toString().trim();
     }
     
