@@ -167,9 +167,7 @@ onEntry:  (don't need this, TODO, remove)
   <desc>modify all domain attributes</desc>
 </right>
 
-- getDomain                         : get all domain attributes
-          - modifyDomain                      : modify all domain attributes
-          - modifyDomainWithinInheritedLimit  : modify all domain attributes within global config limit
+
           
 <!-- 
     account rights
@@ -194,6 +192,10 @@ onEntry:  (don't need this, TODO, remove)
   <desc>rename server</desc>
 </right>
 
+<right name="modifyZimlet" type="setAttrs" targetType="zimlet">
+  <desc>modify all zimlet attributes</desc>
+</right>
+
 <right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
   <desc>test global config target for now, delete after test is done</desc>
 </right>
@@ -203,11 +205,11 @@ onEntry:  (don't need this, TODO, remove)
 </right>
 
 <right name="getAccount" type="getAttrs" targetType="account">
-  <desc>get all account attrs</desc>
+  <desc>get all account attributes</desc>
 </right>
 
 <right name="modifyAccount" type="setAttrs" targetType="account">
-  <desc>set all account attrs</desc>
+  <desc>set all account attributes</desc>
 </right>
 
 <right name="viewDummy" type="getAttrs" targetType="account,cos">
