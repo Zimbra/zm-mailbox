@@ -3774,7 +3774,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>stats views available for the authed admin in admin console</desc>
 </attr>
 
-<attr id="763" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
+<attr id="763" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
   <defaultCOSValue>zimbra</defaultCOSValue>
   <desc>IM service</desc>
 </attr>
