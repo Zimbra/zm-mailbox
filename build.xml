@@ -438,6 +438,10 @@
             <param name="getter.class" value="distributionList"/>
             <param name="getter.output" value="ZAttrDistributionList.java"/>
         </antcall>
+        <antcall target="generate-getter">
+            <param name="getter.class" value="right"/>
+            <param name="getter.output" value="ZAttrRight.java"/>
+        </antcall>
         <antcall target="generate-provisioning"/>
     </target>
 
