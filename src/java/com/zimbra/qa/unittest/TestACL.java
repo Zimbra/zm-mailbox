@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -70,7 +71,7 @@ public abstract class TestACL extends TestCase {
     protected static final Right ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
     protected static final Right ADMIN_RIGHT_GLOBALGRANT       = AdminRight.R_testGlobalGrantRemoveMe;
     protected static final Right ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
-
+    protected static final Right ADMIN_RIGHT_ZIMLET            = AdminRight.R_modifyZimlet;
     
     static {
         
@@ -598,8 +599,15 @@ public abstract class TestACL extends TestCase {
      * 
      */
     protected Set<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
-        String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
-        Entry targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+        Entry targetEntry;
+        if (target instanceof Zimlet) {
+            // must be by name
+            String targetName = ((Zimlet)target).getName();
+            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.name, targetName);
+        } else {
+            String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
+            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+        }
         return RightUtil.grantRight(mProv, targetEntry, aces);
     }
         

@@ -28,6 +28,8 @@ The following terms are used in modeling and implementation of the system:
             - global grant
             - right (TODO)
             - server
+            - xmppcomponent
+            - zimlet
            
     There are three aspects of targets that need to be dealt with:
     (A) target object, on which a rights are granted.
@@ -120,11 +122,11 @@ Depending on the context, there are three aspects of targets that need to be dea
         an account/CR right on a domain specifies that the right is effective on all accounts/CRs in the domain.
         
         Following is the complete description on target scopes.  If the grant is on a:
-        - account           : the account itself
+        - account           : the account entry
         
-        - calendar resource : the calendar resource itself
+        - calendar resource : the calendar resource entry
         
-        - cos               : the cos itself
+        - cos               : the cos entry
         
         - distribution list : if the right is applicable to:
                               - distribution lists: 
@@ -135,22 +137,26 @@ Depending on the context, there are three aspects of targets that need to be dea
                               
         - domain            : if the right is applicable to: 
                               - domains:
-                                    the domain itself (note, not any sub-domains under this domain)
+                                    the domain entry (note, not any sub-domains under this domain)
                               - distribution lists: 
                                     all distributions lists in this domain     
                               - accounts and calendar resources: 
                                     all accounts and calendar resources in this domain
                                     
          
-        - global config     : the global config itself
+        - global config     : the global config entry
         
-        - global grant      : the global grant target 
+        - global grant      : the global grant entry 
         
-        - right             : the right definition itself
+        - right             : the right definition entry  TODO
 
-        - server            : the server itself
+        - server            : the server entry
         
-
+        - xmppcomponent     : the xmpp component entry
+        
+        - zimlet            : the zimlet entry
+        
+        
 ===========
 3. Rights
 ===========
@@ -486,7 +492,7 @@ Depending on the context, there are three aspects of targets that need to be dea
     ---------- 
         type="astring"
         cardinality="multi" (each value is an Access Control Entry, hence making an ACL)
-        optionalIn="account,distributionList,cos,domain,globalConfig,server"  (TODO: cos/domain/server base)
+        optionalIn="account,distributionList,cos,domain,globalConfig,server,xmppcomponent,zimlet"
             
             
     zimbraACE Format:
@@ -630,17 +636,10 @@ Depending on the context, there are three aspects of targets that need to be dea
            to the account creating the right.
           
     
-4.3 Changes for Cos/Domain/Server Base Entries
-    1. Need a "base DN" entry for Domains
-       In the LDAP DIT, currently cos's and servers are created under the "cos base" DN(cn=cos,cn-zimbra) 
-       and "server base" DN(cn=servers,cn=zimbra).  But domains are created under the LDAP root (DN = ""),
-       there is no "domain base".
-       For the sole purpose of (1) granting the createTopDomain right, and (2) granting rights on 
-       all domains, we will create a "domain base DN" entry in LDAP: cn=domains,cn=zimbra.   Note, domain 
-       entries will still be created under LDAP root, like how it is done currently.  The domain base entry 
-       is just for granting rights.
-       
-    2. Need zimbraACE on cos/server/domain Base Entries
+4.3 Add the "global grant" Entry
+    cn=globalgrant,cn=zimbra
+    
+    It is for granting grants that affect all entries on the system.
            
 
     
@@ -835,7 +834,7 @@ Depending on the context, there are three aspects of targets that need to be dea
   <right [deny="${deny}"]>{right-name}</right>
 </GrantRightRequest>    
 
-{target-type} = account | resource | distributionlist | domain | cos | server | config | global
+{target-type} = account | resource | distributionlist | domain | cos | server | xmppcomponent | zimlet | config | global 
 
 {target-by}   = name | id
   

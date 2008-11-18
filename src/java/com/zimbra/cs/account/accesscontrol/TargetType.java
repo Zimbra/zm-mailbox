@@ -27,7 +27,11 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
+import com.zimbra.cs.account.Provisioning.ZimletBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 
 public enum TargetType {
@@ -38,6 +42,8 @@ public enum TargetType {
     cos(true),
     right(true),
     server(true),
+    xmppcomponent(true),
+    zimlet(true),
     config(false),
     global(false);
     
@@ -110,6 +116,19 @@ public enum TargetType {
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_SERVER(target); 
             break;
+        case xmppcomponent:
+            targetEntry = prov.get(XMPPComponentBy.fromString(targetBy.name()), target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(target); 
+            break;    
+        case zimlet:
+            ZimletBy zimletBy = ZimletBy.fromString(targetBy.name());
+            if (zimletBy != ZimletBy.name)
+                throw ServiceException.INVALID_REQUEST("zimlet must be by name", null);
+            targetEntry = prov.getZimlet(target);
+            if (targetEntry == null)
+                throw AccountServiceException.NO_SUCH_ZIMLET(target); 
+            break;
         case config:
             targetEntry = prov.getConfig();
             break;
@@ -129,6 +148,10 @@ public enum TargetType {
             return true;
         else if (target instanceof Config)
             return right.applicableOnTargetType(TargetType.config);
+        else if (target instanceof Zimlet)
+            return right.applicableOnTargetType(TargetType.zimlet);
+        else if (target instanceof XMPPComponent)
+            return right.applicableOnTargetType(TargetType.xmppcomponent);
         else if (target instanceof Server)
             return right.applicableOnTargetType(TargetType.server);
         else if (target instanceof Cos)
@@ -156,6 +179,10 @@ public enum TargetType {
             return AttributeClass.aclTarget;
         else if (target instanceof Config)
             return AttributeClass.globalConfig;
+        else if (target instanceof Zimlet)
+            return AttributeClass.zimletEntry;
+        else if (target instanceof XMPPComponent)
+            return AttributeClass.xmppComponent;
         else if (target instanceof Server)
             return AttributeClass.server;
         else if (target instanceof Cos)
@@ -284,6 +311,10 @@ public enum TargetType {
             expandGlobalGrant(prov, target, visitor, result);
         else if (target instanceof Config)
             expandConfig(prov, target, visitor, result);
+        else if (target instanceof Zimlet)
+            expandZimlet(prov, target, visitor, result);
+        else if (target instanceof XMPPComponent)
+            expandXMPPComponent(prov, target, visitor, result);
         else if (target instanceof Server)
             expandServer(prov, target, visitor, result);
         else if (target instanceof Cos)
@@ -390,6 +421,30 @@ public enum TargetType {
         // get grants on the target itself
         int distance = 0;
         visitor.visit(TargetType.server, target, distance, targeType, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        visitor.visit(TargetType.global, globalGrant, ++distance, targeType, result);
+    }
+    
+    private static void expandXMPPComponent(Provisioning prov, Entry target, ExpandTargetVisitor visitor, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.xmppcomponent;
+        
+        // get grants on the target itself
+        int distance = 0;
+        visitor.visit(TargetType.xmppcomponent, target, distance, targeType, result);
+        
+        // global grant
+        Entry globalGrant = prov.getGlobalGrant();
+        visitor.visit(TargetType.global, globalGrant, ++distance, targeType, result);
+    }
+    
+    private static void expandZimlet(Provisioning prov, Entry target, ExpandTargetVisitor visitor, List<EffectiveACL> result) throws ServiceException {
+        TargetType targeType = TargetType.zimlet;
+        
+        // get grants on the target itself
+        int distance = 0;
+        visitor.visit(TargetType.zimlet, target, distance, targeType, result);
         
         // global grant
         Entry globalGrant = prov.getGlobalGrant();

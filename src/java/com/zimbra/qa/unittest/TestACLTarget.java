@@ -20,6 +20,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -311,6 +312,43 @@ public class TestACLTarget extends TestACL {
         via = new TestViaGrant(TargetType.server, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
         revokeRight(TargetType.server, target, aces);
+        
+        // grant on the global grant
+        GlobalGrant globalGrant = mProv.getGlobalGrant();
+        grantRight(TargetType.global, globalGrant, aces);
+        via = new TestViaGrant(TargetType.global, globalGrant, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
+        revokeRight(TargetType.global, globalGrant, aces);
+    }
+    
+    public void testTargetZimlet() throws Exception {
+        String testName = getName();
+        
+        /*
+         * setup grantees
+         */
+        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        
+        /*
+         * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
+         *   - the target zimlet
+         *   - global grant
+         */
+        Right right = ADMIN_RIGHT_ZIMLET;
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(newUsrACE(grantee, right, ALLOW));
+        
+        /*
+         * test targets
+         */
+        TestViaGrant via;
+        
+        // grant on target zimlet itself
+        Zimlet target = mProv.getZimlet("com_zimbra_date");
+        grantRight(TargetType.zimlet, target, aces);
+        via = new TestViaGrant(TargetType.zimlet, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        verify(grantee, target, right, ALLOW, via);
+        revokeRight(TargetType.zimlet, target, aces);
         
         // grant on the global grant
         GlobalGrant globalGrant = mProv.getGlobalGrant();
