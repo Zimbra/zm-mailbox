@@ -233,7 +233,9 @@ public class SoapEngine {
             }
             
             try {
-                zsc.getAuthToken().setProxyAuthToken(prov.getProxyAuthToken(rid));
+                AuthToken at = zsc.getAuthToken();
+                if (at != null)
+                    at.setProxyAuthToken(prov.getProxyAuthToken(rid));
             } catch (ServiceException e) {
                 mLog.warn("failed to set proxy auth token: " + e.getMessage());
             }
