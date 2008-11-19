@@ -87,12 +87,6 @@ public class IMPersona extends ClassLogger {
                 } catch (Exception e) {
                     ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
                 }
-                try {
-                    User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID(), true);
-                    XMPPServer.getInstance().getUserManager().deleteUser(user);
-                } catch (Exception e) {
-                    ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
-                }
             }
         } catch (Exception e) {
             ZimbraLog.im.warn("Exception deleting IM data for: "+acctName, e);
