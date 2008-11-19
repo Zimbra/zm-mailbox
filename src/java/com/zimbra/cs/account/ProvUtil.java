@@ -284,7 +284,7 @@ public class ProvUtil implements DebugListener {
         CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_RIGHT("createRight", "cr", "{name} [attr1 value1 [attr2 value2...]]", Category.RIGHT, 1, Integer.MAX_VALUE),
         CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
-        CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 5, Integer.MAX_VALUE),
+        CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {classname} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 6, Integer.MAX_VALUE),
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
@@ -2479,11 +2479,13 @@ public class ProvUtil implements DebugListener {
     }
     
     private void doCreateXMPPComponent(String[] args) throws ServiceException, ArgException {
-        //4 = category
-        //5 = type
-        Map<String,Object> map = getMap(args, 6);
-        map.put(Provisioning.A_zimbraXMPPComponentCategory, args[4]);
-        map.put(Provisioning.A_zimbraXMPPComponentType, args[5]);
+        //4 = class
+        //5 = category
+        //6 = type
+        Map<String,Object> map = getMap(args, 7);
+        map.put(Provisioning.A_zimbraXMPPComponentClassName, args[4]);
+        map.put(Provisioning.A_zimbraXMPPComponentCategory, args[5]);
+        map.put(Provisioning.A_zimbraXMPPComponentType, args[6]);
         Domain d = lookupDomain(args[2]);
         String routableName = args[1]+"."+d.getName();
         System.out.println(mProv.createXMPPComponent(routableName, lookupDomain(args[2]), lookupServer(args[3]), map));

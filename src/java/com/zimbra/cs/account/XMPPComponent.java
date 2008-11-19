@@ -32,6 +32,10 @@ public class XMPPComponent extends NamedEntry implements Comparable {
         return getAttr(Provisioning.A_zimbraXMPPComponentName);
     }
     
+    public String getClassName() {
+        return getAttr(Provisioning.A_zimbraXMPPComponentClassName);
+    }
+    
     public String getShortName() throws ServiceException {
         String name = getName();
         String domainName = getDomain().getName();

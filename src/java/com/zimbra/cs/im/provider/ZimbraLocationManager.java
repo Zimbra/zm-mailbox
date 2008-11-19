@@ -44,6 +44,7 @@ public class ZimbraLocationManager implements LocationManager {
         toRet.category = in.getComponentCategory();
         toRet.type = in.getComponentType();
         toRet.features = in.getComponentFeatures();
+        toRet.className = in.getClassName();
         return toRet;
     }
     
