@@ -427,7 +427,7 @@ IM NOTIFICATIONS
                 ]*
                 [
                 // NEW MESSAGE RECEIVED:
-                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP" [error="recipient_unavailable"]>
+                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP" [error="MESSAGE_ERROR_CONDITION"]>
                       [<subject [lang="LANG"]>SUBJECT</subject>]
                       [<body [lang="LANG"] html="1|0">BODY</body>]
                       [<typing/>]
@@ -472,3 +472,35 @@ IM NOTIFICATIONS
              </im>]
           ]?     
         </notify>]
+
+        
+MESSAGE_ERROR_CONDITIONS:
+        forbidden
+        
+        internal_server_error
+        
+        item_not_found - user not found (usually NOT sent
+        
+        jid_malformed - address is malformed
+        
+        not_acceptable - server didn't like your message
+                          (e.g. bad-word filter rejected it)
+
+        not_allowed - you're not allowed to send a message there
+
+        payment_required
+
+        recipient_unavailable - that user is temporarily unavailable
+
+        redirect - that user is at a different address
+
+        remote_server_not_found - could not contact the user's domain
+
+        remote_server_timeout
+
+        resource_constraint - the system is too busy right now
+
+        service_unavailable - messages are not accepted by the service
+
+        undefined_condition
+
