@@ -73,7 +73,7 @@ public class RenameAccount extends AdminDocumentHandler {
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
         prov.renameAccount(id, newName);
         if (mbox != null)
-            mbox.renameMailbox(newName);
+            mbox.renameMailbox(oldName, newName);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RenameAccount","name", oldName, "newName", newName})); 

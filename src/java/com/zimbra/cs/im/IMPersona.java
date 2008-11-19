@@ -34,6 +34,7 @@ import org.jivesoftware.wildfire.forms.spi.XDataFormImpl;
 import org.jivesoftware.wildfire.group.Group;
 import org.jivesoftware.wildfire.group.GroupManager;
 import org.jivesoftware.wildfire.group.GroupNotFoundException;
+import org.jivesoftware.wildfire.roster.RosterItem;
 import org.jivesoftware.wildfire.user.User;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
@@ -44,6 +45,7 @@ import org.xmpp.packet.Roster;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.IQ;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.im.IMBuddy.SubType;
 import com.zimbra.cs.im.IMChat.MucStatusCode;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
@@ -75,9 +77,8 @@ public class IMPersona extends ClassLogger {
             if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 IMAddr addr = new IMAddr(acctName);
                 JID jid = addr.makeJID();
-                User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID(), true);
                 try {
-                    XMPPServer.getInstance().getRosterManager().deleteRoster(jid);
+                    XMPPServer.getInstance().getRosterManager().deleteRoster(jid, true);
                 } catch (Exception e) {
                     ZimbraLog.im.warn("Exception deleting IM Roster data for: "+acctName, e);
                 }
@@ -87,6 +88,7 @@ public class IMPersona extends ClassLogger {
                     ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
                 }
                 try {
+                    User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID(), true);
                     XMPPServer.getInstance().getUserManager().deleteUser(user);
                 } catch (Exception e) {
                     ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
@@ -95,6 +97,10 @@ public class IMPersona extends ClassLogger {
         } catch (Exception e) {
             ZimbraLog.im.warn("Exception deleting IM data for: "+acctName, e);
         }
+    }
+    
+    public static void offlineRenameIMPersona(String oldName, String newName) {
+        deleteIMPersona(oldName);
     }
     
     /**
@@ -191,6 +197,116 @@ public class IMPersona extends ClassLogger {
         mAddr = addr;
         mMailbox = mbox;
         ZimbraLog.im.info("Creating IMPersona "+toString()+" at addr "+System.identityHashCode(this)+" mbox at addr "+System.identityHashCode(mbox));
+    }
+    
+    public void renamePersona(String newName) {
+        String oldName = mAddr.getAddr();
+        
+        Map<IMAddr, IMSubscribedNotification> startRoster = new HashMap<IMAddr, IMSubscribedNotification>();
+        startRoster.putAll(mRoster);
+        
+        List<RosterItem> rosterItemsBeforeDelete = new ArrayList<RosterItem>();
+        try {
+            org.jivesoftware.wildfire.roster.Roster oldRoster = 
+                XMPPServer.getInstance().getRosterManager().getRoster(oldName);
+            for (RosterItem item : oldRoster.getRosterItems())
+                rosterItemsBeforeDelete.add(item);
+        } catch (UserNotFoundException e) {
+            ZimbraLog.im.debug("usernotfound: "+oldName, e);
+        }
+        
+        synchronized(getLock()) {
+            if (true) {
+                // remove all subs FROM other people
+                // can't use roster APIs, not all our buddies will be on this server
+                
+                boolean fakeOnline = false;
+                if (!mIsOnline) {
+                    // if we aren't already connected, then connect us
+                    fakeOnline = true;
+                    mIsOnline = true;
+                    connectToIMServer();
+                }
+                
+                for (RosterItem item : rosterItemsBeforeDelete) {
+                    if (item.getSubStatus() == RosterItem.SUB_BOTH || item.getSubStatus() == RosterItem.SUB_FROM) {
+                        try {
+                            authorizeSubscribe(null, new IMAddr(item.getJid()), false, false, item.getNickname(),item.getGroups());
+                        } catch (ServiceException e) {
+                            ZimbraLog.im.debug("in authSubscribe before changing name",e);
+                        }
+                    }
+                }
+                if (fakeOnline) {
+                    mIsOnline = false;
+                    disconnectFromIMServer();
+                }
+            }
+
+            // take us offline, if we're currently online
+            if (mIsOnline) {
+                mIsOnline = false;
+                try {
+                    pushMyPresence();
+                } catch (ServiceException e) {
+                    ZimbraLog.im.debug("Couldn't push offline presence before disconnect during rename to "+newName);
+                }
+                disconnectFromIMServer();
+            }
+            
+            // delete our existing roster, etc
+            deleteIMPersona(oldName);
+
+            // change the name
+            mAddr = new IMAddr(newName);
+            
+            if (true) {
+                // re-create all our subscriptions.  Buddies will unfortunately have to ACCEPT our sub requests again 
+                boolean fakeOnline = false;
+                if (!mIsOnline) {
+                    fakeOnline = true;
+                    mIsOnline = true;
+                    connectToIMServer();
+                }
+                
+                for (RosterItem item : rosterItemsBeforeDelete) {
+                    if (item.getSubStatus() == RosterItem.SUB_BOTH || item.getSubStatus() == RosterItem.SUB_FROM) {
+                        try {
+                            authorizeSubscribe(null, new IMAddr(item.getJid()), true, false, 
+                                               item.getNickname(), item.getGroups());
+                        } catch (ServiceException e) {
+                            ZimbraLog.im.debug("in authSubscribe after changing name",e);
+                        }
+                    }
+                    if (item.getSubStatus() == RosterItem.SUB_BOTH || item.getSubStatus() == RosterItem.SUB_TO) {
+                        try {
+                            addOutgoingSubscription(null, new IMAddr(item.getJid()), item.getNickname(), item.getGroups());
+                        } catch (ServiceException e) {
+                            ZimbraLog.im.debug("in authSubscribe after changing name",e);
+                        }
+                        if (!fakeOnline) { 
+                            postIMNotification(IMSubscribedNotification.create(new IMAddr(item.getJid()), "", 
+                                                                               item.getGroups(), false, false,
+                                                                               Roster.Ask.subscribe));
+                        }
+                    }
+                }
+                if (fakeOnline) {
+                    mIsOnline = false;
+                    disconnectFromIMServer();
+                }
+            }
+                
+            if (mListeners.size() > 0) {
+                mIsOnline = true;
+                connectToIMServer();
+                try {
+                    pushMyPresence();
+                } catch (ServiceException e) {
+                    ZimbraLog.im.debug("Couldn't push initial presence after reconnect during rename to "+newName);
+                }
+            }
+        }
     }
 
     /**
@@ -289,6 +405,14 @@ public class IMPersona extends ClassLogger {
         }
     }
 
+    
+    public void addOutgoingSubscription(OperationContext octxt, IMAddr address,
+                                        String name, List<String> groupArray) throws ServiceException {
+        String[] groups = new String[groupArray.size()];
+        groupArray.toArray(groups);
+        addOutgoingSubscription(octxt, address, name, groups);
+    }
+    
     /**
      * @param octxt
      * @param address
@@ -318,6 +442,15 @@ public class IMPersona extends ClassLogger {
         }
     }
 
+    public void authorizeSubscribe(OperationContext octxt, IMAddr toAddress,
+                                   boolean authorized, boolean add, String name, List<String> groupArray)
+                                   throws ServiceException {
+        
+        String[] groups = new String[groupArray.size()];
+        groupArray.toArray(groups);
+        authorizeSubscribe(octxt, toAddress, authorized, add, name, groups);
+    }
+    
     /**
      * @param octxt
      * @param toAddress
@@ -689,7 +822,8 @@ public class IMPersona extends ClassLogger {
                 // roster
                 IMRosterNotification rosterNot = new IMRosterNotification();
                 for (IMSubscribedNotification not: mRoster.values()) {
-                    rosterNot.addEntry(not);
+                    if (not.isSubscribedTo())
+                        rosterNot.addEntry(not);
                 }
                 postIMNotification(rosterNot, s);
                 
@@ -1401,7 +1535,7 @@ public class IMPersona extends ClassLogger {
                         debug("Presence.unsubscribed: %s", pres);
                         IMAddr address = IMAddr.fromJID(pres.getFrom());
                         postIMNotification(IMSubscribedNotification.create(address,
-                                    address.toString(), false, null));
+                                    address.toString(), false, false, null));
                     }
                     break;
                     case probe:
@@ -1435,18 +1569,22 @@ public class IMPersona extends ClassLogger {
                     // client if the sub is unsubscribed, but not in the case of a roster SET
                     if (roster.getType() == IQ.Type.set || subscript == Roster.Subscription.both || subscript == Roster.Subscription.to) {
                         boolean isTo = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to);
+                        boolean isFrom = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.from);
+                        
                         IMSubscribedNotification not = IMSubscribedNotification
                         .create(
                             buddyAddr,
                             item.getName(),
                             item.getGroups(),
                             isTo,
+                            isFrom,
                             item.getAsk());
-                        if (isTo) {
-                            mRoster.put(buddyAddr, not);
-                        } else {
+                        
+                        if (subscript == Roster.Subscription.remove)
                             mRoster.remove(buddyAddr);
-                        }
+                        else
+                            mRoster.put(buddyAddr, not);
+                        
                         if (!isResult) {
                             postIMNotification(not);
                         }
@@ -1793,12 +1931,11 @@ public class IMPersona extends ClassLogger {
 //            rosterPacket.addItem(address.makeJID(), name, Roster.Ask.unsubscribe,
 //                Roster.Subscription.none, Arrays.asList(groups));
 //            xmppRoute(rosterPacket);
-            
-            // tell the other user we want to unsubscribe
+                        // tell the other user we want to unsubscribe
             Presence unsubscribePacket = new Presence(Presence.Type.unsubscribe);
             unsubscribePacket.setTo(address.makeJID());
             xmppRoute(unsubscribePacket);
-            postIMNotification(IMSubscribedNotification.create(address, name, groups, false,
+            postIMNotification(IMSubscribedNotification.create(address, name, groups, false, false,
                 Roster.Ask.unsubscribe));
         }
     }

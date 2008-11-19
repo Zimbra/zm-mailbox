@@ -27,10 +27,11 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class RenameMailbox extends RedoableOp {
 
     private String mNewName;
+    private String mOldName;
 
     public RenameMailbox() {}
 
-    public RenameMailbox(int mailboxId, String newName) {
+    public RenameMailbox(int mailboxId, String oldName, String newName) {
         setMailboxId(mailboxId);
         mNewName = newName;
     }
@@ -43,16 +44,20 @@ public class RenameMailbox extends RedoableOp {
     @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mNewName);
+        if (getVersion().atLeast(1,24))
+            out.writeUTF(mOldName);
     }
 
     @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
         mNewName = in.readUTF();
+        if (getVersion().atLeast(1,24)) 
+            mOldName = in.readUTF();
     }
 
     @Override
     protected String getPrintableData() {
-        return "newName=" + mNewName;
+        return "newName=" + mNewName+" oldName="+mOldName;
     }
 
     @Override
@@ -60,6 +65,6 @@ public class RenameMailbox extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         if (mNewName != null)
-            mbox.renameMailbox(mNewName);
+            mbox.renameMailbox(mOldName, mNewName);
     }
 }

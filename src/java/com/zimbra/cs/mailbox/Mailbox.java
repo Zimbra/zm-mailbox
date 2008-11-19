@@ -1623,20 +1623,36 @@ public class Mailbox {
         }
     }
 
-    public synchronized void renameMailbox(String newName) throws ServiceException {
-        renameMailbox(null, newName);
+    public synchronized void renameMailbox(String oldName, String newName) throws ServiceException {
+        renameMailbox(null, oldName, newName);
     }
 
-    public synchronized void renameMailbox(OperationContext octxt, String newName) throws ServiceException {
+    public synchronized void renameMailbox(OperationContext octxt, String oldName, String newName) throws ServiceException {
         if (newName == null || newName.length() < 1)
             throw ServiceException.INVALID_REQUEST("Cannot rename mailbox to empty name", null);
-
-        RenameMailbox redoRecorder = new RenameMailbox(mId, newName);
+        
+        RenameMailbox redoRecorder = new RenameMailbox(mId, oldName, newName);
         beginTransaction("renameMailbox", octxt, redoRecorder);
         boolean success = false;
         try {
             Connection conn = getOperationConnection();
             DbMailbox.renameMailbox(conn, this, newName);
+
+            boolean xmppEnabled = Provisioning.getInstance().getServer(getAccount()).
+                                     getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false);
+            
+            boolean imEnabledThisAcct = getAccount().
+                                          getBooleanAttr(Provisioning.A_zimbraFeatureIMEnabled, false);
+            
+            if (mPersona != null || (xmppEnabled && imEnabledThisAcct)) {
+                getPersona().renamePersona(newName);
+//              if we're currently connected to IM, we'll need to update our IM Persona
+//                if (mPersona != null) {
+//                    mPersona.renamePersona(newName);
+//                } else {
+//                    IMPersona.offlineRenameIMPersona(oldName, newName);
+//                }
+            }
             success = true;
         } finally {
             endTransaction(success);

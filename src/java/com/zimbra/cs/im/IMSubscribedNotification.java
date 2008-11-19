@@ -30,42 +30,52 @@ class IMSubscribedNotification extends IMNotification {
     IMAddr mAddr;
     String mName;
     String[] mGroups;
-    boolean mSubscribed;
+    boolean mSubscribed; // isTo (i'm subscribed TO that remote entity)
+    boolean mSubscribedFrom; 
     Roster.Ask mAsk;
 
-    static IMSubscribedNotification create(IMAddr address, String name, List<IMGroup> groups, boolean subscribed, Roster.Ask ask) {
+    static IMSubscribedNotification create(IMAddr address, String name, List<IMGroup> groups, 
+                                           boolean subscribedTo, boolean subscribedFrom, Roster.Ask ask) {
         String[] str = new String[groups.size()];
         int i = 0;
         for (IMGroup grp : groups) 
             str[i++] = grp.getName();
 
-        return new IMSubscribedNotification(address, name, str, subscribed, ask);
+        return new IMSubscribedNotification(address, name, str, subscribedTo, subscribedFrom, ask);
     }
     
-    static IMSubscribedNotification create(IMAddr address, String name, Collection<String> groups, boolean subscribed, Roster.Ask ask) {
+    static IMSubscribedNotification create(IMAddr address, String name, Collection<String> groups, 
+                                           boolean subscribedTo, boolean subscribedFrom, Roster.Ask ask) {
         String[] str = new String[groups.size()];
         int i = 0;
         for (String s : groups) 
             str[i++] = s;
 
-        return new IMSubscribedNotification(address, name, str, subscribed, ask);
+        return new IMSubscribedNotification(address, name, str, subscribedTo, subscribedFrom, ask);
     }
     
-    static IMSubscribedNotification create(IMAddr address, String name, String[] groups, boolean subscribed, Roster.Ask ask) {
-        return new IMSubscribedNotification(address, name, groups, subscribed, ask);
+    static IMSubscribedNotification create(IMAddr address, String name, String[] groups, 
+                                           boolean subscribedTo, boolean subscribedFrom, Roster.Ask ask) {
+        return new IMSubscribedNotification(address, name, groups, subscribedTo, subscribedFrom, ask);
     }
     
-    static IMSubscribedNotification create(IMAddr address, String name, boolean subscribed, Roster.Ask ask) {
-        return new IMSubscribedNotification(address, name, null, subscribed, ask);
+    static IMSubscribedNotification create(IMAddr address, String name, 
+                                           boolean subscribedTo, boolean subscribedFrom, Roster.Ask ask) {
+        return new IMSubscribedNotification(address, name, null, subscribedTo, subscribedFrom, ask);
     }
     
-    private IMSubscribedNotification(IMAddr address, String name, String[] groups, boolean subscribed, Roster.Ask ask) {
+    private IMSubscribedNotification(IMAddr address, String name, String[] groups, 
+                                     boolean subscribedTo, boolean subscribedFrom, Roster.Ask ask) {
         mAddr = address;
         mName = name;
         mGroups = groups;
-        mSubscribed = subscribed;
+        mSubscribed = subscribedTo;
+        mSubscribedFrom = subscribedFrom;
         mAsk = ask;
     }
+    
+    public boolean isSubscribedTo() { return mSubscribed; }
+    public boolean isSubscribedFrom() { return mSubscribedFrom; }
     
     public Element toXml(Element parent) {
         ZimbraLog.im.info("IMSubscribedNotification " + mAddr + " " + mName + " Subscribed=" +mSubscribed
