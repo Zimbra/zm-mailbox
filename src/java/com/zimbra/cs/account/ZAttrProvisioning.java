@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081118-1352 */
+    /* build: 5.0 pshao 20081119-1050 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5547,6 +5547,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=737)
     public static final String A_zimbraXMPPComponentCategory = "zimbraXMPPComponentCategory";
+
+    /**
+     * class name of the XMPP component
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=768)
+    public static final String A_zimbraXMPPComponentClassName = "zimbraXMPPComponentClassName";
 
     /**
      * XMPP Type of the component

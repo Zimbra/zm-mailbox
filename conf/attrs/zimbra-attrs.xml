@@ -3796,5 +3796,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>attributes contained in a getAttrs or setAttrs right</desc>
 </attr>
 
+<attr id="768" name="zimbraXMPPComponentClassName" type="string" cardinality="single" requiredIn="xmppComponent" since="future">
+  <desc>class name of the XMPP component</desc>
+</attr>
     
 </attrs>
