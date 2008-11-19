@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
-import com.zimbra.cs.mailbox.ContactRankings;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -63,7 +62,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -357,20 +355,8 @@ public class ParseMimeMessage {
                 mm.setHeader("In-Reply-To", irt);
 
             // can have no addresses specified if it's a draft...
-            if (!maddrs.isEmpty()) {
+            if (!maddrs.isEmpty())
                 addAddressHeaders(mm, maddrs, ctxt.defaultCharset);
-            	ArrayList<InternetAddress> rcptAddresses = new ArrayList<InternetAddress>();
-            	addAddresses(rcptAddresses, maddrs.get(EmailType.TO.toString()));
-            	addAddresses(rcptAddresses, maddrs.get(EmailType.CC.toString()));
-            	addAddresses(rcptAddresses, maddrs.get(EmailType.BCC.toString()));
-                if (!rcptAddresses.isEmpty()) {
-                	try {
-                    	ContactRankings.increment(octxt.getAuthenticatedUser().getId(), rcptAddresses);
-                	} catch (Throwable e) {
-                        mLog.warn("unable to update contact rankings", e);
-                	}
-                }
-            }
             	
             if (!hasContent && !isMultipart)
                 mm.setText("", Mime.P_CHARSET_DEFAULT);
@@ -410,13 +396,6 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void addAddresses(Collection<InternetAddress> addrs, Object obj) {
-    	if (obj == null)
-    		return;
-    	else if (obj instanceof InternetAddress[])
-    		addrs.addAll(Arrays.asList((InternetAddress[])obj));
-    }
-    
     private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID)
     throws ServiceException, MessagingException, IOException {
         if (contentID != null)

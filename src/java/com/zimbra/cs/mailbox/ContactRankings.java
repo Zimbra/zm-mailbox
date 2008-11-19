@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeSet;
 
+import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
 import com.zimbra.common.service.ServiceException;
@@ -45,10 +46,12 @@ public class ContactRankings {
 		mTableSize = Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
 		readFromDatabase();
 	}
-	public static void increment(String accountId, Collection<InternetAddress> addrs) throws ServiceException {
+	public static void increment(String accountId, Collection<? extends Address> addrs) throws ServiceException {
 		ContactRankings rankings = new ContactRankings(accountId);
-		for (InternetAddress addr : addrs)
-			rankings.increment(addr.getAddress(), addr.getPersonal());
+		for (Address addr : addrs)
+			if (addr instanceof InternetAddress)
+				rankings.increment(((InternetAddress)addr).getAddress(), 
+								   ((InternetAddress)addr).getPersonal());
 		
 		rankings.writeToDatabase();
 	}

@@ -18,9 +18,11 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
@@ -29,7 +31,6 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
-import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -75,27 +76,6 @@ public class MailSender {
         }
         return folderId;
     }
-
-    private static Address[] removeFailedAddresses(Address[] orig, Address[] failedAddrs) {
-        if (orig == null || failedAddrs == null) 
-            return orig;
-
-        List<Address> newTo = new ArrayList<Address>();
-        for (int i = 0; i < orig.length; i++) {
-            boolean invalid = false;
-            for (int j = 0; j < failedAddrs.length; j++) {
-                if (failedAddrs[j].equals(orig[i])) {
-                    invalid = true;
-                    break;
-                }
-            }
-            if (!invalid)
-                newTo.add(orig[i]);
-        }
-        Address[] valid = newTo.toArray(new Address[newTo.size()]);
-        return valid;
-    }
-
 
     public static enum ReplyForwardType {
         ORIGINAL,  // This is an original message; not a reply or forward.
@@ -250,8 +230,16 @@ public class MailSender {
 
             // actually send the message via SMTP
             applyDomainSmtpSettings(acct, mm);
-            sendMessage(mm, ignoreFailedAddresses, rollback);
+            Collection<Address> sentAddresses = sendMessage(mm, ignoreFailedAddresses, rollback);
 
+            if (!sentAddresses.isEmpty()) {
+            	try {
+                	ContactRankings.increment(octxt.getAuthenticatedUser().getId(), sentAddresses);
+            	} catch (Throwable e) {
+            		ZimbraLog.smtp.warn("unable to update contact rankings", e);
+            	}
+            }
+            
             // Send intercept if save-to-sent didn't do it already.
             if (!saveToSent) {
                 try {
@@ -524,60 +512,26 @@ public class MailSender {
         mm.saveChanges();
     }
 
-    protected void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
+    /*
+     * returns a Collection of successfully sent recipient Addresses
+     */
+    protected Collection<Address> sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
+    	HashSet<Address> sentAddresses = new HashSet<Address>();
         try {
-            boolean retry = ignoreFailedAddresses;
-            if (mm.getAllRecipients() != null) {
-                do {
-                    try {
-                        Transport.send(mm);
-                        retry = false;
-                    } catch (SendFailedException sfe) {
-                        if (!retry)
-                            throw sfe;
-
-                        // Failed addresses include invalid addresses and valid-but-unsent addresses,
-                        // whatever the reasons were.
-                        Address[] invalidAddrs = sfe.getInvalidAddresses();
-                        Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
-                        Address[] badAddrs = null;
-                        int numBad = 0;
-                        if (invalidAddrs != null)
-                            numBad += invalidAddrs.length;
-                        if (validUnsentAddrs != null)
-                            numBad += validUnsentAddrs.length;
-                        if (numBad > 0) {
-                            badAddrs = new Address[numBad];
-                            int badAddrsIndex = 0;
-                            if (invalidAddrs != null) {
-                                for (Address a : invalidAddrs) {
-                                    badAddrs[badAddrsIndex++] = a;
-                                }
-                            }
-                            if (validUnsentAddrs != null) {
-                                for (Address a : validUnsentAddrs) {
-                                    badAddrs[badAddrsIndex++] = a;
-                                }
-                            }
-                        }
-
-                        Address[] to = removeFailedAddresses(mm.getRecipients(RecipientType.TO), badAddrs);
-                        Address[] cc = removeFailedAddresses(mm.getRecipients(RecipientType.CC), badAddrs);
-                        Address[] bcc = removeFailedAddresses(mm.getRecipients(RecipientType.BCC), badAddrs);
-
-                        // if there are NO valid addrs, then give up!
-                        if ((to == null || to.length == 0) &&
-                                (cc == null || cc.length == 0) &&
-                                (bcc == null || bcc.length == 0))
-                            retry = false;
-
-                        mm.setRecipients(RecipientType.TO, to);
-                        mm.setRecipients(RecipientType.CC, cc);
-                        mm.setRecipients(RecipientType.BCC, bcc);
-                    }
-                } while(retry);
+            Address[] rcptAddresses = mm.getAllRecipients();
+            while (rcptAddresses != null) {
+            	try {
+                    Transport.send(mm, rcptAddresses);
+                    sentAddresses.addAll(Arrays.asList(rcptAddresses));
+                    break;
+                } catch (SendFailedException sfe) {
+                	if (!ignoreFailedAddresses)
+                		throw sfe;
+                	rcptAddresses = sfe.getValidUnsentAddresses();
+                	sentAddresses.addAll(Arrays.asList(sfe.getValidSentAddresses()));
+                }
             }
         } catch (SendFailedException e) {
             for (RollbackData rdata : rollback)
@@ -594,7 +548,8 @@ public class MailSender {
                 if (rdata != null)
                     rdata.rollback();
             throw e;
-        } 
+        }
+        return sentAddresses;
     }
 
     /**
