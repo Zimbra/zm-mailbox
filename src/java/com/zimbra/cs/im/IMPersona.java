@@ -72,7 +72,6 @@ public class IMPersona extends ClassLogger {
             if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 IMAddr addr = new IMAddr(acctName);
                 JID jid = addr.makeJID();
-                User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID(), true);
                 try {
                     XMPPServer.getInstance().getRosterManager().deleteRoster(jid);
                 } catch (Exception e) {
@@ -82,11 +81,6 @@ public class IMPersona extends ClassLogger {
                     GroupManager.getInstance().deleteUser(jid.toBareJID());
                 } catch (Exception e) {
                     ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
-                }
-                try {
-                    XMPPServer.getInstance().getUserManager().deleteUser(user);
-                } catch (Exception e) {
-                    ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
                 }
             }
         } catch (Exception e) {
@@ -189,7 +183,7 @@ public class IMPersona extends ClassLogger {
         mMailbox = mbox;
         ZimbraLog.im.info("Creating IMPersona "+toString()+" at addr "+System.identityHashCode(this)+" mbox at addr "+System.identityHashCode(mbox));
     }
-
+    
     /**
      * Active Sessions are tracked here so that we can use them to push
      * notifications to the client
@@ -336,8 +330,8 @@ public class IMPersona extends ClassLogger {
             }
             if (add) {
                 addOutgoingSubscription(octxt, toAddress, name, groups);
-            }
         }
+    }
     }
 
     /**
@@ -683,7 +677,7 @@ public class IMPersona extends ClassLogger {
                 // roster
                 IMRosterNotification rosterNot = new IMRosterNotification();
                 for (IMSubscribedNotification not: mRoster.values()) {
-                    rosterNot.addEntry(not);
+                        rosterNot.addEntry(not);
                 }
                 postIMNotification(rosterNot, s);
                 
@@ -717,21 +711,21 @@ public class IMPersona extends ClassLogger {
         
         switch (iq.getType()) {
             case error:
-                ZimbraLog.im.debug("Ignoring IQ error packet: "+iq);
+                    ZimbraLog.im.debug("Ignoring IQ error packet: "+iq);
                 return;
             case result:
             {
-                org.dom4j.Element child = iq.getChildElement();
-                if (child != null) {
-                    if ("query".equals(child.getName())) {
-                        if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
-                            handlePrivacyResult(iq);
-                            handled = true;
+                    org.dom4j.Element child = iq.getChildElement();
+                    if (child != null) {
+                        if ("query".equals(child.getName())) {
+                            if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
+                                handlePrivacyResult(iq);
+                                handled = true;
+                            }
                         }
                     }
-                }
-                if (!handled)
-                    ZimbraLog.im.debug("Ignoring IQ result packet: "+iq);
+                    if (!handled)
+                        ZimbraLog.im.debug("Ignoring IQ result packet: "+iq);
                 return;
             }
             case set:
@@ -881,7 +875,7 @@ public class IMPersona extends ClassLogger {
             ZimbraLog.im.debug("Ignoring unknown privacy IQ response: "+iq);
     }
     
-
+        
     private void handleMessagePacket(boolean toMe, Message msg) {
         // is it a gateway notification?  If so, then stop processing it here
         Element xe = msg.getChildElement("x", "zimbra:interop");
@@ -967,7 +961,7 @@ public class IMPersona extends ClassLogger {
                 IMPresence newPresence = new IMPresence(pres);
                 mBufferedPresence.put(fromAddr, newPresence);
                 IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(fromAddr, newPresence);
-                postIMNotification(event);
+                    postIMNotification(event);
             } else {
                 IMAddr fromAddr;
                 Presence reply = null;
@@ -979,7 +973,7 @@ public class IMPersona extends ClassLogger {
                         IMPresence newPresence = new IMPresence(Show.OFFLINE, (byte) prio, pres.getStatus());
                         mBufferedPresence.put(fromAddr, newPresence);
                         IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(fromAddr, newPresence);
-                        postIMNotification(event);
+                            postIMNotification(event);
                     break;
                     case subscribe: {
                         fromAddr = IMAddr.fromJID(pres.getFrom()); 
@@ -1096,10 +1090,10 @@ public class IMPersona extends ClassLogger {
             }
         } catch (ServiceException ex) {
             ZimbraLog.im.warn("Caught Exception checking if XMPP enabled "
-                        + ex.toString(), ex);
+                              + ex.toString(), ex);
         }
     }
-  
+    
     public void setPrivacyList(PrivacyList pl) {
         synchronized(getLock()) {
             // figure out what name to use
@@ -1184,7 +1178,7 @@ public class IMPersona extends ClassLogger {
             mBufferedPresence = new HashMap<IMAddr, IMPresence>();
         }
     }
-
+    
 //    public boolean inSharedGroup(String name) {
 //        return mSharedGroups.contains(name);
 //    }
@@ -1319,7 +1313,7 @@ public class IMPersona extends ClassLogger {
 //                Roster.Subscription.none, Arrays.asList(groups));
 //            xmppRoute(rosterPacket);
             
-            // tell the other user we want to unsubscribe
+                        // tell the other user we want to unsubscribe
             Presence unsubscribePacket = new Presence(Presence.Type.unsubscribe);
             unsubscribePacket.setTo(address.makeJID());
             xmppRoute(unsubscribePacket);
