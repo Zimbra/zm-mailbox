@@ -41,11 +41,14 @@ public class IMErrorMessageNotification extends IMBaseMessageNotification {
     public Element toXml(Element parent) throws ServiceException {
         Element e = super.toXml(parent);
         
-        switch(mErrorCondition) {
-            case recipient_unavailable:
-                e.addAttribute(IMConstants.A_ERROR, PacketError.Condition.recipient_unavailable.name());
-                break;
-        }
+//        switch(mErrorCondition) {
+//            case recipient_unavailable:
+//                e.addAttribute(IMConstants.A_ERROR, PacketError.Condition.recipient_unavailable.name());
+//                break;
+//                
+//        }
+        if (mErrorCondition != null)
+            e.addAttribute(IMConstants.A_ERROR, mErrorCondition.name());
         mErrorText.toXml(e);
         return e;
     }
