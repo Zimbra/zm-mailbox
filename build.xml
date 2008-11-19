@@ -571,7 +571,7 @@
             <arg line="-l -v mc default zimbraFeatureInstantNotify TRUE"/>
         </java>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="cxc conference ${defaultdomain.name} ${zimbra.server.hostname} conference text"/>
+            <arg line="cxc conference ${defaultdomain.name} ${zimbra.server.hostname} org.jivesoftware.wildfire.muc.spi.MultiUserChatServerImpl conference text"/>
         </java>
         <antcall target="stop-webserver"/>
         <antcall target="start-webserver"/>
