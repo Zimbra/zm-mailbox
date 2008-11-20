@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081119-1822 */
+    /* build: 5.0 pshao 20081119-2159 */
 
     /**
      * Zimbra access control list
@@ -5167,8 +5167,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * If TRUE, the envelope sender of a message redirected by mail filters
-     * will be set to the user&#039;s address. If FALSE, the envelope sender
-     * will be set to the From address of the redirected message.
+     * will be set to the users address. If FALSE, the envelope sender will
+     * be set to the From address of the redirected message.
      *
      * @return zimbraMailRedirectSetEnvelopeSender, or false if unset
      */
@@ -5179,8 +5179,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * If TRUE, the envelope sender of a message redirected by mail filters
-     * will be set to the user&#039;s address. If FALSE, the envelope sender
-     * will be set to the From address of the redirected message.
+     * will be set to the users address. If FALSE, the envelope sender will
+     * be set to the From address of the redirected message.
      *
      * @param zimbraMailRedirectSetEnvelopeSender new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5195,8 +5195,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * If TRUE, the envelope sender of a message redirected by mail filters
-     * will be set to the user&#039;s address. If FALSE, the envelope sender
-     * will be set to the From address of the redirected message.
+     * will be set to the users address. If FALSE, the envelope sender will
+     * be set to the From address of the redirected message.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
