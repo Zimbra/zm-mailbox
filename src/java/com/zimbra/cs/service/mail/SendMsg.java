@@ -83,12 +83,14 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SendMsg extends MailDocumentHandler {
 
-    private static Log sLog = LogFactory.getLog(SendMsg.class);
+    static Log sLog = LogFactory.getLog(SendMsg.class);
 
     private enum SendState { NEW, SENT, PENDING };
 
     private static final long MAX_IN_FLIGHT_DELAY_MSECS = 4 * Constants.MILLIS_PER_SECOND;
     private static final long RETRY_CHECK_PERIOD_MSECS = 500;
+
+    private static final ItemId NO_MESSAGE_SAVED_TO_SENT = new ItemId((String) null, -1);
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -152,6 +154,11 @@ public class SendMsg extends MailDocumentHandler {
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads, iidOrigId,
                     replyType, identityId, noSaveToSent, false, needCalendarSentByFixup);
 
+                // (need to make sure that *something* gets recorded, because caching
+                //   a null ItemId makes the send appear to still be PENDING)
+                if (savedMsgId == null)
+                    savedMsgId = NO_MESSAGE_SAVED_TO_SENT;
+
                 // and record it in the table in case the client retries the send
                 if (sendRecord != null)
                     sendRecord.setSecond(savedMsgId);
@@ -166,7 +173,7 @@ public class SendMsg extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
         Element respElement = response.addElement(MailConstants.E_MSG);
-        if (savedMsgId != null)
+        if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0)
             respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
         return response;
     }
@@ -245,11 +252,10 @@ public class SendMsg extends MailDocumentHandler {
 
             for (Pair<String, ItemId> record : sendData) {
                 if (record.getFirst().equals(sendUid)) {
-                    if (record.getSecond() == null) {
+                    if (record.getSecond() == null)
                         state = SendState.PENDING;
-                    } else {
+                    else
                         state = SendState.SENT;
-                    }
                     sendRecord = record;
                     break;
                 }
