@@ -41,7 +41,7 @@ public class ZAttrRight extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081119-2159 */
+    /* build: 5.0 schemers 20081120-1034 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -70,6 +70,19 @@ public class ZAttrRight extends NamedEntry {
     /**
      * RFC2256: common name(s) for which the entity is known by
      *
+     * @param cn new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setCn(String cn) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_cn, cn);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: common name(s) for which the entity is known by
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -78,6 +91,18 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_cn, "");
         return attrs;
+    }
+
+    /**
+     * RFC2256: common name(s) for which the entity is known by
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetCn() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_cn, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -107,6 +132,19 @@ public class ZAttrRight extends NamedEntry {
     /**
      * RFC2256: descriptive information
      *
+     * @param description new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setDescription(String description) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, description);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -115,6 +153,18 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_description, "");
         return attrs;
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetDescription() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -144,6 +194,19 @@ public class ZAttrRight extends NamedEntry {
     /**
      * Zimbra access control list
      *
+     * @param zimbraACE new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void setACE(String[] zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra access control list
+     *
      * @param zimbraACE new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -153,6 +216,19 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraACE, zimbraACE);
         return attrs;
+    }
+
+    /**
+     * Zimbra access control list
+     *
+     * @param zimbraACE new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void addACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -172,6 +248,19 @@ public class ZAttrRight extends NamedEntry {
     /**
      * Zimbra access control list
      *
+     * @param zimbraACE existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void removeACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra access control list
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -180,6 +269,18 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraACE, "");
         return attrs;
+    }
+
+    /**
+     * Zimbra access control list
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void unsetACE() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraACE, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -209,6 +310,19 @@ public class ZAttrRight extends NamedEntry {
     /**
      * Zimbra Systems Unique ID
      *
+     * @param zimbraId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=1)
+    public void setId(String zimbraId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, zimbraId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Systems Unique ID
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -217,6 +331,18 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "");
         return attrs;
+    }
+
+    /**
+     * Zimbra Systems Unique ID
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=1)
+    public void unsetId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -250,6 +376,21 @@ public class ZAttrRight extends NamedEntry {
     /**
      * attributes contained in a getAttrs or setAttrs right
      *
+     * @param zimbraRightAttrs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void setRightAttrs(String[] zimbraRightAttrs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * attributes contained in a getAttrs or setAttrs right
+     *
      * @param zimbraRightAttrs new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -261,6 +402,21 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
         return attrs;
+    }
+
+    /**
+     * attributes contained in a getAttrs or setAttrs right
+     *
+     * @param zimbraRightAttrs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void addRightAttrs(String zimbraRightAttrs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -282,6 +438,21 @@ public class ZAttrRight extends NamedEntry {
     /**
      * attributes contained in a getAttrs or setAttrs right
      *
+     * @param zimbraRightAttrs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void removeRightAttrs(String zimbraRightAttrs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightAttrs, zimbraRightAttrs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * attributes contained in a getAttrs or setAttrs right
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -292,6 +463,20 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightAttrs, "");
         return attrs;
+    }
+
+    /**
+     * attributes contained in a getAttrs or setAttrs right
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void unsetRightAttrs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightAttrs, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -325,6 +510,21 @@ public class ZAttrRight extends NamedEntry {
     /**
      * rights contained in a combo right
      *
+     * @param zimbraRightRights new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void setRightRights(String[] zimbraRightRights) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightRights, zimbraRightRights);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * rights contained in a combo right
+     *
      * @param zimbraRightRights new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -336,6 +536,21 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightRights, zimbraRightRights);
         return attrs;
+    }
+
+    /**
+     * rights contained in a combo right
+     *
+     * @param zimbraRightRights new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void addRightRights(String zimbraRightRights) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightRights, zimbraRightRights);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -357,6 +572,21 @@ public class ZAttrRight extends NamedEntry {
     /**
      * rights contained in a combo right
      *
+     * @param zimbraRightRights existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void removeRightRights(String zimbraRightRights) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightRights, zimbraRightRights);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * rights contained in a combo right
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -367,6 +597,20 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightRights, "");
         return attrs;
+    }
+
+    /**
+     * rights contained in a combo right
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void unsetRightRights() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightRights, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -421,6 +665,23 @@ public class ZAttrRight extends NamedEntry {
      * <p>Valid values: [right, zimlet, cos, config, distributionlist, account, domain, xmppcomponent, server, resource, global]
      *
      * @param zimbraRightTargetType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public void setRightTargetType(ZAttrProvisioning.RightTargetType zimbraRightTargetType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightTargetType, zimbraRightTargetType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * right target type
+     *
+     * <p>Valid values: [right, zimlet, cos, config, distributionlist, account, domain, xmppcomponent, server, resource, global]
+     *
+     * @param zimbraRightTargetType new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -438,6 +699,23 @@ public class ZAttrRight extends NamedEntry {
      *
      * <p>Valid values: [right, zimlet, cos, config, distributionlist, account, domain, xmppcomponent, server, resource, global]
      *
+     * @param zimbraRightTargetType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public void setRightTargetTypeAsString(String[] zimbraRightTargetType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightTargetType, zimbraRightTargetType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * right target type
+     *
+     * <p>Valid values: [right, zimlet, cos, config, distributionlist, account, domain, xmppcomponent, server, resource, global]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -448,6 +726,22 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightTargetType, "");
         return attrs;
+    }
+
+    /**
+     * right target type
+     *
+     * <p>Valid values: [right, zimlet, cos, config, distributionlist, account, domain, xmppcomponent, server, resource, global]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public void unsetRightTargetType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightTargetType, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -502,6 +796,23 @@ public class ZAttrRight extends NamedEntry {
      * <p>Valid values: [setAttrs, getAttrs, combo, preset]
      *
      * @param zimbraRightType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public void setRightType(ZAttrProvisioning.RightType zimbraRightType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightType, zimbraRightType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * right type
+     *
+     * <p>Valid values: [setAttrs, getAttrs, combo, preset]
+     *
+     * @param zimbraRightType new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -519,6 +830,23 @@ public class ZAttrRight extends NamedEntry {
      *
      * <p>Valid values: [setAttrs, getAttrs, combo, preset]
      *
+     * @param zimbraRightType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public void setRightTypeAsString(String zimbraRightType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightType, zimbraRightType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * right type
+     *
+     * <p>Valid values: [setAttrs, getAttrs, combo, preset]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -529,6 +857,22 @@ public class ZAttrRight extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRightType, "");
         return attrs;
+    }
+
+    /**
+     * right type
+     *
+     * <p>Valid values: [setAttrs, getAttrs, combo, preset]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=764)
+    public void unsetRightType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRightType, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     ///// END-AUTO-GEN-REPLACE

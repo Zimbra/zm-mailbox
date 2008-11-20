@@ -32,7 +32,7 @@ public class ZAttrCalendarResource extends Account {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081119-2159 */
+    /* build: 5.0 schemers 20081120-1034 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
@@ -61,6 +61,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * RFC2798: preferred name to be used when displaying entries
      *
+     * @param displayName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setDisplayName(String displayName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_displayName, displayName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2798: preferred name to be used when displaying entries
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -69,6 +82,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_displayName, "");
         return attrs;
+    }
+
+    /**
+     * RFC2798: preferred name to be used when displaying entries
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetDisplayName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_displayName, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -117,6 +142,21 @@ public class ZAttrCalendarResource extends Account {
      * <p>Valid values: [USER, RESOURCE]
      *
      * @param zimbraAccountCalendarUserType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=313)
+    public void setAccountCalendarUserType(ZAttrProvisioning.AccountCalendarUserType zimbraAccountCalendarUserType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountCalendarUserType, zimbraAccountCalendarUserType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar user type - USER (default) or RESOURCE
+     *
+     * <p>Valid values: [USER, RESOURCE]
+     *
+     * @param zimbraAccountCalendarUserType new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -132,6 +172,21 @@ public class ZAttrCalendarResource extends Account {
      *
      * <p>Valid values: [USER, RESOURCE]
      *
+     * @param zimbraAccountCalendarUserType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=313)
+    public void setAccountCalendarUserTypeAsString(String zimbraAccountCalendarUserType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountCalendarUserType, zimbraAccountCalendarUserType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar user type - USER (default) or RESOURCE
+     *
+     * <p>Valid values: [USER, RESOURCE]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -140,6 +195,20 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAccountCalendarUserType, "");
         return attrs;
+    }
+
+    /**
+     * calendar user type - USER (default) or RESOURCE
+     *
+     * <p>Valid values: [USER, RESOURCE]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=313)
+    public void unsetAccountCalendarUserType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountCalendarUserType, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -164,8 +233,22 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=315)
     public Map<String,Object> setCalResAutoAcceptDecline(boolean zimbraCalResAutoAcceptDecline, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, Boolean.toString(zimbraCalResAutoAcceptDecline));
+        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, zimbraCalResAutoAcceptDecline ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether this calendar resource accepts/declines meeting invites
+     * automatically; default TRUE
+     *
+     * @param zimbraCalResAutoAcceptDecline new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=315)
+    public void setCalResAutoAcceptDecline(boolean zimbraCalResAutoAcceptDecline) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, zimbraCalResAutoAcceptDecline ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -180,6 +263,19 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, "");
         return attrs;
+    }
+
+    /**
+     * Whether this calendar resource accepts/declines meeting invites
+     * automatically; default TRUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=315)
+    public void unsetCalResAutoAcceptDecline() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -204,8 +300,22 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=322)
     public Map<String,Object> setCalResAutoDeclineIfBusy(boolean zimbraCalResAutoDeclineIfBusy, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, Boolean.toString(zimbraCalResAutoDeclineIfBusy));
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, zimbraCalResAutoDeclineIfBusy ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether this calendar resource declines invite if already busy;
+     * default TRUE
+     *
+     * @param zimbraCalResAutoDeclineIfBusy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=322)
+    public void setCalResAutoDeclineIfBusy(boolean zimbraCalResAutoDeclineIfBusy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, zimbraCalResAutoDeclineIfBusy ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -220,6 +330,19 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, "");
         return attrs;
+    }
+
+    /**
+     * Whether this calendar resource declines invite if already busy;
+     * default TRUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=322)
+    public void unsetCalResAutoDeclineIfBusy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -244,8 +367,22 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=323)
     public Map<String,Object> setCalResAutoDeclineRecurring(boolean zimbraCalResAutoDeclineRecurring, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, Boolean.toString(zimbraCalResAutoDeclineRecurring));
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, zimbraCalResAutoDeclineRecurring ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether this calendar resource declines invites to recurring
+     * appointments; default FASE
+     *
+     * @param zimbraCalResAutoDeclineRecurring new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=323)
+    public void setCalResAutoDeclineRecurring(boolean zimbraCalResAutoDeclineRecurring) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, zimbraCalResAutoDeclineRecurring ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -260,6 +397,19 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, "");
         return attrs;
+    }
+
+    /**
+     * Whether this calendar resource declines invites to recurring
+     * appointments; default FASE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=323)
+    public void unsetCalResAutoDeclineRecurring() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -289,6 +439,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * building number or name
      *
+     * @param zimbraCalResBuilding new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=327)
+    public void setCalResBuilding(String zimbraCalResBuilding) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResBuilding, zimbraCalResBuilding);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * building number or name
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -297,6 +460,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResBuilding, "");
         return attrs;
+    }
+
+    /**
+     * building number or name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=327)
+    public void unsetCalResBuilding() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResBuilding, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -326,6 +501,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * capacity
      *
+     * @param zimbraCalResCapacity new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=330)
+    public void setCalResCapacity(int zimbraCalResCapacity) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResCapacity, Integer.toString(zimbraCalResCapacity));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * capacity
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -334,6 +522,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResCapacity, "");
         return attrs;
+    }
+
+    /**
+     * capacity
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=330)
+    public void unsetCalResCapacity() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResCapacity, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -363,6 +563,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * email of contact in charge of resource
      *
+     * @param zimbraCalResContactEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=332)
+    public void setCalResContactEmail(String zimbraCalResContactEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResContactEmail, zimbraCalResContactEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email of contact in charge of resource
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -371,6 +584,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResContactEmail, "");
         return attrs;
+    }
+
+    /**
+     * email of contact in charge of resource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=332)
+    public void unsetCalResContactEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResContactEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -400,6 +625,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * name of contact in charge of resource
      *
+     * @param zimbraCalResContactName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=331)
+    public void setCalResContactName(String zimbraCalResContactName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResContactName, zimbraCalResContactName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * name of contact in charge of resource
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -408,6 +646,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResContactName, "");
         return attrs;
+    }
+
+    /**
+     * name of contact in charge of resource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=331)
+    public void unsetCalResContactName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResContactName, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -437,6 +687,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * phone number of contact in charge of resource
      *
+     * @param zimbraCalResContactPhone new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=333)
+    public void setCalResContactPhone(String zimbraCalResContactPhone) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResContactPhone, zimbraCalResContactPhone);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phone number of contact in charge of resource
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -445,6 +708,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResContactPhone, "");
         return attrs;
+    }
+
+    /**
+     * phone number of contact in charge of resource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=333)
+    public void unsetCalResContactPhone() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResContactPhone, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -474,6 +749,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * floor number or name
      *
+     * @param zimbraCalResFloor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=328)
+    public void setCalResFloor(String zimbraCalResFloor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResFloor, zimbraCalResFloor);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * floor number or name
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -482,6 +770,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResFloor, "");
         return attrs;
+    }
+
+    /**
+     * floor number or name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=328)
+    public void unsetCalResFloor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResFloor, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -511,6 +811,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * display name for resource location
      *
+     * @param zimbraCalResLocationDisplayName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=324)
+    public void setCalResLocationDisplayName(String zimbraCalResLocationDisplayName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResLocationDisplayName, zimbraCalResLocationDisplayName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * display name for resource location
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -519,6 +832,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResLocationDisplayName, "");
         return attrs;
+    }
+
+    /**
+     * display name for resource location
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=324)
+    public void unsetCalResLocationDisplayName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResLocationDisplayName, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -548,6 +873,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * room number or name
      *
+     * @param zimbraCalResRoom new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=329)
+    public void setCalResRoom(String zimbraCalResRoom) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResRoom, zimbraCalResRoom);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * room number or name
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -556,6 +894,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResRoom, "");
         return attrs;
+    }
+
+    /**
+     * room number or name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=329)
+    public void unsetCalResRoom() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResRoom, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -585,6 +935,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * site name
      *
+     * @param zimbraCalResSite new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=326)
+    public void setCalResSite(String zimbraCalResSite) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResSite, zimbraCalResSite);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * site name
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -593,6 +956,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResSite, "");
         return attrs;
+    }
+
+    /**
+     * site name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=326)
+    public void unsetCalResSite() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResSite, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -641,6 +1016,21 @@ public class ZAttrCalendarResource extends Account {
      * <p>Valid values: [Equipment, Location]
      *
      * @param zimbraCalResType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=314)
+    public void setCalResType(ZAttrProvisioning.CalResType zimbraCalResType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResType, zimbraCalResType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar resource type - Location or Equipment
+     *
+     * <p>Valid values: [Equipment, Location]
+     *
+     * @param zimbraCalResType new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -656,6 +1046,21 @@ public class ZAttrCalendarResource extends Account {
      *
      * <p>Valid values: [Equipment, Location]
      *
+     * @param zimbraCalResType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=314)
+    public void setCalResTypeAsString(String zimbraCalResType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResType, zimbraCalResType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar resource type - Location or Equipment
+     *
+     * <p>Valid values: [Equipment, Location]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -664,6 +1069,20 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResType, "");
         return attrs;
+    }
+
+    /**
+     * calendar resource type - Location or Equipment
+     *
+     * <p>Valid values: [Equipment, Location]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=314)
+    public void unsetCalResType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResType, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -693,6 +1112,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * Zimbra Systems Unique ID
      *
+     * @param zimbraId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=1)
+    public void setId(String zimbraId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, zimbraId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Systems Unique ID
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -701,6 +1133,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "");
         return attrs;
+    }
+
+    /**
+     * Zimbra Systems Unique ID
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=1)
+    public void unsetId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -730,6 +1174,19 @@ public class ZAttrCalendarResource extends Account {
     /**
      * locale of entry, e.g. en_US
      *
+     * @param zimbraLocale new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=345)
+    public void setLocale(String zimbraLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, zimbraLocale);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -738,6 +1195,18 @@ public class ZAttrCalendarResource extends Account {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLocale, "");
         return attrs;
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=345)
+    public void unsetLocale() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     ///// END-AUTO-GEN-REPLACE

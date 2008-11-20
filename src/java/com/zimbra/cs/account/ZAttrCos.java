@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081119-2159 */
+    /* build: 5.0 schemers 20081120-1034 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -70,6 +70,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * RFC2256: common name(s) for which the entity is known by
      *
+     * @param cn new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setCn(String cn) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_cn, cn);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: common name(s) for which the entity is known by
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -78,6 +91,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_cn, "");
         return attrs;
+    }
+
+    /**
+     * RFC2256: common name(s) for which the entity is known by
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetCn() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_cn, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -107,6 +132,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * RFC2256: descriptive information
      *
+     * @param description new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setDescription(String description) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, description);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -115,6 +153,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_description, "");
         return attrs;
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetDescription() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -144,6 +194,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Zimbra access control list
      *
+     * @param zimbraACE new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void setACE(String[] zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra access control list
+     *
      * @param zimbraACE new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -153,6 +216,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraACE, zimbraACE);
         return attrs;
+    }
+
+    /**
+     * Zimbra access control list
+     *
+     * @param zimbraACE new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void addACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -172,6 +248,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Zimbra access control list
      *
+     * @param zimbraACE existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void removeACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra access control list
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -180,6 +269,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraACE, "");
         return attrs;
+    }
+
+    /**
+     * Zimbra access control list
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void unsetACE() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraACE, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -223,6 +324,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
      *
+     * @param zimbraAdminAuthTokenLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=109)
+    public void setAdminAuthTokenLifetime(String zimbraAdminAuthTokenLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAuthTokenLifetime, zimbraAdminAuthTokenLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -231,6 +345,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminAuthTokenLifetime, "");
         return attrs;
+    }
+
+    /**
+     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=109)
+    public void unsetAdminAuthTokenLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAuthTokenLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -260,6 +386,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * admin saved searches
      *
+     * @param zimbraAdminSavedSearches new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=446)
+    public void setAdminSavedSearches(String[] zimbraAdminSavedSearches) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSavedSearches, zimbraAdminSavedSearches);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin saved searches
+     *
      * @param zimbraAdminSavedSearches new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -269,6 +408,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminSavedSearches, zimbraAdminSavedSearches);
         return attrs;
+    }
+
+    /**
+     * admin saved searches
+     *
+     * @param zimbraAdminSavedSearches new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=446)
+    public void addAdminSavedSearches(String zimbraAdminSavedSearches) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminSavedSearches, zimbraAdminSavedSearches);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -288,6 +440,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * admin saved searches
      *
+     * @param zimbraAdminSavedSearches existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=446)
+    public void removeAdminSavedSearches(String zimbraAdminSavedSearches) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAdminSavedSearches, zimbraAdminSavedSearches);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin saved searches
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -296,6 +461,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminSavedSearches, "");
         return attrs;
+    }
+
+    /**
+     * admin saved searches
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=446)
+    public void unsetAdminSavedSearches() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSavedSearches, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -320,8 +497,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=427)
     public Map<String,Object> setAllowAnyFromAddress(boolean zimbraAllowAnyFromAddress, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAllowAnyFromAddress, Boolean.toString(zimbraAllowAnyFromAddress));
+        attrs.put(Provisioning.A_zimbraAllowAnyFromAddress, zimbraAllowAnyFromAddress ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether this account can use any from address. Not changeable by
+     * domain admin to allow arbitrary addresses
+     *
+     * @param zimbraAllowAnyFromAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=427)
+    public void setAllowAnyFromAddress(boolean zimbraAllowAnyFromAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAllowAnyFromAddress, zimbraAllowAnyFromAddress ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -336,6 +527,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAllowAnyFromAddress, "");
         return attrs;
+    }
+
+    /**
+     * Whether this account can use any from address. Not changeable by
+     * domain admin to allow arbitrary addresses
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=427)
+    public void unsetAllowAnyFromAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAllowAnyFromAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -374,6 +578,22 @@ public class ZAttrCos extends NamedEntry {
      * is a Java SimpleDateFormat specifier. The default is an LDAP
      * generalized time format:
      *
+     * @param zimbraArchiveAccountDateTemplate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=432)
+    public void setArchiveAccountDateTemplate(String zimbraArchiveAccountDateTemplate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraArchiveAccountDateTemplate, zimbraArchiveAccountDateTemplate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * An account or CoS setting that works with the name template that
+     * allows you to dictate the date format used in the name template. This
+     * is a Java SimpleDateFormat specifier. The default is an LDAP
+     * generalized time format:
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -382,6 +602,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraArchiveAccountDateTemplate, "");
         return attrs;
+    }
+
+    /**
+     * An account or CoS setting that works with the name template that
+     * allows you to dictate the date format used in the name template. This
+     * is a Java SimpleDateFormat specifier. The default is an LDAP
+     * generalized time format:
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=432)
+    public void unsetArchiveAccountDateTemplate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraArchiveAccountDateTemplate, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -417,6 +652,21 @@ public class ZAttrCos extends NamedEntry {
      * archiving system how to derive the archive mailbox name. ID, USER,
      * DATE, and DOMAIN are expanded.
      *
+     * @param zimbraArchiveAccountNameTemplate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=431)
+    public void setArchiveAccountNameTemplate(String zimbraArchiveAccountNameTemplate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraArchiveAccountNameTemplate, zimbraArchiveAccountNameTemplate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * An account or CoS setting - typically only in CoS - that tells the
+     * archiving system how to derive the archive mailbox name. ID, USER,
+     * DATE, and DOMAIN are expanded.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -425,6 +675,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraArchiveAccountNameTemplate, "");
         return attrs;
+    }
+
+    /**
+     * An account or CoS setting - typically only in CoS - that tells the
+     * archiving system how to derive the archive mailbox name. ID, USER,
+     * DATE, and DOMAIN are expanded.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=431)
+    public void unsetArchiveAccountNameTemplate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraArchiveAccountNameTemplate, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -447,8 +711,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=115)
     public Map<String,Object> setAttachmentsBlocked(boolean zimbraAttachmentsBlocked, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAttachmentsBlocked, Boolean.toString(zimbraAttachmentsBlocked));
+        attrs.put(Provisioning.A_zimbraAttachmentsBlocked, zimbraAttachmentsBlocked ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * block all attachment downloading
+     *
+     * @param zimbraAttachmentsBlocked new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=115)
+    public void setAttachmentsBlocked(boolean zimbraAttachmentsBlocked) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsBlocked, zimbraAttachmentsBlocked ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -462,6 +739,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAttachmentsBlocked, "");
         return attrs;
+    }
+
+    /**
+     * block all attachment downloading
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=115)
+    public void unsetAttachmentsBlocked() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsBlocked, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -484,8 +773,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=173)
     public Map<String,Object> setAttachmentsIndexingEnabled(boolean zimbraAttachmentsIndexingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAttachmentsIndexingEnabled, Boolean.toString(zimbraAttachmentsIndexingEnabled));
+        attrs.put(Provisioning.A_zimbraAttachmentsIndexingEnabled, zimbraAttachmentsIndexingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not to index attachemts
+     *
+     * @param zimbraAttachmentsIndexingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=173)
+    public void setAttachmentsIndexingEnabled(boolean zimbraAttachmentsIndexingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsIndexingEnabled, zimbraAttachmentsIndexingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -499,6 +801,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAttachmentsIndexingEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether or not to index attachemts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=173)
+    public void unsetAttachmentsIndexingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsIndexingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -521,8 +835,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=116)
     public Map<String,Object> setAttachmentsViewInHtmlOnly(boolean zimbraAttachmentsViewInHtmlOnly, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, Boolean.toString(zimbraAttachmentsViewInHtmlOnly));
+        attrs.put(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, zimbraAttachmentsViewInHtmlOnly ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * view all attachments in html only
+     *
+     * @param zimbraAttachmentsViewInHtmlOnly new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=116)
+    public void setAttachmentsViewInHtmlOnly(boolean zimbraAttachmentsViewInHtmlOnly) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, zimbraAttachmentsViewInHtmlOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -536,6 +863,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, "");
         return attrs;
+    }
+
+    /**
+     * view all attachments in html only
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=116)
+    public void unsetAttachmentsViewInHtmlOnly() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -579,6 +918,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * lifetime (nnnnn[hmsd]) of newly created auth tokens
      *
+     * @param zimbraAuthTokenLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=108)
+    public void setAuthTokenLifetime(String zimbraAuthTokenLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenLifetime, zimbraAuthTokenLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -587,6 +939,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAuthTokenLifetime, "");
         return attrs;
+    }
+
+    /**
+     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=108)
+    public void unsetAuthTokenLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -616,6 +980,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Locales available for this account
      *
+     * @param zimbraAvailableLocale new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=487)
+    public void setAvailableLocale(String[] zimbraAvailableLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailableLocale, zimbraAvailableLocale);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Locales available for this account
+     *
      * @param zimbraAvailableLocale new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -625,6 +1002,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAvailableLocale, zimbraAvailableLocale);
         return attrs;
+    }
+
+    /**
+     * Locales available for this account
+     *
+     * @param zimbraAvailableLocale new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=487)
+    public void addAvailableLocale(String zimbraAvailableLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAvailableLocale, zimbraAvailableLocale);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -644,6 +1034,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Locales available for this account
      *
+     * @param zimbraAvailableLocale existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=487)
+    public void removeAvailableLocale(String zimbraAvailableLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAvailableLocale, zimbraAvailableLocale);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Locales available for this account
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -652,6 +1055,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAvailableLocale, "");
         return attrs;
+    }
+
+    /**
+     * Locales available for this account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=487)
+    public void unsetAvailableLocale() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailableLocale, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -687,6 +1102,21 @@ public class ZAttrCos extends NamedEntry {
      * account/cos inheritance 2. if not set on account/cos, use the value on
      * the domain of the account
      *
+     * @param zimbraAvailableSkin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=364)
+    public void setAvailableSkin(String[] zimbraAvailableSkin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailableSkin, zimbraAvailableSkin);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Skins available for this account. Fallback order is: 1. the normal
+     * account/cos inheritance 2. if not set on account/cos, use the value on
+     * the domain of the account
+     *
      * @param zimbraAvailableSkin new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -696,6 +1126,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAvailableSkin, zimbraAvailableSkin);
         return attrs;
+    }
+
+    /**
+     * Skins available for this account. Fallback order is: 1. the normal
+     * account/cos inheritance 2. if not set on account/cos, use the value on
+     * the domain of the account
+     *
+     * @param zimbraAvailableSkin new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=364)
+    public void addAvailableSkin(String zimbraAvailableSkin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAvailableSkin, zimbraAvailableSkin);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -719,6 +1164,21 @@ public class ZAttrCos extends NamedEntry {
      * account/cos inheritance 2. if not set on account/cos, use the value on
      * the domain of the account
      *
+     * @param zimbraAvailableSkin existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=364)
+    public void removeAvailableSkin(String zimbraAvailableSkin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAvailableSkin, zimbraAvailableSkin);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Skins available for this account. Fallback order is: 1. the normal
+     * account/cos inheritance 2. if not set on account/cos, use the value on
+     * the domain of the account
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -727,6 +1187,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAvailableSkin, "");
         return attrs;
+    }
+
+    /**
+     * Skins available for this account. Fallback order is: 1. the normal
+     * account/cos inheritance 2. if not set on account/cos, use the value on
+     * the domain of the account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=364)
+    public void unsetAvailableSkin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailableSkin, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -756,6 +1230,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Batch size to use when indexing data
      *
+     * @param zimbraBatchedIndexingSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=619)
+    public void setBatchedIndexingSize(int zimbraBatchedIndexingSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBatchedIndexingSize, Integer.toString(zimbraBatchedIndexingSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Batch size to use when indexing data
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -764,6 +1251,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBatchedIndexingSize, "");
         return attrs;
+    }
+
+    /**
+     * Batch size to use when indexing data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=619)
+    public void unsetBatchedIndexingSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBatchedIndexingSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -796,6 +1295,20 @@ public class ZAttrCos extends NamedEntry {
      * maximum number of revisions to keep for calendar items (appointments
      * and tasks). 0 means unlimited.
      *
+     * @param zimbraCalendarMaxRevisions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=709)
+    public void setCalendarMaxRevisions(int zimbraCalendarMaxRevisions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarMaxRevisions, Integer.toString(zimbraCalendarMaxRevisions));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of revisions to keep for calendar items (appointments
+     * and tasks). 0 means unlimited.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -804,6 +1317,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarMaxRevisions, "");
         return attrs;
+    }
+
+    /**
+     * maximum number of revisions to keep for calendar items (appointments
+     * and tasks). 0 means unlimited.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=709)
+    public void unsetCalendarMaxRevisions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarMaxRevisions, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -849,6 +1375,25 @@ public class ZAttrCos extends NamedEntry {
      * attributes for GAL objects are mapped to Contact compatible attributes
      * via zimbraGalLdapAttrMap.
      *
+     * @param zimbraContactAutoCompleteEmailFields new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=760)
+    public void setContactAutoCompleteEmailFields(String zimbraContactAutoCompleteEmailFields) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteEmailFields, zimbraContactAutoCompleteEmailFields);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -859,6 +1404,24 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAutoCompleteEmailFields, "");
         return attrs;
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=760)
+    public void unsetContactAutoCompleteEmailFields() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteEmailFields, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -898,6 +1461,23 @@ public class ZAttrCos extends NamedEntry {
      * contacts when generating auto-complete contact list. Folder id of 0 is
      * used to include GAL contacts in the response.
      *
+     * @param zimbraContactAutoCompleteFolderIds new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=759)
+    public void setContactAutoCompleteFolderIds(String zimbraContactAutoCompleteFolderIds) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteFolderIds, zimbraContactAutoCompleteFolderIds);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Comma separates list of folder Ids that should be used to search for
+     * contacts when generating auto-complete contact list. Folder id of 0 is
+     * used to include GAL contacts in the response.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -908,6 +1488,22 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAutoCompleteFolderIds, "");
         return attrs;
+    }
+
+    /**
+     * Comma separates list of folder Ids that should be used to search for
+     * contacts when generating auto-complete contact list. Folder id of 0 is
+     * used to include GAL contacts in the response.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=759)
+    public void unsetContactAutoCompleteFolderIds() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteFolderIds, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -937,6 +1533,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Maximum number of contacts allowed in mailbox. 0 means no limit.
      *
+     * @param zimbraContactMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=107)
+    public void setContactMaxNumEntries(int zimbraContactMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactMaxNumEntries, Integer.toString(zimbraContactMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of contacts allowed in mailbox. 0 means no limit.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -945,6 +1554,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactMaxNumEntries, "");
         return attrs;
+    }
+
+    /**
+     * Maximum number of contacts allowed in mailbox. 0 means no limit.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=107)
+    public void unsetContactMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -987,6 +1608,24 @@ public class ZAttrCos extends NamedEntry {
      * ranking table are given the priority when generating the auto-complete
      * contact list.
      *
+     * @param zimbraContactRankingTableSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=758)
+    public void setContactRankingTableSize(int zimbraContactRankingTableSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingTableSize, Integer.toString(zimbraContactRankingTableSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Size of the contact ranking table. Ranking table is used to keep track
+     * of most heavily used contacts in outgoing email. Contacts in the
+     * ranking table are given the priority when generating the auto-complete
+     * contact list.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -997,6 +1636,23 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactRankingTableSize, "");
         return attrs;
+    }
+
+    /**
+     * Size of the contact ranking table. Ranking table is used to keep track
+     * of most heavily used contacts in outgoing email. Contacts in the
+     * ranking table are given the priority when generating the auto-complete
+     * contact list.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=758)
+    public void unsetContactRankingTableSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingTableSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1026,6 +1682,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Maximum number of data sources allowed on an account
      *
+     * @param zimbraDataSourceMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=426)
+    public void setDataSourceMaxNumEntries(int zimbraDataSourceMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceMaxNumEntries, Integer.toString(zimbraDataSourceMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of data sources allowed on an account
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -1034,6 +1703,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceMaxNumEntries, "");
         return attrs;
+    }
+
+    /**
+     * Maximum number of data sources allowed on an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=426)
+    public void unsetDataSourceMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1077,6 +1758,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Shortest allowed duration for zimbraDataSourcePollingInterval.
      *
+     * @param zimbraDataSourceMinPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=525)
+    public void setDataSourceMinPollingInterval(String zimbraDataSourceMinPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceMinPollingInterval, zimbraDataSourceMinPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -1085,6 +1779,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceMinPollingInterval, "");
         return attrs;
+    }
+
+    /**
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=525)
+    public void unsetDataSourceMinPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceMinPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1136,6 +1842,21 @@ public class ZAttrCos extends NamedEntry {
      * all data sources owned by an account. If unset or 0, the data source
      * will not be scheduled for automated polling.
      *
+     * @param zimbraDataSourcePollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=455)
+    public void setDataSourcePollingInterval(String zimbraDataSourcePollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, zimbraDataSourcePollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a data source, or
+     * all data sources owned by an account. If unset or 0, the data source
+     * will not be scheduled for automated polling.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -1144,6 +1865,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
         return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a data source, or
+     * all data sources owned by an account. If unset or 0, the data source
+     * will not be scheduled for automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=455)
+    public void unsetDataSourcePollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1173,6 +1908,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * maximum amount of mail quota a domain admin can set on a user
      *
+     * @param zimbraDomainAdminMaxMailQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=398)
+    public void setDomainAdminMaxMailQuota(long zimbraDomainAdminMaxMailQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAdminMaxMailQuota, Long.toString(zimbraDomainAdminMaxMailQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum amount of mail quota a domain admin can set on a user
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -1181,6 +1929,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainAdminMaxMailQuota, "");
         return attrs;
+    }
+
+    /**
+     * maximum amount of mail quota a domain admin can set on a user
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=398)
+    public void unsetDomainAdminMaxMailQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAdminMaxMailQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1203,8 +1963,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=138)
     public Map<String,Object> setFeatureAdvancedSearchEnabled(boolean zimbraFeatureAdvancedSearchEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, Boolean.toString(zimbraFeatureAdvancedSearchEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, zimbraFeatureAdvancedSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * advanced search button enabled
+     *
+     * @param zimbraFeatureAdvancedSearchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=138)
+    public void setFeatureAdvancedSearchEnabled(boolean zimbraFeatureAdvancedSearchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, zimbraFeatureAdvancedSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1218,6 +1991,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, "");
         return attrs;
+    }
+
+    /**
+     * advanced search button enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=138)
+    public void unsetFeatureAdvancedSearchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1240,8 +2025,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=498)
     public Map<String,Object> setFeatureBriefcasesEnabled(boolean zimbraFeatureBriefcasesEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureBriefcasesEnabled, Boolean.toString(zimbraFeatureBriefcasesEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureBriefcasesEnabled, zimbraFeatureBriefcasesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to allow use of briefcase feature
+     *
+     * @param zimbraFeatureBriefcasesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=498)
+    public void setFeatureBriefcasesEnabled(boolean zimbraFeatureBriefcasesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcasesEnabled, zimbraFeatureBriefcasesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1255,6 +2053,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBriefcasesEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether to allow use of briefcase feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=498)
+    public void unsetFeatureBriefcasesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcasesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1277,8 +2087,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=136)
     public Map<String,Object> setFeatureCalendarEnabled(boolean zimbraFeatureCalendarEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, Boolean.toString(zimbraFeatureCalendarEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, zimbraFeatureCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * calendar features
+     *
+     * @param zimbraFeatureCalendarEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=136)
+    public void setFeatureCalendarEnabled(boolean zimbraFeatureCalendarEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, zimbraFeatureCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1292,6 +2115,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, "");
         return attrs;
+    }
+
+    /**
+     * calendar features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=136)
+    public void unsetFeatureCalendarEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1314,8 +2149,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=531)
     public Map<String,Object> setFeatureCalendarUpsellEnabled(boolean zimbraFeatureCalendarUpsellEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellEnabled, Boolean.toString(zimbraFeatureCalendarUpsellEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellEnabled, zimbraFeatureCalendarUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * calendar upsell enabled
+     *
+     * @param zimbraFeatureCalendarUpsellEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=531)
+    public void setFeatureCalendarUpsellEnabled(boolean zimbraFeatureCalendarUpsellEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellEnabled, zimbraFeatureCalendarUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1329,6 +2177,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellEnabled, "");
         return attrs;
+    }
+
+    /**
+     * calendar upsell enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=531)
+    public void unsetFeatureCalendarUpsellEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1358,6 +2218,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * calendar upsell URL
      *
+     * @param zimbraFeatureCalendarUpsellURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=532)
+    public void setFeatureCalendarUpsellURL(String zimbraFeatureCalendarUpsellURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellURL, zimbraFeatureCalendarUpsellURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar upsell URL
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -1366,6 +2239,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellURL, "");
         return attrs;
+    }
+
+    /**
+     * calendar upsell URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=532)
+    public void unsetFeatureCalendarUpsellURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarUpsellURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1388,8 +2273,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=141)
     public Map<String,Object> setFeatureChangePasswordEnabled(boolean zimbraFeatureChangePasswordEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, Boolean.toString(zimbraFeatureChangePasswordEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, zimbraFeatureChangePasswordEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * password changing
+     *
+     * @param zimbraFeatureChangePasswordEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=141)
+    public void setFeatureChangePasswordEnabled(boolean zimbraFeatureChangePasswordEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, zimbraFeatureChangePasswordEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1403,6 +2301,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, "");
         return attrs;
+    }
+
+    /**
+     * password changing
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=141)
+    public void unsetFeatureChangePasswordEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1425,8 +2335,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=584)
     public Map<String,Object> setFeatureComposeInNewWindowEnabled(boolean zimbraFeatureComposeInNewWindowEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureComposeInNewWindowEnabled, Boolean.toString(zimbraFeatureComposeInNewWindowEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureComposeInNewWindowEnabled, zimbraFeatureComposeInNewWindowEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not compose messages in a new windows is allowed
+     *
+     * @param zimbraFeatureComposeInNewWindowEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=584)
+    public void setFeatureComposeInNewWindowEnabled(boolean zimbraFeatureComposeInNewWindowEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureComposeInNewWindowEnabled, zimbraFeatureComposeInNewWindowEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1440,6 +2363,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureComposeInNewWindowEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether or not compose messages in a new windows is allowed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=584)
+    public void unsetFeatureComposeInNewWindowEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureComposeInNewWindowEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1462,8 +2397,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=135)
     public Map<String,Object> setFeatureContactsEnabled(boolean zimbraFeatureContactsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureContactsEnabled, Boolean.toString(zimbraFeatureContactsEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureContactsEnabled, zimbraFeatureContactsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * contact features
+     *
+     * @param zimbraFeatureContactsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=135)
+    public void setFeatureContactsEnabled(boolean zimbraFeatureContactsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsEnabled, zimbraFeatureContactsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1477,6 +2425,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureContactsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * contact features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=135)
+    public void unsetFeatureContactsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1499,8 +2459,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=529)
     public Map<String,Object> setFeatureContactsUpsellEnabled(boolean zimbraFeatureContactsUpsellEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureContactsUpsellEnabled, Boolean.toString(zimbraFeatureContactsUpsellEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureContactsUpsellEnabled, zimbraFeatureContactsUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * address book upsell enabled
+     *
+     * @param zimbraFeatureContactsUpsellEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=529)
+    public void setFeatureContactsUpsellEnabled(boolean zimbraFeatureContactsUpsellEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsUpsellEnabled, zimbraFeatureContactsUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1514,6 +2487,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureContactsUpsellEnabled, "");
         return attrs;
+    }
+
+    /**
+     * address book upsell enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=529)
+    public void unsetFeatureContactsUpsellEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsUpsellEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1543,6 +2528,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * address book upsell URL
      *
+     * @param zimbraFeatureContactsUpsellURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=530)
+    public void setFeatureContactsUpsellURL(String zimbraFeatureContactsUpsellURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsUpsellURL, zimbraFeatureContactsUpsellURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * address book upsell URL
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -1551,6 +2549,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureContactsUpsellURL, "");
         return attrs;
+    }
+
+    /**
+     * address book upsell URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=530)
+    public void unsetFeatureContactsUpsellURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsUpsellURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1573,8 +2583,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=140)
     public Map<String,Object> setFeatureConversationsEnabled(boolean zimbraFeatureConversationsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, Boolean.toString(zimbraFeatureConversationsEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, zimbraFeatureConversationsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * conversations
+     *
+     * @param zimbraFeatureConversationsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=140)
+    public void setFeatureConversationsEnabled(boolean zimbraFeatureConversationsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, zimbraFeatureConversationsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1588,6 +2611,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * conversations
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=140)
+    public void unsetFeatureConversationsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1610,8 +2645,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=143)
     public Map<String,Object> setFeatureFiltersEnabled(boolean zimbraFeatureFiltersEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureFiltersEnabled, Boolean.toString(zimbraFeatureFiltersEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureFiltersEnabled, zimbraFeatureFiltersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * filter prefs enabled
+     *
+     * @param zimbraFeatureFiltersEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=143)
+    public void setFeatureFiltersEnabled(boolean zimbraFeatureFiltersEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFiltersEnabled, zimbraFeatureFiltersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1625,6 +2673,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureFiltersEnabled, "");
         return attrs;
+    }
+
+    /**
+     * filter prefs enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=143)
+    public void unsetFeatureFiltersEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFiltersEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1647,8 +2707,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=499)
     public Map<String,Object> setFeatureFlaggingEnabled(boolean zimbraFeatureFlaggingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureFlaggingEnabled, Boolean.toString(zimbraFeatureFlaggingEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureFlaggingEnabled, zimbraFeatureFlaggingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to allow use of flagging feature
+     *
+     * @param zimbraFeatureFlaggingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=499)
+    public void setFeatureFlaggingEnabled(boolean zimbraFeatureFlaggingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFlaggingEnabled, zimbraFeatureFlaggingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1662,6 +2735,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureFlaggingEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether to allow use of flagging feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=499)
+    public void unsetFeatureFlaggingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFlaggingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1686,8 +2771,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=359)
     public Map<String,Object> setFeatureGalAutoCompleteEnabled(boolean zimbraFeatureGalAutoCompleteEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled, Boolean.toString(zimbraFeatureGalAutoCompleteEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled, zimbraFeatureGalAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * enable auto-completion from the GAL, zimbraFeatureGalEnabled also has
+     * to be enabled for the auto-completion feature
+     *
+     * @param zimbraFeatureGalAutoCompleteEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=359)
+    public void setFeatureGalAutoCompleteEnabled(boolean zimbraFeatureGalAutoCompleteEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled, zimbraFeatureGalAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1702,6 +2801,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled, "");
         return attrs;
+    }
+
+    /**
+     * enable auto-completion from the GAL, zimbraFeatureGalEnabled also has
+     * to be enabled for the auto-completion feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=359)
+    public void unsetFeatureGalAutoCompleteEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1724,8 +2836,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=149)
     public Map<String,Object> setFeatureGalEnabled(boolean zimbraFeatureGalEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureGalEnabled, Boolean.toString(zimbraFeatureGalEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureGalEnabled, zimbraFeatureGalEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether GAL features are enabled
+     *
+     * @param zimbraFeatureGalEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=149)
+    public void setFeatureGalEnabled(boolean zimbraFeatureGalEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGalEnabled, zimbraFeatureGalEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1739,6 +2864,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureGalEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether GAL features are enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=149)
+    public void unsetFeatureGalEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGalEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1765,8 +2902,23 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=711)
     public Map<String,Object> setFeatureGalSyncEnabled(boolean zimbraFeatureGalSyncEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureGalSyncEnabled, Boolean.toString(zimbraFeatureGalSyncEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureGalSyncEnabled, zimbraFeatureGalSyncEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether GAL sync feature is enabled
+     *
+     * @param zimbraFeatureGalSyncEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.10
+     */
+    @ZAttr(id=711)
+    public void setFeatureGalSyncEnabled(boolean zimbraFeatureGalSyncEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGalSyncEnabled, zimbraFeatureGalSyncEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1782,6 +2934,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureGalSyncEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether GAL sync feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.10
+     */
+    @ZAttr(id=711)
+    public void unsetFeatureGalSyncEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGalSyncEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1806,8 +2972,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=481)
     public Map<String,Object> setFeatureGroupCalendarEnabled(boolean zimbraFeatureGroupCalendarEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureGroupCalendarEnabled, Boolean.toString(zimbraFeatureGroupCalendarEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureGroupCalendarEnabled, zimbraFeatureGroupCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * group calendar features. if set to FALSE, calendar works as a personal
+     * calendar and attendees and scheduling etc are turned off in web UI
+     *
+     * @param zimbraFeatureGroupCalendarEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=481)
+    public void setFeatureGroupCalendarEnabled(boolean zimbraFeatureGroupCalendarEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGroupCalendarEnabled, zimbraFeatureGroupCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1822,6 +3002,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureGroupCalendarEnabled, "");
         return attrs;
+    }
+
+    /**
+     * group calendar features. if set to FALSE, calendar works as a personal
+     * calendar and attendees and scheduling etc are turned off in web UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=481)
+    public void unsetFeatureGroupCalendarEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureGroupCalendarEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1844,8 +3037,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=219)
     public Map<String,Object> setFeatureHtmlComposeEnabled(boolean zimbraFeatureHtmlComposeEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureHtmlComposeEnabled, Boolean.toString(zimbraFeatureHtmlComposeEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureHtmlComposeEnabled, zimbraFeatureHtmlComposeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * enabled html composing
+     *
+     * @param zimbraFeatureHtmlComposeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=219)
+    public void setFeatureHtmlComposeEnabled(boolean zimbraFeatureHtmlComposeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureHtmlComposeEnabled, zimbraFeatureHtmlComposeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1859,6 +3065,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureHtmlComposeEnabled, "");
         return attrs;
+    }
+
+    /**
+     * enabled html composing
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=219)
+    public void unsetFeatureHtmlComposeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureHtmlComposeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1881,8 +3099,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=305)
     public Map<String,Object> setFeatureIMEnabled(boolean zimbraFeatureIMEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, Boolean.toString(zimbraFeatureIMEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, zimbraFeatureIMEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * IM features
+     *
+     * @param zimbraFeatureIMEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=305)
+    public void setFeatureIMEnabled(boolean zimbraFeatureIMEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, zimbraFeatureIMEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1896,6 +3127,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureIMEnabled, "");
         return attrs;
+    }
+
+    /**
+     * IM features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=305)
+    public void unsetFeatureIMEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1918,8 +3161,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=415)
     public Map<String,Object> setFeatureIdentitiesEnabled(boolean zimbraFeatureIdentitiesEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureIdentitiesEnabled, Boolean.toString(zimbraFeatureIdentitiesEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureIdentitiesEnabled, zimbraFeatureIdentitiesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to allow use of identities feature
+     *
+     * @param zimbraFeatureIdentitiesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=415)
+    public void setFeatureIdentitiesEnabled(boolean zimbraFeatureIdentitiesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureIdentitiesEnabled, zimbraFeatureIdentitiesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1933,6 +3189,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureIdentitiesEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether to allow use of identities feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=415)
+    public void unsetFeatureIdentitiesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureIdentitiesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1957,8 +3225,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=568)
     public Map<String,Object> setFeatureImapDataSourceEnabled(boolean zimbraFeatureImapDataSourceEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureImapDataSourceEnabled, Boolean.toString(zimbraFeatureImapDataSourceEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureImapDataSourceEnabled, zimbraFeatureImapDataSourceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether user is allowed to retrieve mail from an external IMAP data
+     * source
+     *
+     * @param zimbraFeatureImapDataSourceEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=568)
+    public void setFeatureImapDataSourceEnabled(boolean zimbraFeatureImapDataSourceEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImapDataSourceEnabled, zimbraFeatureImapDataSourceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1973,6 +3255,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureImapDataSourceEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether user is allowed to retrieve mail from an external IMAP data
+     * source
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=568)
+    public void unsetFeatureImapDataSourceEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImapDataSourceEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -1999,8 +3294,23 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=750)
     public Map<String,Object> setFeatureImportExportFolderEnabled(boolean zimbraFeatureImportExportFolderEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureImportExportFolderEnabled, Boolean.toString(zimbraFeatureImportExportFolderEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureImportExportFolderEnabled, zimbraFeatureImportExportFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether import export folder feature is enabled
+     *
+     * @param zimbraFeatureImportExportFolderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=750)
+    public void setFeatureImportExportFolderEnabled(boolean zimbraFeatureImportExportFolderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImportExportFolderEnabled, zimbraFeatureImportExportFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2016,6 +3326,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureImportExportFolderEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether import export folder feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=750)
+    public void unsetFeatureImportExportFolderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImportExportFolderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2038,8 +3362,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=142)
     public Map<String,Object> setFeatureInitialSearchPreferenceEnabled(boolean zimbraFeatureInitialSearchPreferenceEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureInitialSearchPreferenceEnabled, Boolean.toString(zimbraFeatureInitialSearchPreferenceEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureInitialSearchPreferenceEnabled, zimbraFeatureInitialSearchPreferenceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * preference to set initial search
+     *
+     * @param zimbraFeatureInitialSearchPreferenceEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=142)
+    public void setFeatureInitialSearchPreferenceEnabled(boolean zimbraFeatureInitialSearchPreferenceEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureInitialSearchPreferenceEnabled, zimbraFeatureInitialSearchPreferenceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2053,6 +3390,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureInitialSearchPreferenceEnabled, "");
         return attrs;
+    }
+
+    /**
+     * preference to set initial search
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=142)
+    public void unsetFeatureInitialSearchPreferenceEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureInitialSearchPreferenceEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2075,8 +3424,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=521)
     public Map<String,Object> setFeatureInstantNotify(boolean zimbraFeatureInstantNotify, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureInstantNotify, Boolean.toString(zimbraFeatureInstantNotify));
+        attrs.put(Provisioning.A_zimbraFeatureInstantNotify, zimbraFeatureInstantNotify ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Enable instant notifications
+     *
+     * @param zimbraFeatureInstantNotify new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=521)
+    public void setFeatureInstantNotify(boolean zimbraFeatureInstantNotify) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureInstantNotify, zimbraFeatureInstantNotify ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2090,6 +3452,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureInstantNotify, "");
         return attrs;
+    }
+
+    /**
+     * Enable instant notifications
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=521)
+    public void unsetFeatureInstantNotify() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureInstantNotify, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2112,8 +3486,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=489)
     public Map<String,Object> setFeatureMailEnabled(boolean zimbraFeatureMailEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMailEnabled, Boolean.toString(zimbraFeatureMailEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMailEnabled, zimbraFeatureMailEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * email features enabled
+     *
+     * @param zimbraFeatureMailEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=489)
+    public void setFeatureMailEnabled(boolean zimbraFeatureMailEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailEnabled, zimbraFeatureMailEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2127,6 +3514,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailEnabled, "");
         return attrs;
+    }
+
+    /**
+     * email features enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=489)
+    public void unsetFeatureMailEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2149,8 +3548,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=342)
     public Map<String,Object> setFeatureMailForwardingEnabled(boolean zimbraFeatureMailForwardingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, Boolean.toString(zimbraFeatureMailForwardingEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, zimbraFeatureMailForwardingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * enable end-user mail forwarding features
+     *
+     * @param zimbraFeatureMailForwardingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=342)
+    public void setFeatureMailForwardingEnabled(boolean zimbraFeatureMailForwardingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, zimbraFeatureMailForwardingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2164,6 +3576,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, "");
         return attrs;
+    }
+
+    /**
+     * enable end-user mail forwarding features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=342)
+    public void unsetFeatureMailForwardingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2186,8 +3610,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=704)
     public Map<String,Object> setFeatureMailForwardingInFiltersEnabled(boolean zimbraFeatureMailForwardingInFiltersEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, Boolean.toString(zimbraFeatureMailForwardingInFiltersEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, zimbraFeatureMailForwardingInFiltersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * enable end-user mail forwarding defined in mail filters features
+     *
+     * @param zimbraFeatureMailForwardingInFiltersEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=704)
+    public void setFeatureMailForwardingInFiltersEnabled(boolean zimbraFeatureMailForwardingInFiltersEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, zimbraFeatureMailForwardingInFiltersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2201,6 +3638,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, "");
         return attrs;
+    }
+
+    /**
+     * enable end-user mail forwarding defined in mail filters features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=704)
+    public void unsetFeatureMailForwardingInFiltersEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2225,8 +3674,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=441)
     public Map<String,Object> setFeatureMailPollingIntervalPreferenceEnabled(boolean zimbraFeatureMailPollingIntervalPreferenceEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMailPollingIntervalPreferenceEnabled, Boolean.toString(zimbraFeatureMailPollingIntervalPreferenceEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMailPollingIntervalPreferenceEnabled, zimbraFeatureMailPollingIntervalPreferenceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Deprecated since: 5.0. done via skin template overrides. Orig desc:
+     * whether user is allowed to set mail polling interval
+     *
+     * @param zimbraFeatureMailPollingIntervalPreferenceEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=441)
+    public void setFeatureMailPollingIntervalPreferenceEnabled(boolean zimbraFeatureMailPollingIntervalPreferenceEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailPollingIntervalPreferenceEnabled, zimbraFeatureMailPollingIntervalPreferenceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2241,6 +3704,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailPollingIntervalPreferenceEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Deprecated since: 5.0. done via skin template overrides. Orig desc:
+     * whether user is allowed to set mail polling interval
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=441)
+    public void unsetFeatureMailPollingIntervalPreferenceEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailPollingIntervalPreferenceEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2263,8 +3739,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=566)
     public Map<String,Object> setFeatureMailPriorityEnabled(boolean zimbraFeatureMailPriorityEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMailPriorityEnabled, Boolean.toString(zimbraFeatureMailPriorityEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMailPriorityEnabled, zimbraFeatureMailPriorityEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * mail priority feature
+     *
+     * @param zimbraFeatureMailPriorityEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=566)
+    public void setFeatureMailPriorityEnabled(boolean zimbraFeatureMailPriorityEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailPriorityEnabled, zimbraFeatureMailPriorityEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2278,6 +3767,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailPriorityEnabled, "");
         return attrs;
+    }
+
+    /**
+     * mail priority feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=566)
+    public void unsetFeatureMailPriorityEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailPriorityEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2300,8 +3801,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=527)
     public Map<String,Object> setFeatureMailUpsellEnabled(boolean zimbraFeatureMailUpsellEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMailUpsellEnabled, Boolean.toString(zimbraFeatureMailUpsellEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMailUpsellEnabled, zimbraFeatureMailUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * email upsell enabled
+     *
+     * @param zimbraFeatureMailUpsellEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=527)
+    public void setFeatureMailUpsellEnabled(boolean zimbraFeatureMailUpsellEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailUpsellEnabled, zimbraFeatureMailUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2315,6 +3829,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailUpsellEnabled, "");
         return attrs;
+    }
+
+    /**
+     * email upsell enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=527)
+    public void unsetFeatureMailUpsellEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailUpsellEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2344,6 +3870,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * email upsell URL
      *
+     * @param zimbraFeatureMailUpsellURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=528)
+    public void setFeatureMailUpsellURL(String zimbraFeatureMailUpsellURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailUpsellURL, zimbraFeatureMailUpsellURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email upsell URL
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -2352,6 +3891,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailUpsellURL, "");
         return attrs;
+    }
+
+    /**
+     * email upsell URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=528)
+    public void unsetFeatureMailUpsellURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailUpsellURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2374,8 +3925,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=347)
     public Map<String,Object> setFeatureMobileSyncEnabled(boolean zimbraFeatureMobileSyncEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMobileSyncEnabled, Boolean.toString(zimbraFeatureMobileSyncEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureMobileSyncEnabled, zimbraFeatureMobileSyncEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to permit mobile sync
+     *
+     * @param zimbraFeatureMobileSyncEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=347)
+    public void setFeatureMobileSyncEnabled(boolean zimbraFeatureMobileSyncEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileSyncEnabled, zimbraFeatureMobileSyncEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2389,6 +3953,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMobileSyncEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether to permit mobile sync
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=347)
+    public void unsetFeatureMobileSyncEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileSyncEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2411,8 +3987,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=631)
     public Map<String,Object> setFeatureNewAddrBookEnabled(boolean zimbraFeatureNewAddrBookEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureNewAddrBookEnabled, Boolean.toString(zimbraFeatureNewAddrBookEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureNewAddrBookEnabled, zimbraFeatureNewAddrBookEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether user can create address books
+     *
+     * @param zimbraFeatureNewAddrBookEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=631)
+    public void setFeatureNewAddrBookEnabled(boolean zimbraFeatureNewAddrBookEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNewAddrBookEnabled, zimbraFeatureNewAddrBookEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2426,6 +4015,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureNewAddrBookEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Whether user can create address books
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=631)
+    public void unsetFeatureNewAddrBookEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNewAddrBookEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2450,8 +4051,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=367)
     public Map<String,Object> setFeatureNewMailNotificationEnabled(boolean zimbraFeatureNewMailNotificationEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureNewMailNotificationEnabled, Boolean.toString(zimbraFeatureNewMailNotificationEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureNewMailNotificationEnabled, zimbraFeatureNewMailNotificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether new mail notification feature should be allowed for this
+     * account or in this cos
+     *
+     * @param zimbraFeatureNewMailNotificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=367)
+    public void setFeatureNewMailNotificationEnabled(boolean zimbraFeatureNewMailNotificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNewMailNotificationEnabled, zimbraFeatureNewMailNotificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2466,6 +4081,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureNewMailNotificationEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Whether new mail notification feature should be allowed for this
+     * account or in this cos
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=367)
+    public void unsetFeatureNewMailNotificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNewMailNotificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2490,8 +4118,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=356)
     public Map<String,Object> setFeatureNotebookEnabled(boolean zimbraFeatureNotebookEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureNotebookEnabled, Boolean.toString(zimbraFeatureNotebookEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureNotebookEnabled, zimbraFeatureNotebookEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
+     *
+     * @param zimbraFeatureNotebookEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=356)
+    public void setFeatureNotebookEnabled(boolean zimbraFeatureNotebookEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNotebookEnabled, zimbraFeatureNotebookEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2506,6 +4148,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureNotebookEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=356)
+    public void unsetFeatureNotebookEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNotebookEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2528,8 +4183,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=585)
     public Map<String,Object> setFeatureOpenMailInNewWindowEnabled(boolean zimbraFeatureOpenMailInNewWindowEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureOpenMailInNewWindowEnabled, Boolean.toString(zimbraFeatureOpenMailInNewWindowEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureOpenMailInNewWindowEnabled, zimbraFeatureOpenMailInNewWindowEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not open a new msg/conv in a new windows is allowed
+     *
+     * @param zimbraFeatureOpenMailInNewWindowEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=585)
+    public void setFeatureOpenMailInNewWindowEnabled(boolean zimbraFeatureOpenMailInNewWindowEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureOpenMailInNewWindowEnabled, zimbraFeatureOpenMailInNewWindowEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2543,6 +4211,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureOpenMailInNewWindowEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether or not open a new msg/conv in a new windows is allowed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=585)
+    public void unsetFeatureOpenMailInNewWindowEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureOpenMailInNewWindowEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2565,8 +4245,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=451)
     public Map<String,Object> setFeatureOptionsEnabled(boolean zimbraFeatureOptionsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureOptionsEnabled, Boolean.toString(zimbraFeatureOptionsEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureOptionsEnabled, zimbraFeatureOptionsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether an account can modify its zimbraPref* attributes
+     *
+     * @param zimbraFeatureOptionsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=451)
+    public void setFeatureOptionsEnabled(boolean zimbraFeatureOptionsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureOptionsEnabled, zimbraFeatureOptionsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2580,6 +4273,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureOptionsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether an account can modify its zimbraPref* attributes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=451)
+    public void unsetFeatureOptionsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureOptionsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2604,8 +4309,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=366)
     public Map<String,Object> setFeatureOutOfOfficeReplyEnabled(boolean zimbraFeatureOutOfOfficeReplyEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled, Boolean.toString(zimbraFeatureOutOfOfficeReplyEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled, zimbraFeatureOutOfOfficeReplyEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether out of office reply feature should be allowed for this account
+     * or in this cos
+     *
+     * @param zimbraFeatureOutOfOfficeReplyEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=366)
+    public void setFeatureOutOfOfficeReplyEnabled(boolean zimbraFeatureOutOfOfficeReplyEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled, zimbraFeatureOutOfOfficeReplyEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2620,6 +4339,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Whether out of office reply feature should be allowed for this account
+     * or in this cos
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=366)
+    public void unsetFeatureOutOfOfficeReplyEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2644,8 +4376,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=416)
     public Map<String,Object> setFeaturePop3DataSourceEnabled(boolean zimbraFeaturePop3DataSourceEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeaturePop3DataSourceEnabled, Boolean.toString(zimbraFeaturePop3DataSourceEnabled));
+        attrs.put(Provisioning.A_zimbraFeaturePop3DataSourceEnabled, zimbraFeaturePop3DataSourceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether user is allowed to retrieve mail from an external POP3 data
+     * source
+     *
+     * @param zimbraFeaturePop3DataSourceEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=416)
+    public void setFeaturePop3DataSourceEnabled(boolean zimbraFeaturePop3DataSourceEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePop3DataSourceEnabled, zimbraFeaturePop3DataSourceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2660,6 +4406,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeaturePop3DataSourceEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether user is allowed to retrieve mail from an external POP3 data
+     * source
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=416)
+    public void unsetFeaturePop3DataSourceEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePop3DataSourceEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2682,8 +4441,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=447)
     public Map<String,Object> setFeaturePortalEnabled(boolean zimbraFeaturePortalEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeaturePortalEnabled, Boolean.toString(zimbraFeaturePortalEnabled));
+        attrs.put(Provisioning.A_zimbraFeaturePortalEnabled, zimbraFeaturePortalEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * portal features
+     *
+     * @param zimbraFeaturePortalEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=447)
+    public void setFeaturePortalEnabled(boolean zimbraFeaturePortalEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePortalEnabled, zimbraFeaturePortalEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2697,6 +4469,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeaturePortalEnabled, "");
         return attrs;
+    }
+
+    /**
+     * portal features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=447)
+    public void unsetFeaturePortalEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePortalEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2719,8 +4503,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=139)
     public Map<String,Object> setFeatureSavedSearchesEnabled(boolean zimbraFeatureSavedSearchesEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSavedSearchesEnabled, Boolean.toString(zimbraFeatureSavedSearchesEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureSavedSearchesEnabled, zimbraFeatureSavedSearchesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * saved search feature
+     *
+     * @param zimbraFeatureSavedSearchesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=139)
+    public void setFeatureSavedSearchesEnabled(boolean zimbraFeatureSavedSearchesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSavedSearchesEnabled, zimbraFeatureSavedSearchesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2734,6 +4531,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSavedSearchesEnabled, "");
         return attrs;
+    }
+
+    /**
+     * saved search feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=139)
+    public void unsetFeatureSavedSearchesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSavedSearchesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2756,8 +4565,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=335)
     public Map<String,Object> setFeatureSharingEnabled(boolean zimbraFeatureSharingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSharingEnabled, Boolean.toString(zimbraFeatureSharingEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureSharingEnabled, zimbraFeatureSharingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * enabled sharing
+     *
+     * @param zimbraFeatureSharingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=335)
+    public void setFeatureSharingEnabled(boolean zimbraFeatureSharingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSharingEnabled, zimbraFeatureSharingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2771,6 +4593,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSharingEnabled, "");
         return attrs;
+    }
+
+    /**
+     * enabled sharing
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=335)
+    public void unsetFeatureSharingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSharingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2793,8 +4627,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=452)
     public Map<String,Object> setFeatureShortcutAliasesEnabled(boolean zimbraFeatureShortcutAliasesEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureShortcutAliasesEnabled, Boolean.toString(zimbraFeatureShortcutAliasesEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureShortcutAliasesEnabled, zimbraFeatureShortcutAliasesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * keyboard shortcuts aliases features
+     *
+     * @param zimbraFeatureShortcutAliasesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=452)
+    public void setFeatureShortcutAliasesEnabled(boolean zimbraFeatureShortcutAliasesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureShortcutAliasesEnabled, zimbraFeatureShortcutAliasesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2808,6 +4655,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureShortcutAliasesEnabled, "");
         return attrs;
+    }
+
+    /**
+     * keyboard shortcuts aliases features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=452)
+    public void unsetFeatureShortcutAliasesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureShortcutAliasesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2830,8 +4689,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=494)
     public Map<String,Object> setFeatureSignaturesEnabled(boolean zimbraFeatureSignaturesEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSignaturesEnabled, Boolean.toString(zimbraFeatureSignaturesEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureSignaturesEnabled, zimbraFeatureSignaturesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to allow use of signature feature
+     *
+     * @param zimbraFeatureSignaturesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=494)
+    public void setFeatureSignaturesEnabled(boolean zimbraFeatureSignaturesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSignaturesEnabled, zimbraFeatureSignaturesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2845,6 +4717,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSignaturesEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether to allow use of signature feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=494)
+    public void unsetFeatureSignaturesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSignaturesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2867,8 +4751,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=354)
     public Map<String,Object> setFeatureSkinChangeEnabled(boolean zimbraFeatureSkinChangeEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSkinChangeEnabled, Boolean.toString(zimbraFeatureSkinChangeEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureSkinChangeEnabled, zimbraFeatureSkinChangeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether changing skin is allowed for this account or in this cos
+     *
+     * @param zimbraFeatureSkinChangeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=354)
+    public void setFeatureSkinChangeEnabled(boolean zimbraFeatureSkinChangeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSkinChangeEnabled, zimbraFeatureSkinChangeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2882,6 +4779,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSkinChangeEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Whether changing skin is allowed for this account or in this cos
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=354)
+    public void unsetFeatureSkinChangeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSkinChangeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2904,8 +4813,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=137)
     public Map<String,Object> setFeatureTaggingEnabled(boolean zimbraFeatureTaggingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureTaggingEnabled, Boolean.toString(zimbraFeatureTaggingEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureTaggingEnabled, zimbraFeatureTaggingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * tagging feature
+     *
+     * @param zimbraFeatureTaggingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=137)
+    public void setFeatureTaggingEnabled(boolean zimbraFeatureTaggingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTaggingEnabled, zimbraFeatureTaggingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2919,6 +4841,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureTaggingEnabled, "");
         return attrs;
+    }
+
+    /**
+     * tagging feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=137)
+    public void unsetFeatureTaggingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTaggingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2941,8 +4875,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=436)
     public Map<String,Object> setFeatureTasksEnabled(boolean zimbraFeatureTasksEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureTasksEnabled, Boolean.toString(zimbraFeatureTasksEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureTasksEnabled, zimbraFeatureTasksEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to allow use of tasks feature
+     *
+     * @param zimbraFeatureTasksEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=436)
+    public void setFeatureTasksEnabled(boolean zimbraFeatureTasksEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTasksEnabled, zimbraFeatureTasksEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2956,6 +4903,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureTasksEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether to allow use of tasks feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=436)
+    public void unsetFeatureTasksEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTasksEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2978,8 +4937,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=312)
     public Map<String,Object> setFeatureViewInHtmlEnabled(boolean zimbraFeatureViewInHtmlEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureViewInHtmlEnabled, Boolean.toString(zimbraFeatureViewInHtmlEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureViewInHtmlEnabled, zimbraFeatureViewInHtmlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * option to view attachments in html
+     *
+     * @param zimbraFeatureViewInHtmlEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=312)
+    public void setFeatureViewInHtmlEnabled(boolean zimbraFeatureViewInHtmlEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureViewInHtmlEnabled, zimbraFeatureViewInHtmlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -2993,6 +4965,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureViewInHtmlEnabled, "");
         return attrs;
+    }
+
+    /**
+     * option to view attachments in html
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=312)
+    public void unsetFeatureViewInHtmlEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureViewInHtmlEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3015,8 +4999,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=445)
     public Map<String,Object> setFeatureVoiceEnabled(boolean zimbraFeatureVoiceEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureVoiceEnabled, Boolean.toString(zimbraFeatureVoiceEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureVoiceEnabled, zimbraFeatureVoiceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Voicemail features enabled
+     *
+     * @param zimbraFeatureVoiceEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=445)
+    public void setFeatureVoiceEnabled(boolean zimbraFeatureVoiceEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceEnabled, zimbraFeatureVoiceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3030,6 +5027,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Voicemail features enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=445)
+    public void unsetFeatureVoiceEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3052,8 +5061,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=533)
     public Map<String,Object> setFeatureVoiceUpsellEnabled(boolean zimbraFeatureVoiceUpsellEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellEnabled, Boolean.toString(zimbraFeatureVoiceUpsellEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellEnabled, zimbraFeatureVoiceUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * voice upsell enabled
+     *
+     * @param zimbraFeatureVoiceUpsellEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=533)
+    public void setFeatureVoiceUpsellEnabled(boolean zimbraFeatureVoiceUpsellEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellEnabled, zimbraFeatureVoiceUpsellEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3067,6 +5089,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellEnabled, "");
         return attrs;
+    }
+
+    /**
+     * voice upsell enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=533)
+    public void unsetFeatureVoiceUpsellEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3096,6 +5130,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * voice upsell URL
      *
+     * @param zimbraFeatureVoiceUpsellURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=534)
+    public void setFeatureVoiceUpsellURL(String zimbraFeatureVoiceUpsellURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellURL, zimbraFeatureVoiceUpsellURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * voice upsell URL
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3104,6 +5151,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellURL, "");
         return attrs;
+    }
+
+    /**
+     * voice upsell URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=534)
+    public void unsetFeatureVoiceUpsellURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceUpsellURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3126,8 +5185,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=602)
     public Map<String,Object> setFeatureWebSearchEnabled(boolean zimbraFeatureWebSearchEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureWebSearchEnabled, Boolean.toString(zimbraFeatureWebSearchEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureWebSearchEnabled, zimbraFeatureWebSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether web search feature is enabled
+     *
+     * @param zimbraFeatureWebSearchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=602)
+    public void setFeatureWebSearchEnabled(boolean zimbraFeatureWebSearchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebSearchEnabled, zimbraFeatureWebSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3141,6 +5213,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureWebSearchEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether web search feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=602)
+    public void unsetFeatureWebSearchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebSearchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3163,8 +5247,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=544)
     public Map<String,Object> setFeatureZimbraAssistantEnabled(boolean zimbraFeatureZimbraAssistantEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, Boolean.toString(zimbraFeatureZimbraAssistantEnabled));
+        attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, zimbraFeatureZimbraAssistantEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Zimbra Assistant enabled
+     *
+     * @param zimbraFeatureZimbraAssistantEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=544)
+    public void setFeatureZimbraAssistantEnabled(boolean zimbraFeatureZimbraAssistantEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, zimbraFeatureZimbraAssistantEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3178,6 +5275,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Zimbra Assistant enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=544)
+    public void unsetFeatureZimbraAssistantEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3207,6 +5316,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Exchange user password for free/busy lookup and propagation
      *
+     * @param zimbraFreebusyExchangeAuthPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=609)
+    public void setFreebusyExchangeAuthPassword(String zimbraFreebusyExchangeAuthPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthPassword, zimbraFreebusyExchangeAuthPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Exchange user password for free/busy lookup and propagation
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3215,6 +5337,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthPassword, "");
         return attrs;
+    }
+
+    /**
+     * Exchange user password for free/busy lookup and propagation
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=609)
+    public void unsetFreebusyExchangeAuthPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3263,6 +5397,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [basic, form]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=611)
+    public void setFreebusyExchangeAuthScheme(ZAttrProvisioning.FreebusyExchangeAuthScheme zimbraFreebusyExchangeAuthScheme) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
+     * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3278,6 +5427,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [basic, form]
      *
+     * @param zimbraFreebusyExchangeAuthScheme new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=611)
+    public void setFreebusyExchangeAuthSchemeAsString(String zimbraFreebusyExchangeAuthScheme) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, zimbraFreebusyExchangeAuthScheme);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3286,6 +5450,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, "");
         return attrs;
+    }
+
+    /**
+     * auth scheme to use
+     *
+     * <p>Valid values: [basic, form]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=611)
+    public void unsetFreebusyExchangeAuthScheme() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthScheme, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3315,6 +5493,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Exchange username for free/busy lookup and propagation
      *
+     * @param zimbraFreebusyExchangeAuthUsername new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=608)
+    public void setFreebusyExchangeAuthUsername(String zimbraFreebusyExchangeAuthUsername) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthUsername, zimbraFreebusyExchangeAuthUsername);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Exchange username for free/busy lookup and propagation
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3323,6 +5514,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthUsername, "");
         return attrs;
+    }
+
+    /**
+     * Exchange username for free/busy lookup and propagation
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=608)
+    public void unsetFreebusyExchangeAuthUsername() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeAuthUsername, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3366,6 +5569,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The duration of f/b block pushed to Exchange server.
      *
+     * @param zimbraFreebusyExchangeCachedInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=621)
+    public void setFreebusyExchangeCachedInterval(String zimbraFreebusyExchangeCachedInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedInterval, zimbraFreebusyExchangeCachedInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The duration of f/b block pushed to Exchange server.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3374,6 +5590,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedInterval, "");
         return attrs;
+    }
+
+    /**
+     * The duration of f/b block pushed to Exchange server.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=621)
+    public void unsetFreebusyExchangeCachedInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3421,6 +5649,20 @@ public class ZAttrCos extends NamedEntry {
      * The value of duration is used to indicate the start date (in the past
      * relative to today) of the f/b interval pushed to Exchange server.
      *
+     * @param zimbraFreebusyExchangeCachedIntervalStart new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=620)
+    public void setFreebusyExchangeCachedIntervalStart(String zimbraFreebusyExchangeCachedIntervalStart) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, zimbraFreebusyExchangeCachedIntervalStart);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The value of duration is used to indicate the start date (in the past
+     * relative to today) of the f/b interval pushed to Exchange server.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3429,6 +5671,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, "");
         return attrs;
+    }
+
+    /**
+     * The value of duration is used to indicate the start date (in the past
+     * relative to today) of the f/b interval pushed to Exchange server.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=620)
+    public void unsetFreebusyExchangeCachedIntervalStart() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3458,6 +5713,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * URL to Exchange server for free/busy lookup and propagation
      *
+     * @param zimbraFreebusyExchangeURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=607)
+    public void setFreebusyExchangeURL(String zimbraFreebusyExchangeURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeURL, zimbraFreebusyExchangeURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL to Exchange server for free/busy lookup and propagation
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3466,6 +5734,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeURL, "");
         return attrs;
+    }
+
+    /**
+     * URL to Exchange server for free/busy lookup and propagation
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=607)
+    public void unsetFreebusyExchangeURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3495,6 +5775,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * O and OU used in legacyExchangeDN attribute
      *
+     * @param zimbraFreebusyExchangeUserOrg new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=610)
+    public void setFreebusyExchangeUserOrg(String zimbraFreebusyExchangeUserOrg) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeUserOrg, zimbraFreebusyExchangeUserOrg);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * O and OU used in legacyExchangeDN attribute
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3503,6 +5796,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeUserOrg, "");
         return attrs;
+    }
+
+    /**
+     * O and OU used in legacyExchangeDN attribute
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=610)
+    public void unsetFreebusyExchangeUserOrg() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeUserOrg, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3531,8 +5836,24 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=752)
     public Map<String,Object> setFreebusyLocalMailboxNotActive(boolean zimbraFreebusyLocalMailboxNotActive, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, Boolean.toString(zimbraFreebusyLocalMailboxNotActive));
+        attrs.put(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, zimbraFreebusyLocalMailboxNotActive ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * when set to TRUE, free/busy for the account is not calculated from
+     * local mailbox.
+     *
+     * @param zimbraFreebusyLocalMailboxNotActive new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.11
+     */
+    @ZAttr(id=752)
+    public void setFreebusyLocalMailboxNotActive(boolean zimbraFreebusyLocalMailboxNotActive) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, zimbraFreebusyLocalMailboxNotActive ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3549,6 +5870,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, "");
         return attrs;
+    }
+
+    /**
+     * when set to TRUE, free/busy for the account is not calculated from
+     * local mailbox.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.11
+     */
+    @ZAttr(id=752)
+    public void unsetFreebusyLocalMailboxNotActive() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3578,6 +5914,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * available IM interop gateways
      *
+     * @param zimbraIMAvailableInteropGateways new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=571)
+    public void setIMAvailableInteropGateways(String[] zimbraIMAvailableInteropGateways) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMAvailableInteropGateways, zimbraIMAvailableInteropGateways);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * available IM interop gateways
+     *
      * @param zimbraIMAvailableInteropGateways new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3587,6 +5936,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraIMAvailableInteropGateways, zimbraIMAvailableInteropGateways);
         return attrs;
+    }
+
+    /**
+     * available IM interop gateways
+     *
+     * @param zimbraIMAvailableInteropGateways new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=571)
+    public void addIMAvailableInteropGateways(String zimbraIMAvailableInteropGateways) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraIMAvailableInteropGateways, zimbraIMAvailableInteropGateways);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3606,6 +5968,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * available IM interop gateways
      *
+     * @param zimbraIMAvailableInteropGateways existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=571)
+    public void removeIMAvailableInteropGateways(String zimbraIMAvailableInteropGateways) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraIMAvailableInteropGateways, zimbraIMAvailableInteropGateways);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * available IM interop gateways
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3614,6 +5989,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMAvailableInteropGateways, "");
         return attrs;
+    }
+
+    /**
+     * available IM interop gateways
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=571)
+    public void unsetIMAvailableInteropGateways() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMAvailableInteropGateways, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3668,6 +6055,23 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [yahoo, zimbra]
      *
      * @param zimbraIMService new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=762)
+    public void setIMService(ZAttrProvisioning.IMService zimbraIMService) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMService, zimbraIMService.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @param zimbraIMService new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -3685,6 +6089,23 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [yahoo, zimbra]
      *
+     * @param zimbraIMService new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=762)
+    public void setIMServiceAsString(String zimbraIMService) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMService, zimbraIMService);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
@@ -3695,6 +6116,22 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIMService, "");
         return attrs;
+    }
+
+    /**
+     * IM service
+     *
+     * <p>Valid values: [yahoo, zimbra]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=762)
+    public void unsetIMService() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIMService, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3724,6 +6161,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Zimbra Systems Unique ID
      *
+     * @param zimbraId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=1)
+    public void setId(String zimbraId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, zimbraId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Systems Unique ID
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3732,6 +6182,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "");
         return attrs;
+    }
+
+    /**
+     * Zimbra Systems Unique ID
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=1)
+    public void unsetId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3761,6 +6223,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * maximum number of identities allowed on an account
      *
+     * @param zimbraIdentityMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=414)
+    public void setIdentityMaxNumEntries(int zimbraIdentityMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIdentityMaxNumEntries, Integer.toString(zimbraIdentityMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of identities allowed on an account
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3769,6 +6244,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIdentityMaxNumEntries, "");
         return attrs;
+    }
+
+    /**
+     * maximum number of identities allowed on an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=414)
+    public void unsetIdentityMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIdentityMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3791,8 +6278,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=174)
     public Map<String,Object> setImapEnabled(boolean zimbraImapEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraImapEnabled, Boolean.toString(zimbraImapEnabled));
+        attrs.put(Provisioning.A_zimbraImapEnabled, zimbraImapEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether IMAP is enabled for an account
+     *
+     * @param zimbraImapEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=174)
+    public void setImapEnabled(boolean zimbraImapEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnabled, zimbraImapEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3806,6 +6306,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether IMAP is enabled for an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=174)
+    public void unsetImapEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3835,6 +6347,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The address to which legal intercept messages will be sent.
      *
+     * @param zimbraInterceptAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=614)
+    public void setInterceptAddress(String[] zimbraInterceptAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptAddress, zimbraInterceptAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The address to which legal intercept messages will be sent.
+     *
      * @param zimbraInterceptAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3844,6 +6369,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraInterceptAddress, zimbraInterceptAddress);
         return attrs;
+    }
+
+    /**
+     * The address to which legal intercept messages will be sent.
+     *
+     * @param zimbraInterceptAddress new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=614)
+    public void addInterceptAddress(String zimbraInterceptAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraInterceptAddress, zimbraInterceptAddress);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3863,6 +6401,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The address to which legal intercept messages will be sent.
      *
+     * @param zimbraInterceptAddress existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=614)
+    public void removeInterceptAddress(String zimbraInterceptAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraInterceptAddress, zimbraInterceptAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The address to which legal intercept messages will be sent.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3871,6 +6422,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraInterceptAddress, "");
         return attrs;
+    }
+
+    /**
+     * The address to which legal intercept messages will be sent.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=614)
+    public void unsetInterceptAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3900,6 +6463,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Template used to construct the body of a legal intercept message.
      *
+     * @param zimbraInterceptBody new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=618)
+    public void setInterceptBody(String zimbraInterceptBody) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptBody, zimbraInterceptBody);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the body of a legal intercept message.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3908,6 +6484,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraInterceptBody, "");
         return attrs;
+    }
+
+    /**
+     * Template used to construct the body of a legal intercept message.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=618)
+    public void unsetInterceptBody() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptBody, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3937,6 +6525,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Template used to construct the sender of a legal intercept message.
      *
+     * @param zimbraInterceptFrom new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=616)
+    public void setInterceptFrom(String zimbraInterceptFrom) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptFrom, zimbraInterceptFrom);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the sender of a legal intercept message.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -3945,6 +6546,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraInterceptFrom, "");
         return attrs;
+    }
+
+    /**
+     * Template used to construct the sender of a legal intercept message.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=616)
+    public void unsetInterceptFrom() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptFrom, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3969,8 +6582,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=615)
     public Map<String,Object> setInterceptSendHeadersOnly(boolean zimbraInterceptSendHeadersOnly, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, Boolean.toString(zimbraInterceptSendHeadersOnly));
+        attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, zimbraInterceptSendHeadersOnly ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Specifies whether legal intercept messages should contain the entire
+     * original message or just the headers.
+     *
+     * @param zimbraInterceptSendHeadersOnly new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=615)
+    public void setInterceptSendHeadersOnly(boolean zimbraInterceptSendHeadersOnly) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, zimbraInterceptSendHeadersOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -3985,6 +6612,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, "");
         return attrs;
+    }
+
+    /**
+     * Specifies whether legal intercept messages should contain the entire
+     * original message or just the headers.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=615)
+    public void unsetInterceptSendHeadersOnly() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4014,6 +6654,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Template used to construct the subject of a legal intercept message.
      *
+     * @param zimbraInterceptSubject new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=617)
+    public void setInterceptSubject(String zimbraInterceptSubject) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptSubject, zimbraInterceptSubject);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the subject of a legal intercept message.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4022,6 +6675,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraInterceptSubject, "");
         return attrs;
+    }
+
+    /**
+     * Template used to construct the subject of a legal intercept message.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=617)
+    public void unsetInterceptSubject() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInterceptSubject, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4044,8 +6709,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=579)
     public Map<String,Object> setJunkMessagesIndexingEnabled(boolean zimbraJunkMessagesIndexingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraJunkMessagesIndexingEnabled, Boolean.toString(zimbraJunkMessagesIndexingEnabled));
+        attrs.put(Provisioning.A_zimbraJunkMessagesIndexingEnabled, zimbraJunkMessagesIndexingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Whether to index junk messages
+     *
+     * @param zimbraJunkMessagesIndexingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=579)
+    public void setJunkMessagesIndexingEnabled(boolean zimbraJunkMessagesIndexingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraJunkMessagesIndexingEnabled, zimbraJunkMessagesIndexingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4059,6 +6737,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJunkMessagesIndexingEnabled, "");
         return attrs;
+    }
+
+    /**
+     * Whether to index junk messages
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=579)
+    public void unsetJunkMessagesIndexingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraJunkMessagesIndexingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4088,6 +6778,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * locale of entry, e.g. en_US
      *
+     * @param zimbraLocale new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=345)
+    public void setLocale(String zimbraLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, zimbraLocale);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4096,6 +6799,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLocale, "");
         return attrs;
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=345)
+    public void unsetLocale() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4125,6 +6840,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * servers that an account can be initially provisioned on
      *
+     * @param zimbraMailHostPool new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=125)
+    public void setMailHostPool(String[] zimbraMailHostPool) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHostPool, zimbraMailHostPool);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * servers that an account can be initially provisioned on
+     *
      * @param zimbraMailHostPool new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -4134,6 +6862,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailHostPool, zimbraMailHostPool);
         return attrs;
+    }
+
+    /**
+     * servers that an account can be initially provisioned on
+     *
+     * @param zimbraMailHostPool new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=125)
+    public void addMailHostPool(String zimbraMailHostPool) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailHostPool, zimbraMailHostPool);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4153,6 +6894,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * servers that an account can be initially provisioned on
      *
+     * @param zimbraMailHostPool existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=125)
+    public void removeMailHostPool(String zimbraMailHostPool) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailHostPool, zimbraMailHostPool);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * servers that an account can be initially provisioned on
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4161,6 +6915,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailHostPool, "");
         return attrs;
+    }
+
+    /**
+     * servers that an account can be initially provisioned on
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=125)
+    public void unsetMailHostPool() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHostPool, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4204,6 +6970,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * idle timeout (nnnnn[hmsd])
      *
+     * @param zimbraMailIdleSessionTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=147)
+    public void setMailIdleSessionTimeout(String zimbraMailIdleSessionTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailIdleSessionTimeout, zimbraMailIdleSessionTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * idle timeout (nnnnn[hmsd])
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4212,6 +6991,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailIdleSessionTimeout, "");
         return attrs;
+    }
+
+    /**
+     * idle timeout (nnnnn[hmsd])
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=147)
+    public void unsetMailIdleSessionTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailIdleSessionTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4255,6 +7046,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * lifetime (nnnnn[hmsd]) of a mail message regardless of location
      *
+     * @param zimbraMailMessageLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=106)
+    public void setMailMessageLifetime(String zimbraMailMessageLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailMessageLifetime, zimbraMailMessageLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4263,6 +7067,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailMessageLifetime, "");
         return attrs;
+    }
+
+    /**
+     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=106)
+    public void unsetMailMessageLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailMessageLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4306,6 +7122,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
      *
+     * @param zimbraMailMinPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=110)
+    public void setMailMinPollingInterval(String zimbraMailMinPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailMinPollingInterval, zimbraMailMinPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4314,6 +7143,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailMinPollingInterval, "");
         return attrs;
+    }
+
+    /**
+     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=110)
+    public void unsetMailMinPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailMinPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4344,8 +7185,25 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=748)
     public Map<String,Object> setMailPurgeUseChangeDateForTrash(boolean zimbraMailPurgeUseChangeDateForTrash, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, Boolean.toString(zimbraMailPurgeUseChangeDateForTrash));
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, zimbraMailPurgeUseChangeDateForTrash ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * If TRUE, a message is purged from trash based on the date that it was
+     * moved to the Trash folder. If FALSE, a message is purged from Trash
+     * based on the date that it was added to the mailbox.
+     *
+     * @param zimbraMailPurgeUseChangeDateForTrash new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=748)
+    public void setMailPurgeUseChangeDateForTrash(boolean zimbraMailPurgeUseChangeDateForTrash) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, zimbraMailPurgeUseChangeDateForTrash ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4363,6 +7221,22 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, "");
         return attrs;
+    }
+
+    /**
+     * If TRUE, a message is purged from trash based on the date that it was
+     * moved to the Trash folder. If FALSE, a message is purged from Trash
+     * based on the date that it was added to the mailbox.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=748)
+    public void unsetMailPurgeUseChangeDateForTrash() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4392,6 +7266,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * mail quota in bytes
      *
+     * @param zimbraMailQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=16)
+    public void setMailQuota(long zimbraMailQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailQuota, Long.toString(zimbraMailQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mail quota in bytes
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4400,6 +7287,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailQuota, "");
         return attrs;
+    }
+
+    /**
+     * mail quota in bytes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=16)
+    public void unsetMailQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4432,6 +7331,20 @@ public class ZAttrCos extends NamedEntry {
      * maximum length of mail signature, 0 means unlimited. If not set,
      * default is 1024
      *
+     * @param zimbraMailSignatureMaxLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=454)
+    public void setMailSignatureMaxLength(long zimbraMailSignatureMaxLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSignatureMaxLength, Long.toString(zimbraMailSignatureMaxLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum length of mail signature, 0 means unlimited. If not set,
+     * default is 1024
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4440,6 +7353,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSignatureMaxLength, "");
         return attrs;
+    }
+
+    /**
+     * maximum length of mail signature, 0 means unlimited. If not set,
+     * default is 1024
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=454)
+    public void unsetMailSignatureMaxLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSignatureMaxLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4495,6 +7421,22 @@ public class ZAttrCos extends NamedEntry {
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
      * shorter duration is used.
      *
+     * @param zimbraMailSpamLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=105)
+    public void setMailSpamLifetime(String zimbraMailSpamLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSpamLifetime, zimbraMailSpamLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the Junk folder. 0 means that all
+     * messages will be retained. This admin-modifiable attribute works in
+     * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
+     * shorter duration is used.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4503,6 +7445,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSpamLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of messages in the Junk folder. 0 means that all
+     * messages will be retained. This admin-modifiable attribute works in
+     * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
+     * shorter duration is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=105)
+    public void unsetMailSpamLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSpamLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4558,6 +7515,22 @@ public class ZAttrCos extends NamedEntry {
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
      * The shorter duration is used.
      *
+     * @param zimbraMailTrashLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=104)
+    public void setMailTrashLifetime(String zimbraMailTrashLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrashLifetime, zimbraMailTrashLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the Trash folder. 0 means that all
+     * messages will be retained. This admin-modifiable attribute works in
+     * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
+     * The shorter duration is used.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4566,6 +7539,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailTrashLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of messages in the Trash folder. 0 means that all
+     * messages will be retained. This admin-modifiable attribute works in
+     * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
+     * The shorter duration is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=104)
+    public void unsetMailTrashLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrashLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4595,6 +7583,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * template used to construct the body of an email notification message
      *
+     * @param zimbraNewMailNotificationBody new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=152)
+    public void setNewMailNotificationBody(String zimbraNewMailNotificationBody) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNewMailNotificationBody, zimbraNewMailNotificationBody);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the body of an email notification message
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4603,6 +7604,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, "");
         return attrs;
+    }
+
+    /**
+     * template used to construct the body of an email notification message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=152)
+    public void unsetNewMailNotificationBody() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNewMailNotificationBody, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4632,6 +7645,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * template used to construct the sender of an email notification message
      *
+     * @param zimbraNewMailNotificationFrom new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=150)
+    public void setNewMailNotificationFrom(String zimbraNewMailNotificationFrom) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNewMailNotificationFrom, zimbraNewMailNotificationFrom);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the sender of an email notification message
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4640,6 +7666,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNewMailNotificationFrom, "");
         return attrs;
+    }
+
+    /**
+     * template used to construct the sender of an email notification message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=150)
+    public void unsetNewMailNotificationFrom() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNewMailNotificationFrom, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4672,6 +7710,20 @@ public class ZAttrCos extends NamedEntry {
      * template used to construct the subject of an email notification
      * message
      *
+     * @param zimbraNewMailNotificationSubject new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=151)
+    public void setNewMailNotificationSubject(String zimbraNewMailNotificationSubject) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, zimbraNewMailNotificationSubject);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the subject of an email notification
+     * message
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4680,6 +7732,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, "");
         return attrs;
+    }
+
+    /**
+     * template used to construct the subject of an email notification
+     * message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=151)
+    public void unsetNewMailNotificationSubject() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4712,6 +7777,20 @@ public class ZAttrCos extends NamedEntry {
      * maximum number of revisions to keep for wiki pages and documents. 0
      * means unlimited.
      *
+     * @param zimbraNotebookMaxRevisions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=482)
+    public void setNotebookMaxRevisions(int zimbraNotebookMaxRevisions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotebookMaxRevisions, Integer.toString(zimbraNotebookMaxRevisions));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of revisions to keep for wiki pages and documents. 0
+     * means unlimited.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4720,6 +7799,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNotebookMaxRevisions, "");
         return attrs;
+    }
+
+    /**
+     * maximum number of revisions to keep for wiki pages and documents. 0
+     * means unlimited.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=482)
+    public void unsetNotebookMaxRevisions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotebookMaxRevisions, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4744,8 +7836,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=646)
     public Map<String,Object> setNotebookSanitizeHtml(boolean zimbraNotebookSanitizeHtml, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNotebookSanitizeHtml, Boolean.toString(zimbraNotebookSanitizeHtml));
+        attrs.put(Provisioning.A_zimbraNotebookSanitizeHtml, zimbraNotebookSanitizeHtml ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to strip off potentially harming HTML tags in Wiki and HTML
+     * Documents.
+     *
+     * @param zimbraNotebookSanitizeHtml new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=646)
+    public void setNotebookSanitizeHtml(boolean zimbraNotebookSanitizeHtml) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotebookSanitizeHtml, zimbraNotebookSanitizeHtml ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4760,6 +7866,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNotebookSanitizeHtml, "");
         return attrs;
+    }
+
+    /**
+     * whether to strip off potentially harming HTML tags in Wiki and HTML
+     * Documents.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=646)
+    public void unsetNotebookSanitizeHtml() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotebookSanitizeHtml, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4789,6 +7908,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * administrative notes
      *
+     * @param zimbraNotes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=9)
+    public void setNotes(String zimbraNotes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, zimbraNotes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * administrative notes
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4797,6 +7929,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNotes, "");
         return attrs;
+    }
+
+    /**
+     * administrative notes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=9)
+    public void unsetNotes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4832,6 +7976,21 @@ public class ZAttrCos extends NamedEntry {
      * a user must have before being allowed to re-use an old one. A value of
      * 0 means no password history.
      *
+     * @param zimbraPasswordEnforceHistory new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=37)
+    public void setPasswordEnforceHistory(int zimbraPasswordEnforceHistory) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordEnforceHistory, Integer.toString(zimbraPasswordEnforceHistory));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to enforce password history. Number of unique passwords
+     * a user must have before being allowed to re-use an old one. A value of
+     * 0 means no password history.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4840,6 +7999,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordEnforceHistory, "");
         return attrs;
+    }
+
+    /**
+     * whether or not to enforce password history. Number of unique passwords
+     * a user must have before being allowed to re-use an old one. A value of
+     * 0 means no password history.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=37)
+    public void unsetPasswordEnforceHistory() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordEnforceHistory, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4862,8 +8035,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=45)
     public Map<String,Object> setPasswordLocked(boolean zimbraPasswordLocked, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordLocked, Boolean.toString(zimbraPasswordLocked));
+        attrs.put(Provisioning.A_zimbraPasswordLocked, zimbraPasswordLocked ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * user is unable to change password
+     *
+     * @param zimbraPasswordLocked new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=45)
+    public void setPasswordLocked(boolean zimbraPasswordLocked) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLocked, zimbraPasswordLocked ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4877,6 +8063,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordLocked, "");
         return attrs;
+    }
+
+    /**
+     * user is unable to change password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=45)
+    public void unsetPasswordLocked() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLocked, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4924,6 +8122,20 @@ public class ZAttrCos extends NamedEntry {
      * how long an account is locked out. Use 0 to lockout an account until
      * admin resets it
      *
+     * @param zimbraPasswordLockoutDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=379)
+    public void setPasswordLockoutDuration(String zimbraPasswordLockoutDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, zimbraPasswordLockoutDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how long an account is locked out. Use 0 to lockout an account until
+     * admin resets it
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -4932,6 +8144,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "");
         return attrs;
+    }
+
+    /**
+     * how long an account is locked out. Use 0 to lockout an account until
+     * admin resets it
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=379)
+    public void unsetPasswordLockoutDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4954,8 +8179,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=378)
     public Map<String,Object> setPasswordLockoutEnabled(boolean zimbraPasswordLockoutEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, Boolean.toString(zimbraPasswordLockoutEnabled));
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, zimbraPasswordLockoutEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not account lockout is enabled.
+     *
+     * @param zimbraPasswordLockoutEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=378)
+    public void setPasswordLockoutEnabled(boolean zimbraPasswordLockoutEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, zimbraPasswordLockoutEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -4969,6 +8207,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether or not account lockout is enabled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=378)
+    public void unsetPasswordLockoutEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5020,6 +8270,21 @@ public class ZAttrCos extends NamedEntry {
      * purged from the list, even though no successful authentication has
      * occurred
      *
+     * @param zimbraPasswordLockoutFailureLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=381)
+    public void setPasswordLockoutFailureLifetime(String zimbraPasswordLockoutFailureLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, zimbraPasswordLockoutFailureLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the duration after which old consecutive failed login attempts are
+     * purged from the list, even though no successful authentication has
+     * occurred
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5028,6 +8293,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "");
         return attrs;
+    }
+
+    /**
+     * the duration after which old consecutive failed login attempts are
+     * purged from the list, even though no successful authentication has
+     * occurred
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=381)
+    public void unsetPasswordLockoutFailureLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5060,6 +8339,20 @@ public class ZAttrCos extends NamedEntry {
      * number of consecutive failed login attempts until an account is locked
      * out
      *
+     * @param zimbraPasswordLockoutMaxFailures new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=380)
+    public void setPasswordLockoutMaxFailures(int zimbraPasswordLockoutMaxFailures) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, Integer.toString(zimbraPasswordLockoutMaxFailures));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of consecutive failed login attempts until an account is locked
+     * out
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5068,6 +8361,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, "");
         return attrs;
+    }
+
+    /**
+     * number of consecutive failed login attempts until an account is locked
+     * out
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=380)
+    public void unsetPasswordLockoutMaxFailures() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5097,6 +8403,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * maximum days between password changes
      *
+     * @param zimbraPasswordMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=36)
+    public void setPasswordMaxAge(int zimbraPasswordMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMaxAge, Integer.toString(zimbraPasswordMaxAge));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum days between password changes
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5105,6 +8424,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMaxAge, "");
         return attrs;
+    }
+
+    /**
+     * maximum days between password changes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=36)
+    public void unsetPasswordMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5134,6 +8465,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * max length of a password
      *
+     * @param zimbraPasswordMaxLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=34)
+    public void setPasswordMaxLength(int zimbraPasswordMaxLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMaxLength, Integer.toString(zimbraPasswordMaxLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max length of a password
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5142,6 +8486,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMaxLength, "");
         return attrs;
+    }
+
+    /**
+     * max length of a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=34)
+    public void unsetPasswordMaxLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMaxLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5171,6 +8527,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum days between password changes
      *
+     * @param zimbraPasswordMinAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=35)
+    public void setPasswordMinAge(int zimbraPasswordMinAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinAge, Integer.toString(zimbraPasswordMinAge));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum days between password changes
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5179,6 +8548,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinAge, "");
         return attrs;
+    }
+
+    /**
+     * minimum days between password changes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=35)
+    public void unsetPasswordMinAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5208,6 +8589,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum length of a password
      *
+     * @param zimbraPasswordMinLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=33)
+    public void setPasswordMinLength(int zimbraPasswordMinLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinLength, Integer.toString(zimbraPasswordMinLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum length of a password
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5216,6 +8610,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinLength, "");
         return attrs;
+    }
+
+    /**
+     * minimum length of a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=33)
+    public void unsetPasswordMinLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5245,6 +8651,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum number of lower case characters required in a password
      *
+     * @param zimbraPasswordMinLowerCaseChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=390)
+    public void setPasswordMinLowerCaseChars(int zimbraPasswordMinLowerCaseChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinLowerCaseChars, Integer.toString(zimbraPasswordMinLowerCaseChars));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of lower case characters required in a password
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5253,6 +8672,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinLowerCaseChars, "");
         return attrs;
+    }
+
+    /**
+     * minimum number of lower case characters required in a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=390)
+    public void unsetPasswordMinLowerCaseChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinLowerCaseChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5282,6 +8713,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum number of numeric characters required in a password
      *
+     * @param zimbraPasswordMinNumericChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=392)
+    public void setPasswordMinNumericChars(int zimbraPasswordMinNumericChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinNumericChars, Integer.toString(zimbraPasswordMinNumericChars));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of numeric characters required in a password
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5290,6 +8734,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinNumericChars, "");
         return attrs;
+    }
+
+    /**
+     * minimum number of numeric characters required in a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=392)
+    public void unsetPasswordMinNumericChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinNumericChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5319,6 +8775,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum number of ascii punctuation characters required in a password
      *
+     * @param zimbraPasswordMinPunctuationChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=391)
+    public void setPasswordMinPunctuationChars(int zimbraPasswordMinPunctuationChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinPunctuationChars, Integer.toString(zimbraPasswordMinPunctuationChars));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of ascii punctuation characters required in a password
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5327,6 +8796,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinPunctuationChars, "");
         return attrs;
+    }
+
+    /**
+     * minimum number of ascii punctuation characters required in a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=391)
+    public void unsetPasswordMinPunctuationChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinPunctuationChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5356,6 +8837,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * minimum number of upper case characters required in a password
      *
+     * @param zimbraPasswordMinUpperCaseChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=389)
+    public void setPasswordMinUpperCaseChars(int zimbraPasswordMinUpperCaseChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinUpperCaseChars, Integer.toString(zimbraPasswordMinUpperCaseChars));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of upper case characters required in a password
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5364,6 +8858,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinUpperCaseChars, "");
         return attrs;
+    }
+
+    /**
+     * minimum number of upper case characters required in a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=389)
+    public void unsetPasswordMinUpperCaseChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinUpperCaseChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5386,8 +8892,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=175)
     public Map<String,Object> setPop3Enabled(boolean zimbraPop3Enabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPop3Enabled, Boolean.toString(zimbraPop3Enabled));
+        attrs.put(Provisioning.A_zimbraPop3Enabled, zimbraPop3Enabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether POP3 is enabled for an account
+     *
+     * @param zimbraPop3Enabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=175)
+    public void setPop3Enabled(boolean zimbraPop3Enabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3Enabled, zimbraPop3Enabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5401,6 +8920,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3Enabled, "");
         return attrs;
+    }
+
+    /**
+     * whether POP3 is enabled for an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=175)
+    public void unsetPop3Enabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3Enabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5430,6 +8961,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * portal name
      *
+     * @param zimbraPortalName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=448)
+    public void setPortalName(String zimbraPortalName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPortalName, zimbraPortalName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * portal name
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5438,6 +8982,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPortalName, "");
         return attrs;
+    }
+
+    /**
+     * portal name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=448)
+    public void unsetPortalName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPortalName, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5462,8 +9018,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=678)
     public Map<String,Object> setPrefAdvancedClientEnforceMinDisplay(boolean zimbraPrefAdvancedClientEnforceMinDisplay, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAdvancedClientEnforceMinDisplay, Boolean.toString(zimbraPrefAdvancedClientEnforceMinDisplay));
+        attrs.put(Provisioning.A_zimbraPrefAdvancedClientEnforceMinDisplay, zimbraPrefAdvancedClientEnforceMinDisplay ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * After login, whether the advanced client should enforce minimum
+     * display resolution
+     *
+     * @param zimbraPrefAdvancedClientEnforceMinDisplay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=678)
+    public void setPrefAdvancedClientEnforceMinDisplay(boolean zimbraPrefAdvancedClientEnforceMinDisplay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAdvancedClientEnforceMinDisplay, zimbraPrefAdvancedClientEnforceMinDisplay ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5478,6 +9048,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefAdvancedClientEnforceMinDisplay, "");
         return attrs;
+    }
+
+    /**
+     * After login, whether the advanced client should enforce minimum
+     * display resolution
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=678)
+    public void unsetPrefAdvancedClientEnforceMinDisplay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAdvancedClientEnforceMinDisplay, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5502,8 +9085,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=131)
     public Map<String,Object> setPrefAutoAddAddressEnabled(boolean zimbraPrefAutoAddAddressEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAutoAddAddressEnabled, Boolean.toString(zimbraPrefAutoAddAddressEnabled));
+        attrs.put(Provisioning.A_zimbraPrefAutoAddAddressEnabled, zimbraPrefAutoAddAddressEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not new address in outgoing email are auto added to address
+     * book
+     *
+     * @param zimbraPrefAutoAddAddressEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=131)
+    public void setPrefAutoAddAddressEnabled(boolean zimbraPrefAutoAddAddressEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutoAddAddressEnabled, zimbraPrefAutoAddAddressEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5518,6 +9115,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefAutoAddAddressEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether or not new address in outgoing email are auto added to address
+     * book
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=131)
+    public void unsetPrefAutoAddAddressEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutoAddAddressEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5561,6 +9171,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * time to wait before auto saving a draft(nnnnn[hmsd])
      *
+     * @param zimbraPrefAutoSaveDraftInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=561)
+    public void setPrefAutoSaveDraftInterval(String zimbraPrefAutoSaveDraftInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutoSaveDraftInterval, zimbraPrefAutoSaveDraftInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time to wait before auto saving a draft(nnnnn[hmsd])
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5569,6 +9192,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefAutoSaveDraftInterval, "");
         return attrs;
+    }
+
+    /**
+     * time to wait before auto saving a draft(nnnnn[hmsd])
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=561)
+    public void unsetPrefAutoSaveDraftInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutoSaveDraftInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5591,8 +9226,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=702)
     public Map<String,Object> setPrefCalendarAllowCancelEmailToSelf(boolean zimbraPrefCalendarAllowCancelEmailToSelf, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, Boolean.toString(zimbraPrefCalendarAllowCancelEmailToSelf));
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, zimbraPrefCalendarAllowCancelEmailToSelf ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to allow a cancel email sent to organizer of appointment
+     *
+     * @param zimbraPrefCalendarAllowCancelEmailToSelf new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=702)
+    public void setPrefCalendarAllowCancelEmailToSelf(boolean zimbraPrefCalendarAllowCancelEmailToSelf) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, zimbraPrefCalendarAllowCancelEmailToSelf ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5606,6 +9254,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, "");
         return attrs;
+    }
+
+    /**
+     * whether to allow a cancel email sent to organizer of appointment
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=702)
+    public void unsetPrefCalendarAllowCancelEmailToSelf() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5630,8 +9290,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=686)
     public Map<String,Object> setPrefCalendarAllowForwardedInvite(boolean zimbraPrefCalendarAllowForwardedInvite, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, Boolean.toString(zimbraPrefCalendarAllowForwardedInvite));
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, zimbraPrefCalendarAllowForwardedInvite ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether calendar invite part in a forwarded email is auto-added to
+     * calendar
+     *
+     * @param zimbraPrefCalendarAllowForwardedInvite new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=686)
+    public void setPrefCalendarAllowForwardedInvite(boolean zimbraPrefCalendarAllowForwardedInvite) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, zimbraPrefCalendarAllowForwardedInvite ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5646,6 +9320,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, "");
         return attrs;
+    }
+
+    /**
+     * whether calendar invite part in a forwarded email is auto-added to
+     * calendar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=686)
+    public void unsetPrefCalendarAllowForwardedInvite() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5670,8 +9357,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=687)
     public Map<String,Object> setPrefCalendarAllowMethodlessInvite(boolean zimbraPrefCalendarAllowMethodlessInvite, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, Boolean.toString(zimbraPrefCalendarAllowMethodlessInvite));
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, zimbraPrefCalendarAllowMethodlessInvite ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether calendar invite part without method parameter in Content-Type
+     * header is auto-added to calendar
+     *
+     * @param zimbraPrefCalendarAllowMethodlessInvite new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=687)
+    public void setPrefCalendarAllowMethodlessInvite(boolean zimbraPrefCalendarAllowMethodlessInvite) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, zimbraPrefCalendarAllowMethodlessInvite ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5686,6 +9387,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, "");
         return attrs;
+    }
+
+    /**
+     * whether calendar invite part without method parameter in Content-Type
+     * header is auto-added to calendar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=687)
+    public void unsetPrefCalendarAllowMethodlessInvite() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5710,8 +9424,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=688)
     public Map<String,Object> setPrefCalendarAllowPublishMethodInvite(boolean zimbraPrefCalendarAllowPublishMethodInvite, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, Boolean.toString(zimbraPrefCalendarAllowPublishMethodInvite));
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, zimbraPrefCalendarAllowPublishMethodInvite ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether calendar invite part with PUBLISH method is auto-added to
+     * calendar
+     *
+     * @param zimbraPrefCalendarAllowPublishMethodInvite new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=688)
+    public void setPrefCalendarAllowPublishMethodInvite(boolean zimbraPrefCalendarAllowPublishMethodInvite) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, zimbraPrefCalendarAllowPublishMethodInvite ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5726,6 +9454,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, "");
         return attrs;
+    }
+
+    /**
+     * whether calendar invite part with PUBLISH method is auto-added to
+     * calendar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=688)
+    public void unsetPrefCalendarAllowPublishMethodInvite() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5748,8 +9489,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=276)
     public Map<String,Object> setPrefCalendarAlwaysShowMiniCal(boolean zimbraPrefCalendarAlwaysShowMiniCal, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAlwaysShowMiniCal, Boolean.toString(zimbraPrefCalendarAlwaysShowMiniCal));
+        attrs.put(Provisioning.A_zimbraPrefCalendarAlwaysShowMiniCal, zimbraPrefCalendarAlwaysShowMiniCal ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * always show the mini calendar
+     *
+     * @param zimbraPrefCalendarAlwaysShowMiniCal new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=276)
+    public void setPrefCalendarAlwaysShowMiniCal(boolean zimbraPrefCalendarAlwaysShowMiniCal) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAlwaysShowMiniCal, zimbraPrefCalendarAlwaysShowMiniCal ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5763,6 +9517,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAlwaysShowMiniCal, "");
         return attrs;
+    }
+
+    /**
+     * always show the mini calendar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=276)
+    public void unsetPrefCalendarAlwaysShowMiniCal() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAlwaysShowMiniCal, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5792,6 +9558,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * number of minutes (0 = never) before appt to show reminder dialog
      *
+     * @param zimbraPrefCalendarApptReminderWarningTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=341)
+    public void setPrefCalendarApptReminderWarningTime(int zimbraPrefCalendarApptReminderWarningTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, Integer.toString(zimbraPrefCalendarApptReminderWarningTime));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of minutes (0 = never) before appt to show reminder dialog
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5800,6 +9579,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, "");
         return attrs;
+    }
+
+    /**
+     * number of minutes (0 = never) before appt to show reminder dialog
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=341)
+    public void unsetPrefCalendarApptReminderWarningTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5832,6 +9623,20 @@ public class ZAttrCos extends NamedEntry {
      * hour of day that the day view should end at, non-inclusive (16=4pm, 24
      * = midnight, etc)
      *
+     * @param zimbraPrefCalendarDayHourEnd new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=440)
+    public void setPrefCalendarDayHourEnd(int zimbraPrefCalendarDayHourEnd) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDayHourEnd, Integer.toString(zimbraPrefCalendarDayHourEnd));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * hour of day that the day view should end at, non-inclusive (16=4pm, 24
+     * = midnight, etc)
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5840,6 +9645,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarDayHourEnd, "");
         return attrs;
+    }
+
+    /**
+     * hour of day that the day view should end at, non-inclusive (16=4pm, 24
+     * = midnight, etc)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=440)
+    public void unsetPrefCalendarDayHourEnd() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDayHourEnd, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5869,6 +9687,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * hour of day that the day view should start at (1=1 AM, 8=8 AM, etc)
      *
+     * @param zimbraPrefCalendarDayHourStart new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=439)
+    public void setPrefCalendarDayHourStart(int zimbraPrefCalendarDayHourStart) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDayHourStart, Integer.toString(zimbraPrefCalendarDayHourStart));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * hour of day that the day view should start at (1=1 AM, 8=8 AM, etc)
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5877,6 +9708,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarDayHourStart, "");
         return attrs;
+    }
+
+    /**
+     * hour of day that the day view should start at (1=1 AM, 8=8 AM, etc)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=439)
+    public void unsetPrefCalendarDayHourStart() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDayHourStart, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5906,6 +9749,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * first day of week to show in calendar (0=sunday, 6=saturday)
      *
+     * @param zimbraPrefCalendarFirstDayOfWeek new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=261)
+    public void setPrefCalendarFirstDayOfWeek(int zimbraPrefCalendarFirstDayOfWeek) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek, Integer.toString(zimbraPrefCalendarFirstDayOfWeek));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * first day of week to show in calendar (0=sunday, 6=saturday)
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5914,6 +9770,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek, "");
         return attrs;
+    }
+
+    /**
+     * first day of week to show in calendar (0=sunday, 6=saturday)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=261)
+    public void unsetPrefCalendarFirstDayOfWeek() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -5962,6 +9830,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [list, month, schedule, day, workWeek, week]
      *
      * @param zimbraPrefCalendarInitialView new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=240)
+    public void setPrefCalendarInitialView(ZAttrProvisioning.PrefCalendarInitialView zimbraPrefCalendarInitialView) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, zimbraPrefCalendarInitialView.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * initial calendar view to use
+     *
+     * <p>Valid values: [list, month, schedule, day, workWeek, week]
+     *
+     * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5977,6 +9860,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [list, month, schedule, day, workWeek, week]
      *
+     * @param zimbraPrefCalendarInitialView new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=240)
+    public void setPrefCalendarInitialViewAsString(String zimbraPrefCalendarInitialView) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, zimbraPrefCalendarInitialView);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * initial calendar view to use
+     *
+     * <p>Valid values: [list, month, schedule, day, workWeek, week]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -5985,6 +9883,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, "");
         return attrs;
+    }
+
+    /**
+     * initial calendar view to use
+     *
+     * <p>Valid values: [list, month, schedule, day, workWeek, week]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=240)
+    public void unsetPrefCalendarInitialView() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6009,8 +9921,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=273)
     public Map<String,Object> setPrefCalendarNotifyDelegatedChanges(boolean zimbraPrefCalendarNotifyDelegatedChanges, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, Boolean.toString(zimbraPrefCalendarNotifyDelegatedChanges));
+        attrs.put(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, zimbraPrefCalendarNotifyDelegatedChanges ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * If set to true, user is notified by email of changes made to her
+     * calendar by others via delegated calendar access.
+     *
+     * @param zimbraPrefCalendarNotifyDelegatedChanges new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=273)
+    public void setPrefCalendarNotifyDelegatedChanges(boolean zimbraPrefCalendarNotifyDelegatedChanges) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, zimbraPrefCalendarNotifyDelegatedChanges ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6025,6 +9951,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, "");
         return attrs;
+    }
+
+    /**
+     * If set to true, user is notified by email of changes made to her
+     * calendar by others via delegated calendar access.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=273)
+    public void unsetPrefCalendarNotifyDelegatedChanges() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6054,6 +9993,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * When to send the first reminder for an event.
      *
+     * @param zimbraPrefCalendarReminderDuration1 new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=573)
+    public void setPrefCalendarReminderDuration1(String zimbraPrefCalendarReminderDuration1) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDuration1, zimbraPrefCalendarReminderDuration1);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When to send the first reminder for an event.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6062,6 +10014,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderDuration1, "");
         return attrs;
+    }
+
+    /**
+     * When to send the first reminder for an event.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=573)
+    public void unsetPrefCalendarReminderDuration1() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDuration1, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6091,6 +10055,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * When to send the second reminder for an event.
      *
+     * @param zimbraPrefCalendarReminderDuration2 new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=574)
+    public void setPrefCalendarReminderDuration2(String zimbraPrefCalendarReminderDuration2) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDuration2, zimbraPrefCalendarReminderDuration2);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When to send the second reminder for an event.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6099,6 +10076,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderDuration2, "");
         return attrs;
+    }
+
+    /**
+     * When to send the second reminder for an event.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=574)
+    public void unsetPrefCalendarReminderDuration2() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDuration2, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6128,6 +10117,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The email the reminder goes to.
      *
+     * @param zimbraPrefCalendarReminderEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=575)
+    public void setPrefCalendarReminderEmail(String zimbraPrefCalendarReminderEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderEmail, zimbraPrefCalendarReminderEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The email the reminder goes to.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6136,6 +10138,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderEmail, "");
         return attrs;
+    }
+
+    /**
+     * The email the reminder goes to.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=575)
+    public void unsetPrefCalendarReminderEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6158,8 +10172,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=682)
     public Map<String,Object> setPrefCalendarReminderFlashTitle(boolean zimbraPrefCalendarReminderFlashTitle, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderFlashTitle, Boolean.toString(zimbraPrefCalendarReminderFlashTitle));
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderFlashTitle, zimbraPrefCalendarReminderFlashTitle ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Flash title when on appointment remimnder notification
+     *
+     * @param zimbraPrefCalendarReminderFlashTitle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=682)
+    public void setPrefCalendarReminderFlashTitle(boolean zimbraPrefCalendarReminderFlashTitle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderFlashTitle, zimbraPrefCalendarReminderFlashTitle ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6173,6 +10200,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderFlashTitle, "");
         return attrs;
+    }
+
+    /**
+     * Flash title when on appointment remimnder notification
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=682)
+    public void unsetPrefCalendarReminderFlashTitle() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderFlashTitle, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6195,8 +10234,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=577)
     public Map<String,Object> setPrefCalendarReminderMobile(boolean zimbraPrefCalendarReminderMobile, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderMobile, Boolean.toString(zimbraPrefCalendarReminderMobile));
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderMobile, zimbraPrefCalendarReminderMobile ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * The mobile device (phone) the reminder goes to.
+     *
+     * @param zimbraPrefCalendarReminderMobile new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=577)
+    public void setPrefCalendarReminderMobile(boolean zimbraPrefCalendarReminderMobile) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderMobile, zimbraPrefCalendarReminderMobile ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6210,6 +10262,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderMobile, "");
         return attrs;
+    }
+
+    /**
+     * The mobile device (phone) the reminder goes to.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=577)
+    public void unsetPrefCalendarReminderMobile() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderMobile, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6232,8 +10296,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=576)
     public Map<String,Object> setPrefCalendarReminderSendEmail(boolean zimbraPrefCalendarReminderSendEmail, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, Boolean.toString(zimbraPrefCalendarReminderSendEmail));
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, zimbraPrefCalendarReminderSendEmail ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * To send email or to not send email is the question.
+     *
+     * @param zimbraPrefCalendarReminderSendEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=576)
+    public void setPrefCalendarReminderSendEmail(boolean zimbraPrefCalendarReminderSendEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, zimbraPrefCalendarReminderSendEmail ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6247,6 +10324,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, "");
         return attrs;
+    }
+
+    /**
+     * To send email or to not send email is the question.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=576)
+    public void unsetPrefCalendarReminderSendEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6271,8 +10360,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=667)
     public Map<String,Object> setPrefCalendarReminderSoundsEnabled(boolean zimbraPrefCalendarReminderSoundsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSoundsEnabled, Boolean.toString(zimbraPrefCalendarReminderSoundsEnabled));
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSoundsEnabled, zimbraPrefCalendarReminderSoundsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether audible alert is enabled when appointment notification is
+     * played
+     *
+     * @param zimbraPrefCalendarReminderSoundsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=667)
+    public void setPrefCalendarReminderSoundsEnabled(boolean zimbraPrefCalendarReminderSoundsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSoundsEnabled, zimbraPrefCalendarReminderSoundsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6287,6 +10390,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderSoundsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether audible alert is enabled when appointment notification is
+     * played
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=667)
+    public void unsetPrefCalendarReminderSoundsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSoundsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6309,8 +10425,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=578)
     public Map<String,Object> setPrefCalendarReminderYMessenger(boolean zimbraPrefCalendarReminderYMessenger, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderYMessenger, Boolean.toString(zimbraPrefCalendarReminderYMessenger));
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderYMessenger, zimbraPrefCalendarReminderYMessenger ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Send a reminder via YIM
+     *
+     * @param zimbraPrefCalendarReminderYMessenger new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=578)
+    public void setPrefCalendarReminderYMessenger(boolean zimbraPrefCalendarReminderYMessenger) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderYMessenger, zimbraPrefCalendarReminderYMessenger ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6324,6 +10453,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderYMessenger, "");
         return attrs;
+    }
+
+    /**
+     * Send a reminder via YIM
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=578)
+    public void unsetPrefCalendarReminderYMessenger() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderYMessenger, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6346,8 +10487,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=274)
     public Map<String,Object> setPrefCalendarUseQuickAdd(boolean zimbraPrefCalendarUseQuickAdd, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarUseQuickAdd, Boolean.toString(zimbraPrefCalendarUseQuickAdd));
+        attrs.put(Provisioning.A_zimbraPrefCalendarUseQuickAdd, zimbraPrefCalendarUseQuickAdd ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not use quick add dialog or go into full appt edit view
+     *
+     * @param zimbraPrefCalendarUseQuickAdd new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=274)
+    public void setPrefCalendarUseQuickAdd(boolean zimbraPrefCalendarUseQuickAdd) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarUseQuickAdd, zimbraPrefCalendarUseQuickAdd ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6361,6 +10515,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarUseQuickAdd, "");
         return attrs;
+    }
+
+    /**
+     * whether or not use quick add dialog or go into full appt edit view
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=274)
+    public void unsetPrefCalendarUseQuickAdd() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarUseQuickAdd, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6409,6 +10575,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [standard, advanced]
      *
      * @param zimbraPrefClientType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=453)
+    public void setPrefClientType(ZAttrProvisioning.PrefClientType zimbraPrefClientType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefClientType, zimbraPrefClientType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * user preference of client type
+     *
+     * <p>Valid values: [standard, advanced]
+     *
+     * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6424,6 +10605,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [standard, advanced]
      *
+     * @param zimbraPrefClientType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=453)
+    public void setPrefClientTypeAsString(String zimbraPrefClientType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefClientType, zimbraPrefClientType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * user preference of client type
+     *
+     * <p>Valid values: [standard, advanced]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6432,6 +10628,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefClientType, "");
         return attrs;
+    }
+
+    /**
+     * user preference of client type
+     *
+     * <p>Valid values: [standard, advanced]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=453)
+    public void unsetPrefClientType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefClientType, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6480,6 +10690,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=217)
+    public void setPrefComposeFormat(ZAttrProvisioning.PrefComposeFormat zimbraPrefComposeFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeFormat, zimbraPrefComposeFormat.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to compose in html or text.
+     *
+     * <p>Valid values: [html, text]
+     *
+     * @param zimbraPrefComposeFormat new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6495,6 +10720,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [html, text]
      *
+     * @param zimbraPrefComposeFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=217)
+    public void setPrefComposeFormatAsString(String zimbraPrefComposeFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeFormat, zimbraPrefComposeFormat);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to compose in html or text.
+     *
+     * <p>Valid values: [html, text]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6503,6 +10743,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefComposeFormat, "");
         return attrs;
+    }
+
+    /**
+     * whether or not to compose in html or text.
+     *
+     * <p>Valid values: [html, text]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=217)
+    public void unsetPrefComposeFormat() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeFormat, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6525,8 +10779,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=209)
     public Map<String,Object> setPrefComposeInNewWindow(boolean zimbraPrefComposeInNewWindow, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefComposeInNewWindow, Boolean.toString(zimbraPrefComposeInNewWindow));
+        attrs.put(Provisioning.A_zimbraPrefComposeInNewWindow, zimbraPrefComposeInNewWindow ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not compose messages in a new windows by default
+     *
+     * @param zimbraPrefComposeInNewWindow new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=209)
+    public void setPrefComposeInNewWindow(boolean zimbraPrefComposeInNewWindow) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeInNewWindow, zimbraPrefComposeInNewWindow ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6540,6 +10807,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefComposeInNewWindow, "");
         return attrs;
+    }
+
+    /**
+     * whether or not compose messages in a new windows by default
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=209)
+    public void unsetPrefComposeInNewWindow() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeInNewWindow, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6588,6 +10867,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=167)
+    public void setPrefContactsInitialView(ZAttrProvisioning.PrefContactsInitialView zimbraPrefContactsInitialView) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsInitialView, zimbraPrefContactsInitialView.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * initial contact view to use
+     *
+     * <p>Valid values: [list, cards]
+     *
+     * @param zimbraPrefContactsInitialView new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6603,6 +10897,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [list, cards]
      *
+     * @param zimbraPrefContactsInitialView new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=167)
+    public void setPrefContactsInitialViewAsString(String zimbraPrefContactsInitialView) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsInitialView, zimbraPrefContactsInitialView);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * initial contact view to use
+     *
+     * <p>Valid values: [list, cards]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6611,6 +10920,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefContactsInitialView, "");
         return attrs;
+    }
+
+    /**
+     * initial contact view to use
+     *
+     * <p>Valid values: [list, cards]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=167)
+    public void unsetPrefContactsInitialView() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsInitialView, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6640,6 +10963,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * number of contacts per page
      *
+     * @param zimbraPrefContactsPerPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=148)
+    public void setPrefContactsPerPage(int zimbraPrefContactsPerPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsPerPage, Integer.toString(zimbraPrefContactsPerPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of contacts per page
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6648,6 +10984,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefContactsPerPage, "");
         return attrs;
+    }
+
+    /**
+     * number of contacts per page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=148)
+    public void unsetPrefContactsPerPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsPerPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6696,6 +11044,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
      *
      * @param zimbraPrefDedupeMessagesSentToSelf new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=144)
+    public void setPrefDedupeMessagesSentToSelf(ZAttrProvisioning.PrefDedupeMessagesSentToSelf zimbraPrefDedupeMessagesSentToSelf) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, zimbraPrefDedupeMessagesSentToSelf.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
+     *
+     * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
+     *
+     * @param zimbraPrefDedupeMessagesSentToSelf new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6711,6 +11074,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
      *
+     * @param zimbraPrefDedupeMessagesSentToSelf new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=144)
+    public void setPrefDedupeMessagesSentToSelfAsString(String zimbraPrefDedupeMessagesSentToSelf) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, zimbraPrefDedupeMessagesSentToSelf);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
+     *
+     * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6719,6 +11097,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, "");
         return attrs;
+    }
+
+    /**
+     * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
+     *
+     * <p>Valid values: [dedupeAll, dedupeNone, secondCopyifOnToOrCC]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=144)
+    public void unsetPrefDedupeMessagesSentToSelf() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6743,8 +11135,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=470)
     public Map<String,Object> setPrefDeleteInviteOnReply(boolean zimbraPrefDeleteInviteOnReply, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefDeleteInviteOnReply, Boolean.toString(zimbraPrefDeleteInviteOnReply));
+        attrs.put(Provisioning.A_zimbraPrefDeleteInviteOnReply, zimbraPrefDeleteInviteOnReply ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether meeting invite emails are moved to Trash folder upon
+     * accept/decline
+     *
+     * @param zimbraPrefDeleteInviteOnReply new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=470)
+    public void setPrefDeleteInviteOnReply(boolean zimbraPrefDeleteInviteOnReply) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDeleteInviteOnReply, zimbraPrefDeleteInviteOnReply ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6759,6 +11165,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDeleteInviteOnReply, "");
         return attrs;
+    }
+
+    /**
+     * whether meeting invite emails are moved to Trash folder upon
+     * accept/decline
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=470)
+    public void unsetPrefDeleteInviteOnReply() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDeleteInviteOnReply, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6781,8 +11200,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=511)
     public Map<String,Object> setPrefDisplayExternalImages(boolean zimbraPrefDisplayExternalImages, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, Boolean.toString(zimbraPrefDisplayExternalImages));
+        attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, zimbraPrefDisplayExternalImages ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to display external images in HTML mail
+     *
+     * @param zimbraPrefDisplayExternalImages new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=511)
+    public void setPrefDisplayExternalImages(boolean zimbraPrefDisplayExternalImages) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, zimbraPrefDisplayExternalImages ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6796,6 +11228,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, "");
         return attrs;
+    }
+
+    /**
+     * whether to display external images in HTML mail
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=511)
+    public void unsetPrefDisplayExternalImages() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6818,8 +11262,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=637)
     public Map<String,Object> setPrefFolderTreeOpen(boolean zimbraPrefFolderTreeOpen, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefFolderTreeOpen, Boolean.toString(zimbraPrefFolderTreeOpen));
+        attrs.put(Provisioning.A_zimbraPrefFolderTreeOpen, zimbraPrefFolderTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not folder tree is expanded
+     *
+     * @param zimbraPrefFolderTreeOpen new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=637)
+    public void setPrefFolderTreeOpen(boolean zimbraPrefFolderTreeOpen) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFolderTreeOpen, zimbraPrefFolderTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6833,6 +11290,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefFolderTreeOpen, "");
         return attrs;
+    }
+
+    /**
+     * whether or not folder tree is expanded
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=637)
+    public void unsetPrefFolderTreeOpen() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFolderTreeOpen, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6885,6 +11354,22 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=134)
+    public void setPrefForwardIncludeOriginalText(ZAttrProvisioning.PrefForwardIncludeOriginalText zimbraPrefForwardIncludeOriginalText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardIncludeOriginalText, zimbraPrefForwardIncludeOriginalText.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what part of the original message to include during forwards
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     *
+     * @param zimbraPrefForwardIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6901,6 +11386,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
      *
+     * @param zimbraPrefForwardIncludeOriginalText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=134)
+    public void setPrefForwardIncludeOriginalTextAsString(String zimbraPrefForwardIncludeOriginalText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardIncludeOriginalText, zimbraPrefForwardIncludeOriginalText);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what part of the original message to include during forwards
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6909,6 +11410,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardIncludeOriginalText, "");
         return attrs;
+    }
+
+    /**
+     * what part of the original message to include during forwards
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=134)
+    public void unsetPrefForwardIncludeOriginalText() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardIncludeOriginalText, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -6961,6 +11477,22 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [same, html, text]
      *
      * @param zimbraPrefForwardReplyFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=413)
+    public void setPrefForwardReplyFormat(ZAttrProvisioning.PrefForwardReplyFormat zimbraPrefForwardReplyFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyFormat, zimbraPrefForwardReplyFormat.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what format we reply/forward messages in (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [same, html, text]
+     *
+     * @param zimbraPrefForwardReplyFormat new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6977,6 +11509,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [same, html, text]
      *
+     * @param zimbraPrefForwardReplyFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=413)
+    public void setPrefForwardReplyFormatAsString(String zimbraPrefForwardReplyFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyFormat, zimbraPrefForwardReplyFormat);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what format we reply/forward messages in (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [same, html, text]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -6985,6 +11533,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplyFormat, "");
         return attrs;
+    }
+
+    /**
+     * what format we reply/forward messages in (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [same, html, text]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=413)
+    public void unsetPrefForwardReplyFormat() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyFormat, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7011,8 +11574,23 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=218)
     public Map<String,Object> setPrefForwardReplyInOriginalFormat(boolean zimbraPrefForwardReplyInOriginalFormat, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, Boolean.toString(zimbraPrefForwardReplyInOriginalFormat));
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, zimbraPrefForwardReplyInOriginalFormat ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Deprecated since: 4.5. Deprecated in favor of
+     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
+     * format (text or html) of message we are replying to
+     *
+     * @param zimbraPrefForwardReplyInOriginalFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=218)
+    public void setPrefForwardReplyInOriginalFormat(boolean zimbraPrefForwardReplyInOriginalFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, zimbraPrefForwardReplyInOriginalFormat ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7028,6 +11606,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, "");
         return attrs;
+    }
+
+    /**
+     * Deprecated since: 4.5. Deprecated in favor of
+     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
+     * format (text or html) of message we are replying to
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=218)
+    public void unsetPrefForwardReplyInOriginalFormat() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7060,6 +11652,20 @@ public class ZAttrCos extends NamedEntry {
      * prefix character to use during forward/reply (deprecatedSince 5.0 in
      * identity)
      *
+     * @param zimbraPrefForwardReplyPrefixChar new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=130)
+    public void setPrefForwardReplyPrefixChar(String zimbraPrefForwardReplyPrefixChar) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyPrefixChar, zimbraPrefForwardReplyPrefixChar);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * prefix character to use during forward/reply (deprecatedSince 5.0 in
+     * identity)
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7068,6 +11674,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplyPrefixChar, "");
         return attrs;
+    }
+
+    /**
+     * prefix character to use during forward/reply (deprecatedSince 5.0 in
+     * identity)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=130)
+    public void unsetPrefForwardReplyPrefixChar() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplyPrefixChar, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7092,8 +11711,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=372)
     public Map<String,Object> setPrefGalAutoCompleteEnabled(boolean zimbraPrefGalAutoCompleteEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, Boolean.toString(zimbraPrefGalAutoCompleteEnabled));
+        attrs.put(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, zimbraPrefGalAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether end-user wants auto-complete from GAL. Feature must also be
+     * enabled.
+     *
+     * @param zimbraPrefGalAutoCompleteEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=372)
+    public void setPrefGalAutoCompleteEnabled(boolean zimbraPrefGalAutoCompleteEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, zimbraPrefGalAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7108,6 +11741,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether end-user wants auto-complete from GAL. Feature must also be
+     * enabled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=372)
+    public void unsetPrefGalAutoCompleteEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7130,8 +11776,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=635)
     public Map<String,Object> setPrefGalSearchEnabled(boolean zimbraPrefGalSearchEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefGalSearchEnabled, Boolean.toString(zimbraPrefGalSearchEnabled));
+        attrs.put(Provisioning.A_zimbraPrefGalSearchEnabled, zimbraPrefGalSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether end-user wants search from GAL. Feature must also be enabled
+     *
+     * @param zimbraPrefGalSearchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=635)
+    public void setPrefGalSearchEnabled(boolean zimbraPrefGalSearchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGalSearchEnabled, zimbraPrefGalSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7145,6 +11804,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGalSearchEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether end-user wants search from GAL. Feature must also be enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=635)
+    public void unsetPrefGalSearchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGalSearchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7193,6 +11864,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [conversation, message]
      *
      * @param zimbraPrefGroupMailBy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=54)
+    public void setPrefGroupMailBy(ZAttrProvisioning.PrefGroupMailBy zimbraPrefGroupMailBy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGroupMailBy, zimbraPrefGroupMailBy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how to group mail by default
+     *
+     * <p>Valid values: [conversation, message]
+     *
+     * @param zimbraPrefGroupMailBy new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7208,6 +11894,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [conversation, message]
      *
+     * @param zimbraPrefGroupMailBy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=54)
+    public void setPrefGroupMailByAsString(String zimbraPrefGroupMailBy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGroupMailBy, zimbraPrefGroupMailBy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how to group mail by default
+     *
+     * <p>Valid values: [conversation, message]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7216,6 +11917,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGroupMailBy, "");
         return attrs;
+    }
+
+    /**
+     * how to group mail by default
+     *
+     * <p>Valid values: [conversation, message]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=54)
+    public void unsetPrefGroupMailBy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGroupMailBy, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7245,6 +11960,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * default font color
      *
+     * @param zimbraPrefHtmlEditorDefaultFontColor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=260)
+    public void setPrefHtmlEditorDefaultFontColor(String zimbraPrefHtmlEditorDefaultFontColor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontColor, zimbraPrefHtmlEditorDefaultFontColor);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default font color
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7253,6 +11981,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontColor, "");
         return attrs;
+    }
+
+    /**
+     * default font color
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=260)
+    public void unsetPrefHtmlEditorDefaultFontColor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontColor, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7282,6 +12022,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * default font family
      *
+     * @param zimbraPrefHtmlEditorDefaultFontFamily new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=258)
+    public void setPrefHtmlEditorDefaultFontFamily(String zimbraPrefHtmlEditorDefaultFontFamily) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, zimbraPrefHtmlEditorDefaultFontFamily);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default font family
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7290,6 +12043,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, "");
         return attrs;
+    }
+
+    /**
+     * default font family
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=258)
+    public void unsetPrefHtmlEditorDefaultFontFamily() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7319,6 +12084,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * default font size
      *
+     * @param zimbraPrefHtmlEditorDefaultFontSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=259)
+    public void setPrefHtmlEditorDefaultFontSize(String zimbraPrefHtmlEditorDefaultFontSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontSize, zimbraPrefHtmlEditorDefaultFontSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default font size
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7327,6 +12105,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontSize, "");
         return attrs;
+    }
+
+    /**
+     * default font size
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=259)
+    public void unsetPrefHtmlEditorDefaultFontSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefHtmlEditorDefaultFontSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7349,8 +12139,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=488)
     public Map<String,Object> setPrefIMAutoLogin(boolean zimbraPrefIMAutoLogin, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMAutoLogin, Boolean.toString(zimbraPrefIMAutoLogin));
+        attrs.put(Provisioning.A_zimbraPrefIMAutoLogin, zimbraPrefIMAutoLogin ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to login to the IM client automatically
+     *
+     * @param zimbraPrefIMAutoLogin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=488)
+    public void setPrefIMAutoLogin(boolean zimbraPrefIMAutoLogin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMAutoLogin, zimbraPrefIMAutoLogin ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7364,6 +12167,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMAutoLogin, "");
         return attrs;
+    }
+
+    /**
+     * whether to login to the IM client automatically
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=488)
+    public void unsetPrefIMAutoLogin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMAutoLogin, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7393,6 +12208,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * IM buddy list sort order
      *
+     * @param zimbraPrefIMBuddyListSort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=705)
+    public void setPrefIMBuddyListSort(String zimbraPrefIMBuddyListSort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMBuddyListSort, zimbraPrefIMBuddyListSort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IM buddy list sort order
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7401,6 +12229,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMBuddyListSort, "");
         return attrs;
+    }
+
+    /**
+     * IM buddy list sort order
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=705)
+    public void unsetPrefIMBuddyListSort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMBuddyListSort, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7423,8 +12263,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=462)
     public Map<String,Object> setPrefIMFlashIcon(boolean zimbraPrefIMFlashIcon, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMFlashIcon, Boolean.toString(zimbraPrefIMFlashIcon));
+        attrs.put(Provisioning.A_zimbraPrefIMFlashIcon, zimbraPrefIMFlashIcon ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Flash IM icon on new messages
+     *
+     * @param zimbraPrefIMFlashIcon new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=462)
+    public void setPrefIMFlashIcon(boolean zimbraPrefIMFlashIcon) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMFlashIcon, zimbraPrefIMFlashIcon ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7438,6 +12291,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMFlashIcon, "");
         return attrs;
+    }
+
+    /**
+     * Flash IM icon on new messages
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=462)
+    public void unsetPrefIMFlashIcon() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMFlashIcon, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7460,8 +12325,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=679)
     public Map<String,Object> setPrefIMFlashTitle(boolean zimbraPrefIMFlashTitle, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMFlashTitle, Boolean.toString(zimbraPrefIMFlashTitle));
+        attrs.put(Provisioning.A_zimbraPrefIMFlashTitle, zimbraPrefIMFlashTitle ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Flash title bar when a new IM arrives
+     *
+     * @param zimbraPrefIMFlashTitle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=679)
+    public void setPrefIMFlashTitle(boolean zimbraPrefIMFlashTitle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMFlashTitle, zimbraPrefIMFlashTitle ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7475,6 +12353,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMFlashTitle, "");
         return attrs;
+    }
+
+    /**
+     * Flash title bar when a new IM arrives
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=679)
+    public void unsetPrefIMFlashTitle() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMFlashTitle, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7497,8 +12387,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=707)
     public Map<String,Object> setPrefIMHideBlockedBuddies(boolean zimbraPrefIMHideBlockedBuddies, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMHideBlockedBuddies, Boolean.toString(zimbraPrefIMHideBlockedBuddies));
+        attrs.put(Provisioning.A_zimbraPrefIMHideBlockedBuddies, zimbraPrefIMHideBlockedBuddies ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to hide IM blocked buddies
+     *
+     * @param zimbraPrefIMHideBlockedBuddies new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=707)
+    public void setPrefIMHideBlockedBuddies(boolean zimbraPrefIMHideBlockedBuddies) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMHideBlockedBuddies, zimbraPrefIMHideBlockedBuddies ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7512,6 +12415,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMHideBlockedBuddies, "");
         return attrs;
+    }
+
+    /**
+     * whether to hide IM blocked buddies
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=707)
+    public void unsetPrefIMHideBlockedBuddies() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMHideBlockedBuddies, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7534,8 +12449,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=706)
     public Map<String,Object> setPrefIMHideOfflineBuddies(boolean zimbraPrefIMHideOfflineBuddies, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMHideOfflineBuddies, Boolean.toString(zimbraPrefIMHideOfflineBuddies));
+        attrs.put(Provisioning.A_zimbraPrefIMHideOfflineBuddies, zimbraPrefIMHideOfflineBuddies ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to hide IM offline buddies
+     *
+     * @param zimbraPrefIMHideOfflineBuddies new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=706)
+    public void setPrefIMHideOfflineBuddies(boolean zimbraPrefIMHideOfflineBuddies) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMHideOfflineBuddies, zimbraPrefIMHideOfflineBuddies ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7549,6 +12477,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMHideOfflineBuddies, "");
         return attrs;
+    }
+
+    /**
+     * whether to hide IM offline buddies
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=706)
+    public void unsetPrefIMHideOfflineBuddies() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMHideOfflineBuddies, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7597,6 +12537,21 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=560)
+    public void setPrefIMIdleStatus(ZAttrProvisioning.PrefIMIdleStatus zimbraPrefIMIdleStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMIdleStatus, zimbraPrefIMIdleStatus.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IM idle status
+     *
+     * <p>Valid values: [away, xa, offline, invisible]
+     *
+     * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7612,6 +12567,21 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
+     * @param zimbraPrefIMIdleStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=560)
+    public void setPrefIMIdleStatusAsString(String zimbraPrefIMIdleStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMIdleStatus, zimbraPrefIMIdleStatus);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IM idle status
+     *
+     * <p>Valid values: [away, xa, offline, invisible]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7620,6 +12590,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMIdleStatus, "");
         return attrs;
+    }
+
+    /**
+     * IM idle status
+     *
+     * <p>Valid values: [away, xa, offline, invisible]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=560)
+    public void unsetPrefIMIdleStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMIdleStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7649,6 +12633,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * IM session idle timeout in minutes
      *
+     * @param zimbraPrefIMIdleTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=559)
+    public void setPrefIMIdleTimeout(int zimbraPrefIMIdleTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMIdleTimeout, Integer.toString(zimbraPrefIMIdleTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IM session idle timeout in minutes
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -7657,6 +12654,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMIdleTimeout, "");
         return attrs;
+    }
+
+    /**
+     * IM session idle timeout in minutes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=559)
+    public void unsetPrefIMIdleTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMIdleTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7679,8 +12688,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=517)
     public Map<String,Object> setPrefIMInstantNotify(boolean zimbraPrefIMInstantNotify, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMInstantNotify, Boolean.toString(zimbraPrefIMInstantNotify));
+        attrs.put(Provisioning.A_zimbraPrefIMInstantNotify, zimbraPrefIMInstantNotify ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Enable instant notifications
+     *
+     * @param zimbraPrefIMInstantNotify new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=517)
+    public void setPrefIMInstantNotify(boolean zimbraPrefIMInstantNotify) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMInstantNotify, zimbraPrefIMInstantNotify ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7694,6 +12716,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMInstantNotify, "");
         return attrs;
+    }
+
+    /**
+     * Enable instant notifications
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=517)
+    public void unsetPrefIMInstantNotify() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMInstantNotify, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7716,8 +12750,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=556)
     public Map<String,Object> setPrefIMLogChats(boolean zimbraPrefIMLogChats, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMLogChats, Boolean.toString(zimbraPrefIMLogChats));
+        attrs.put(Provisioning.A_zimbraPrefIMLogChats, zimbraPrefIMLogChats ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to log IM chats to the Chats folder
+     *
+     * @param zimbraPrefIMLogChats new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=556)
+    public void setPrefIMLogChats(boolean zimbraPrefIMLogChats) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMLogChats, zimbraPrefIMLogChats ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7731,6 +12778,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMLogChats, "");
         return attrs;
+    }
+
+    /**
+     * whether to log IM chats to the Chats folder
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=556)
+    public void unsetPrefIMLogChats() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMLogChats, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7753,8 +12812,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=552)
     public Map<String,Object> setPrefIMLogChatsEnabled(boolean zimbraPrefIMLogChatsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMLogChatsEnabled, Boolean.toString(zimbraPrefIMLogChatsEnabled));
+        attrs.put(Provisioning.A_zimbraPrefIMLogChatsEnabled, zimbraPrefIMLogChatsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether IM log chats is enabled
+     *
+     * @param zimbraPrefIMLogChatsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=552)
+    public void setPrefIMLogChatsEnabled(boolean zimbraPrefIMLogChatsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMLogChatsEnabled, zimbraPrefIMLogChatsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7768,6 +12840,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMLogChatsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether IM log chats is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=552)
+    public void unsetPrefIMLogChatsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMLogChatsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7790,8 +12874,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=463)
     public Map<String,Object> setPrefIMNotifyPresence(boolean zimbraPrefIMNotifyPresence, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMNotifyPresence, Boolean.toString(zimbraPrefIMNotifyPresence));
+        attrs.put(Provisioning.A_zimbraPrefIMNotifyPresence, zimbraPrefIMNotifyPresence ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Notify for presence modifications
+     *
+     * @param zimbraPrefIMNotifyPresence new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=463)
+    public void setPrefIMNotifyPresence(boolean zimbraPrefIMNotifyPresence) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMNotifyPresence, zimbraPrefIMNotifyPresence ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7805,6 +12902,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMNotifyPresence, "");
         return attrs;
+    }
+
+    /**
+     * Notify for presence modifications
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=463)
+    public void unsetPrefIMNotifyPresence() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMNotifyPresence, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7827,8 +12936,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=464)
     public Map<String,Object> setPrefIMNotifyStatus(boolean zimbraPrefIMNotifyStatus, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMNotifyStatus, Boolean.toString(zimbraPrefIMNotifyStatus));
+        attrs.put(Provisioning.A_zimbraPrefIMNotifyStatus, zimbraPrefIMNotifyStatus ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Notify for status change
+     *
+     * @param zimbraPrefIMNotifyStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=464)
+    public void setPrefIMNotifyStatus(boolean zimbraPrefIMNotifyStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMNotifyStatus, zimbraPrefIMNotifyStatus ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7842,6 +12964,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMNotifyStatus, "");
         return attrs;
+    }
+
+    /**
+     * Notify for status change
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=464)
+    public void unsetPrefIMNotifyStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMNotifyStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7864,8 +12998,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=558)
     public Map<String,Object> setPrefIMReportIdle(boolean zimbraPrefIMReportIdle, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMReportIdle, Boolean.toString(zimbraPrefIMReportIdle));
+        attrs.put(Provisioning.A_zimbraPrefIMReportIdle, zimbraPrefIMReportIdle ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to report IM idle status
+     *
+     * @param zimbraPrefIMReportIdle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=558)
+    public void setPrefIMReportIdle(boolean zimbraPrefIMReportIdle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMReportIdle, zimbraPrefIMReportIdle ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7879,6 +13026,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMReportIdle, "");
         return attrs;
+    }
+
+    /**
+     * whether to report IM idle status
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=558)
+    public void unsetPrefIMReportIdle() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMReportIdle, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7901,8 +13060,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=570)
     public Map<String,Object> setPrefIMSoundsEnabled(boolean zimbraPrefIMSoundsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIMSoundsEnabled, Boolean.toString(zimbraPrefIMSoundsEnabled));
+        attrs.put(Provisioning.A_zimbraPrefIMSoundsEnabled, zimbraPrefIMSoundsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether sounds is enabled in IM
+     *
+     * @param zimbraPrefIMSoundsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=570)
+    public void setPrefIMSoundsEnabled(boolean zimbraPrefIMSoundsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMSoundsEnabled, zimbraPrefIMSoundsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7916,6 +13088,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIMSoundsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether sounds is enabled in IM
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=570)
+    public void unsetPrefIMSoundsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMSoundsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7938,8 +13122,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=241)
     public Map<String,Object> setPrefImapSearchFoldersEnabled(boolean zimbraPrefImapSearchFoldersEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, Boolean.toString(zimbraPrefImapSearchFoldersEnabled));
+        attrs.put(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, zimbraPrefImapSearchFoldersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not the IMAP server exports search folders
+     *
+     * @param zimbraPrefImapSearchFoldersEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=241)
+    public void setPrefImapSearchFoldersEnabled(boolean zimbraPrefImapSearchFoldersEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, zimbraPrefImapSearchFoldersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -7953,6 +13150,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether or not the IMAP server exports search folders
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=241)
+    public void unsetPrefImapSearchFoldersEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8000,6 +13209,20 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of read messages in the Inbox folder. 0 means that
      * all messages will be retained.
      *
+     * @param zimbraPrefInboxReadLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=538)
+    public void setPrefInboxReadLifetime(String zimbraPrefInboxReadLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefInboxReadLifetime, zimbraPrefInboxReadLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of read messages in the Inbox folder. 0 means that
+     * all messages will be retained.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8008,6 +13231,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefInboxReadLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of read messages in the Inbox folder. 0 means that
+     * all messages will be retained.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=538)
+    public void unsetPrefInboxReadLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefInboxReadLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8055,6 +13291,20 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of unread messages in the Inbox folder. 0 means that
      * all messages will be retained.
      *
+     * @param zimbraPrefInboxUnreadLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=537)
+    public void setPrefInboxUnreadLifetime(String zimbraPrefInboxUnreadLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefInboxUnreadLifetime, zimbraPrefInboxUnreadLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of unread messages in the Inbox folder. 0 means that
+     * all messages will be retained.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8063,6 +13313,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefInboxUnreadLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of unread messages in the Inbox folder. 0 means that
+     * all messages will be retained.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=537)
+    public void unsetPrefInboxUnreadLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefInboxUnreadLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8085,8 +13348,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=55)
     public Map<String,Object> setPrefIncludeSpamInSearch(boolean zimbraPrefIncludeSpamInSearch, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIncludeSpamInSearch, Boolean.toString(zimbraPrefIncludeSpamInSearch));
+        attrs.put(Provisioning.A_zimbraPrefIncludeSpamInSearch, zimbraPrefIncludeSpamInSearch ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not to include spam in search by default
+     *
+     * @param zimbraPrefIncludeSpamInSearch new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=55)
+    public void setPrefIncludeSpamInSearch(boolean zimbraPrefIncludeSpamInSearch) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIncludeSpamInSearch, zimbraPrefIncludeSpamInSearch ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8100,6 +13376,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIncludeSpamInSearch, "");
         return attrs;
+    }
+
+    /**
+     * whether or not to include spam in search by default
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=55)
+    public void unsetPrefIncludeSpamInSearch() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIncludeSpamInSearch, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8122,8 +13410,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=56)
     public Map<String,Object> setPrefIncludeTrashInSearch(boolean zimbraPrefIncludeTrashInSearch, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefIncludeTrashInSearch, Boolean.toString(zimbraPrefIncludeTrashInSearch));
+        attrs.put(Provisioning.A_zimbraPrefIncludeTrashInSearch, zimbraPrefIncludeTrashInSearch ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not to include trash in search by default
+     *
+     * @param zimbraPrefIncludeTrashInSearch new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=56)
+    public void setPrefIncludeTrashInSearch(boolean zimbraPrefIncludeTrashInSearch) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIncludeTrashInSearch, zimbraPrefIncludeTrashInSearch ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8137,6 +13438,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIncludeTrashInSearch, "");
         return attrs;
+    }
+
+    /**
+     * whether or not to include trash in search by default
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=56)
+    public void unsetPrefIncludeTrashInSearch() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIncludeTrashInSearch, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8192,6 +13505,22 @@ public class ZAttrCos extends NamedEntry {
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
      * The shorter duration is used.
      *
+     * @param zimbraPrefJunkLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=540)
+    public void setPrefJunkLifetime(String zimbraPrefJunkLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefJunkLifetime, zimbraPrefJunkLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the Junk folder. 0 means that all
+     * messages will be retained. This user-modifiable attribute works in
+     * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
+     * The shorter duration is used.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8200,6 +13529,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefJunkLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of messages in the Junk folder. 0 means that all
+     * messages will be retained. This user-modifiable attribute works in
+     * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
+     * The shorter duration is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=540)
+    public void unsetPrefJunkLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefJunkLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8229,6 +13573,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * list view columns in web client
      *
+     * @param zimbraPrefListViewColumns new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=694)
+    public void setPrefListViewColumns(String zimbraPrefListViewColumns) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefListViewColumns, zimbraPrefListViewColumns);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list view columns in web client
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8237,6 +13594,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefListViewColumns, "");
         return attrs;
+    }
+
+    /**
+     * list view columns in web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=694)
+    public void unsetPrefListViewColumns() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefListViewColumns, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8281,6 +13650,24 @@ public class ZAttrCos extends NamedEntry {
      * end-user attribute that specifies which locale an object defaults to,
      * it is not an end-user setting.
      *
+     * @param zimbraPrefLocale new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=442)
+    public void setPrefLocale(String zimbraPrefLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefLocale, zimbraPrefLocale);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * user locale preference, e.g. en_US Whenever the server looks for the
+     * user locale, it will first look for zimbraPrefLocale, if it is not set
+     * then it will fallback to the current mechanism of looking for
+     * zimbraLocale in the various places for a user. zimbraLocale is the non
+     * end-user attribute that specifies which locale an object defaults to,
+     * it is not an end-user setting.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8289,6 +13676,23 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefLocale, "");
         return attrs;
+    }
+
+    /**
+     * user locale preference, e.g. en_US Whenever the server looks for the
+     * user locale, it will first look for zimbraPrefLocale, if it is not set
+     * then it will fallback to the current mechanism of looking for
+     * zimbraLocale in the various places for a user. zimbraLocale is the non
+     * end-user attribute that specifies which locale an object defaults to,
+     * it is not an end-user setting.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=442)
+    public void unsetPrefLocale() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefLocale, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8318,6 +13722,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Default Charset for mail composing and parsing text
      *
+     * @param zimbraPrefMailDefaultCharset new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=469)
+    public void setPrefMailDefaultCharset(String zimbraPrefMailDefaultCharset) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailDefaultCharset, zimbraPrefMailDefaultCharset);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default Charset for mail composing and parsing text
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8326,6 +13743,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailDefaultCharset, "");
         return attrs;
+    }
+
+    /**
+     * Default Charset for mail composing and parsing text
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=469)
+    public void unsetPrefMailDefaultCharset() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailDefaultCharset, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8348,8 +13777,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=681)
     public Map<String,Object> setPrefMailFlashIcon(boolean zimbraPrefMailFlashIcon, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefMailFlashIcon, Boolean.toString(zimbraPrefMailFlashIcon));
+        attrs.put(Provisioning.A_zimbraPrefMailFlashIcon, zimbraPrefMailFlashIcon ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Flash icon when a new email arrives
+     *
+     * @param zimbraPrefMailFlashIcon new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=681)
+    public void setPrefMailFlashIcon(boolean zimbraPrefMailFlashIcon) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFlashIcon, zimbraPrefMailFlashIcon ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8363,6 +13805,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailFlashIcon, "");
         return attrs;
+    }
+
+    /**
+     * Flash icon when a new email arrives
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=681)
+    public void unsetPrefMailFlashIcon() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFlashIcon, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8385,8 +13839,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=680)
     public Map<String,Object> setPrefMailFlashTitle(boolean zimbraPrefMailFlashTitle, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefMailFlashTitle, Boolean.toString(zimbraPrefMailFlashTitle));
+        attrs.put(Provisioning.A_zimbraPrefMailFlashTitle, zimbraPrefMailFlashTitle ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * Flash title bar when a new email arrives
+     *
+     * @param zimbraPrefMailFlashTitle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=680)
+    public void setPrefMailFlashTitle(boolean zimbraPrefMailFlashTitle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFlashTitle, zimbraPrefMailFlashTitle ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8400,6 +13867,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailFlashTitle, "");
         return attrs;
+    }
+
+    /**
+     * Flash title bar when a new email arrives
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=680)
+    public void unsetPrefMailFlashTitle() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFlashTitle, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8429,6 +13908,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * initial search done by dhtml client
      *
+     * @param zimbraPrefMailInitialSearch new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=102)
+    public void setPrefMailInitialSearch(String zimbraPrefMailInitialSearch) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailInitialSearch, zimbraPrefMailInitialSearch);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * initial search done by dhtml client
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8437,6 +13929,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailInitialSearch, "");
         return attrs;
+    }
+
+    /**
+     * initial search done by dhtml client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=102)
+    public void unsetPrefMailInitialSearch() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailInitialSearch, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8466,6 +13970,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * number of messages/conversations per page
      *
+     * @param zimbraPrefMailItemsPerPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=57)
+    public void setPrefMailItemsPerPage(int zimbraPrefMailItemsPerPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailItemsPerPage, Integer.toString(zimbraPrefMailItemsPerPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of messages/conversations per page
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8474,6 +13991,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailItemsPerPage, "");
         return attrs;
+    }
+
+    /**
+     * number of messages/conversations per page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=57)
+    public void unsetPrefMailItemsPerPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailItemsPerPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8521,6 +14050,20 @@ public class ZAttrCos extends NamedEntry {
      * interval at which the web client polls the server for new messages
      * (nnnnn[hmsd])
      *
+     * @param zimbraPrefMailPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=111)
+    public void setPrefMailPollingInterval(String zimbraPrefMailPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailPollingInterval, zimbraPrefMailPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interval at which the web client polls the server for new messages
+     * (nnnnn[hmsd])
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8529,6 +14072,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailPollingInterval, "");
         return attrs;
+    }
+
+    /**
+     * interval at which the web client polls the server for new messages
+     * (nnnnn[hmsd])
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=111)
+    public void unsetPrefMailPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8581,6 +14137,22 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [outlook, internet]
      *
      * @param zimbraPrefMailSignatureStyle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=156)
+    public void setPrefMailSignatureStyle(ZAttrProvisioning.PrefMailSignatureStyle zimbraPrefMailSignatureStyle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureStyle, zimbraPrefMailSignatureStyle.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mail signature style outlook|internet (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [outlook, internet]
+     *
+     * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8597,6 +14169,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [outlook, internet]
      *
+     * @param zimbraPrefMailSignatureStyle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=156)
+    public void setPrefMailSignatureStyleAsString(String zimbraPrefMailSignatureStyle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureStyle, zimbraPrefMailSignatureStyle);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mail signature style outlook|internet (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [outlook, internet]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8605,6 +14193,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailSignatureStyle, "");
         return attrs;
+    }
+
+    /**
+     * mail signature style outlook|internet (deprecatedSince 5.0 in
+     * identity)
+     *
+     * <p>Valid values: [outlook, internet]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=156)
+    public void unsetPrefMailSignatureStyle() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureStyle, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8627,8 +14230,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=666)
     public Map<String,Object> setPrefMailSoundsEnabled(boolean zimbraPrefMailSoundsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefMailSoundsEnabled, Boolean.toString(zimbraPrefMailSoundsEnabled));
+        attrs.put(Provisioning.A_zimbraPrefMailSoundsEnabled, zimbraPrefMailSoundsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether audible alert is enabled when a new email arrives
+     *
+     * @param zimbraPrefMailSoundsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=666)
+    public void setPrefMailSoundsEnabled(boolean zimbraPrefMailSoundsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSoundsEnabled, zimbraPrefMailSoundsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8642,6 +14258,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailSoundsEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether audible alert is enabled when a new email arrives
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=666)
+    public void unsetPrefMailSoundsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSoundsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8668,8 +14296,23 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=749)
     public Map<String,Object> setPrefMandatorySpellCheckEnabled(boolean zimbraPrefMandatorySpellCheckEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefMandatorySpellCheckEnabled, Boolean.toString(zimbraPrefMandatorySpellCheckEnabled));
+        attrs.put(Provisioning.A_zimbraPrefMandatorySpellCheckEnabled, zimbraPrefMandatorySpellCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether mandatory spell check is enabled
+     *
+     * @param zimbraPrefMandatorySpellCheckEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=749)
+    public void setPrefMandatorySpellCheckEnabled(boolean zimbraPrefMandatorySpellCheckEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMandatorySpellCheckEnabled, zimbraPrefMandatorySpellCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8685,6 +14328,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMandatorySpellCheckEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether mandatory spell check is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=749)
+    public void unsetPrefMandatorySpellCheckEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMandatorySpellCheckEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8717,6 +14374,20 @@ public class ZAttrCos extends NamedEntry {
      * whether and mark a message as read -1: Do not mark read 0: Mark read
      * 1..n: Mark read after this many seconds
      *
+     * @param zimbraPrefMarkMsgRead new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=650)
+    public void setPrefMarkMsgRead(int zimbraPrefMarkMsgRead) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMarkMsgRead, Integer.toString(zimbraPrefMarkMsgRead));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether and mark a message as read -1: Do not mark read 0: Mark read
+     * 1..n: Mark read after this many seconds
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8725,6 +14396,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMarkMsgRead, "");
         return attrs;
+    }
+
+    /**
+     * whether and mark a message as read -1: Do not mark read 0: Mark read
+     * 1..n: Mark read after this many seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=650)
+    public void unsetPrefMarkMsgRead() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMarkMsgRead, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8747,8 +14431,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=145)
     public Map<String,Object> setPrefMessageViewHtmlPreferred(boolean zimbraPrefMessageViewHtmlPreferred, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefMessageViewHtmlPreferred, Boolean.toString(zimbraPrefMessageViewHtmlPreferred));
+        attrs.put(Provisioning.A_zimbraPrefMessageViewHtmlPreferred, zimbraPrefMessageViewHtmlPreferred ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether client prefers text/html or text/plain
+     *
+     * @param zimbraPrefMessageViewHtmlPreferred new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=145)
+    public void setPrefMessageViewHtmlPreferred(boolean zimbraPrefMessageViewHtmlPreferred) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMessageViewHtmlPreferred, zimbraPrefMessageViewHtmlPreferred ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8762,6 +14459,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMessageViewHtmlPreferred, "");
         return attrs;
+    }
+
+    /**
+     * whether client prefers text/html or text/plain
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=145)
+    public void unsetPrefMessageViewHtmlPreferred() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMessageViewHtmlPreferred, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8786,8 +14495,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=500)
     public Map<String,Object> setPrefOpenMailInNewWindow(boolean zimbraPrefOpenMailInNewWindow, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOpenMailInNewWindow, Boolean.toString(zimbraPrefOpenMailInNewWindow));
+        attrs.put(Provisioning.A_zimbraPrefOpenMailInNewWindow, zimbraPrefOpenMailInNewWindow ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not the client opens a new msg/conv in a new window (via
+     * dbl-click)
+     *
+     * @param zimbraPrefOpenMailInNewWindow new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=500)
+    public void setPrefOpenMailInNewWindow(boolean zimbraPrefOpenMailInNewWindow) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOpenMailInNewWindow, zimbraPrefOpenMailInNewWindow ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8802,6 +14525,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOpenMailInNewWindow, "");
         return attrs;
+    }
+
+    /**
+     * whether or not the client opens a new msg/conv in a new window (via
+     * dbl-click)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=500)
+    public void unsetPrefOpenMailInNewWindow() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOpenMailInNewWindow, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8853,6 +14589,21 @@ public class ZAttrCos extends NamedEntry {
      * this interval, and does not send duplicate notifications in this
      * interval
      *
+     * @param zimbraPrefOutOfOfficeCacheDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=386)
+    public void setPrefOutOfOfficeCacheDuration(String zimbraPrefOutOfOfficeCacheDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, zimbraPrefOutOfOfficeCacheDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * server remembers addresses to which notifications have been sent for
+     * this interval, and does not send duplicate notifications in this
+     * interval
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8861,6 +14612,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, "");
         return attrs;
+    }
+
+    /**
+     * server remembers addresses to which notifications have been sent for
+     * this interval, and does not send duplicate notifications in this
+     * interval
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=386)
+    public void unsetPrefOutOfOfficeCacheDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8905,6 +14670,19 @@ public class ZAttrCos extends NamedEntry {
      * download pop3 messages since
      *
      * @param zimbraPrefPop3DownloadSince new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=653)
+    public void setPrefPop3DownloadSince(Date zimbraPrefPop3DownloadSince) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * download pop3 messages since
+     *
+     * @param zimbraPrefPop3DownloadSince new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8918,6 +14696,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * download pop3 messages since
      *
+     * @param zimbraPrefPop3DownloadSince new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=653)
+    public void setPrefPop3DownloadSinceAsString(String zimbraPrefPop3DownloadSince) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * download pop3 messages since
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -8926,6 +14717,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, "");
         return attrs;
+    }
+
+    /**
+     * download pop3 messages since
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=653)
+    public void unsetPrefPop3DownloadSince() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8948,8 +14751,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=394)
     public Map<String,Object> setPrefReadingPaneEnabled(boolean zimbraPrefReadingPaneEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefReadingPaneEnabled, Boolean.toString(zimbraPrefReadingPaneEnabled));
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneEnabled, zimbraPrefReadingPaneEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether reading pane is shown by default
+     *
+     * @param zimbraPrefReadingPaneEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=394)
+    public void setPrefReadingPaneEnabled(boolean zimbraPrefReadingPaneEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneEnabled, zimbraPrefReadingPaneEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -8963,6 +14779,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefReadingPaneEnabled, "");
         return attrs;
+    }
+
+    /**
+     * whether reading pane is shown by default
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=394)
+    public void unsetPrefReadingPaneEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9015,6 +14843,22 @@ public class ZAttrCos extends NamedEntry {
      * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=133)
+    public void setPrefReplyIncludeOriginalText(ZAttrProvisioning.PrefReplyIncludeOriginalText zimbraPrefReplyIncludeOriginalText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyIncludeOriginalText, zimbraPrefReplyIncludeOriginalText.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what part of the original message to include during replies
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
+     *
+     * @param zimbraPrefReplyIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9031,6 +14875,22 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
      *
+     * @param zimbraPrefReplyIncludeOriginalText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=133)
+    public void setPrefReplyIncludeOriginalTextAsString(String zimbraPrefReplyIncludeOriginalText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyIncludeOriginalText, zimbraPrefReplyIncludeOriginalText);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what part of the original message to include during replies
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9039,6 +14899,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefReplyIncludeOriginalText, "");
         return attrs;
+    }
+
+    /**
+     * what part of the original message to include during replies
+     * (deprecatedSince 5.0 in identity)
+     *
+     * <p>Valid values: [includeAsAttachment, includeNone, includeBodyAndHeadersWithPrefix, includeSmart, includeBody, includeBodyWithPrefix]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=133)
+    public void unsetPrefReplyIncludeOriginalText() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyIncludeOriginalText, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9061,8 +14936,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=22)
     public Map<String,Object> setPrefSaveToSent(boolean zimbraPrefSaveToSent, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefSaveToSent, Boolean.toString(zimbraPrefSaveToSent));
+        attrs.put(Provisioning.A_zimbraPrefSaveToSent, zimbraPrefSaveToSent ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not to save outgoing mail (deprecatedSince 5.0 in identity)
+     *
+     * @param zimbraPrefSaveToSent new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=22)
+    public void setPrefSaveToSent(boolean zimbraPrefSaveToSent) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSaveToSent, zimbraPrefSaveToSent ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9076,6 +14964,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSaveToSent, "");
         return attrs;
+    }
+
+    /**
+     * whether or not to save outgoing mail (deprecatedSince 5.0 in identity)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=22)
+    public void unsetPrefSaveToSent() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSaveToSent, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9098,8 +14998,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=634)
     public Map<String,Object> setPrefSearchTreeOpen(boolean zimbraPrefSearchTreeOpen, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefSearchTreeOpen, Boolean.toString(zimbraPrefSearchTreeOpen));
+        attrs.put(Provisioning.A_zimbraPrefSearchTreeOpen, zimbraPrefSearchTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not search tree is expanded
+     *
+     * @param zimbraPrefSearchTreeOpen new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=634)
+    public void setPrefSearchTreeOpen(boolean zimbraPrefSearchTreeOpen) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSearchTreeOpen, zimbraPrefSearchTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9113,6 +15026,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSearchTreeOpen, "");
         return attrs;
+    }
+
+    /**
+     * whether or not search tree is expanded
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=634)
+    public void unsetPrefSearchTreeOpen() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSearchTreeOpen, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9160,6 +15085,20 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Sent folder. 0 means that all
      * messages will be retained.
      *
+     * @param zimbraPrefSentLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=539)
+    public void setPrefSentLifetime(String zimbraPrefSentLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSentLifetime, zimbraPrefSentLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the Sent folder. 0 means that all
+     * messages will be retained.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9168,6 +15107,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSentLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of messages in the Sent folder. 0 means that all
+     * messages will be retained.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=539)
+    public void unsetPrefSentLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSentLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9197,6 +15149,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * name of folder to save sent mail in (deprecatedSince 5.0 in identity)
      *
+     * @param zimbraPrefSentMailFolder new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=103)
+    public void setPrefSentMailFolder(String zimbraPrefSentMailFolder) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSentMailFolder, zimbraPrefSentMailFolder);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * name of folder to save sent mail in (deprecatedSince 5.0 in identity)
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9205,6 +15170,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSentMailFolder, "");
         return attrs;
+    }
+
+    /**
+     * name of folder to save sent mail in (deprecatedSince 5.0 in identity)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=103)
+    public void unsetPrefSentMailFolder() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSentMailFolder, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9234,6 +15211,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * keyboard shortcuts
      *
+     * @param zimbraPrefShortcuts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=396)
+    public void setPrefShortcuts(String zimbraPrefShortcuts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShortcuts, zimbraPrefShortcuts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * keyboard shortcuts
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9242,6 +15232,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShortcuts, "");
         return attrs;
+    }
+
+    /**
+     * keyboard shortcuts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=396)
+    public void unsetPrefShortcuts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShortcuts, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9264,8 +15266,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=192)
     public Map<String,Object> setPrefShowFragments(boolean zimbraPrefShowFragments, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefShowFragments, Boolean.toString(zimbraPrefShowFragments));
+        attrs.put(Provisioning.A_zimbraPrefShowFragments, zimbraPrefShowFragments ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * show fragments in conversation and message lists
+     *
+     * @param zimbraPrefShowFragments new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=192)
+    public void setPrefShowFragments(boolean zimbraPrefShowFragments) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowFragments, zimbraPrefShowFragments ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9279,6 +15294,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShowFragments, "");
         return attrs;
+    }
+
+    /**
+     * show fragments in conversation and message lists
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=192)
+    public void unsetPrefShowFragments() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowFragments, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9301,8 +15328,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=222)
     public Map<String,Object> setPrefShowSearchString(boolean zimbraPrefShowSearchString, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefShowSearchString, Boolean.toString(zimbraPrefShowSearchString));
+        attrs.put(Provisioning.A_zimbraPrefShowSearchString, zimbraPrefShowSearchString ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to show search box or not
+     *
+     * @param zimbraPrefShowSearchString new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=222)
+    public void setPrefShowSearchString(boolean zimbraPrefShowSearchString) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowSearchString, zimbraPrefShowSearchString ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9316,6 +15356,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShowSearchString, "");
         return attrs;
+    }
+
+    /**
+     * whether to show search box or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=222)
+    public void unsetPrefShowSearchString() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowSearchString, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9340,8 +15392,22 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=471)
     public Map<String,Object> setPrefShowSelectionCheckbox(boolean zimbraPrefShowSelectionCheckbox, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefShowSelectionCheckbox, Boolean.toString(zimbraPrefShowSelectionCheckbox));
+        attrs.put(Provisioning.A_zimbraPrefShowSelectionCheckbox, zimbraPrefShowSelectionCheckbox ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * show selection checkbox for selecting email, contact, voicemial items
+     * in a list view for batch operations
+     *
+     * @param zimbraPrefShowSelectionCheckbox new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=471)
+    public void setPrefShowSelectionCheckbox(boolean zimbraPrefShowSelectionCheckbox) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowSelectionCheckbox, zimbraPrefShowSelectionCheckbox ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9356,6 +15422,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShowSelectionCheckbox, "");
         return attrs;
+    }
+
+    /**
+     * show selection checkbox for selecting email, contact, voicemial items
+     * in a list view for batch operations
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=471)
+    public void unsetPrefShowSelectionCheckbox() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowSelectionCheckbox, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9385,6 +15464,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Skin to use for this account
      *
+     * @param zimbraPrefSkin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=355)
+    public void setPrefSkin(String zimbraPrefSkin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSkin, zimbraPrefSkin);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Skin to use for this account
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9393,6 +15485,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSkin, "");
         return attrs;
+    }
+
+    /**
+     * Skin to use for this account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=355)
+    public void unsetPrefSkin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSkin, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9415,8 +15519,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=689)
     public Map<String,Object> setPrefStandardClientAccessilbityMode(boolean zimbraPrefStandardClientAccessilbityMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, Boolean.toString(zimbraPrefStandardClientAccessilbityMode));
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, zimbraPrefStandardClientAccessilbityMode ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether standard client should operate in accessilbity Mode
+     *
+     * @param zimbraPrefStandardClientAccessilbityMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=689)
+    public void setPrefStandardClientAccessilbityMode(boolean zimbraPrefStandardClientAccessilbityMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, zimbraPrefStandardClientAccessilbityMode ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9430,6 +15547,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, "");
         return attrs;
+    }
+
+    /**
+     * whether standard client should operate in accessilbity Mode
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=689)
+    public void unsetPrefStandardClientAccessilbityMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9452,8 +15581,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=633)
     public Map<String,Object> setPrefTagTreeOpen(boolean zimbraPrefTagTreeOpen, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, Boolean.toString(zimbraPrefTagTreeOpen));
+        attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, zimbraPrefTagTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not tag tree is expanded
+     *
+     * @param zimbraPrefTagTreeOpen new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=633)
+    public void setPrefTagTreeOpen(boolean zimbraPrefTagTreeOpen) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, zimbraPrefTagTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9467,6 +15609,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, "");
         return attrs;
+    }
+
+    /**
+     * whether or not tag tree is expanded
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=633)
+    public void unsetPrefTagTreeOpen() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9496,6 +15650,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * time zone of user or COS
      *
+     * @param zimbraPrefTimeZoneId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=235)
+    public void setPrefTimeZoneId(String[] zimbraPrefTimeZoneId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTimeZoneId, zimbraPrefTimeZoneId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time zone of user or COS
+     *
      * @param zimbraPrefTimeZoneId new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9505,6 +15672,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefTimeZoneId, zimbraPrefTimeZoneId);
         return attrs;
+    }
+
+    /**
+     * time zone of user or COS
+     *
+     * @param zimbraPrefTimeZoneId new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=235)
+    public void addPrefTimeZoneId(String zimbraPrefTimeZoneId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefTimeZoneId, zimbraPrefTimeZoneId);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9524,6 +15704,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * time zone of user or COS
      *
+     * @param zimbraPrefTimeZoneId existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=235)
+    public void removePrefTimeZoneId(String zimbraPrefTimeZoneId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefTimeZoneId, zimbraPrefTimeZoneId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time zone of user or COS
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9532,6 +15725,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefTimeZoneId, "");
         return attrs;
+    }
+
+    /**
+     * time zone of user or COS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=235)
+    public void unsetPrefTimeZoneId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTimeZoneId, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9587,6 +15792,22 @@ public class ZAttrCos extends NamedEntry {
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
      * The shorter duration is used.
      *
+     * @param zimbraPrefTrashLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=541)
+    public void setPrefTrashLifetime(String zimbraPrefTrashLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTrashLifetime, zimbraPrefTrashLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the Trash folder. 0 means that all
+     * messages will be retained. This user-modifiable attribute works in
+     * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
+     * The shorter duration is used.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9595,6 +15816,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefTrashLifetime, "");
         return attrs;
+    }
+
+    /**
+     * Retention period of messages in the Trash folder. 0 means that all
+     * messages will be retained. This user-modifiable attribute works in
+     * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
+     * The shorter duration is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=541)
+    public void unsetPrefTrashLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTrashLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9617,8 +15853,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=61)
     public Map<String,Object> setPrefUseKeyboardShortcuts(boolean zimbraPrefUseKeyboardShortcuts, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefUseKeyboardShortcuts, Boolean.toString(zimbraPrefUseKeyboardShortcuts));
+        attrs.put(Provisioning.A_zimbraPrefUseKeyboardShortcuts, zimbraPrefUseKeyboardShortcuts ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not keyboard shortcuts are enabled
+     *
+     * @param zimbraPrefUseKeyboardShortcuts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=61)
+    public void setPrefUseKeyboardShortcuts(boolean zimbraPrefUseKeyboardShortcuts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseKeyboardShortcuts, zimbraPrefUseKeyboardShortcuts ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9632,6 +15881,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefUseKeyboardShortcuts, "");
         return attrs;
+    }
+
+    /**
+     * whether or not keyboard shortcuts are enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=61)
+    public void unsetPrefUseKeyboardShortcuts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseKeyboardShortcuts, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9658,8 +15919,23 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=395)
     public Map<String,Object> setPrefUseRfc2231(boolean zimbraPrefUseRfc2231, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefUseRfc2231, Boolean.toString(zimbraPrefUseRfc2231));
+        attrs.put(Provisioning.A_zimbraPrefUseRfc2231, zimbraPrefUseRfc2231 ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * When composing and sending mail, whether to use RFC 2231 MIME
+     * parameter value encoding. If set to FALSE, then RFC 2047 style
+     * encoding is used.
+     *
+     * @param zimbraPrefUseRfc2231 new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=395)
+    public void setPrefUseRfc2231(boolean zimbraPrefUseRfc2231) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseRfc2231, zimbraPrefUseRfc2231 ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9675,6 +15951,20 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefUseRfc2231, "");
         return attrs;
+    }
+
+    /**
+     * When composing and sending mail, whether to use RFC 2231 MIME
+     * parameter value encoding. If set to FALSE, then RFC 2047 style
+     * encoding is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=395)
+    public void unsetPrefUseRfc2231() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseRfc2231, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9697,8 +15987,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=236)
     public Map<String,Object> setPrefUseTimeZoneListInCalendar(boolean zimbraPrefUseTimeZoneListInCalendar, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar, Boolean.toString(zimbraPrefUseTimeZoneListInCalendar));
+        attrs.put(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar, zimbraPrefUseTimeZoneListInCalendar ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether list of well known time zones is displayed in calendar UI
+     *
+     * @param zimbraPrefUseTimeZoneListInCalendar new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=236)
+    public void setPrefUseTimeZoneListInCalendar(boolean zimbraPrefUseTimeZoneListInCalendar) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar, zimbraPrefUseTimeZoneListInCalendar ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9712,6 +16015,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar, "");
         return attrs;
+    }
+
+    /**
+     * whether list of well known time zones is displayed in calendar UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=236)
+    public void unsetPrefUseTimeZoneListInCalendar() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9741,6 +16056,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * number of voice messages/call logs per page
      *
+     * @param zimbraPrefVoiceItemsPerPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=526)
+    public void setPrefVoiceItemsPerPage(int zimbraPrefVoiceItemsPerPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefVoiceItemsPerPage, Integer.toString(zimbraPrefVoiceItemsPerPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of voice messages/call logs per page
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9749,6 +16077,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefVoiceItemsPerPage, "");
         return attrs;
+    }
+
+    /**
+     * number of voice messages/call logs per page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=526)
+    public void unsetPrefVoiceItemsPerPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefVoiceItemsPerPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9771,8 +16111,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=456)
     public Map<String,Object> setPrefWarnOnExit(boolean zimbraPrefWarnOnExit, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefWarnOnExit, Boolean.toString(zimbraPrefWarnOnExit));
+        attrs.put(Provisioning.A_zimbraPrefWarnOnExit, zimbraPrefWarnOnExit ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether to display a warning when users try to navigate away from ZCS
+     *
+     * @param zimbraPrefWarnOnExit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=456)
+    public void setPrefWarnOnExit(boolean zimbraPrefWarnOnExit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefWarnOnExit, zimbraPrefWarnOnExit ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9786,6 +16139,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefWarnOnExit, "");
         return attrs;
+    }
+
+    /**
+     * whether to display a warning when users try to navigate away from ZCS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=456)
+    public void unsetPrefWarnOnExit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefWarnOnExit, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9808,8 +16173,21 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=638)
     public Map<String,Object> setPrefZimletTreeOpen(boolean zimbraPrefZimletTreeOpen, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefZimletTreeOpen, Boolean.toString(zimbraPrefZimletTreeOpen));
+        attrs.put(Provisioning.A_zimbraPrefZimletTreeOpen, zimbraPrefZimletTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * whether or not zimlet tree is expanded
+     *
+     * @param zimbraPrefZimletTreeOpen new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=638)
+    public void setPrefZimletTreeOpen(boolean zimbraPrefZimletTreeOpen) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZimletTreeOpen, zimbraPrefZimletTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9823,6 +16201,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZimletTreeOpen, "");
         return attrs;
+    }
+
+    /**
+     * whether or not zimlet tree is expanded
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=638)
+    public void unsetPrefZimletTreeOpen() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZimletTreeOpen, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9852,6 +16242,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Allowed domains for Proxy servlet
      *
+     * @param zimbraProxyAllowedDomains new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=294)
+    public void setProxyAllowedDomains(String[] zimbraProxyAllowedDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProxyAllowedDomains, zimbraProxyAllowedDomains);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed domains for Proxy servlet
+     *
      * @param zimbraProxyAllowedDomains new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9861,6 +16264,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraProxyAllowedDomains, zimbraProxyAllowedDomains);
         return attrs;
+    }
+
+    /**
+     * Allowed domains for Proxy servlet
+     *
+     * @param zimbraProxyAllowedDomains new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=294)
+    public void addProxyAllowedDomains(String zimbraProxyAllowedDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraProxyAllowedDomains, zimbraProxyAllowedDomains);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9880,6 +16296,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Allowed domains for Proxy servlet
      *
+     * @param zimbraProxyAllowedDomains existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=294)
+    public void removeProxyAllowedDomains(String zimbraProxyAllowedDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraProxyAllowedDomains, zimbraProxyAllowedDomains);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed domains for Proxy servlet
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9888,6 +16317,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraProxyAllowedDomains, "");
         return attrs;
+    }
+
+    /**
+     * Allowed domains for Proxy servlet
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=294)
+    public void unsetProxyAllowedDomains() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProxyAllowedDomains, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9917,6 +16358,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Content types that can be cached by proxy servlet
      *
+     * @param zimbraProxyCacheableContentTypes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=303)
+    public void setProxyCacheableContentTypes(String[] zimbraProxyCacheableContentTypes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProxyCacheableContentTypes, zimbraProxyCacheableContentTypes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Content types that can be cached by proxy servlet
+     *
      * @param zimbraProxyCacheableContentTypes new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9926,6 +16380,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraProxyCacheableContentTypes, zimbraProxyCacheableContentTypes);
         return attrs;
+    }
+
+    /**
+     * Content types that can be cached by proxy servlet
+     *
+     * @param zimbraProxyCacheableContentTypes new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=303)
+    public void addProxyCacheableContentTypes(String zimbraProxyCacheableContentTypes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraProxyCacheableContentTypes, zimbraProxyCacheableContentTypes);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9945,6 +16412,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Content types that can be cached by proxy servlet
      *
+     * @param zimbraProxyCacheableContentTypes existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=303)
+    public void removeProxyCacheableContentTypes(String zimbraProxyCacheableContentTypes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraProxyCacheableContentTypes, zimbraProxyCacheableContentTypes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Content types that can be cached by proxy servlet
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -9953,6 +16433,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraProxyCacheableContentTypes, "");
         return attrs;
+    }
+
+    /**
+     * Content types that can be cached by proxy servlet
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=303)
+    public void unsetProxyCacheableContentTypes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProxyCacheableContentTypes, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -9996,6 +16488,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Minimum duration of time between quota warnings.
      *
+     * @param zimbraQuotaWarnInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=485)
+    public void setQuotaWarnInterval(String zimbraQuotaWarnInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraQuotaWarnInterval, zimbraQuotaWarnInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum duration of time between quota warnings.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10004,6 +16509,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnInterval, "");
         return attrs;
+    }
+
+    /**
+     * Minimum duration of time between quota warnings.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=485)
+    public void unsetQuotaWarnInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraQuotaWarnInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10033,6 +16550,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Quota warning message template.
      *
+     * @param zimbraQuotaWarnMessage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=486)
+    public void setQuotaWarnMessage(String zimbraQuotaWarnMessage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraQuotaWarnMessage, zimbraQuotaWarnMessage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Quota warning message template.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10041,6 +16571,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnMessage, "");
         return attrs;
+    }
+
+    /**
+     * Quota warning message template.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=486)
+    public void unsetQuotaWarnMessage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraQuotaWarnMessage, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10070,6 +16612,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Threshold for quota warning messages.
      *
+     * @param zimbraQuotaWarnPercent new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=483)
+    public void setQuotaWarnPercent(int zimbraQuotaWarnPercent) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraQuotaWarnPercent, Integer.toString(zimbraQuotaWarnPercent));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Threshold for quota warning messages.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10078,6 +16633,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
         return attrs;
+    }
+
+    /**
+     * Threshold for quota warning messages.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=483)
+    public void unsetQuotaWarnPercent() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10107,6 +16674,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * maximum number of signatures allowed on an account
      *
+     * @param zimbraSignatureMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=493)
+    public void setSignatureMaxNumEntries(int zimbraSignatureMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignatureMaxNumEntries, Integer.toString(zimbraSignatureMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of signatures allowed on an account
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10115,6 +16695,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSignatureMaxNumEntries, "");
         return attrs;
+    }
+
+    /**
+     * maximum number of signatures allowed on an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=493)
+    public void unsetSignatureMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignatureMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10147,6 +16739,20 @@ public class ZAttrCos extends NamedEntry {
      * minimum number of signatures allowed on an account, this is only used
      * in the client
      *
+     * @param zimbraSignatureMinNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=523)
+    public void setSignatureMinNumEntries(int zimbraSignatureMinNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignatureMinNumEntries, Integer.toString(zimbraSignatureMinNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of signatures allowed on an account, this is only used
+     * in the client
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10155,6 +16761,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSignatureMinNumEntries, "");
         return attrs;
+    }
+
+    /**
+     * minimum number of signatures allowed on an account, this is only used
+     * in the client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=523)
+    public void unsetSignatureMinNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignatureMinNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10183,8 +16802,24 @@ public class ZAttrCos extends NamedEntry {
     @ZAttr(id=604)
     public Map<String,Object> setSpamApplyUserFilters(boolean zimbraSpamApplyUserFilters, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSpamApplyUserFilters, Boolean.toString(zimbraSpamApplyUserFilters));
+        attrs.put(Provisioning.A_zimbraSpamApplyUserFilters, zimbraSpamApplyUserFilters ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
+    }
+
+    /**
+     * If TRUE, spam messages will be affected by user mail filters instead
+     * of being automatically filed into the Junk folder. This attribute is
+     * deprecated and will be removed in a future release. See bug 23886 for
+     * details.
+     *
+     * @param zimbraSpamApplyUserFilters new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=604)
+    public void setSpamApplyUserFilters(boolean zimbraSpamApplyUserFilters) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamApplyUserFilters, zimbraSpamApplyUserFilters ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10201,6 +16836,21 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpamApplyUserFilters, "");
         return attrs;
+    }
+
+    /**
+     * If TRUE, spam messages will be affected by user mail filters instead
+     * of being automatically filed into the Junk folder. This attribute is
+     * deprecated and will be removed in a future release. See bug 23886 for
+     * details.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=604)
+    public void unsetSpamApplyUserFilters() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamApplyUserFilters, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10242,6 +16892,23 @@ public class ZAttrCos extends NamedEntry {
      * client requests more. This setting affects all sync categories
      * including email, contacts, calendar and tasks.
      *
+     * @param zimbraSyncWindowSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=437)
+    public void setSyncWindowSize(int zimbraSyncWindowSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSyncWindowSize, Integer.toString(zimbraSyncWindowSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum batch size for each ZimbraSync transaction. Default value
+     * of 0 means to follow client requested size. If set to any positive
+     * integer, the value will be the maximum number of items to sync even if
+     * client requests more. This setting affects all sync categories
+     * including email, contacts, calendar and tasks.
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10250,6 +16917,22 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSyncWindowSize, "");
         return attrs;
+    }
+
+    /**
+     * The maximum batch size for each ZimbraSync transaction. Default value
+     * of 0 means to follow client requested size. If set to any positive
+     * integer, the value will be the maximum number of items to sync even if
+     * client requests more. This setting affects all sync categories
+     * including email, contacts, calendar and tasks.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=437)
+    public void unsetSyncWindowSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSyncWindowSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10282,6 +16965,20 @@ public class ZAttrCos extends NamedEntry {
      * The registered name of the Zimbra Analyzer Extension for this account
      * to use
      *
+     * @param zimbraTextAnalyzer new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=393)
+    public void setTextAnalyzer(String zimbraTextAnalyzer) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTextAnalyzer, zimbraTextAnalyzer);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The registered name of the Zimbra Analyzer Extension for this account
+     * to use
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10290,6 +16987,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
         return attrs;
+    }
+
+    /**
+     * The registered name of the Zimbra Analyzer Extension for this account
+     * to use
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=393)
+    public void unsetTextAnalyzer() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10319,6 +17029,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * List of Zimlets available to this COS
      *
+     * @param zimbraZimletAvailableZimlets new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=291)
+    public void setZimletAvailableZimlets(String[] zimbraZimletAvailableZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletAvailableZimlets, zimbraZimletAvailableZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of Zimlets available to this COS
+     *
      * @param zimbraZimletAvailableZimlets new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10328,6 +17051,19 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZimletAvailableZimlets, zimbraZimletAvailableZimlets);
         return attrs;
+    }
+
+    /**
+     * List of Zimlets available to this COS
+     *
+     * @param zimbraZimletAvailableZimlets new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=291)
+    public void addZimletAvailableZimlets(String zimbraZimletAvailableZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZimletAvailableZimlets, zimbraZimletAvailableZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -10347,6 +17083,19 @@ public class ZAttrCos extends NamedEntry {
     /**
      * List of Zimlets available to this COS
      *
+     * @param zimbraZimletAvailableZimlets existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=291)
+    public void removeZimletAvailableZimlets(String zimbraZimletAvailableZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZimletAvailableZimlets, zimbraZimletAvailableZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of Zimlets available to this COS
+     *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
@@ -10355,6 +17104,18 @@ public class ZAttrCos extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletAvailableZimlets, "");
         return attrs;
+    }
+
+    /**
+     * List of Zimlets available to this COS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=291)
+    public void unsetZimletAvailableZimlets() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletAvailableZimlets, "");
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     ///// END-AUTO-GEN-REPLACE
