@@ -1937,11 +1937,14 @@ public class AttributeManager {
                 case TYPE_ENUM:
                     generateGetter(result, ai, false);
                     generateGetter(result, ai, true);
-                    generateSetter(result, ai, false, SetterType.set);
+                    generateSetter(result, ai, false, SetterType.set, false);
+                    generateSetter(result, ai, false, SetterType.set, true);
                     if (ai.getType() == AttributeType.TYPE_GENTIME || ai.getType() == AttributeType.TYPE_ENUM) {
-                        generateSetter(result, ai, true, SetterType.set);
+                        generateSetter(result, ai, true, SetterType.set, false);
+                        generateSetter(result, ai, true, SetterType.set, true);
                     }
-                    generateSetter(result, ai, false, SetterType.unset);
+                    generateSetter(result, ai, false, SetterType.unset, false);
+                    generateSetter(result, ai, false, SetterType.unset, true);
                     break;
                 default:
                     if (ai.getName().equalsIgnoreCase("zimbraLocale")) {
@@ -1949,12 +1952,16 @@ public class AttributeManager {
                     } else {
                         generateGetter(result, ai, false);
                     }
-                    generateSetter(result, ai, false, SetterType.set);
+                    generateSetter(result, ai, false, SetterType.set, false);
+                    generateSetter(result, ai, false, SetterType.set, true);
                     if (ai.getCardinality() == AttributeCardinality.multi) {
-                        generateSetter(result, ai, false, SetterType.add);
-                        generateSetter(result, ai, false, SetterType.remove);
+                        generateSetter(result, ai, false, SetterType.add, false);
+                        generateSetter(result, ai, false, SetterType.add, true);
+                        generateSetter(result, ai, false, SetterType.remove, false);
+                        generateSetter(result, ai, false, SetterType.remove, true);
                     }
-                    generateSetter(result, ai, false, SetterType.unset);
+                    generateSetter(result, ai, false, SetterType.unset, false);
+                    generateSetter(result, ai, false, SetterType.unset, true);
                     break;
             }
         }
@@ -2051,7 +2058,7 @@ public class AttributeManager {
 
     private static enum SetterType { set, add, unset, remove }
 
-    private static void generateSetter(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType) throws ServiceException {
+    private static void generateSetter(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType, boolean noMap) throws ServiceException {
         String javaType;
         String putParam;
 
@@ -2068,7 +2075,7 @@ public class AttributeManager {
         switch (type) {
             case TYPE_BOOLEAN:
                 javaType = "boolean";
-                putParam = String.format("Boolean.toString(%s)", name);
+                putParam = String.format("%s ? Provisioning.TRUE : Provisioning.FALSE", name);
                 break;
             case TYPE_INTEGER:
                 javaType = "int";
@@ -2134,21 +2141,36 @@ public class AttributeManager {
         }
 
         if (paramDoc != null) result.append(paramDoc);
-        result.append(String.format("     * @param attrs existing map to populate, or null to create a new map%n"));
-        result.append("     * @return populated map to pass into Provisioning.modifyAttrs\n");
+        if (!noMap) {
+            result.append(String.format("     * @param attrs existing map to populate, or null to create a new map%n"));
+            result.append("     * @return populated map to pass into Provisioning.modifyAttrs\n");
+        } else {
+            result.append("     * @throws com.zimbra.common.service.ServiceException if error during update\n");
+        }
         if (ai.getSince() != null) {
             result.append("     *\n");
             result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
         }
         result.append("     */\n");
         result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
-        if (setterType !=  SetterType.unset)
-            result.append(String.format("    public %s %s(%s %s, %s attrs) {%n", mapType, methodName, javaType, name, mapType));
-        else
-            result.append(String.format("    public %s %s(%s attrs) {%n", mapType, methodName, mapType));
-        result.append(String.format("        if (attrs == null) attrs = new HashMap<String,Object>();%n"));
-        result.append(body);
-        result.append(String.format("        return attrs;%n"));
+        if (noMap) {
+            if (setterType !=  SetterType.unset)
+                result.append(String.format("    public void %s(%s %s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name));
+            else
+                result.append(String.format("    public void %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
+            result.append(String.format("        HashMap<String,Object> attrs = new HashMap<String,Object>();%n"));
+            result.append(body);
+            result.append(String.format("        getProvisioning().modifyAttrs(this, attrs);%n"));
+        } else {
+            if (setterType !=  SetterType.unset)
+                result.append(String.format("    public %s %s(%s %s, %s attrs) {%n", mapType, methodName, javaType, name, mapType));
+            else
+                result.append(String.format("    public %s %s(%s attrs) {%n", mapType, methodName, mapType));
+            result.append(String.format("        if (attrs == null) attrs = new HashMap<String,Object>();%n"));
+            result.append(body);
+            result.append(String.format("        return attrs;%n"));
+        }
+
         result.append(String.format("    }%n"));
     }
 
