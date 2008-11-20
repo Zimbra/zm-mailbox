@@ -282,8 +282,6 @@ public class AdminConstants {
     public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
 
     // calendar time zone fixup
-    public static final QName FIX_CALENDAR_TIME_ZONE_REQUEST = QName.get("FixCalendarTimeZoneRequest", NAMESPACE);
-    public static final QName FIX_CALENDAR_TIME_ZONE_RESPONSE = QName.get("FixCalendarTimeZoneResponse", NAMESPACE);
     public static final QName FIX_CALENDAR_TZ_REQUEST = QName.get("FixCalendarTZRequest", NAMESPACE);
     public static final QName FIX_CALENDAR_TZ_RESPONSE = QName.get("FixCalendarTZResponse", NAMESPACE);
     // calendar item end time fixup
@@ -538,7 +536,6 @@ public class AdminConstants {
     public static final String A_DEPLOYALL = "deployall";
     public static final String A_DEPLOYLOCAL = "deploylocal";
 
-    public static final String A_COUNTRY = "country";
     public static final String A_TZFIXUP_AFTER = "after";
     public static final String A_TZFIXUP_SYNC = "sync";
     
