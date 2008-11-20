@@ -541,7 +541,7 @@ public class ZCalendar {
                     }
                     if (forceOlsonTZID && mTok.equals(ICalTok.TZID)) {
                         // bug 15549: Apple iCal refuses to work with anything other than Olson TZIDs.
-                        value = TZIDMapper.toOlson(value);
+                        value = TZIDMapper.canonicalize(value);
                     }
                 }
                 if (noEscape)
@@ -640,7 +640,7 @@ public class ZCalendar {
                 String value = maValue;
                 if (forceOlsonTZID) {
                     // bug 15549: Apple iCal refuses to work with anything other than Olson TZIDs.
-                    value = TZIDMapper.toOlson(value);
+                    value = TZIDMapper.canonicalize(value);
                 }
 
                 // Microsoft Entourage 2004 (Outlook-like program for Mac)

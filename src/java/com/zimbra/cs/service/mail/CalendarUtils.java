@@ -637,9 +637,7 @@ public class CalendarUtils {
             daylightOnset = parseSimpleOnset(daylight);
         }
 
-        ICalTimeZone tz = new ICalTimeZone(tzid, standardOffset,
-                standardOnset, daylightOffset, daylightOnset);
-        return tz;
+        return ICalTimeZone.lookup(tzid, standardOffset, standardOnset, daylightOffset, daylightOnset);
     }
 
     private static SimpleOnset parseSimpleOnset(Element element)

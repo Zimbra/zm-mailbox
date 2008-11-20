@@ -26,9 +26,12 @@ import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.StringTokenizer;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -60,7 +63,7 @@ public class ICalTimeZone extends SimpleTimeZone {
 
     private static final long serialVersionUID = 1L;
 
-    public static class SimpleOnset {
+    public static class SimpleOnset implements Comparable<SimpleOnset> {
         private int mWeek       = 0;
         private int mDayOfWeek  = 0;
         private int mMonth      = 0;
@@ -140,20 +143,36 @@ public class ICalTimeZone extends SimpleTimeZone {
                 mDayOfMonth = 0;
             }
         }
+
+        public int compareTo(SimpleOnset other) {
+            int comp;
+            comp = mMonth - other.mMonth;
+            if (comp != 0) return comp;
+            comp = mWeek - other.mWeek;
+            if (comp != 0) return comp;
+            if (mWeek != 0)
+                comp = mDayOfWeek - other.mDayOfWeek;
+            else
+                comp = mDayOfMonth - other.mDayOfMonth;
+            if (comp != 0) return comp;
+            comp = mHour - other.mHour;
+            if (comp != 0) return comp;
+            comp = mMinute - other.mMinute;
+            if (comp != 0) return comp;
+            comp = mSecond - other.mSecond;
+            return comp;
+        }
     }
     
     private static final String DEFAULT_DTSTART = "19710101T000000";
 
-    private boolean mSameAsUTC = false;  // true if this timezone is equivalent to UTC/GMT
-    protected boolean mHasDaylight = false;
+    private int    mStandardOffset = 0;
+    private String mDayToStdDtStart = DEFAULT_DTSTART;
+    private String mDayToStdRule = null;
 
-    protected int    mStandardOffset = 0;
-    protected String mDayToStdDtStart = DEFAULT_DTSTART;
-    protected String mDayToStdRule = null;
-
-    protected int    mDaylightOffset = 0; 
-    protected String mStdToDayDtStart = DEFAULT_DTSTART;
-    protected String mStdToDayRule = null;
+    private int    mDaylightOffset = 0; 
+    private String mStdToDayDtStart = DEFAULT_DTSTART;
+    private String mStdToDayRule = null;
 
     private SimpleOnset mStandardOnset;
     private SimpleOnset mDaylightOnset;
@@ -170,7 +189,6 @@ public class ICalTimeZone extends SimpleTimeZone {
         StringBuilder sb = new StringBuilder();
         sb.append("TZID=").append(getID());
         sb.append("\nSimpleTimeZone: ").append(super.toString());
-        sb.append("\nmHasDaylight=").append(mHasDaylight);
         sb.append("\nmStandardOffset=").append(mStandardOffset);
         sb.append(", mDayToStdDtStart=").append(mDayToStdDtStart);
         sb.append(", mDayToStdRule=\"").append(mDayToStdRule).append("\"");
@@ -185,7 +203,6 @@ public class ICalTimeZone extends SimpleTimeZone {
 
     private static final String FN_TZ_NAME          = "tzid";
     private static final String FN_STD_OFFSET       = "so";
-    private static final String FN_HAS_DAYLIGHT     = "hd";
     private static final String FN_DAYLIGHT_OFFSET  = "do";
     private static final String FN_DAYTOSTD_DTSTART = "d2ss";
     private static final String FN_STDTODAY_DTSTART = "s2ds";
@@ -206,8 +223,9 @@ public class ICalTimeZone extends SimpleTimeZone {
      * Returns the time zone for the given account.
      */
     public static ICalTimeZone getAccountTimeZone(Account account) {
-        String tzId = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
-        ICalTimeZone timeZone = WellKnownTimeZones.getTimeZoneById(tzId);
+        String tzid = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        tzid = TZIDMapper.canonicalize(tzid);
+        ICalTimeZone timeZone = WellKnownTimeZones.getTimeZoneById(tzid);
         if (timeZone == null) {
             return sUTC;
         }
@@ -218,11 +236,11 @@ public class ICalTimeZone extends SimpleTimeZone {
 
     public Metadata encodeAsMetadata() {
         Metadata meta = new Metadata();
-        if (getID() == null) {
-            System.out.println("null tzid!");
-        }
-        meta.put(FN_TZ_NAME, getID());
-        meta.put(FN_HAS_DAYLIGHT, mHasDaylight);
+        String tzid = getID();
+        meta.put(FN_TZ_NAME, tzid);
+        // For well-known time zone we only need the TZID.
+        if (lookupByTZID(tzid) != null)
+            return meta;
 
         meta.put(FN_STD_OFFSET, mStandardOffset);
         meta.put(FN_DAYTOSTD_DTSTART, mDayToStdDtStart); 
@@ -238,21 +256,31 @@ public class ICalTimeZone extends SimpleTimeZone {
     public String getStandardRule()    { return mDayToStdRule; }
     public String getDaylightDtStart() { return mStdToDayDtStart; }
     public String getDaylightRule()    { return mStdToDayRule; }
-    public boolean sameAsUTC()         { return mSameAsUTC; }
+    public boolean sameAsUTC()         { return mStandardOffset == 0 && mDaylightOffset == 0; }
 
     public static ICalTimeZone decodeFromMetadata(Metadata m) throws ServiceException {
-        String tzId;
-        if (m.containsKey(FN_TZ_NAME))
-            tzId = m.get(FN_TZ_NAME);
-        else
-            tzId = "unknown time zone";
-        return new ICalTimeZone(tzId, m);
+        String tzid;
+        if (m.containsKey(FN_TZ_NAME)) {
+            tzid = m.get(FN_TZ_NAME);
+            boolean hasDef = m.containsKey(FN_STD_OFFSET);
+            if (!DebugConfig.disableCalendarTZMatchByID || !hasDef) {
+                ICalTimeZone tz = WellKnownTimeZones.getTimeZoneById(tzid);
+                if (tz != null) {
+                    return tz;
+                } else if (!hasDef) {
+                    ZimbraLog.calendar.warn("Unknown time zone \"" + tzid + "\" in metadata; using UTC instead");
+                    return sUTC.cloneWithNewTZID(tzid);
+                }
+            }
+        } else
+            tzid = "unknown time zone";
+        ICalTimeZone newTz = new ICalTimeZone(tzid, m);
+        ICalTimeZone tz = lookupByRule(newTz);
+        return tz;
     }
     
     private ICalTimeZone(String tzId, Metadata meta) throws ServiceException {
         super(0, tzId);
-//        mTzId = tzId;
-        mHasDaylight = meta.getBool(FN_HAS_DAYLIGHT, false);
 
         mStandardOffset = (int) meta.getLong(FN_STD_OFFSET, 0);
         mDayToStdDtStart = meta.get(FN_DAYTOSTD_DTSTART, null);
@@ -264,18 +292,19 @@ public class ICalTimeZone extends SimpleTimeZone {
 
         initFromICalData(true);
     }
-    
+
     private void initFromICalData(boolean fromMetadata) {
-        mSameAsUTC = mStandardOffset == mDaylightOffset && mStandardOffset == 0;
-        if (mDaylightOffset - mStandardOffset < 0) {
+        int dstSavings = mDaylightOffset - mStandardOffset;
+        if (dstSavings < 0) {
             // Must be an error in the TZ definition.  Swap the offsets.
             // (Saw this with Windows TZ for Windhoek, Namibia)
             int tmp = mStandardOffset;
             mStandardOffset = mDaylightOffset;
             mDaylightOffset = tmp;
+            dstSavings *= -1;
         }
         setRawOffset(mStandardOffset);
-        if (mHasDaylight) {
+        if (dstSavings != 0) {
             mStandardOnset = parseOnset(mDayToStdRule, mDayToStdDtStart, fromMetadata);
             mDaylightOnset = parseOnset(mStdToDayRule, mStdToDayDtStart, fromMetadata);
 
@@ -291,7 +320,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                        stzStandard.mDayOfMonth,
                        stzStandard.mDayOfWeek,
                        stzStandard.mDtStartMillis);
-            setDSTSavings(mDaylightOffset - mStandardOffset);
+            setDSTSavings(dstSavings);
         }
     }
 
@@ -492,11 +521,20 @@ public class ICalTimeZone extends SimpleTimeZone {
      * @param dayRRule   iCal recurrence rule for transition into daylight
      *                   time
      */
-    public ICalTimeZone(String tzId,
+    public static ICalTimeZone lookup(String tzid,
+            int stdOffset, String stdDtStart, String stdRRule,
+            int dayOffset, String dayDtStart, String dayRRule) {
+        ICalTimeZone tz = lookupByTZID(tzid);
+        if (tz != null) return tz;
+        ICalTimeZone newTz = new ICalTimeZone(tzid, stdOffset, stdDtStart, stdRRule, dayOffset, dayDtStart, dayRRule);
+        tz = lookupByRule(newTz);
+        return tz;
+    }
+
+    private ICalTimeZone(String tzId,
                     int stdOffset, String stdDtStart, String stdRRule,
                     int dayOffset, String dayDtStart, String dayRRule) {
         super(0, tzId);
-        mHasDaylight = stdOffset != dayOffset;
         mStandardOffset = stdOffset;
         if (stdDtStart != null)
             mDayToStdDtStart = stdDtStart;
@@ -510,17 +548,25 @@ public class ICalTimeZone extends SimpleTimeZone {
         initFromICalData(false);
     }
 
-    public ICalTimeZone(String tzId,
-                        int standardOffset, SimpleOnset standardOnset,
-                        int daylightOffset, SimpleOnset daylightOnset) {
+    public static ICalTimeZone lookup(String tzid,
+                                      int standardOffset, SimpleOnset standardOnset,
+                                      int daylightOffset, SimpleOnset daylightOnset) {
+        ICalTimeZone tz = lookupByTZID(tzid);
+        if (tz != null) return tz;
+        ICalTimeZone newTz = new ICalTimeZone(tzid, standardOffset, standardOnset, daylightOffset, daylightOnset);
+        tz = lookupByRule(newTz);
+        return tz;
+    }
+
+    private ICalTimeZone(String tzId,
+                         int standardOffset, SimpleOnset standardOnset,
+                         int daylightOffset, SimpleOnset daylightOnset) {
         super(0, tzId);
         mStandardOffset = standardOffset;
         mDaylightOffset = daylightOffset;
-        mSameAsUTC = mStandardOffset == mDaylightOffset && mStandardOffset == 0;
         setRawOffset(mStandardOffset);
         if (mDaylightOffset != mStandardOffset &&
             standardOnset != null && daylightOnset != null) {
-            mHasDaylight = true;
             mDayToStdDtStart = toICalDtStart(standardOnset);
             mDayToStdRule    = toICalRRule(standardOnset);
             mStdToDayDtStart = toICalDtStart(daylightOnset);
@@ -543,11 +589,6 @@ public class ICalTimeZone extends SimpleTimeZone {
             setDSTSavings(mDaylightOffset - mStandardOffset);
         }
     }
-
-    public ICalTimeZone(String tzId, int offset) {
-        this(tzId, offset, null, offset, null);
-    }
-    
 
     private static String toICalDtStart(SimpleOnset onset) {
         String hourStr = Integer.toString(onset.getHour() + 100).substring(1);
@@ -689,12 +730,13 @@ public class ICalTimeZone extends SimpleTimeZone {
                 else
                     actualDaylightTime = parseHHMMSS(tstamp);
             }
+            boolean hasDaylight = tz.mStandardOffset != tz.mDaylightOffset;
             if (!tz.useDaylightTime()) {
             	if (onsets[0] != null || onsets[1] != null) {
             		System.out.println("ERROR: Onset dates present in a non-DST TZ.");
                     goodOrBad = false;
                 }
-                System.out.println("  DST supported:   " + tz.mHasDaylight);
+                System.out.println("  DST supported:   " + hasDaylight);
                 System.out.println("  toString:\n" + tz.toString());
             } else {
             	if (onsets[0] == null || onsets[1] == null) {
@@ -702,7 +744,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                     goodOrBad = false;
                 }
                 // Dump TZ detail.
-                System.out.println("  DST supported:   " + tz.mHasDaylight);
+                System.out.println("  DST supported:   " + hasDaylight);
                 System.out.println("  Daylight Offset: " + offsetToHHMM(tz.mDaylightOffset));
                 System.out.println("  Daylight Start:  " + tz.mStdToDayDtStart);
                 System.out.println("  Daylight RRule:  " + tz.mStdToDayRule);
@@ -1034,7 +1076,7 @@ public class ICalTimeZone extends SimpleTimeZone {
 	            standard.addProperty(new ZProperty(ICalTok.RRULE, mDayToStdRule));
         }
 
-        if (mStdToDayDtStart != null && (mHasDaylight || mDayToStdDtStart == null)) {
+        if (mStdToDayDtStart != null && (mStandardOffset != mDaylightOffset || mDayToStdDtStart == null)) {
             ZComponent daylight = new ZComponent(ICalTok.DAYLIGHT);
             vtz.addComponent(daylight);
             
@@ -1073,7 +1115,17 @@ public class ICalTimeZone extends SimpleTimeZone {
 
     public static ICalTimeZone fromVTimeZone(ZComponent comp)
     throws ServiceException {
-        String tzname = comp.getPropVal(ICalTok.TZID, null);
+        return fromVTimeZone(comp, false);
+    }
+
+    static ICalTimeZone fromVTimeZone(ZComponent comp, boolean skipLookup)
+    throws ServiceException {
+        String tzid = comp.getPropVal(ICalTok.TZID, null);
+
+        if (!skipLookup) {
+            ICalTimeZone tz = lookupByTZID(tzid);
+            if (tz != null) return tz;
+        }
 
         ZComponent standard = null;
         ZComponent daylight = null;
@@ -1145,7 +1197,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         	daylight = null;
         }
         if (standard == null)
-        	throw new IllegalArgumentException("VTIMEZONE has neither STANDARD nor DAYLIGHT: TZID=" + tzname);
+        	throw new IllegalArgumentException("VTIMEZONE has neither STANDARD nor DAYLIGHT: TZID=" + tzid);
         
         String stddtStart = null;
         int stdoffsetTime = 0;
@@ -1207,10 +1259,44 @@ public class ICalTimeZone extends SimpleTimeZone {
             }
         }
         
-        ICalTimeZone tz = new ICalTimeZone(tzname, 
+        ICalTimeZone newTz = new ICalTimeZone(tzid, 
                 stdoffsetTime, stddtStart, stdrrule,
                 dayoffsetTime, daydtStart, dayrrule);
 
+        if (!skipLookup)
+            newTz = lookupByRule(newTz);
+        return newTz;
+    }
+
+    // Look up a well-known time zone by TZID.  A cloned object with given TZID is returned,
+    // or null if TZID was unknown.  (No clone if input tzid matches the TZ looked up)
+    private static ICalTimeZone lookupByTZID(String tzid) {
+        if (!DebugConfig.disableCalendarTZMatchByID) {
+            ICalTimeZone match = WellKnownTimeZones.getTimeZoneById(tzid);
+            if (match != null) {
+                if (match.getID().equals(tzid))
+                    return match;
+                else
+                    return match.cloneWithNewTZID(tzid);
+            }
+        }
+        return null;
+    }
+
+    // Lookup a well-known time zone by DST rule.  A cloned object with given time zone's TZID
+    // is returned, or the original time zone object is no match was found.
+    // (No clone if TZID of input tz matches the TZID of the time zone looked up)
+    private static ICalTimeZone lookupByRule(ICalTimeZone tz) {
+        if (!DebugConfig.disableCalendarTZMatchByRule) {
+            ICalTimeZone match = WellKnownTimeZones.getBestMatch(tz);
+            String tzid = tz.getID();
+            if (match != null) {
+                if (match.getID().equals(tzid))
+                    return match;
+                else
+                    return match.cloneWithNewTZID(tzid);
+            }
+        }
         return tz;
     }
 }

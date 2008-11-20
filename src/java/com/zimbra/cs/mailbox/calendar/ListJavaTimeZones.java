@@ -9,7 +9,7 @@ public class ListJavaTimeZones {
 
     public static void main(String[] args) throws Exception {
         String[] tzids = TimeZone.getAvailableIDs();
-        Set<TimeZone> tzset = new TreeSet<TimeZone>(new TZComparator());  // TreeSet for sorting.
+        Set<TimeZone> tzset = new TreeSet<TimeZone>(new TZComparatorByOffset());  // TreeSet for sorting.
         for (String tzid : tzids) {
             tzset.add(TimeZone.getTimeZone(tzid));
         }
@@ -18,7 +18,7 @@ public class ListJavaTimeZones {
         }
     }
 
-    private static class TZComparator implements Comparator<TimeZone> {
+    private static class TZComparatorByOffset implements Comparator<TimeZone> {
 
         public int compare(TimeZone tz1, TimeZone tz2) {
             if (tz1 != null && tz2 != null) {
@@ -62,7 +62,7 @@ public class ListJavaTimeZones {
         String gmtOffset = toGMTOffsetString(tz.getRawOffset());
         boolean isDst = tz.useDaylightTime();
         String clazz = tz.getClass().getSimpleName();
-        String text = String.format("%-20s (%s) - hasDST=%s (%s)", tzid, gmtOffset, (isDst ? "Y" : "N"), clazz);
+        String text = String.format("%-20s (%s) - hasDST=%s (%s:%08x)", tzid, gmtOffset, (isDst ? "Y" : "N"), clazz, tz.hashCode());
         System.out.println(text);
     }
 }

@@ -77,7 +77,7 @@ public class ZDateTime implements ToZJSONObject {
 
     public TimeZone getTimeZone() {
         if (!getHasNoTimeZone()) {
-            return TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
+            return TimeZone.getTimeZone(TZIDMapper.canonicalize(mTimeZoneId));
         } else {
             return TimeZone.getTimeZone("GMT");
         }
@@ -88,7 +88,7 @@ public class ZDateTime implements ToZJSONObject {
         df.setLenient(false);
         TimeZone tz = null;
         if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
-            tz = TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
+            tz = TimeZone.getTimeZone(TZIDMapper.canonicalize(mTimeZoneId));
             df.setTimeZone(tz);
         } else if (mDateTime.indexOf('Z') != -1) {
             df.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -111,7 +111,7 @@ public class ZDateTime implements ToZJSONObject {
         df.setLenient(false);
         TimeZone tz = null;
         if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
-            tz = TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
+            tz = TimeZone.getTimeZone(TZIDMapper.canonicalize(mTimeZoneId));
             df.setTimeZone(tz);
         } else if (mDateTime.indexOf('Z') != -1) {
             df.setTimeZone(TimeZone.getTimeZone("GMT"));

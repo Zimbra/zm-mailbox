@@ -38,6 +38,9 @@ import com.zimbra.cs.service.mail.CalendarUtils;
     <!-- if timezone matches any of the criteria, replace with the timezone in <replace> -->
     <!-- specify one or many criteria; each type can be specified multiple times -->
     <match>
+      <!-- match any/all timezones -->
+      <any/>
+
       <!-- match the timezone's TZID string -->
       <tzid id="[TZID]"/>
 
@@ -64,6 +67,9 @@ import com.zimbra.cs.service.mail.CalendarUtils;
       </dates>
     </match>
 
+    <!-- "touch" the timezone without any data change to force sync clients to refetch -->
+    <touch/>
+    OR
     <!-- timezone matching any of the above criteria is replaced with this timezone -->
     <replace>
       <!-- lookup a well-known timezone from /opt/zimbra/conf/timezones.ics file -->
@@ -85,6 +91,7 @@ public class XmlFixupRules {
     public static final String E_TZFIXUP = "tzfixup";
     private static final String E_FIXUP_RULE = "fixupRule";
     private static final String E_MATCH = "match";
+    private static final String E_ANY = "any";
     private static final String E_TZID = "tzid";
     private static final String E_NON_DST = "nonDst";
     private static final String E_RULES = "rules";
@@ -92,6 +99,7 @@ public class XmlFixupRules {
     private static final String E_STANDARD = "standard";
     private static final String E_DAYLIGHT = "daylight";
     private static final String E_REPLACE = "replace";
+    private static final String E_TOUCH = "touch";
     private static final String E_WELL_KNOWN_TZ = "wellKnownTz";
 
     private static final String A_ID = "id";
@@ -103,12 +111,15 @@ public class XmlFixupRules {
     private static final String A_WKDAY = "wkday";
     private static final String A_MDAY = "mday";
 
-    private static void parseMatchers(Element matchElem, ICalTimeZone replacementTZ, List<Matcher> matchers)
+    private static void parseMatchers(Element matchElem, ICalTimeZone replacementTZ,
+                                      List<Matcher> matchers)
     throws ServiceException {
         for (Iterator<Element> elemIter = matchElem.elementIterator(); elemIter.hasNext(); ) {
             Element elem = elemIter.next();
             String elemName = elem.getName();
-            if (elemName.equals(E_TZID)) {
+            if (elemName.equals(E_ANY)) {
+                matchers.add(new Matcher(replacementTZ));
+            } else if (elemName.equals(E_TZID)) {
                 String tzid = elem.getAttribute(A_ID);
                 matchers.add(new Matcher(tzid, replacementTZ));
             } else if (elemName.equals(E_NON_DST)) {
@@ -149,19 +160,29 @@ public class XmlFixupRules {
     private static void parseFixupRule(Element fixupRuleElem, List<Matcher> matchers)
     throws ServiceException {
         Element matchElem = fixupRuleElem.getElement(E_MATCH);
-        ICalTimeZone replacementTZ = null;
-        Element replaceElem = fixupRuleElem.getElement(E_REPLACE);
-        Element wellKnownTzElem = replaceElem.getOptionalElement(E_WELL_KNOWN_TZ);
-        if (wellKnownTzElem != null) {
-            String tzid = wellKnownTzElem.getAttribute(A_ID);
-            replacementTZ = WellKnownTimeZones.getTimeZoneById(tzid);
-            if (replacementTZ == null)
-                throw ServiceException.FAILURE("Unknown TZID \"" + tzid + "\"", null);
+        Element touchElem = fixupRuleElem.getOptionalElement(E_TOUCH);
+        Element replaceElem = fixupRuleElem.getOptionalElement(E_REPLACE);
+        if (touchElem == null && replaceElem == null)
+            throw ServiceException.FAILURE("Neither <touch> nor <replace> found in <fixupRule>", null);
+        else if (touchElem != null && replaceElem != null)
+            throw ServiceException.FAILURE("<fixupRule> must not have both <touch> and <replace>", null);
+
+        ICalTimeZone replacementTZ;
+        if (touchElem != null) {
+            replacementTZ = null;  // null replacement means touch-only
         } else {
-            Element tzElem = replaceElem.getOptionalElement(MailConstants.E_CAL_TZ);
-            if (tzElem == null)
-                throw ServiceException.FAILURE("Neither <tz> nor <wellKnownTz> found in <replace>", null);
-            replacementTZ = CalendarUtils.parseTzElement(tzElem);
+            Element wellKnownTzElem = replaceElem.getOptionalElement(E_WELL_KNOWN_TZ);
+            if (wellKnownTzElem != null) {
+                String tzid = wellKnownTzElem.getAttribute(A_ID);
+                replacementTZ = WellKnownTimeZones.getTimeZoneById(tzid);
+                if (replacementTZ == null)
+                    throw ServiceException.FAILURE("Unknown TZID \"" + tzid + "\"", null);
+            } else {
+                Element tzElem = replaceElem.getOptionalElement(MailConstants.E_CAL_TZ);
+                if (tzElem == null)
+                    throw ServiceException.FAILURE("Neither <tz> nor <wellKnownTz> found in <replace>", null);
+                replacementTZ = CalendarUtils.parseTzElement(tzElem);
+            }
         }
         parseMatchers(matchElem, replacementTZ, matchers);
     }

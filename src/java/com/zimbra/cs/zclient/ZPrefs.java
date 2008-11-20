@@ -174,7 +174,7 @@ public class ZPrefs {
 
     public String getTimeZoneId() { return get(Provisioning.A_zimbraPrefTimeZoneId); }
 
-    public String getTimeZoneWindowsId() { return TZIDMapper.toWindows(get(Provisioning.A_zimbraPrefTimeZoneId)); }
+    public String getTimeZoneCanonicalId() { return TZIDMapper.canonicalize(get(Provisioning.A_zimbraPrefTimeZoneId)); }
 
     private TimeZone mCachedTimeZone;
     private String mCachedTimeZoneId;
@@ -183,7 +183,7 @@ public class ZPrefs {
         if (mCachedTimeZone == null || (mCachedTimeZoneId != null && !mCachedTimeZoneId.equals(getTimeZoneId()))) {
             mCachedTimeZoneId = getTimeZoneId();
             mCachedTimeZone  = (mCachedTimeZoneId == null) ? null :
-                    TimeZone.getTimeZone(TZIDMapper.toJava(mCachedTimeZoneId));
+                    TimeZone.getTimeZone(TZIDMapper.canonicalize(mCachedTimeZoneId));
             if (mCachedTimeZone == null)
                 mCachedTimeZone = TimeZone.getDefault();
         }

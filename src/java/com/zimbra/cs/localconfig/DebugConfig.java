@@ -125,6 +125,9 @@ public class DebugConfig {
     // chance of OOME when there is a huge result.
     public static boolean disableGalSyncVisitor;
 
+    public static boolean disableCalendarTZMatchByID;
+    public static boolean disableCalendarTZMatchByRule;
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -161,6 +164,9 @@ public class DebugConfig {
         numMailboxGroups = disableMailboxGroups ? Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
         
         disableGalSyncVisitor = booleanValue("debug_disable_gal_sync_visitor", false);
+
+        disableCalendarTZMatchByID = booleanValue("debug_disable_calendar_tz_match_by_id", false);
+        disableCalendarTZMatchByRule = booleanValue("debug_disable_calendar_tz_match_by_rule", false);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {

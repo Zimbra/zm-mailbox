@@ -99,7 +99,7 @@ public class WindowsTimeZoneInformation {
         if (mDaylightDate != null)
             daylightOnset = mDaylightDate.toSimpleOnset();
 
-        return new ICalTimeZone(
+        return ICalTimeZone.lookup(
                 mName,
                 mStandardOffsetMillis,
                 standardOnset,

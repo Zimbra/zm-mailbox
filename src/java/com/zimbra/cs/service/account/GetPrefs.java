@@ -21,9 +21,9 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -86,6 +86,9 @@ public class GetPrefs extends AccountDocumentHandler  {
                 for (int i = 0; i < sa.length; i++)
                     prefs.addKeyValuePair(key, sa[i], AccountConstants.E_PREF, AccountConstants.A_NAME);
             } else {
+                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
+                if (key.equals(Provisioning.A_zimbraPrefTimeZoneId))
+                    value = TZIDMapper.canonicalize((String) value);
                 prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }

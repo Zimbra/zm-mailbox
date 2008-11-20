@@ -60,7 +60,9 @@ public class FixCalendarItemTZ extends RedoableOp {
             for (Entry<String, ICalTimeZone> entry : mReplacementMap.entrySet()) {
                 String tzid = entry.getKey();
                 ICalTimeZone newTZ = entry.getValue();
-                String newTZMeta = newTZ.encodeAsMetadata().toString();
+                String newTZMeta = null;
+                if (newTZ != null)
+                    newTZMeta = newTZ.encodeAsMetadata().toString();
                 out.writeUTF(tzid);
                 out.writeUTF(newTZMeta);
             }
@@ -79,7 +81,9 @@ public class FixCalendarItemTZ extends RedoableOp {
                 String tzid = in.readUTF();
                 String newTZMeta = in.readUTF();
                 try {
-                    ICalTimeZone newTZ = ICalTimeZone.decodeFromMetadata(new Metadata(newTZMeta));
+                    ICalTimeZone newTZ = null;
+                    if (newTZMeta != null)
+                        newTZ = ICalTimeZone.decodeFromMetadata(new Metadata(newTZMeta));
                     mReplacementMap.put(tzid, newTZ);
                 } catch (ServiceException e) {
                     IOException ioe = new IOException("Error deserializing timezone");

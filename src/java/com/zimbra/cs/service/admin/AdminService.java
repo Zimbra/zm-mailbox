@@ -175,7 +175,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
 
         // calendar time zone fixup
-        dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_TIME_ZONE_REQUEST, new FixCalendarTimeZone());
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_TZ_REQUEST, new FixCalendarTZ());
         // calendar item end time fixup
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_END_TIME_REQUEST, new FixCalendarEndTime());

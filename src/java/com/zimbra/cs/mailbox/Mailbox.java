@@ -75,6 +75,7 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
+import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -86,7 +87,6 @@ import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.TimeZoneFixup;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -4223,88 +4223,10 @@ public class Mailbox {
                 calItem = getCalendarItemById(octxt, calItemId);
                 markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
                 success = true;
-            }
-            return numFixed;
-        } finally {
-            endTransaction(success);
-        }
-    }
 
-    /**
-     * Fix up timezone definitions in all appointments/tasks in the mailbox.
-     * @param octxt
-     * @param after
-     * @param country
-     * @return
-     * @throws ServiceException
-     */
-    public int fixAllCalendarItemTimeZone(
-            OperationContext octxt, long after, String country)
-    throws ServiceException {
-        int numFixed = 0;
-        ZimbraLog.calendar.info("Started: timezone fixup in calendar of mailbox " + getId());
-        List[] lists = new List[2];
-        lists[0] = getItemList(octxt, MailItem.TYPE_APPOINTMENT);
-        lists[1] = getItemList(octxt, MailItem.TYPE_TASK);
-        for (List items : lists) {
-            for (Iterator iter = items.iterator(); iter.hasNext(); ) {
-                Object obj = iter.next();
-                if (!(obj instanceof CalendarItem))
-                    continue;
-                CalendarItem calItem = (CalendarItem) obj;
-                long end = calItem.getEndTime();
-                if (end < after)
-                    continue;
-                try {
-                    numFixed += fixCalendarItemTimeZone(octxt, calItem.getId(), after, country);
-                } catch (ServiceException e) {
-                    ZimbraLog.calendar.error(
-                            "Error fixing calendar item " + calItem.getId() +
-                            " in mailbox " + getId() + ": " + e.getMessage(), e);
-                }
-            }
-        }
-        ZimbraLog.calendar.info(
-                "Finished: timezone fixup in calendar of mailbox " +
-                getId() + "; fixed " + numFixed + " timezone entries");
-        return numFixed;
-    }
-
-    /**
-     * Fix up timezone definitions in an appointment/task.  Fixup is
-     * required when governments change the daylight savings policy.
-     * @param octxt
-     * @param calItemId
-     * @param after only look at appointments/tasks that have instances after
-     *              this date/time
-     * @param country two-letter country code; apply fixup specific to this country;
-     *                default is null and means fixup will apply only the unambiguous
-     *                timezone changes
-     * @return number of timezone objects that were modified
-     * @throws ServiceException
-     */
-    public synchronized int fixCalendarItemTimeZone(
-            OperationContext octxt, int calItemId, long after, String country)
-    throws ServiceException {
-        FixCalendarItemTimeZone redoRecorder =
-            new FixCalendarItemTimeZone(getId(), calItemId, after, country);
-        boolean success = false;
-        try {
-            beginTransaction("fixCalendarItemTimeZone", octxt, redoRecorder);
-            CalendarItem calItem = getCalendarItemById(octxt, calItemId);
-            int numFixed = TimeZoneFixup.fixCalendarItem(calItem, country);
-            if (numFixed > 0) {
-                ZimbraLog.calendar.info("Fixed " + numFixed + " timezone entries in calendar item " + calItem.getId());
-                calItem.snapshotRevision();
-                calItem.saveMetadata();
-                // Need to uncache and refetch the item because there are fields
-                // in the appointment/task that reference the old, pre-fix version
-                // of the timezones.  We can either visit them all and update them,
-                // or simply invalidate the calendar item and refetch it.
-                uncacheItem(calItemId);
-                calItem = getCalendarItemById(octxt, calItemId);
-                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
-                success = true;
+                Callback cb = calItem.getCallback();
+                if (cb != null)
+                    cb.modified(calItem);
             }
             return numFixed;
         } finally {

@@ -33,7 +33,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 
 public class TimeZoneFixupRules {
 
-    private static enum MatchBy { TZID, OFFSET, RULES, DATES };
+    private static enum MatchBy { ANY, TZID, OFFSET, RULES, DATES };
 
     public static class Matcher {
         private MatchBy mMatchBy;
@@ -43,6 +43,12 @@ public class TimeZoneFixupRules {
         private SimpleOnset mStandardOnset;
         private SimpleOnset mDaylightOnset;
         private ICalTimeZone mReplacementTZ;
+
+        // match any/all
+        public Matcher(ICalTimeZone replacementTZ) {
+            mMatchBy = MatchBy.ANY;
+            mReplacementTZ = replacementTZ;
+        }
 
         // match on TZID
         public Matcher(String tzid, ICalTimeZone replacementTZ) {
@@ -106,10 +112,13 @@ public class TimeZoneFixupRules {
             }
         }
 
+        public boolean isTouchOnly() { return mReplacementTZ == null; }
         public ICalTimeZone getReplacementTZ() { return mReplacementTZ; }
 
         public boolean matches(ICalTimeZone tz) {
             switch (mMatchBy) {
+            case ANY:
+                return true;
             case TZID:
                 return mTZID.equalsIgnoreCase(tz.getID());
             case OFFSET:
@@ -156,12 +165,19 @@ public class TimeZoneFixupRules {
     private ICalTimeZone fixTZ(ICalTimeZone oldTZ, Map<String, ICalTimeZone> replaced) {
         for (Matcher matcher : mMatchers) {
             if (matcher.matches(oldTZ)) {
-                ICalTimeZone newTZ = matcher.getReplacementTZ();
                 String oldID = oldTZ.getID();
-                ZimbraLog.calendar.info(
-                        "Found replacement timezone: old=" + oldID + ", new=" + newTZ.getID());
-                replaced.put(oldID, newTZ);
-                return newTZ.cloneWithNewTZID(oldID);
+                if (matcher.isTouchOnly()) {
+                    ZimbraLog.calendar.info(
+                            "Touching timezone: " + oldID);
+                    replaced.put(oldID, oldTZ);
+                    return oldTZ;  // return self as replacement
+                } else {
+                    ICalTimeZone newTZ = matcher.getReplacementTZ();
+                    ZimbraLog.calendar.info(
+                            "Found replacement timezone: old=" + oldID + ", new=" + newTZ.getID());
+                    replaced.put(oldID, newTZ);
+                    return newTZ.cloneWithNewTZID(oldID);
+                }
             }
         }
         return null;
@@ -182,11 +198,6 @@ public class TimeZoneFixupRules {
         }
         for (ICalTimeZone newTZ : newTZList) {
             tzmap.add(newTZ);
-            numFixed++;
-        }
-        ICalTimeZone newLocalTZ = fixTZ(tzmap.getLocalTimeZone(), replaced);
-        if (newLocalTZ != null) {
-            tzmap.setLocalTimeZone(newLocalTZ);
             numFixed++;
         }
         return numFixed;
