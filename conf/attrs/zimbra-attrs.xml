@@ -3799,5 +3799,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="768" name="zimbraXMPPComponentClassName" type="string" cardinality="single" requiredIn="xmppComponent" since="future">
   <desc>class name of the XMPP component</desc>
 </attr>
+
+<attr id="769" name="zimbraMailRedirectSetEnvelopeSender" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>If TRUE, the envelope sender of a message redirected by mail filters will be set to the user's address.  
+        If FALSE, the envelope sender will be set to the From address of the redirected message.
+  </desc>
+</attr>
+
     
 </attrs>

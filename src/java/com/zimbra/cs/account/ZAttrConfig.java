@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081119-1050 */
+    /* build: 5.0 pshao 20081119-1822 */
 
     /**
      * Zimbra access control list
@@ -5162,6 +5162,49 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailPurgeSleepInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeSleepInterval, "");
+        return attrs;
+    }
+
+    /**
+     * If TRUE, the envelope sender of a message redirected by mail filters
+     * will be set to the user&#039;s address. If FALSE, the envelope sender
+     * will be set to the From address of the redirected message.
+     *
+     * @return zimbraMailRedirectSetEnvelopeSender, or false if unset
+     */
+    @ZAttr(id=769)
+    public boolean isMailRedirectSetEnvelopeSender() {
+        return getBooleanAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, false);
+    }
+
+    /**
+     * If TRUE, the envelope sender of a message redirected by mail filters
+     * will be set to the user&#039;s address. If FALSE, the envelope sender
+     * will be set to the From address of the redirected message.
+     *
+     * @param zimbraMailRedirectSetEnvelopeSender new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=769)
+    public Map<String,Object> setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, Boolean.toString(zimbraMailRedirectSetEnvelopeSender));
+        return attrs;
+    }
+
+    /**
+     * If TRUE, the envelope sender of a message redirected by mail filters
+     * will be set to the user&#039;s address. If FALSE, the envelope sender
+     * will be set to the From address of the redirected message.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=769)
+    public Map<String,Object> unsetMailRedirectSetEnvelopeSender(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, "");
         return attrs;
     }
 
