@@ -59,12 +59,11 @@ public class ZimbraLocationManager implements LocationManager {
     public List<ComponentIdentifier> getAllServerComponents() throws ServiceException {
         List<ComponentIdentifier> toRet = new ArrayList<ComponentIdentifier>();
         
-        String serverId = Provisioning.getInstance().getLocalServer().getId();
         for (XMPPComponent component : getCloudComponents()) {
             try {
                 toRet.add(fromXMPPComponent(component));
             } catch (ServiceException ex) {
-                ZimbraLog.im.warn("Exception in XMPP Component configuration data for: "+component, ex);
+                ZimbraLog.im.warn("XMPP Component configuration invalid for: "+component+", disabled", ex);
             }
         }
         return toRet;
@@ -79,7 +78,7 @@ public class ZimbraLocationManager implements LocationManager {
                 try {
                     toRet.add(fromXMPPComponent(component));
                 } catch (ServiceException ex) {
-                    ZimbraLog.im.warn("Exception in XMPP Component configuration data for: "+component, ex);
+                    ZimbraLog.im.warn("XMPP Component configuration invalid for: "+component+", disabled", ex);
                 }
             }
         }
@@ -96,7 +95,7 @@ public class ZimbraLocationManager implements LocationManager {
                     try {
                         toRet.add(fromXMPPComponent(component));
                     } catch (ServiceException ex) {
-                        ZimbraLog.im.warn("Exception in XMPP Component configuration data for: "+component, ex);
+                        ZimbraLog.im.warn("XMPP Component configuration invalid for: "+component+", disabled", ex);
                     }
                 }
             }
@@ -115,7 +114,6 @@ public class ZimbraLocationManager implements LocationManager {
                     return true;
             }
         } catch (ServiceException ex) {
-            ex.printStackTrace();
             ZimbraLog.im.warn("Ignoring exception in ZimbraLocationManager.isCloudComponent("+domain+")", ex);
         }
         return false;

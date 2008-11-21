@@ -38,7 +38,12 @@ public class XMPPComponent extends NamedEntry implements Comparable {
     
     public String getShortName() throws ServiceException {
         String name = getName();
-        String domainName = getDomain().getName();
+        Domain d = getDomain();
+        if (d == null) {
+            throw ServiceException.FAILURE("Invalid configuration data: XMPPComponent name, \""+
+                                           name+"\" points to nonexistent domain: "+getDomainId(), null);
+        }
+        String domainName = d.getName();
         if (!name.endsWith(domainName)) {
             throw ServiceException.FAILURE("Invalid configuration data: XMPPComponent name, \""+
                                            name+"\" must be a subdomain of domain \""+domainName+
@@ -84,12 +89,14 @@ public class XMPPComponent extends NamedEntry implements Comparable {
         parts.add("domainId="+getDomainId());
         try {
             Domain domain = getDomain();
-            parts.add("domainName="+domain.getName());
+            if (domain != null)
+                parts.add("domainName="+domain.getName());
         } catch (ServiceException e) {}
         parts.add("serverId="+getServerId());
         try {
             Server server = getServer();
-            parts.add("serverName="+server.getName());
+            if (server != null)
+                parts.add("serverName="+server.getName());
         } catch (ServiceException e) {}
         
         StringBuilder featureStr = new StringBuilder();
