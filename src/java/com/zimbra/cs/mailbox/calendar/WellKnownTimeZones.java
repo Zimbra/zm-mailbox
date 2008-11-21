@@ -270,8 +270,8 @@ public class WellKnownTimeZones {
 
         ICalTimeZone iPhonePacific = ICalTimeZone.lookup(
                 "GMT-08.00/-07.00",
-                -28800000, "19710101T020000", "FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO",
-                -25200000, "19710101T020000", "FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO");
+                -28800000, "19710101T020000", "FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO", "PST",
+                -25200000, "19710101T020000", "FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO", "PDT");
         System.out.println("iPhone Pacific: " + iPhonePacific.getID());
         ICalTimeZone primaryPacific = sOffsetRuleMatches.get(iPhonePacific);
         System.out.println("Primary Pacific: " + primaryPacific.getID());

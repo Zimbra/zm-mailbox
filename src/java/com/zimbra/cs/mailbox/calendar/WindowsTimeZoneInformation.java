@@ -30,6 +30,8 @@ public class WindowsTimeZoneInformation {
     // daylight name.  There is only one name for a time zone.  So we
     // don't map Windows fields StandardName[32] and DaylightName[32].
     private String mName;
+    private String mStandardName;  // Windows field StandardName[32]
+    private String mDaylightName;  // Windows field DaylightName[32]
 
     private int mBiasMins;
     private WindowsSystemTime mStandardDate;
@@ -45,8 +47,10 @@ public class WindowsTimeZoneInformation {
                                       int biasMins,
                                       WindowsSystemTime standardDate,
                                       int standardBiasMins,
+                                      String standardName,
                                       WindowsSystemTime daylightDate,
-                                      int daylightBiasMins) {
+                                      int daylightBiasMins,
+                                      String daylightName) {
         mName             = name;
         mBiasMins         = biasMins;
         mStandardDate     = standardDate;
@@ -56,6 +60,9 @@ public class WindowsTimeZoneInformation {
 
         mStandardOffsetMillis = -1 * (mBiasMins + mStandardBiasMins) * 60 * 1000;
         mDaylightOffsetMillis = -1 * (mBiasMins + mDaylightBiasMins) * 60 * 1000;
+
+        mStandardName = standardName;
+        mDaylightName = daylightName;
     }
 
     /**
@@ -74,19 +81,23 @@ public class WindowsTimeZoneInformation {
     public WindowsSystemTime getStandardDate() { return mStandardDate; }
     public int getStandardBiasMins()           { return mStandardBiasMins; }
     public int getStandardOffset()             { return mStandardOffsetMillis; }
+    public String getStandardName()            { return mStandardName; }
     public WindowsSystemTime getDaylightDate() { return mDaylightDate; }
     public int getDaylightBiasMins()           { return mDaylightBiasMins; }
     public int getDaylightOffset()             { return mDaylightOffsetMillis; }
+    public String getDaylightName()            { return mDaylightName; }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("TIME_ZONE_INFORMATION {\n");
         sb.append("    Zone Name    = ").append(mName).append("\n");
         sb.append("    Bias         = ").append(mBiasMins).append("\n");
         sb.append("    StandardDate = ").append(mStandardDate).append("\n");
         sb.append("    StandardBias = ").append(mStandardBiasMins).append("\n");
+        sb.append("    StandardName = ").append(mStandardName).append("\n");
         sb.append("    DaylightDate = ").append(mDaylightDate).append("\n");
         sb.append("    DaylightBias = ").append(mDaylightBiasMins).append("\n");
+        sb.append("    DaylightName = ").append(mDaylightName).append("\n");
         sb.append("}");
         return sb.toString();
     }
@@ -103,8 +114,10 @@ public class WindowsTimeZoneInformation {
                 mName,
                 mStandardOffsetMillis,
                 standardOnset,
+                mStandardName,
                 mDaylightOffsetMillis,
-                daylightOnset);
+                daylightOnset,
+                mDaylightName);
     }
 
     public static WindowsTimeZoneInformation fromICal(ICalTimeZone icalTz) {
@@ -119,7 +132,7 @@ public class WindowsTimeZoneInformation {
         int daylightBias = -1 * icalTz.getDaylightOffset() - bias;
         return new WindowsTimeZoneInformation(
                 icalTz.getID(), bias / 60 / 1000,
-                standardDate, 0,
-                daylightDate, daylightBias / 60 / 1000);
+                standardDate, 0, icalTz.getStandardTzname(),
+                daylightDate, daylightBias / 60 / 1000, icalTz.getDaylightTzname());
     }
 }

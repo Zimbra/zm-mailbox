@@ -637,7 +637,10 @@ public class CalendarUtils {
             daylightOnset = parseSimpleOnset(daylight);
         }
 
-        return ICalTimeZone.lookup(tzid, standardOffset, standardOnset, daylightOffset, daylightOnset);
+        String standardTzname = tzElem.getAttribute(MailConstants.A_CAL_TZ_STDNAME, null);
+        String daylightTzname = tzElem.getAttribute(MailConstants.A_CAL_TZ_DAYNAME, null);
+
+        return ICalTimeZone.lookup(tzid, standardOffset, standardOnset, standardTzname, daylightOffset, daylightOnset, daylightTzname);
     }
 
     private static SimpleOnset parseSimpleOnset(Element element)

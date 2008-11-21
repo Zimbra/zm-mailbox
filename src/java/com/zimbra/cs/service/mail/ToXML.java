@@ -1182,12 +1182,14 @@ public class ToXML {
             Element e = parent.addElement(MailConstants.E_CAL_TZ);
             e.addAttribute(MailConstants.A_ID, tz.getID());
             e.addAttribute(MailConstants.A_CAL_TZ_STDOFFSET, tz.getStandardOffset() / 60 / 1000);
+            e.addAttribute(MailConstants.A_CAL_TZ_STDNAME, tz.getStandardTzname());
 
             if (tz.useDaylightTime()) {
                 SimpleOnset standard = tz.getStandardOnset();
                 SimpleOnset daylight = tz.getDaylightOnset();
                 if (standard != null && daylight != null) {
                     e.addAttribute(MailConstants.A_CAL_TZ_DAYOFFSET, tz.getDaylightOffset() / 60 / 1000);
+                    e.addAttribute(MailConstants.A_CAL_TZ_DAYNAME, tz.getDaylightTzname());
 
                     Element std = e.addElement(MailConstants.E_CAL_TZ_STANDARD);
                     int standardWeek = standard.getWeek();

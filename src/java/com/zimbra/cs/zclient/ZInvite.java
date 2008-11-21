@@ -697,6 +697,8 @@ public class ZInvite implements ToZJSONObject {
         private long mDaylightSavingsOffset;
         private ZTransitionRule mStandard;
         private ZTransitionRule mDaylight;
+        private String mStandardTzname;
+        private String mDaylightTzname;
 
         public ZTimeZone() {
 
@@ -704,6 +706,8 @@ public class ZInvite implements ToZJSONObject {
         
         public ZTimeZone(Element e) throws ServiceException {
             mId = e.getAttribute(MailConstants.A_ID);
+            mStandardTzname = e.getAttribute(MailConstants.A_CAL_TZ_STDNAME, null);
+            mDaylightTzname = e.getAttribute(MailConstants.A_CAL_TZ_DAYNAME, null);
             mStandardOffset = e.getAttributeLong(MailConstants.A_CAL_TZ_STDOFFSET, 0);
             mDaylightSavingsOffset = e.getAttributeLong(MailConstants.A_CAL_TZ_DAYOFFSET, -1);
             Element standardEl = e.getOptionalElement(MailConstants.E_CAL_TZ_STANDARD);
@@ -717,6 +721,8 @@ public class ZInvite implements ToZJSONObject {
         public Element toElement(Element parent) {
             Element tzEl = parent.addElement(MailConstants.E_CAL_TZ);
             tzEl.addAttribute(MailConstants.A_ID, mId);
+            tzEl.addAttribute(MailConstants.A_CAL_TZ_STDNAME, mStandardTzname);
+            tzEl.addAttribute(MailConstants.A_CAL_TZ_DAYNAME, mDaylightTzname);
             tzEl.addAttribute(MailConstants.A_CAL_TZ_STDOFFSET, mStandardOffset);
             if (mDaylightSavingsOffset != -1)
                 tzEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFFSET, mDaylightSavingsOffset);
@@ -745,6 +751,14 @@ public class ZInvite implements ToZJSONObject {
             return mId;
         }
 
+        public String getStandardTzname() {
+            return mStandardTzname;
+        }
+
+        public String getDaylightTzname() {
+            return mDaylightTzname;
+        }
+
         /**
          *
          * @return rule, or NULL is no DST
@@ -764,6 +778,14 @@ public class ZInvite implements ToZJSONObject {
 
         public void setId(String id) {
             mId = id;
+        }
+
+        public void setStandardTzname(String name) {
+            mStandardTzname = name;
+        }
+
+        public void setDaylightTzname(String name) {
+            mDaylightTzname = name;
         }
 
         public void setStandardOffset(long standardOffset) {
@@ -789,6 +811,8 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("daylightOffset", mDaylightSavingsOffset);
             zjo.put("standardRule", mStandard);
             zjo.put("daylightRule", mDaylight);
+            zjo.put("standardTzname", mStandardTzname);
+            zjo.put("daylightTzname", mDaylightTzname);
             return zjo;
         }
 

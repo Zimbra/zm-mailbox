@@ -58,9 +58,11 @@
                                     // here, but all custom time zones must be defined before being
                                     // referenced.
        <tz
-           id="timezonename"        // this name is referenced in various DATETIME data in the rest of <inv>
+           id="tzid"                // this name is referenced in various DATETIME data in the rest of <inv>
            stdoff="<minutes>"       // offset from UTC in standard time; local = UTC + offset
            [dayoff="<minutes>"]     // offset from UTC in daylight time; present only if DST is used
+           [stdname="abbrev"]       // abbreviated name for standard time (e.g. PST)
+           [dayname="abbrev"]       // abbreviated name for daylight time (e.g. PDT)
        >
            [                        // If daylight savings time is not used, <standard> and <daylight> must be
                                     // omitted.  If DST is used, both <standard> and <daylight> must be present.
