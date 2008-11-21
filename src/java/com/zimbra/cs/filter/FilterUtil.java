@@ -25,6 +25,8 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -319,11 +321,11 @@ public class FilterUtil {
 
     public static void redirect(Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException, MessagingException {
-        MimeMessage outgoingMsg = null;
+        SMTPMessage outgoingMsg = null;
         
         try {
             if (!isMailLoop(sourceMbox, msg)) {
-                outgoingMsg = new MimeMessage(msg);
+                outgoingMsg = new SMTPMessage(msg);
                 outgoingMsg.setHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
                 outgoingMsg.saveChanges();
             } else {
@@ -333,7 +335,7 @@ public class FilterUtil {
         } catch (MessagingException e) {
             try {
                 // Workaround for bug 16525
-                outgoingMsg = new MimeMessage(msg) {
+                outgoingMsg = new SMTPMessage(msg) {
                     @Override protected void updateHeaders() throws MessagingException {
                         setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
                     }
@@ -344,6 +346,11 @@ public class FilterUtil {
             }
         }
         
+        if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
+            // Set envelope sender to the account name (bug 31309).
+            Account account = sourceMbox.getAccount();
+            outgoingMsg.setEnvelopeFrom(account.getName());
+        }
         Transport.send(outgoingMsg, new javax.mail.Address[] { new InternetAddress(destinationAddress) });
     }
     
