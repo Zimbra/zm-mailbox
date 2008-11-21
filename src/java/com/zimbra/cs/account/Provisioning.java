@@ -1411,14 +1411,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract Identity get(Account account, IdentityBy keyType, String key) throws ServiceException;
 
-    public Identity getIdentityByName(Account account, String name) throws ServiceException {
-        return get(account, IdentityBy.name, name);
-    }
-
-    public Identity getIdentityById(Account account, String id) throws ServiceException {
-        return get(account, IdentityBy.id, id);
-    }
-
     // signatures
     public static enum SignatureBy {
 
@@ -1442,14 +1434,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<Signature> getAllSignatures(Account account) throws ServiceException;
 
     public abstract Signature get(Account account, SignatureBy keyType, String key) throws ServiceException;
-
-    public Signature getSignatureByName(Account account, String key) throws ServiceException {
-        return get(account, SignatureBy.name, key);
-    }
-
-    public Signature getSignatureById(Account account, String key) throws ServiceException {
-        return get(account, SignatureBy.id, key);
-    }
 
     // data sources
     public static enum DataSourceBy {
@@ -1482,14 +1466,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException if the key is malformed
      */
     public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
-
-    public DataSource getDataSourceByName(Account account, String key) throws ServiceException {
-        return get(account, DataSourceBy.name, key);
-    }
-
-    public DataSource getDataSourceById(Account account, String key) throws ServiceException {
-        return get(account, DataSourceBy.id, key);
-    }
 
     public static enum XMPPComponentBy {
 
