@@ -603,6 +603,8 @@ public class MailConstants {
 
     public static final String A_CAL_TZ_STDOFFSET = "stdoff";
     public static final String A_CAL_TZ_DAYOFFSET = "dayoff";
+    public static final String A_CAL_TZ_STDNAME = "stdname";
+    public static final String A_CAL_TZ_DAYNAME = "dayname";
     public static final String A_CAL_TZ_WEEK = "week";
     public static final String A_CAL_TZ_DAYOFWEEK = "wkday";
     public static final String A_CAL_TZ_MONTH = "mon";
