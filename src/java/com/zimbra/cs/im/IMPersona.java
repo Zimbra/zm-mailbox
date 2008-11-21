@@ -1398,14 +1398,14 @@ public class IMPersona extends ClassLogger {
                 IMGatewayStateNotification not = 
                     new IMGatewayStateNotification(serviceName, state, delay);
                 postIMNotification(not);
-                // return; FIXME Tim: leave the text message until the client supports the notifications
+                return;
             }
             Element otherLocation = xe.element("otherLocation");
             if (otherLocation != null) {
                 IMOtherLocationNotification not = 
                     new IMOtherLocationNotification(serviceName,username);
                 postIMNotification(not);
-                // return; FIXME Tim: leave the text message until the client supports the notifications
+                return;
             }
         }
         
