@@ -97,6 +97,8 @@ public abstract class DocumentHandler {
     public void postHandle(Object userObj) { }
     
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
+    
+    public void postProxy(Element request, Element response, Map<String, Object> context) throws ServiceException {}
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
 
@@ -433,6 +435,8 @@ public abstract class DocumentHandler {
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
             response = proxy.dispatch(request, zsc).detach();
+            
+            postProxy(request, response, context);
         }
         return response;
     }
