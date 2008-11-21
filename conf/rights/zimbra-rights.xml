@@ -54,27 +54,32 @@
            Required and can have only one value.
     
     2. For getAttrs/setAttrs rights:
-           Optional and can have multiple values separated by comma.
+           (A) if <attrs> is not present, it means all attributes on the target type.
+               {target-type} must contain exactly one target type.   
+            
+           (B) if <attrs> is present, {target-type} is optional and can have multiple 
+               values separated by comma.
            
-           e.g. If a get/setAttrs right has:
-                    account/cos attrs A, B, C
-	                domain attrs X, Y, Z
-	                server attrs M, N
-	                account/cos/domain/server attrs P, Q
-           
-		   - If <targetType> is set:
-		         The right is only effective when granted on one of the specified entry types.
-		         e.g.
-		         - if <targetType> contains "account" only, then the right is effective 
-		           only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
-
-		         -  if <targetType> contains "account,cos,server" then the right is effective 
-		            for: account attrs A, B, C, P, Q
-		                 cos attrs A, B, C, P, Q
-		                 server attrs P, Q
-  
-           - If <targetType> is omitted:
-                 It means the right is not affiliated with a particular target type.  
+	           e.g. If a get/setAttrs right has:
+	                    account/cos attrs A, B, C
+		                domain attrs X, Y, Z
+		                server attrs M, N
+		                account/cos/domain/server attrs P, Q
+	           
+			   - If <targetType> is set:
+			         The right is only effective when granted on one of the specified entry types.
+			         e.g.
+			         - if <targetType> contains "account" only, then the right is effective 
+			           only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
+	
+			         -  if <targetType> contains "account,cos,server" then the right is effective 
+			            for: account attrs A, B, C, P, Q
+			                 cos attrs A, B, C, P, Q
+			                 server attrs P, Q
+	  
+	           - If <targetType> is omitted:
+	                 It means the right is not affiliated with a particular target type and is 
+	                 applicable to all target types.  
     
     3. For combo rights:
            Not allowed.
@@ -85,6 +90,9 @@
     e.g.  account attrs A, B, C
           domain attrs X, Y, Z
           server attrs M, N
+          
+    If <attrs> is not present, it means all attributes on the target type.
+     
                   
 {l}: 
     If the attribute can be modified to any value or within inherited limit.
