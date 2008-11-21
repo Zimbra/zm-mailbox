@@ -30,12 +30,10 @@ import org.dom4j.Element;
 import org.jivesoftware.wildfire.ClientSession;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.AuthToken;
-import org.jivesoftware.wildfire.forms.spi.XDataFormImpl;
 import org.jivesoftware.wildfire.group.Group;
 import org.jivesoftware.wildfire.group.GroupManager;
 import org.jivesoftware.wildfire.group.GroupNotFoundException;
 import org.jivesoftware.wildfire.roster.RosterItem;
-import org.jivesoftware.wildfire.user.User;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -45,7 +43,6 @@ import org.xmpp.packet.Roster;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.IQ;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.im.IMBuddy.SubType;
 import com.zimbra.cs.im.IMChat.MucStatusCode;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
@@ -69,9 +66,6 @@ public class IMPersona extends ClassLogger {
     private static final String FN_ADDRESS = "a";
     private static final String FN_INTEROP_SERVICE_PREFIX  = "isvc-";
 
-    //
-    // When to trigger this?  
-    //    
     public static void deleteIMPersona(String acctName) {
         try {
             if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
@@ -816,7 +810,7 @@ public class IMPersona extends ClassLogger {
                 // roster
                 IMRosterNotification rosterNot = new IMRosterNotification();
                 for (IMSubscribedNotification not: mRoster.values()) {
-                    if (not.isSubscribedTo())
+//                    if (not.isSubscribedTo())
                         rosterNot.addEntry(not);
                 }
                 postIMNotification(rosterNot, s);
@@ -1559,29 +1553,25 @@ public class IMPersona extends ClassLogger {
                     IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
                     Roster.Subscription subscript = item.getSubscription();
                     
-                    // do we need to tell the client about FROM subs?  We do need to tell the
-                    // client if the sub is unsubscribed, but not in the case of a roster SET
-                    if (roster.getType() == IQ.Type.set || subscript == Roster.Subscription.both || subscript == Roster.Subscription.to) {
-                        boolean isTo = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to);
-                        boolean isFrom = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.from);
-                        
-                        IMSubscribedNotification not = IMSubscribedNotification
-                        .create(
+                    boolean isTo = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to);
+                    boolean isFrom = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.from);
+                    
+                    IMSubscribedNotification not = IMSubscribedNotification
+                    .create(
                             buddyAddr,
                             item.getName(),
                             item.getGroups(),
                             isTo,
                             isFrom,
                             item.getAsk());
-                        
-                        if (subscript == Roster.Subscription.remove)
-                            mRoster.remove(buddyAddr);
-                        else
-                            mRoster.put(buddyAddr, not);
-                        
-                        if (!isResult) {
-                            postIMNotification(not);
-                        }
+                    
+                    if (subscript == Roster.Subscription.remove)
+                        mRoster.remove(buddyAddr);
+                    else
+                        mRoster.put(buddyAddr, not);
+                    
+                    if (!isResult) {
+                        postIMNotification(not);
                     }
                 }
                 if (isResult) {
