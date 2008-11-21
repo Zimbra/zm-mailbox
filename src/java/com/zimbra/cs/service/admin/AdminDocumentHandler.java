@@ -28,15 +28,13 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.DomainAccessManager;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
@@ -256,7 +254,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     protected boolean checkDomainRight(ZimbraSoapContext zsc, String domainName, AdminRight right) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         
-        if (am instanceof DomainAccessManager) {
+        if (!(am instanceof RoleAccessManager)) {
             return canAccessEmail(zsc, domainName);
         } else {
             Domain domain = getDomainFromEmailAddr(domainName);
