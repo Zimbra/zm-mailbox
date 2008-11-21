@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SetUtil;
 
 /**
  * @author schemers
@@ -185,5 +186,34 @@ public abstract class AttributeCallback {
             throw ServiceException.INVALID_REQUEST("value not a String or String[]", null);
 
         return list;
+    }
+    
+    protected Set<String> newValuesToBe(MultiValueMod mod, Entry entry, String attrName) {
+        Set<String> newValues = null; 
+        if (entry != null) {
+            Set<String> curValues = entry.getMultiAttrSet(attrName);
+    
+            if (mod == null) {
+                newValues = curValues;
+            } else {
+                if (mod.adding()) {
+                    newValues = new HashSet<String>();
+                    SetUtil.union(newValues, curValues, mod.valuesSet());
+                } else if (mod.removing()) {
+                    newValues = SetUtil.subtract(curValues, mod.valuesSet());
+                } else if (mod.deleting()) {
+                    newValues = new HashSet<String>();
+                } else {
+                    newValues = mod.valuesSet();
+                }
+            }
+        } else {
+            if (mod == null)
+                newValues = new HashSet<String>();
+            else
+                newValues = mod.valuesSet();
+        }
+        
+        return newValues;
     }
 }

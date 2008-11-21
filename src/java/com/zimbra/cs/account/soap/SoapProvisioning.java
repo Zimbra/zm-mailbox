@@ -1915,17 +1915,24 @@ public class SoapProvisioning extends Provisioning {
     
     @Override
     public Right createRight(String name, Map<String, Object> attrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_RIGHT_REQUEST);
+        RightCommand.attrsToXML(name, attrs, req);;
+        return new SoapRight(invoke(req).getElement(AdminConstants.E_RIGHT), this);
     }
     
     @Override
-    public void deleteRight(String rightName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+    public void deleteRight(String zimbraId) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.DELETE_RIGHT_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
+        Element resp = invoke(req);
     }
     
     @Override
     public void renameRight(String zimbraId, String newName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        XMLElement req = new XMLElement(AdminConstants.RENAME_RIGHT_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
+        req.addElement(AdminConstants.E_NEW_NAME).setText(newName);
+        invoke(req);
     }
     
     @Override

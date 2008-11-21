@@ -3,7 +3,6 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -34,23 +33,26 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 
+
 public enum TargetType {
-    account(true),
-    resource(true),
-    distributionlist(true),
-    domain(true),
-    cos(true),
-    right(true),
-    server(true),
-    xmppcomponent(true),
-    zimlet(true),
-    config(false),
-    global(false);
+    account(true,           AttributeClass.account),
+    resource(true,          AttributeClass.calendarResource),
+    distributionlist(true,  AttributeClass.distributionList),
+    domain(true,            AttributeClass.domain),
+    cos(true,               AttributeClass.cos),
+    right(true,             AttributeClass.right),
+    server(true,            AttributeClass.server),
+    xmppcomponent(true,     AttributeClass.xmppComponent),
+    zimlet(true,            AttributeClass.zimletEntry),
+    config(false,           AttributeClass.globalConfig),
+    global(false,           AttributeClass.aclTarget);
     
     private boolean mNeedsTargetIdentity;
+    private AttributeClass mAttrClass;
     
-    TargetType(boolean NeedsTargetIdentity) {
+    TargetType(boolean NeedsTargetIdentity, AttributeClass attrClass) {
         mNeedsTargetIdentity = NeedsTargetIdentity;
+        mAttrClass = attrClass;
     }
     
     public static TargetType fromString(String s) throws ServiceException {
@@ -67,6 +69,10 @@ public enum TargetType {
     
     public boolean needsTargetIdentity() {
         return mNeedsTargetIdentity;
+    }
+    
+    AttributeClass getAttributeClass() {
+        return mAttrClass;
     }
     
     /**
@@ -198,7 +204,7 @@ public enum TargetType {
         else
             throw ServiceException.FAILURE("internal error", null);
     }
-    
+
     
     private interface ExpandTargetVisitor {
         /**

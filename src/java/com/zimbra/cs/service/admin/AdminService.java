@@ -31,6 +31,8 @@ import com.zimbra.soap.DocumentService;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.dom4j.QName;
+
 /**
  * @author schemers
  */
@@ -199,7 +201,14 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_FREE_BUSY_QUEUE_INFO_REQUEST, new GetFreeBusyQueueInfo());
         dispatcher.registerHandler(AdminConstants.PUSH_FREE_BUSY_REQUEST, new PushFreeBusy());
         
-        // permissions
+        // rights
+        dispatcher.registerHandler(AdminConstants.GET_RIGHT_REQUEST, new GetRight());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_RIGHT_REQUEST, new GetAllRights());
+        dispatcher.registerHandler(AdminConstants.CREATE_RIGHT_REQUEST, new CreateRight());
+        dispatcher.registerHandler(AdminConstants.DELETE_RIGHT_REQUEST, new DeleteRight());
+        dispatcher.registerHandler(AdminConstants.RENAME_RIGHT_REQUEST, new RenameRight());
+        dispatcher.registerHandler(AdminConstants.MODIFY_RIGHT_REQUEST, new ModifyRight());
+        dispatcher.registerHandler(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST, new GetEffectiveRights());
         dispatcher.registerHandler(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST, new GetEffectiveRights());
         dispatcher.registerHandler(AdminConstants.GET_GRANTS_REQUEST, new GetGrants());
         dispatcher.registerHandler(AdminConstants.CHECK_RIGHT_REQUEST, new CheckRight());

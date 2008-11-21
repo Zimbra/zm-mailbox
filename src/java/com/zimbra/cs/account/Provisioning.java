@@ -1563,7 +1563,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public abstract List<Right> getAllRights()  throws ServiceException;
     
-    public abstract Right createRight(String name, Map<String, Object> attrs) throws ServiceException;
+    /*
+    public abstract Right createRight(String name, String desc, String rightType, Set<String> targetTypes, 
+                                      Set<String> attrs, Set<String> rights) throws ServiceException;
+    */
+    public abstract Right createRight(String name, Map<String, Object> rightAttrs) throws ServiceException;
     
     public abstract void deleteRight(String rightName) throws ServiceException;
     

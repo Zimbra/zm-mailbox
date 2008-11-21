@@ -65,7 +65,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -5470,11 +5472,15 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public Right createRight(String name, Map<String, Object> rightAttrs) throws ServiceException {
-        // the naming attribute cn is case-insensitrive, but we want to preserve the case when a right is created
+        // the naming attribute cn is case-insensitive, but we want to preserve the case when a right is created
         // name = name.toLowerCase().trim();
-
+        
+        // check the right name is not a system or existing custom defined right
+        if (RightManager.getInstance().rightExists(name))
+            throw AccountServiceException.RIGHT_EXISTS(name);
+        
         HashMap attrManagerContext = new HashMap();
-        AttributeManager.getInstance().preModify(rightAttrs, null, attrManagerContext, true, true);
+        AttributeManager.getInstance().preModify(rightAttrs, null, attrManagerContext, true, false); // do not check immutable
 
         ZimbraLdapContext zlc = null;
         try {
@@ -5495,7 +5501,10 @@ public class LdapProvisioning extends Provisioning {
 
             Right right = getRightById(zimbraIdStr, zlc);
             AttributeManager.getInstance().postModify(rightAttrs, right, attrManagerContext, true);
-            return right;
+            
+            // add it to RightManager
+            RightManager.getInstance().addCustomRight(right);
+            return right; //  return the LDAP Right
 
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.RIGHT_EXISTS(name);
@@ -5509,29 +5518,55 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public void deleteRight(String zimbraId) throws ServiceException {
-        LdapRight c = (LdapRight) get(RightBy.id, zimbraId);
-        if (c == null)
+        
+        LdapRight r = (LdapRight) get(RightBy.id, zimbraId);
+        if (r == null)
             throw AccountServiceException.NO_SUCH_RIGHT(zimbraId);
+        
+        // delete it from RightManager
+        RightManager.getInstance().deleteCustomRight(r.getName());
+        
 
         // TODO: should we go through all grants that contain this right? probably not
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
-            zlc.unbindEntry(c.getDN());
-            sRightCache.remove(c);
+            zlc.unbindEntry(r.getDN());
+            sRightCache.remove(r);
+            
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge right: "+zimbraId, e);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
     }
+    
+    @Override
+    public void renameRight(String zimbraId, String newName) throws ServiceException {
+        
+        /*
+         * TODO, need to handle 
+         * - fix all custom combo rights containing this right
+         * - fix all grants containing this right 
+         * 
+         * We deal with right name everywhere, not id, except for deleteRight and modifyRight
+         */
+        throw ServiceException.FAILURE("not supported", null);
+    }
 
+    
+    /*
     public void renameRight(String zimbraId, String newName) throws ServiceException {
         LdapRight right = (LdapRight) get(RightBy.id, zimbraId);
         if (right == null)
             throw AccountServiceException.NO_SUCH_RIGHT(zimbraId);
 
-       newName = newName.toLowerCase().trim();
+        // newName = newName.toLowerCase().trim();
+        
+        // check the right name is not a system defined right
+        if (ComboRight.validateRight(newName, RightManager.getInstance()) != null)
+            throw ServiceException.INVALID_REQUEST("right name " + newName + " is a system defined right" , null);
+        
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
@@ -5547,6 +5582,7 @@ public class LdapProvisioning extends Provisioning {
             ZimbraLdapContext.closeContext(zlc);
         }
     }
+    */
     
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,

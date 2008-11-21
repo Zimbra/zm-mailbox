@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081120-1034 */
+    /* build: 5.0 pshao 20081120-1800 */
 
     /**
      * Zimbra access control list
@@ -8680,6 +8680,8 @@ public class ZAttrConfig extends Entry {
      * be set to the From address of the redirected message.
      *
      * @return zimbraMailRedirectSetEnvelopeSender, or false if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public boolean isMailRedirectSetEnvelopeSender() {
@@ -8694,6 +8696,8 @@ public class ZAttrConfig extends Entry {
      * @param zimbraMailRedirectSetEnvelopeSender new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public Map<String,Object> setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender, Map<String,Object> attrs) {
@@ -8709,6 +8713,8 @@ public class ZAttrConfig extends Entry {
      *
      * @param zimbraMailRedirectSetEnvelopeSender new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public void setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender) throws com.zimbra.common.service.ServiceException {
@@ -8724,6 +8730,8 @@ public class ZAttrConfig extends Entry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public Map<String,Object> unsetMailRedirectSetEnvelopeSender(Map<String,Object> attrs) {
@@ -8738,6 +8746,8 @@ public class ZAttrConfig extends Entry {
      * be set to the From address of the redirected message.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public void unsetMailRedirectSetEnvelopeSender() throws com.zimbra.common.service.ServiceException {

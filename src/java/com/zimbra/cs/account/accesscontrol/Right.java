@@ -5,7 +5,7 @@ import com.zimbra.common.service.ServiceException;
 
 public abstract class Right {
     
-    enum RightType {
+    public enum RightType {
         preset,
         getAttrs,
         setAttrs,
@@ -17,6 +17,10 @@ public abstract class Right {
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR("unknown right type: " + s, e);
             }
+        }
+        
+        public boolean isUserDefinable() {
+            return this != preset;
         }
     }
     
@@ -69,9 +73,10 @@ public abstract class Right {
         return mRightType==RightType.combo;
     }
     
-    RightType getRightType() {
+    public RightType getRightType() {
         return mRightType;
     }
+    
     
     /**
      * - right name stored in zimbraACE.
@@ -108,7 +113,7 @@ public abstract class Right {
         mDefault = defaultValue;
     }
     
-    public boolean applicableOnTargetType(TargetType targetType) {
+    boolean applicableOnTargetType(TargetType targetType) {
         return (mTargetType == targetType);
     }
 
@@ -124,13 +129,21 @@ public abstract class Right {
             throw ServiceException.PARSE_ERROR("missing target type", null);
     }
     
+    // for SOAP response only
+    String getTargetTypeStr() {
+        return mTargetType.getCode();
+    }
+    
     /*
      * - verify that all things are well with this object, catch loose ends
      *   that were not catched during paring
      * 
-     * - populate internal aux data structures   
+     * - populate internal aux data structures  
+     * 
+     * - after this method is called for an right object, no change should be done 
+     *   to the object.
      */
-    void postParse() throws ServiceException {
+    void completeRight() throws ServiceException {
         if (getDesc() == null)
             throw ServiceException.PARSE_ERROR("missing description", null);
         verifyTargetType();

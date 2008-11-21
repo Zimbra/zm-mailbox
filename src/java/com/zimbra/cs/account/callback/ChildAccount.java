@@ -75,34 +75,7 @@ public class ChildAccount extends AttributeCallback {
         }
     }
     
-    private Set<String> newValuesToBe(MultiValueMod mod, Entry entry, String attrName) {
-        Set<String> newValues = null; 
-        if (entry != null) {
-            Set<String> curValues = entry.getMultiAttrSet(attrName);
-    
-            if (mod == null) {
-                newValues = curValues;
-            } else {
-                if (mod.adding()) {
-                    newValues = new HashSet<String>();
-                    SetUtil.union(newValues, curValues, mod.valuesSet());
-                } else if (mod.removing()) {
-                    newValues = SetUtil.subtract(curValues, mod.valuesSet());
-                } else if (mod.deleting()) {
-                    newValues = new HashSet<String>();
-                } else {
-                    newValues = mod.valuesSet();
-                }
-            }
-        } else {
-            if (mod == null)
-                newValues = new HashSet<String>();
-            else
-                newValues = mod.valuesSet();
-        }
-        
-        return newValues;
-    }
+
 
     
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {

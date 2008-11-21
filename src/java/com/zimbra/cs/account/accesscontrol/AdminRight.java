@@ -30,26 +30,16 @@ public class AdminRight extends Right {
     public static AdminRight R_configureQuotaWithinLimit;
     
     public static AdminRight R_domainAdmin;
-    
-    /*
-    enum EntryType {
-        account,
-        cos;
-        
-        public static EntryType fromString(String s) throws ServiceException {
-            try {
-                return EntryType.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR("unknown entry type: " + s, e);
-            }
-        }
+
+    static enum DefinedBy {
+        system,
+        custom;
     }
-    */
     
     static void initKnownAdminRights(RightManager rm) throws ServiceException {
         
-        R_PSEUDO_GET_ATTRS = new AttrRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
-        R_PSEUDO_SET_ATTRS = new AttrRight("PSEUDO_SET_ATTRS", RightType.setAttrs);
+        R_PSEUDO_GET_ATTRS = newAdminSystemRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
+        R_PSEUDO_SET_ATTRS = newAdminSystemRight("PSEUDO_SET_ATTRS", RightType.setAttrs);
         
         R_createAccount = rm.getAdminRight("createAccount");
         R_renameAccount = rm.getAdminRight("renameAccount");
@@ -71,18 +61,40 @@ public class AdminRight extends Right {
 
     }
     
-    static AdminRight newAdminRight(String name, RightType rightType) {
-        if (rightType == RightType.getAttrs || rightType == RightType.setAttrs)
-            return new AttrRight(name, rightType);
-        else if (rightType == RightType.combo)
-            return new ComboRight(name, rightType);
-        else
-            return new AdminRight(name, rightType);
+
+    
+    private DefinedBy mDefinedBy;
+    private String  mRightId;  // for custom right
+    
+    protected AdminRight(String name, RightType rightType, DefinedBy definedBy) {
+        super(name, rightType);
+        mDefinedBy = definedBy;
     }
     
-    protected AdminRight(String name, RightType rightType) {
-        super(name, rightType);
+    private void setId(String rightId) {
+        mRightId = rightId;
     }
+    
+    static AdminRight newAdminSystemRight(String name, RightType rightType) {
+        return newAdminRight(name, rightType, DefinedBy.system);
+    }
+        
+    static AdminRight newAdminCustomRight(String name, RightType rightType, String rightZimbraId) {
+        AdminRight right = newAdminRight(name, rightType, DefinedBy.custom);
+        right.setId(rightZimbraId);
+        return right;
+    }
+    
+    private static AdminRight newAdminRight(String name, RightType rightType, DefinedBy definedBy) {
+        if (rightType == RightType.getAttrs || rightType == RightType.setAttrs)
+            return new AttrRight(name, rightType, definedBy);
+        else if (rightType == RightType.combo)
+            return new ComboRight(name, rightType, definedBy);
+        else
+            return new AdminRight(name, rightType, definedBy);
+    }
+    
+
 
     /*
     String dump(StringBuilder sb) {

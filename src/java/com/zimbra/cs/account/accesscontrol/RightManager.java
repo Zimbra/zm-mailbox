@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.TreeMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -13,6 +14,8 @@ import org.dom4j.io.SAXReader;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+
+import com.zimbra.cs.account.Provisioning;
 
 public class RightManager {
     private static final String E_A            = "a";
@@ -27,8 +30,6 @@ public class RightManager {
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
     private static final String A_NAME         = "name";
-    private static final String A_ON_ENTRY     = "onEntry";
-    private static final String A_R            = "r";
     private static final String A_TARGET_TYPE  = "targetType";
     private static final String A_TYPE         = "type";
     private static final String A_USER_RIGHT   = "userRight";
@@ -39,7 +40,8 @@ public class RightManager {
     
     // keep the map sorted so "zmmailbox lp" can display in alphabetical order 
     private Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();  
-    private Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();  
+    private Map<String, AdminRight> sAdminSystemRights = new TreeMap<String, AdminRight>();  
+    private Map<String, AdminRight> sAdminCustomRights = new TreeMap<String, AdminRight>();  
 
     public static synchronized RightManager getInstance() throws ServiceException {
         if (mInstance != null) {
@@ -76,7 +78,7 @@ public class RightManager {
                 ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
             }
             try {
-                loadRights(file);
+                loadSystemRights(file);
             } catch (DocumentException de) {
                 throw ServiceException.PARSE_ERROR("error loading rights file: " + file, de);
             }
@@ -134,11 +136,11 @@ public class RightManager {
             throw ServiceException.PARSE_ERROR("missing attr name", null);   
         
         boolean limit = false;
-        // limit is required for setAttrs, ignored for getAttrs
+        // limit is optional for setAttrs, ignored for getAttrs
         if (right.getRightType() == Right.RightType.setAttrs)
             limit = getBooleanAttr(eAttr, A_LIMIT, false);
         
-        // TODO, validate if the attribute exists
+        AttrRight.validateAttr(attrName, right.getTargetTypes());
         right.addAttr(attrName, limit);
     }
     
@@ -147,8 +149,6 @@ public class RightManager {
             throw ServiceException.PARSE_ERROR(E_ATTRS + " is only allowed for admin getAttrs or setAttrs right", null);
         
         AttrRight attrRight = (AttrRight)right;
-        attrRight.initAttrs();
-        
         for (Iterator elemIter = eAttrs.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
             if (elem.getName().equals(E_A))
@@ -163,9 +163,7 @@ public class RightManager {
         if (rightName == null)
             throw ServiceException.PARSE_ERROR("missing right name", null);   
             
-        Right r = getRight(rightName);
-        if (r == null)
-            throw ServiceException.PARSE_ERROR("unknown right: " + rightName, null);   
+        Right r = getRight(rightName); // getRight will throw if the right does not exist.
         right.addRight(r);
     }
     
@@ -206,7 +204,7 @@ public class RightManager {
                 throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "]", null);
             rightType = AdminRight.RightType.fromString(rt);
             
-            right = AdminRight.newAdminRight(name, rightType);
+            right = AdminRight.newAdminSystemRight(name, rightType);
             if (targetTypeStr != null) {
                 String taregtTypes[] = targetTypeStr.split(TARGET_TYPE_DELIMITER);
                 for (String tt : taregtTypes) {
@@ -232,13 +230,13 @@ public class RightManager {
                 throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);
         }
         
-        // verify that all required fields are set
-        right.postParse();
+        // verify that all required fields are set and populate internal data
+        right.completeRight();
 
         return right;
     }
     
-    private void loadRights(File file) throws DocumentException, ServiceException {
+    private void loadSystemRights(File file) throws DocumentException, ServiceException {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
         Element root = doc.getRootElement();
@@ -254,7 +252,7 @@ public class RightManager {
             if (name == null)
                 throw ServiceException.PARSE_ERROR("no name specified", null);
             
-            if (sUserRights.get(name) != null || sAdminRights.get(name) != null) 
+            if (sUserRights.get(name) != null || sAdminSystemRights.get(name) != null) 
                 throw ServiceException.PARSE_ERROR("right " + name + " is already defined", null);
             
             try {
@@ -262,12 +260,77 @@ public class RightManager {
                 if (right instanceof UserRight)
                     sUserRights.put(name, (UserRight)right);
                 else
-                    sAdminRights.put(name, (AdminRight)right);
+                    sAdminSystemRights.put(name, (AdminRight)right);
             } catch (ServiceException e) {
                 throw ServiceException.PARSE_ERROR("unable to parse right: [" + name + "]", e);
             }
         }
     }
+    
+    //
+    // custom rights
+    //
+    
+    private AdminRight toRight(com.zimbra.cs.account.Right ldapRight) throws ServiceException {
+        String rightName = ldapRight.getName();
+        String rt = ldapRight.getAttr(Provisioning.A_zimbraRightType);
+        Right.RightType rightType = Right.RightType.fromString(rt);
+        
+        AdminRight right = AdminRight.newAdminCustomRight(rightName, rightType, ldapRight.getId());
+        
+        String desc = ldapRight.getAttr(Provisioning.A_description);
+        right.setDesc(desc);
+        
+        if (right.isAttrRight()) {
+            AttrRight attrRight = (AttrRight)right;
+            
+            Set<String> targetTypes = ldapRight.getMultiAttrSet(Provisioning.A_zimbraRightTargetType);
+            for (String targetType : targetTypes)
+                right.setTargetType(TargetType.fromString(targetType));
+            
+            Set<String> attrs = ldapRight.getMultiAttrSet(Provisioning.A_zimbraRightAttrs);
+            for (String a : attrs)
+                attrRight.addAttr(AttrRight.Attr.fromLdapAttrValue(a));
+            
+        } else if (right.isComboRight()) {
+            ComboRight comboRight = (ComboRight)right;
+            Set<String> rights = ldapRight.getMultiAttrSet(Provisioning.A_zimbraRightRights);
+            for (String r : rights)
+                comboRight.addRight(getRight(r));
+        } 
+
+        // verify that all required fields are set and populate internal data
+        right.completeRight();
+        return right;        
+    }
+    
+    public AdminRight addCustomRight(com.zimbra.cs.account.Right ldapRight) throws ServiceException {
+        AdminRight right = toRight(ldapRight);
+        addCustomRight(right);
+        return right;
+    }
+    
+    private void addCustomRight(AdminRight right) {
+        synchronized (sAdminCustomRights) {
+            sAdminCustomRights.put(right.getName(), right);
+        }
+    }
+    
+    public void deleteCustomRight(String rightName) {
+        synchronized (sAdminCustomRights) {
+            sAdminCustomRights.remove(rightName);
+        }
+    }
+    
+    private synchronized Right getCustomRight(String right) {
+        synchronized (sAdminCustomRights) {
+            return sAdminCustomRights.get(right);
+        }
+    }
+    
+    //
+    // getters
+    //
     
     public UserRight getUserRight(String right) throws ServiceException {
         UserRight r = sUserRights.get(right);
@@ -277,21 +340,42 @@ public class RightManager {
     }
     
     public AdminRight getAdminRight(String right) throws ServiceException {
-        AdminRight r = sAdminRights.get(right);
+        AdminRight r = sAdminSystemRights.get(right);
         if (r == null)
             throw ServiceException.FAILURE("invalid right " + right, null);
         return r;
     }
     
     public Right getRight(String right) throws ServiceException {
-        Right r = sUserRights.get(right);
-        if (r == null)
-            r = sAdminRights.get(right);
+        return getRight(right, true);
+    }
+    
+    private Right getRight(String right, boolean mustFind) throws ServiceException {
+        Right r = getSystemRight(right);
         
         if (r == null)
+            r = getCustomRight(right);
+        
+        if (mustFind && r == null)
             throw ServiceException.FAILURE("invalid right " + right, null);
         
         return r;
+    }
+    
+    public boolean rightExists(String right) throws ServiceException{
+        return (getRight(right, false) != null);
+    }
+    
+    public Right getSystemRight(String right) {
+        Right r = sUserRights.get(right);
+        if (r == null)
+            r = sAdminSystemRights.get(right);
+        
+        return r;
+    }
+    
+    public boolean isSystemRight(String rightName) {
+        return getSystemRight(rightName) != null;
     }
     
     public Map<String, UserRight> getAllUserRights() {
@@ -299,7 +383,7 @@ public class RightManager {
     }
     
     public Map<String, AdminRight> getAllAdminRights() {
-        return sAdminRights;
+        return sAdminSystemRights;
     }
     
     private String dump(StringBuilder sb) {

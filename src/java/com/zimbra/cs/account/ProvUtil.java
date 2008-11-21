@@ -330,9 +330,10 @@ public class ProvUtil implements DebugListener {
         GET_GRANTS("getGrants", "gg", "{target-type} [{target-id|target-name}]", Category.RIGHT, 1, 2),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
+        GET_RIGHT("getRight", "gr", "[-e] {name|id} [attr1 [attr2...]]", Category.RIGHT, 1, Integer.MAX_VALUE),
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-        GRANT_RIGHT("grantRight", "gr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
+        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -360,8 +361,9 @@ public class ProvUtil implements DebugListener {
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
+        RENAME_RIGHT("renameRight", "rr", "{name|id} {newName}", Category.RIGHT, 2, 2),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
-        REVOKE_RIGHT("revokeRight", "rr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
+        REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -550,7 +552,8 @@ public class ProvUtil implements DebugListener {
             mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
             break;
         case CREATE_RIGHT:
-            System.out.println(mProv.createRight(args[1], getMap(args, 2)).getId());
+            // System.out.println(mProv.createRight(args[1], getMap(args, 2)).getId());
+            dumpRight(mProv.createRight(args[1], getMap(args, 2)), null);
             break; 
         case CREATE_SIGNATURE:
             System.out.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMap(args, 3)).getId());
@@ -660,6 +663,9 @@ public class ProvUtil implements DebugListener {
         		System.out.println(fbqueue.toString());
         	break;
         }
+        case GET_RIGHT:
+            dumpRight(lookupRight(args[1]), getArgNameSet(args, 2));
+            break;
         case GET_SERVER:
             doGetServer(args);
             break;
@@ -779,6 +785,9 @@ public class ProvUtil implements DebugListener {
         case RENAME_DOMAIN:
             doRenameDomain(args);            
             break;
+        case RENAME_RIGHT:
+            mProv.renameRight(lookupRight(args[1]).getId(), args[2]);            
+            break; 
         case SET_ACCOUNT_COS:
             mProv.setCOS(lookupAccount(args[1]),lookupCos(args[2])); 
             break;                        
@@ -2585,7 +2594,7 @@ public class ProvUtil implements DebugListener {
             getRightArgsGrantee(ra, false);
         } else {
             // has more args, use it for the requested grantee
-            if (ra.mCurPos < args.length - 1)
+            if (ra.mCurPos < args.length)
                 getRightArgsGrantee(ra, false);
         }
         

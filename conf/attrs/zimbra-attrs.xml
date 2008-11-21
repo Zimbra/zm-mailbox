@@ -179,7 +179,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: first name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="description" type="string" optionalIn="account,distributionList,cos,domain,server,mimeEntry,objectEntry,aclTarget,right" flags="domainAdminModifiable">
+<attr name="description" type="string" optionalIn="account,distributionList,cos,domain,server,mimeEntry,objectEntry,aclTarget" requiredIn="right" flags="domainAdminModifiable">
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
@@ -3780,19 +3780,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="764" name="zimbraRightType" type="enum" value="preset,setAttrs,getAttrs,combo" cardinality="single" requiredIn="right" since="future">
+<attr id="764" name="zimbraRightType" type="enum" value="preset,setAttrs,getAttrs,combo" cardinality="single" requiredIn="right"  immutable="1" callback="CustomRight" since="future">
   <desc>right type</desc>
 </attr>
 
-<attr id="765" name="zimbraRightTargetType" type="enum" value="account,resource,distributionlist,domain,cos,right,server,xmppcomponent,zimlet,config,global" cardinality="multi" optionalIn="right" since="future">
+<attr id="765" name="zimbraRightTargetType" type="enum" value="account,resource,distributionlist,domain,cos,right,server,xmppcomponent,zimlet,config,global" cardinality="multi" optionalIn="right" callback="CustomRight" since="future">
   <desc>right target type</desc>
 </attr>
 
-<attr id="766" name="zimbraRightRights" type="string" cardinality="multi" optionalIn="right" since="future">
+<attr id="766" name="zimbraRightRights" type="string" cardinality="multi" optionalIn="right" callback="CustomRight" since="future">
   <desc>rights contained in a combo right</desc>
 </attr>
 
-<attr id="767" name="zimbraRightAttrs" type="string" cardinality="multi" optionalIn="right" since="future">
+<attr id="767" name="zimbraRightAttrs" type="string" cardinality="multi" optionalIn="right" callback="CustomRight" since="future">
   <desc>attributes contained in a getAttrs or setAttrs right</desc>
 </attr>
 
@@ -3800,7 +3800,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>class name of the XMPP component</desc>
 </attr>
 
-<attr id="769" name="zimbraMailRedirectSetEnvelopeSender" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="769" name="zimbraMailRedirectSetEnvelopeSender" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="future">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>
     If TRUE, the envelope sender of a message redirected by mail filters will be set to the users address.  

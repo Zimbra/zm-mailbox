@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.accesscontrol.AdminRight.DefinedBy;
 import com.zimbra.cs.account.accesscontrol.AttrRight.Attr;
 
 public class ComboRight extends AdminRight {
@@ -16,8 +17,8 @@ public class ComboRight extends AdminRight {
     // all attr rights contained in this combo right
     private Set<AttrRight> mAttrRights = new HashSet<AttrRight>();
     
-    ComboRight(String name, RightType rightType) {
-        super(name, rightType);
+    ComboRight(String name, RightType rightType, DefinedBy definedBy) {
+        super(name, rightType, definedBy);
     }
     
     String dump(StringBuilder sb) {
@@ -39,7 +40,7 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
-    public boolean applicableOnTargetType(TargetType targetType) {
+    boolean applicableOnTargetType(TargetType targetType) {
         return true;
     }
 
@@ -53,8 +54,13 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
-    void postParse() throws ServiceException {
-        super.postParse();
+    String getTargetTypeStr() {
+        return null;
+    }
+    
+    @Override
+    void completeRight() throws ServiceException {
+        super.completeRight();
         
         expand(this, mPresetRights, mAttrRights);
     }
@@ -80,11 +86,19 @@ public class ComboRight extends AdminRight {
         return mPresetRights.contains(right);
     }
     
+    // get all (direct or indirect) preset rights contained by this combo right 
     Set<Right> getPresetRights() {
         return mPresetRights;
     }
     
+    // get all (direct or indirect) attr rights contained by this combo right 
     Set<AttrRight> getAttrRights() {
         return mAttrRights;
     }
+    
+    // get directed contained rights
+    Set<Right> getRights() {
+        return mRights;
+    }
+
 }
