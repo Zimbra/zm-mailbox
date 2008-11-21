@@ -21,6 +21,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Formatter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -33,7 +35,7 @@ import com.zimbra.cs.mailbox.Metadata;
 
 public class DbDataSource {
 
-	public static class DataSourceItem {
+    public static class DataSourceItem {
 		public int itemId;
 		public String remoteId;
 		public Metadata md;
@@ -277,6 +279,46 @@ public class DbDataSource {
         }
     	
     	return items;
+    }
+
+    public static Collection<DataSourceItem> getAllMappingsForRemoteIdPrefix(DataSource ds, int folderId, String prefix)
+        throws ServiceException {
+        Mailbox mbox = ds.getMailbox();
+    	List<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String db = DbMailbox.getDatabaseName(mbox);
+        String dst = db + ".data_source_item";
+        String mit = db + ".mail_item";
+        try {
+            conn = DbPool.getConnection();
+            Formatter fmt = new Formatter();
+            fmt.format("SELECT item_id, remote_id, %s.metadata FROM %s", dst, dst);
+            fmt.format(" INNER JOIN %s ON %s.item_id = %s.id", mit, dst, mit);
+            fmt.format(" WHERE %s.mailbox_id = ?", dst);
+            fmt.format(" AND data_source_id = ? AND folder_id = ?");
+            if (prefix != null) {
+                fmt.format(" AND remote_id LIKE '%s%%'", prefix);
+            }
+            stmt = conn.prepareStatement(fmt.toString());
+            stmt.setInt(1, mbox.getId());
+            stmt.setString(2, ds.getId());
+            stmt.setInt(3, folderId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String s = rs.getString(3);
+                Metadata md = s != null ? new Metadata(s) : null;
+                items.add(new DataSourceItem(rs.getInt(1), rs.getString(2), md));
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get mapping for data source " + ds.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return items;
     }
     
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
