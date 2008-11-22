@@ -26,7 +26,6 @@ The following terms are used in modeling and implementation of the system:
             - domain
             - global config
             - global grant
-            - right (TODO)
             - server
             - xmppcomponent
             - zimlet
@@ -161,17 +160,41 @@ Depending on the context, there are three aspects of targets that need to be dea
 3. Rights
 ===========
 
-3.1 System-Defined Rights
+3.1 How Are Rights Defined
 
-3.1.1 High Level Rights - Rights for Functional Operations on Applicable Target Types. 
+3.1.1 System-Defined Rights
 
-      There are two types of such rights:
+      System rights are defined in ZimbraServer/conf/zimbra-rights.xml file
       
-      (A) Non-configure*** Rights
-          - Usually associated with a corresponding SOAP command.
-      
-          - Independent of other rights on the same target.  
-            For example:
+      There are 4 types of rights: preset, setAttrs, getAttrs, combo
+        
+      Naming convention:
+                                                                           checked by SOAP handler
+      ----------------------------------------------------------------------------------------------------------------
+      create{Object}    - create an object                                 Create{Object}Request
+      delete{Object}    - delete an object                                 Delete{Object}Request
+      rename{Object}    - rename an object                                 Rename{Object}Request
+      list{Object}      - know the existence of an object                  GetAll{Object}Request, SearchDirectory
+      get{Object}       - read some attributes on an object                Get{Object}Request
+      modify{Object}    - modify and read all attributes on an object      Modify{Object}Request
+      view{Object}      - read some attributes on an object                Get{Object}Request
+      configure{Object} - modify and read some attributes on an object     Modify{Object}Request
+               
+
+3.1.1.1 preset Right
+      - Has predefined, fixed implication on targets.
+            e.g. createAccount  - create account
+                 renameDomain   - rename domain
+                 reindexMailbox - reindex mailbox
+                 seeServer      - know the existence of a server 
+                 
+      - Is associated with a fixed target type
+                 createAccount  - domain
+                 reanmeAccount  - account
+                 seeServer      - server 
+               
+      - Independent of other rights on the same target.  
+            e.g. :
                 - if grantee G is allowed the setPassword, renameAccount, restoreAccount rights on 
                   account A, we do not check if G is allowed/denied the modifyAccount right on A when 
                   set password/rename account/restore account are executed.
@@ -179,7 +202,7 @@ Depending on the context, there are three aspects of targets that need to be dea
                   domain D, we do not check if G is allowed/denied the getAccount right on A 
                   when backup account/view email/get mailbox dump are executed.
             
-          - Some Operations Require Rights on Multiple Targets
+      - Some Operations Require Rights on Multiple Targets
             If a right involves accessing multiple targets, the grantee needs to have adequate 
             rights on all pertinent targets. 
             For example:
@@ -191,58 +214,159 @@ Depending on the context, there are three aspects of targets that need to be dea
                 - Likewise to remove the alias from the account, the grantee must have rights to: 
                       - removeAccountAlias of account-1@domain-1.com
                         AND 
-                      - deleteAlias in domain-2.com.
-                      
+                      - deleteAlias in domain-2.com.      
+
+
+3.1.1.2 getAttr Right
+      - Allows reading attribute values.
+            e.g. getAccount - get all attributes of account
+                 viewQuota  - get zimbraMailQuota, zimbraQuotaWarnPercent, zimbraQuotaWarnInterval, zimbraQuotaWarnMessage attributes
+                 
+      - Can be associated with none or multiple target types.           
       
-      (B) configure*** Rights
-          - Can only modify a certain subset of attributes of an entry.
-            For example:
-                configureQuota right can modify attributes: 
-                    zimbraMailQuota
-                    zimbraQuotaWarnPercent
-                    zimbraQuotaWarnInterval
-                    zimbraQuotaWarnMessage
+
+3.1.1.3 setAttr Right
+      - Allows modifying and reading attribute values.
+            e.g. modifyAccount  = modify all attributes of account
+                 configureQuota - get zimbraMailQuota, zimbraQuotaWarnPercent, zimbraQuotaWarnInterval, zimbraQuotaWarnMessage attributes
+
+      - Can be associated with none or multiple target types.   
+
+3.1.1.4 combo Right
+      - Right containing other rights.
+ 
+      - Cannot be associated with a target type.  
+      
+
+3.1.2 Inline Attribute Rights
+      - Specified on the grants
+      
+      - Format is {verb}.{target-type}.{attribute-name}
+        {verb}: getAttr | setAttr
+                getAttr: reading the attribute
+                setAttr: reading and writing the attribute
+                
+        {target-type}: (one of the target types in 1.2)        
+                account  |
+                cr       |  
+                cos      |
+                dl       |
+                domain   |
+                config   |
+                server   |
+                xmppcpnt |
+                zimlet
+                
+        {attribute-name}: attribute name
+       
+     -  e.g.
+          setAttr.account.zimbraMailStatus
+          getAttr.domain.zimbraMailStatus
+          setAttr.cos.zimbraMailQuota
           
-          - Checked in SOAP get{object}/modify{object} handlers.  As follows:
+     - In a grant(zimbraACE), it shows up at the spot for {right}
+          2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 usr set.account.zimbraMailStatus
+                
+
+3.2 Target Types of a Right
+    - Target types on which the right is applicable.
+      
+    - If a right is granted on a target it is not applicable to, the grant is not effective (ignored).
     
-            Definition of rights:
-            (1) allow get{object}     : can read all attributes on the entry
-            (2) allow modify{object}  : can *read and write* *all* attributes on the entry     (note: allow read is implied)
-            (3) allow configure***    : can *read and write* *certain* attributes on the entry (note: allow read is implied)
-            (4) deny get{object}      : cannot read any attributes on the entry
-            (5) deny modify{object}   : cannot write any attributes on the entry               (note: does not deny read, just doesn't have a say on read)
-            (6) deny configure***     : cannot write certain attributes on the entry           (note: does not deny read, just doesn't have a say on read)
+    - For preset rights: one
+          The target on which the right is applicable.
+          
+    - For getAttrs/setAttrs rights: none or one, or multiple
+          If none: the right is applicable on all target types
+          If one/multiple:  the right is only applicable on those target types
+          
+          e.g. 1. can modify zimbraMailStatus on any target types (no target types specified on the right definition)
+                  <right name="configureMailStatus" type="setAttrs">
+                      <desc>configure mail status </desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                   
+                  - if granted on a domain, can modify zMS on the domain, and on any accounts and distribution lists in the domain
+                  - if granted on a distribution list, can modify zMS on the DL, and on any direct/indirect accounts/DLs in the DL
+                  - if granted on an account, can modify zMS on the account
+                
+          e.g. 2. can modify zimbraMailStatus on accounts
+                  <right name="configureAccountMailStatus" type="setAttrs" targetType="account">
+                      <desc>configure account mail status</desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                  
+                  - if granted on a domain, no effect
+                  - if granted on a distribution list, no effect
+                  - if granted on an account, can modify zMS on the account
+
+          e.g. 3. can modify zimbraMailStatus on domains
+                  <right name="configureDomainMailStatus" type="setAttrs" targetType="domain">
+                      <desc>configure domain mail status</desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                
+                  - if granted on a domain, can modify zMS on the domain (only on the domain entry, not accounts/DLs in the domain)
+                  - if granted on a distribution list, no effect
+                  - if granted on an account, no effect
+
+       
+    - For combo rights: none
+          Target types specified for each right the combo right contains apply.
+
+
+3.3 Granting Rules for getAttr/setAttr System and Inline Rights
+      
+    - getAttr/setAttr are checked in SOAP get{object}/modify{object} handlers.  As follows:
     
-            The above can be short-handed in this table:
-            (Table-1)
+          Definition of rights:
+              (1) allow get{object}     : can READ ALL attributes on the entry
+              (2) allow view***         : can READ SOME attributes on the entry
+              (3) allow modify{object}  : can READ and WRITE ALL attributes on the entry
+              (4) allow configure***    : can READ and WRITE SOME attributes on the entry
+            
+              (5) deny get{object}      : cannot READ any attributes on the entry
+              (6) deny view***          : cannot READ SOME attributes on the entry
+              (7) deny modify{object}   : cannot WRITE ALL attributes on the entry     (note: does not deny read, just doesn't have a say on read)
+              (8) deny configure***     : cannot WRITE SOME attributes on the entry    (note: does not deny read, just doesn't have a say on read)
+            
+          The above can be short-handed in this table:
+              (Table-1)
                                                   allow    allow    deny    deny 
                                                   read     write    read    write
                                                   (A)      (B)      (C)     (D)
-            -----------------------------------------------------------------------
-            (1) allow get{object}                 all
-            (2) allow modify{object}              all      all
-            (3) allow setXXX and configureXXX     certain  certain
-            (4) deny get{object}                                    any
-            (5) deny modify{object}                                         any
-            (6) deny setXXX and configureXXX                                certain
+              -----------------------------------------------------------------------
+              (1) allow get{object}               all
+              (2) allow view***                   some
+              (3) allow modify{object}            all      all
+              (4) allow configure***              some     some
+              (5) deny get{object}                                  all
+              (6) deny view***                                      some
+              (7) deny modify{object}                                       all
+              (8) deny configure***                                         some
+
     
-    
-            For each attribute, the read/write permission is determined as follows:
-            (Table-2)
+          For each attribute, the read/write permission is determined as follows:
+              (Table-2)
                   
-                 allow     deny     result
-            --------------------------------  
-            (W)                      deny
-            (X)    X                 allow
-            (Y)             X        deny
-            (Z)    X        X        deny
-             
+                     allow     deny     result
+              --------------------------------  
+              (W)                       deny
+              (X)    *                  allow
+              (Y)              *        deny
+              (Z)    *         *        deny
+                 
              
             e.g. 
             1. Q: target allows modifyAccount right to the current admin, but does not have an ACE entry for configureQuota right 
                   - can the current admin modify zimbraMailQuota of the target?
                A: Yes.  Because (2):(B)="allow write all" => result in (X)
-            
             
             2. Q: target allows modifyAccount right to the current admin, but has an entry for "deny configureQuota" 
                   - can the current admin modify zimbraMailQuota of the target?
@@ -253,17 +377,70 @@ Depending on the context, there are three aspects of targets that need to be dea
                A: No.   Because (4):(C)="deny read all" and (3):(A)="allow read certain" =>  => result in (Z)
                   However, if the question is "can the current admin *modify* the value of zimbraMailQuota of the target?" the answer would be Yes.
                   Because (4):(D)="not specified" and (3):(B)="allow write certain" => result in (X)
- 
       
-      
-      System-defined high level rights are described by target types below in 3.1.1.X.
+
+3.4 Limit(constraints) for Modifying Attributes
+    Attributes cannot be modified to a value beyond the constraints for the attribute.   If there is no constraint 
+    for an attribute, it can be modified to any value allowed by the attribute syntax.
+    
+    Constraints are defined in the multi-value attribute zimbraConstraint, each value in zimbraConstraint specifies 
+    the constraint for an attribute.  zimbraConstraint can be set on COS and global config entries.
+    
+    Each zimbraConstraint value is in the format of:
+    
+        - for neumeric(integer, interval, port) attributes:
+              {attr-name}:[{min}]:[{max}]
+              
+              e.g. zimbraPasswordMinLength:4:6 (can be set to value between 4 and 6)
+                   zimbraPrefOutOfOfficeCacheDuration:1m:7d (can be set to value between 1m and 7d)
+                   zimbraMailQuota:100000000: (min=100000000, no max limit)
+                   zimbraSignatureMaxNumEntries::10 (no min limit, max=10)
+              
+        - for boolean attributes:
+              {attr-name}:{comma-separated allowed boolean values}
+              
+              e.g. zimbraFeatureMailEnabled:TRUE,FALSE (can be set to TRUE or FALSE)
+                   zimbraFeatureContactsEnabled:FALSE (can be set to FALSE)
+                   
+        - for enum attributes:
+             {attr-name}:{comma-separated allowed enum values}
+             
+              e.g. zimbraDomainStatus:active,maintenance,locked,closed
+                   zimbraGalMode:zimbra 
+    
+    For account and cos attributes, constraints are specified in the corresponding COS attribute zimbraConstraint.
+    For domain and  server attributes, constraints are specified in the global config attribute zimbraConstraint.
+    
+    An admin is allowed to set attributes beyond constraints only if he has right to modify the zimbraConstraint 
+    attribute that defines the constraint for the object he is modifying.  
+    
+    For example, if zimbraConstraint on cos C has:
+          zimbraPasswordMinLength:4:6
+          zimbraSignatureMaxNumEntries::10
+          
+    - if the authed admin has right to modify zimbraConstraint on cos C (and has right to modify the corresponding
+      account/cos attributes), he can set:
+          zimbraPasswordMinLength to any value
+          zimbraSignatureMaxNumEntries to any value
+          all attributes to any value on cos C and accounts assigned to cos C
+          
+    - if the authed admin does not have right to modify zimbraConstraint on cos C (and has right to modify the 
+      corresponding account/cos attributes), he can set:    
+          zimbraPasswordMinLength to between 4 and 6
+          zimbraSignatureMaxNumEntries to a value less than 10
+          all other attributes to any value on cos C and accounts assigned to cos C
+          
+    
+    
+
+3.5 System Defined Rights
       The lists are tentative, they can certainly change during the development cycles of the delegate admin
       project, and afterwards as the product evolves.
 
-3.1.1.1 account/calendar resource:
+3.5.1 account/calendar resource:
           - getAccount                         : get all account attributes
           - modifyAccount                      : modify all account attributes
-          - modifyAccountWithinInheritedLimit  : modify all account attributes within COS limit
+          - listAccount                        : see account in GetAllAccounts/SearchDirectoryResponse
           
           - renameAccount                      : rename account
           - deleteAccount                      : delete account
@@ -289,10 +466,10 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureTheme                     : configure available themes(skins)
 
 
-3.1.1.2 calendar resource:
+3.5.2 calendar resource:
           - getCalenceResource                 : get all calendar resource attributes
           - modifyCalenceResource              : modify all calendar resource attributes
-          - modifyCalenceResourceWithinInheritedLimit : modify all calendar resource attributes within COS limit
+          - listCalenceResource                : see calendar resource in GetAllCalendarResources/SearchDirectoryResponse
           
           - renameCalendarResource             : rename calendar resource
           - deleteCalendarResource             : delete calendar resource
@@ -311,10 +488,10 @@ Depending on the context, there are three aspects of targets that need to be dea
           - setPassword                        : set calendar resource password
 
 
-3.1.1.3 cos
+3.5.3 cos
           - getCos                             : get all cos attributes
           - modifyCos                          : modify all cos attributes
-          - modifyCosWithinInheritedLimit      : modify all cos attributes within the current COS limit
+          - listCos                            : see cos in GetAllCos/SearchDirectoryResponse
           
           - renameCos                          : rename cos
           - deleteCos                          : delete cos
@@ -327,7 +504,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureTheme                     : configure available themes(skins)
 
     
-3.1.1.4 distribution list
+3.5.4 distribution list
           - All rights for account/calendar resource
                 When account/calendar resource rights are specified on a DL entry, the ACEs are 
                 interpreted as "apply to all direct or indirect account/calendar resource members 
@@ -346,7 +523,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           - removeDistributionListMember      : remove member from distribution list
     
 
-3.1.1.5 domain
+3.5.5 domain
           - All rights for account/calendar resource
                 When account/calendar resources rights are specified on a domain entry, the ACEs are 
                 interpreted as "apply to all accounts/calendar resources in this domain"
@@ -357,7 +534,7 @@ Depending on the context, there are three aspects of targets that need to be dea
                 
           - getDomain                         : get all domain attributes
           - modifyDomain                      : modify all domain attributes
-          - modifyDomainWithinInheritedLimit  : modify all domain attributes within global config limit
+          - listDomain                        : see domain in GetAllDomains/SearchDirectoryResponse
           
           - renameDomain                      : rename domain
           - deleteDomain                      : delete domain
@@ -380,16 +557,16 @@ Depending on the context, there are three aspects of targets that need to be dea
           i.e. if G is allowed to createAccount in company.com, does G automatically have 
                right to createAccount in support.company.com and sales.company.com?
                
-          For now we don't.     
+          we probably should not.     
 <<<<<
 
 
-3.1.1.6 global config
+3.5.6 global config
           - getGlobalConfig                  : get all global config attributes
           - modifyGlobalConfig               : modify all global config attributes
 
 
-3.1.1.7 global grant          
+3.5.7 global grant          
           - all right for all other targets
           
           and
@@ -398,10 +575,10 @@ Depending on the context, there are three aspects of targets that need to be dea
           - createServer                     : createServer
 
 
-3.1.1.8 server
+3.5.8 server
           - getServer                        : get all server attributes
           - modifyServer                     : modify all server attributes
-          - modifyServerWithinInheritedLimit : modify all server attributes within global config limit
+          - listServer                       : see server in GetAllServers/SearchDirectoryResponse
           
           - deleteServer                     : delete server
           
@@ -422,62 +599,6 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureVolumes                 : configure volumes
           - configureServiceEnabled          : configure services enabled
 
-
-3.1.1.9 right 
-        (see "3.2.1 Rights on Modifying Combination of Attributes on Various Entry Types" and 
-             "3.2.2 Combo Rights - Rights Combining any Rights" and
-             "4.2 System and Admin Defined Rights")
-             
-          - getRight                         : get all right attributes (not used for now)
-          - modifyRight                      : modify all right attributes
-          
-          - renameRight                      : rename right
-          - deleteRight                      : delete right
-      
-       
-3.1.2 Attribute Level Rights - Fine-Grained Rights on Individual Attributes
-          - getAttr.{attr-name}              : get this attribute
-          - modifyAttr.{attr-name}           : get and modify this attribute
-          - modifyAttrWithinInheritedLimit.{attr-name} : modify this attribute within inherited limit
-               "inherited limit" is:
-                   - for account: cos value
-                   - for cos: current cos value
-                   - for domain: global config value
-                   - for server: global config value
-
-          e.g. getAttr.zimbraMailQuota
-               modifyAttr.zimbraMailQuota
-               modifyAttrWithinInheritedLimit.zimbraMailQuota
-               
-
-3.2 User(admin) Defined Rights
-
-    Admin defined rights can span multiple types of targets.  When an admin right spanning multiple 
-    target types is granted on a target, only those sub-rights that are applicable to the target 
-    type are effective.  Non-applicable sub-rights are ignored.
-    
-    For example, if an admin right spanning account, server, domain is granted on a domain, then only 
-    the sub-rights that are applicable to domain and account are effective; rights for server will be 
-    ignored.
-    
-
-3.2.1 Rights on Modifying Combination of Attributes on Various Entry Types
-          e.g. admin can define a configureFooBar right that allows:
-               - modify attr A, B, C on accounts/cos
-               - modify attr D, E, F on accounts/cos within inherited limit
-               - modify attr G, H on domains
-               - modify attr I on servers
-               - modify attr J, K on servers within inherited limit
-               - modify attr L on global config
-
-
-3.2.2 Combo Rights - Rights Combining any Rights       
-          e.g. admin can define a right that combines the following rights:
-               - modifyAttrWithinInheritedLimit.zimbraMailQuota
-               - configureFooBar
-               - createAccount
-               - backupAccount
-               - restoreAccount
 
 
 =================
@@ -528,6 +649,9 @@ Depending on the context, there are three aspects of targets that need to be dea
                           
                   c2e3fd70-97ac-43a4-8caa-4bf681251a49 usr configureQuota
                       ==> account c2e3fd70-97ac-43a4-8caa-4bf681251a49 can configure quota of this account.
+                      
+                  2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 usr set.account.zimbraMailStatus
+                      ==> account 2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 can set account attribute zimbraMailStatus.
                        
         
     Indexing:
@@ -540,106 +664,15 @@ Depending on the context, there are three aspects of targets that need to be dea
         TODO
 
 
-4.2 System and Admin Defined Rights
-    
-    Location in DIT
-    ---------------
-        All rights will be stored on the config branch (cn=zimbra).
-        
-        Base DN for all rights: cn=rights,cn=zimbra
-        
-        Base DN for system defined rights: cn=system,cn=rights,cn=zimbra
-        
-        Base DN for admin defined rights: cn=custom,cn=rights,cn=zimbra
-        
-        
-    Right Definition
-    ----------------
-        Right attributes are captured in the object class zimbraRight.  Every right definition entry must belong to 
-        object class zimbraRight, which defines the base contents of the entry. 
-        
-        zimbraRight is derived from the superior object classes "top" and contains the following attributes:
-        -----------
-       
-           cn (from top)          : required, single-value, string 
-                                    right name
-                             
-           description (from top) : optional, single-value, string 
-                                    description of the right             
-                     
-           zimbraId               : required, single-value, immutable, string
-                                    right id generated by server 
-                                                    
-           zimbraRightType        : required, single-value, immutable, enum of 'fixed', 'getAttrs', 'modifyAttrs', 'combo'
-                                    - preset      : rights with predefined capabilities
-                                    - getAttrs    : rights that can read certain attributes on an attribute type
-                                    - modifyAttrs : rights that can read and write certain attributes on an attribute type
-                                    - combo'      : rights that contains other rights
-                 
-           and following optional, single-value, string attributes:
-                      
-           zimbraRightAccountAttribute:
-               attributes allowed on account
-               
-           zimbraRightCosAttribute:
-               attributes allowed on cos
-               
-           zimbraRightDomainAttribute:
-               attributes allowed on domain
-               
-           zimbraRightServerAttribute:
-               attributes allowed on server
-               
-           zimbraRightGlobalConfigAttribute
-               attributes allowed on global config
-               
-           zimbraRightAccountAttributeWithinInheritedLimit:
-               attributes allowed to be modified on account within cos limit
-               (applicable only if zimbraRightType is modifyAttrs)
-               
-           zimbraRightCosAttributeWithinInheritedLimit:
-               attributes allowed to be modified on cos within current cos limit
-               (applicable only if zimbraRightType is modifyAttrs)
-           
-           zimbraRightDomainAttributeWithinInheritedLimit:
-               attributes allowed to be modified on domain within global config limit
-               (applicable only if zimbraRightType is modifyAttrs)
-               
-           zimbraRightServerAttributeWithinInheritedLimit:
-               attributes allowed to be modified on server within global config limit
-               (applicable only if zimbraRightType is modifyAttrs)
-                             
-           zimbraRightRight
-               rights contained in this right
-               (applicable only if zimbraRightType is combo)   
 
->>>>> OPEN-ISSUE-2 
-           Should we store id instead of name in zimbraACE?
-           
-           pros: good for rename
-           cons: we are saving right name now in the current implementation
-           
-           We will not store zimbraId in zimbraACE for now.
-<<<<<
     
-    Right on Right Definition Entries
-    ---------------------------------
-        1. right definitions are readable to all admin accounts.  That is, the 
-           getRight right is never checked.  We can consider checking it if necessary.
-           
-        2. right definitions are not scoped.  They are like cos's and servers, are global 
-           entries that can be shared across domains.   
-        
-        3. rename, delete, modify of right definition entries are subject to zimbraACE 
-           granted on each right definition entry.   When a right definition entry is 
-           created, system automatically grants 3 rights: renameRight, deleteRight, modifyRight, 
-           to the account creating the right.
-          
-    
-4.3 Add the "global grant" Entry
+4.2 Add the "global grant" Entry
     cn=globalgrant,cn=zimbra
     
-    It is for granting grants that affect all entries on the system.
+    - For granting grants that affect all entries on the system.  e.g all cos's, all servers, all domains.
+    
+    - For granting the create{Object} rights that cannot be granted on any target becasue the target does not exist yet.
+      e.g. createTopDomain, createCos, createServer.
            
 
     
@@ -650,172 +683,118 @@ Depending on the context, there are three aspects of targets that need to be dea
 5.1 The Most Specific Grant Takes Precedence
     A) Target Scope
        
-       most specific                                                 least specific 
-       --------------------------------------------------------------------------
-       account  ->  group hierarchy  ->  domain(of the account)  ->  global grant
-       cos                                                           global grant
-       server                                                        global grant
+       most specific                                                          least specific 
+       ----------------------------------------------------------------------------------------
+       account            -> distribution lists -> domain(of the account)  -> global grant
+       distribution list  -> distribution lists -> domain(of the DL)       -> global grant
+       domain                                                              -> global grant
+       cos                                                                 -> global grant
+       server                                                              -> global grant
+       xmppcomponents                                                      -> global grant
+       zimlet                                                              -> global grant
        
-       Note, there is no "domain hierarchy" in the initial release.
-       Each domain is treated equally as far as target scope is concerned.
+       Note:
+         - all groups the account is a direct/indirect member of are considered equally 
+           when judging the grants.  We take union of all grants granted on all groups the 
+           target account is a member of.  If there is any negative grants, deny.  If 
+           the union is empty, deny,  Otherwise, allow.
+           
+         - sub domain does not have a role in grant judging.
        
-       e.g. 
-       1. For this hierarchy:
-              domain  domain.com
-              domain  sub.domain.com
-              group   g1@domain.com
-              group   g2@domain.com (a member of group g1@domain.com)
-              account user1@domain.com (a member of group g2@domain.com)
-              account user2@sub.domain.com (a member of group g1@domain.com)
        
-          if a right R is:
-              (a) allow admin A on domain.com
-              (b) deny  admin A on sub.domain.com
-              (c) allow admin A on group g1@domain.com
-              (d) deny  admin A on group g2@domain.com
+       e.g.1  given the following grants for right R:
+       
+            domain D (grant-1: allow admin A)
+                group G1 (grant-2: deny admin A)
+                    account U (grant-3: allow admin A)
                  
-          then:
-              - admin A is denied right R on user1@domain.com, because the most specific grant,
-                which is (d), denies it.
-                
-              - admin A is allowed right R on user@@sub.domain.com, because the most specific 
-                grant, which is (c), allows it.
-                
-          Note, in (a), (b), (c), (d), admin A is not necessarily the grantee of each grant, 
-          it can be a member of the group to which the right is granted.  (see B) below) 
-              
+            - admin A is allowed, because the most specific grant(grant-3) allows it.
+          
+       
+       e.g.2 given the following grants for right R:
+         
+            domain D (grant-1: allow admin A)
+                group G1 (grant-2: deny admin A)
+                    group G2 (grant-3: allow admin A)
+                        account U 
+                   
+            - admin A is denied, because grant-2 denies it.
+              Note: grant-2 and grant-3 are equally related to account U, grant-2 takes
+                    precedence because it is a negative grant. (see 5.2)
+
     
     
     B) Grantee Scope
     
        most specific                                 least specific 
        ------------------------------------------------------------
-       account                                       group hierarchy
+       account                                       distribution lists
        
-       e.g.
-       1. For this hierarchy:
-              group g1@domain.com
-              account user1@domain.com (a member of group g1@domain.com)
-              group admin-group@domain.com
-              admin account admin1@domain.com (a member of group admin-group@domain.com)
-              admin account admin2@domain.com (a member of group admin-group@domain.com)
-          
-          and the grants are:
-              (a) on account entry user1@domain.com
-                    {id of admin-group@domain.com} grp -rightR
-                    i.e. deny any direct or indirect member of group admin-group@domain.com 
-                         rightR on user1@domain.com.
-                         
-              (b) on account entry user1@domain.com
-                    {id of admin2@domain.com} usr rightR
-                    i.e. allow admin admin2@domain.com for rightR on user1@domain.com          
-                
-              (c) on group entry g1@domain.com
-                    {id of admin1@domain.com} usr rightR
-                    i.e. allow admin admin1@domain.com for rightR on any direct or indirect 
-                         members of g1@domain.com
+       Note:
+         - all groups the account is a direct/indirect member of are considered equally 
+           when judging the grants.  We take union of all grants granted on all groups the 
+           target account is a member of.  If there is any negative grants, deny.  If 
+           the union is empty, deny,  Otherwise, allow.
+       
+       e.g.1 given the following grants for right R:
+
+           user account U (grant-1: deny GA) (grant-2: allow A2)
+                  
+           admin group GA (A1 and A2 are members of group GA)
+               admin account A1
+               admin account A2
                      
-          then:
-              - admin1@domain.com is denied for rightR on user1@domain.com
-                because grant (a) denies it.  Even if admin1@domain.com is allowed by grant (c), 
-                but it is on the group level in the target scope, so grant (a) takes precedence 
-                over grant (c).
+           - admin A1 is denied for right R on account U, because grant-1 denies it.  
                 
-              - admin2@domain.com is allowed for rightR on user1@domain.com
-                because grant (b) allows it.  Even if grant (a) denies it, but it on the group 
-                level in the grantee scope, so grant (b) takes precedence over grant (a).
+           - admin A2 is allowed for right R on account U, because grant-2 allows it.
+             grant-2 takes precedence over grant-1 because it is directly granted to the 
+             admin account, whereas grant-1 is granted to a group.
+                
        
-    C) Combining Target Scope and Grantee Scope: Grantee Relativity takes Precedence over Target Relativity
-       For example, for this target hierarchy:
-           domain D
-               group G1 (allow right R to group GC)
-                   group G2 (deny right R to group GB)
-                       group G3 (deny right R to group GA)
-                           user account U   
+    C) Combining Target Scope and Grantee Scope: Target Relativity takes Precedence over Grantee Relativity
+       
+       For example, given the following grants for right R:
+       
+           group GU (grant-1: deny admin A)
+                   user account U (grant-2: allow group GA)
                        
-       And this grantee hierarchy:
-           group GA
-               group GB
-                   group GC
-                       (admin) account A
+           group GA (A is a member of group GA)
+               admin account A
                    
-       Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
-       Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
-       grant on G1(grant to GC).
-                           
+           - A is *allowed* for right R on target account U, because grant-2(granted on the target itself) is 
+             more specific to account U than grant-1(granted on a group the target account is a member of).
+             Even if on the grantee side, grant-1(grant to account A) is more specific than grant-2(grant to a group 
+             the authed account is a member of)
+                                  
 
 5.2 Negative Grants Takes Precedence Over Positive Grants
-    If grants are all equal in both target and grantee scope, and they conflict with each other, 
+    If grants are all equally related to the target and grantee, and they conflict - dome deny, some allow,
     then the negative grant takes precedence.
     
-    e.g. 
-    1. For this hierarchy:
-           group admin-group1@domain.com
-           group admin-group2@domain.com
-           admin account admin1@domain.com (a member in both admin-group1@domain.com and admin-group2@domain.com)
-           account user1@domain.com
+    e.g.1. 
+           target account U (grant-1: allow group GA) (grant-2: deny group GA)
            
-       and the grants are:
-           (a) on account entry user1@domain.com
-                 {id of admin-group1@domain.com} grp -rightR
-            
-           (b) on account entry user1@domain.com
-                 {id of admin-group1@domain.com} grp rightR  
-                 
-       then:
-           - admin admin1@domain.com is denied for rightR on user1@domain.com, because of grant (a), which is 
-             a negative grant that takes precedence over the positive grant (b) on equally scoped target/grantee.
-             
-    2. For this hierarchy:
-           group g1@domain.com
-           group g2@domain.com
-           account user1@domain.com (a member in both group g1@domain.com and group g2@domain.com)
-           admin account admin1@domain.com
+           admin account A is a member of group GA
            
-       and the grants are:
-           (a) on group entry g1@domain.com
-                 {id-of-admin1@domain.com} usr -rightR 
-                 
-           (b) on group entry g2@domain.com
-                 {id-of-admin1@domain.com} usr rightR 
-                 
-       then:
-           admin admin1@domain.com is denied for rightR on user1@domain.com, because of grant (a), which is 
-           a negative grant that takes precedence over the positive grant (b) on equally scoped target/grantee.                       
-    
-
-5.3 Conflict Grants on the Same Target, to the Same Grantee, on the Same Right, the Result is "unexpected"
-    5.1 and 5.1 are for scenarios when grants on *different* entries or to *different* grantees, conflict with 
-    one another.  
-    
-    When an existing grant is modified or when a new grant is added, our granting code will ensure that 
-    only one grant can exist for the same grantee, same right.
-    
-    For example, if there is a grant on user1@domain.com
-        {id-of_admin@domain.com} usr rightR
-    then on user1@domain.com there can't be a     
-        {id-of_admin@domain.com} usr -rightR
-    
-    However, if such grants does get into LDAP for any reason (e.g. by ldapmodify), the result is *unexpected*.
-    
-    We could've spent more cycles detecting such conflicting settings and honor the negative grant if there 
-    is one, but currently the implementation choice is not to do so.  If this becomes a problem, we can change 
-    the implementation.  For example, while walking through all grants on a target for rightR, it will stop 
-    with a result if a grant specifically granted to the authed account for rightR(allow or deny) is found.
-    It will not continue to examine other grants because this is grant is as specific as can be.
-    
-    However, note, for checking rights for Get{object}/Modify{object} SOAP Calls, we will iterate through all 
-    rights, instead of stopping when a most specific grant is found.  This is because we need to expand all 
-    rights down to attribute level.  See 5.4 below. 
+           - admin account A is denied, because grant-2, the negative grant, takes precedence.
+           
+    e.g.2. 
+           group GU-1 (grant-1: deny admin A)
+               group GU-2 (grant-2: allow admin A)
+                   account U
+           
+           - admin A is denied, because grant-1 and grant-2 are equally related to the target account U,
+             so the negtive grant takes precedence.  
+       
     
     
-5.4 For Get{object}/Modify{object} SOAP Calls
-    All positive/negative rights will be expanded down to each attribute level and computed into a net set 
-    of attributes allowed for read/write.
+5.3 For Get{object}/Modify{object} SOAP Requests
+    All positive/negative rights will be expanded down to each attribute level and computed into an
+    effective set of attributes allowed for read/write.
     
-    Get{object}/Modify{object} will be allowed only if all attributes requested for Get/Modify is allowed 
-    to be read/written; otherwise the entire request will be denied(PERM_DENIED exception) and no attribute 
-    is returned/updated.
+    Get{object}/Modify{object} will be allowed only if all attributes requested for Get/Modify are allowed 
+    to be read/modified; otherwise the entire request will be denied(PERM_DENIED exception) and no attribute 
+    is returned/modified.
 
                              
 
@@ -946,7 +925,7 @@ if <grantee> is omitted, it means the account identified by the auth token.
   <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
       <right n="{right-name}"/>+
       <setAttrs [all="{all}"]>
-        <a n="..." [l="{limit}"]>+
+        <a n="..." [min="{min-constraint}"] [max="max-constraint"] [values="{common-seperated-allowed-values}"]/>+
       </setAttrs>
       <getAttrs [all="{all}"]>
         <a n="...">+
@@ -980,8 +959,9 @@ if <grantee> is omitted, it means the account identified by the auth token.
         <right n="renameAccount"/>
         <right n="deleteAccount"/>
         <setAttrs>
-          <a n="zimbraMailQuota" l="1"/>
-          <a n="..."/>
+          <a n="zimbraMailQuota" min="100000000"/>
+          <a n="zimbraMailStatus"/>
+          <a n="zimbraFeatureMailEnabled" values="TRUE,FALSE"/>
           ...
         </setAttrs>
         <getAttrs>
@@ -993,137 +973,20 @@ if <grantee> is omitted, it means the account identified by the auth token.
     </GetEffectiveRightsRequest>
 
          
-6.2 Create/Delete/Get/Rename/Modify Custom Rights
+6.2 Get/GetAll Right Definition
 
-6.2.1 CreateRightRequest
-      Create a custom right right.
-    
-<CreateRightRequest>
-  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
-    <desc>{right-description}</desc>
-    [<attrs>
-       <a n="{attr-name}" l="{limit}"/>+
-     </attrs>]
-    [<rights>
-       <r n="{right-name}"/>+
-     </rights>]
-  </right>
-</CreateRightRequest>
-
-{right-type}: getAttrs | setAttrs | combo
-              getAttrs - can read attributes
-              setAttrs - can read and write attributes
-              combo    - combo right containing other already defined rights
-              
-              If {right-type} is "getAttrs" or "setAttrs", attributes can be get/set by the right 
-              is defined in the <attrs> element. 
-              If {right-type} is is "combo", rights covered by the right is defined in the <rights>
-              element.
-  
-{target-type}:
-    Target type on which the right is applicable.
-    1. For getAttrs/setAttrs rights:
-           Optional and can have multiple values separated by comma.
-           
-           e.g. If a get/setAttrs right has:
-                    account/cos attrs A, B, C
-                    domain attrs X, Y, Z
-                    server attrs M, N
-                    account/cos/domain/server attrs P, Q
-           
-           - If <targetType> is set:
-                 The right is only effective when granted on one of the specified entry types.
-                 e.g.
-                 - if <targetType> contains "account" only, then the right is effective 
-                   only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
-
-                 -  if <targetType> contains "account,cos,server" then the right is effective 
-                    for: account attrs A, B, C, P, Q
-                         cos attrs A, B, C, P, Q
-                         server attrs P, Q
-  
-           - If <targetType> is omitted:
-                 It means the right is not affiliated with a particular target type.  
-    
-    2. For combo rights:
-           Not allowed.
-
-  
-<attrs>: Attributes covered by the right.
-         Required if {right-type} is "getAttrs" or "setAttrs".  Ignored otherwise.
-         
-         {attr-name} in <a> elements can contain any attrs from any type of entries.
-         e.g.  attrs A, B, C (acount/cos attrs)
-               attrs X, Y, Z (domain attrs)
-               attrs M, N    (server attrs)
-               attrs P, Q    (account/cos/server/domain/distributionlist attrs)
-               
-         Out of all attrs defined for a get/setAttrs right, the "effective" attrs at right checking time 
-         are those that exist on the target entry on which the operation is to be performed.
-         e.g. if the right in the above example is granted on a domain entry, then the grantee can (or cannot 
-              if the right granted as negative right) access:
-                - attributes A, B, C on all account under the domain
-                - attributes X, Y, Z, P, Q on the domain
-                - attributes P, Q on all account/distributionlist in the domain
-                
-         NOTE: User cannot define a custom right with "allow all attrs".  Custom getAttrs/setAttrs rights
-               *must* specify a set of attributes that are allowed by the right. 
-               The "allow all attributes" rights on each target type are defined by the 
-               system, namely the getAccount, getCalendarResource, getDistributionList,
-               getCos, getServer, getDomain, (getRight TODO), getXMPPComponents, and 
-               getConfig rights.
-               
-                  
-{l}: 
-    If the attribute can be modified to any value or only within inherited limit.
-    Only applicable and required when {right-type} is "setAttrs".
-    0: (default) the attribute can be modified to any value allowed by the attribute definition
-    1: the attribute can only be modified within inherited limit
-
-{attr-name}:
-    Attribute name covered by the right
-    
-<rights>: Rights covered by the right.
-          Required if {right-type} is "combo".  Ignored otherwise.
-          {right-name} in <r> elements can contain any right name that is already defined, including any 
-          system rights and custom rights.
-
-    
-<CreateRightResponse>
-  <right name="{right-name}" id="right-id" type="{right-type}" [targetType="{target-type}"]>
-    <desc>{right-description}</desc>
-    [<attrs>
-       <a n="{attr-name}" l="{limit}"/>+
-     </attrs>]
-    [<rights>
-       <r n="{right-name}"/>+
-     </rights>]
-  </right>
-</CreateRightResponse>
-
-
-6.2.2 DeleteRightRequest
-      Delete a custom right.
-    
-<DeleteRightRequest>
-  <id>{value-of-zimbraId}</id>
-</DeleteRightRequest>
-
-<DeleteRightResponse/>
-
-
-6.2.3 GetRightRequest
-      Get a custom or system right.
+6.2.1 GetRightRequest
+      Get a right definition.
     
 <GetRightRequest>
-  <right by="id|name">...</right>
+  <right>{right-name}</right>
 </GetRightRequest>
 
 <GetRightResponse>
-  <right name="{right-name}" [id="{right-id}"] type="{right-type}" [targetType="{target-type}"] definedBy="{defined-by}">
+  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs>
-       <a n="{attr-name}" l="{limit}"/>+
+       <a n="{attr-name}"/>+
      </attrs>]
     [<rights>
        <r n="{right-name}"/>+
@@ -1133,8 +996,6 @@ if <grantee> is omitted, it means the account identified by the auth token.
 
 {right-name}: right name
 
-{right-id}: only present if the right is a custom right
-
 {right-type}: getAttrs | setAttrs | combo | preset
 
 {target-type}: if {right-type} is:
@@ -1142,82 +1003,26 @@ if <grantee> is omitted, it means the account identified by the auth token.
                - getAttrs/setAtrts: optional
                - combo: always not present
 
-{defined-by}: system | custom
 
-
-6.2.4 RenameRight
-      Rename a custom right.
-    
-<RenameRightRequest>
-  <id>{value-of-zimbraId}</id>
-  <newName>{new-right-name}</newName>
-</RenameRightRequest>
-
-<RenameRightResponse/>
-  <right name="{new-right-name}"/>
-</RenameRightResponse>
-
-
-6.2.5 ModifyRightRequest 
-      Modify a custom right.
-    
-<ModifyRightRequest>
-  <right id="{right-id}" [targetType="{target-type}"]>
-    <desc>{right-description}</desc>
-    [<attrs>
-       <a n="{modifier}{attr-name}" l="{limit}"/>+
-     </attrs>]
-    [<rights>
-       <r n="{modifier}{right-name}"/>+
-     </rights>]
-  </right>
-</ModifyRightRequest>
-
-{modifier}: + | -
-            +: add attr for getAttrs/setAttrs right; right for combo right
-            -: remove attr for getAttrs/setAttrs right; right for combo right
-
-{target-type}:
-    see CreateRight
-    Optional for setAttrs/getAttrs rights
-    Now allowed for combo rights
-    
-Note: right type cannot be modified.
-
-<ModifyRightResponse>
-  <right name="right-name" id="{right-id}" type="{right-type}" [targetType="{target-type}"]>
-    <desc>{right-description}</desc>
-    [<attrs>
-       <a n="{attr-name}" l="{limit}"/>+
-     </attrs>]
-    [<rights>
-       <r n="{right-name}"/>+
-     </rights>]
-  </right>
-</ModifyRightResponse>
-
-ModifyRightResponse contains the new right definition.
-
-
-6.2.6 GetAllRights
-
+6.2.2 GetAllRights
+      Get all system defined rights
+      
 <GetAllRightsRequest/>
 
-Get all system and custom rights
-
 <GetAllRightsResponse>
-  <right name="{right-name}" [id="{right-id}"] type="{right-type}" [targetType="{target-type}"] definedBy="{defined-by}">
+  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs>
-       <a n="{attr-name}" l="{limit}"/>+
+       <a n="{attr-name}"/>+
      </attrs>]
     [<rights>
        <r n="{right-name}"/>+
      </rights>]
   </right>+
-</GetAllCosResponse>
+</GetAllRightsResponse>
 
 See <GetRightResponse> for description of each <right> in the response. 
+
 
 ===========
 7. zmprov
