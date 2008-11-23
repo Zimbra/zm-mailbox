@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.io.IOException;
 
 public final class ImapUtil {
@@ -31,14 +32,13 @@ public final class ImapUtil {
 
     // Used for sorting ListData lexicographically in reverse order. This
     // ensures that inferior mailboxes will be processed before their
-    // parents, which avoids problems when deleting folders. Also, ignore
-    // case of INBOX part when comparing INBOX or its inferiors.
+    // parents which avoids problems when deleting folders. Also, ignore
+    // case when comparing mailbox names so we can remove duplicates (Zimbra
+    // folder names are case insensitive).
     private static final Comparator<ListData> COMPARATOR =
         new Comparator<ListData>() {
             public int compare(ListData ld1, ListData ld2) {
-                String name1 = getNormalizedName(ld1);
-                String name2 = getNormalizedName(ld2);
-                return name2.compareTo(name1);
+                return ld2.getMailbox().compareToIgnoreCase(ld1.getMailbox());
             }
         };
 
@@ -77,9 +77,25 @@ public final class ImapUtil {
         sorted.addAll(inboxInferiors);
         Collections.sort(otherFolders, COMPARATOR);
         sorted.addAll(otherFolders);
+        removeDuplicates(sorted);
         return sorted;
     }
 
+    private static void removeDuplicates(List<ListData> sorted) {
+        Iterator<ListData> it = sorted.iterator();
+        if (it.hasNext()) {
+            ListData ld = it.next();
+            while (it.hasNext()) {
+                ListData next = it.next();
+                if (ld.getMailbox().equalsIgnoreCase(next.getMailbox())) {
+                    it.remove();
+                } else {
+                    ld = next;
+                }
+            }
+        }
+    }
+    
     private static ListData getDefaultInbox(List<ListData> sorted) {
         for (ListData ld : sorted) {
             if (isInboxInferior(ld)) {
@@ -87,17 +103,6 @@ public final class ImapUtil {
             }
         }
         return null;
-    }
-    
-    private static String getNormalizedName(ListData ld) {
-        String name = ld.getMailbox();
-        if (name.equalsIgnoreCase(INBOX)) {
-            return INBOX;
-        } else if (isInboxInferior(ld)) {
-            return INBOX + name.substring(INBOX_LEN);
-        } else {
-            return name;
-        }
     }
     
     /*
