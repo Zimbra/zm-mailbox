@@ -31,7 +31,7 @@ import java.io.IOException;
 public class TestImapUtil extends TestCase {
     private static final String[] FOLDERS = {
         "BOOBOO/BEAR", "INBOX", "Inbox", "Inbox/Foo", "Foobar", "INBOX/bar",
-        "Foobar/Blah Blah/XXX", "Foobar/Blah Blah"
+        "Foobar/Blah Blah/XXX", "foobar", "Foobar/Blah Blah"
     };
 
     private static final String[] FOLDERS_2 = {
@@ -74,7 +74,7 @@ public class TestImapUtil extends TestCase {
     };
 
     private static final String[] SORTED_FOLDERS = {
-        "INBOX", "INBOX/bar", "Inbox/Foo", "Foobar/Blah Blah/XXX",
+        "INBOX", "Inbox/Foo", "INBOX/bar", "Foobar/Blah Blah/XXX",
         "Foobar/Blah Blah", "Foobar", "BOOBOO/BEAR"
     };
 
@@ -86,6 +86,13 @@ public class TestImapUtil extends TestCase {
     public void testSortFolders2() throws Exception {
         List<String> folders = getNames(ImapUtil.sortFolders(parseFolders(FOLDERS_2)));
         assertEquals("INBOX", folders.get(0));
+    }
+
+    private void compareLists(List<?> expected, List<?> actual) {
+        assertEquals(expected.size(), actual.size());
+        for (int i = 0; i < expected.size(); i++) {
+            assertEquals(expected.get(i), actual.get(i));
+        }
     }
     
     private List<ListData> parseFolders(String[] folders) throws IOException {
