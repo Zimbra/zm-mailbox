@@ -22,6 +22,8 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+
 import java.util.Map;
 
 /**
@@ -34,4 +36,13 @@ public class Server extends ZAttrServer {
     public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
     }
+
+    public void deleteServer(String zimbraId) throws ServiceException {
+        getProvisioning().deleteServer(getId());
+    }
+
+    public void modify(Map<String, Object> attrs) throws ServiceException {
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
 }

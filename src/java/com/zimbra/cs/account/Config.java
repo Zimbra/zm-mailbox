@@ -46,6 +46,10 @@ public class Config extends ZAttrConfig {
         return "globalconfig";
     }
 
+    public void modify(Map<String, Object> attrs) throws ServiceException {
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
     @Override
     public void resetData() {
         super.resetData();

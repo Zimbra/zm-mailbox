@@ -17,13 +17,9 @@
 
 package com.zimbra.cs.account;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.zimbra.common.service.ServiceException;
+
+import java.util.Map;
 
 public class DistributionList extends ZAttrDistributionList {
     
@@ -40,6 +36,34 @@ public class DistributionList extends ZAttrDistributionList {
     
     protected DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
+    }
+
+    public void modify(Map<String, Object> attrs) throws ServiceException {
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    public void deleteDistributionList() throws ServiceException {
+        getProvisioning().deleteDistributionList(getId());
+    }
+
+    public void addAlias(String alias) throws ServiceException {
+        getProvisioning().addAlias(this, alias);
+    }
+
+    public void removeAlias(String alias) throws ServiceException {
+        getProvisioning().removeAlias(this, alias);
+    }
+
+    public void renameDistributionList(String newName) throws ServiceException {
+        getProvisioning().renameDistributionList(getId(), newName);
+    }
+
+    public void addMembers(String[] members) throws ServiceException {
+        getProvisioning().addMembers(this, members);
+    }
+
+    public void removeMembers(String[] member) throws ServiceException {
+        getProvisioning().removeMembers(this, member);
     }
 
     public String[] getAllMembers() throws ServiceException {

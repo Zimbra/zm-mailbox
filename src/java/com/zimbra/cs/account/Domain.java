@@ -25,9 +25,13 @@ package com.zimbra.cs.account;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
+import com.zimbra.cs.account.Provisioning.GalMode;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.ZAttrProvisioning.DomainStatus;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,7 +50,63 @@ public class Domain extends ZAttrDomain {
         else
             mUnicodeName = IDNUtil.toUnicodeDomainName(name);
     }
+
+    public void modify(Map<String, Object> attrs) throws ServiceException {
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    public void deleteDomain(String zimbraId) throws ServiceException {
+        getProvisioning().deleteDomain(getId());
+    }
     
+    public List getAllAccounts() throws ServiceException {
+            return getProvisioning().getAllAccounts(this);
+    }
+
+    public void getAllAccounts(NamedEntry.Visitor visitor) throws ServiceException {
+        getProvisioning().getAllAccounts(this, visitor);
+    }
+
+    public void getAllAccounts(Server s, NamedEntry.Visitor visitor) throws ServiceException {
+        getProvisioning().getAllAccounts(this, s, visitor);
+    }
+
+    public List getAllCalendarResources() throws ServiceException {
+        return getProvisioning().getAllCalendarResources(this);
+    }
+
+    public void getAllCalendarResources(NamedEntry.Visitor visitor) throws ServiceException {
+        getProvisioning().getAllCalendarResources(this, visitor);
+    }
+
+    public void getAllCalendarResources(Server s, NamedEntry.Visitor visitor) throws ServiceException {
+        getProvisioning().getAllCalendarResources(this, s, visitor);
+    }
+
+    public List getAllDistributionLists() throws ServiceException {
+        return getProvisioning().getAllDistributionLists(this);
+    }
+
+    public List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException {
+        return getProvisioning().searchAccounts(this, query, returnAttrs, sortAttr, sortAscending, flags);
+    }
+
+    public List searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException {
+        return getProvisioning().searchCalendarResources(this, filter, returnAttrs, sortAttr, sortAscending);
+    }
+
+    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
+        return getProvisioning().searchGal(this, query, type, token);
+    }
+
+    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, String token, GalContact.Visitor visitor) throws ServiceException {
+        return getProvisioning().searchGal(this, query, type, token, visitor);
+    }
+
+    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, GalMode mode, String token) throws ServiceException {
+        return getProvisioning().searchGal(this, query, type, mode, token);
+    }
+
     @Override
     protected void resetData() {
         super.resetData();
