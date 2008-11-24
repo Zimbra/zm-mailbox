@@ -37,6 +37,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -280,23 +281,21 @@ public class MailboxManager {
     public Mailbox getMailboxByAccountId(String accountId, FetchMode fetchMode) throws ServiceException {
         if (accountId == null)
             throw new IllegalArgumentException();
-    
+
         Integer mailboxKey;
         synchronized (this) {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
         }
-        if (mailboxKey != null)
+        if (mailboxKey != null) {
+            if (DebugConfig.mockMultiserverInstall)
+                verifyCorrectHost(accountId);
             return getMailboxById(mailboxKey.intValue(), fetchMode, false);
-        else if (fetchMode != FetchMode.AUTOCREATE)
+        } else if (fetchMode != FetchMode.AUTOCREATE) {
             return null;
+        }
     
         // auto-create the mailbox if this is the right host...
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
-        if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!Provisioning.onLocalServer(account))
-            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-
+        Account account = verifyCorrectHost(accountId);
         synchronized (this) {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
         }
@@ -304,6 +303,15 @@ public class MailboxManager {
             return getMailboxById(mailboxKey.intValue(), fetchMode, false);
         else
             return createMailbox(null, account);
+    }
+
+    private Account verifyCorrectHost(String accountId) throws ServiceException {
+        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
+        if (account == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+        if (!Provisioning.onLocalServer(account))
+            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
+        return account;
     }
 
 

@@ -119,6 +119,11 @@ public class DebugConfig {
     // most DBMSes can't deal with).
     public static final int numMailboxGroups;
     
+    // If true, more than one server may be sharing the same store and database
+    // install.  In that case, the server must perform extra checks to ensure
+    // that mailboxes "homed" on other servers are treated accordingly.
+    public static final boolean mockMultiserverInstall;
+
     // If true, the GAL sync visitor mechanism is disabled.  SyncGal will use 
     // the traditional way of adding matches to a SearchGalResult, then add 
     // each match in the SOAP response.   The GAL sync visitor mechanism reduces  
@@ -162,7 +167,9 @@ public class DebugConfig {
 
         disableMailboxGroups = booleanValue("debug_disable_mailbox_group", false);
         numMailboxGroups = disableMailboxGroups ? Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
-        
+
+        mockMultiserverInstall = booleanValue("debug_mock_multiserver_install", false);
+
         disableGalSyncVisitor = booleanValue("debug_disable_gal_sync_visitor", false);
 
         disableCalendarTZMatchByID = booleanValue("debug_disable_calendar_tz_match_by_id", false);

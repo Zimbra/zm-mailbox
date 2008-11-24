@@ -10,12 +10,11 @@
    of ZimbraServer project to start/stop.
 
 3. On Windows if you really want to install jetty as a Windows service
-   you can achieve using Java Service Wrapper.
-   Google search and download wrapper-windows-x86-32-3.2.3.zip and
-   unzip it.  Copy the wrapper.exe file under the unzipped bin
-   directory to C:\opt\zimbra\bin.  Copy wrapper.jar and wrapper.dll
-   under the unzipped lib directory to C:\opt\zimbra\lib.  Finally,
-   copy your p4 ZimbraServer\conf\jetty-6.1\wrapper.conf to
+   you can use the Java Service Wrapper.  The files are checked in
+   under ZimbraServer\tools\jetty; if you'd prefer to download them
+   yourself you can Yahoo! search for wrapper-windows-x86-32-3.2.3.zip
+   and unzip it.  Copy wrapper.exe to C:\opt\zimbra\bin, wrapper.jar and
+   wrapper.dll to C:\opt\zimbra\lib, and wrapper.conf to
    C:\opt\zimbra\jetty\etc.  Now run:
 
      wrapper.exe -i C:\opt\zimbra\jetty\etc\wrapper.conf 

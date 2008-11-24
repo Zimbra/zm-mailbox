@@ -46,12 +46,17 @@
     </condition>
     <property name="zimbra.kerberos.realm" value="ZIMBRA.COM"/>
 
+    <condition property="production.suffix" value=".production" else="">
+        <isset property="is-production"/>
+    </condition>
+
     <property name="build.dir" location="build"/>
     <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
     <property name="dist.dir" location="build/dist"/>
+    <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
     <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
-    <property name='warfilename' value='service.war'/>
+    <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
     <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
     <property name="common.dir" location="../ZimbraCommon"/>
@@ -70,13 +75,15 @@
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="config.dir" location="conf"/>
+	<property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
     <property name="zimlet.dir" location="../Zimlet/build/dist"/>
     <property file="${zimlet.dir}/build.properties"/>
 
     <property name="deploy.war" value="${warfile}"/>
-    <property name="deploy.host" value="localhost"/>
+    <property name="deploy.host" value="127.0.0.1"/>
     <property name="deploy.port" value="7070"/>
+    <property name="ldap.host" value="127.0.0.1"/>
     <property name="ldap.port" value="389"/>
     
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
@@ -86,12 +93,13 @@
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_PORT"/>
     </condition>
 
-    <property name="lmtp.host" value="localhost"/>
+    <property name="lmtp.host" value="127.0.0.1"/>
     <property name="lmtp.port" value="7025"/>
     <property name="lmtpinject.numthreads" value="2"/>
 
     <property name="zimbra.home.dir" location="/opt/zimbra"/>
     <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
+    <property name="jetty.conf.dir" value="${jetty.home.dir}/etc"/>
     <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
     <property name="jetty.version" value="6.1.5"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
@@ -136,15 +144,11 @@
         <isset property="env.ZIMBRA_JETTY_USE_SERVICE"/>
     </condition>
 
-    <property name="webserver.name" value="jetty"/>
-    <property name="webserver.root.dir" location="${zimbra.home.dir}/${webserver.name}"/>
-    <property name="webserver.conf.dir" value="${webserver.root.dir}/etc"/>
-
     <condition property="deploy.dir" value="${env.DEPLOY_DIR}">
         <isset property="env.DEPLOY_DIR"/>
     </condition>
 
-    <condition property="deploy.dir" value="${webserver.root.dir}/webapps">
+    <condition property="deploy.dir" value="${jetty.home.dir}/webapps">
         <not><isset property="env.DEPLOY_DIR"/></not>
     </condition>
 
@@ -161,13 +165,6 @@
     </condition>
     <condition property="native.so" value="so">
         <not><os name="Mac OS X"/></not>
-    </condition>
-
-    <condition property="production.suffix" value=".production">
-        <isset property="is-production"/>
-    </condition>
-    <condition property="production.suffix" value="">
-        <not><isset property="is-production"/></not>
     </condition>
 
     <property name="slapd.config.dir" value="${config.dir}/ldap/config"/>
@@ -342,11 +339,11 @@
         <echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
             package com.zimbra.cs.util;
             class BuildInfoGenerated {
-            public static final String VERSION = "${zimbra.buildinfo.version}";
-            public static final String TYPE = "${zimbra.buildinfo.type}";
-            public static final String RELEASE = "${zimbra.buildinfo.release}";
-            public static final String DATE = "${DSTAMP}-${TSTAMP}";
-            public static final String HOST = "${zimbra.buildinfo.host}";
+	            public static final String VERSION = "${zimbra.buildinfo.version}";
+	            public static final String TYPE = "${zimbra.buildinfo.type}";
+	            public static final String RELEASE = "${zimbra.buildinfo.release}";
+	            public static final String DATE = "${DSTAMP}-${TSTAMP}";
+	            public static final String HOST = "${zimbra.buildinfo.host}";
             }
         </echo>
         <javac destdir="${build.classes.dir}" debug="true" srcdir="${build.dir}/buildinfo">
@@ -508,7 +505,7 @@
 
     <target name="war" depends="jar">
         <echo>war.include=${war.include}</echo>
-        <war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
+        <war warfile="${warfile}" webxml="${war.web.xml}">
             <fileset dir="WebRoot"/>
             <lib file="${im.jarfile}"/>
             <lib file="${jarfile}"/>
@@ -527,11 +524,11 @@
     </target>
 
     <target name="copy-war" depends="stop-jetty,war">
-        <delete dir="${webserver.root.dir}/webapps/service"/>
-        <delete file="${webserver.root.dir}/webapps/service.war"/>
-        <copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
-        <mkdir dir='${webserver.root.dir}/webapps/service'/>
-        <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}"/>
+        <delete dir="${jetty.home.dir}/webapps/service"/>
+        <delete file="${jetty.home.dir}/webapps/service.war"/>
+        <copy file="${warfile}" todir="${jetty.home.dir}/webapps"/>
+        <mkdir dir='${jetty.home.dir}/webapps/service'/>
+        <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
@@ -550,7 +547,7 @@
             <fileset dir="${dist.dir}">
                 <exclude name="conf/localconfig.xml"/>
                 <!-- don't trash zimbra_server_hostname -->
-                <exclude name="${webserver.name}/webapps/**"/>
+                <exclude name="jetty/webapps/**"/>
                 <!-- deploy-war covers these -->
             </fileset>
         </copy>
@@ -591,7 +588,7 @@
         <antcall target="start-webserver"/>
     </target>
 
-    <target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
+    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -605,7 +602,7 @@
                 <copy tofile="${dist.dir}/bin/zmmailboxdctl" file="${src.dir}/bin/zmmailboxdctl" overwrite="true"/>
             </then>
             <else>
-                <copy tofile="${dist.dir}/bin/${webserver.name}" file="${src.dir}/bin/${webserver.name}"
+                <copy tofile="${dist.dir}/bin/jetty" file="${src.dir}/bin/jetty"
                       overwrite="true"/>
             </else>
         </if>
@@ -625,13 +622,11 @@
         <if>
             <not><isset property="is-production"/></not>
             <then>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
-                      failonerror="true">
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
                     <arg line="-e mailboxd_directory=/opt/zimbra/jetty"/>
                 </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
-                      failonerror="true">
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
                     <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
                 </java>
@@ -665,31 +660,18 @@
         <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
-        <copy todir="${dist.dir}/jetty/webapps" file="${warfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
-        <copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
-        <copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
-        <copy tofile="${dist.dir}/jetty/etc/webdefault.xml"
-              file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
-        <if>
+    	<!-- jetty windows service wrapper -->
+    	<if>
             <isset property="is-windows"/>
             <then>
-                <copy tofile="${dist.dir}/jetty/etc/wrapper.conf" file="${config.dir}/jetty-6.1/wrapper.conf"/>
+            	<echo>Copying jetty windows service wrapper files</echo>
+                <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
+                <!-- <copy todir="${dist.dir}/bin" file="tools/jetty/wrapper.exe"/> -->
+                <copy todir="${dist.dir}/lib" file="tools/jetty/wrapper.jar"/>
+                <copy todir="${dist.dir}/lib" file="tools/jetty/wrapper.dll"/>
             </then>
         </if>
-        <copy tofile="${dist.dir}/jetty/resources/log4j.properties"
-              file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
-        <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
-            <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},${ziputil.jar},${db.driver.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar,jdom*.jar,jdavmail*,json.jar,testng*.jar"/>
-        </copy>
-        <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
-            <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
-        </copy>
-        <copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
-        <copy todir="${dist.dir}/jetty/lib" overwrite="true">
-            <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
-        </copy>
+
 
         <!-- openldap -->
         <copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/>
@@ -703,7 +685,7 @@
 
         <!-- db schema -->
         <copy todir="${dist.dir}/db" overwrite="true">
-            <fileset dir="${src.dir}/db" includes="*.sql" excludes="db.sql,create_database.sql"/>
+            <fileset dir="${src.dir}/db" includes="*.sql"/>
         </copy>
         <copy todir="${dist.dir}/db" overwrite="true">
             <fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/>
@@ -727,6 +709,33 @@
               overwrite="true"/>
     </target>
 
+	<target name="dev-dist-jetty">
+        <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
+        <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
+        <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
+        <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
+        <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
+              file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
+        <if>
+            <isset property="is-windows"/>
+            <then>
+                <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
+            </then>
+        </if>
+        <copy tofile="${dist.dir}/jetty/resources/log4j.properties"
+              file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
+        <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
+            <fileset dir="${common.jars.dir}"
+                     includes="${ical4j.jar},${ziputil.jar},${db.driver.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar,jdom*.jar,jdavmail*,json.jar,testng*.jar"/>
+        </copy>
+        <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
+            <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
+        </copy>
+        <copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/jetty/lib" overwrite="true">
+            <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
+        </copy>
+    </target>
 
     <target name="reset-jetty" description="Resets jetty">
         <delete dir="${jetty.home.dir}"/>
@@ -859,8 +868,7 @@
             <socket server="${lmtp.host}" port="${lmtp.port}"/>
         </waitfor>
         <echo>LmtpInject messages</echo>
-        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
-              failonerror="true">
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s user1@example.zimbra.com -d"/>
             <arg path="data/TestMailRaw"/>
         </java>
@@ -868,10 +876,9 @@
 
     <target name="localhost-ssl-cert">
         <delete failonerror="no">
-            <fileset dir="${webserver.conf.dir}" includes="keystore"/>
+            <fileset dir="${jetty.conf.dir}" includes="keystore"/>
         </delete>
-        <genkey alias="${webserver.name}" storepass="zimbra" keyalg="rsa" verbose="false"
-                keystore="${webserver.conf.dir}/keystore" validity="365">
+        <genkey alias="jetty" storepass="zimbra" keyalg="rsa" verbose="false" keystore="${jetty.conf.dir}/keystore" validity="365">
             <dname>
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
@@ -879,8 +886,7 @@
                 <param name="C" value="US"/>
             </dname>
         </genkey>
-        <genkey alias="${webserver.name}-dsa" storepass="zimbra" keyalg="dsa" verbose="false"
-                keystore="${webserver.conf.dir}/keystore" validity="365">
+        <genkey alias="jetty-dsa" storepass="zimbra" keyalg="dsa" verbose="false" keystore="${jetty.conf.dir}/keystore" validity="365">
             <dname>
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
@@ -892,11 +898,11 @@
 
     <target name="keystore-backup">
         <mkdir dir="${zimbra.home.dir}/conf/keystore-backup"/>
-        <copy file="${webserver.conf.dir}/keystore" tofile="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" overwrite="true"/>
+        <copy file="${jetty.conf.dir}/keystore" tofile="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" overwrite="true"/>
     </target>
     
     <target name="keystore-restore">
-        <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${webserver.conf.dir}/keystore" overwrite="true"/>
+        <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${jetty.conf.dir}/keystore" overwrite="true"/>
     </target>
 
     <target name="dir-init">
@@ -916,24 +922,20 @@
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
         <delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
+   		<delete dir="${zimbra.home.dir}/data"/>
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
         </delete>
-        <delete failonerror="no">
-            <fileset dir="${webserver.root.dir}/logs" includes="*"/>
-        </delete>
-        <delete dir="${webserver.root.dir}/webapps/service"/>
-        <delete file="${webserver.root.dir}/webapps/service.war"/>
+    	<antcall target="dir-init-jetty"/>
 
-   		<delete dir="${zimbra.home.dir}/data"/>
    		
     	<mkdir dir="${zimbra.home.dir}/data"/>
       	<mkdir dir="${zimbra.home.dir}/data/ldap"/>
        	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb"/>
        	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/db"/>
        	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/logs"/>
-       	<mkdir dir="${zimbra.home.dir}/data/ldap/config"/>       	
-
+       	<mkdir dir="${zimbra.home.dir}/data/ldap/config"/>
+     	
     	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
@@ -946,6 +948,14 @@
             <param name="base.dir" value="${zimbra.home.dir}"/>
         </antcall>
     </target>
+
+	<target name="dir-init-jetty">
+        <delete failonerror="no">
+            <fileset dir="${jetty.home.dir}/logs" includes="*"/>
+        </delete>
+        <delete dir="${jetty.home.dir}/webapps/service"/>
+        <delete file="${jetty.home.dir}/webapps/service.war"/>
+	</target>
 
     <target name="choose-db-schema">
         <condition property="db.schema.dir" value="src/db/sqlite">
@@ -963,11 +973,11 @@
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
 
     <target name="mysql-init" if="db-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-             classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+             classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql" print="false"/>
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
 
@@ -1095,9 +1105,9 @@
     </target>
 
     <target name="ldap-load" depends="zmprov-commands">
-         <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-            <socket server="${zimbra.server.hostname}" port="${ldap.port}"/>
-         </waitfor>    
+        <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${ldap.host}" port="${ldap.port}"/>
+        </waitfor>
         <antcall target="ldap-add">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
         </antcall>
@@ -1497,16 +1507,14 @@
     <target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix">
         <echo>Waiting for jetty to stop</echo>
         <waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
-            <not>
-                <http url="http://${deploy.host}:${deploy.port}/"/>
-            </not>
+            <not><http url="http://${deploy.host}:${deploy.port}/"/></not>
         </waitfor>
     </target>
 
     <target name="start-jetty-java">
         <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
             <sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
-            <sysproperty key="START" value="${jetty.home.dir}/etc/start.config"/>
+            <sysproperty key="START" value="${jetty.conf.dir}/start.config"/>
             <sysproperty key="STOP.PORT" value="7867"/>
             <sysproperty key="STOP.KEY" value="stop"/>
             <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml"/>
@@ -1532,6 +1540,166 @@
     </target>
 
     <target name="restart-webserver" depends="stop-webserver,start-webserver"/>
-    
+
     <target name="empty"/>
+
+
+    <property name="zimbra.alt.hostname" value="${env.ZIMBRA_ALTERNATE_HOSTNAME}"/>
+    <property name="build.zmprov.altserver" location="${build.dir}/data/zmprov-2.txt"/>
+    <property name="jetty.alt.dir" location="${zimbra.home.dir}/jetty-2"/>
+    <property name="dist.jetty.alt.dir" location="${dist.dir}/jetty-2"/>
+
+    <target name="server2-provision-ldap">
+        <echo file="${build.zmprov.altserver}">
+            da user5@${defaultdomain.name}
+            ds ${zimbra.alt.hostname}
+
+            cs ${zimbra.alt.hostname} \
+                zimbraSmtpHostname ${zimbra.smtp.host} \
+                zimbraMailPort 11070 \
+                zimbraMailMode http \
+                zimbraAdminPort 11071 \
+                zimbraLmtpBindPort 11025 \
+                zimbraImapBindPort 11143 \
+                zimbraImapSSLBindPort 11993 \
+                zimbraImapCleartextLoginEnabled TRUE \
+                zimbraPop3BindPort 11110 \
+                zimbraPop3SSLBindPort 11995 \
+                zimbraPop3CleartextLoginEnabled TRUE \
+                zimbraXMPPEnabled FALSE
+            ms ${zimbra.alt.hostname} \
+                zimbraServiceInstalled ldap \
+                zimbraServiceInstalled mta \
+                zimbraServiceInstalled mailbox
+            ms ${zimbra.alt.hostname} \
+                zimbraServiceEnabled ldap \
+                zimbraServiceEnabled mta \
+                zimbraServiceEnabled mailbox
+            ms ${zimbra.alt.hostname} \
+                zimbraMailPurgeSleepInterval 0 \
+                zimbraRedoLogLogPath redolog-2/redo.log \
+                zimbraRedoLogArchiveDir redolog-2/archive
+            ca user5@${defaultdomain.name} test123 \
+                zimbraMailHost ${zimbra.alt.hostname} \
+                cn 'Demo User Five' \
+                displayName 'Demo User Five' \
+                telephoneNumber '+1 650 555 5555' \
+                zimbraFeatureIMEnabled FALSE \
+                zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+                zimbraPrefMailPollingInterval 12h \
+                zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+                zimbraPrefWarnOnExit FALSE
+        </echo>
+        <echo>Initializing server ${zimbra.alt.hostname} and user user5@${defaultdomain.name}</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -f ${build.zmprov.altserver} -v"/>
+        </java>
+    </target>
+
+    <target name="server2-generate-localconfig">
+        <copy tofile="${dist.dir}/conf/localconfig-2.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true"/>
+        <if>
+            <not><isset property="is-production"/></not>
+            <then>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+                    <arg line="-e mailboxd_directory=/opt/zimbra/jetty-2"/>
+                </java>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+                    <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
+                </java>
+            </then>
+        </if>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+            <arg line="-e zimbra_server_hostname=${zimbra.alt.hostname}"/>
+        </java>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+            <arg line="-e zimbra_admin_service_port=11071"/>
+        </java>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+            <arg line="-e zmstat_log_directory=${zimbra.home.dir}/zmstat-2"/>
+        </java>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+            <arg line="-e debug_mock_multiserver_install=true"/>
+        </java>
+    </target>
+
+    <target name="server2-war">
+        <copy file="${config.dir}/web.xml${production.suffix}" tofile="${build.dir}/web.xml" overwrite="true"/>
+        <replace file="${build.dir}/web.xml">
+            <replacefilter token="7070" value="11070"/>
+            <replacefilter token="7443" value="11443"/>
+            <replacefilter token="7071" value="11071"/>
+            <replacefilter token="7072" value="11072"/>
+            <replacefilter token="7867" value="11867"/>
+        </replace>
+        <antcall target="war">
+            <param name="zimbra.server.hostname" value="${zimbra.alt.hostname}"/>
+            <param name="war.web.xml" value="${build.dir}/web.xml"/>
+        </antcall>
+    </target>
+
+	<target name="server2-deploy" depends="server2-war">
+        <delete dir="${jetty.alt.dir}/webapps/service"/>
+        <delete file="${jetty.alt.dir}/webapps/service.war"/>
+        <copy file="${warfile}" todir="${jetty.alt.dir}/webapps"/>
+        <mkdir dir='${jetty.alt.dir}/webapps/service'/>
+        <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
+	</target>
+
+    <target name="server2-reset">
+        <antcall target="clean"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${generated.java.dir}"/>
+        <delete dir="${zimbra.home.dir}/redolog-2"/>
+        <mkdir dir="${zimbra.home.dir}/redolog-2/archive"/>
+
+        <antcall target="reset-jetty">
+            <param name="jetty.home.dir" value="${jetty.alt.dir}"/>
+        </antcall>
+        <antcall target="dir-init-jetty">
+            <param name="jetty.home.dir" value="${jetty.alt.dir}"/>
+        </antcall>
+
+        <antcall target="server2-war"/>
+
+        <antcall target="dev-dist-jetty">
+            <param name="dist.jetty.dir" value="${dist.jetty.alt.dir}"/>
+        </antcall>
+        <mkdir dir="${dist.dir}/log-2"/>
+        <replace dir="${dist.jetty.alt.dir}/etc">
+            <replacefilter token="7070" value="11070"/>
+            <replacefilter token="7443" value="11443"/>
+            <replacefilter token="7071" value="11071"/>
+            <replacefilter token="7072" value="11072"/>
+            <replacefilter token="7867" value="11867"/>
+            <replacefilter token="localconfig.xml" value="localconfig-2.xml"/>
+            <replacefilter token="/opt/zimbra/log" value="/opt/zimbra/log-2"/>
+            <replacefilter token="/opt/zimbra/jetty" value="${jetty.alt.dir}"/>
+        </replace>
+
+        <antcall target="server2-generate-localconfig"/>
+        <echo>Updating primary server localconfig to reflect mock-multiserver install</echo>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-e debug_mock_multiserver_install=true"/>
+        </java>
+
+    	<antcall target="localhost-ssl-cert">
+    		<param name="jetty.conf.dir" value="${jetty.alt.dir}/etc"/>
+    	</antcall>
+
+        <copy todir="${zimbra.home.dir}">
+            <fileset dir="${dist.dir}"/>
+        </copy>
+        <mkdir dir='${jetty.alt.dir}/webapps/service'/>
+        <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
+
+        <antcall target="server2-provision-ldap"/>
+    </target>
+
 </project>
