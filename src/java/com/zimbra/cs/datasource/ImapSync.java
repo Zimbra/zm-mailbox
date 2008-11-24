@@ -24,6 +24,7 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.DummySSLSocketFactory;
@@ -35,6 +36,7 @@ import com.zimbra.common.util.SystemUtil;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -83,7 +85,9 @@ public class ImapSync extends MailItemImport {
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
-        config.setTrace(DEBUG || ds.isDebugTraceEnabled());
+        if (DEBUG || ds.isDebugTraceEnabled()) {
+            enableTrace(config);
+        }
         config.setTimeout(LC.javamail_imap_timeout.intValue());
         // config.setRawMode(true);
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
@@ -96,7 +100,7 @@ public class ImapSync extends MailItemImport {
 
     public synchronized String test() throws ServiceException {
         validateDataSource();
-        connection.getConfig().setTrace(true);
+        enableTrace(connection.getImapConfig());
         try {
             connect();
         } catch (ServiceException e) {
@@ -110,6 +114,12 @@ public class ImapSync extends MailItemImport {
         return null;
     }
 
+    private static void enableTrace(ImapConfig config) {
+        config.setTrace(true);
+        config.setTraceStream(
+            new PrintStream(new LogOutputStream(ZimbraLog.imap), true));
+    }
+    
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         validateDataSource();
@@ -309,7 +319,7 @@ public class ImapSync extends MailItemImport {
                 zimbraPath = localRootFolder.getPath() + "/" + relativePath;
             }
         }
-        return zimbraPath;
+        return MailItem.normalizeItemName(zimbraPath);
     }
 
     /*

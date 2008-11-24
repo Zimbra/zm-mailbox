@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Set;
@@ -81,7 +82,9 @@ public class Pop3Sync extends MailItemImport {
         config.setTlsEnabled(LC.javamail_pop3_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
-        config.setTrace(DEBUG || ds.isDebugTraceEnabled());
+        if (DEBUG || ds.isDebugTraceEnabled()) {
+            enableTrace(config);
+        }
         config.setTimeout(LC.javamail_pop3_timeout.intValue());
         // config.setRawMode(true);
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
@@ -105,6 +108,12 @@ public class Pop3Sync extends MailItemImport {
             connection.close();
         }
         return null;
+    }
+
+    private static void enableTrace(Pop3Config config) {
+        config.setTrace(true);
+        config.setTraceStream(
+            new PrintStream(new LogOutputStream(ZimbraLog.pop), true));
     }
 
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
