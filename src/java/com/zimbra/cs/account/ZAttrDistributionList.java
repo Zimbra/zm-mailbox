@@ -34,16 +34,29 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081120-1800 */
+    /* build: 5.0 schemers 20081124-1428 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
      *
-     * @return cn, or null unset
+     * @return cn, or null if unset
      */
     @ZAttr(id=-1)
     public String getCn() {
-        return getAttr(Provisioning.A_cn);
+        return getAttr(Provisioning.A_cn, null);
+    }
+
+    /**
+     * RFC2256: common name(s) for which the entity is known by
+     *
+     * @param cn new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setCn(String cn) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_cn, cn);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -63,13 +76,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * RFC2256: common name(s) for which the entity is known by
      *
-     * @param cn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public void setCn(String cn) throws com.zimbra.common.service.ServiceException {
+    public void unsetCn() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_cn, cn);
+        attrs.put(Provisioning.A_cn, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -87,25 +99,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * RFC2256: common name(s) for which the entity is known by
+     * RFC2256: descriptive information
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return description, or null if unset
      */
     @ZAttr(id=-1)
-    public void unsetCn() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_cn, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    public String getDescription() {
+        return getAttr(Provisioning.A_description, null);
     }
 
     /**
      * RFC2256: descriptive information
      *
-     * @return description, or null unset
+     * @param description new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public String getDescription() {
-        return getAttr(Provisioning.A_description);
+    public void setDescription(String description) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, description);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -125,13 +138,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * RFC2256: descriptive information
      *
-     * @param description new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public void setDescription(String description) throws com.zimbra.common.service.ServiceException {
+    public void unsetDescription() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_description, description);
+        attrs.put(Provisioning.A_description, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -149,25 +161,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * RFC2256: descriptive information
+     * RFC2798: preferred name to be used when displaying entries
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return displayName, or null if unset
      */
     @ZAttr(id=-1)
-    public void unsetDescription() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_description, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    public String getDisplayName() {
+        return getAttr(Provisioning.A_displayName, null);
     }
 
     /**
      * RFC2798: preferred name to be used when displaying entries
      *
-     * @return displayName, or null unset
+     * @param displayName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public String getDisplayName() {
-        return getAttr(Provisioning.A_displayName);
+    public void setDisplayName(String displayName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_displayName, displayName);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -187,13 +200,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * RFC2798: preferred name to be used when displaying entries
      *
-     * @param displayName new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public void setDisplayName(String displayName) throws com.zimbra.common.service.ServiceException {
+    public void unsetDisplayName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_displayName, displayName);
+        attrs.put(Provisioning.A_displayName, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -211,25 +223,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * RFC2798: preferred name to be used when displaying entries
+     * RFC1274: RFC822 Mailbox
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return mail, or null if unset
      */
     @ZAttr(id=-1)
-    public void unsetDisplayName() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_displayName, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    public String getMail() {
+        return getAttr(Provisioning.A_mail, null);
     }
 
     /**
      * RFC1274: RFC822 Mailbox
      *
-     * @return mail, or null unset
+     * @param mail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public String getMail() {
-        return getAttr(Provisioning.A_mail);
+    public void setMail(String mail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_mail, mail);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -249,13 +262,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * RFC1274: RFC822 Mailbox
      *
-     * @param mail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public void setMail(String mail) throws com.zimbra.common.service.ServiceException {
+    public void unsetMail() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_mail, mail);
+        attrs.put(Provisioning.A_mail, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -273,25 +285,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * RFC1274: RFC822 Mailbox
+     * RFC1274: user identifier
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return uid, or null if unset
      */
     @ZAttr(id=-1)
-    public void unsetMail() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_mail, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    public String getUid() {
+        return getAttr(Provisioning.A_uid, null);
     }
 
     /**
      * RFC1274: user identifier
      *
-     * @return uid, or null unset
+     * @param uid new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public String getUid() {
-        return getAttr(Provisioning.A_uid);
+    public void setUid(String uid) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_uid, uid);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -311,13 +324,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * RFC1274: user identifier
      *
-     * @param uid new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=-1)
-    public void setUid(String uid) throws com.zimbra.common.service.ServiceException {
+    public void unsetUid() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, uid);
+        attrs.put(Provisioning.A_uid, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -335,18 +347,6 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * RFC1274: user identifier
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     */
-    @ZAttr(id=-1)
-    public void unsetUid() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
      * Zimbra access control list
      *
      * @return zimbraACE, or ampty array if unset
@@ -354,6 +354,19 @@ public class ZAttrDistributionList extends MailTarget {
     @ZAttr(id=659)
     public String[] getACE() {
         return getMultiAttr(Provisioning.A_zimbraACE);
+    }
+
+    /**
+     * Zimbra access control list
+     *
+     * @param zimbraACE new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=659)
+    public void setACE(String[] zimbraACE) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraACE, zimbraACE);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -373,13 +386,13 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * Zimbra access control list
      *
-     * @param zimbraACE new value
+     * @param zimbraACE new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=659)
-    public void setACE(String[] zimbraACE) throws com.zimbra.common.service.ServiceException {
+    public void addACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraACE, zimbraACE);
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraACE, zimbraACE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -400,13 +413,13 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * Zimbra access control list
      *
-     * @param zimbraACE new to add to existing values
+     * @param zimbraACE existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=659)
-    public void addACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
+    public void removeACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraACE, zimbraACE);
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraACE, zimbraACE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -427,13 +440,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * Zimbra access control list
      *
-     * @param zimbraACE existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=659)
-    public void removeACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
+    public void unsetACE() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraACE, zimbraACE);
+        attrs.put(Provisioning.A_zimbraACE, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -451,26 +463,28 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * Zimbra access control list
+     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
+     * Zimbra Systems Unique Group ID
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return zimbraGroupId, or null if unset
      */
-    @ZAttr(id=659)
-    public void unsetACE() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraACE, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    @ZAttr(id=325)
+    public String getGroupId() {
+        return getAttr(Provisioning.A_zimbraGroupId, null);
     }
 
     /**
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
      * Zimbra Systems Unique Group ID
      *
-     * @return zimbraGroupId, or null unset
+     * @param zimbraGroupId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=325)
-    public String getGroupId() {
-        return getAttr(Provisioning.A_zimbraGroupId);
+    public void setGroupId(String zimbraGroupId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGroupId, zimbraGroupId);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -492,13 +506,12 @@ public class ZAttrDistributionList extends MailTarget {
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
      * Zimbra Systems Unique Group ID
      *
-     * @param zimbraGroupId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=325)
-    public void setGroupId(String zimbraGroupId) throws com.zimbra.common.service.ServiceException {
+    public void unsetGroupId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraGroupId, zimbraGroupId);
+        attrs.put(Provisioning.A_zimbraGroupId, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -517,26 +530,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * Zimbra Systems Unique ID
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return zimbraId, or null if unset
      */
-    @ZAttr(id=325)
-    public void unsetGroupId() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraGroupId, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    @ZAttr(id=1)
+    public String getId() {
+        return getAttr(Provisioning.A_zimbraId, null);
     }
 
     /**
      * Zimbra Systems Unique ID
      *
-     * @return zimbraId, or null unset
+     * @param zimbraId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=1)
-    public String getId() {
-        return getAttr(Provisioning.A_zimbraId);
+    public void setId(String zimbraId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, zimbraId);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -556,13 +569,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * Zimbra Systems Unique ID
      *
-     * @param zimbraId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=1)
-    public void setId(String zimbraId) throws com.zimbra.common.service.ServiceException {
+    public void unsetId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraId, zimbraId);
+        attrs.put(Provisioning.A_zimbraId, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -580,25 +592,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * Zimbra Systems Unique ID
+     * locale of entry, e.g. en_US
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return zimbraLocale, or null if unset
      */
-    @ZAttr(id=1)
-    public void unsetId() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraId, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    @ZAttr(id=345)
+    public String getLocaleAsString() {
+        return getAttr(Provisioning.A_zimbraLocale, null);
     }
 
     /**
      * locale of entry, e.g. en_US
      *
-     * @return zimbraLocale, or null unset
+     * @param zimbraLocale new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=345)
-    public String getLocaleAsString() {
-        return getAttr(Provisioning.A_zimbraLocale);
+    public void setLocale(String zimbraLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, zimbraLocale);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -618,13 +631,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * locale of entry, e.g. en_US
      *
-     * @param zimbraLocale new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=345)
-    public void setLocale(String zimbraLocale) throws com.zimbra.common.service.ServiceException {
+    public void unsetLocale() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLocale, zimbraLocale);
+        attrs.put(Provisioning.A_zimbraLocale, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -642,25 +654,26 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * locale of entry, e.g. en_US
+     * administrative notes
      *
-     * @throws com.zimbra.common.service.ServiceException if error during update
+     * @return zimbraNotes, or null if unset
      */
-    @ZAttr(id=345)
-    public void unsetLocale() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLocale, "");
-        getProvisioning().modifyAttrs(this, attrs);
+    @ZAttr(id=9)
+    public String getNotes() {
+        return getAttr(Provisioning.A_zimbraNotes, null);
     }
 
     /**
      * administrative notes
      *
-     * @return zimbraNotes, or null unset
+     * @param zimbraNotes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=9)
-    public String getNotes() {
-        return getAttr(Provisioning.A_zimbraNotes);
+    public void setNotes(String zimbraNotes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, zimbraNotes);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
@@ -680,13 +693,12 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * administrative notes
      *
-     * @param zimbraNotes new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=9)
-    public void setNotes(String zimbraNotes) throws com.zimbra.common.service.ServiceException {
+    public void unsetNotes() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNotes, zimbraNotes);
+        attrs.put(Provisioning.A_zimbraNotes, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -701,18 +713,6 @@ public class ZAttrDistributionList extends MailTarget {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNotes, "");
         return attrs;
-    }
-
-    /**
-     * administrative notes
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     */
-    @ZAttr(id=9)
-    public void unsetNotes() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNotes, "");
-        getProvisioning().modifyAttrs(this, attrs);
     }
 
     ///// END-AUTO-GEN-REPLACE

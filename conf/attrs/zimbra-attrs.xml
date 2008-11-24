@@ -881,7 +881,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>We now maintain all tables unconditionally.  See bug 19145</deprecateDesc>
 </attr>
 
-<attr id="170" name="zimbraTableMaintenanceOperation" type="enum" value="ANALYZE,OPTIMIZE" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="4.5.7">
+<attr id="170" name="zimbraTableMaintenanceOperation" type="enum" value="ANALYZE,OPTIMIZE" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="4.5.7">
   <globalConfigValue>ANALYZE</globalConfigValue>
   <desc>table maintenance operation that will be performed.  Valid options: "ANALYZE", "OPTIMIZE"</desc>
   <deprecateDesc>We now maintain all tables unconditionally.  See bug 19145</deprecateDesc>

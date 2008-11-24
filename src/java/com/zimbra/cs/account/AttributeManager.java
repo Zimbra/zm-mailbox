@@ -21,6 +21,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
@@ -1935,48 +1936,74 @@ public class AttributeManager {
                 case TYPE_DURATION:
                 case TYPE_GENTIME:
                 case TYPE_ENUM:
-                    generateGetter(result, ai, false);
-                    generateGetter(result, ai, true);
-                    generateSetter(result, ai, false, SetterType.set, false);
-                    generateSetter(result, ai, false, SetterType.set, true);
+                    generateGetter(result, ai, false, ac);
+                    generateGetter(result, ai, true, ac);
+                    generateSetters(result, ai, false, SetterType.set);
                     if (ai.getType() == AttributeType.TYPE_GENTIME || ai.getType() == AttributeType.TYPE_ENUM) {
-                        generateSetter(result, ai, true, SetterType.set, false);
-                        generateSetter(result, ai, true, SetterType.set, true);
+                        generateSetters(result, ai, true, SetterType.set);
                     }
-                    generateSetter(result, ai, false, SetterType.unset, false);
-                    generateSetter(result, ai, false, SetterType.unset, true);
+                    generateSetters(result, ai, false, SetterType.unset);
                     break;
                 default:
                     if (ai.getName().equalsIgnoreCase("zimbraLocale")) {
-                        generateGetter(result, ai, true);
+                        generateGetter(result, ai, true, ac);
                     } else {
-                        generateGetter(result, ai, false);
+                        generateGetter(result, ai, false, ac);
                     }
-                    generateSetter(result, ai, false, SetterType.set, false);
-                    generateSetter(result, ai, false, SetterType.set, true);
+                    generateSetters(result, ai, false, SetterType.set);
                     if (ai.getCardinality() == AttributeCardinality.multi) {
-                        generateSetter(result, ai, false, SetterType.add, false);
-                        generateSetter(result, ai, false, SetterType.add, true);
-                        generateSetter(result, ai, false, SetterType.remove, false);
-                        generateSetter(result, ai, false, SetterType.remove, true);
+                        generateSetters(result, ai, false, SetterType.add);
+                        generateSetters(result, ai, false, SetterType.remove);
                     }
-                    generateSetter(result, ai, false, SetterType.unset, false);
-                    generateSetter(result, ai, false, SetterType.unset, true);
+                    generateSetters(result, ai, false, SetterType.unset);
                     break;
             }
         }
         replaceJavaFile(javaFile, result.toString());
     }
 
-    private static void generateGetter(StringBuilder result, AttributeInfo ai, boolean asString) throws ServiceException {
+    private static String defaultValue(AttributeInfo ai, AttributeClass ac) {
+        List<String> values;
+        switch (ac) {
+            case account:
+            case calendarResource:
+            case cos:
+                values = ai.getDefaultCosValues();
+                break;
+            case domain:
+            case server:
+            case globalConfig:
+                values = ai.getGlobalConfigValues();
+                break;
+            default:
+                return null;
+        }
+        if (values == null || values.size() == 0)
+            return null;
+
+        if (ai.getCardinality() != AttributeCardinality.multi) {
+            return values.get(0);
+        } else {
+            StringBuilder result = new StringBuilder();
+            result.append("new String[] {");
+            boolean first = true;
+            for (String v : values) {
+                if (!first) result.append(","); else first = false;
+                result.append("\"");
+                result.append(v.replace("\"","\\\""));
+                result.append("\"");
+            }
+            result.append("}");
+            return result.toString();
+        }
+    }
+
+    private static void generateGetter(StringBuilder result, AttributeInfo ai, boolean asString, AttributeClass ac) throws ServiceException {
         String javaType;
         String javaBody;
         String javaDocReturns;
-
         String name = ai.getName();
-
         AttributeType type = asString ? AttributeType.TYPE_STRING : ai.getType();
-
         boolean asStringDoc = false;
 
         String methodName = ai.getName();
@@ -1984,31 +2011,49 @@ public class AttributeManager {
         methodName = (type == AttributeType.TYPE_BOOLEAN ? "is" : "get")+methodName.substring(0,1).toUpperCase() + methodName.substring(1);
         if (asString) methodName += "AsString";
 
+        String defaultValue = defaultValue(ai, ac);
+
         switch (type) {
             case TYPE_BOOLEAN:
+                defaultValue = "TRUE".equalsIgnoreCase(defaultValue) ? "true" : "false";
                 javaType = "boolean";
-                javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, false);", name);
-                javaDocReturns = ", or false if unset";
+                javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                javaDocReturns = String.format(", or %s if unset", defaultValue);
                 break;
             case TYPE_INTEGER:
+                if (defaultValue == null) defaultValue = "-1";
                 javaType = "int";
-                javaBody = String.format("return getIntAttr(Provisioning.A_%s, -1);", name);
-                javaDocReturns = ", or -1 if unset";
+                javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                javaDocReturns = String.format(", or %s if unset", defaultValue);
                 break;
             case TYPE_ENUM:
                 javaType = "ZAttrProvisioning." + enumName(ai);
-                javaBody = String.format("try { String v = getAttr(Provisioning.A_%s); return v == null ? null : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }", name, enumName(ai));
-                javaDocReturns = ", or null if unset and/or has invalid value";
+                if (defaultValue != null) {
+                    defaultValue = javaType + "." + StringUtil.escapeJavaIdentifier(defaultValue);
+                } else {
+                    defaultValue = "null";
+                }
+                javaBody = String.format("try { String v = getAttr(Provisioning.A_%s); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, defaultValue,enumName(ai), defaultValue);
+                javaDocReturns = String.format(", or %s if unset and/or has invalid value", defaultValue);
                 break;
             case TYPE_LONG:
+                if (defaultValue == null) defaultValue = "-1";
                 javaType = "long";
-                javaBody = String.format("return getLongAttr(Provisioning.A_%s, -1);", name);
-                javaDocReturns = ", or -1 if unset";
+                javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL);", name, defaultValue);
+                javaDocReturns = String.format(", or %s if unset", defaultValue);
                 break;
             case TYPE_DURATION:
+                String defaultDurationStrValue;
+                if (defaultValue != null) {
+                    defaultDurationStrValue = " ("+defaultValue+") ";
+                    defaultValue = String.valueOf(DateUtil.getTimeInterval(defaultValue, -1));
+                } else {
+                    defaultValue = "-1";
+                    defaultDurationStrValue = "";
+                }
+                javaBody = String.format("return getTimeInterval(Provisioning.A_%s, %sL);", name, defaultValue);
+                javaDocReturns = String.format(" in millseconds, or %s%s if unset", defaultValue, defaultDurationStrValue);
                 javaType = "long";
-                javaBody = String.format("return getTimeInterval(Provisioning.A_%s, -1);", name);
-                javaDocReturns = " in millseconds, or -1 if unset";
                 asStringDoc = true;
                 break;
             case TYPE_GENTIME:
@@ -2019,12 +2064,21 @@ public class AttributeManager {
                 break;
             default:
                 if (ai.getCardinality() != AttributeCardinality.multi) {
+                    if (defaultValue != null) {
+                        defaultValue = "\"" + defaultValue.replace("\"", "\\\"") +"\"";
+                    } else {
+                        defaultValue = "null";
+                    }
                     javaType = "String";
-                    javaBody = String.format("return getAttr(Provisioning.A_%s);", name);
-                    javaDocReturns = ", or null unset";
+                    javaBody = String.format("return getAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                    javaDocReturns = String.format(", or %s if unset", defaultValue);
                 } else {
                     javaType = "String[]";
-                    javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
+                    if (defaultValue == null) {
+                        javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
+                    } else {
+                        javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s); return value.length > 0 ? value : %s;", name, defaultValue);    
+                    }
                     javaDocReturns = ", or ampty array if unset";
                 }
                 break;
@@ -2057,6 +2111,11 @@ public class AttributeManager {
     }
 
     private static enum SetterType { set, add, unset, remove }
+
+    private static void generateSetters(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType) throws ServiceException {
+        generateSetter(result, ai, asString, setterType, true);
+        generateSetter(result, ai, asString, setterType, false);
+    }
 
     private static void generateSetter(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType, boolean noMap) throws ServiceException {
         String javaType;
