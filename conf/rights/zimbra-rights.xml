@@ -19,7 +19,7 @@
     
     [
       <attrs>
-          <a n="{attribute-name}" l="{limit}"/>+
+          <a n="{attribute-name}"/>+
       </attrs>
     ]
     
@@ -92,13 +92,7 @@
           server attrs M, N
           
     If <attrs> is not present, it means all attributes on the target type.
-     
-                  
-{l}: 
-    If the attribute can be modified to any value or within inherited limit.
-    Only applicable and required when right type is modifyAttrs.
-    0: (default) the attribute can be modified to any value allowed by the attribute definition
-	1: the attribute can only be modified within inherited limit
+
 
 {attribute-name}:
     Attribute name covered by the right
@@ -177,9 +171,6 @@
   <desc>modify all domain attributes</desc>
 </right>
 
-<right name="modifyDomainWithinInheritedLimit" type="setAttrs" targetType="domain">
-  <desc>modify all domain attributes</desc>
-</right>
 
 <right name="configureExternalGAL" type="setAttrs" targetType="domain">
   <desc>configure attributes for external GAL</desc>
@@ -292,22 +283,12 @@
   </attrs>
 </right>
 
-<right name="configureQuotaWithinLimit" type="setAttrs" targetType="account,cos">
-  <desc>configure quota with inherited limit</desc>
-  <attrs>
-    <a l="1" n="zimbraMailQuota"/>
-    <a l="1" n="zimbraQuotaWarnPercent"/>
-    <a l="1" n="zimbraQuotaWarnInterval"/>
-    <a l="1" n="zimbraQuotaWarnMessage"/>
-  </attrs>
-</right>
-
 <right name="accountAdmin" type="combo">
   <desc>domain admin</desc>
   <rights>
     <r n="createAccount"/>
     <r n="renameAccount"/>
-    <r n="configureQuotaWithinLimit"/>
+    <r n="configureQuota"/>
   </rights>
 </right>
 
