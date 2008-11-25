@@ -10,4 +10,5 @@ reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_unknown_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_sender_domain%%
 %%explode reject_rbl_client VAR:zimbraMtaRestrictionRBLs%%
+check_policy_service unix:private/policy
 permit
