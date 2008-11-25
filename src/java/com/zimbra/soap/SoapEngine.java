@@ -240,17 +240,17 @@ public class SoapEngine {
                 mLog.warn("failed to set proxy auth token: " + e.getMessage());
             }
         }
-        
+
         String ip = (String) context.get(SOAP_REQUEST_IP);
         String origip = (String) context.get(ORIG_REQUEST_IP);
-        
+
         // don't log ip if oip is present and ip is localhost
         if (ip != null && (!TrustedNetwork.isLocalhost(ip) || origip == null))
             ZimbraLog.addIpToContext(ip);
-        
+
         if (origip != null)
             ZimbraLog.addOrigIpToContext(origip);
-        
+
         if (zsc.getUserAgent() != null)
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 
@@ -263,9 +263,9 @@ public class SoapEngine {
 
         if (mLog.isDebugEnabled())
             mLog.debug("dispatch: doc " + doc.getQualifiedName());
-        
+
         Element responseBody = null;
-        if (!zsc.isProxyRequest()) {    
+        if (!zsc.isProxyRequest()) {
             // if the client's told us that they've seen through notification block 50, we can drop old notifications up to that point
             acknowledgeNotifications(zsc);
 
@@ -274,11 +274,8 @@ public class SoapEngine {
                 responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
                 ZimbraLog.soap.info(doc.getQualifiedName());
                 for (Element req : doc.listElements()) {
-                    
-                    /*
-                    if (mLog.isDebugEnabled())
-                        mLog.debug("dispatch: multi " + req.getQualifiedName());
-                    */
+                    // if (mLog.isDebugEnabled())
+                    //     mLog.debug("dispatch: multi " + req.getQualifiedName());
                     
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
                     ZimbraLog.soap.info("(batch) " + req.getQualifiedName());
@@ -307,7 +304,7 @@ public class SoapEngine {
                 // proxy dispatcher.  IllegalAddException will be thrown
                 // if we don't detach it first.
                 doc.detach();
-                ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, null);
+                ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, zsc.getRequestedAccountId()).disableNotifications();
                 ZimbraLog.soap.info(doc.getQualifiedName() + " (Proxying to " + zsc.getProxyTarget().toString() +")");
                 responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
                 responseBody.detach();
@@ -325,12 +322,10 @@ public class SoapEngine {
             }
         }
 
-        // put notifications (new sessions and incremental change notifications)
+        // put notifications (new sessions and incremental change notifications) to header...
         Element responseHeader = generateResponseHeader(zsc);
-
-        Element response = responseProto.soapEnvelope(responseBody, responseHeader);
-
-        return response;
+        // ... and return the composed response
+        return responseProto.soapEnvelope(responseBody, responseHeader);
     }
 
 
@@ -426,7 +421,7 @@ public class SoapEngine {
                 // fault in a session for this handler (if necessary) before executing the command
                 context.put(ZIMBRA_SESSION, handler.getSession(zsc));
 
-                // try to proxy the request if necesary (don't proxy commands that don't require auth)
+                // try to proxy the request if necessary (don't proxy commands that don't require auth)
                 if (needsAuth || needsAdminAuth)
                     response = handler.proxyIfNecessary(request, context);
             }

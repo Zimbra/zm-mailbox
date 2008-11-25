@@ -94,14 +94,6 @@ public final class PendingModifications {
                (modified != null && !modified.isEmpty());
     }
 
-    public int getNotificationCount() {
-        int count = 0;
-        if (deleted != null)   count += deleted.size();
-        if (created != null)   count += created.size();
-        if (modified != null)  count += modified.size();
-        return count;
-    }
-
     public boolean overlapsWithAccount(String accountId) {
         accountId = accountId == null ? null : accountId.toLowerCase();
         if (deleted != null) {

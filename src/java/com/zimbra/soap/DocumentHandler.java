@@ -23,6 +23,7 @@ package com.zimbra.soap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -37,6 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.AdminSession;
+import com.zimbra.cs.session.RemoteSoapSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -96,8 +98,10 @@ public abstract class DocumentHandler {
      */
     public void postHandle(Object userObj) { }
     
+    @SuppressWarnings("unused")
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
     
+    @SuppressWarnings("unused")
     public void postProxy(Element request, Element response, Map<String, Object> context) throws ServiceException {}
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
@@ -166,6 +170,17 @@ public abstract class DocumentHandler {
             ZimbraLog.addMboxToContext(mbox.getId());
         return mbox; 
     }
+
+    private static boolean isRequestLocal(ZimbraSoapContext zsc) {
+        try {
+            Account acct = getAuthenticatedAccount(zsc);
+            return (acct != null && Provisioning.onLocalServer(acct));
+        } catch (ServiceException e) {
+            ZimbraLog.session.info("error determining whether authenticated account is local", e);
+            return false;
+        }
+    }
+
 
     /** Returns whether the command's caller must be authenticated. */
     public boolean needsAuth(Map<String, Object> context) {
@@ -237,21 +252,25 @@ public abstract class DocumentHandler {
      *  though perhaps that's the right thing to do...)  If requested, also
      *  creates a new Session object associated with the given account.
      * 
-     * @param accountId   The account ID to create the new session for.
-     * @param stype       One of the types defined in the {@link SessionCache} class.
+     * @param zsc         The parsed SOAP header for the auth request.
+     * @param authToken   The new auth token created for the user.
+     * @param context     The <code>SoapEngine</code>'s request state.
      * @param getSession  Whether to try to generate a new Session.
      * @return A new Session object of the appropriate type, or <tt>null</tt>. */
-    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, boolean getSession) {
+    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, Map<String, Object> context, boolean getSession) {
         String oldAccountId = zsc.getAuthtokenAccountId();
         String accountId = authToken.getAccountId();
         if (accountId != null && !accountId.equals(oldAccountId))
             zsc.clearSessionInfo();
         zsc.setAuthToken(authToken);
 
-        return (getSession ? getSession(zsc) : null);
+        Session session = (getSession ? getSession(zsc) : null);
+        if (context != null)
+            context.put(SoapEngine.ZIMBRA_SESSION, session);
+        return session;
     }
 
-    protected static Session getReferencedSession(ZimbraSoapContext zsc) {
+    public static Session getReferencedSession(ZimbraSoapContext zsc) {
         SessionInfo sinfo = zsc.getSessionInfo();
         return sinfo == null ? null : SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
     }
@@ -294,6 +313,11 @@ public abstract class DocumentHandler {
         if (authAccountId == null)
             return null;
 
+        // if they asked for a SOAP session on a remote host and it's a non-proxied request, we don't notify
+        boolean isLocal = isRequestLocal(zsc);
+        if (stype == Session.Type.SOAP && !isLocal && !zsc.isSessionProxied())
+            return null;
+
         Session s = null;
 
         // if the caller referenced a session of this type, fetch it from the session cache
@@ -314,8 +338,10 @@ public abstract class DocumentHandler {
         if (s == null) {
             try {
                 if (stype == Session.Type.SOAP) {
-                    if (Provisioning.onLocalServer(getAuthenticatedAccount(zsc)))
+                    if (isLocal)
                         s = new SoapSession(authAccountId).register();
+                    else
+                        s = new RemoteSoapSession(authAccountId).register();
                 } else if (stype == Session.Type.ADMIN) {
                     s = new AdminSession(authAccountId).register();
                 }
@@ -414,11 +440,11 @@ public abstract class DocumentHandler {
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
-        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(server.getName()) && engine != null;
+        boolean isLocal = LOCAL_HOST_ID.equalsIgnoreCase(server.getId());
 
         Element response = null;
         request.detach();
-        if (isLocal) {
+        if (isLocal && engine != null) {
             // executing on same server; just hand back to the SoapEngine
             Map<String, Object> contextTarget = new HashMap<String, Object>(context);
             contextTarget.put(SoapEngine.ZIMBRA_ENGINE, engine);
@@ -429,18 +455,48 @@ public abstract class DocumentHandler {
                 throw new SoapFaultException("error in proxied request", true, response);
             }
         } else {
+            // do any necessary operations before doing a cross-server proxy
             preProxy(request, context);
-            
-            // executing remotely; find out target and proxy there
+            // executing remotely; find our target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
-            response = proxy.dispatch(request, zsc).detach();
-            
+            response = proxyWithNotification(request, proxy, zsc, (Session) context.get(SoapEngine.ZIMBRA_SESSION));
+            // do any necessary operations after doing a cross-server proxy
             postProxy(request, response, context);
         }
         return response;
     }
-    
+
+    public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
+    throws ServiceException {
+        return proxyWithNotification(request, proxy, zscProxy, getReferencedSession(zscInbound));
+    }
+
+    public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
+    throws ServiceException {
+        Server server = proxy.getServer();
+        boolean isLocal = LOCAL_HOST_ID.equalsIgnoreCase(server.getId());
+
+        if (zscProxy.isNotificationEnabled()) {
+            // if we've got a SOAP session, make sure to use the appropriate remote session ID
+            if (localSession instanceof SoapSession.DelegateSession)
+                localSession = ((SoapSession.DelegateSession) localSession).getParentSession();
+            // note that requests proxied to *this same host* shouldn't request notification, as the existing local session collects the notifications
+            if (!(localSession instanceof SoapSession) || localSession.getMailbox() == null)
+                zscProxy.disableNotifications();
+            else if (!isLocal)
+                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(server));
+            else
+                zscProxy.setProxySession(localSession.getSessionId());
+        }
+
+        Pair<Element, Element> envelope = proxy.execute(request, zscProxy);
+        // if we've got a SOAP session, handle the returned notifications and session ID
+        if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled())
+            ((SoapSession) localSession).handleRemoteNotifications(server, envelope.getFirst());
+        return envelope.getSecond().detach();
+    }
+
     /**
      * This is for logging usage only:
      *     returns the account name if the account can be found by acctId,
@@ -452,17 +508,16 @@ public abstract class DocumentHandler {
      * @return
      */
     private String getAccountLogName(Provisioning prov, String acctId) {
-        if (acctId != null) {
-            try {
-                Account acct = prov.get(AccountBy.id, acctId);
-                if (acct != null)
-                    return acct.getName();
-            } catch (ServiceException e) {
-                // ignore 
-            }
-            return acctId;
-        }
-        return "";
+        if (acctId == null)
+            return "";
+
+        try {
+            Account acct = prov.get(AccountBy.id, acctId);
+            if (acct != null)
+                return acct.getName();
+        } catch (ServiceException e) { }
+
+        return acctId;
     }
     
     public void logAuditAccess(String delegatingAcctId, String authedAcctId, String targetAcctId) {

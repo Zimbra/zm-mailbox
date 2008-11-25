@@ -153,8 +153,8 @@ public class Auth extends AdminDocumentHandler {
                 throw se;
             }
         }
-        
-        return doResponse(at, zsc, acct);
+
+        return doResponse(at, zsc, context, acct);
 	}
     
     private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl) throws ServiceException, AuthTokenException  {
@@ -181,7 +181,7 @@ public class Auth extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("not an admin account");
 	}
 
-	private Element doResponse(AuthToken at, ZimbraSoapContext zsc, Account acct) throws ServiceException {
+	private Element doResponse(AuthToken at, ZimbraSoapContext zsc, Map<String, Object> context, Account acct) throws ServiceException {
 	    Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
         
@@ -189,7 +189,7 @@ public class Auth extends AdminDocumentHandler {
         
         boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
-        Session session = updateAuthenticatedAccount(zsc, at, true);
+        Session session = updateAuthenticatedAccount(zsc, at, context, true);
         if (session != null)
             ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
         return response;

@@ -99,6 +99,7 @@ public final class SearchParams implements Cloneable {
         public String toString()  { return mRep; }
     };
 
+    public ZimbraSoapContext getRequestContext() { return mRequestContext; }
     public int getHopCount() { return mHopCount; }
     public long getCalItemExpandStart() { return mCalItemExpandStart; }
     public long getCalItemExpandEnd() { return mCalItemExpandEnd; }
@@ -315,7 +316,8 @@ public final class SearchParams implements Cloneable {
      */
     public static SearchParams parse(Element request, ZimbraSoapContext zsc, String defaultQueryStr) throws ServiceException {
         SearchParams params = new SearchParams();
-        
+
+        params.mRequestContext = zsc;
         params.setHopCount(zsc.getHopCount());
         params.setIncludeTagDeleted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_DELETED, false));
         params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
@@ -505,6 +507,7 @@ public final class SearchParams implements Cloneable {
     public Object clone() {
         SearchParams o = new SearchParams();
 
+        o.mRequestContext = mRequestContext;
         o.mHopCount = mHopCount;
         o.mDefaultField = mDefaultField;
         o.mQueryStr = mQueryStr;
@@ -539,7 +542,8 @@ public final class SearchParams implements Cloneable {
         
         return o;
     }
-    
+
+    private ZimbraSoapContext mRequestContext;
     private int mHopCount = 0; // this parameter is intentionally NOT encoded into XML, it is encoded manually by the ProxiedQueryResults proxying code
     
     private String mDefaultField = "content:";

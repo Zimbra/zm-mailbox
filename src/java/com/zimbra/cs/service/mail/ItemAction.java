@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -32,17 +33,26 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class ItemAction extends MailDocumentHandler {
 
 	protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
@@ -76,10 +86,11 @@ public class ItemAction extends MailDocumentHandler {
         return response;
     }
 
-    protected String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
+    protected String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
         // determine the requested operation
@@ -96,11 +107,17 @@ public class ItemAction extends MailDocumentHandler {
         List<Integer> local = new ArrayList<Integer>();
         Map<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
+        if (remote.isEmpty() && local.isEmpty())
+            return "";
 
+        // for moves/copies, make sure that we're going to receive notifications from the target folder
+        Account remoteNotify = forceRemoteSession(zsc, context, octxt, opStr, action);
+
+        // handle referenced items living on other servers
         StringBuffer successes = proxyRemoteItems(action, remote, request, context);
 
+        // handle referenced items living on this server
         if (!local.isEmpty()) {
-            OperationContext octxt = getOperationContext(zsc, context);
         	String constraint = action.getAttribute(MailConstants.A_TARGET_CONSTRAINT, null);
         	TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
         	
@@ -154,17 +171,95 @@ public class ItemAction extends MailDocumentHandler {
         	successes.append(successes.length() > 0 ? "," : "").append(localResults);
         }
 
+        // for moves/copies, make sure that we received notifications from the target folder
+        if (remoteNotify != null)
+            proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, remoteNotify.getId());
+
         return successes.toString();
     }
 
-    static void partitionItems(ZimbraSoapContext zsc, String ids, List<Integer> local, Map<String, StringBuffer> remote) throws ServiceException {
+    private Account forceRemoteSession(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt, String op, Element action)
+    throws ServiceException {
+        // only proxying notification from the user's home-server master session
+        if (!zsc.isNotificationEnabled())
+            return null;
+        Session session = (Session) context.get(SoapEngine.ZIMBRA_SESSION);
+        if (session instanceof SoapSession.DelegateSession)
+            session = ((SoapSession.DelegateSession) session).getParentSession();
+        if (!(session instanceof SoapSession) || session.getMailbox() == null)
+            return null;
+        SoapSession ss = (SoapSession) session;
+
+        // only have to worry about operations where things can get created in other mailboxes (regular notification works for all other cases)
+        if (!op.equals(OP_MOVE) && !op.equals(OP_COPY) && !op.equals(OP_SPAM) && !op.equals(OP_RENAME) && !op.equals(OP_UPDATE))
+            return null;
+        String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
+        if (folderStr == null)
+            return null;
+
+        // recursively dereference mountpoints to find ultimate target folder
+        ItemId iidFolder = new ItemId(folderStr, zsc);
+        Account owner = null;
+        int hopCount = 0;
+        ZAuthToken zat = null;
+        while (hopCount < ZimbraSoapContext.MAX_HOP_COUNT) {
+            owner = Provisioning.getInstance().getAccountById(iidFolder.getAccountId());
+            if (Provisioning.onLocalServer(owner)) {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
+                Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
+                if (!(folder instanceof Mountpoint))
+                    break;
+                Mountpoint mpt = (Mountpoint) folder;
+                iidFolder = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+            } else {
+                if (zat == null) {
+                    AuthToken at = zsc.getAuthToken();
+                    String pxyAuthToken = at.getProxyAuthToken();
+                    zat = pxyAuthToken == null ? at.toZAuthToken() : new ZAuthToken(pxyAuthToken);
+                }
+                ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(owner));
+                zoptions.setNoSession(true);
+                zoptions.setTargetAccount(owner.getId());
+                zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+                ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+                ZFolder zfolder = zmbx.getFolderById(iidFolder.toString(zsc.getAuthtokenAccountId()));
+                if (!(zfolder instanceof ZMountpoint))
+                    break;
+                iidFolder = new ItemId(((ZMountpoint) zfolder).getCanonicalRemoteId(), zsc.getAuthtokenAccountId());
+            }
+            hopCount++;
+        }
+        if (hopCount == ZimbraSoapContext.MAX_HOP_COUNT)
+            throw ServiceException.TOO_MANY_HOPS();
+
+        // avoid dereferencing the mountpoint again later on
+        action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
+
+        // fault in a session to listen in on the target folder's mailbox
+        if (iidFolder.belongsTo(session.getAuthenticatedAccountId())) {
+            return null;
+        } else if (iidFolder.isLocal()) {
+            ss.getDelegateSession(iidFolder.getAccountId());
+            return null;
+        } else {
+            try {
+                proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, owner.getId());
+                return owner;
+            } catch (ServiceException e) {
+                return null;
+            }
+        }
+    }
+
+    static void partitionItems(ZimbraSoapContext zsc, String ids, List<Integer> local, Map<String, StringBuffer> remote)
+    throws ServiceException {
         Account acct = getRequestedAccount(zsc);
         String targets[] = ids.split(",");
         for (int i = 0; i < targets.length; i++) {
             ItemId iid = new ItemId(targets[i], zsc);
-            if (iid.belongsTo(acct))
+            if (iid.belongsTo(acct)) {
                 local.add(iid.getId());
-            else {
+            } else {
                 StringBuffer sb = remote.get(iid.getAccountId());
                 if (sb == null)
                     remote.put(iid.getAccountId(), new StringBuffer(iid.toString()));
@@ -175,28 +270,31 @@ public class ItemAction extends MailDocumentHandler {
     }
 
     protected StringBuffer proxyRemoteItems(Element action, Map<String, StringBuffer> remote, Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
-        // make sure that the folder ID is fully qualified for the proxy case
+    throws ServiceException {
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
-        if (folderStr != null)
-            action.addAttribute(MailConstants.A_FOLDER, new ItemId(folderStr, getZimbraSoapContext(context)).toString());
+        if (folderStr != null) {
+            // fully qualify the folder ID (if any) in order for proxying to work
+            ItemId iidFolder = new ItemId(folderStr, getZimbraSoapContext(context));
+            action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
+        }
 
         StringBuffer successes = new StringBuffer();
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
-            action.addAttribute(MailConstants.A_ID, entry.getValue().toString());
-            Element response = proxyRequest(request, context, entry.getKey());
-            String completed = extractSuccesses(response);
-            successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
+            // update the <action> element to reference the subset of target items belonging to this user...
+            String itemIds = entry.getValue().toString();
+            action.addAttribute(MailConstants.A_ID, itemIds);
+            // ... proxy to the target items' owner's server...
+            String accountId = entry.getKey();
+            Element response = proxyRequest(request, context, accountId);
+            // ... and try to extract the list of items affected by the operation
+            try {
+                String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
+                successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
+            } catch (ServiceException e) {
+                ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
+            }
         }
-        return successes;
-    }
 
-    protected String extractSuccesses(Element response) {
-        try {
-            return response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
-        } catch (ServiceException e) {
-            ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
-            return "";
-        }
+        return successes;
     }
 }

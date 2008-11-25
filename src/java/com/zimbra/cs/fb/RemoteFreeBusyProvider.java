@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.util.NetUtil;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -215,13 +216,9 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         Account acct = prov.get(Provisioning.AccountBy.id, acctId);
         Server server = prov.getServer(acct);
 
-        Element response = null;
-        request.detach();
-
         // executing remotely; find out target and proxy there
         ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
-        response = proxy.dispatch(request, zscTarget).detach();
-
+        Element response = DocumentHandler.proxyWithNotification(request.detach(), proxy, zscTarget, zsc);
         return response;
     }
     

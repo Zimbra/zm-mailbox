@@ -71,7 +71,7 @@ public class Auth extends AccountDocumentHandler {
                 Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
                 if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     throw ServiceException.AUTH_EXPIRED();
-                return doResponse(request, at, zsc, acct);
+                return doResponse(request, at, zsc, context, acct);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
             }
@@ -119,18 +119,19 @@ public class Auth extends AccountDocumentHandler {
             }
 
             AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
-            return doResponse(request, at, zsc, acct);
+            return doResponse(request, at, zsc, context, acct);
         }
     }
 
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, Account acct) throws ServiceException {
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, Map<String, Object> context, Account acct)
+    throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
         
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
-            Session session = updateAuthenticatedAccount(zsc, at, true);
+            Session session = updateAuthenticatedAccount(zsc, at, context, true);
             if (session != null)
                 ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
         }

@@ -28,7 +28,6 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -36,6 +35,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -271,9 +271,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         }
 
         // call the remote server now!
-        ZimbraSoapContext zsc = null;
-        zsc = new ZimbraSoapContext(mAuthToken, mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount()+1);
-      
         Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
         String baseurl = null;
         if (!isMultipleMailboxes) {
@@ -285,9 +282,15 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             baseurl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
         ProxyTarget proxy = new ProxyTarget(server, mAuthToken, baseurl + qnrequest.getName());
 
+        ZimbraSoapContext zscProxy, zscInbound = mSearchParams.getRequestContext();
+        if (zscInbound != null)
+            zscProxy = new ZimbraSoapContext(zscInbound, mTargetAcctId);
+        else
+            zscProxy = new ZimbraSoapContext(mAuthToken, mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount() + 1);
+
         Element searchResp = null;
         try {
-            searchResp = proxy.dispatch(searchElt, zsc);
+            searchResp = DocumentHandler.proxyWithNotification(searchElt, proxy, zscProxy, zscInbound);
         } catch (SoapFaultException sfe) {
             ZimbraLog.index.warn("Unable to ("+sfe.toString()+") fetch search results from remote server " + proxy);
             mAtEndOfList = true;
