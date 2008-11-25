@@ -157,6 +157,18 @@
   <desc>create account in the domain</desc>
 </right>
 
+<right name="createAlias" type="preset" targetType="domain">
+  <desc>create alias in the domain</desc>
+</right>
+
+<right name="createCos" type="preset" targetType="global">
+  <desc>create COS</desc>
+</right>
+
+<right name="createTopDomain" type="preset" targetType="domain">
+  <desc>create a top-level domain</desc>
+</right>
+
 <right name="getDomain" type="getAttrs" targetType="domain">
   <desc>get all domain attributes</desc>
 </right>
@@ -169,13 +181,47 @@
   <desc>modify all domain attributes</desc>
 </right>
 
+<right name="configureExternalGAL" type="setAttrs" targetType="domain">
+  <desc>configure attributes for external GAL</desc>
+   <attrs>
+    <a n="zimbraGalMode"/>
+    <a n="zimbraGalLdapURL"/>
+    <a n="zimbraGalLdapSearchBase"/>
+    <a n="zimbraGalLdapBindDn"/>
+    <a n="zimbraGalLdapBindPassword"/>
+	<a n="zimbraGalLdapFilter"/>
+	<a n="zimbraGalAutoCompleteLdapFilter"/>
+	<a n="zimbraGalSyncLdapURL"/>
+	<a n="zimbraGalSyncLdapSearchBase"/>
+	<a n="zimbraGalSyncLdapFilter"/>
+	<a n="zimbraGalSyncLdapAuthMech"/>
+	<a n="zimbraGalSyncLdapBindDn"/>
+	<a n="zimbraGalSyncLdapBindPassword"/>							   	     
+  </attrs> 
+</right>
 
+<right name="configureExternaAuth" type="setAttrs" targetType="domain">
+  <desc>configure attributes for external auth</desc>
+   <attrs>
+    <a n="zimbraAuthMech"/>
+    <a n="zimbraAuthLdapURL"/>
+    <a n="zimbraAuthLdapBindDn"/>
+    <a n="zimbraAuthLdapSearchBase"/>
+    <a n="zimbraAuthLdapSearchFilter"/>
+    <a n="zimbraAuthLdapSearchBindDn"/>
+    <a n="zimbraAuthLdapSearchBindPassword"/>            
+  </attrs> 
+</right>
           
 <!-- 
     account rights
 -->
 <right name="renameAccount" type="preset" targetType="account">
   <desc>rename account</desc>
+</right>
+
+<right name="deleteAccount" type="preset" targetType="account">
+  <desc>delete account</desc>
 </right>
 
 <right name="renameCalendarResource" type="preset" targetType="resource">
@@ -188,6 +234,18 @@
 
 <right name="renameCos" type="preset" targetType="cos">
   <desc>rename cos</desc>
+</right>
+
+<right name="modifyCos" type="setAttrs" targetType="cos">
+  <desc>set all cos attributes</desc>
+</right>
+
+<right name="deleteCos" type="preset" targetType="cos">
+  <desc>delete COS</desc>
+</right>
+
+<right name="listCos" type="preset" targetType="cos">
+  <desc>see cos in GetAllCos/SearchDirectoryResponse</desc>
 </right>
 
 <right name="renameServer" type="preset" targetType="server">
@@ -256,6 +314,46 @@
 <!-- 
     current domainAdminModifiable attrs in zimbra-attrs.xml
  -->
+ <right name="getAccountFeatures" type="getAttrs" targetType="account,cos">
+  <desc>for unittest only, do we have a use case for this?</desc>
+  <attrs>
+    <a n="zimbraFeatureMailPriorityEnabled"/>
+    <a n="zimbraFeatureInstantNotify"/>
+    <a n="zimbraFeatureImapDataSourceEnabled"/>
+    <a n="zimbraFeaturePop3DataSourceEnabled"/>
+    <a n="zimbraFeatureIdentitiesEnabled"/>
+    <a n="zimbraFeatureMailForwardingEnabled"/>
+    <a n="zimbraFeatureContactsEnabled"/>
+    <a n="zimbraFeatureCalendarEnabled"/>
+    <a n="zimbraFeatureTasksEnabled"/>
+    <a n="zimbraFeatureTaggingEnabled"/>
+    <a n="zimbraFeatureAdvancedSearchEnabled"/>
+    <a n="zimbraFeatureSavedSearchesEnabled"/>
+    <a n="zimbraFeatureConversationsEnabled"/>
+    <a n="zimbraFeatureChangePasswordEnabled"/>
+    <a n="zimbraFeatureInitialSearchPreferenceEnabled"/>
+    <a n="zimbraFeatureFiltersEnabled"/>
+    <a n="zimbraFeatureGalEnabled"/>
+    <a n="zimbraFeatureSharingEnabled"/>
+    <a n="zimbraFeatureNotebookEnabled"/>
+    <a n="zimbraFeatureBriefcasesEnabled"/>
+    <a n="zimbraFeatureHtmlComposeEnabled"/>
+    <a n="zimbraFeatureGalAutoCompleteEnabled"/>
+    <a n="zimbraImapEnabled"/>
+    <a n="zimbraPop3Enabled"/>
+    <a n="zimbraFeatureSkinChangeEnabled"/>
+    <a n="zimbraFeatureOutOfOfficeReplyEnabled"/>
+    <a n="zimbraFeatureNewMailNotificationEnabled"/>
+    <a n="zimbraFeatureMailPollingIntervalPreferenceEnabled"/>
+    <a n="zimbraFeatureOptionsEnabled"/>
+    <a n="zimbraFeatureShortcutAliasesEnabled"/>
+    <a n="zimbraFeatureMailEnabled"/>
+    <a n="zimbraFeatureGroupCalendarEnabled"/>
+    <a n="zimbraFeatureIMEnabled"/>
+    <a n="zimbraFeatureFlaggingEnabled"/>
+  </attrs>
+</right>
+
 <right name="modifyDomainAdminAttrs" type="setAttrs" targetType="account">
   <desc>modify attributes that are currently tagged domainAdminModifiable in zimbra-attrs.xml</desc>
   <attrs>
