@@ -3787,5 +3787,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="765" name="zimbraDataSourceDefaultPollingInterval" type="duration" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="DataSourceCallback" since="future">
+  <desc>
+    The default data source polling interval, specified separately for each data source type.  Each value is specified as "type:interval".  
+    If an interval is not specified for a given data source type, or set to 0, automated polling is off by default.
+  </desc>
+</attr>
+
     
 </attrs>

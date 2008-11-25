@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081125-0055 */
+    /* build: 5.0 pshao 20081125-1427 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1607,6 +1607,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=425)
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public static final String A_zimbraDataSourceDefaultPollingInterval = "zimbraDataSourceDefaultPollingInterval";
 
     /**
      * email address for the data source

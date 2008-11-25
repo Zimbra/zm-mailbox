@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081125-0055 */
+    /* build: 5.0 pshao 20081125-1427 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1652,6 +1652,112 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetContactRankingTableSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactRankingTableSize, "");
+        return attrs;
+    }
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * <p>Use getDataSourceDefaultPollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceDefaultPollingIntervalAsString()
+     *
+     * @return zimbraDataSourceDefaultPollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public long getDataSourceDefaultPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceDefaultPollingInterval, -1L);
+    }
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * @return zimbraDataSourceDefaultPollingInterval, or ampty array if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public String[] getDataSourceDefaultPollingIntervalAsString() {
+        return getMultiAttr(Provisioning.A_zimbraDataSourceDefaultPollingInterval);
+    }
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * @param zimbraDataSourceDefaultPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public void setDataSourceDefaultPollingInterval(String[] zimbraDataSourceDefaultPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, zimbraDataSourceDefaultPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * @param zimbraDataSourceDefaultPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public Map<String,Object> setDataSourceDefaultPollingInterval(String[] zimbraDataSourceDefaultPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, zimbraDataSourceDefaultPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public void unsetDataSourceDefaultPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The default data source polling interval, specified separately for
+     * each data source type. Each value is specified as
+     * &quot;type:interval&quot;. If an interval is not specified for a given
+     * data source type, or set to 0, automated polling is off by default.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=765)
+    public Map<String,Object> unsetDataSourceDefaultPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, "");
         return attrs;
     }
 
