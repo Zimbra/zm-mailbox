@@ -343,14 +343,6 @@ public class AdminConstants {
     public static final QName GET_RIGHT_RESPONSE = QName.get("GetRightResponse", NAMESPACE);
     public static final QName GET_ALL_RIGHT_REQUEST = QName.get("GetAllRightsRequest", NAMESPACE);
     public static final QName GET_ALL_RIGHT_RESPONSE = QName.get("GetAllRightsResponse", NAMESPACE);
-    public static final QName CREATE_RIGHT_REQUEST = QName.get("CreateRightRequest", NAMESPACE);
-    public static final QName CREATE_RIGHT_RESPONSE = QName.get("CreateRightResponse", NAMESPACE);
-    public static final QName DELETE_RIGHT_REQUEST = QName.get("DeleteRightRequest", NAMESPACE);
-    public static final QName DELETE_RIGHT_RESPONSE = QName.get("DeleteRightResponse", NAMESPACE);
-    public static final QName RENAME_RIGHT_REQUEST= QName.get("RenameRightRequest", NAMESPACE);
-    public static final QName REMAME_RIGHT_RESPONSE = QName.get("RenameRightResponse", NAMESPACE);
-    public static final QName MODIFY_RIGHT_REQUEST = QName.get("ModifyRightRequest", NAMESPACE);
-    public static final QName MODIFY_RIGHT_RESPONSE = QName.get("ModifyRightResponse", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_REQUEST = QName.get("GetEffectiveRightsRequest", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_RESPONSE = QName.get("GetEffectiveRightsResponse", NAMESPACE);
     public static final QName GET_GRANTS_REQUEST = QName.get("GetGrantsRequest", NAMESPACE);
@@ -597,8 +589,6 @@ public class AdminConstants {
     public static final String E_VIA         = "via";
     public static final String A_ALL         = "all";
     public static final String A_ALLOW       = "allow";
-    public static final String A_ATTR_LIMIT  = "l";
-    public static final String A_DEFINED_BY  = "definedBy";
     public static final String A_DENY        = "deny";
     public static final String A_RIGHT       = "right";
     public static final String A_TARGET_TYPE = "targetType";
