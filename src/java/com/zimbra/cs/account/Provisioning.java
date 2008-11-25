@@ -24,6 +24,7 @@ package com.zimbra.cs.account;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -1539,33 +1540,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
     
-    public static enum RightBy {
-        
-        // case must match protocol
-        id, name;
-        
-        public static RightBy fromString(String s) throws ServiceException {
-            try {
-                return RightBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
+    public Right getRight(String rightName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public abstract Right get(RightBy keyType, String key) throws ServiceException;
-    
-    public abstract List<Right> getAllRights()  throws ServiceException;
-    
-    /*
-    public abstract Right createRight(String name, String desc, String rightType, Set<String> targetTypes, 
-                                      Set<String> attrs, Set<String> rights) throws ServiceException;
-    */
-    public abstract Right createRight(String name, Map<String, Object> rightAttrs) throws ServiceException;
-    
-    public abstract void deleteRight(String rightName) throws ServiceException;
-    
-    public abstract void renameRight(String zimbraId, String newName) throws ServiceException;
+    public List<Right> getAllRights()  throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
     
     public abstract boolean checkRight(String targetType, TargetBy targetBy, String target,
                                        GranteeBy granteeBy, String grantee,

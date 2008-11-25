@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 schemers 20081124-1428 */
+    /* build: 5.0 pshao 20081125-0055 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4823,7 +4823,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=769)
+    @ZAttr(id=764)
     public boolean isMailRedirectSetEnvelopeSender() {
         return getBooleanAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, true);
     }
@@ -4838,7 +4838,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=769)
+    @ZAttr(id=764)
     public void setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, zimbraMailRedirectSetEnvelopeSender ? Provisioning.TRUE : Provisioning.FALSE);
@@ -4856,7 +4856,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=769)
+    @ZAttr(id=764)
     public Map<String,Object> setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, zimbraMailRedirectSetEnvelopeSender ? Provisioning.TRUE : Provisioning.FALSE);
@@ -4872,7 +4872,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=769)
+    @ZAttr(id=764)
     public void unsetMailRedirectSetEnvelopeSender() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, "");
@@ -4889,7 +4889,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=769)
+    @ZAttr(id=764)
     public Map<String,Object> unsetMailRedirectSetEnvelopeSender(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, "");

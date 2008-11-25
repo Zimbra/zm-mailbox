@@ -1,9 +1,6 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -198,8 +195,6 @@ public class RightCommand {
                 for (Element eAttr : eSetAttrs.listElements(AdminConstants.E_A)) {
                     String attrName = eAttr.getAttribute(AdminConstants.A_N);
                     mCanSetAttrs.add(attrName);
-                    if (eAttr.getAttributeBool(AdminConstants.A_ATTR_LIMIT, false))
-                        mCanSetAttrsWithLimit.add(attrName);
                 }
             }
             
@@ -242,11 +237,8 @@ public class RightCommand {
             if (mCanSetAllAttrs) {
                 eSetAttrs.addAttribute(AdminConstants.A_ALL, true);
             } else {
-                for (String a : mCanSetAttrs) {
-                    Element eAttr = eSetAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, a);
-                    if (mCanSetAttrsWithLimit.contains(a))
-                        eAttr.addAttribute(AdminConstants.A_ATTR_LIMIT, true);
-                }
+                for (String a : mCanSetAttrs)
+                    eSetAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, a);
             }
             
             // getAttrs
@@ -383,25 +375,6 @@ public class RightCommand {
         RightUtil.revokeRight(prov, targetEntry, aces);
     }
 
-    //
-    // cumtome right management methods
-    //
-    
-    
-    /*
-    <CreateRightRequest>
-        <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
-          <desc>{right-description}</desc>
-          [<attrs>
-             <a n="{attr-name}" l="{limit}"/>+
-           </attrs>]
-          [<rights>
-             <r n="{right-name}"/>+
-           </rights>]
-        </right>
-    </CreateRightRequest>
-    */
-    
     public static Element rightToXML(Element parent, Right right) throws ServiceException {
         Element eRight = parent.addElement(AdminConstants.E_RIGHT);
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
@@ -422,11 +395,8 @@ public class RightCommand {
                 for (String attr : attrs)
                     eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
             } else {
-                for (AttrRight.Attr attr :attrRight.getAttrs()) {
-                    Element eAttr = eAttrs.addElement(attr.getAttrName());
-                    if (attr.getLimit())
-                        eAttr.addAttribute(AdminConstants.A_ATTR_LIMIT, true);
-                }
+                for (AttrRight.Attr attr :attrRight.getAttrs())
+                    eAttrs.addElement(attr.getAttrName());
             }
         } else if (right.isComboRight()) {
             Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);
@@ -437,135 +407,5 @@ public class RightCommand {
 
         return eRight;
     }
-    
-    private static void addAttr(String a, Element eAttrs) {
-        AttrRight.Attr attr = AttrRight.Attr.fromLdapAttrValue(a);
-        Element eAttr = eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr.getAttrName());
-        if (attr.getLimit())
-            eAttr.addAttribute(AdminConstants.A_ATTR_LIMIT, true);
-    }
-    
-    /*
-     * for creating/modifying customer right definition
-     * 
-     * for SoapProvisioning to convert ldap attr map to SOAP
-     * no validation is done here (i.e. the SOAP client code),
-     * all validation will be done in the server.  Here we 
-     * just blindly translate the LDAP attrs to SAOP elements/attributes
-     */
-    public static void attrsToXML(String rightName, Map<String, Object> attrs, Element parent) throws ServiceException{
-        String rightType = (String)attrs.get(Provisioning.A_zimbraRightType);
-        String desc = (String)attrs.get(Provisioning.A_description);
-        
-        
-        Element eRight = parent.addElement(AdminConstants.A_RIGHT);
-        eRight.addAttribute(AdminConstants.A_NAME, rightName);
-        
-        // right type
-        eRight.addAttribute(AdminConstants.A_TYPE, rightType);
-        
-        // desc
-        eRight.addElement(AdminConstants.E_DESC).setText(desc);
-        
-        // target type
-        Object obj = attrs.get(Provisioning.A_zimbraRightTargetType);
-        if (obj != null) {
-            StringBuilder targetTypeSb = new StringBuilder();
-            if (obj instanceof String)
-                targetTypeSb.append((String)obj);
-            else if (obj instanceof String[]) {
-                boolean first = true;
-                for (String tt : (String[])obj) {
-                    if (!first) {
-                        targetTypeSb.append(",");
-                        first = false;
-                    }
-                    targetTypeSb.append(tt.toString());
-                }
-            } else
-                throw ServiceException.INVALID_REQUEST("unsupported object type", null);
-            
-            eRight.addAttribute(AdminConstants.A_TARGET_TYPE, targetTypeSb.toString());    
-        }
-        
-        // attrs/rights
-        obj = attrs.get(Provisioning.A_zimbraRightAttrs);
-        if (obj != null) {
-            if (obj instanceof String) {
-                Element eAttrs = eRight.addElement(AdminConstants.E_ATTRS);
-                addAttr((String)obj, eAttrs);
-            } else if (obj instanceof String[]) {
-                Element eAttrs = eRight.addElement(AdminConstants.E_ATTRS);
-                for (String a : (String[])obj)
-                    addAttr(a, eAttrs);
-            } else
-                throw ServiceException.INVALID_REQUEST("unsupported object type", null);
-        }
-            
-        obj = attrs.get(Provisioning.A_zimbraRightRights);
-        if (obj != null) {
-            if (obj instanceof String) {
-                Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);
-                eRights.addElement(AdminConstants.E_R).addAttribute(AdminConstants.A_N, (String)obj);
-            } else if (obj instanceof String[]) {
-                Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);
-                for (String r : (String[])obj) {
-                    eRights.addElement(AdminConstants.E_R).addAttribute(AdminConstants.A_N, r);
-                }
-            } else
-                throw ServiceException.INVALID_REQUEST("unsupported object type", null);
-        }
-    }
-    
-    /*
-     * for creating/modifying customer right definition
-     *  
-     * for SOAP handers to convert SOAP to ldap attrs before handing to LdapProvisioning
-     */
-    public static void XMLToAttrs(Element eRight, Map<String, Object> attrs) throws ServiceException {
-        // String rightName = eRight.getAttribute(AdminConstants.A_NAME);
-        
-        String rightType = eRight.getAttribute(AdminConstants.A_TYPE);
-        String desc = eRight.getElement(AdminConstants.E_DESC).getText();
-        String targetType = eRight.getAttribute(AdminConstants.A_TARGET_TYPE, null);
-        
-        RightType rt = RightType.fromString(rightType);
 
-        // right type
-        attrs.put(Provisioning.A_zimbraRightType, rightType);
-        
-        // desc
-        attrs.put(Provisioning.A_description, desc);
-        
-        // target type
-        if (targetType != null) {
-            String[] tts = targetType.split(",");
-            for (String tt : tts)
-                StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightTargetType, tt);
-        }
-        
-        // attrs/rights
-        if (rt == RightType.getAttrs || rt == RightType.setAttrs) {
-            Element eAttrs = eRight.getElement(AdminConstants.E_ATTRS);
-            List<String> rightAttrs = new ArrayList<String>();
-            for (Element eRightAttr : eAttrs.listElements(AdminConstants.E_A)) {
-                String rightAttrName = eRightAttr.getAttribute(AdminConstants.A_N);
-                if (rt == RightType.setAttrs) {
-                    if (eRightAttr.getAttributeBool(AdminConstants.A_ATTR_LIMIT, false))   
-                        rightAttrName = rightAttrName + ":l";
-                }
-                rightAttrs.add(rightAttrName);
-            }
-            attrs.put(Provisioning.A_zimbraRightAttrs, rightAttrs);
-            
-        } else {
-            Element eRights = eRight.getElement(AdminConstants.E_RIGHTS);
-            List<String> rightRights = new ArrayList<String>();
-            for (Element eRightRight : eRights.listElements(AdminConstants.E_R)) {
-                String rightRightName = eRightRight.getAttribute(AdminConstants.A_N);
-                rightRights.add(rightRightName);
-            }
-            attrs.put(Provisioning.A_zimbraRightRights, rightRights);
-        }
-    }
 }

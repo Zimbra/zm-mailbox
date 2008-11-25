@@ -16,45 +16,17 @@ public class AttrRight extends AdminRight {
 
     static class Attr {
         private String mAttrName;
-        private boolean mLimit;
         
-        Attr(String attrName, boolean limit) {
+        Attr(String attrName) {
             mAttrName = attrName;
-            mLimit = limit;
-        }
-        
-        static String attrNameFromLdapAttrValue(String attr) {
-            String[] parts = attr.split(":");
-            return parts[0];
-        }
-        
-        static Attr fromLdapAttrValue(String attr) {
-            String[] parts = attr.split(":");
-            boolean limit = false;
-            if (parts.length == 2 && parts[1].equals("l"))
-                limit = true;
-            return new Attr(parts[0], limit);
-        }
-        
-        String toLdapStringValue() {
-            if (mLimit)
-                return mAttrName + ":l";
-            else
-                return mAttrName;
         }
         
         String getAttrName() {
             return mAttrName;
         }
         
-        boolean getLimit() {
-            return mLimit;
-        }
-        
         String dump(StringBuilder sb) {
             sb.append(mAttrName);
-            if (mLimit)
-                sb.append(" (limit)");
             return sb.toString();
         }
     }  
@@ -135,10 +107,10 @@ public class AttrRight extends AdminRight {
         return null;
     }
     
-    void addAttr(String attrName, boolean limit) {
+    void addAttr(String attrName) {
         if (mAttrs == null)
             mAttrs = new HashSet<Attr>();
-        mAttrs.add(new Attr(attrName, limit));
+        mAttrs.add(new Attr(attrName));
     }
     
     void addAttr(Attr attr) {
@@ -196,10 +168,6 @@ public class AttrRight extends AdminRight {
      * @param targetTypes
      */
     public static void validateAttr(String attrName, List<TargetType> targetTypes) throws ServiceException {
-        // when called from CustomRight LDAP attribute callback, the attrName may contain a ":l" 
-        // at the end, ignore that.
-        attrName = Attr.attrNameFromLdapAttrValue(attrName);
-        
         AttributeManager am = AttributeManager.getInstance();
         if (targetTypes == null) {
             if (am.getAttributeInfo(attrName) != null)
