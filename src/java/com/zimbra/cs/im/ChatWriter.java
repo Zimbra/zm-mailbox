@@ -41,6 +41,7 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.html.HtmlEntityMapper;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.im.IMGetChat;
@@ -71,7 +72,12 @@ class ChatWriter {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
                     OutputStreamWriter wout =
                         new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
-                    String text = mElt.toXML().asXML(); 
+                    String text = mElt.toXML().asXML();
+                    
+                    // convert unicode chars to HTML entities.  This is purely to make the "show original"
+                    // easier to deal with by keeping the saved chat entrely in the 7-bit ascii space
+                    text = HtmlEntityMapper.unicodeToHtmlEntity(text);
+                    
                     wout.write(text);
                     wout.flush();
                     mBuf = buf.toByteArray();
@@ -178,10 +184,8 @@ class ChatWriter {
 
             String msgBodyHtml = msg.getBody() != null ? msg.getBody().toString() : "";
             
-            msgBodyHtml = msgBodyHtml.replaceAll(" ", "&nbsp;");
-            msgBodyHtml = msgBodyHtml.replaceAll("\t", TAB_STR);
-            msgBodyHtml = msgBodyHtml.replaceAll("\r\n", "<br/>");
-            msgBodyHtml = msgBodyHtml.replaceAll("\n", "<br/>");
+            // conert embedded unicode entities to their HTML equivalent 
+            msgBodyHtml = HtmlEntityMapper.unicodeToHtmlEntity(msgBodyHtml);
 
             // find the color for this user
             if (!colorMap.containsKey(from)) {

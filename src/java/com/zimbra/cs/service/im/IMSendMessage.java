@@ -25,6 +25,7 @@ import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 
+import com.zimbra.cs.html.HtmlEntityMapper;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMMessage;
 import com.zimbra.cs.im.IMPersona;
@@ -69,7 +70,8 @@ public class IMSendMessage extends IMDocumentHandler {
                     String plainText = plainElt.getText();
                     
                     if (xhtmlElt != null) {
-                        String xhtmlText = xhtmlElt.getText();
+                        String xhtmlText = xhtmlElt.getText(); //.replaceAll("&nbsp;", "&#160;"); // &nbsp; isn't technically part of XHTML...but &#160; is -- so use it instead
+                        xhtmlText = HtmlEntityMapper.htmlEntitiesToNumeric(xhtmlText);
                         org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText("<body xmlns=\""+XHTML_NAMESPACE+"\">"+xhtmlText+"</body>").getRootElement();
                         org.dom4j.Element xhtmlBody = parsed;
                         xhtmlBody.detach();
