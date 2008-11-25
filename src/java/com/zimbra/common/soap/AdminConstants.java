@@ -577,6 +577,7 @@ public class AdminConstants {
     
     // right
     public static final String E_ATTRS       = "attrs";
+    public static final String E_DEFAULT     = "default";
     public static final String E_DESC        = "desc";
     public static final String E_GET_ATTRS   = "getAttrs";
     public static final String E_GRANT       = "grant";
@@ -586,13 +587,13 @@ public class AdminConstants {
     public static final String E_RIGHT       = "right";
     public static final String E_TARGET      = "target";
     public static final String E_SET_ATTRS   = "setAttrs";
+    public static final String E_VALUE       = "v";
     public static final String E_VIA         = "via";
     public static final String A_ALL         = "all";
     public static final String A_ALLOW       = "allow";
     public static final String A_DENY        = "deny";
     public static final String A_RIGHT       = "right";
     public static final String A_TARGET_TYPE = "targetType";
-
     
     public static final String E_WAITSET = "waitSet";
 }
