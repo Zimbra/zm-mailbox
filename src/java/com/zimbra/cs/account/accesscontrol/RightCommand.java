@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +135,29 @@ public class RightCommand {
         public boolean deny()       { return mDeny; }
     }
     
+    public static class EffectiveAttr {
+        private static final Set<String> EMPTY_SET = new HashSet<String>();
+        
+        String mAttrName;
+        Set<String> mDefault;
+        
+        EffectiveAttr(String attrName, Set<String> defaultValue) {
+            mAttrName = attrName;
+            mDefault = defaultValue;
+        }
+        
+        public String getAttrName() { return mAttrName; }
+        
+        public Set<String> getDefault()  { 
+            if (mDefault == null)
+                return EMPTY_SET;
+            else
+                return mDefault; 
+        }
+    }
+    
     public static class EffectiveRights {
+        private static final Map<String, EffectiveAttr> EMPTY_MAP = new HashMap<String, EffectiveAttr>();
         private static final Set<String> EMPTY_SET = new HashSet<String>();
         
         String mTargetType;
@@ -148,8 +171,7 @@ public class RightCommand {
         
         // setAttrs
         boolean mCanSetAllAttrs = false;
-        Set<String> mCanSetAttrs = EMPTY_SET;
-        Set<String> mCanSetAttrsWithLimit = EMPTY_SET;
+        Map<String, EffectiveAttr> mCanSetAttrs = EMPTY_MAP;
         
         // getAttrs
         boolean mCanGetAllAttrs = false;
@@ -190,11 +212,19 @@ public class RightCommand {
             if (eSetAttrs.getAttributeBool(AdminConstants.A_ALL, false)) {
                 mCanSetAllAttrs = true;
             } else {
-                mCanSetAttrs = new HashSet<String>();
-                mCanSetAttrsWithLimit = new HashSet<String>();
+                mCanSetAttrs = new HashMap<String, EffectiveAttr>();
                 for (Element eAttr : eSetAttrs.listElements(AdminConstants.E_A)) {
                     String attrName = eAttr.getAttribute(AdminConstants.A_N);
-                    mCanSetAttrs.add(attrName);
+                    Element eDefault = eAttr.getOptionalElement(AdminConstants.E_DEFAULT);
+                    Set<String> defaultValues = null;
+                    if (eDefault != null) {
+                        defaultValues = new HashSet<String>();
+                        for (Element eValue : eDefault.listElements(AdminConstants.E_VALUE)) {
+                            defaultValues.add(eValue.getText());
+                        }
+                    }
+                    EffectiveAttr ea = new EffectiveAttr(attrName, defaultValues);
+                    mCanSetAttrs.put(attrName, ea);
                 }
             }
             
@@ -237,8 +267,15 @@ public class RightCommand {
             if (mCanSetAllAttrs) {
                 eSetAttrs.addAttribute(AdminConstants.A_ALL, true);
             } else {
-                for (String a : mCanSetAttrs)
-                    eSetAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, a);
+                for (EffectiveAttr ea : mCanSetAttrs.values()) {
+                    Element eAttr = eSetAttrs.addElement(AdminConstants.E_A);
+                    eAttr.addAttribute(AdminConstants.A_N, ea.getAttrName());
+                    if (!ea.getDefault().isEmpty()) {
+                        Element eDefault = eAttr.addElement(AdminConstants.E_DEFAULT);
+                        for (String v : ea.getDefault())
+                            eDefault.addElement(AdminConstants.E_VALUE).setText(v);
+                    }
+                }
             }
             
             // getAttrs
@@ -257,8 +294,7 @@ public class RightCommand {
         }
 
         void setCanSetAllAttrs() { mCanSetAllAttrs = true; }
-        void setCanSetAttrs(Set<String> canSetAttrs) { mCanSetAttrs = canSetAttrs; }
-        void setCanSetAttrsWithLimit(Set<String> canSetAttrsWithLimit) { mCanSetAttrsWithLimit = canSetAttrsWithLimit; }
+        void setCanSetAttrs(Map<String, EffectiveAttr> canSetAttrs) { mCanSetAttrs = canSetAttrs; }
         void setCanGetAllAttrs() { mCanGetAllAttrs = true; }
         void setCanGetAttrs(Set<String> canGetAttrs) { mCanGetAttrs = canGetAttrs; }
         
@@ -269,8 +305,7 @@ public class RightCommand {
         public String granteeName() { return mGranteeName; }
         public Set<String> presetRights() { return mPresetRights; }
         public boolean canSetAllAttrs() { return mCanSetAllAttrs; } 
-        public Set<String> canSetAttrs() { return mCanSetAttrs; }
-        public Set<String> canSetAttrsWithLimit() { return mCanSetAttrsWithLimit; }
+        public Map<String, EffectiveAttr> canSetAttrs() { return mCanSetAttrs; }
         public boolean canGetAllAttrs() { return mCanGetAllAttrs; } 
         public Set<String> canGetAttrs() { return mCanGetAttrs; }
     }

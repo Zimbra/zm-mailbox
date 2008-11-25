@@ -15,14 +15,17 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeCardinality;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.MemberOf;
+import com.zimbra.cs.account.Server;
 
 public class RightChecker {
 
@@ -572,8 +575,9 @@ public class RightChecker {
         
         if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL)
             result.setCanSetAllAttrs();
-        else if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME)
-            result.setCanSetAttrs(allowSetAttrs.getAllowed());
+        else if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
+            result.setCanSetAttrs(fillDefault(target, allowSetAttrs));
+        }
         
         if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL)
             result.setCanGetAllAttrs();
@@ -584,6 +588,35 @@ public class RightChecker {
         return result;
     }
     
+    private static Map<String, RightCommand.EffectiveAttr> fillDefault(Entry target, AllowedAttrs allowSetAttrs) throws ServiceException {
+        Entry inheritFrom = null;
+        Provisioning prov = Provisioning.getInstance();
+        AttributeManager am = AttributeManager.getInstance();
+        
+        if (target instanceof Server || target instanceof Domain)
+            inheritFrom = prov.getConfig();
+        else if (target instanceof Account)
+            inheritFrom = prov.getCOS((Account)target);
+        
+        Map<String, RightCommand.EffectiveAttr> effAttrs = new HashMap<String, RightCommand.EffectiveAttr>();
+        for (String attrName : allowSetAttrs.getAllowed()) {
+            Set<String> defaultValues = null;
+            if (inheritFrom != null) {
+                AttributeCardinality ac = am.getAttributeCardinality(attrName);
+                if (ac == AttributeCardinality.single) {
+                    String defaultValue = inheritFrom.getAttr(attrName);
+                    if (defaultValue != null) {
+                        defaultValues = new HashSet<String>();
+                        defaultValues.add(defaultValue);
+                    }
+                } else {
+                    defaultValues = inheritFrom.getMultiAttrSet(attrName);
+                }
+            }
+            effAttrs.put(attrName, new RightCommand.EffectiveAttr(attrName, defaultValues));
+        }
+        return effAttrs;
+    }
     
     private static Set<Right> getEffectivePresetRights(Account grantee, Entry target) throws ServiceException {
         

@@ -2588,15 +2588,21 @@ public class ProvUtil implements DebugListener {
                 System.out.println("    " + r);
         }
         
+        String format = "    %-40s %-20s\n";
         System.out.println();
         if (effRights.canSetAllAttrs())
-            System.out.println("Can set all attributes without limit");
+            System.out.println("Can set all attributes");
         else {
             System.out.println("Can set the following attributes");
             System.out.println("--------------------------------");
-            for (String a : effRights.canSetAttrs())
-                System.out.println("    " + a);
-
+            System.out.printf(format, "attribute", "default");
+            System.out.printf(format, "----------------------------------------", "--------------------");
+            for (RightCommand.EffectiveAttr ea : effRights.canSetAttrs().values()) {
+                StringBuilder sb = new StringBuilder();
+                for (String v: ea.getDefault())
+                    sb.append(v + " ");
+                System.out.printf(format, ea.getAttrName(), sb);
+            }
         }
         
         System.out.println();
@@ -2606,7 +2612,7 @@ public class ProvUtil implements DebugListener {
             System.out.println("Can get the following attributes");
             System.out.println("--------------------------------");
             for (String a : effRights.canGetAttrs())
-                System.out.println("    " + a);
+                System.out.printf(format, a, "");
         }
     }
     

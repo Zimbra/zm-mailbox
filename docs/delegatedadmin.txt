@@ -925,7 +925,11 @@ if <grantee> is omitted, it means the account identified by the auth token.
   <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
       <right n="{right-name}"/>+
       <setAttrs [all="{all}"]>
-        <a n="..." [min="{min-constraint}"] [max="max-constraint"] [values="{common-seperated-allowed-values}"]/>+
+          <a n="..." [min="{min-constraint}"] [max="max-constraint"] [values="{common-separated-allowed-values}"]>
+              [<default>
+                   <v>...</v>+
+               </default>]
+          </a>
       </setAttrs>
       <getAttrs [all="{all}"]>
         <a n="...">+
@@ -945,6 +949,8 @@ if <grantee> is omitted, it means the account identified by the auth token.
     {all} : 0(default) | 1
             1 - all attributes on the target entry are accessible
                 if 1, no <a> elements will appear under the <setAttrs>/<getAttrs>
+                
+    <default> : inherited default value(or values if the attribute is multl-valued)
     
     e.g. 
     <GetEffectiveRightsRequest>
