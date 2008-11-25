@@ -30,15 +30,12 @@ public class TestACLAttrRight extends TestACL {
     
     static final Right ATTR_RIGHT_SET_ALL  = AdminRight.R_modifyAccount;
     static final Right ATTR_RIGHT_SET_SOME = AdminRight.R_configureQuota;
-    static final Right ATTR_RIGHT_SET_SOME_WITH_LIMIT = AdminRight.R_configureQuotaWithinLimit;
     
     // attrs covered by the ATTR_RIGHT_SOME right
     static final Map<String, Object> ATTRS_SOME;
-    static final AllowedAttrs EXPECTED_SOME_NO_LIMIT;
-    static final AllowedAttrs EXPECTED_SOME_WITH_LIMIT;
+    static final AllowedAttrs EXPECTED_SOME;
     static final AllowedAttrs EXPECTED_SOME_EMPTY;
-    static final AllowedAttrs EXPECTED_ALL_MINUS_SOME_NO_LIMIT;
-    static final AllowedAttrs EXPECTED_ALL_SOME_WITH_LIMIT;
+    static final AllowedAttrs EXPECTED_ALL_MINUS_SOME;
     
     static final Map<String, Object> ATTRS_SOME_MORE;
     
@@ -64,20 +61,15 @@ public class TestACLAttrRight extends TestACL {
         }
         Set<String> ALL_ACCOUNT_ATTRS_MINUS_SOME = SetUtil.subtract(ALL_ACCOUNT_ATTRS, ATTRS_SOME.keySet());
         
-        EXPECTED_SOME_NO_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), EMPTY_SET);
-        EXPECTED_SOME_WITH_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), ATTRS_SOME.keySet());
-        EXPECTED_SOME_EMPTY = AccessManager.ALLOW_SOME_ATTRS(EMPTY_SET, EMPTY_SET);
-        EXPECTED_ALL_MINUS_SOME_NO_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME, EMPTY_SET);
-        EXPECTED_ALL_SOME_WITH_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME, ATTRS_SOME.keySet());
+        EXPECTED_SOME = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
+        EXPECTED_SOME_EMPTY = AccessManager.ALLOW_SOME_ATTRS(EMPTY_SET);
+        EXPECTED_ALL_MINUS_SOME = AccessManager.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME);
     }
     
     
-    public void oneGrantSome(AllowOrDeny grant, LimitOrNoLimit limit, GetOrSet getOrSet, AllowedAttrs expected) throws Exception {
+    public void oneGrantSome(AllowOrDeny grant, GetOrSet getOrSet, AllowedAttrs expected) throws Exception {
         
-        if (!CHECK_LIMIT && limit == LimitOrNoLimit.LIMIT)
-            return;
-        
-        String testName = "oneGrantSome-" + grant.name() + "-" + limit.name() + "-" + getOrSet.name();
+        String testName = "oneGrantSome-" + grant.name() + "-" + getOrSet.name();
         
         System.out.println("Testing " + testName);
         
@@ -93,7 +85,7 @@ public class TestACLAttrRight extends TestACL {
         if (getOrSet.isGet())
             someRight = ATTR_RIGHT_GET_SOME;
         else
-            someRight = limit.limit()? ATTR_RIGHT_SET_SOME_WITH_LIMIT : ATTR_RIGHT_SET_SOME;
+            someRight = ATTR_RIGHT_SET_SOME;
         Set<ZimbraACE> grants = makeUsrGrant(GA, someRight, grant);
         
         /*
@@ -140,12 +132,9 @@ public class TestACLAttrRight extends TestACL {
     }
 
     
-    private void someAllSameLevel(AllowOrDeny some, AllowOrDeny all, LimitOrNoLimit limit, GetOrSet getOrSet, AllowedAttrs expected) throws ServiceException {
+    private void someAllSameLevel(AllowOrDeny some, AllowOrDeny all, GetOrSet getOrSet, AllowedAttrs expected) throws ServiceException {
         
-        if (!CHECK_LIMIT && limit == LimitOrNoLimit.LIMIT)
-            return;
-        
-        String testName = "someAllSameLevel-" + some.name() + "-some-" + all.name() + "-all-" + limit.name() + "-" + getOrSet.name();
+        String testName = "someAllSameLevel-" + some.name() + "-some-" + all.name() + "-all-" + getOrSet.name();
        
         System.out.println("Testing " + testName);
         
@@ -163,7 +152,7 @@ public class TestACLAttrRight extends TestACL {
             someRight = ATTR_RIGHT_GET_SOME;
             allRight = ATTR_RIGHT_GET_ALL;
         } else {
-            someRight = limit.limit()? ATTR_RIGHT_SET_SOME_WITH_LIMIT : ATTR_RIGHT_SET_SOME;
+            someRight = ATTR_RIGHT_SET_SOME;
             allRight = ATTR_RIGHT_SET_ALL;
         }
         Set<ZimbraACE> grants = makeUsrGrant(GA, someRight, some);
@@ -190,15 +179,12 @@ public class TestACLAttrRight extends TestACL {
      * allow some at closer level, deny all at farther level
      * => should allow some
      */
-    public void someAllDiffLevel(AllowOrDeny some, AllowOrDeny all, LimitOrNoLimit limit, 
+    public void someAllDiffLevel(AllowOrDeny some, AllowOrDeny all, 
                                  boolean someIsCloser, // whether some or all is the closer grant
                                  GetOrSet getOrSet,
                                  AllowedAttrs expected) throws Exception {
-        
-        if (!CHECK_LIMIT && limit == LimitOrNoLimit.LIMIT)
-            return;
-        
-        String testName = "someAllDiffLevel-" + some.name() + "-some-" + all.name() + "-all-" + limit.name() + "-" + (someIsCloser?"someIsCloser":"allIsCloser") + "-" + getOrSet.name();
+
+        String testName = "someAllDiffLevel-" + some.name() + "-some-" + all.name() + "-all-" + (someIsCloser?"someIsCloser":"allIsCloser") + "-" + getOrSet.name();
         
         System.out.println("Testing " + testName);
         
@@ -218,7 +204,7 @@ public class TestACLAttrRight extends TestACL {
             someRight = ATTR_RIGHT_GET_SOME;
             allRight = ATTR_RIGHT_GET_ALL;
         } else {
-            someRight = limit.limit()? ATTR_RIGHT_SET_SOME_WITH_LIMIT : ATTR_RIGHT_SET_SOME;
+            someRight = ATTR_RIGHT_SET_SOME;
             allRight = ATTR_RIGHT_SET_ALL;
         }
         Set<ZimbraACE> grants = makeUsrGrant(GA, someRight, some);
@@ -245,73 +231,53 @@ public class TestACLAttrRight extends TestACL {
 
     
     public void testOneGrantSome() throws Exception {
-        oneGrantSome(ALLOW, NOLIMIT, SET, EXPECTED_SOME_NO_LIMIT);
-        oneGrantSome(DENY,  NOLIMIT, SET, EXPECTED_SOME_EMPTY);
-        oneGrantSome(ALLOW, LIMIT,   SET, EXPECTED_SOME_WITH_LIMIT);
-        oneGrantSome(DENY,  LIMIT,   SET, EXPECTED_SOME_EMPTY);
-        
-        // limit doesn't matter, result should the same as SET with no NOLIMIT
-        oneGrantSome(ALLOW, NULLLIMIT, GET, EXPECTED_SOME_NO_LIMIT);
-        oneGrantSome(DENY,  NULLLIMIT, GET, EXPECTED_SOME_EMPTY);
+        oneGrantSome(ALLOW, SET, EXPECTED_SOME);
+        oneGrantSome(DENY,  SET, EXPECTED_SOME_EMPTY);
+        oneGrantSome(ALLOW, GET, EXPECTED_SOME);
+        oneGrantSome(DENY,  GET, EXPECTED_SOME_EMPTY);
     }
     
     public void testOneGrantAll() throws Exception {
         oneGrantAll(ALLOW, SET, AccessManager.ALLOW_ALL_ATTRS());
         oneGrantAll(DENY,  SET, AccessManager.DENY_ALL_ATTRS());
-        
-        // result should the same as SET
         oneGrantAll(ALLOW, GET, AccessManager.ALLOW_ALL_ATTRS());
         oneGrantAll(DENY,  GET, AccessManager.DENY_ALL_ATTRS());
     }
     
     public void testTwoGrantsSameLevel() throws Exception {
-        someAllSameLevel(ALLOW, ALLOW, NOLIMIT, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllSameLevel(DENY,  ALLOW, NOLIMIT, SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllSameLevel(ALLOW, DENY,  NOLIMIT, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  NOLIMIT, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllSameLevel(ALLOW, ALLOW, LIMIT,   SET, EXPECTED_ALL_SOME_WITH_LIMIT);
-        someAllSameLevel(DENY,  ALLOW, LIMIT,   SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllSameLevel(ALLOW, DENY,  LIMIT,   SET, AccessManager.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  LIMIT,   SET, AccessManager.DENY_ALL_ATTRS());
-        
-        // limit doesn't matter, result should the same as SET with no NOLIMIT
-        someAllSameLevel(ALLOW, ALLOW, NULLLIMIT, GET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllSameLevel(DENY,  ALLOW, NULLLIMIT, GET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllSameLevel(ALLOW, DENY,  NULLLIMIT, GET, AccessManager.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  NULLLIMIT, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(ALLOW, ALLOW, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllSameLevel(DENY,  ALLOW, SET, EXPECTED_ALL_MINUS_SOME);
+        someAllSameLevel(ALLOW, DENY,  SET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  SET, AccessManager.DENY_ALL_ATTRS());
+
+        someAllSameLevel(ALLOW, ALLOW, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllSameLevel(DENY,  ALLOW, GET, EXPECTED_ALL_MINUS_SOME);
+        someAllSameLevel(ALLOW, DENY,  GET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  GET, AccessManager.DENY_ALL_ATTRS());
         
     }
 
     public void testTwoGrantsDiffLevel() throws Exception {
-        //               some   all    limit  some-is-closer
-        someAllDiffLevel(ALLOW, ALLOW, NOLIMIT, true, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, NOLIMIT, true, SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllDiffLevel(ALLOW, DENY,  NOLIMIT, true, SET, EXPECTED_SOME_NO_LIMIT);
-        someAllDiffLevel(DENY,  DENY,  NOLIMIT, true, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, ALLOW, LIMIT,   true, SET, EXPECTED_ALL_SOME_WITH_LIMIT);
-        someAllDiffLevel(DENY,  ALLOW, LIMIT,   true, SET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllDiffLevel(ALLOW, DENY,  LIMIT,   true, SET, EXPECTED_SOME_WITH_LIMIT);
-        someAllDiffLevel(DENY,  DENY,  LIMIT,   true, SET, AccessManager.DENY_ALL_ATTRS());
+        //               some   all    some-is-closer
+        someAllDiffLevel(ALLOW, ALLOW, true, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, true, SET, EXPECTED_ALL_MINUS_SOME);
+        someAllDiffLevel(ALLOW, DENY,  true, SET, EXPECTED_SOME);
+        someAllDiffLevel(DENY,  DENY,  true, SET, AccessManager.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, NOLIMIT, false, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, NOLIMIT, false, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  NOLIMIT, false, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  NOLIMIT, false, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, ALLOW, LIMIT,   false, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, LIMIT,   false, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  LIMIT,   false, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  LIMIT,   false, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, false, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, false, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  false, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  false, SET, AccessManager.DENY_ALL_ATTRS());
         
-        // limit doesn't matter, result should the same as SET with no NOLIMIT
-        someAllDiffLevel(ALLOW, ALLOW, NULLLIMIT, true,  GET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, NULLLIMIT, true,  GET, EXPECTED_ALL_MINUS_SOME_NO_LIMIT);
-        someAllDiffLevel(ALLOW, DENY,  NULLLIMIT, true,  GET, EXPECTED_SOME_NO_LIMIT);
-        someAllDiffLevel(DENY,  DENY,  NULLLIMIT, true,  GET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, ALLOW, NULLLIMIT, false, GET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, NULLLIMIT, false, GET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  NULLLIMIT, false, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, true, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, true, GET, EXPECTED_ALL_MINUS_SOME);
+        someAllDiffLevel(ALLOW, DENY,  true, GET, EXPECTED_SOME);
+        someAllDiffLevel(DENY,  DENY,  true, GET, AccessManager.DENY_ALL_ATTRS());
         
+        someAllDiffLevel(ALLOW, ALLOW, false, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, false, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  false, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  false, GET, AccessManager.DENY_ALL_ATTRS());
     }
     
     // TODO: add test for adding/substracting attrs between two allow/deny SOME rights 

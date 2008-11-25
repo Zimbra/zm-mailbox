@@ -583,9 +583,6 @@ public abstract class TestACL extends TestCase {
         assertEquals(expected.getResult(), actual.getResult());
         if (actual.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
             assertEquals(expected.getAllowed(), actual.getAllowed());
-            
-            if (CHECK_LIMIT)
-                assertEquals(expected.getAllowedWithLimit(), actual.getAllowedWithLimit());
         }
     }
     

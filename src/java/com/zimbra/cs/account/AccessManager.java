@@ -17,7 +17,6 @@
 
 package com.zimbra.cs.account;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -137,20 +136,11 @@ public abstract class AccessManager {
         // attr results
         private Result mResult;
         private Set<String> mAllowSome;
-        private Set<String> mAllowSomeWithLimit;  // todo; delete this
-        
-        // retire this
-        private AllowedAttrs(Result result, Set<String> allowSome, Set<String> allowSomeWithLimit) {
-            mResult = result;
-            mAllowSome = allowSome;
-            mAllowSomeWithLimit = allowSomeWithLimit;
-            mCanDo = null;
-        }
+
         
         private AllowedAttrs(Result result, Set<String> allowSome) {
             mResult = result;
             mAllowSome = allowSome;
-            mAllowSomeWithLimit = null;
             mCanDo = null;
         }
         
@@ -194,10 +184,6 @@ public abstract class AccessManager {
             return mAllowSome;
         }
         
-        public Set<String> getAllowedWithLimit() {
-            return mAllowSomeWithLimit;
-        }
-        
         public String dump() {
             StringBuilder sb = new StringBuilder();
             sb.append("result = " + mResult + "\n");
@@ -207,11 +193,6 @@ public abstract class AccessManager {
                 for (String a : mAllowSome)
                     sb.append(a + " ");
                 sb.append(")\n");
-                
-                sb.append("allowed with limit = (");
-                for (String a : mAllowSomeWithLimit)
-                    sb.append(a + " ");
-                sb.append(")\n");
             }
             
             return sb.toString();
@@ -219,16 +200,11 @@ public abstract class AccessManager {
     }
     
     public static final AllowedAttrs ALLOW_ALL_ATTRS() {
-        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null, null);
+        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null);
     }
     
     public static final AllowedAttrs DENY_ALL_ATTRS() {
-        return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null, null);
-    }
-    
-    // todo, delete this
-    public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome, Set<String> allowSomeWithLimit) {
-        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome, allowSomeWithLimit);
+        return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null);
     }
     
     public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome) {

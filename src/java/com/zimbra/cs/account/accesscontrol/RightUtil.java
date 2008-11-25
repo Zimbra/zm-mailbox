@@ -58,48 +58,6 @@ public class RightUtil {
         } else
             return null;
     }
-    
-    /////////////////////////////////////////////////
-    /////////////////////////////////////////////////
-    /////////////     REMOVE BELOW   ////////////////
-    /////////////////////////////////////////////////
-    /////////////////////////////////////////////////
-
-    
-    /**
-     * Returns a List of ACEs with the specified right granted on the entry.  
-     * Negative grants are in the front, positive grants are put in the rear of the 
-     * returned List.
-     * 
-     * @param entry the entry on which rights are granted
-     * @param right right of interest
-     * @return a List of ACEs with the specified right granted on the entry. 
-     * @throws ServiceException
-     */
-    static List<ZimbraACE> getACEs(Entry entry, Right right) throws ServiceException {
-        ZimbraACL acl = getACL(entry); 
-        if (acl != null)
-            return acl.getACEsByPresetRight(right);
-        else
-            return null;
-    }
-    
-    static List<ZimbraACE> getACEs(Entry entry, Right right, TargetType targetType) throws ServiceException {
-        ZimbraACL acl = getACL(entry); 
-        if (acl != null)
-            return acl.getACEsByAttrRight(right, targetType);
-        else
-            return null;
-    }
-    
-    static List<ZimbraACE> getACEs(Entry entry, Set<String> granteeIds, TargetType targetType) throws ServiceException {
-        ZimbraACL acl = getACL(entry); 
-        if (acl != null)
-            return acl.getACEsByGranteeId(granteeIds, targetType);
-        else
-            return null;
-    }
-    
 
     /**
      * Grant rights on a target entry.

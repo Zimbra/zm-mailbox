@@ -21,7 +21,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
-import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 public class RightCommand {

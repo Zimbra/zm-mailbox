@@ -10,7 +10,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.RightChecker.EffectiveACL;
 import com.zimbra.cs.mailbox.ACL;
 
 /*

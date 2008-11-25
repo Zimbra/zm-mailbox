@@ -24,7 +24,7 @@ public class ZimbraACL {
     // negative grants
     Set<ZimbraACE> mDenied = new HashSet<ZimbraACE>();
 
-    // for the containsRight call
+    // for the containsRight call, can probably remove now
     Set<Right> mContainsRight = new HashSet<Right>();
     
     /**
@@ -163,12 +163,7 @@ public class ZimbraACL {
         }
         return false;
     }
-    
-    boolean containsRight(Right right) {
-        return mContainsRight.contains(right);
-    }
-    
-    
+   
     List<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
         List<ZimbraACE> granted = new ArrayList<ZimbraACE>();
         for (ZimbraACE ace : acesToGrant) {
@@ -218,11 +213,7 @@ public class ZimbraACL {
         return mDenied;
     }
     
-    /////////////////////////////////////////////////
-    /////////////////////////////////////////////////
-    /////////////     REMOVE BELOW   ////////////////
-    /////////////////////////////////////////////////
-    /////////////////////////////////////////////////
+    
     
     /**
      * Get ACEs with specified rights
@@ -236,134 +227,6 @@ public class ZimbraACL {
         for (ZimbraACE ace : mAces) {
             if (rights.contains(ace.getRight()))
                 result.add(ace);
-        }
-
-        return result;
-    }
-    
-    List<ZimbraACE> getACEsByGranteeId(Set<String> granteeIds, TargetType targetType) {
-        List<ZimbraACE> result = new ArrayList<ZimbraACE>();
-        
-        for (ZimbraACE ace : mAces) {
-            if (granteeIds.contains(ace.getGrantee())) {
-                Right rightGranted = ace.getRight();
-                
-                if (rightGranted.isComboRight()) {
-                    // always pass in needing get, because get will get us both get and set
-                    expandComboRightForAttrRights(ace, RightType.getAttrs, targetType, result);
-                    
-                    // also, add the combo right itself
-                    result.add(ace);
-                    
-                } else if (rightGranted.isAttrRight()) {
-                    AttrRight attrRight = (AttrRight)rightGranted; 
-                    
-                    // setAttrs imply getAttrs on the same set of attrs
-                    // unlike getACEsByAttrRight, we don't check get/set here.
-                    // here we need both get/setAttrs rights
-                    /*
-                    if (!attrRight.applicableToRightType(rightTypeNeeded))
-                        continue;
-                    */
-                    
-                    // if the right is applicable to the target type on which the right is granted
-                    if (!rightGranted.applicableOnTargetType(targetType))
-                        continue;
-                    
-                    result.add(ace);
-                } else {
-                    // preset right
-                    result.add(ace);
-                }
-            }
-        }
-
-        return result;
-    }
-    
-    /**
-     * Returns a List of ACEs with the specified preset right.
-     * 
-     * Negative grants are in the front, positive grants are in the rear of the 
-     * returned List. 
-     * 
-     * @param right
-     * @param result 
-     */
-    List<ZimbraACE> getACEsByPresetRight(Right right) {
-        List<ZimbraACE> result = new ArrayList<ZimbraACE>();
-        
-        for (ZimbraACE ace : mAces) {
-            if (ace.getRight().isComboRight()) {
-                ComboRight comboRight = (ComboRight)ace.getRight();
-                if (comboRight.containsPresetRight(right))
-                    result.add(ace);
-            } else if (right == ace.getRight()) {
-                result.add(ace);
-            }
-        }
-
-        return result;
-    }
-    
-    private void expandComboRightForAttrRights(ZimbraACE ace, RightType rightTypeNeeded, TargetType targetType, List<ZimbraACE> result) {
-        Right rightGranted = ace.getRight();
-        
-        ComboRight comboRight = (ComboRight)rightGranted;
-        Set<AttrRight> attrRights = comboRight.getAttrRights();
-        
-        for (AttrRight attrRight : attrRights) {
-            // setAttrs imply getAttrs on the same set of attrs
-            if (!attrRight.applicableToRightType(rightTypeNeeded))
-                continue;
-            
-            // if the right is applicable to the target type on which the right is granted
-            if (!attrRight.applicableOnTargetType(targetType))
-                continue;
-            
-            // create a pseudo ZimbraACE that represent this expanded right
-            ZimbraACE pseudoACE = ace.clone();
-            pseudoACE.setRight(attrRight);
-            result.add(pseudoACE);
-        }
-    }
-    
-    /**
-     * 
-     * For get/setAttrs rights
-     * 
-     * @param rightNeeded  AdminRight.RT_PSEUDO_GET_ATTRS or AdminRight.RT_PSEUDO_SET_ATTRS
-     * @param targetType   target type of the actual enrty this operation is to be performed
-     * @param attrs
-     * @return
-     */
-    List<ZimbraACE> getACEsByAttrRight(Right rightNeeded, TargetType targetType) {
-        List<ZimbraACE> result = new ArrayList<ZimbraACE>();
-        
-        RightType rightTypeNeeded = rightNeeded.getRightType();
-        
-        for (ZimbraACE ace : mAces) {
-            Right rightGranted = ace.getRight();
-            
-            if (rightGranted.isComboRight()) {
-                expandComboRightForAttrRights(ace, rightTypeNeeded, targetType, result);
-                
-            } else if (rightGranted.isAttrRight()) {
-                AttrRight attrRight = (AttrRight)rightGranted; 
-                
-                // setAttrs imply getAttrs on the same set of attrs
-                if (!attrRight.applicableToRightType(rightTypeNeeded))
-                    continue;
-                
-                // if the right is applicable to the target type on which the right is granted
-                if (!rightGranted.applicableOnTargetType(targetType))
-                    continue;
-
-                result.add(ace);
-                
-            } else
-                continue;
-
         }
 
         return result;

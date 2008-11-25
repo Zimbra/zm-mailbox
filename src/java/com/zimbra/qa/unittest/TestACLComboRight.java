@@ -23,8 +23,7 @@ public class TestACLComboRight extends TestACL {
 
     // attrs covered by the ATTR_RIGHT_SOME right
     static final Map<String, Object> ATTRS_SOME;
-    static final AllowedAttrs EXPECTED_SOME_NO_LIMIT;
-    static final AllowedAttrs EXPECTED_SOME_WITH_LIMIT;
+    static final AllowedAttrs EXPECTED_SOME;
     
     static {
         Set<String> EMPTY_SET = new HashSet<String>();
@@ -44,8 +43,7 @@ public class TestACLComboRight extends TestACL {
         ATTRS_SOME.putAll(ATTRS_CONFIGURE_QUOTA_WITHIN_LIMIT);
         ATTRS_SOME.putAll(ATTRS_DOMAIN_ADMIN_MODIFIABLE);
         
-        EXPECTED_SOME_NO_LIMIT = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), EMPTY_SET);
-        EXPECTED_SOME_WITH_LIMIT =  AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet(), ATTRS_CONFIGURE_QUOTA_WITHIN_LIMIT.keySet());
+        EXPECTED_SOME = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
     }
     
     public void testComboRight() throws Exception {
@@ -81,7 +79,7 @@ public class TestACLComboRight extends TestACL {
         // renameAccount right is applicable on acount
         verify(GA, TA, AdminRight.R_renameAccount, ALLOW, via);
         
-        verify(GA, TA, ATTRS_SOME, SET, EXPECTED_SOME_WITH_LIMIT);
+        verify(GA, TA, ATTRS_SOME, SET, EXPECTED_SOME);
     }
 
     

@@ -27,7 +27,6 @@ public class AdminRight extends Right {
     public static AdminRight R_viewDummy;
     public static AdminRight R_modifyAccount;
     public static AdminRight R_configureQuota;
-    public static AdminRight R_configureQuotaWithinLimit;
     
     public static AdminRight R_domainAdmin;
 
@@ -55,7 +54,6 @@ public class AdminRight extends Right {
         R_viewDummy = rm.getAdminRight("viewDummy");
         R_modifyAccount = rm.getAdminRight("modifyAccount");
         R_configureQuota = rm.getAdminRight("configureQuota");
-        R_configureQuotaWithinLimit = rm.getAdminRight("configureQuotaWithinLimit");
         
         R_domainAdmin = rm.getAdminRight("domainAdmin");
 
