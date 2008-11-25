@@ -34,6 +34,7 @@ public class HeaderConstants {
     public static final String E_SESSION    = "session";
     public static final String A_ACCOUNT_ID = "acct";
     public static final String A_ID         = "id";
+    public static final String A_PROXIED    = "proxy";
     public static final String E_NOTIFY     = "notify";
     public static final String A_NOTIFY     = "notify";
     public static final String A_SEQNO      = "seq";

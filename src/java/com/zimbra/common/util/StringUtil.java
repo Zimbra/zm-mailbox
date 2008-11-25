@@ -50,6 +50,16 @@ public class StringUtil {
         return s1.equals(s2);
     }
 
+    public static int countOccurrences(String str, char c) {
+        if (str == null)
+            return 0;
+        int count = 0;
+        for (int i = 0, len = str.length(); i < len; i++)
+            if (str.charAt(i) == c)
+                count++;
+        return count;
+    }
+
 	public static String stripControlCharacters(String raw) {
 		if (raw == null)
 			return null;
