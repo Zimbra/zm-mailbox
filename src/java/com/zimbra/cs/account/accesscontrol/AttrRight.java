@@ -110,6 +110,11 @@ public class AttrRight extends AdminRight {
     void verifyTargetType() throws ServiceException {
     }
     
+    @Override
+    TargetType getTargetType() throws ServiceException {
+        throw ServiceException.FAILURE("internal error", null);
+    }
+    
     public List<TargetType> getTargetTypes() {
         return mTargetTypes;
     }

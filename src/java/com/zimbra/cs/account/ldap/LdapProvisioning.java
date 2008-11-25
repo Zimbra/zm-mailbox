@@ -2699,6 +2699,7 @@ public class LdapProvisioning extends Provisioning {
     // ACL group
     //
     static final String DATA_ACLGROUP_LIST = "AG_LIST";
+
     
     @Override
     /*
@@ -2728,7 +2729,7 @@ public class LdapProvisioning extends Provisioning {
                                             null, sMinimalDlAttrs);
             if (dl != null) {
                 // while we have the members, compute upward membership and cache it
-                List<MemberOf> groups = computeUpwardMembership(dl);
+                AclGroups groups = computeUpwardMembership(dl);
                 dl.setCachedData(DATA_ACLGROUP_LIST, groups);
                 
                 // done computing upward membership, trim off big attrs that contain all members
@@ -2750,7 +2751,7 @@ public class LdapProvisioning extends Provisioning {
                                             null, sMinimalDlAttrs);
             if (dl != null) {
                 // while we have the members, compute upward membership and cache it
-                List<MemberOf> groups = computeUpwardMembership(dl);
+                AclGroups groups = computeUpwardMembership(dl);
                 dl.setCachedData(DATA_ACLGROUP_LIST, groups);
                 
                 // done computing upward membership, trim off big attrs that contain all members
@@ -2763,7 +2764,7 @@ public class LdapProvisioning extends Provisioning {
         return dl;
     }
 
-    private List<MemberOf> computeUpwardMembership(DistributionList list) throws ServiceException {
+    private AclGroups computeUpwardMembership(DistributionList list) throws ServiceException {
         Map<String, String> via = new HashMap<String, String>();
         List<DistributionList> lists = getDistributionLists(list, false, via, true);
         return computeUpwardMembership(lists, via);
@@ -2779,8 +2780,9 @@ public class LdapProvisioning extends Provisioning {
         };
         
 
-    private List<MemberOf> computeUpwardMembership(List<DistributionList> lists, Map<String, String> via) {
+    private AclGroups computeUpwardMembership(List<DistributionList> lists, Map<String, String> via) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
+        List<String> groupIds = new ArrayList<String>();
         
         for (DistributionList dl : lists) {
             String dlName = dl.getName();
@@ -2793,17 +2795,18 @@ public class LdapProvisioning extends Provisioning {
             } while (viaName != null);
             
             groups.add(new MemberOf(dl.getId(), dist));
+            groupIds.add(dl.getId());
         }
         
         Collections.sort(groups, MEMBER_OF_COMPARATOR);
         groups = Collections.unmodifiableList(groups);
         
-        return groups;
+        return new AclGroups(groups, groupIds);
     }
     
     @Override
-    public List<MemberOf> getAclGroups(Account acct) throws ServiceException {
-        List<MemberOf> dls = (List<MemberOf>)acct.getCachedData(DATA_ACLGROUP_LIST);
+    public AclGroups getAclGroups(Account acct) throws ServiceException {
+        AclGroups dls = (AclGroups)acct.getCachedData(DATA_ACLGROUP_LIST);
         if (dls != null) 
             return dls;
      
@@ -2824,13 +2827,13 @@ public class LdapProvisioning extends Provisioning {
      * upward membership if it is not in cache.
      *
      */
-    public List<MemberOf> getAclGroups(DistributionList list) throws ServiceException {
+    public AclGroups getAclGroups(DistributionList list) throws ServiceException {
 
         // sanity check
         if (!list.isAclGroup())
             throw ServiceException.FAILURE("internal error", null);
 
-        List<MemberOf> dls = (List<MemberOf>)list.getCachedData(DATA_ACLGROUP_LIST);
+        AclGroups dls = (AclGroups)list.getCachedData(DATA_ACLGROUP_LIST);
         if (dls != null) 
             return dls;
         

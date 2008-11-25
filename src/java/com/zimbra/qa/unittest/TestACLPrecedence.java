@@ -99,7 +99,7 @@ public class TestACLPrecedence extends TestACL {
         mProv.modifyAttrs(TA, attrs);
         
         // verify that both are indeed added
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(TA);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(TA);
         assertEquals(2, acl.size());
         
         TestViaGrant via;
@@ -163,7 +163,7 @@ public class TestACLPrecedence extends TestACL {
         mProv.modifyAttrs(TA, attrs);
         
         // verify that both are indeed added
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(TA);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(TA);
         assertEquals(2, acl.size());
         
         TestViaGrant via;
@@ -321,6 +321,8 @@ public class TestACLPrecedence extends TestACL {
        Then A is *allowed* for right R on target account U, because GC is more specific to A than GA and GB.
        Even if on the target side, grant on G3(grant to GA) and G2(grant to GB) is more specific than the 
        grant on G1(grant to GC).          
+       
+       the above is no longer true
                    
      */
     public void test5() throws Exception {
@@ -372,8 +374,15 @@ public class TestACLPrecedence extends TestACL {
         grantRight(TargetType.distributionlist, G3, aces);
         
         // the right should be allowed via the grant on G1, granted to group GC 
+        /*
         via = new TestViaGrant(TargetType.distributionlist, G1, GranteeType.GT_GROUP, GC.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
+        */
+        
+        via = new TestViaGrant(TargetType.distributionlist, G2, GranteeType.GT_GROUP, GB.getName(), right, NEGATIVE);
+        via.addCanAlsoVia(new TestViaGrant(TargetType.distributionlist, G3, GranteeType.GT_GROUP, GA.getName(), right, NEGATIVE));
+        verify(grantee, target, right, DENY, via);
+        
     }
     
     public static void main(String[] args) throws Exception {

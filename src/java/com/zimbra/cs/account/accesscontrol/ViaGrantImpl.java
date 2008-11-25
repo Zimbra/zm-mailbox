@@ -12,13 +12,13 @@ public class ViaGrantImpl extends ViaGrant {
     boolean mIsNegativeGrant;
     
     public ViaGrantImpl(TargetType targetType,
-                Entry target,
-                GranteeType granteeType,
-                String granteeName,
-                Right right,
-                boolean isNegativeGrant) {
+                        String targetName,
+                        GranteeType granteeType,
+                        String granteeName,
+                        Right right,
+                        boolean isNegativeGrant) {
         mTargetType = targetType.getCode();
-        mTargetName = target.getLabel();
+        mTargetName = targetName;
         mGranteeType = granteeType.getCode();
         mGranteeName = granteeName;
         mRight = right.getName();
@@ -31,13 +31,13 @@ public class ViaGrantImpl extends ViaGrant {
                         String granteeName,
                         String right,
                         boolean isNegativeGrant) {
-    mTargetType = targetType;
-    mTargetName = target;
-    mGranteeType = granteeType;
-    mGranteeName = granteeName;
-    mRight = right;
-    mIsNegativeGrant = isNegativeGrant;
-}
+        mTargetType = targetType;
+        mTargetName = target;
+        mGranteeType = granteeType;
+        mGranteeName = granteeName;
+        mRight = right;
+        mIsNegativeGrant = isNegativeGrant;
+    }
     
     public String getTargetType() { 
         return mTargetType;

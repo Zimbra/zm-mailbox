@@ -61,7 +61,7 @@ public enum GranteeType {
     }
     
     public boolean hasFlags(short flags) {
-        return ((flags & mFlags) != 0);
+        return ((flags & mFlags) == flags);
     }
     
     /**

@@ -137,12 +137,20 @@ public abstract class AccessManager {
         // attr results
         private Result mResult;
         private Set<String> mAllowSome;
-        private Set<String> mAllowSomeWithLimit;
+        private Set<String> mAllowSomeWithLimit;  // todo; delete this
         
+        // retire this
         private AllowedAttrs(Result result, Set<String> allowSome, Set<String> allowSomeWithLimit) {
             mResult = result;
             mAllowSome = allowSome;
             mAllowSomeWithLimit = allowSomeWithLimit;
+            mCanDo = null;
+        }
+        
+        private AllowedAttrs(Result result, Set<String> allowSome) {
+            mResult = result;
+            mAllowSome = allowSome;
+            mAllowSomeWithLimit = null;
             mCanDo = null;
         }
         
@@ -218,8 +226,13 @@ public abstract class AccessManager {
         return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null, null);
     }
     
+    // todo, delete this
     public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome, Set<String> allowSomeWithLimit) {
         return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome, allowSomeWithLimit);
+    }
+    
+    public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome) {
+        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
     }
     
     public abstract AllowedAttrs canGetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException;

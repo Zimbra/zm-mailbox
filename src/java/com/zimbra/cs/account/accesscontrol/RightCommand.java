@@ -320,13 +320,10 @@ public class RightCommand {
         // granteeEntry right must be an Account
         Account granteeAcct = (Account)granteeEntry;
         
-        List<EffectiveACL> effectiveACLs = TargetType.expandTargetByGrantee(prov, targetEntry, granteeAcct);
-        
         String targetId = (targetEntry instanceof NamedEntry)? ((NamedEntry)targetEntry).getId() : "";
         EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel(), granteeAcct.getId(), granteeAcct.getName());
         
-        if (effectiveACLs != null && effectiveACLs.size() > 0)
-            RightChecker.getEffectiveRights(effectiveACLs, granteeAcct, TargetType.getAttributeClass(targetEntry), er);
+        RightChecker.getEffectiveRights(granteeAcct, targetEntry, er);
         return er;
     }
     

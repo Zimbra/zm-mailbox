@@ -2617,16 +2617,11 @@ public class ProvUtil implements DebugListener {
         if (effRights.canSetAllAttrs())
             System.out.println("Can set all attributes without limit");
         else {
-            System.out.println("Can set the following attributes without limit");
-            System.out.println("----------------------------------------------");
+            System.out.println("Can set the following attributes");
+            System.out.println("--------------------------------");
             for (String a : effRights.canSetAttrs())
                 System.out.println("    " + a);
-            
-            System.out.println();
-            System.out.println("Can set the following attributes within inherited limit");
-            System.out.println("-------------------------------------------------------");
-            for (String a : effRights.canSetAttrsWithLimit())
-                System.out.println("    " + a);
+
         }
         
         System.out.println();

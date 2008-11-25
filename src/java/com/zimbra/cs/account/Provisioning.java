@@ -427,6 +427,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
     
+    public static class AclGroups {
+        List<MemberOf> mMemberOf;  // list of MemberOf
+        List<String> mGroupIds;    // list of group ids
+        
+        public AclGroups(List<MemberOf> memberOf, List<String> groupIds) {
+            mMemberOf = memberOf;
+            mGroupIds = groupIds;
+        }
+        
+        public List<MemberOf> memberOf() {
+            return mMemberOf;
+        }
+        
+        public List<String> groupIds() {
+            return mGroupIds;
+        }
+    }
+    
     /**
      * 
      * @param acct
@@ -435,7 +453,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *         the sorter the distance is, the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public List<MemberOf> getAclGroups(Account acct) throws ServiceException {
+    public AclGroups getAclGroups(Account acct) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
@@ -447,7 +465,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *         the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public List<MemberOf> getAclGroups(DistributionList list) throws ServiceException {
+    public AclGroups getAclGroups(DistributionList list) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     

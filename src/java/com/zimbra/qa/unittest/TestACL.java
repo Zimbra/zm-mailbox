@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,6 +52,8 @@ import com.zimbra.cs.service.AuthProvider;
 */
 
 public abstract class TestACL extends TestCase {
+    
+    protected static boolean CHECK_LIMIT = false;  // todo: remove this and all limit related code after all tests pass. 
     
     // private static final AclAccessManager mAM = new AclAccessManager();
     protected static final AccessManager mAM = AccessManager.getInstance();
@@ -306,7 +309,11 @@ public abstract class TestACL extends TestCase {
         }
         
         boolean limit() {
-            // should nver be called for NULLLIMIT
+            // master key to turn of limit checking
+            if (!CHECK_LIMIT)
+                return false;
+            
+            // should never be called for NULLLIMIT
             if (this == NULLLIMIT)
                 fail();
             
@@ -576,7 +583,9 @@ public abstract class TestACL extends TestCase {
         assertEquals(expected.getResult(), actual.getResult());
         if (actual.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
             assertEquals(expected.getAllowed(), actual.getAllowed());
-            assertEquals(expected.getAllowedWithLimit(), actual.getAllowedWithLimit());
+            
+            if (CHECK_LIMIT)
+                assertEquals(expected.getAllowedWithLimit(), actual.getAllowedWithLimit());
         }
     }
     
@@ -601,7 +610,7 @@ public abstract class TestACL extends TestCase {
      * directly to RightUtil.
      * 
      */
-    protected Set<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    protected List<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         Entry targetEntry;
         if (target instanceof Zimlet) {
             // must be by name
@@ -614,7 +623,7 @@ public abstract class TestACL extends TestCase {
         return RightUtil.grantRight(mProv, targetEntry, aces);
     }
         
-    protected Set<ZimbraACE> revokeRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    protected List<ZimbraACE> revokeRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         // call TargetType.lookupTarget instead of passing the target entry directly for two reasons:
         // 1. to simulate how grants are done in the real server/zmprov
         // 2. convert DistributionList to AclGroup

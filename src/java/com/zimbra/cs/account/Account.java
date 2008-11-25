@@ -19,9 +19,9 @@ package com.zimbra.cs.account;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 
 import java.util.List;
@@ -73,7 +73,7 @@ public class Account extends ZAttrAccount  {
         getProvisioning().setPassword(this, password);
     }
 
-    public List<MemberOf> getAclGroups() throws ServiceException {
+    public AclGroups getAclGroups() throws ServiceException {
         return getProvisioning().getAclGroups(this);
     }
 

@@ -73,6 +73,10 @@ public class TestACLAttrRight extends TestACL {
     
     
     public void oneGrantSome(AllowOrDeny grant, LimitOrNoLimit limit, GetOrSet getOrSet, AllowedAttrs expected) throws Exception {
+        
+        if (!CHECK_LIMIT && limit == LimitOrNoLimit.LIMIT)
+            return;
+        
         String testName = "oneGrantSome-" + grant.name() + "-" + limit.name() + "-" + getOrSet.name();
         
         System.out.println("Testing " + testName);
@@ -137,6 +141,10 @@ public class TestACLAttrRight extends TestACL {
 
     
     private void someAllSameLevel(AllowOrDeny some, AllowOrDeny all, LimitOrNoLimit limit, GetOrSet getOrSet, AllowedAttrs expected) throws ServiceException {
+        
+        if (!CHECK_LIMIT && limit == LimitOrNoLimit.LIMIT)
+            return;
+        
         String testName = "someAllSameLevel-" + some.name() + "-some-" + all.name() + "-all-" + limit.name() + "-" + getOrSet.name();
        
         System.out.println("Testing " + testName);
@@ -186,6 +194,9 @@ public class TestACLAttrRight extends TestACL {
                                  boolean someIsCloser, // whether some or all is the closer grant
                                  GetOrSet getOrSet,
                                  AllowedAttrs expected) throws Exception {
+        
+        if (!CHECK_LIMIT && limit == LimitOrNoLimit.LIMIT)
+            return;
         
         String testName = "someAllDiffLevel-" + some.name() + "-some-" + all.name() + "-all-" + limit.name() + "-" + (someIsCloser?"someIsCloser":"allIsCloser") + "-" + getOrSet.name();
         

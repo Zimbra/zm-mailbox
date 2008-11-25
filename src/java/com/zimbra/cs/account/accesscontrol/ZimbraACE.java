@@ -47,6 +47,9 @@ public class ZimbraACE {
     // password for guest grantee, accesskey for key grantee
     private String mSecret;
 
+    // for logging/tracing purpose only
+    private TargetType mTargetType;  // target type on which the grant is granted
+    private String mTargetName;      // target name on which the grant is granted
     
     /*
      * Construct a ZimbraACE from its serialized string form.
@@ -98,7 +101,21 @@ public class ZimbraACE {
         return parts;
     }
     
-    ZimbraACE(String ace, RightManager rm) throws ServiceException {
+    /**
+     * ctor for loading from LDAP.  
+     * 
+     * We store targetType and targetName in ZimbraACE, because in some code path we've got 
+     * an ZimbraACE object but lost track of on which target is it granted.  
+     * 
+     * targetType and targetName are *not* serialized into LDAP, they are only set in memory.
+     * 
+     * @param ace
+     * @param rm
+     * @param targetType
+     * @param targetName
+     * @throws ServiceException
+     */
+    ZimbraACE(String ace, RightManager rm, TargetType targetType, String targetName) throws ServiceException {
         String[] parts = getParts(ace);
         
         String grantee;
@@ -134,6 +151,9 @@ public class ZimbraACE {
             mDeny = false;
             mRight = rm.getRight(right);
         }
+        
+        mTargetType = targetType;
+        mTargetName = targetName;
     }
     
     
@@ -157,6 +177,9 @@ public class ZimbraACE {
         mDeny = other.mDeny;
         if (other.mSecret != null)
             mSecret = new String(other.mSecret);
+        
+        mTargetType = other.mTargetType;
+        mTargetName = other.mTargetName;
     }
     
     /**
@@ -234,6 +257,14 @@ public class ZimbraACE {
     // or setting right in pseudo ZimbraACE expaneded from a combo right for attr rights
     void setRight(Right right) {
         mRight = right;
+    }
+    
+    TargetType getTargetType() {
+        return mTargetType;
+    }
+    
+    String getTargetName() {
+        return mTargetName;
     }
     
     /** Returns whether this grant applies to the given {@link Account}.

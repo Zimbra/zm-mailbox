@@ -1,6 +1,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ public class RevokePermission extends MailDocumentHandler {
         }
 
         // TODO, change to Provisioning.grantPermission?
-        Set<ZimbraACE> revoked = RightUtil.revokeRight(Provisioning.getInstance(), account, aces);
+        List<ZimbraACE> revoked = RightUtil.revokeRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.REVOKE_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : revoked)

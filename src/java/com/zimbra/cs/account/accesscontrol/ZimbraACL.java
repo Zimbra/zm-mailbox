@@ -15,8 +15,14 @@ import com.zimbra.cs.account.accesscontrol.Right.RightType;
 public class ZimbraACL {
     private static final Log sLog = LogFactory.getLog(ZimbraACL.class);
 
-    // usr, grp, gst, key aces
+    // all aces
     List<ZimbraACE> mAces = new ArrayList<ZimbraACE>();
+    
+    // positive  grants
+    Set<ZimbraACE> mAllowed = new HashSet<ZimbraACE>();
+    
+    // negative grants
+    Set<ZimbraACE> mDenied = new HashSet<ZimbraACE>();
 
     // for the containsRight call
     Set<Right> mContainsRight = new HashSet<Right>();
@@ -31,9 +37,10 @@ public class ZimbraACL {
      * @param aces
      * @throws ServiceException
      */
-    ZimbraACL(String[] aces, RightManager rm) throws ServiceException {
+    ZimbraACL(String[] aces, TargetType targetType, String targetName) throws ServiceException {
+        RightManager rm = RightManager.getInstance();
         for (String aceStr : aces) {
-            ZimbraACE ace = new ZimbraACE(aceStr, rm);
+            ZimbraACE ace = new ZimbraACE(aceStr, rm, targetType, targetName);
             addACE(ace);
         }
     }
@@ -83,15 +90,22 @@ public class ZimbraACL {
      * @param aceToGrant
      */
     private void addACE(ZimbraACE aceToGrant) {
-        if (aceToGrant.deny())
+        if (aceToGrant.deny()) {
             mAces.add(0, aceToGrant);
-        else
+            mDenied.add(aceToGrant);
+        } else {
             mAces.add(aceToGrant);
+            mAllowed.add(aceToGrant);
+        }
         mContainsRight.add(aceToGrant.getRight());
     }
     
     private void removeACE(ZimbraACE aceToRevoke) {
         mAces.remove(aceToRevoke);
+        if (aceToRevoke.deny())
+            mDenied.remove(aceToRevoke);
+        else
+            mAllowed.remove(aceToRevoke);
         mContainsRight.remove(aceToRevoke.getRight());
     }
     
@@ -155,8 +169,8 @@ public class ZimbraACL {
     }
     
     
-    Set<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
-        Set<ZimbraACE> granted = new HashSet<ZimbraACE>();
+    List<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
+        List<ZimbraACE> granted = new ArrayList<ZimbraACE>();
         for (ZimbraACE ace : acesToGrant) {
             if (grant(ace))
                 granted.add(ace);
@@ -179,8 +193,8 @@ public class ZimbraACL {
      * @param aceToRevoke ace to revoke
      * @return the set of ZimbraACE that are successfully revoked.
      */
-    Set<ZimbraACE> revokeAccess(Set<ZimbraACE> acesToRevoke) {
-        Set<ZimbraACE> revoked = new HashSet<ZimbraACE>();
+    List<ZimbraACE> revokeAccess(Set<ZimbraACE> acesToRevoke) {
+        List<ZimbraACE> revoked = new ArrayList<ZimbraACE>();
         for (ZimbraACE ace : acesToRevoke) {
             if (revoke(ace))
                 revoked.add(ace);
@@ -192,11 +206,23 @@ public class ZimbraACL {
      * Get all ACEs
      * @return all ACEs
      */
-    Set<ZimbraACE> getAllACEs() {
-        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.addAll(mAces);
-        return aces;
+    List<ZimbraACE> getAllACEs() {
+        return mAces;
     }
+    
+    Set<ZimbraACE> getAllowedACEs() {
+        return mAllowed;
+    }
+    
+    Set<ZimbraACE> getDeniedACEs() {
+        return mDenied;
+    }
+    
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+    /////////////     REMOVE BELOW   ////////////////
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
     
     /**
      * Get ACEs with specified rights
@@ -204,8 +230,8 @@ public class ZimbraACL {
      * @param rights specified rights.
      * @return ACEs with right specified in rights
      */
-    Set<ZimbraACE> getACEs(Set<Right> rights) {
-        Set<ZimbraACE> result = new HashSet<ZimbraACE>();
+    List<ZimbraACE> getACEs(Set<Right> rights) {
+        List<ZimbraACE> result = new ArrayList<ZimbraACE>();
         
         for (ZimbraACE ace : mAces) {
             if (rights.contains(ace.getRight()))
@@ -378,7 +404,7 @@ public class ZimbraACL {
         // aces.add("00000000-0000-0000-0000-000000000000 ALL -invite");
         
         try {
-            ZimbraACL acl = new ZimbraACL(aces, RightManager.getInstance());
+            ZimbraACL acl = new ZimbraACL(aces, TargetType.account, "user1@phoebe.mac");
             List<String> serialized = acl.serialize();
             for (String ace : serialized)
                 System.out.println(ace);

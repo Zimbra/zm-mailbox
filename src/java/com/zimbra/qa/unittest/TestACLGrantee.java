@@ -184,7 +184,7 @@ public class TestACLGrantee extends TestACL {
         aces.add(newKeyACE(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, null, UserRight.R_viewFreeBusy, ALLOW));
         aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, UserRight.R_viewFreeBusy, DENY));
         aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED, null, UserRight.R_viewFreeBusy, DENY));
-        Set<ZimbraACE> grantedAces = grantRight(TargetType.account, target, aces);
+        List<ZimbraACE> grantedAces = grantRight(TargetType.account, target, aces);
         
         /*
          * get generated accesskey to build our test accounts
@@ -291,7 +291,7 @@ public class TestACLGrantee extends TestACL {
         aces.add(newUsrACE(user1, UserRight.R_viewFreeBusy, ALLOW));
         
         try {
-            Set<ZimbraACE> grantedAces = grantRight(TargetType.account, target, aces);
+            List<ZimbraACE> grantedAces = grantRight(TargetType.account, target, aces);
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.INVALID_REQUEST)) {
                 // make sure nothing is granted, including the good ones
@@ -459,7 +459,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify that only one is added 
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         assertEquals(1, acl.size());
     }
     
@@ -482,7 +482,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify that only one is added 
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         assertEquals(1, acl.size());
     }
     
@@ -507,7 +507,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grants were added
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         assertEquals(2, acl.size());
         
         // grant some more
@@ -551,7 +551,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grant was added
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         assertEquals(1, acl.size());
         via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), UserRight.R_loginAs, POSITIVE);
         verify(user, target, UserRight.R_loginAs, ALLOW, via);
@@ -584,7 +584,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grant was added
-        Set<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         assertEquals(2, acl.size());
         
         via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), UserRight.R_invite, POSITIVE);

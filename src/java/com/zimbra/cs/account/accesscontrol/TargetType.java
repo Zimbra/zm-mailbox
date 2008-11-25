@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -40,7 +42,6 @@ public enum TargetType {
     distributionlist(true,  AttributeClass.distributionList),
     domain(true,            AttributeClass.domain),
     cos(true,               AttributeClass.cos),
-    right(true,             AttributeClass.right),
     server(true,            AttributeClass.server),
     xmppcomponent(true,     AttributeClass.xmppComponent),
     zimlet(true,            AttributeClass.zimletEntry),
@@ -49,10 +50,38 @@ public enum TargetType {
     
     private boolean mNeedsTargetIdentity;
     private AttributeClass mAttrClass;
+    private Set<TargetType> mApplicableTargetTypes;
     
+    static {
+        init();
+    }
+    
+    /**
+     * 
+     * @param NeedsTargetIdentity
+     * @param attrClass
+     * @param applicableTargetTypes target types of rights that can be granted on this target type
+     *                              if null, all target types
+     */
     TargetType(boolean NeedsTargetIdentity, AttributeClass attrClass) {
         mNeedsTargetIdentity = NeedsTargetIdentity;
         mAttrClass = attrClass;
+    }
+    
+    void setApplicableTargetTypes(TargetType[] applicableTargetTypes) {
+        mApplicableTargetTypes = (applicableTargetTypes==null)? null : new HashSet<TargetType>(Arrays.asList(applicableTargetTypes));
+    }
+    
+    static void init() {
+        TargetType.account.setApplicableTargetTypes(new TargetType[]{TargetType.account});
+        TargetType.resource.setApplicableTargetTypes(new TargetType[]{TargetType.account, TargetType.resource});
+        TargetType.distributionlist.setApplicableTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist});
+        TargetType.domain.setApplicableTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist, TargetType.domain});
+        TargetType.cos.setApplicableTargetTypes(new TargetType[]{TargetType.cos});
+        TargetType.server.setApplicableTargetTypes(new TargetType[]{TargetType.server});
+        TargetType.xmppcomponent.setApplicableTargetTypes(new TargetType[]{TargetType.xmppcomponent});
+        TargetType.config.setApplicableTargetTypes(new TargetType[]{TargetType.config});
+        TargetType.global.setApplicableTargetTypes(null);
     }
     
     public static TargetType fromString(String s) throws ServiceException {
@@ -73,6 +102,22 @@ public enum TargetType {
     
     AttributeClass getAttributeClass() {
         return mAttrClass;
+    }
+    
+    /**
+     * returns if right is applicable on this target type(right granted on) entry
+     * 
+     * @param right must be a preset right
+     * @return
+     */
+    boolean isRightApplicable(Right right) throws ServiceException {
+        if (!right.isPresetRight())
+            throw ServiceException.FAILURE("internal error", null);
+        
+        if (mApplicableTargetTypes == null)
+            return true;
+        else 
+            return mApplicableTargetTypes.contains(right.getTargetType());
     }
     
     /**
@@ -114,9 +159,6 @@ public enum TargetType {
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_COS(target); 
             break;
-        case right:
-            throw ServiceException.FAILURE("TODO", null);
-            // break;
         case server:
             targetEntry = prov.get(ServerBy.fromString(targetBy.name()), target);
             if (targetEntry == null)
@@ -148,63 +190,107 @@ public enum TargetType {
         return targetEntry;
     }
 
-    static boolean isRightApplicableOnTarget(Right right, Entry target) {
+
+    
+    static AttributeClass getAttributeClass(Entry target) throws ServiceException{
         
-        if (target instanceof GlobalGrant)
-            return true;
-        else if (target instanceof Config)
-            return right.applicableOnTargetType(TargetType.config);
-        else if (target instanceof Zimlet)
-            return right.applicableOnTargetType(TargetType.zimlet);
-        else if (target instanceof XMPPComponent)
-            return right.applicableOnTargetType(TargetType.xmppcomponent);
-        else if (target instanceof Server)
-            return right.applicableOnTargetType(TargetType.server);
+        if (target instanceof CalendarResource)
+            return AttributeClass.calendarResource;
+        else if (target instanceof Account)
+            return AttributeClass.account;
+        else if (target instanceof Domain)
+            return AttributeClass.domain;
         else if (target instanceof Cos)
-            return right.applicableOnTargetType(TargetType.cos);
+            return AttributeClass.cos;
+        else if (target instanceof DistributionList)
+            return AttributeClass.distributionList;
+        else if (target instanceof Server)
+            return AttributeClass.server;
+        else if (target instanceof Config)
+            return AttributeClass.globalConfig;
+        else if (target instanceof GlobalGrant)
+            return AttributeClass.aclTarget;
+        else if (target instanceof Zimlet)
+            return AttributeClass.zimletEntry;
+        else if (target instanceof XMPPComponent)
+            return AttributeClass.xmppComponent;
+        else
+            throw ServiceException.FAILURE("internal error", null);
+    }
+    
+    static TargetType getTargetType(Entry target) throws ServiceException{
+        
+        if (target instanceof CalendarResource)
+            return TargetType.resource;
+        else if (target instanceof Account)
+            return TargetType.account;
+        else if (target instanceof Domain)
+            return TargetType.domain;
+        else if (target instanceof Cos)
+            return TargetType.cos;
+        else if (target instanceof DistributionList)
+            return TargetType.distributionlist;
+        else if (target instanceof Server)
+            return TargetType.server;
+        else if (target instanceof Config)
+            return TargetType.config;
+        else if (target instanceof GlobalGrant)
+            return TargetType.global;
+        else if (target instanceof Zimlet)
+            return TargetType.zimlet;
+        else if (target instanceof XMPPComponent)
+            return TargetType.xmppcomponent;
+        else
+            throw ServiceException.FAILURE("internal error", null);
+    }
+    
+
+
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+    /////////////     REMOVE BELOW   ////////////////
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+    
+    static boolean isRightApplicableOnTarget_XXX(Right right, Entry target) {
+        /*
+         * tested in the order of how often acl are checked on each target types in normal 
+         * server operation pattern.
+         * 
+         * CalendarResource is tested before account beore it is a subclass of Account.
+         * Could remove testing for CalendarResource here because it would be the same 
+         * as Account.  Leave it for now.
+         *  
+         */
+        if (target instanceof CalendarResource)
+            return right.applicableOnTargetType(TargetType.resource) ||
+                   right.applicableOnTargetType(TargetType.account);
+        else if (target instanceof Account)
+            return right.applicableOnTargetType(TargetType.account);
         else if (target instanceof Domain)
             return right.applicableOnTargetType(TargetType.domain) ||
                    right.applicableOnTargetType(TargetType.distributionlist) ||
                    right.applicableOnTargetType(TargetType.resource) ||
                    right.applicableOnTargetType(TargetType.account);
+        else if (target instanceof Cos)
+            return right.applicableOnTargetType(TargetType.cos);
         else if (target instanceof DistributionList)
             return right.applicableOnTargetType(TargetType.distributionlist) ||
                    right.applicableOnTargetType(TargetType.resource) ||
                    right.applicableOnTargetType(TargetType.account);
-        else if (target instanceof CalendarResource)
-            return right.applicableOnTargetType(TargetType.resource) ||
-                   right.applicableOnTargetType(TargetType.account);
-        else if (target instanceof Account)
-            return right.applicableOnTargetType(TargetType.account);
+        else if (target instanceof Server)
+            return right.applicableOnTargetType(TargetType.server);
+        else if (target instanceof Config)
+            return right.applicableOnTargetType(TargetType.config); 
+        else if (target instanceof GlobalGrant)
+            return true;
+        else if (target instanceof Zimlet)
+            return right.applicableOnTargetType(TargetType.zimlet);
+        else if (target instanceof XMPPComponent)
+            return right.applicableOnTargetType(TargetType.xmppcomponent);
         else
             return false;
     }
-    
-    static AttributeClass getAttributeClass(Entry target) throws ServiceException{
-        if (target instanceof GlobalGrant)
-            return AttributeClass.aclTarget;
-        else if (target instanceof Config)
-            return AttributeClass.globalConfig;
-        else if (target instanceof Zimlet)
-            return AttributeClass.zimletEntry;
-        else if (target instanceof XMPPComponent)
-            return AttributeClass.xmppComponent;
-        else if (target instanceof Server)
-            return AttributeClass.server;
-        else if (target instanceof Cos)
-            return AttributeClass.cos;
-        else if (target instanceof Domain)
-            return AttributeClass.domain;
-        else if (target instanceof DistributionList)
-            return AttributeClass.distributionList;
-        else if (target instanceof CalendarResource)
-            return AttributeClass.calendarResource;
-        else if (target instanceof Account)
-            return AttributeClass.account;
-        else
-            throw ServiceException.FAILURE("internal error", null);
-    }
-
     
     private interface ExpandTargetVisitor {
         /**
@@ -258,9 +344,9 @@ public enum TargetType {
             // add id for the perspective account
             mGranteeIds.add(grantee.getId());
             
-            // add ids for all groups the perspecrtive account is a member of
-            List<MemberOf> groups = prov.getAclGroups(grantee);
-            for (MemberOf group : groups) {
+            // add ids for all groups the perspective account is a member of
+            AclGroups groups = prov.getAclGroups(grantee);
+            for (MemberOf group : groups.memberOf()) {
                 mGranteeIds.add(group.getId());
             }
         }
@@ -288,7 +374,7 @@ public enum TargetType {
      * @throws ServiceException
      */
     static List<EffectiveACL> expandTargetByRight(Provisioning prov, Entry target, Right right) throws ServiceException {
-        if (!isRightApplicableOnTarget(right, target))
+        if (!isRightApplicableOnTarget_XXX(right, target))
             return null;
         
         ExpandTargetVisitorByRight visitor = new ExpandTargetVisitorByRight(right);
@@ -347,9 +433,9 @@ public enum TargetType {
         visitor.visit(targeTtype, target, distance, targeTtype, result);
         
         // groups the account is directly or indirectly a member of
-        List<MemberOf> groups = prov.getAclGroups((Account)target);
+        AclGroups groups = prov.getAclGroups((Account)target);
         int dist = distance;
-        for (MemberOf group : groups) {
+        for (MemberOf group : groups.memberOf()) {
             DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
             dist = distance + group.getDistance();
             visitor.visit(TargetType.distributionlist, dl, dist, targeTtype, result);
@@ -379,9 +465,9 @@ public enum TargetType {
         int distance = 0;
         visitor.visit(TargetType.distributionlist, target, distance, targetType, result);
         
-        List<MemberOf> groups = prov.getAclGroups((DistributionList)target);
+        AclGroups groups = prov.getAclGroups((DistributionList)target);
         int dist = distance;
-        for (MemberOf group : groups) {
+        for (MemberOf group : groups.memberOf()) {
             DistributionList dl = prov.getAclGroup(DistributionListBy.id, group.getId());
             dist = distance + group.getDistance();
             visitor.visit(TargetType.distributionlist, dl, dist, targetType, result);

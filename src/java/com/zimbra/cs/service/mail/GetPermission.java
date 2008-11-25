@@ -2,6 +2,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -31,7 +32,7 @@ public class GetPermission extends MailDocumentHandler {
             specificRights.add(RightManager.getInstance().getUserRight(eACE.getAttribute(MailConstants.A_RIGHT)));
         }
         
-        Set<ZimbraACE> aces = (specificRights==null)?RightUtil.getAllACEs(account) : RightUtil.getACEs(account, specificRights);
+        List<ZimbraACE> aces = (specificRights==null)?RightUtil.getAllACEs(account) : RightUtil.getACEs(account, specificRights);
         Element response = zsc.createElement(MailConstants.GET_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : aces)

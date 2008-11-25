@@ -129,6 +129,10 @@ public abstract class Right {
             throw ServiceException.PARSE_ERROR("missing target type", null);
     }
     
+    TargetType getTargetType() throws ServiceException {
+        return mTargetType;
+    }
+    
     // for SOAP response only
     String getTargetTypeStr() {
         return mTargetType.getCode();

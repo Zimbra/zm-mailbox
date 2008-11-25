@@ -54,6 +54,11 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
+    TargetType getTargetType() throws ServiceException {
+        throw ServiceException.FAILURE("internal error", null);
+    }
+    
+    @Override
     String getTargetTypeStr() {
         return null;
     }

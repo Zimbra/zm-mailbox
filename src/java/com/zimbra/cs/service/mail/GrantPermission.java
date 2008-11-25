@@ -1,6 +1,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +40,7 @@ public class GrantPermission extends MailDocumentHandler {
         }
 
         // TODO, change to Provisioning.grantPermission?
-        Set<ZimbraACE> granted = RightUtil.grantRight(Provisioning.getInstance(), account, aces);
+        List<ZimbraACE> granted = RightUtil.grantRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted)
