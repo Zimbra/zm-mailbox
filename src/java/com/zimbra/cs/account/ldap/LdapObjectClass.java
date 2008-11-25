@@ -68,15 +68,6 @@ public class LdapObjectClass {
         return ocs;
     }
     
-    public static Set<String> getRightObjectClasses(LdapProvisioning prov) throws ServiceException {
-        Set<String> ocs = new LinkedHashSet<String>();
-        
-        ocs.add(LdapProvisioning.C_zimbraRight);
-        
-        addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraRightExtraObjectClass);
-        return ocs;
-    }
-    
     public static Set<String> getServerObjectClasses(LdapProvisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
