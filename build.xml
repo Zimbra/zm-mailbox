@@ -1174,9 +1174,30 @@
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Administrator' displayName 'Administrator' \
             zimbraIsAdminAccount TRUE \
+        	zimbraAdminConsoleUIComponents cartBlancheUI \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             telephoneNumber '+1 650 555 0000'
+            ca domainadmin@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Domain Administrator' displayName 'Domain Administrator' \
+            zimbraIsAdminAccount TRUE \
+        	zimbraAdminConsoleUIComponents cartBlancheUI \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            telephoneNumber '+1 650 555 0000'   \
+        	zimbraAdminConsoleUIComponents accountListView \
+        	zimbraAdminConsoleUIComponents aliasListView \
+        	zimbraAdminConsoleUIComponents DLListView \
+        	zimbraAdminConsoleUIComponents resourceListView \
+        	zimbraAdminConsoleUIComponents accountsGeneralTab \
+        	zimbraAdminConsoleUIComponents accountsFeaturesTab \
+        	zimbraAdminConsoleUIComponents accountsForwardingTab \
+        	zimbraAdminConsoleUIComponents accountsAliasesTab \
+        	zimbraAdminConsoleUIComponents saveSearch \
+        	zimbraAdminConsoleUIComponents accountsChangePassword \
+        	zimbraAdminConsoleUIComponents moveAlias \
+        	zimbraAdminConsoleUIComponents accountsCreate 
             ca user1@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Demo User One' \
@@ -1330,6 +1351,21 @@
             ca wiki@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             zimbraMailQuota 0
+        	grr global usr admin@${defaultdomain.name} createAccount
+        	grr global usr admin@${defaultdomain.name} createTopDomain
+        	grr global usr admin@${defaultdomain.name} modifyAccount
+        	grr global usr admin@${defaultdomain.name} deleteAccount
+        	grr global usr admin@${defaultdomain.name} configureAdminUI
+        	grr global usr admin@${defaultdomain.name} configureExternalGAL
+        	grr global usr admin@${defaultdomain.name} configureExternaAuth
+        	grr global usr admin@${defaultdomain.name} createAlias
+        	grr global usr admin@${defaultdomain.name} modifyCos
+        	grr global usr admin@${defaultdomain.name} deleteCos
+        	grr global usr admin@${defaultdomain.name} listCos
+        	grr global usr admin@${defaultdomain.name} createCos
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} modifyDomainAdminAttrs
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} accountAdmin
         </echo>
     </target>
 
