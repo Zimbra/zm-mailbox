@@ -241,9 +241,16 @@ public class LC {
     public static final KnownKey postfix_command_directory;
     public static final KnownKey postfix_daemon_directory;
     public static final KnownKey postfix_header_checks;
+    public static final KnownKey postfix_in_flow_delay;
+    public static final KnownKey postfix_lmtp_connection_cache_destinations;
+    public static final KnownKey postfix_lmtp_connection_cache_time_limit;
+    public static final KnownKey postfix_lmtp_host_lookup;;
     public static final KnownKey postfix_mailq_path;
     public static final KnownKey postfix_manpage_directory;
+    public static final KnownKey postfix_maximal_backoff_time;
+    public static final KnownKey postfix_minimal_backoff_time;
     public static final KnownKey postfix_newaliases_path;
+    public static final KnownKey postfix_policy_time_limit;
     public static final KnownKey postfix_queue_directory;
     public static final KnownKey postfix_sender_canonical_maps;
     public static final KnownKey postfix_sendmail_path;
@@ -253,13 +260,7 @@ public class LC {
     public static final KnownKey postfix_smtpd_tls_cert_file;
     public static final KnownKey postfix_smtpd_tls_key_file;
     public static final KnownKey postfix_smtpd_tls_loglevel;
-    public static final KnownKey postfix_in_flow_delay;
     public static final KnownKey postfix_queue_run_delay;
-    public static final KnownKey postfix_minimal_backoff_time;
-    public static final KnownKey postfix_maximal_backoff_time;
-    public static final KnownKey postfix_lmtp_connection_cache_destinations;
-    public static final KnownKey postfix_lmtp_connection_cache_time_limit;
-    public static final KnownKey postfix_lmtp_host_lookup;;
     public static final KnownKey postfix_transport_maps;
     public static final KnownKey postfix_version;
     public static final KnownKey postfix_virtual_alias_domains;
@@ -849,6 +850,9 @@ public class LC {
 
         postfix_newaliases_path  = new KnownKey("postfix_newaliases_path");
         postfix_newaliases_path.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin" + FS + "newaliases");
+
+        postfix_policy_time_limit = new KnownKey("postfix_policy_time_limit");
+        postfix_policy_time_limit.setDefault("3600");
 
         postfix_queue_directory  = new KnownKey("postfix_queue_directory");
         postfix_queue_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "postfix" + FS + "spool");
