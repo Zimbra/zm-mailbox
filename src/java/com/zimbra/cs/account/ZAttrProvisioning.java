@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081125-1427 */
+    /* build: 5.0 pshao 20081125-2131 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4488,6 +4488,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=406)
     public static final String A_zimbraPrefWhenSentToEnabled = "zimbraPrefWhenSentToEnabled";
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public static final String A_zimbraPrefZimlets = "zimbraPrefZimlets";
 
     /**
      * whether or not zimlet tree is expanded

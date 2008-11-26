@@ -3793,6 +3793,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     If an interval is not specified for a given data source type, or set to 0, automated polling is off by default.
   </desc>
 </attr>
-
     
+<attr id="766" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="future">
+  <desc>
+      zimlets user wants to see in the UI
+      note: zimlets available to a user is the union of account/cos attr zimbraZimletAvailableZimlets and domain attr zimbraZimletDomainAvailableZimlets
+  </desc>
+</attr>
+
 </attrs>

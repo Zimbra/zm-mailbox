@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081125-1427 */
+    /* build: 5.0 pshao 20081125-2131 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -16318,6 +16318,158 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefZimletTreeOpen(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZimletTreeOpen, "");
+        return attrs;
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @return zimbraPrefZimlets, or ampty array if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public String[] getPrefZimlets() {
+        return getMultiAttr(Provisioning.A_zimbraPrefZimlets);
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param zimbraPrefZimlets new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void setPrefZimlets(String[] zimbraPrefZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param zimbraPrefZimlets new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public Map<String,Object> setPrefZimlets(String[] zimbraPrefZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
+        return attrs;
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param zimbraPrefZimlets new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void addPrefZimlets(String zimbraPrefZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param zimbraPrefZimlets new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public Map<String,Object> addPrefZimlets(String zimbraPrefZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
+        return attrs;
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param zimbraPrefZimlets existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void removePrefZimlets(String zimbraPrefZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param zimbraPrefZimlets existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public Map<String,Object> removePrefZimlets(String zimbraPrefZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
+        return attrs;
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public void unsetPrefZimlets() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZimlets, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user wants to see in the UI note: zimlets available to a user
+     * is the union of account/cos attr zimbraZimletAvailableZimlets and
+     * domain attr zimbraZimletDomainAvailableZimlets
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=766)
+    public Map<String,Object> unsetPrefZimlets(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZimlets, "");
         return attrs;
     }
 
