@@ -27,10 +27,7 @@ public class GalUtil {
                 query = query.replaceAll("\\*\\*", "*");
             else {
                 String arg = LdapUtil.escapeSearchFilterArg(token);
-                if (internal)
-                    query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
-                else
-                    query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+")(whenModified>="+arg+")(whenCreated>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
+                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
             }
         }
         
