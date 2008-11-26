@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -49,12 +50,12 @@ public class ProxyTarget {
         if (mServer == null)
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
 
-        mAuthToken = authToken;        
-        String url;        
+        mAuthToken = authToken;
+        String url;
         String requestStr = req.getRequestURI();
         String qs = req.getQueryString();
         if (qs != null)
-            requestStr =  requestStr + "?" + qs;
+            requestStr = requestStr + "?" + qs;
 
         int localAdminPort = prov.getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         if (!prov.isOfflineProxyServer(mServer) && req.getLocalPort() == localAdminPort) {
@@ -62,7 +63,7 @@ public class ProxyTarget {
         } else {
             url = URLUtil.getServiceURL(mServer, requestStr, false);
         }
-        
+
         mURL = url;
     }
 
@@ -70,9 +71,13 @@ public class ProxyTarget {
         mServer = server;  mAuthToken = authToken;  mURL = url;
     }
 
+    public Server getServer() {
+        return mServer;
+    }
+
     public boolean isTargetLocal() throws ServiceException {
         Server localServer = Provisioning.getInstance().getLocalServer();
-        return mServer.equals(localServer);
+        return mServer.getId().equals(localServer.getId());
     }
 
     public Element dispatch(Element request) throws ServiceException {
@@ -90,27 +95,30 @@ public class ProxyTarget {
     }
 
     public Element dispatch(Element request, ZimbraSoapContext zsc) throws ServiceException {
+        return execute(request, zsc).getSecond();
+    }
+
+    public Pair<Element, Element> execute(Element request, ZimbraSoapContext zsc) throws ServiceException {
         if (zsc == null)
-            return dispatch(request);
+            return new Pair<Element, Element>(null, dispatch(request));
 
         SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
         if (proto == SoapProtocol.Soap12 && zsc.getRequestProtocol() == SoapProtocol.Soap11)
             proto = SoapProtocol.Soap11;
         Element envelope = proto.soapEnvelope(request, zsc.toProxyCtxt());
 
-        Element response = null;
         SoapHttpTransport transport = null;
         try {
             transport = new SoapHttpTransport(mURL);
-            response = transport.invokeRaw(envelope);
-            response = transport.extractBodyElement(response);
+            Element response = transport.invokeRaw(envelope);
+            Element body = transport.extractBodyElement(response);
+            return new Pair<Element, Element>(transport.getZimbraContext(), body);
         } catch (IOException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
             if (transport != null)
                 transport.shutdown();
         }
-        return response;
     }
 
     @Override public String toString() {

@@ -65,14 +65,13 @@ public class ZimbraSoapContext {
 
         @Override public String toString()  { return sessionId; }
 
-
         private class SoapPushChannel implements SoapSession.PushChannel {
             private boolean mLocalChangesOnly;
 
             SoapPushChannel(boolean localOnly)  { mLocalChangesOnly = localOnly; }
 
             public void closePushChannel() {
-                // don't allow there to be more than one NoOp hanging on a particular account
+                // don't allow more than one NoOp to hang on an account
                 signalNotification(true);
             }
             public int getLastKnownSequence()         { return sequence; }
@@ -101,12 +100,13 @@ public class ZimbraSoapContext {
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
     private int     mMaximumChangeId = -1;
 
+    private boolean mSessionSuppressed;  // whether to create a new session for this request
+    private boolean mSessionProxied;
     private SessionInfo mSessionInfo;
-    private boolean mSessionSuppressed; // don't create a new session for this request
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
     private boolean mCanceledWaitForNotifications = false;
-    private Continuation mContinuation; // used for blocking requests
+    private Continuation mContinuation;  // used for blocking requests
 
     private ProxyTarget mProxyTarget;
     private boolean     mIsProxyRequest;
@@ -116,7 +116,7 @@ public class ZimbraSoapContext {
     private String mUserAgent;
     private String mRequestIP;
 
-    //zdsync: for parsing locally constructed soap requests
+    // zdsync: for parsing locally constructed soap requests
     public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol) throws ServiceException {
         this(authToken, accountId, reqProtocol, respProtocol, 0);
     }
@@ -150,6 +150,7 @@ public class ZimbraSoapContext {
 
         mSessionInfo = zsc.mSessionInfo;
         mSessionSuppressed = zsc.mSessionSuppressed;
+        mSessionProxied = true;
         mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
 
         mHopCount = zsc.mHopCount + 1;
@@ -165,7 +166,7 @@ public class ZimbraSoapContext {
      *                 present in request)
      * @param context  The engine context, which might contain the auth token
      * @param requestProtocol  The SOAP protocol used for the request */
-    public ZimbraSoapContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
+    public ZimbraSoapContext(Element ctxt, Map<String, Object> context, SoapProtocol requestProtocol) throws ServiceException {
         if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
             throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 
@@ -199,7 +200,6 @@ public class ZimbraSoapContext {
         }
 
         // find out if we're executing in another user's context
-        Account account = null;
         Element eAccount = ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_ACCOUNT);
         if (eAccount != null) {
             String key = eAccount.getAttribute(HeaderConstants.A_BY, null);
@@ -208,7 +208,7 @@ public class ZimbraSoapContext {
             if (key == null) {
                 mRequestedAccountId = null;
             } else if (key.equals(HeaderConstants.BY_NAME)) {
-                account = prov.get(AccountBy.name, value, mAuthToken);
+                Account account = prov.get(AccountBy.name, value, mAuthToken);
                 if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
                 mRequestedAccountId = account.getId();
@@ -270,7 +270,10 @@ public class ZimbraSoapContext {
             mSessionSuppressed |= ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
             // if sessions are enabled, create a SessionInfo to encapsulate (will fetch the Session object during the request)
             if (!mSessionSuppressed) {
-                for (Element session : ctxt.listElements(HeaderConstants.E_SESSION_ID)) {
+                Element session = ctxt.getOptionalElement(HeaderConstants.E_SESSION_ID);
+                if (session != null) {
+                    mSessionProxied = session.getAttributeBool(HeaderConstants.A_PROXIED, false);
+
                     String sessionId = null;
                     if ("".equals(sessionId = session.getTextTrim()))
                         sessionId = session.getAttribute(HeaderConstants.A_ID, null);
@@ -280,7 +283,7 @@ public class ZimbraSoapContext {
             }
         }
 
-        // temporary hack: don't qualify item ids in reponses, if so requested
+        // temporary hack: don't qualify item ids in responses, if so requested
         mUnqualifiedItemIds = (ctxt != null && ctxt.getOptionalElement(HeaderConstants.E_NO_QUALIFY) != null);
 
         // Handle user agent if specified by the client.  The user agent string is formatted
@@ -296,7 +299,7 @@ public class ZimbraSoapContext {
             }
         }
 
-        mRequestIP = (String)context.get(SoapEngine.REQUEST_IP);
+        mRequestIP = (String) context.get(SoapEngine.REQUEST_IP);
     }
 
     /** Records in this context that we've traversed a mountpoint to get here.
@@ -364,6 +367,10 @@ public class ZimbraSoapContext {
         return !mSessionSuppressed;
     }
 
+    public boolean isSessionProxied() {
+        return mSessionProxied;
+    }
+
     /** Returns the {@link SessionInfo} item associated with this
      *  SOAP request.  SessionInfo objects correspond to either:<ul>
      *  <li>sessions specified in a <tt>&lt;sessionId></tt> element in the 
@@ -373,12 +380,30 @@ public class ZimbraSoapContext {
         return mSessionInfo;
     }
 
+    public SessionInfo setProxySession(String sessionId) {
+        if (mSessionSuppressed || sessionId == null) {
+            mSessionInfo = null;
+        } else {
+            mSessionInfo = new SessionInfo(sessionId, 0, false);
+        }
+        mSessionProxied = true;
+        return mSessionInfo;
+    }
+
     SessionInfo recordNewSession(String sessionId) {
-        return (mSessionInfo = new SessionInfo(sessionId, 0, true));
+        if (mSessionSuppressed || sessionId == null) {
+            mSessionInfo = null;
+        } else if (mSessionInfo == null) {
+            mSessionInfo = new SessionInfo(sessionId, 0, true);
+        } else {
+            mSessionInfo.sessionId = sessionId;  mSessionInfo.created = true;
+        }
+        return mSessionInfo;
     }
 
     protected void clearSessionInfo() {
         mSessionInfo = null;
+        mSessionProxied = false;
     }
 
     /** Returns <tt>TRUE</tt> if our referenced session is brand-new.  This
@@ -446,13 +471,21 @@ public class ZimbraSoapContext {
             (new ZAuthToken(pxyAuthToken)).encodeSoapCtxt(ctxt);
         else if (mRawAuthToken != null)
             mRawAuthToken.encodeSoapCtxt(ctxt);
+
         if (mResponseProtocol != mRequestProtocol)
             ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
+
+        if (mSessionSuppressed)
+            ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
+        else if (mSessionInfo != null)
+            encodeSession(ctxt, mSessionInfo.sessionId, null, true).addAttribute(HeaderConstants.A_PROXIED, true);
+        else
+            ctxt.addUniqueElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_PROXIED, true);
+
         Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
-        if (mSessionSuppressed)
-            ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
+
         if (mUnqualifiedItemIds)
             ctxt.addUniqueElement(HeaderConstants.E_NO_QUALIFY);
         return ctxt;
