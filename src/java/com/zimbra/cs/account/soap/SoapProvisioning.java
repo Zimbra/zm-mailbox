@@ -1943,8 +1943,21 @@ public class SoapProvisioning extends Provisioning {
     
     @Override
     public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
-            GranteeBy granteeBy, String grantee) throws ServiceException {
+                                                           GranteeBy granteeBy, String grantee,
+                                                           boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST);
+        
+        String expandAttrs = null;
+        if (expandSetAttrs && expandGetAttrs)
+            expandAttrs = "setAttrs,getAttrs";
+        else if (expandSetAttrs)
+            expandAttrs = "setAttrs";
+        else if (expandGetAttrs)
+            expandAttrs = "getAttrs";
+        
+        if (expandAttrs != null)        
+            req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAttrs);
+        
         toXML(req, targetType, targetBy, target);
         if (granteeBy != null && grantee != null)
             toXML(req, null, granteeBy, grantee);

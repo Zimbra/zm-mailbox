@@ -11,6 +11,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -189,9 +190,12 @@ public enum TargetType {
         return targetEntry;
     }
 
-
+    static Set<String> getAttrsInClass(Entry target) throws ServiceException {
+        AttributeClass klass = TargetType.getAttributeClass(target);
+        return AttributeManager.getInstance().getAttrsInClass(klass);
+    }
     
-    static AttributeClass getAttributeClass(Entry target) throws ServiceException{
+    static AttributeClass getAttributeClass(Entry target) throws ServiceException {
         
         if (target instanceof CalendarResource)
             return AttributeClass.calendarResource;

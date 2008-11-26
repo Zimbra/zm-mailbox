@@ -131,6 +131,13 @@ public abstract class Entry implements ToZJSONObject {
         if (!applyDefaults)
             return null;
         
+        return getAttrDefault(name);
+    }
+    
+    public Object getAttrDefault(String name) {
+        
+        Object v;
+        
         // check defaults
         if (mDefaults != null) {
             v = mDefaults.get(name);

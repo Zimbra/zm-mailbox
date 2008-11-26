@@ -1,11 +1,15 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -558,7 +562,8 @@ public class RightChecker {
      * @throws ServiceException
      */
     static RightCommand.EffectiveRights getEffectiveRights(Account grantee, Entry target,
-            RightCommand.EffectiveRights result) throws ServiceException {
+                                                           boolean expandSetAttrs, boolean expandGetAttrs,
+                                                           RightCommand.EffectiveRights result) throws ServiceException {
 
         // get effective preset rights
         Set<Right> presetRights = getEffectivePresetRights(grantee, target);
@@ -573,46 +578,57 @@ public class RightChecker {
         for (Right r : presetRights)
             result.addPresetRight(r.getName());
         
-        if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL)
+        if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL) {
             result.setCanSetAllAttrs();
-        else if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
+            if (expandSetAttrs)
+                result.setCanSetAttrs(expandAttrs(target));  // need default for setAttrs
+        } else if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
             result.setCanSetAttrs(fillDefault(target, allowSetAttrs));
         }
         
-        if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL)
+        if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL) {
             result.setCanGetAllAttrs();
-        else if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
-            result.setCanGetAttrs(allowGetAttrs.getAllowed());
+            if (expandGetAttrs)
+                result.setCanGetAttrs(setToSortedList(TargetType.getAttrsInClass(target)));
+        } else if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
+            result.setCanGetAttrs(setToSortedList(allowGetAttrs.getAllowed()));
         }
         
         return result;
     }
     
-    private static Map<String, RightCommand.EffectiveAttr> fillDefault(Entry target, AllowedAttrs allowSetAttrs) throws ServiceException {
-        Entry inheritFrom = null;
-        Provisioning prov = Provisioning.getInstance();
-        AttributeManager am = AttributeManager.getInstance();
-        
-        if (target instanceof Server || target instanceof Domain)
-            inheritFrom = prov.getConfig();
-        else if (target instanceof Account)
-            inheritFrom = prov.getCOS((Account)target);
-        
-        Map<String, RightCommand.EffectiveAttr> effAttrs = new HashMap<String, RightCommand.EffectiveAttr>();
-        for (String attrName : allowSetAttrs.getAllowed()) {
+    private static List<String> setToSortedList(Set<String> set) {
+        List<String> list = new ArrayList<String>(set);
+        Collections.sort(list);
+        return list;
+    }
+    
+    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target) throws ServiceException {
+        AttributeClass klass = TargetType.getAttributeClass(target);
+        return fillDefault(target, AttributeManager.getInstance().getAttrsInClass(klass));
+    }
+    
+    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, AllowedAttrs allowSetAttrs) throws ServiceException {
+        return fillDefault(target, allowSetAttrs.getAllowed());
+    }
+    
+    private static SortedMap<String, RightCommand.EffectiveAttr> expandAttrs(Entry target) throws ServiceException {
+        return fillDefault(target, TargetType.getAttrsInClass(target));
+    }
+    
+    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, Set<String> attrs) throws ServiceException {
+        SortedMap<String, RightCommand.EffectiveAttr> effAttrs = new TreeMap<String, RightCommand.EffectiveAttr>();
+        for (String attrName : attrs) {
             Set<String> defaultValues = null;
-            if (inheritFrom != null) {
-                AttributeCardinality ac = am.getAttributeCardinality(attrName);
-                if (ac == AttributeCardinality.single) {
-                    String defaultValue = inheritFrom.getAttr(attrName);
-                    if (defaultValue != null) {
-                        defaultValues = new HashSet<String>();
-                        defaultValues.add(defaultValue);
-                    }
-                } else {
-                    defaultValues = inheritFrom.getMultiAttrSet(attrName);
-                }
+            
+            Object defaultValue = target.getAttrDefault(attrName);
+            if (defaultValue instanceof String) {
+                    defaultValues = new HashSet<String>();
+                    defaultValues.add((String)defaultValue);
+            } else if (defaultValue instanceof String[]) {
+                defaultValues = new HashSet<String>(Arrays.asList((String[])defaultValue));
             }
+
             effAttrs.put(attrName, new RightCommand.EffectiveAttr(attrName, defaultValues));
         }
         return effAttrs;

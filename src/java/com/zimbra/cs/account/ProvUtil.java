@@ -2564,6 +2564,9 @@ public class ProvUtil implements DebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgsTarget(ra);
         
+        boolean expandSetAttrs = true;
+        boolean expandGetAttrs = true;
+        
         if (mProv instanceof LdapProvisioning) {
             // must provide grantee info
             getRightArgsGrantee(ra, false);
@@ -2577,7 +2580,7 @@ public class ProvUtil implements DebugListener {
         GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
     
         RightCommand.EffectiveRights effRights = mProv.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
-                                                                          granteeBy, ra.mGranteeIdOrName);
+                                                                          granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
         
         System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
        
@@ -2588,27 +2591,37 @@ public class ProvUtil implements DebugListener {
                 System.out.println("    " + r);
         }
         
-        String format = "    %-40s %-20s\n";
+        String format = "    %-50s %-30s\n";
         System.out.println();
         if (effRights.canSetAllAttrs())
             System.out.println("Can set all attributes");
-        else {
+        
+        if (!effRights.canSetAllAttrs() || expandSetAttrs) {
             System.out.println("Can set the following attributes");
             System.out.println("--------------------------------");
             System.out.printf(format, "attribute", "default");
             System.out.printf(format, "----------------------------------------", "--------------------");
             for (RightCommand.EffectiveAttr ea : effRights.canSetAttrs().values()) {
-                StringBuilder sb = new StringBuilder();
-                for (String v: ea.getDefault())
-                    sb.append(v + " ");
-                System.out.printf(format, ea.getAttrName(), sb);
+                boolean first = true;
+                if (ea.getDefault().isEmpty()) {
+                    System.out.printf(format, ea.getAttrName(), "");
+                } else {
+                    for (String v: ea.getDefault()) {
+                        if (first) {
+                            System.out.printf(format, ea.getAttrName(), v);
+                            first = false;
+                        } else
+                            System.out.printf(format, "", v);
+                    }
+                }
             }
         }
         
         System.out.println();
         if (effRights.canGetAllAttrs())
             System.out.println("Can get all attributes");
-        else {
+        
+        if (!effRights.canGetAllAttrs() || expandGetAttrs) {
             System.out.println("Can get the following attributes");
             System.out.println("--------------------------------");
             for (String a : effRights.canGetAttrs())

@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -157,8 +159,8 @@ public class RightCommand {
     }
     
     public static class EffectiveRights {
-        private static final Map<String, EffectiveAttr> EMPTY_MAP = new HashMap<String, EffectiveAttr>();
-        private static final Set<String> EMPTY_SET = new HashSet<String>();
+        private static final SortedMap<String, EffectiveAttr> EMPTY_MAP = new TreeMap<String, EffectiveAttr>();
+        private static final List<String> EMPTY_LIST = new ArrayList<String>();
         
         String mTargetType;
         String mTargetId;
@@ -167,15 +169,15 @@ public class RightCommand {
         String mGranteeName;
         
         // preset
-        Set<String> mPresetRights = new HashSet<String>();
+        List<String> mPresetRights = new ArrayList<String>();
         
         // setAttrs
         boolean mCanSetAllAttrs = false;
-        Map<String, EffectiveAttr> mCanSetAttrs = EMPTY_MAP;
+        SortedMap<String, EffectiveAttr> mCanSetAttrs = EMPTY_MAP;
         
         // getAttrs
         boolean mCanGetAllAttrs = false;
-        Set<String> mCanGetAttrs = EMPTY_SET;
+        List<String> mCanGetAttrs = EMPTY_LIST;
         
         EffectiveRights(String targetType, String targetId, String targetName, String granteeId, String granteeName) {
             mTargetType = targetType;
@@ -202,7 +204,7 @@ public class RightCommand {
             mTargetName= eTarget.getAttribute(AdminConstants.A_NAME);
             
             // preset rights
-            mPresetRights = new HashSet<String>();
+            mPresetRights = new ArrayList<String>();
             for (Element eRight : eTarget.listElements(AdminConstants.E_RIGHT)) {
                 mPresetRights.add(eRight.getAttribute(AdminConstants.A_N));
             }
@@ -211,34 +213,35 @@ public class RightCommand {
             Element eSetAttrs = eTarget.getElement(AdminConstants.E_SET_ATTRS);
             if (eSetAttrs.getAttributeBool(AdminConstants.A_ALL, false)) {
                 mCanSetAllAttrs = true;
-            } else {
-                mCanSetAttrs = new HashMap<String, EffectiveAttr>();
-                for (Element eAttr : eSetAttrs.listElements(AdminConstants.E_A)) {
-                    String attrName = eAttr.getAttribute(AdminConstants.A_N);
-                    Element eDefault = eAttr.getOptionalElement(AdminConstants.E_DEFAULT);
-                    Set<String> defaultValues = null;
-                    if (eDefault != null) {
-                        defaultValues = new HashSet<String>();
-                        for (Element eValue : eDefault.listElements(AdminConstants.E_VALUE)) {
-                            defaultValues.add(eValue.getText());
-                        }
+            }
+            
+            mCanSetAttrs = new TreeMap<String, EffectiveAttr>();
+            for (Element eAttr : eSetAttrs.listElements(AdminConstants.E_A)) {
+                String attrName = eAttr.getAttribute(AdminConstants.A_N);
+                Element eDefault = eAttr.getOptionalElement(AdminConstants.E_DEFAULT);
+                Set<String> defaultValues = null;
+                if (eDefault != null) {
+                    defaultValues = new HashSet<String>();
+                    for (Element eValue : eDefault.listElements(AdminConstants.E_VALUE)) {
+                        defaultValues.add(eValue.getText());
                     }
-                    EffectiveAttr ea = new EffectiveAttr(attrName, defaultValues);
-                    mCanSetAttrs.put(attrName, ea);
                 }
+                EffectiveAttr ea = new EffectiveAttr(attrName, defaultValues);
+                mCanSetAttrs.put(attrName, ea);
             }
             
             // getAttrs
             Element eGetAttrs = eTarget.getElement(AdminConstants.E_GET_ATTRS);
             if (eGetAttrs.getAttributeBool(AdminConstants.A_ALL, false)) {
                 mCanGetAllAttrs = true;
-            } else {
-                mCanGetAttrs = new HashSet<String>();
-                for (Element eAttr : eSetAttrs.listElements(AdminConstants.E_A)) {
-                    String attrName = eAttr.getAttribute(AdminConstants.A_N);
-                    mCanGetAttrs.add(attrName);
-                }
             }
+                
+            mCanGetAttrs = new ArrayList<String>();
+            for (Element eAttr : eSetAttrs.listElements(AdminConstants.E_A)) {
+                String attrName = eAttr.getAttribute(AdminConstants.A_N);
+                mCanGetAttrs.add(attrName);
+            }
+
         }
         
         public void toXML(Element parent) {
@@ -266,15 +269,15 @@ public class RightCommand {
             Element eSetAttrs = eTarget.addElement(AdminConstants.E_SET_ATTRS);
             if (mCanSetAllAttrs) {
                 eSetAttrs.addAttribute(AdminConstants.A_ALL, true);
-            } else {
-                for (EffectiveAttr ea : mCanSetAttrs.values()) {
-                    Element eAttr = eSetAttrs.addElement(AdminConstants.E_A);
-                    eAttr.addAttribute(AdminConstants.A_N, ea.getAttrName());
-                    if (!ea.getDefault().isEmpty()) {
-                        Element eDefault = eAttr.addElement(AdminConstants.E_DEFAULT);
-                        for (String v : ea.getDefault())
-                            eDefault.addElement(AdminConstants.E_VALUE).setText(v);
-                    }
+            }
+               
+            for (EffectiveAttr ea : mCanSetAttrs.values()) {
+                Element eAttr = eSetAttrs.addElement(AdminConstants.E_A);
+                eAttr.addAttribute(AdminConstants.A_N, ea.getAttrName());
+                if (!ea.getDefault().isEmpty()) {
+                    Element eDefault = eAttr.addElement(AdminConstants.E_DEFAULT);
+                    for (String v : ea.getDefault())
+                        eDefault.addElement(AdminConstants.E_VALUE).setText(v);
                 }
             }
             
@@ -282,11 +285,12 @@ public class RightCommand {
             Element eGetAttrs = eTarget.addElement(AdminConstants.E_GET_ATTRS);
             if (mCanGetAllAttrs) {
                 eGetAttrs.addAttribute(AdminConstants.A_ALL, true);
-            } else {
-                for (String a : mCanGetAttrs) {
-                    Element eAttr = eGetAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, a);
-                }
             }
+                
+            for (String a : mCanGetAttrs) {
+                Element eAttr = eGetAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, a);
+            }
+
         }
         
         void addPresetRight(String right) {
@@ -294,20 +298,20 @@ public class RightCommand {
         }
 
         void setCanSetAllAttrs() { mCanSetAllAttrs = true; }
-        void setCanSetAttrs(Map<String, EffectiveAttr> canSetAttrs) { mCanSetAttrs = canSetAttrs; }
+        void setCanSetAttrs(SortedMap<String, EffectiveAttr> canSetAttrs) { mCanSetAttrs = canSetAttrs; }
         void setCanGetAllAttrs() { mCanGetAllAttrs = true; }
-        void setCanGetAttrs(Set<String> canGetAttrs) { mCanGetAttrs = canGetAttrs; }
+        void setCanGetAttrs(List<String> canGetAttrs) { mCanGetAttrs = canGetAttrs; }
         
         public String targetType() { return mTargetType; }
         public String targetId()   { return mTargetId; }
         public String targetName() { return mTargetName; }
         public String granteeId() { return mGranteeId; }
         public String granteeName() { return mGranteeName; }
-        public Set<String> presetRights() { return mPresetRights; }
+        public List<String> presetRights() { return mPresetRights; }
         public boolean canSetAllAttrs() { return mCanSetAllAttrs; } 
-        public Map<String, EffectiveAttr> canSetAttrs() { return mCanSetAttrs; }
+        public SortedMap<String, EffectiveAttr> canSetAttrs() { return mCanSetAttrs; }
         public boolean canGetAllAttrs() { return mCanGetAllAttrs; } 
-        public Set<String> canGetAttrs() { return mCanGetAttrs; }
+        public List<String> canGetAttrs() { return mCanGetAttrs; }
     }
     
     
@@ -333,8 +337,9 @@ public class RightCommand {
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
-                                               String targetType, TargetBy targetBy, String target,
-                                               GranteeBy granteeBy, String grantee) throws ServiceException {
+                                                     String targetType, TargetBy targetBy, String target,
+                                                     GranteeBy granteeBy, String grantee,
+                                                     boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
 
         // target
         TargetType tt = TargetType.fromString(targetType);
@@ -349,7 +354,7 @@ public class RightCommand {
         String targetId = (targetEntry instanceof NamedEntry)? ((NamedEntry)targetEntry).getId() : "";
         EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel(), granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(granteeAcct, targetEntry, er);
+        RightChecker.getEffectiveRights(granteeAcct, targetEntry, expandSetAttrs, expandGetAttrs, er);
         return er;
     }
     

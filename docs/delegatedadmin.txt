@@ -913,12 +913,24 @@ Depending on the context, there are three aspects of targets that need to be dea
       is selected.  For example, after user1 is selected, if the admin does not have right 
       to setPassword, it should probably hide or gray out the setPassword tab.
     
-<GetEffectiveRightsRequest>
+<GetEffectiveRightsRequest expandAllAttrs="{expand-all-attrs}">
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   [<grantee by="{grantee-by}">{grantee-name-or-id}</grantee>]
 </GetEffectiveRightsRequest>
 
 if <grantee> is omitted, it means the account identified by the auth token.
+
+{expand-all-attrs} : comma separated values of "getAttrs", "setAttrs"
+                     e.g. getAttrs           - expand attrs in getAttrs in GetEffectiveRightsResponse
+                          setAttrs           - expand attrs in setAttrs in GetEffectiveRightsResponse
+                          getAttrs,setAttrs  - expand attrs in both getAttrs and setAttrs in GetEffectiveRightsResponse
+                                     
+                     - when all="1" in setAttrs/getAttrs in GetEffectiveRightsResponse: 
+                           0: do not expand attributes
+                           1: expand all attributes
+                     - when all is not present or is 0 in setAttrs/getAttrs in GetEffectiveRightsResponse: 
+                       value of {whether-to-expand-all-attrs} does not apply.  Allowed attributes are always 
+                       returned in setAttrs/getAttrs in GetEffectiveRightsResponse.  
     
 <GetEffectiveRightsResponse>    
   <grantee id"{grantee-id}" name="{grantee-name}">

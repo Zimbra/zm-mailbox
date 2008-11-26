@@ -1548,13 +1548,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public abstract boolean checkRight(String targetType, TargetBy targetBy, String target,
+    public boolean checkRight(String targetType, TargetBy targetBy, String target,
                                        GranteeBy granteeBy, String grantee,
                                        String right,
-                                       AccessManager.ViaGrant via) throws ServiceException;
+                                       AccessManager.ViaGrant via) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
-    public abstract RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
-                                                                    GranteeBy granteeBy, String grantee) throws ServiceException;
+    public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
+                                                           GranteeBy granteeBy, String grantee,
+                                                           boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
     
     public abstract RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException;
             
