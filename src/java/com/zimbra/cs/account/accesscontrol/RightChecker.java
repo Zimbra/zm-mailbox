@@ -575,23 +575,30 @@ public class RightChecker {
         AllowedAttrs allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, null);
         
         // finally, populate our result 
-        for (Right r : presetRights)
-            result.addPresetRight(r.getName());
         
+        // preset rights
+        Set<String> rights= new HashSet<String>();
+        for (Right r : presetRights) {
+            rights.add(r.getName());
+        }
+        result.setPresetRights(setToSortedList(rights));
+        
+        // setAttrs
         if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL) {
             result.setCanSetAllAttrs();
             if (expandSetAttrs)
-                result.setCanSetAttrs(expandAttrs(target));  // need default for setAttrs
+                result.setCanSetAttrs(expandAttrs(target));
         } else if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
             result.setCanSetAttrs(fillDefault(target, allowSetAttrs));
         }
         
+        // getAttrs
         if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL) {
             result.setCanGetAllAttrs();
             if (expandGetAttrs)
-                result.setCanGetAttrs(setToSortedList(TargetType.getAttrsInClass(target)));
+                result.setCanGetAttrs(expandAttrs(target));
         } else if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
-            result.setCanGetAttrs(setToSortedList(allowGetAttrs.getAllowed()));
+            result.setCanGetAttrs(fillDefault(target, allowGetAttrs));
         }
         
         return result;
@@ -601,11 +608,6 @@ public class RightChecker {
         List<String> list = new ArrayList<String>(set);
         Collections.sort(list);
         return list;
-    }
-    
-    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target) throws ServiceException {
-        AttributeClass klass = TargetType.getAttributeClass(target);
-        return fillDefault(target, AttributeManager.getInstance().getAttrsInClass(klass));
     }
     
     private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, AllowedAttrs allowSetAttrs) throws ServiceException {

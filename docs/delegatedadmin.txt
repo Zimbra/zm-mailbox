@@ -929,8 +929,8 @@ if <grantee> is omitted, it means the account identified by the auth token.
                            0: do not expand attributes
                            1: expand all attributes
                      - when all is not present or is 0 in setAttrs/getAttrs in GetEffectiveRightsResponse: 
-                       value of {whether-to-expand-all-attrs} does not apply.  Allowed attributes are always 
-                       returned in setAttrs/getAttrs in GetEffectiveRightsResponse.  
+                           value of {whether-to-expand-all-attrs} does not apply.  Allowed attributes are always 
+                           returned in setAttrs/getAttrs in GetEffectiveRightsResponse.  
     
 <GetEffectiveRightsResponse>    
   <grantee id"{grantee-id}" name="{grantee-name}">
@@ -944,7 +944,11 @@ if <grantee> is omitted, it means the account identified by the auth token.
           </a>
       </setAttrs>
       <getAttrs [all="{all}"]>
-        <a n="...">+
+        <a n="...">
+              [<default>
+                   <v>...</v>+
+               </default>]
+          </a>
       </getAttrs>
   </target>
 </GetEffectiveRightsResponse>   

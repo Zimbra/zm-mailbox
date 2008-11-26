@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.cli.CommandLine;
@@ -70,6 +71,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveAttr;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -323,7 +325,7 @@ public class ProvUtil implements DebugListener {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
-        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name}", Category.RIGHT, 1, 3),
+        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5),
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_GRANTS("getGrants", "gg", "{target-type} [{target-id|target-name}]", Category.RIGHT, 1, 2),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
@@ -2564,9 +2566,6 @@ public class ProvUtil implements DebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgsTarget(ra);
         
-        boolean expandSetAttrs = true;
-        boolean expandGetAttrs = true;
-        
         if (mProv instanceof LdapProvisioning) {
             // must provide grantee info
             getRightArgsGrantee(ra, false);
@@ -2574,6 +2573,19 @@ public class ProvUtil implements DebugListener {
             // has more args, use it for the requested grantee
             if (ra.mCurPos < args.length)
                 getRightArgsGrantee(ra, false);
+        }
+        
+        boolean expandSetAttrs = false;
+        boolean expandGetAttrs = false;
+        
+        // if there are more args, see if they are expandSetAttrs/expandGetAttrs
+        for (int i= ra.mCurPos; i < args.length; i++) {
+            if ("expandSetAttrs".equals(args[i]))
+                expandSetAttrs = true;
+            else if ("expandGetAttrs".equals(args[i]))
+                expandGetAttrs = true;
+            else
+                throw new ArgException("unrecognized arg: " + args[i]);
         }
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
@@ -2584,24 +2596,36 @@ public class ProvUtil implements DebugListener {
         
         System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
        
+        System.out.println("================");
         System.out.println("Preset rights");
-        System.out.println("-------------");
+        System.out.println("================");
         if (effRights.presetRights() != null) {
             for (String r : effRights.presetRights())
                 System.out.println("    " + r);
         }
         
+        displayAttrs("set", expandSetAttrs, effRights.canSetAllAttrs(), effRights.canSetAttrs());
+        displayAttrs("get", expandGetAttrs, effRights.canGetAllAttrs(), effRights.canGetAttrs());
+
+        System.out.println();
+        System.out.println();
+    }
+    
+    private void displayAttrs(String op, boolean expandAll, boolean allAttrs, SortedMap<String, EffectiveAttr> attrs) {
         String format = "    %-50s %-30s\n";
         System.out.println();
-        if (effRights.canSetAllAttrs())
-            System.out.println("Can set all attributes");
+        System.out.println("=========================");
+        System.out.println(op + " attributess rights");
+        System.out.println("=========================");
+        if (allAttrs)
+            System.out.println("Can " + op + " all attributes");
         
-        if (!effRights.canSetAllAttrs() || expandSetAttrs) {
-            System.out.println("Can set the following attributes");
+        if (!allAttrs || expandAll) {
+            System.out.println("Can " + op + " the following attributes");
             System.out.println("--------------------------------");
             System.out.printf(format, "attribute", "default");
             System.out.printf(format, "----------------------------------------", "--------------------");
-            for (RightCommand.EffectiveAttr ea : effRights.canSetAttrs().values()) {
+            for (RightCommand.EffectiveAttr ea : attrs.values()) {
                 boolean first = true;
                 if (ea.getDefault().isEmpty()) {
                     System.out.printf(format, ea.getAttrName(), "");
@@ -2616,19 +2640,7 @@ public class ProvUtil implements DebugListener {
                 }
             }
         }
-        
-        System.out.println();
-        if (effRights.canGetAllAttrs())
-            System.out.println("Can get all attributes");
-        
-        if (!effRights.canGetAllAttrs() || expandGetAttrs) {
-            System.out.println("Can get the following attributes");
-            System.out.println("--------------------------------");
-            for (String a : effRights.canGetAttrs())
-                System.out.printf(format, a, "");
-        }
     }
-    
     
     private void doGetGrants(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
