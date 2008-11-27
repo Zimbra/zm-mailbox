@@ -551,6 +551,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           
           - configureExternalGAL              : configure external GAL
           - configureExternaAuth              : configure external auth
+          - configureZimbraNotebookAccount    : setAttr zimbraNotebookAccount
     
 >>>>> OPEN-ISSUE-1          
           Should we consider domain hierarchy like we do for DLs? 
