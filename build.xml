@@ -1351,7 +1351,7 @@
             ca wiki@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             zimbraMailQuota 0
-        	grr global usr admin@${defaultdomain.name} createAccount
+        	grr global usr admin@${defaultdomain.name} accountAdmin
         	grr global usr admin@${defaultdomain.name} createTopDomain
         	grr global usr admin@${defaultdomain.name} modifyAccount
         	grr global usr admin@${defaultdomain.name} deleteAccount
@@ -1363,9 +1363,15 @@
         	grr global usr admin@${defaultdomain.name} deleteCos
         	grr global usr admin@${defaultdomain.name} listCos
         	grr global usr admin@${defaultdomain.name} createCos
+        	grr global usr admin@${defaultdomain.name} getDomain
+        	grr global usr admin@${defaultdomain.name} modifyDomain
+        	grr global usr admin@${defaultdomain.name} deleteDomain
+        	grr global usr admin@${defaultdomain.name} setPassword
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} modifyDomainAdminAttrs
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} accountAdmin
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} setPassword
+        	
         </echo>
     </target>
 
