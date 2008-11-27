@@ -19,9 +19,11 @@ package com.zimbra.common.util;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
@@ -33,45 +35,55 @@ import javax.net.ssl.TrustManager;
 public class CustomSSLSocketFactory extends SSLSocketFactory {
     private SSLSocketFactory factory;
     
-    public CustomSSLSocketFactory() {
-        try {
-            SSLContext sslcontext = SSLContext.getInstance("TLS");
-            sslcontext.init(null, new TrustManager[] { new CustomTrustManager() }, null);
-            factory = sslcontext.getSocketFactory();
-        } catch(Exception ex) {
-            // Use System.out here instead of Log4j, since this class is likely
-            // to be used by client code and Log4J may not be available.
-            System.out.println("Unable to initialize SSL:\n" + SystemUtil.getStackTrace(ex));
-        }
+    public CustomSSLSocketFactory() throws GeneralSecurityException {
+        SSLContext sslcontext = SSLContext.getInstance("TLS");
+        sslcontext.init(null, new TrustManager[] { CustomTrustManager.getInstance() }, null);
+        factory = sslcontext.getSocketFactory();
     }
     
     public static SocketFactory getDefault() {
-        return new CustomSSLSocketFactory();
+    	try {
+    		return new CustomSSLSocketFactory();
+    	} catch (GeneralSecurityException x) {
+    		ZimbraLog.security.error(x);
+    		return null;
+    	}
     }
     
     public Socket createSocket(Socket socket, String s, int i, boolean flag) throws IOException {
-        return factory.createSocket(socket, s, i, flag);
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, s, i, flag);
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
     
-    public Socket createSocket(InetAddress inaddr, int i,
-                               InetAddress inaddr1, int j) throws IOException {
-        return factory.createSocket(inaddr, i, inaddr1, j);
+    public Socket createSocket(InetAddress inaddr, int i, InetAddress inaddr1, int j) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(inaddr, i, inaddr1, j);
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
     
     public Socket createSocket(InetAddress inaddr, int i) throws IOException {
-        return factory.createSocket(inaddr, i);
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(inaddr, i);
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
 
     public Socket createSocket(String s, int i, InetAddress inaddr, int j) throws IOException {
-        return factory.createSocket(s, i, inaddr, j);
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, i, inaddr, j);
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
 
     public Socket createSocket(String s, int i) throws IOException {
-        return factory.createSocket(s, i);
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, i);
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
     
     public Socket createSocket() throws IOException {
-        return factory.createSocket();
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket();
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
 
     public String[] getDefaultCipherSuites() {

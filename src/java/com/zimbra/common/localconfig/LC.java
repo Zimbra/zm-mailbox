@@ -59,6 +59,7 @@ public class LC {
     }
 
     public static final KnownKey zimbra_home;
+    public static final KnownKey zimbra_java_path;
     public static final KnownKey zimbra_java_home;
     public static final KnownKey zimbra_log_directory;
     public static final KnownKey zimbra_index_directory;
@@ -285,6 +286,8 @@ public class LC {
     
     public static final KnownKey ssl_allow_untrusted_certs;
     public static final KnownKey ssl_allow_mismatched_certs;
+    public static final KnownKey ssl_allow_accept_untrusted_certs;
+    public static final KnownKey zimbra_class_sslprotocolsocketfactory;
 
     public static final KnownKey zimlet_directory;
     public static final KnownKey wiki_enabled;
@@ -446,11 +449,14 @@ public class LC {
         zimbra_home.setDefault(FS + "opt" + FS + "zimbra");
         zimbra_home.setForceToEdit(true);
 
+        zimbra_java_path = new KnownKey("zimbra_java_path");
+        zimbra_java_path.setDefault("java");
+        
         zimbra_java_home = new KnownKey("zimbra_java_home");
         if (System.getProperty("os.name").equalsIgnoreCase("Mac OS X")) {
             zimbra_java_home.setDefault("/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Home");
         } else {
-            zimbra_java_home.setDefault("${zimbra_home}" + FS + "java");
+            zimbra_java_home.setDefault("${zimbra_home}" + FS + "${zimbra_java_path}");
         }
 
         zimbra_log_directory = new KnownKey("zimbra_log_directory");
@@ -967,6 +973,11 @@ public class LC {
         
         ssl_allow_mismatched_certs = new KnownKey("ssl_allow_mismatched_certs");
         ssl_allow_mismatched_certs.setDefault("true");
+        
+        ssl_allow_accept_untrusted_certs = new KnownKey("ssl_allow_accept_untrusted_certs", "false", "whether to allow accepting untrusted certificates");
+        
+        zimbra_class_sslprotocolsocketfactory = new KnownKey("zimbra_class_sslprotocolsocketfactory");
+        zimbra_class_sslprotocolsocketfactory.setDefault("");
 
         zimlet_directory = new KnownKey("zimlet_directory");
         zimlet_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
