@@ -159,7 +159,11 @@
   <desc>create COS</desc>
 </right>
 
-<right name="createTopDomain" type="preset" targetType="domain">
+<right name="createTopDomain" type="preset" targetType="global">
+  <desc>create a top-level domain</desc>
+</right>
+
+<right name="createSubDomain" type="preset" targetType="domain">
   <desc>create a top-level domain</desc>
 </right>
 
@@ -171,6 +175,9 @@
   <desc>modify all domain attributes</desc>
 </right>
 
+<right name="deleteDmain" type="preset" targetType="domain">
+  <desc>delete domain</desc>
+</right>
 
 <right name="configureExternalGAL" type="setAttrs" targetType="domain">
   <desc>configure attributes for external GAL</desc>
@@ -203,7 +210,18 @@
     <a n="zimbraAuthLdapSearchBindPassword"/>            
   </attrs> 
 </right>
-          
+   
+<right name="configureZimbraNotebookAccount" type="setAttrs" targetType="domain">
+	<desc>allow modifying zimbraNotebookAccount attr</desc>
+	<attrs>
+		<a n="zimbraNotebookAccount"/>
+  </attrs> 		
+</right> 
+
+<right name="initNotebook" type="preset" targetType="domain">
+  <desc>permission to call InitNotebookRequest</desc>
+</right>
+ 
 <!-- 
     account rights
 -->
