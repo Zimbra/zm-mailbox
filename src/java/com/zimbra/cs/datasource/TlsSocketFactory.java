@@ -1,13 +1,18 @@
 package com.zimbra.cs.datasource;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.CustomSSLSocketUtil;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.CustomSSLSocketFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.SocketFactory;
 import java.net.Socket;
 import java.net.InetAddress;
+import java.security.GeneralSecurityException;
 import java.io.IOException;
 
 /*
@@ -18,12 +23,24 @@ import java.io.IOException;
  * when wrapping an existing socket (after TLS negotiation).
  */
 public class TlsSocketFactory extends SSLSocketFactory {
-    private static SSLSocketFactory SSL_FACTORY =
-        LC.data_source_trust_self_signed_certs.booleanValue() ?
-            new DummySSLSocketFactory() : new CustomSSLSocketFactory();
+    private SSLSocketFactory factory;
 
     private static final TlsSocketFactory THE_ONE = new TlsSocketFactory();
 
+    private static final Log LOG = ZimbraLog.datasource;
+    
+    protected TlsSocketFactory() {
+    	if (LC.data_source_trust_self_signed_certs.booleanValue())
+    		factory = new DummySSLSocketFactory();
+    	else {
+    		try {
+    			factory = new CustomSSLSocketFactory();
+    		} catch (GeneralSecurityException x) {
+    			LOG.error(x);
+    		}
+    	}
+    }
+    
     public static SocketFactory getDefault() {
         return THE_ONE;
     }
@@ -51,14 +68,16 @@ public class TlsSocketFactory extends SSLSocketFactory {
     }
 
     public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-        return SSL_FACTORY.createSocket(s, host, port, autoClose);
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, host, port, autoClose);
+    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	return sslSocket;
     }
 
     public String[] getDefaultCipherSuites() {
-        return SSL_FACTORY.getDefaultCipherSuites();
+        return factory.getDefaultCipherSuites();
     }
 
     public String[] getSupportedCipherSuites() {
-        return SSL_FACTORY.getSupportedCipherSuites();
+        return factory.getSupportedCipherSuites();
     }
 }

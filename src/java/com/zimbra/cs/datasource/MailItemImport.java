@@ -29,7 +29,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import java.io.IOException;
-import java.util.List;
 
 public abstract class MailItemImport implements DataSource.DataImport {
     protected final DataSource dataSource;
@@ -41,11 +40,6 @@ public abstract class MailItemImport implements DataSource.DataImport {
         dataSource = ds;
         mbox = ds.getMailbox();
     }
-
-    public abstract String test() throws ServiceException;
-
-    public abstract void importData(List<Integer> folderIds, boolean fullSync)
-        throws ServiceException;
 
     protected void validateDataSource() throws ServiceException {
         DataSource ds = getDataSource();

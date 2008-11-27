@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +39,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.map.LRUMap;
@@ -57,6 +60,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -75,6 +79,7 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -520,8 +525,19 @@ public class ZMailbox {
 			return mTransport.invoke(request, false, nosession, requestedAccountId);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
-            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
+        } catch (Exception e) {
+            Throwable t = SystemUtil.getInnermostException(e);
+            if (t == null)
+            	t = e;
+            if (t instanceof SSLPeerUnverifiedException)
+            	throw RemoteServiceException.SSLCERT_MISMATCH(t.getMessage(), t);
+            else if (t instanceof CertificateException)
+        		throw RemoteServiceException.SSLCERT_ERROR(t.getMessage(), t);
+        	else if (t instanceof SSLHandshakeException)
+        		throw RemoteServiceException.SSL_HANDSHAKE(t.getMessage(), t);
+        	else if (e instanceof IOException)
+        		throw ZClientException.IO_ERROR(e.getMessage(), e);
+        	throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
             Element context = mTransport.getZimbraContext();
             mTransport.clearZimbraContext();

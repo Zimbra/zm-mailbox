@@ -47,7 +47,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.LiveData;
 import com.zimbra.cs.db.DbDataSource;
@@ -89,21 +88,13 @@ public class LiveImport extends MailItemImport {
         return session;
     }
 
-    public synchronized String test() throws ServiceException {
+    public synchronized void test() throws ServiceException {
         DataSource ds = getDataSource();
-
         try {
             connect(ds);
-        } catch (ServiceException e) {
-            Throwable except = SystemUtil.getInnermostException(e);
-            if (except == null)
-                except = e;
-            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
-            return except.toString();
         } finally {
             disconnect(ds);
         }
-        return null;
     }
     
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)

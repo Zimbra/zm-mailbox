@@ -16,12 +16,19 @@
  */
 package com.zimbra.cs.datasource;
 
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.security.auth.login.LoginException;
+
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
@@ -56,21 +63,28 @@ public class DataSourceManager {
     /*
      * Tests connecting to a data source.  Do not actually create the
      * data source.
-     * 
-     * @return <code>null</code> if the test succeeded, or the error message
-     * if it didn't.
      */
-    public static String test(DataSource ds) throws ServiceException {
-        ZimbraLog.datasource.info("Testing %s", ds);
-        DataImport di = newDataImport(ds);
-        String error = di.test();
-        if (error == null) {
-            ZimbraLog.datasource.info("Test succeeded");
-        } else {
-            ZimbraLog.datasource.info("Test failed: %s", error);
-        }
-        
-        return error;
+    public static void test(DataSource ds) throws ServiceException {
+        ZimbraLog.datasource.info("Testing: %s", ds);
+        try {
+        	DataImport di = newDataImport(ds);
+        	di.test();
+            ZimbraLog.datasource.info("Test succeeded: %s", ds);
+        } catch (ServiceException x) {
+        	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
+            Throwable t = SystemUtil.getInnermostException(x);
+            if (t == null)
+            	t = x;
+            if (t instanceof SSLPeerUnverifiedException)
+            	throw RemoteServiceException.SSLCERT_MISMATCH(t.getMessage(), t);
+            else if (t instanceof CertificateException)
+            	throw RemoteServiceException.SSLCERT_ERROR(t.getMessage(), t);
+            else if (t instanceof SSLHandshakeException)
+            	throw RemoteServiceException.SSL_HANDSHAKE(t.getMessage(), t);
+            else if (t instanceof LoginException)
+            	throw RemoteServiceException.AUTH_FAILURE(t.getMessage(), t);
+            throw x;
+        }        
     }
 
     private static DataImport newDataImport(DataSource ds)

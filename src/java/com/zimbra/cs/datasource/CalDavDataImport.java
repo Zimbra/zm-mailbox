@@ -83,15 +83,14 @@ public class CalDavDataImport extends MailItemImport {
     	}
     }
 
-    public String test() throws ServiceException {
-    	try {
-        	mClient = new CalDavClient(getTargetUrl());
-    		mClient.setCredential(getUsername(), getDecryptedPassword());
-    		mClient.login(getPrincipalUrl());
-    	} catch (Exception e) {
-    		return e.getMessage();
-    	}
-    	return null;
+    public void test() throws ServiceException {
+    	mClient = new CalDavClient(getTargetUrl());
+		mClient.setCredential(getUsername(), getDecryptedPassword());
+		try {
+			mClient.login(getPrincipalUrl());
+		} catch (Exception x) {
+			throw ServiceException.FAILURE(x.getMessage(), x);
+		}
     }
 
     protected String getUsername() {

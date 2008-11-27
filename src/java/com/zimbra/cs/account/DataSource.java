@@ -82,7 +82,7 @@ public class DataSource extends AccountProperty {
     }
     
     public interface DataImport {
-        public abstract String test() throws ServiceException;
+        public abstract void test() throws ServiceException;
 
         public abstract void importData(List<Integer> folderIds, boolean fullSync)
             throws ServiceException;

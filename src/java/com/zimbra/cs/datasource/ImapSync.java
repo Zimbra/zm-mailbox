@@ -32,11 +32,11 @@ import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -93,25 +93,23 @@ public class ImapSync extends MailItemImport {
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
             config.setSSLSocketFactory(new DummySSLSocketFactory());
         } else {
-            config.setSSLSocketFactory(new CustomSSLSocketFactory());
+        	try {
+        		config.setSSLSocketFactory(new CustomSSLSocketFactory());
+        	} catch (GeneralSecurityException x) {
+        		LOG.error(x);
+        	}
         }
         return config;
     }
 
-    public synchronized String test() throws ServiceException {
+    public synchronized void test() throws ServiceException {
         validateDataSource();
         enableTrace(connection.getImapConfig());
         try {
             connect();
-        } catch (ServiceException e) {
-            Throwable except = SystemUtil.getInnermostException(e);
-            if (except == null) except = e;
-            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
-            return except.toString();
         } finally {
             connection.close();
         }
-        return null;
     }
 
     private static void enableTrace(ImapConfig config) {
