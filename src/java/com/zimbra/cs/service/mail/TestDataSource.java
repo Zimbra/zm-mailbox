@@ -123,7 +123,14 @@ public class TestDataSource extends MailDocumentHandler {
         */
         eDataSource = response.addElement(type.toString());
         
-        String error = DataSourceManager.test(ds);
+        String error = null;
+        try {
+        	DataSourceManager.test(ds);
+        } catch (ServiceException x) {
+        	error = x.getMessage();
+        	if (error == null)
+        		error = "datasource test failed";
+        }
         if (error == null) {
             eDataSource.addAttribute(MailConstants.A_DS_SUCCESS, true);
         } else {

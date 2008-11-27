@@ -41,11 +41,6 @@ public abstract class MailItemImport implements DataSource.DataImport {
         mbox = ds.getMailbox();
     }
 
-    public abstract String test() throws ServiceException;
-
-    public abstract void importData(List<Integer> folderIds, boolean fullSync)
-        throws ServiceException;
-
     protected void validateDataSource() throws ServiceException {
         DataSource ds = getDataSource();
         if (ds.getHost() == null) {

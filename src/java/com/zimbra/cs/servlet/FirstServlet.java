@@ -36,7 +36,7 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
 import com.zimbra.znative.Util;
@@ -91,8 +91,7 @@ public class FirstServlet extends HttpServlet {
             System.setProperty("javax.net.ssl.keyStorePassword", LC.mailboxd_keystore_password.value());
             System.setProperty("javax.net.ssl.trustStorePassword", LC.mailboxd_truststore_password.value());
 
-            if (LC.ssl_allow_untrusted_certs.booleanValue())
-                EasySSLProtocolSocketFactory.init();
+            SSLSocketFactoryManager.init();
             
             if (Provisioning.getInstance() instanceof LdapProvisioning)
                 checkLDAP();

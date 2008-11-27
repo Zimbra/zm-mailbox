@@ -30,7 +30,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.CustomSSLSocketFactory;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 
@@ -49,6 +48,7 @@ import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.List;
 import java.util.Date;
+import java.security.GeneralSecurityException;
 import java.text.ParseException;
 
 public class Pop3Sync extends MailItemImport {
@@ -90,24 +90,22 @@ public class Pop3Sync extends MailItemImport {
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
             config.setSSLSocketFactory(new DummySSLSocketFactory());
         } else {
-            config.setSSLSocketFactory(new CustomSSLSocketFactory());
+        	try {
+        		config.setSSLSocketFactory(new CustomSSLSocketFactory());
+        	} catch (GeneralSecurityException x) {
+        		LOG.error(x);
+        	}
         }
         return config;
     }
     
-    public synchronized String test() throws ServiceException {
+    public synchronized void test() throws ServiceException {
         validateDataSource();
         try {
             connect();
-        } catch (ServiceException e) {
-            Throwable except = SystemUtil.getInnermostException(e);
-            if (except == null) except = e;
-            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
-            return except.toString();
         } finally {
             connection.close();
         }
-        return null;
     }
 
     private static void enableTrace(Pop3Config config) {

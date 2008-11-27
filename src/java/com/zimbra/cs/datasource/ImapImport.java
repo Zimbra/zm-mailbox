@@ -44,7 +44,6 @@ import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.ReadOnlyFolderException;
 import javax.mail.Session;
-import javax.mail.Store;
 import javax.mail.UIDFolder;
 import javax.mail.internet.MimeMessage;
 
@@ -63,13 +62,11 @@ import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapMessage;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.ZimbraApplication;
@@ -114,19 +111,13 @@ public class ImapImport extends MailItemImport {
         store = getStore(ds);
     }
 
-    public synchronized String test() throws ServiceException {
+    public synchronized void test() throws ServiceException {
         validateDataSource();
         try {
             connect();
-        } catch (ServiceException e) {
-            Throwable except = SystemUtil.getInnermostException(e);
-            if (except == null) except = e;
-            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
-            return except.toString();
         } finally {
             close();
         }
-        return null;
     }
 
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)

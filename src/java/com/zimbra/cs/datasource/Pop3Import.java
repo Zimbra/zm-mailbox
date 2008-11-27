@@ -82,19 +82,13 @@ public class Pop3Import extends MailItemImport {
         store = getStore(ds);
     }
 
-    public synchronized String test() throws ServiceException {
+    public synchronized void test() throws ServiceException {
         validateDataSource();
         try {
             connect();
-        } catch (ServiceException e) {
-            Throwable except = SystemUtil.getInnermostException(e);
-            if (except == null) except = e;
-            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
-            return except.toString();
         } finally {
             disconnect();
         }
-        return null;
     }
 
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
