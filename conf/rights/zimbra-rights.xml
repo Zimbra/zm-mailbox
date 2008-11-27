@@ -155,14 +155,6 @@
   <desc>create alias in the domain</desc>
 </right>
 
-<right name="createCos" type="preset" targetType="global">
-  <desc>create COS</desc>
-</right>
-
-<right name="createTopDomain" type="preset" targetType="global">
-  <desc>create a top-level domain</desc>
-</right>
-
 <right name="createSubDomain" type="preset" targetType="domain">
   <desc>create a top-level domain</desc>
 </right>
@@ -223,6 +215,65 @@
 </right>
  
 <!-- 
+    global rights
+-->
+<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
+  <desc>test global grant target for now, delete after test is done</desc>
+</right>
+
+<right name="createCos" type="preset" targetType="global">
+  <desc>create COS</desc>
+</right>
+
+<right name="createTopDomain" type="preset" targetType="global">
+  <desc>create a top-level domain</desc>
+</right>
+
+<!-- 
+    server rights
+-->
+<right name="renameServer" type="preset" targetType="server">
+  <desc>rename server</desc>
+</right>
+
+<right name="getServer" type="preset" targetType="server">
+  <desc>rename server</desc>
+</right>
+
+<right name="modifyServer" type="preset" targetType="server">
+  <desc>rename server</desc>
+</right>
+
+<!-- 
+    cos rights
+-->
+
+
+<right name="renameCos" type="preset" targetType="cos">
+  <desc>rename cos</desc>
+</right>
+
+<right name="modifyCos" type="setAttrs" targetType="cos">
+  <desc>set all cos attributes</desc>
+</right>
+
+<right name="deleteCos" type="preset" targetType="cos">
+  <desc>delete COS</desc>
+</right>
+
+<right name="listCos" type="preset" targetType="cos">
+  <desc>see cos in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<!-- 
+	global config rights
+-->
+
+<right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
+  <desc>test global config target for now, delete after test is done</desc>
+</right>
+
+<!-- 
     account rights
 -->
 <right name="renameAccount" type="preset" targetType="account">
@@ -241,36 +292,13 @@
   <desc>rename distribution list</desc>
 </right>
 
-<right name="renameCos" type="preset" targetType="cos">
-  <desc>rename cos</desc>
+<right name="setPassword" type="preset" targetType="account">
+  <desc>change account's password</desc>
 </right>
 
-<right name="modifyCos" type="setAttrs" targetType="cos">
-  <desc>set all cos attributes</desc>
-</right>
-
-<right name="deleteCos" type="preset" targetType="cos">
-  <desc>delete COS</desc>
-</right>
-
-<right name="listCos" type="preset" targetType="cos">
-  <desc>see cos in GetAllCos/SearchDirectoryResponse</desc>
-</right>
-
-<right name="renameServer" type="preset" targetType="server">
-  <desc>rename server</desc>
-</right>
 
 <right name="deleteZimlet" type="preset" targetType="zimlet">
   <desc>delete zimlet</desc>
-</right>
-
-<right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
-  <desc>test global config target for now, delete after test is done</desc>
-</right>
-
-<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
-  <desc>test global grant target for now, delete after test is done</desc>
 </right>
 
 <right name="getAccount" type="getAttrs" targetType="account">
