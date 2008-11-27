@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.account;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -178,6 +179,11 @@ public class ToXML {
                 pref.addAttribute(key, name);
                 pref.setText((String) value);
                 */
+
+                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
+                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
+                    value = TZIDMapper.canonicalize((String) value);
+
                 encodeAttrOld(e, name, (String) value, AccountConstants.E_A, key, isIDN);
             }
         }       
