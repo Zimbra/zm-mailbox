@@ -28,7 +28,10 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.TrustManager;
@@ -67,6 +70,16 @@ public class CustomTrustManager implements X509TrustManager {
 	}
 
 	public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+        if (ZimbraLog.security.isDebugEnabled()) {
+        	ZimbraLog.security.debug("Server certificate chain:");
+            for (int i = 0; i < chain.length; ++i) {
+            	ZimbraLog.security.debug("X509Certificate[" + i + "]=" + chain[i]);
+            }
+        }
+		
+		for (X509Certificate cert : chain)
+			cert.checkValidity();
+        
 		try {
 			getDefaultTrustManager().checkServerTrusted(chain, authType);
 			return;
@@ -76,23 +89,26 @@ public class CustomTrustManager implements X509TrustManager {
 				throw new CertificateException("key store empty");
 			getKeyStoreTrustManager().checkServerTrusted(chain, authType);
 		} catch (CertificateException x) {
-			// only accept the very top certificate and not any underlying CAs
-			String alias = null;
-			if (LC.ssl_allow_accept_untrusted_certs.booleanValue()) {
-				alias = chain[0].getSerialNumber().toString(16).toUpperCase();
-				synchronized (this) {
-					pendingCerts.put(alias, chain[0]);
-				}
-			}
-			
-			String certInfo = "";
-			try {
-				certInfo = new SSLCertInfo(alias, chain[0]).serialize();
-			} catch (Exception ex) {}
+			String hostname = CustomSSLSocketUtil.getCertificateHostname(); //stored as threadlocal if triggered from CustomSSLSocketUtil
+			if (hostname == null)
+				hostname = SSLCertInfo.getCertificateCN(chain[0]);
+			String certInfo = handleCertificateCheckFailure(hostname, chain[0], false);
 			throw new CertificateException(certInfo);
 		} catch (KeyStoreException x) {
 			throw new CertificateException(x);
 		}
+	}
+	
+	public String handleCertificateCheckFailure(String hostname, X509Certificate cert, boolean isMismatch) {
+		hostname = hostname.toLowerCase();
+		String alias = hostname + ":" + cert.getSerialNumber().toString(16).toUpperCase();
+		if (LC.ssl_allow_accept_untrusted_certs.booleanValue())
+			cachePendingCertificate(alias, cert);
+		String certInfo = "";
+		try {
+			certInfo = new SSLCertInfo(alias, hostname, cert, LC.ssl_allow_accept_untrusted_certs.booleanValue(), isMismatch).serialize();
+		} catch (Exception ex) {}
+		return certInfo;
 	}
 
 	public X509Certificate[] getAcceptedIssuers() {
@@ -102,9 +118,12 @@ public class CustomTrustManager implements X509TrustManager {
 			return new X509Certificate[0];
 		}
 	}
+	
+	private synchronized void cachePendingCertificate(String alias, X509Certificate cert) {
+		pendingCerts.put(alias, cert);
+	}
 
-	public synchronized void acceptCertificates(String alias)
-			throws GeneralSecurityException {
+	public synchronized void acceptCertificates(String alias) throws GeneralSecurityException {
 		if (!LC.ssl_allow_accept_untrusted_certs.booleanValue())
 			throw new SecurityException("accepting untrusted certificates not allowed: " + alias);
 		
@@ -121,6 +140,23 @@ public class CustomTrustManager implements X509TrustManager {
 		} else {
 			ZimbraLog.security.warn("Alias %s not found in cache; no certificates accepted.", alias);
 		}
+	}
+	
+	public synchronized boolean isCertificateAcceptedForHostname(String hostname, X509Certificate cert) {
+		String prefix = hostname.toLowerCase() + ":";
+		try {
+			for (Enumeration<String> aliases = keyStore.aliases(); aliases.hasMoreElements();) {
+				String alias = aliases.nextElement();
+				if (alias.startsWith(prefix)) {
+					X509Certificate c = (X509Certificate)keyStore.getCertificate(alias);
+					if (c != null && c.equals(cert))
+						return true;
+				}
+			}
+		}catch (KeyStoreException x) {
+			ZimbraLog.security.warn(x);
+		}		
+		return false;
 	}
 
 	private X509TrustManager getDefaultTrustManager() throws CertificateException {
@@ -166,7 +202,7 @@ public class CustomTrustManager implements X509TrustManager {
 				ZimbraLog.security.warn("failed to read keystore file", x);
 			}
 		} catch (FileNotFoundException x) {
-			ZimbraLog.security.info("no keystore found");
+			ZimbraLog.security.info("keystore not present");
 		} finally {
 			if (kin != null)
 				try {
@@ -175,11 +211,34 @@ public class CustomTrustManager implements X509TrustManager {
 					ZimbraLog.security.warn("keystore file can't be closed after reading", x);
 				}
 		}
+		
+		if (!isKeyStoreInitialized) {
+			try {
+				kin = new FileInputStream(LC.mailboxd_keystore_base.value());
+				try {
+					keyStore.load(kin, LC.mailboxd_keystore_base_password.value().toCharArray());
+					isKeyStoreInitialized = true;
+				} catch (CertificateException x) {
+					ZimbraLog.security.warn("failed to load backup certificates", x);
+				} catch (IOException x) {
+					ZimbraLog.security.warn("failed to read backup keystore file", x);
+				}
+			} catch (FileNotFoundException x) {
+				ZimbraLog.security.warn("backup keystore not found");
+			} finally {
+				if (kin != null)
+					try {
+						kin.close();
+					} catch (IOException x) {
+						ZimbraLog.security.warn("backup keystore file can't be closed after reading", x);
+					}
+			}
+		}
 
 		if (!isKeyStoreInitialized) {
 			keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			try {
-				keyStore.load(null, LC.mailboxd_keystore_password.value().toCharArray());
+				keyStore.load(null, new char[0]);
 			} catch (IOException x) {
 				throw new KeyStoreException(x);
 			}

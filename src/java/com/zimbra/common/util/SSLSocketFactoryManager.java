@@ -1,5 +1,10 @@
 package com.zimbra.common.util;
 
+import java.security.GeneralSecurityException;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 
@@ -13,23 +18,48 @@ public class SSLSocketFactoryManager {
 		if (isInitialzied)
 			return;
 		
-		ProtocolSocketFactory socketFactory = null;
+		//ProtocolSocketFactory is used by HttpClient
+		
+		ProtocolSocketFactory psFactory = null;
 		
         String className = LC.zimbra_class_sslprotocolsocketfactory.value();
         if (className != null && !className.equals("")) {
             try {
-                socketFactory = (ProtocolSocketFactory)Class.forName(className).newInstance();
-            } catch (Exception e) {
-                ZimbraLog.security.error("could not instantiate ProtocolSocketFactory interface of class '%s'", className, e);
+                psFactory = (ProtocolSocketFactory)Class.forName(className).newInstance();
+            } catch (Exception x) {
+                ZimbraLog.security.error("could not instantiate ProtocolSocketFactory interface of class '%s'", className, x);
             }
         }
         
-        if (socketFactory == null && LC.ssl_allow_untrusted_certs.booleanValue())
-        	socketFactory = new EasySSLProtocolSocketFactory();
+        if (psFactory == null && LC.ssl_allow_untrusted_certs.booleanValue())
+        	psFactory = new EasySSLProtocolSocketFactory();
         
-        if (socketFactory != null) {
-        	Protocol https = new Protocol("https", socketFactory, 443);
+        if (psFactory != null) {
+        	Protocol https = new Protocol("https", psFactory, 443);
         	Protocol.registerProtocol("https", https);
         }
+        
+        //Init HttpsURLConnection
+        
+    	try {
+    		SSLSocketFactory sockFactory = LC.data_source_trust_self_signed_certs.booleanValue() ?
+    				new DummySSLSocketFactory() : new CustomSSLSocketFactory(false); //HttpsURLConnection has the HostnameVerifier interface
+    		HttpsURLConnection.setDefaultSSLSocketFactory(sockFactory);
+    	} catch (GeneralSecurityException x) {
+    		ZimbraLog.security.error("could not init HttpsURLConnection with SSLSocketFactory", x);
+    	}
+   		//HttpsURLConnection.setDefaultHostnameVerifier(new CustomSSLSocketUtil.HostnameVerifier());
+	}
+	
+	public static String getDefaultSSLSocketFactoryClassName() {
+		return LC.data_source_trust_self_signed_certs.booleanValue() ? DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName();
+	}
+	
+	public static SSLSocketFactory getDefaultSSLSocketFactory() {
+		try {
+			return LC.data_source_trust_self_signed_certs.booleanValue() ? new DummySSLSocketFactory() : new CustomSSLSocketFactory(true);
+		} catch (GeneralSecurityException x) {
+			throw new RuntimeException(x);
+		}
 	}
 }

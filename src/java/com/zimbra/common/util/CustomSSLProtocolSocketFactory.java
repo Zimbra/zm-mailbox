@@ -41,26 +41,26 @@ public class CustomSSLProtocolSocketFactory implements SecureProtocolSocketFacto
         factory = sslcontext.getSocketFactory();
     }
 
+    public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, host, port, autoClose);
+    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
+    	return sslSocket;
+    }
+    
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port);
+    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
+    	return sslSocket;
+    }
+    
     public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort) throws IOException, UnknownHostException {
     	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port, clientHost, clientPort);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
     	return sslSocket;
     }
 
     public Socket createSocket(String host, int port, InetAddress localAddress, int localPort, HttpConnectionParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
         return createSocket(host, port, localAddress, localPort);
-    }
-
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-
-    public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, host, port, autoClose);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
     }
 
     public boolean equals(Object obj) {
@@ -69,10 +69,5 @@ public class CustomSSLProtocolSocketFactory implements SecureProtocolSocketFacto
 
     public int hashCode() {
         return CustomSSLProtocolSocketFactory.class.hashCode();
-    }
-
-    public Socket createSocket(String host, int port, int timeout) throws IOException, UnknownHostException {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

@@ -1,6 +1,5 @@
 package com.zimbra.common.util;
 
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.cert.X509Certificate;
@@ -12,7 +11,10 @@ import com.zimbra.common.util.BEncoding.BEncodingException;
 
 public class SSLCertInfo {
 	
+	private static final String ACCEPTABLE = "accept";
+	private static final String MISMATCH = "mismatch";
 	private static final String ALIAS = "alias";
+	private static final String HOSTNAME = "host";
 	private static final String COMMON_NAME = "CN";
 	private static final String ORGANIZATION_UNIT = "OU";
 	private static final String ORGANIZATION = "O";
@@ -25,8 +27,10 @@ public class SSLCertInfo {
 	private static final String SHA1 = "sha1";
 	private static final String MD5 = "md5";
 	
-	
+	private boolean isAcceptable;
+	private boolean isMismatch;
 	private String alias;
+	private String hostname;
 	
 	private String commonName;
 	private String organizationUnit;
@@ -45,8 +49,11 @@ public class SSLCertInfo {
 	
 	private SSLCertInfo() {}
 	
-	public SSLCertInfo(String alias, X509Certificate cert) throws GeneralSecurityException {
+	public SSLCertInfo(String alias, String hostname, X509Certificate cert, boolean isAcceptable, boolean isMismatch) throws GeneralSecurityException {
+		this.isAcceptable = isAcceptable;
+		this.isMismatch = isMismatch;
 		this.alias = alias;
+		this.hostname = hostname;
 		
 		String subjectDn = cert.getSubjectX500Principal().getName();
 		commonName = getComponent(subjectDn, COMMON_NAME);
@@ -83,8 +90,8 @@ public class SSLCertInfo {
 	
 	public String serialize() {
 		Map<Object, Object> map = new HashMap<Object, Object>();
-		if (alias != null)
-			map.put(ALIAS, alias);
+		map.put(ALIAS, alias);
+		map.put(HOSTNAME, hostname);
 		map.put(COMMON_NAME, commonName);
 		map.put(ORGANIZATION_UNIT, organizationUnit);
 		map.put(ORGANIZATION, organization);
@@ -96,7 +103,8 @@ public class SSLCertInfo {
 		map.put(EXPIRES_ON, expiresOn.getTime());
 		map.put(SHA1, sha1);
 		map.put(MD5, md5);
-		
+		map.put(ACCEPTABLE, Boolean.valueOf(isAcceptable).toString());
+		map.put(MISMATCH, Boolean.valueOf(isMismatch).toString());
 		return BEncoding.encode(map);
 	}
 	
@@ -105,6 +113,7 @@ public class SSLCertInfo {
 		try {
 			Map map = (Map)BEncoding.decode(s);
             certInfo.alias = (String)map.get(ALIAS);
+            certInfo.hostname = (String)map.get(HOSTNAME);
             certInfo.commonName = (String)map.get(COMMON_NAME);
             certInfo.organizationUnit = (String)map.get(ORGANIZATION_UNIT);
             certInfo.organization = (String)map.get(ORGANIZATION);
@@ -116,11 +125,17 @@ public class SSLCertInfo {
             certInfo.expiresOn = new Date((Long)map.get(EXPIRES_ON));
             certInfo.sha1 = (String)map.get(SHA1);
             certInfo.md5 = (String)map.get(MD5);
+            certInfo.isAcceptable = Boolean.parseBoolean((String)map.get(ACCEPTABLE));
+            certInfo.isMismatch = Boolean.parseBoolean((String)map.get(MISMATCH));
 			return certInfo;
 		} catch (BEncodingException x) {}
 		return null;
 	}
 
+	public static String getCertificateCN(X509Certificate cert) {
+		return getComponent(cert.getSubjectX500Principal().getName(), COMMON_NAME);
+	}
+	
 	private static String getComponent(String dn, String component) {
 		int start = dn.indexOf(component + "=");
 		if (start == -1)
@@ -134,8 +149,20 @@ public class SSLCertInfo {
 		return dn.substring(start, i);
 	}
 	
+	public boolean isAcceptable() {
+		return isAcceptable;
+	}
+	
+	public boolean isMismatch() {
+		return isMismatch;
+	}
+	
 	public String getAlias() {
 		return alias;
+	}
+	
+	public String getHostname() {
+		return hostname;
 	}
 	
 	public String getCommonName() {return commonName;}
