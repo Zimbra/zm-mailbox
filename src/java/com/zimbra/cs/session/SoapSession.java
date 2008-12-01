@@ -464,8 +464,24 @@ public class SoapSession extends Session {
     }
 
 
-    public DelegateSession getDelegateSession(String targetAccountId) {
+    public Session getDelegateSession(String targetAccountId) {
+        if (mUnregistered || targetAccountId == null)
+            return null;
+
+        // delegate sessions are only for mailboxes on the local host
+        try {
+            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId)))
+                return null;
+        } catch (ServiceException e) {
+            ZimbraLog.session.info("exception while fetching delegate session", e);
+            return null;
+        }
+
+        // catch the case where they ask for a delegate session for the same user
         targetAccountId = targetAccountId.toLowerCase();
+        if (targetAccountId.equalsIgnoreCase(mAuthenticatedAccountId))
+            return this;
+
         synchronized (mDelegateSessions) {
             // don't return delegate sessions after an unregister()
             if (mUnregistered)

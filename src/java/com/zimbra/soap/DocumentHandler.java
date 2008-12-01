@@ -346,14 +346,19 @@ public abstract class DocumentHandler {
                     s = new AdminSession(authAccountId).register();
                 }
             } catch (ServiceException e) { 
-                ZimbraLog.session.info("ZimbraSoapContext - exception while creating session: ", e);
+                ZimbraLog.session.info("exception while creating session", e);
             }
             if (s != null)
                 zsc.recordNewSession(s.getSessionId());
         }
 
-        if (s != null && stype == Session.Type.SOAP && zsc.isDelegatedRequest())
-            s = ((SoapSession) s).getDelegateSession(zsc.getRequestedAccountId());
+        // if it's a delegated request, try to get a session on the local requested mailbox
+        //   (note that if the requested account is remote, getDelegateSession returns null)
+        if (s instanceof SoapSession && zsc.isDelegatedRequest()) {
+            Session delegate = ((SoapSession) s).getDelegateSession(zsc.getRequestedAccountId());
+            if (delegate != null)
+                s = delegate;
+        }
 
         return s;
     }
