@@ -16,14 +16,11 @@
  */
 package com.zimbra.cs.datasource;
 
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.service.RemoteServiceException;
@@ -72,17 +69,11 @@ public class DataSourceManager {
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
         } catch (ServiceException x) {
         	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
-            Throwable t = SystemUtil.getInnermostException(x);
-            if (t == null)
-            	t = x;
-            if (t instanceof SSLPeerUnverifiedException)
-            	throw RemoteServiceException.SSLCERT_MISMATCH(t.getMessage(), t);
-            else if (t instanceof CertificateException)
-            	throw RemoteServiceException.SSLCERT_ERROR(t.getMessage(), t);
-            else if (t instanceof SSLHandshakeException)
-            	throw RemoteServiceException.SSL_HANDSHAKE(t.getMessage(), t);
-            else if (t instanceof LoginException)
+        	Throwable t = SystemUtil.getInnermostException(x);
+            if (t instanceof LoginException)
             	throw RemoteServiceException.AUTH_FAILURE(t.getMessage(), t);
+            RemoteServiceException.doConnectionFailures(ds.getHost() + ":" + ds.getPort(), t);
+            RemoteServiceException.doSSLFailures(t.getMessage(), t);
             throw x;
         }        
     }

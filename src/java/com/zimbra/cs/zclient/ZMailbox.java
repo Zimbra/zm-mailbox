@@ -25,7 +25,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,8 +38,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.map.LRUMap;
@@ -526,16 +523,10 @@ public class ZMailbox {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (Exception e) {
-            Throwable t = SystemUtil.getInnermostException(e);
-            if (t == null)
-            	t = e;
-            if (t instanceof SSLPeerUnverifiedException)
-            	throw RemoteServiceException.SSLCERT_MISMATCH(t.getMessage(), t);
-            else if (t instanceof CertificateException)
-        		throw RemoteServiceException.SSLCERT_ERROR(t.getMessage(), t);
-        	else if (t instanceof SSLHandshakeException)
-        		throw RemoteServiceException.SSL_HANDSHAKE(t.getMessage(), t);
-        	else if (e instanceof IOException)
+        	Throwable t = SystemUtil.getInnermostException(e);
+        	RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
+        	RemoteServiceException.doSSLFailures(t.getMessage(), t);
+        	if (e instanceof IOException)
         		throw ZClientException.IO_ERROR(e.getMessage(), e);
         	throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
