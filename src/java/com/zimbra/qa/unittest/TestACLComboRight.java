@@ -5,15 +5,20 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightChecker;
+import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.qa.unittest.TestACL.TestViaGrant;
@@ -21,6 +26,8 @@ import com.zimbra.qa.unittest.TestACL.TestViaGrant;
 
 public class TestACLComboRight extends TestACL {
 
+    static Right COMBO_RIGHT;
+    
     // attrs covered by the ATTR_RIGHT_SOME right
     static final Map<String, Object> ATTRS_SOME;
     static final AllowedAttrs EXPECTED_SOME;
@@ -43,7 +50,14 @@ public class TestACLComboRight extends TestACL {
         ATTRS_SOME.putAll(ATTRS_CONFIGURE_QUOTA_WITHIN_LIMIT);
         ATTRS_SOME.putAll(ATTRS_DOMAIN_ADMIN_MODIFIABLE);
         
-        EXPECTED_SOME = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
+        EXPECTED_SOME = RightChecker.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
+        
+        try {
+            COMBO_RIGHT   = RightManager.getInstance().getRight("domainAdmin");
+        } catch (ServiceException e) {
+            System.exit(1);
+        }
+        
     }
     
     public void testComboRight() throws Exception {
@@ -59,7 +73,7 @@ public class TestACLComboRight extends TestACL {
         /*
          * grants
          */
-        Right right = AdminRight.R_domainAdmin;
+        Right right = COMBO_RIGHT;
         Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
         
         /*
@@ -70,7 +84,7 @@ public class TestACLComboRight extends TestACL {
         
         TestViaGrant via;
         
-        via = new TestViaGrant(TargetType.account, TA, GranteeType.GT_USER, GA.getName(), AdminRight.R_domainAdmin, POSITIVE);
+        via = new TestViaGrant(TargetType.account, TA, GranteeType.GT_USER, GA.getName(), COMBO_RIGHT, POSITIVE);
         
         // createAcount is not applicable on account, thus the grant will be ignored, which is 
         // equivalent to no grant for the createAccount right, therefore default should be honored.
@@ -79,7 +93,7 @@ public class TestACLComboRight extends TestACL {
         // renameAccount right is applicable on acount
         verify(GA, TA, AdminRight.R_renameAccount, ALLOW, via);
         
-        verify(GA, TA, ATTRS_SOME, SET, EXPECTED_SOME);
+        verify(GA, TA, SET, EXPECTED_SOME);
     }
 
     

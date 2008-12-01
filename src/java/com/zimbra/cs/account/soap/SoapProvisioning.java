@@ -1903,24 +1903,42 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public Right getRight(String rightName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+    public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_RIGHT_REQUEST);
+        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAllAttrs);
+        req.addElement(AdminConstants.E_RIGHT).setText(rightName);
+        
+        Element resp = invoke(req);
+        Element eRight = resp.getElement(AdminConstants.A_RIGHT);
+        Right right = RightCommand.XMLToRight(eRight);
+        return right;
     }
     
     @Override
-    public List<Right> getAllRights()  throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs)  throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_RIGHTS_REQUEST);
+        req.addAttribute(AdminConstants.A_TARGET_TYPE, targetType);
+        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAllAttrs);
+        Element resp = invoke(req);
+        
+        List<Right> rights = new ArrayList<Right>();
+        for (Element eRight : resp.listElements(AdminConstants.A_RIGHT)) {
+            rights.add(RightCommand.XMLToRight(eRight));
+        }
+        return rights;
     }
     
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
                               GranteeBy granteeBy, String grantee,
-                              String right,
+                              String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.CHECK_RIGHT_REQUEST);
         toXML(req, targetType, targetBy, target);
         toXML(req, null, granteeBy, grantee);
         toXML(req, right, false);
+        
+        SoapProvisioning.addAttrElements(req, attrs);
         
         Element resp = invoke(req);
         boolean result = resp.getAttributeBool(AdminConstants.A_ALLOW);

@@ -105,19 +105,40 @@ public enum TargetType {
     }
     
     /**
-     * returns if a right will be effective if granted on this target type(right granted on) entry
+     * returns if a right is grantable on this target type(right granted on) entry
      * 
-     * @param right must be a preset right
+     * @param right
      * @return
      */
-    boolean isRightApplicable(Right right) throws ServiceException {
-        if (!right.isPresetRight())
-            throw ServiceException.FAILURE("internal error", null);
+    boolean isRightGrantableOnTargetType(Right right) throws ServiceException {
         
         if (mApplicableTargetTypes == null)
             return true;
-        else 
+        
+        if (right.isPresetRight()) {
             return mApplicableTargetTypes.contains(right.getTargetType());
+            
+        } else if (right.isAttrRight()) {
+            AttrRight attrRight = (AttrRight)right;
+            List<TargetType> tts = attrRight.getTargetTypes();
+            
+            // true if any of the target types of the attr right is grantable on this target type
+            for (TargetType tt : attrRight.getTargetTypes()) {
+                if (mApplicableTargetTypes.contains(tt))
+                    return true;
+            }
+
+                
+        } else if (right.isComboRight()) {
+            // true if any of the rights in the combo right is grantable on this target type
+            ComboRight comboRight = (ComboRight)right;
+            for (Right r : comboRight.getAllRights())
+                if (isRightGrantableOnTargetType(r))
+                    return true;
+        } else
+            throw ServiceException.FAILURE("internal error", null);
+        
+        return false;
     }
     
     /**

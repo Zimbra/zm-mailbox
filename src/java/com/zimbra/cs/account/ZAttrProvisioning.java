@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081125-2131 */
+    /* build: 5.0 pshao 20081201-1302 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1528,6 +1528,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=242)
     public static final String A_zimbraComponentAvailable = "zimbraComponentAvailable";
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public static final String A_zimbraConstraint = "zimbraConstraint";
 
     /**
      * Comma separates list of attributes in contact object to search for

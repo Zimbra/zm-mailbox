@@ -4,12 +4,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.accesscontrol.AdminRight.DefinedBy;
-import com.zimbra.cs.account.accesscontrol.AttrRight.Attr;
 
 public class ComboRight extends AdminRight {
     // directly contained rights
     private Set<Right> mRights = new HashSet<Right>();
+    
+    // directly and indirectly contained rights
+    private Set<Right> mAllRights = new HashSet<Right>();
     
     // all preset rights contained in this combo right
     private Set<Right> mPresetRights = new HashSet<Right>();
@@ -17,11 +18,11 @@ public class ComboRight extends AdminRight {
     // all attr rights contained in this combo right
     private Set<AttrRight> mAttrRights = new HashSet<AttrRight>();
     
-    ComboRight(String name, RightType rightType, DefinedBy definedBy) {
-        super(name, rightType, definedBy);
+    ComboRight(String name, RightType rightType) {
+        super(name, rightType);
     }
     
-    String dump(StringBuilder sb) {
+    public String dump(StringBuilder sb) {
         super.dump(sb);
         
         sb.append("===== combo right properties: =====\n");
@@ -68,14 +69,12 @@ public class ComboRight extends AdminRight {
         super.completeRight();
         
         expand(this, mPresetRights, mAttrRights);
-    }
-    
-    private Set<Right> getDirectlyContainedRights() {
-        return mRights;
+        mAllRights.addAll(mPresetRights);
+        mAllRights.addAll(mAttrRights);
     }
     
     private static void expand(ComboRight right, Set<Right> presetRights, Set<AttrRight> attrRights) throws ServiceException {
-        for (Right r : right.getDirectlyContainedRights()) {
+        for (Right r : right.getRights()) {
             if (r.isPresetRight())
                 presetRights.add(r);
             else if (r.isAttrRight())
@@ -101,9 +100,14 @@ public class ComboRight extends AdminRight {
         return mAttrRights;
     }
     
-    // get directed contained rights
-    Set<Right> getRights() {
+    // get rights directly  contained by this combo right
+    public Set<Right> getRights() {
         return mRights;
+    }
+    
+    // get all (direct or indirect) rights contained by this combo right 
+    public Set<Right> getAllRights() {
+        return mAllRights;
     }
 
 }

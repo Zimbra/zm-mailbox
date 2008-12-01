@@ -241,28 +241,28 @@ Depending on the context, there are three aspects of targets that need to be dea
 3.1.2 Inline Attribute Rights
       - Specified on the grants
       
-      - Format is {verb}.{target-type}.{attribute-name}
-        {verb}: getAttr | setAttr
-                getAttr: reading the attribute
-                setAttr: reading and writing the attribute
+      - Format is {op}.{target-type}.{attribute-name}
+        {op}: get | set
+              get: reading the attribute
+              set: reading and writing the attribute
                 
-        {target-type}: (one of the target types in 1.2)        
-                account  |
-                cr       |  
-                cos      |
-                dl       |
-                domain   |
-                config   |
-                server   |
-                xmppcpnt |
+        {target-type}:   
+                account           |
+                resource          |  
+                cos               |
+                distributionlist  |
+                domain            |
+                config            |
+                server            |
+                xmppcomponent     |
                 zimlet
-                
+
         {attribute-name}: attribute name
        
      -  e.g.
-          setAttr.account.zimbraMailStatus
-          getAttr.domain.zimbraMailStatus
-          setAttr.cos.zimbraMailQuota
+          set.account.zimbraMailStatus
+          get.domain.zimbraMailStatus
+          set.cos.zimbraMailQuota
           
      - In a grant(zimbraACE), it shows up at the spot for {right}
           2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 usr set.account.zimbraMailStatus
@@ -276,23 +276,10 @@ Depending on the context, there are three aspects of targets that need to be dea
     - For preset rights: one
           The target on which the right is applicable.
           
-    - For getAttrs/setAttrs rights: none or one, or multiple
-          If none: the right is applicable on all target types
-          If one/multiple:  the right is only applicable on those target types
+    - For getAttrs/setAttrs rights: one, or multiple
+          The right is only applicable on those target types
           
-          e.g. 1. can modify zimbraMailStatus on any target types (no target types specified on the right definition)
-                  <right name="configureMailStatus" type="setAttrs">
-                      <desc>configure mail status </desc>
-                      <attrs>
-                          <a n="zimbraMailStatus"/>
-                      </attrs>
-                  </right>
-                   
-                  - if granted on a domain, can modify zMS on the domain, and on any accounts and distribution lists in the domain
-                  - if granted on a distribution list, can modify zMS on the DL, and on any direct/indirect accounts/DLs in the DL
-                  - if granted on an account, can modify zMS on the account
-                
-          e.g. 2. can modify zimbraMailStatus on accounts
+          e.g. 1. can modify zimbraMailStatus on accounts
                   <right name="configureAccountMailStatus" type="setAttrs" targetType="account">
                       <desc>configure account mail status</desc>
                       <attrs>
@@ -300,8 +287,21 @@ Depending on the context, there are three aspects of targets that need to be dea
                       </attrs>
                   </right>
                   
-                  - if granted on a domain, no effect
-                  - if granted on a distribution list, no effect
+                  - if granted on a domain, can modify zMS on all accounts in the domain
+                  - if granted on a distribution list, can modify zMS on all accounts in the DL
+                  - if granted on an account, can modify zMS on the account
+
+          e.g. 2. can modify zimbraMailStatus on domains
+                  <right name="configureDomainMailStatus" type="setAttrs" targetType="domain,distributionlist,account">
+                      <desc>configure domain mail status</desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                
+                  - if granted on a domain, can modify zMS on the domain, and on all the DLs in the domain, and on all accounts in the domain.
+                  - if granted on a distribution list, can modify zMS on the DL, and on all direct/indirect sub-DLs in the DL, 
+                    and on all direct/indirect account members in the DL.
                   - if granted on an account, can modify zMS on the account
 
           e.g. 3. can modify zimbraMailStatus on domains
@@ -315,7 +315,6 @@ Depending on the context, there are three aspects of targets that need to be dea
                   - if granted on a domain, can modify zMS on the domain (only on the domain entry, not accounts/DLs in the domain)
                   - if granted on a distribution list, no effect
                   - if granted on an account, no effect
-
        
     - For combo rights: none
           Target types specified for each right the combo right contains apply.
@@ -389,7 +388,7 @@ Depending on the context, there are three aspects of targets that need to be dea
     Each zimbraConstraint value is in the format of:
     
         - for neumeric(integer, interval, port) attributes:
-              {attr-name}:[{min}]:[{max}]
+              {attr-name}:[{min}],[{max}]
               
               e.g. zimbraPasswordMinLength:4:6 (can be set to value between 4 and 6)
                    zimbraPrefOutOfOfficeCacheDuration:1m:7d (can be set to value between 1m and 7d)
@@ -415,8 +414,8 @@ Depending on the context, there are three aspects of targets that need to be dea
     attribute that defines the constraint for the object he is modifying.  
     
     For example, if zimbraConstraint on cos C has:
-          zimbraPasswordMinLength:4:6
-          zimbraSignatureMaxNumEntries::10
+          zimbraPasswordMinLength:6,8
+          zimbraSignatureMaxNumEntries:,10
           
     - if the authed admin has right to modify zimbraConstraint on cos C (and has right to modify the corresponding
       account/cos attributes), he can set:
@@ -426,7 +425,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           
     - if the authed admin does not have right to modify zimbraConstraint on cos C (and has right to modify the 
       corresponding account/cos attributes), he can set:    
-          zimbraPasswordMinLength to between 4 and 6
+          zimbraPasswordMinLength to between 6 and 8
           zimbraSignatureMaxNumEntries to a value less than 10
           all other attributes to any value on cos C and accounts assigned to cos C
           
@@ -456,7 +455,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           - backupAccount                      : backup account
           - restoreAccount                     : restore account from backup
           
-          - setPassword                        : set account password
+          - setAccountPassword                 : set account password
           
           - configureQuota                     : configure quota
           - configureFeature                   : enable/disable features
@@ -467,25 +466,25 @@ Depending on the context, there are three aspects of targets that need to be dea
 
 
 3.5.2 calendar resource:
-          - getCalenceResource                 : get all calendar resource attributes
-          - modifyCalenceResource              : modify all calendar resource attributes
-          - listCalenceResource                : see calendar resource in GetAllCalendarResources/SearchDirectoryResponse
+          - getCalendarResource                : get all calendar resource attributes
+          - modifyCalendarResource             : modify all calendar resource attributes
+          - listCalendarResource               : see calendar resource in GetAllCalendarResources/SearchDirectoryResponse
           
           - renameCalendarResource             : rename calendar resource
           - deleteCalendarResource             : delete calendar resource
           
-          - addCalenceResourceAlias            : add alias to calendar resource
-          - removeCalenceResourceAlias         : remove alias from calendar resource
+          - addCalendarResourceAlias           : add alias to calendar resource
+          - removeCalendarResourceAlias        : remove alias from calendar resource
 
           - getMailboxDump                     : get mailbox dump for legal intercept
           - moveMailbox                        : move mailbox from one server to another
           - reindexMailbox                     : reindex mailbox
           - viewEmail                          : view the calendar resource's email
           
-          - backupCalenceResource              : backup calendar resource
-          - restoreCalenceResource             : restore calendar resource from backup
+          - backupCalendarResource             : backup calendar resource
+          - restoreCalendarResource            : restore calendar resource from backup
           
-          - setPassword                        : set calendar resource password
+          - setCalendarResourcePassword        : set calendar resource password
 
 
 3.5.3 cos
@@ -496,6 +495,8 @@ Depending on the context, there are three aspects of targets that need to be dea
           - renameCos                          : rename cos
           - deleteCos                          : delete cos
           
+          - assignCos                          : assign the cos (to domains or accounts)
+           
           - configureQuota                     : configure quota
           - configureFeature                   : enable/disable features
           - configurePasswordRule              : configure password rules
@@ -512,6 +513,7 @@ Depending on the context, there are three aspects of targets that need to be dea
                 
           - getDistributionList               : get all distribution list attributes
           - modifyDistributionList            : modify all distribution list attributes
+          - listDistributionList              : see distribution list in GetAllDistributionList/SearchDirectoryResponse
           
           - renameDistributionList            : rename distribution list
           - deleteDistributionList            : delete distribution list
@@ -547,7 +549,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           - createCalendarResource            : create calendar resource in the domain
           - createDistributionList            : create distribution list in the domain
           - createAlias                       : create alias in this domain
-          - deleteAlias                       : delete alias in this domain
+          - deleteAlias                       : delete alias in this domain (do we need this?)
           
           - configureExternalGAL              : configure external GAL
           - configureExternaAuth              : configure external auth
@@ -573,7 +575,8 @@ Depending on the context, there are three aspects of targets that need to be dea
           and
           - createCos                        : create cos
           - createTopDomain                  : create top level domain
-          - createServer                     : createServer
+          - createServer                     : create server
+          - createZimlet                     : create zimlet
 
 
 3.5.8 server
@@ -601,6 +604,12 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureServiceEnabled          : configure services enabled
 
 
+3.5.9 zimlet
+          - getZimlet                        : get all zimlet attributes
+          - modifyZimlet                     : modify all zimlet attributes
+          - listZimlet                       : see zimlet in GetAllZimlets
+          
+          - deleteZimlet                     : delete zimlet
 
 =================
 4. Storage - LDAP
@@ -811,7 +820,7 @@ Depending on the context, there are three aspects of targets that need to be dea
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"]>{right-name}</right>
+  <right [deny="${deny}"]>{right}</right>
 </GrantRightRequest>    
 
 {target-type} = account | resource | distributionlist | domain | cos | server | xmppcomponent | zimlet | config | global 
@@ -822,9 +831,18 @@ Depending on the context, there are three aspects of targets that need to be dea
   
 {grantee-bt}   = name | id
 
-{right-name} = right name
-  
 {deny} = 1 | 0(default)
+
+{right} = {right-name} | {inline-right}
+
+{right-name} = a system defined right name
+
+{inline-right} = {op}.{target-type}.{attr-name}
+
+{op} = set | get
+
+{attr-name} = a valid attribute name on the specified target type
+
   
   
 <GrantRightResponse/>
@@ -850,7 +868,21 @@ Depending on the context, there are three aspects of targets that need to be dea
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee by="{grantee-by}">{grantee-name-or-id}</grantee>
   <right>{right-name}</right>
+  [<attrs>
+     <a n="...">...</a>+
+   </attrs>]
 </CheckPermissionRequest>
+
+{right-name}: right name
+              must be a preset, getAttrs, or setAttrs right, currently combo
+              right is not supported.
+                
+              if right is a setAttrs right, an attr/value map must be provided 
+              in <attrs>, which contains the attrs/values that are attempted to
+              be modified.   If one of the values to be modified violates one of 
+              the constraint for the the attributes, the result in CheckRightResponse
+              will be allow="0".
+              
 
 <CheckRightResponse allow="{1|0}">
   [<via>
@@ -889,6 +921,18 @@ Depending on the context, there are three aspects of targets that need to be dea
          in the response.     Also, <via> will probably be hairy for rights that modify/get
          selective attrs, it may not be returned for those rights.  TDB...
 
+    e.g. 
+         <CheckRightRequest>
+             <target type="account"> by="name">user1@D</target>
+             <grantee by="name">admin@D</grantee>
+             <right>configureQuota</right>
+             <attrs>
+                 <a n="zimbraMailQuota">100000</a>
+                 <a n="zimbraQuotaWarnPercent">80</a>
+             <attrs>    
+         </CheckRightRequest>
+              
+         <CheckRightResponse hasRight="0">     
          
 6.1.4 GetGrantsRequest
       Returns all grants on the specified target entry.
@@ -921,7 +965,11 @@ Depending on the context, there are three aspects of targets that need to be dea
 
 if <grantee> is omitted, it means the account identified by the auth token.
 
-{expand-all-attrs} : comma separated values of "getAttrs", "setAttrs"
+{expand-all-attrs} : whether to include all attribute names in the <getAttrs>/<setAttrs> elements in 
+                     GetEffectiveRightsResponse if all attributes of the target are gettable/settable
+                     
+                     comma separated values of "getAttrs", "setAttrs"
+                     
                      e.g. getAttrs           - expand attrs in getAttrs in GetEffectiveRightsResponse
                           setAttrs           - expand attrs in setAttrs in GetEffectiveRightsResponse
                           getAttrs,setAttrs  - expand attrs in both getAttrs and setAttrs in GetEffectiveRightsResponse
@@ -1001,15 +1049,20 @@ if <grantee> is omitted, it means the account identified by the auth token.
 6.2.1 GetRightRequest
       Get a right definition.
     
-<GetRightRequest>
+<GetRightRequest [expandAllAttrs="{expand-all-attrs}"]>
   <right>{right-name}</right>
 </GetRightRequest>
+
+{expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
+                     GetRightResponse if the right is meant for all attributes 
+                     0: default, do not include all attribute names in the <attrs> elements
+                     1: include all attribute names in the <attrs> elements
 
 <GetRightResponse>
   <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
-    [<attrs>
-       <a n="{attr-name}"/>+
+    [<attrs [all="1"]>
+       [<a n="{attr-name}"/>+]
      </attrs>]
     [<rights>
        <r n="{right-name}"/>+
@@ -1022,21 +1075,33 @@ if <grantee> is omitted, it means the account identified by the auth token.
 {right-type}: getAttrs | setAttrs | combo | preset
 
 {target-type}: if {right-type} is:
-               - preset: always present
-               - getAttrs/setAtrts: optional
+               - preset: always present (exactly target type)
+               - getAttrs/setAtrts: always present (comma-separated target types)
                - combo: always not present
 
 
 6.2.2 GetAllRights
       Get all system defined rights
       
-<GetAllRightsRequest/>
+<GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"]/>
 
+{target-type} : target type on which a right is grantable
+                e.g. createAccount right is only grantable on domain entries and the globalgrant 
+                     entry.
+                Don't confuse this with "whether a right is applicable on a target type".
+                e.g. the renameAccount right is "applicable" on account entries, but it is "grantable" 
+                     on account, distribuiton list, domain, and globalgrant entries.
+     
+{expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
+                     GetRightResponse if the right is meant for all attributes 
+                     0: default, do not include all attribute names in the <attrs> elements
+                     1: include all attribute names in the <attrs> elements
+                     
 <GetAllRightsResponse>
   <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
     <desc>{right-description}</desc>
-    [<attrs>
-       <a n="{attr-name}"/>+
+    [<attrs all="1">
+       [<a n="{attr-name}"/>+]
      </attrs>]
     [<rights>
        <r n="{right-name}"/>+
@@ -1079,7 +1144,5 @@ Customers can then turn off those bits and explicitly grant only the permissions
 
 - http://bugzilla.zimbra.com/show_bug.cgi?id=18277
   server side infrastructure for role based delegated administration
-
-
 
 

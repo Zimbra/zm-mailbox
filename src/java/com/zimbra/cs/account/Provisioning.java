@@ -1540,18 +1540,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
     
-    public Right getRight(String rightName) throws ServiceException {
+    public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public List<Right> getAllRights()  throws ServiceException {
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs)  throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                                       GranteeBy granteeBy, String grantee,
-                                       String right,
-                                       AccessManager.ViaGrant via) throws ServiceException {
+                              GranteeBy granteeBy, String grantee,
+                              String right, Map<String, Object> attrs,
+                              AccessManager.ViaGrant via) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 

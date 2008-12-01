@@ -155,7 +155,7 @@ public class ZimbraACL {
     private boolean revoke(ZimbraACE aceToRevoke) {
         for (ZimbraACE ace : mAces) {
             if (ace.isGrantee(aceToRevoke.getGrantee()) &&
-                ace.getRight() == aceToRevoke.getRight() &&
+                ace.getRight().getName().equals(aceToRevoke.getRight().getName()) &&
                 ace.deny() == aceToRevoke.deny()) {
                 removeACE(ace);
                 return true;

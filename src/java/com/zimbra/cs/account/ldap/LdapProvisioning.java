@@ -63,6 +63,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -5360,24 +5361,34 @@ public class LdapProvisioning extends Provisioning {
     //
    
     @Override
-    public Right getRight(String rightName) throws ServiceException {
-        throw ServiceException.FAILURE("todo", null);
+    /*
+     * from zmprov -l, we don't expand all attrs, expandAllAttrs is ignored
+     */
+    public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
+        if (expandAllAttrs)
+            throw ServiceException.FAILURE("expandAllAttrs == TRUE is not supported", null);
+        return RightCommand.getRight(rightName);
     }
 
     @Override
-    public List<Right> getAllRights() throws ServiceException {
-        throw ServiceException.FAILURE("todo", null);
+    /*
+     * from zmprov -l, we don't expand all attrs, expandAllAttrs is ignored
+     */
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs) throws ServiceException {
+        if (expandAllAttrs)
+            throw ServiceException.FAILURE("expandAllAttrs == TRUE is not supported", null);
+        return RightCommand.getAllRights(targetType);
     }
     
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
                               GranteeBy granteeBy, String grantee,
-                              String right,
+                              String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
         return RightCommand.checkRight(this, 
                                        targetType, targetBy, target,
                                        granteeBy, grantee,
-                                       right, via);  
+                                       right, attrs, via);  
     }
 
     @Override

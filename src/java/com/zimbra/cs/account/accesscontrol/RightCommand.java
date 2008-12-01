@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,8 +21,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.accesscontrol.Right.RightType;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 public class RightCommand {
     
@@ -308,11 +307,40 @@ public class RightCommand {
         public SortedMap<String, EffectiveAttr> canGetAttrs() { return mCanGetAttrs; }
     }
     
+    public static Right getRight(String rightName) throws ServiceException {
+        return RightManager.getInstance().getRight(rightName);
+    }
+    
+    /**
+     * return rights that can be granted on target with the specified targetType
+     *     e.g. renameAccount can be granted on a domain target
+     *     
+     * Note: this is not the same as "rights applicable on targetType"
+     *     e.g. renameAccount is applicable on account entries. 
+     * 
+     * @param targetType
+     * @return
+     * @throws ServiceException
+     */
+    public static List<Right> getAllRights(String targetType) throws ServiceException {
+        Map<String, AdminRight> allRights = RightManager.getInstance().getAllAdminRights();
+        
+        List<Right> rights = new ArrayList<Right>();
+        
+        TargetType tt = (targetType==null)? null : TargetType.fromString(targetType);
+        for (Map.Entry<String, AdminRight> right : allRights.entrySet()) {
+            Right r = right.getValue();
+            if (tt == null || tt.isRightGrantableOnTargetType(r)) {
+                rights.add(r);
+            }
+        }
+        return rights;
+    }
     
     public static boolean checkRight(Provisioning prov,
                                      String targetType, TargetBy targetBy, String target,
                                      GranteeBy granteeBy, String grantee,
-                                     String right,
+                                     String right, Map<String, Object> attrs,
                                      AccessManager.ViaGrant via) throws ServiceException {
         
         // target
@@ -326,8 +354,18 @@ public class RightCommand {
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        boolean canPerform = AccessManager.getInstance().canDo((Account)granteeEntry, targetEntry, r, true, false, via);
-        return canPerform;
+        if (r.getRightType() == Right.RightType.setAttrs) {
+            /*
+            if (attrs == null || attrs.isEmpty())
+                throw ServiceException.INVALID_REQUEST("attr map is required for checking a setAttrs right: " + r.getName(), null);
+            */
+        } else {
+            if (attrs != null && !attrs.isEmpty())
+                throw ServiceException.INVALID_REQUEST("attr map is not allowed for checking a non-setAttrs right: " + r.getName(), null);
+        }
+        
+        AccessManager am = AccessManager.getInstance();
+        return am.canDo((Account)granteeEntry, targetEntry, r, attrs, via);
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
@@ -409,7 +447,7 @@ public class RightCommand {
         RightUtil.revokeRight(prov, targetEntry, aces);
     }
 
-    public static Element rightToXML(Element parent, Right right) throws ServiceException {
+    public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts) throws ServiceException {
         Element eRight = parent.addElement(AdminConstants.E_RIGHT);
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
         eRight.addAttribute(AdminConstants.A_TYPE, right.getRightType().name());
@@ -425,12 +463,15 @@ public class RightCommand {
             AttrRight attrRight = (AttrRight)right;
             
             if (attrRight.allAttrs()) {
-                Set<String> attrs = attrRight.getAllAttrs();
-                for (String attr : attrs)
-                    eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
+                eAttrs.addAttribute(AdminConstants.A_ALL, true);
+                if (expandAllAtrts) {
+                    Set<String> attrs = attrRight.getAllAttrs();
+                    for (String attr : attrs)
+                        eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
+                }
             } else {
-                for (AttrRight.Attr attr :attrRight.getAttrs())
-                    eAttrs.addElement(attr.getAttrName());
+                for (String attrName :attrRight.getAttrs())
+                    eAttrs.addElement(attrName);
             }
         } else if (right.isComboRight()) {
             Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);
@@ -440,6 +481,15 @@ public class RightCommand {
         }
 
         return eRight;
+    }
+    
+    /*
+     * Hack.  We do *not* parse the SOAP response.   Instead we just get the right from 
+     * right manager.  The Right object is only used by zmprov, not by generic SOAP clients. 
+     */
+    public static Right XMLToRight(Element eRight) throws ServiceException  {
+        String rightName = eRight.getAttribute(AdminConstants.E_NAME);
+        return RightManager.getInstance().getRight(rightName);
     }
 
 }

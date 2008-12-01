@@ -134,7 +134,7 @@ public class RightManager {
         if (attrName == null)
             throw ServiceException.PARSE_ERROR("missing attr name", null);   
         
-        AttrRight.validateAttr(attrName, right.getTargetTypes());
+        right.validateAttr(attrName);
         right.addAttr(attrName);
     }
     
@@ -178,6 +178,11 @@ public class RightManager {
     
     private Right parseRight(Element eRight) throws ServiceException {
         String name = eRight.attributeValue(A_NAME);
+        
+        // system define rights cannot contain a ".".  "." is the separator for inline attr right
+        if (name.contains("."))
+            throw ServiceException.PARSE_ERROR("righ name cannot contain dot(.): " + name, null);
+        
         boolean userRight = getBooleanAttr(eRight, A_USER_RIGHT, false);
         
         // System.out.println("Parsing right " + "(" +  (userRight?"user":"admin") + ") " + name);
@@ -280,7 +285,10 @@ public class RightManager {
     }
     
     public Right getRight(String right) throws ServiceException {
-        return getRight(right, true);
+        if (InlineAttrRight.looksLikeOne(right))
+            return InlineAttrRight.newInlineAttrRight(right);
+        else
+            return getRight(right, true);
     }
     
     private Right getRight(String right, boolean mustFind) throws ServiceException {

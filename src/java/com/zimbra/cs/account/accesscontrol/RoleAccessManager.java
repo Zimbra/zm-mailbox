@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -10,6 +11,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -206,22 +208,58 @@ public class RoleAccessManager extends AccessManager {
         return false;
     }
     
-    private AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) throws ServiceException {
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
+        boolean allowed = false;
+        if (rightNeeded.isPresetRight()) {
+            allowed = canDo(grantee, target, rightNeeded, true, false, viaGrant);
+        
+        } else if (rightNeeded.isAttrRight()) {
+            AttrRight attrRight = (AttrRight)rightNeeded;
+            if (rightNeeded.getRightType() == Right.RightType.getAttrs) {
+                Set<String> attrsToGet = attrRight.getAttrs();
+                allowed = canGetAttrs(grantee, target, attrsToGet);
+            } else {
+                if (attrs == null || attrs.isEmpty()) {
+                    // no attr/value map, just check if all attrs in the right are covered (constraints are not checked)
+                    Set<String> attrsToSet = attrRight.getAttrs();
+                    allowed = canSetAttrs(grantee, target, attrsToSet);
+                } else {
+                    // attr/value map is provided, check it (constraints are checked)
+                    allowed = canSetAttrs(grantee, target, attrs);
+                }
+            }
+            
+        } else if (rightNeeded.isComboRight()) {
+            throw ServiceException.FAILURE("checking right for combo right is not supported", null);
+            /*
+            ComboRight comboRight = (ComboRight)rightNeeded;
+            // check all directly.indirectly contained rights
+            for (Right presetRight : comboRight.getAllRights()) {
+                if (!canDo(grantee, target, presetRight, attrs, null))  // via is not set for combo right. maybe we should just get rid of via 
+                    return false;
+            }
+            */
+        }
+        
+        return allowed;
+    }
+    
+    private RightChecker.AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded) throws ServiceException {
         // Do NOT check for self.  If an admin auth as an admin and want to get/set  
         // his own attrs, he has to have the proper right to do so.
             
         // check ACL
-        return RightChecker.canAccessAttrs(grantee, target, rightNeeded, attrs);
+        return RightChecker.canAccessAttrs(grantee, target, rightNeeded);
     }
     
     @Override
-    public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
-        return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, attrs);
+    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded) throws ServiceException {
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS);
+        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
-
-        
+    
     @Override
-    public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
+    public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
         Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
         // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
         if (granteeAcct == null)
@@ -230,13 +268,15 @@ public class RoleAccessManager extends AccessManager {
         return canGetAttrs(granteeAcct, target, attrs);
     }
     
+    
     @Override
-    public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) throws ServiceException{
-        return canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, attrs);
+    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded) throws ServiceException {
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
     
     @Override
-    public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target,  Map<String, Object> attrs) throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
         Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
         // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
         if (granteeAcct == null)
@@ -244,6 +284,23 @@ public class RoleAccessManager extends AccessManager {
         
         return canSetAttrs(granteeAcct, target, attrs);
     }
+    
+    @Override
+    public boolean canSetAttrs(Account grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+        return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
+    }
+    
+    @Override
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
+        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
+        if (granteeAcct == null)
+            throw ServiceException.PERM_DENIED("cannot access attr");
+        
+        return canSetAttrs(granteeAcct, target, attrs);
+    }
+
     
     /**
      * @param args

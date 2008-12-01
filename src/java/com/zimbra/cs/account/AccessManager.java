@@ -121,101 +121,28 @@ public abstract class AccessManager {
         return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    
-    public static class AllowedAttrs {
-        public enum Result {
-            ALLOW_ALL,
-            DENY_ALL,
-            ALLOW_SOME;
-        }
-        
-        // canDo results
-        private Boolean mCanDo;
-        private String mOneOfDeniedAttrs = "";
-        
-        // attr results
-        private Result mResult;
-        private Set<String> mAllowSome;
-
-        
-        private AllowedAttrs(Result result, Set<String> allowSome) {
-            mResult = result;
-            mAllowSome = allowSome;
-            mCanDo = null;
-        }
-        
-        public void setCanDo(Boolean canDo) {
-            mCanDo = canDo;
-        }
-        
-        // for callsites setting canDo to false
-        public void setCanDo(Boolean canDo, String oneOfDeniedAttr) {
-            mCanDo = canDo;
-            mOneOfDeniedAttrs = oneOfDeniedAttr;
-        }
-
-        /**
-         * 
-         * @return Boolean.TRUE  - can do the get/set with the attrs map passed to the canGetAttrs/canSetAttrs method
-         *         Boolean.FALSE - cannot do the get/set with the attrs map passed to the canGetAttrs/canSetAttrs method
-         *         null          - if attrs map passed to canGetAttrs/canSetAttrs is null.
-         *                         callsite can pass null if it only wants the attr result(getResult(), getAllowed(), 
-         *                         getAllowedWithLimit()), and doesn't care the canDo result. 
-         */
-        public Boolean canDo() {
-            return mCanDo;
-        }
-        
-        /**
-         * Callsite can return the denied info to SOAP client and/or logs it if necessary.  or maybe we don't need this.
-         * 
-         * @return empty String if canDo() returns null or Boolean.TRUE
-         *         otherwise the first attribute name encountered in the attr map that is not covered by the .
-         */
-        public String oneOfDeniedAttrs() {
-            return mOneOfDeniedAttrs;
-        }
-        
-        public Result getResult() {
-            return mResult;
-        }
-        
-        public Set<String> getAllowed() {
-            return mAllowSome;
-        }
-        
-        public String dump() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("result = " + mResult + "\n");
-            
-            if (mResult == Result.ALLOW_SOME) {
-                sb.append("allowed = (");
-                for (String a : mAllowSome)
-                    sb.append(a + " ");
-                sb.append(")\n");
-            }
-            
-            return sb.toString();
-        }
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
     }
     
-    public static final AllowedAttrs ALLOW_ALL_ATTRS() {
-        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null);
-    }
+    /*
+     * returns if grantee can get attrs on target
+     */
+    public abstract boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException;
+    public abstract boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException;
     
-    public static final AllowedAttrs DENY_ALL_ATTRS() {
-        return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null);
-    }
+    /*
+     * returns if grantee can set attrs on target, constraints are NOT checked
+     */
+    public abstract boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException;
     
-    public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome) {
-        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
-    }
+    /*
+     * returns if grantee can set attrs to desired values on target, constraints DOES get checked.
+     */
+    public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException;
     
-    public abstract AllowedAttrs canGetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException;
-    public abstract AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException;
-    public abstract AllowedAttrs canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException;
-    public abstract AllowedAttrs canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException;
-
 
 
     /**

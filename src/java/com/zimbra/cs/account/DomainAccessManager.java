@@ -250,23 +250,34 @@ public class DomainAccessManager extends AccessManager {
     }
 
     @Override
-    public AllowedAttrs canGetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS();
+    public boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException {
+        return false;
     }
     
     @Override
-    public AllowedAttrs canGetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS();
+    public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
+        return false;
     }
     
     @Override
-    public AllowedAttrs canSetAttrs(Account grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS();
+    public boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException {
+        return false;
     }
     
     @Override
-    public AllowedAttrs canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) {
-        return DENY_ALL_ATTRS();
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
+        return false;
     }
+    
+    @Override
+    public boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException {
+        return false;
+    }
+    
+    @Override
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
+        return false;
+    }
+
     
 }

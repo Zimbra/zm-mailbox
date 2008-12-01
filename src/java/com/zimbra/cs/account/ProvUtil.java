@@ -67,6 +67,8 @@ import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.AttrRight;
+import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -315,7 +317,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
-        GET_ALL_RIGHTS("getAllRights", "gar", "[-v]", Category.RIGHT, 0, 1),
+        GET_ALL_RIGHTS("getAllRights", "gar", "[-v] {target-type}", Category.RIGHT, 0, 2),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
         GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
@@ -1552,10 +1554,28 @@ public class ProvUtil implements DebugListener {
     }
     
     private void doGetAllRights(String[] args) throws ServiceException {
-        boolean verbose = args.length > 1 && args[1].equals("-v");
-        List allRights = mProv.getAllRights();
-        for (Iterator it=allRights.iterator(); it.hasNext(); ) {
-            Right right = (Right) it.next();
+        boolean verbose = false;
+        String targetType = null;
+        
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v"))
+                verbose = true;
+            else {
+                if (targetType == null)
+                    targetType = arg;
+                else {
+                    System.out.println("invalid arg: " + arg + ", already specified target type: " + targetType);
+                    usage();
+                    return;
+                }
+            }
+            i++;
+        }
+         
+        List<Right> allRights = mProv.getAllRights(targetType, false);
+        for (Right right : allRights) {
             if (verbose)
                 dumpRight(right);
             else 
@@ -1564,8 +1584,34 @@ public class ProvUtil implements DebugListener {
     } 
     
     private void dumpRight(Right right) throws ServiceException {
-        System.out.println("# name "+right.getName());
-        System.out.println("TODO");
+        String indent = "    ";
+        String indent2 = "        ";
+        
+        System.out.println();
+        System.out.println("------------------------------");
+        
+        System.out.println(right.getName());
+        System.out.println(indent + "   description: " + right.getDesc());
+        System.out.println(indent + "    right type: " + right.getRightType().name());
+        System.out.println(indent + "target type(s): " + right.getRightType().name());
+        
+        if (right.isAttrRight()) {
+            AttrRight attrRight = (AttrRight)right;
+            System.out.println();
+            System.out.println(indent + "attributes:");
+            if (attrRight.allAttrs()) {
+                System.out.println(indent2 + "all attributes");
+            } else {
+                for (String attrName : attrRight.getAttrs())
+                    System.out.println(indent2 + attrName);
+            }
+        } else if (right.isComboRight()) {
+            ComboRight comboRight = (ComboRight)right;
+            System.out.println();
+            System.out.println(indent + "rights:");
+            for (Right r : comboRight.getRights())
+                System.out.println(indent2 + r.getName());
+        }
         System.out.println();
     }
 
@@ -1978,7 +2024,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private Right lookupRight(String rightName) throws ServiceException {
-        Right r = mProv.getRight(rightName);
+        Right r = mProv.getRight(rightName, false);
         if (r == null)
             throw AccountServiceException.NO_SUCH_RIGHT(rightName);
         else
@@ -2542,13 +2588,15 @@ public class ProvUtil implements DebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgs(ra, false);
         
+        Map<String, Object> attrs = getMap(args, ra.mCurPos);
+        
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
     
         AccessManager.ViaGrant via = new AccessManager.ViaGrant();
         boolean allow = mProv.checkRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
                                          granteeBy, ra.mGranteeIdOrName, 
-                                         ra.mRight, via);
+                                         ra.mRight, attrs, via);
         
         System.out.println(allow? "ALLOWED" : "DENIED");
         if (via.available()) {

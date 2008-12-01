@@ -10,7 +10,6 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
@@ -19,17 +18,20 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightChecker;
+import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 
 public class TestACLAttrRight extends TestACL {
     
     
-    static final Right ATTR_RIGHT_GET_ALL   = AdminRight.R_getAccount;
-    static final Right ATTR_RIGHT_GET_SOME  = AdminRight.R_viewDummy;
+    static Right ATTR_RIGHT_GET_ALL;
+    static Right ATTR_RIGHT_GET_SOME;
     
-    static final Right ATTR_RIGHT_SET_ALL  = AdminRight.R_modifyAccount;
-    static final Right ATTR_RIGHT_SET_SOME = AdminRight.R_configureQuota;
+    static Right ATTR_RIGHT_SET_ALL;
+    static Right ATTR_RIGHT_SET_SOME;
     
     // attrs covered by the ATTR_RIGHT_SOME right
     static final Map<String, Object> ATTRS_SOME;
@@ -40,6 +42,7 @@ public class TestACLAttrRight extends TestACL {
     static final Map<String, Object> ATTRS_SOME_MORE;
     
     static {
+        
         Set<String> EMPTY_SET = new HashSet<String>();
         
         ATTRS_SOME = new HashMap<String, Object>();
@@ -56,14 +59,20 @@ public class TestACLAttrRight extends TestACL {
         Set<String> ALL_ACCOUNT_ATTRS = null;
         try {
             ALL_ACCOUNT_ATTRS = AttributeManager.getInstance().getAttrsInClass(AttributeClass.account);
+            
+            ATTR_RIGHT_GET_ALL   = RightManager.getInstance().getRight("getAccount");
+            ATTR_RIGHT_GET_SOME  = RightManager.getInstance().getRight("viewDummy");
+            ATTR_RIGHT_SET_ALL  = RightManager.getInstance().getRight("modifyAccount");
+            ATTR_RIGHT_SET_SOME = RightManager.getInstance().getRight("configureQuota");
+            
         } catch (ServiceException e) {
             System.exit(1);
         }
         Set<String> ALL_ACCOUNT_ATTRS_MINUS_SOME = SetUtil.subtract(ALL_ACCOUNT_ATTRS, ATTRS_SOME.keySet());
         
-        EXPECTED_SOME = AccessManager.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
-        EXPECTED_SOME_EMPTY = AccessManager.ALLOW_SOME_ATTRS(EMPTY_SET);
-        EXPECTED_ALL_MINUS_SOME = AccessManager.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME);
+        EXPECTED_SOME = RightChecker.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
+        EXPECTED_SOME_EMPTY = RightChecker.ALLOW_SOME_ATTRS(EMPTY_SET);
+        EXPECTED_ALL_MINUS_SOME = RightChecker.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME);
     }
     
     
@@ -94,9 +103,7 @@ public class TestACLAttrRight extends TestACL {
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
         grantRight(TargetType.account, TA, grants);
         
-        Map<String, Object> attrs = ATTRS_SOME;
-        
-        verify(GA, TA, attrs, getOrSet, expected);
+        verify(GA, TA, getOrSet, expected);
     }
 
     
@@ -126,9 +133,7 @@ public class TestACLAttrRight extends TestACL {
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
         grantRight(TargetType.account, TA, grants);
         
-        Map<String, Object> attrs = ATTRS_SOME;
-        
-        verify(GA, TA, attrs, getOrSet, expected);
+        verify(GA, TA, getOrSet, expected);
     }
 
     
@@ -164,12 +169,7 @@ public class TestACLAttrRight extends TestACL {
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
         grantRight(TargetType.account, TA, grants);
         
-        /*
-         * attrs wanted
-         */
-        Map<String, Object> attrs = ATTRS_SOME;
-        
-        verify(GA, TA, attrs, getOrSet, expected);
+        verify(GA, TA, getOrSet, expected);
     }
     
 
@@ -221,12 +221,7 @@ public class TestACLAttrRight extends TestACL {
         grantRight(TargetType.account, TA, closerGrant);
         grantRight(TargetType.account, TA, fartherGrant);
         
-        /*
-         * attrs wanted
-         */
-        Map<String, Object> attrs = ATTRS_SOME;
-        
-        verify(GA, TA, attrs, getOrSet, expected);
+        verify(GA, TA, getOrSet, expected);
     }
 
     
@@ -238,46 +233,46 @@ public class TestACLAttrRight extends TestACL {
     }
     
     public void testOneGrantAll() throws Exception {
-        oneGrantAll(ALLOW, SET, AccessManager.ALLOW_ALL_ATTRS());
-        oneGrantAll(DENY,  SET, AccessManager.DENY_ALL_ATTRS());
-        oneGrantAll(ALLOW, GET, AccessManager.ALLOW_ALL_ATTRS());
-        oneGrantAll(DENY,  GET, AccessManager.DENY_ALL_ATTRS());
+        oneGrantAll(ALLOW, SET, RightChecker.ALLOW_ALL_ATTRS());
+        oneGrantAll(DENY,  SET, RightChecker.DENY_ALL_ATTRS());
+        oneGrantAll(ALLOW, GET, RightChecker.ALLOW_ALL_ATTRS());
+        oneGrantAll(DENY,  GET, RightChecker.DENY_ALL_ATTRS());
     }
     
     public void testTwoGrantsSameLevel() throws Exception {
-        someAllSameLevel(ALLOW, ALLOW, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllSameLevel(ALLOW, ALLOW, SET, RightChecker.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, SET, EXPECTED_ALL_MINUS_SOME);
-        someAllSameLevel(ALLOW, DENY,  SET, AccessManager.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  SET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(ALLOW, DENY,  SET, RightChecker.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  SET, RightChecker.DENY_ALL_ATTRS());
 
-        someAllSameLevel(ALLOW, ALLOW, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllSameLevel(ALLOW, ALLOW, GET, RightChecker.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, GET, EXPECTED_ALL_MINUS_SOME);
-        someAllSameLevel(ALLOW, DENY,  GET, AccessManager.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  GET, AccessManager.DENY_ALL_ATTRS());
+        someAllSameLevel(ALLOW, DENY,  GET, RightChecker.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  GET, RightChecker.DENY_ALL_ATTRS());
         
     }
 
     public void testTwoGrantsDiffLevel() throws Exception {
         //               some   all    some-is-closer
-        someAllDiffLevel(ALLOW, ALLOW, true, SET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, true, SET, RightChecker.ALLOW_ALL_ATTRS());
         someAllDiffLevel(DENY,  ALLOW, true, SET, EXPECTED_ALL_MINUS_SOME);
         someAllDiffLevel(ALLOW, DENY,  true, SET, EXPECTED_SOME);
-        someAllDiffLevel(DENY,  DENY,  true, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  true, SET, RightChecker.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, false, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, false, SET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  false, SET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  false, SET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, false, SET, RightChecker.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, false, SET, RightChecker.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  false, SET, RightChecker.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  false, SET, RightChecker.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, true, GET, AccessManager.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, true, GET, RightChecker.ALLOW_ALL_ATTRS());
         someAllDiffLevel(DENY,  ALLOW, true, GET, EXPECTED_ALL_MINUS_SOME);
         someAllDiffLevel(ALLOW, DENY,  true, GET, EXPECTED_SOME);
-        someAllDiffLevel(DENY,  DENY,  true, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  true, GET, RightChecker.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, false, GET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, false, GET, AccessManager.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  false, GET, AccessManager.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  false, GET, AccessManager.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, false, GET, RightChecker.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, false, GET, RightChecker.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  false, GET, RightChecker.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  false, GET, RightChecker.DENY_ALL_ATTRS());
     }
     
     // TODO: add test for adding/substracting attrs between two allow/deny SOME rights 

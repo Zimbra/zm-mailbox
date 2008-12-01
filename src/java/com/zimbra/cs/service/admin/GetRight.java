@@ -18,6 +18,7 @@ public Element handle(Element request, Map<String, Object> context) throws Servi
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
+        boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATRTS, false);
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         // String rightBy = eRight.getAttribute(AdminConstants.A_BY);
         String value = eRight.getText();
@@ -28,7 +29,7 @@ public Element handle(Element request, Map<String, Object> context) throws Servi
             throw AccountServiceException.NO_SUCH_RIGHT(value);
         
         Element response = zsc.createElement(AdminConstants.GET_RIGHT_RESPONSE);
-        RightCommand.rightToXML(response, right);
+        RightCommand.rightToXML(response, right, expandAllAtrts);
 
         return response;
     }

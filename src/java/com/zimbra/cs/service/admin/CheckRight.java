@@ -73,11 +73,14 @@ public class CheckRight extends RightDocumentHandler {
         String right = eRight.getText();
         boolean deny = eRight.getAttributeBool(MailConstants.A_DENY, false);
         
+        Element eAttrs = request.getOptionalElement(AdminConstants.E_ATTRS);
+        Map<String, Object> attrs = (eAttrs==null)? null : AdminService.getAttrs(request);
+        
         ViaGrant via = new ViaGrant();
         boolean result = RightCommand.checkRight(Provisioning.getInstance(),
                                                  targetType, targetBy, target,
                                                  granteeBy, grantee,
-                                                 right,
+                                                 right, attrs,
                                                  via);
         
         Element resp = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);

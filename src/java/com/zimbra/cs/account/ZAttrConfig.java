@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081125-2131 */
+    /* build: 5.0 pshao 20081201-1302 */
 
     /**
      * Zimbra access control list
@@ -3533,6 +3533,140 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetComponentAvailable(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraComponentAvailable, "");
+        return attrs;
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @return zimbraConstraint, or ampty array if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public String[] getConstraint() {
+        return getMultiAttr(Provisioning.A_zimbraConstraint);
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param zimbraConstraint new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void setConstraint(String[] zimbraConstraint) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConstraint, zimbraConstraint);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param zimbraConstraint new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public Map<String,Object> setConstraint(String[] zimbraConstraint, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConstraint, zimbraConstraint);
+        return attrs;
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param zimbraConstraint new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void addConstraint(String zimbraConstraint) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConstraint, zimbraConstraint);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param zimbraConstraint new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public Map<String,Object> addConstraint(String zimbraConstraint, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConstraint, zimbraConstraint);
+        return attrs;
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param zimbraConstraint existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void removeConstraint(String zimbraConstraint) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConstraint, zimbraConstraint);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param zimbraConstraint existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public Map<String,Object> removeConstraint(String zimbraConstraint, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConstraint, zimbraConstraint);
+        return attrs;
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public void unsetConstraint() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConstraint, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * attribute constraints TODO: fill all the constraints
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=767)
+    public Map<String,Object> unsetConstraint(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConstraint, "");
         return attrs;
     }
 

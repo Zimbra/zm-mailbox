@@ -21,7 +21,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -31,11 +30,16 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightChecker;
+import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -66,14 +70,15 @@ public abstract class TestACL extends TestCase {
     protected static final Right USER_RIGHT = UserRight.R_viewFreeBusy;
     
     // account right
-    protected static final Right ADMIN_RIGHT_ACCOUNT           = AdminRight.R_renameAccount;
-    protected static final Right ADMIN_RIGHT_CALENDAR_RESOURCE = AdminRight.R_renameCalendarResource;
-    protected static final Right ADMIN_RIGHT_CONFIG            = AdminRight.R_testGlobalConfigRemoveMe;protected static final Right ADMIN_RIGHT_COS               = AdminRight.R_renameCos;
-    protected static final Right ADMIN_RIGHT_DISTRIBUTION_LIST = AdminRight.R_renameDistributionList;
-    protected static final Right ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
-    protected static final Right ADMIN_RIGHT_GLOBALGRANT       = AdminRight.R_testGlobalGrantRemoveMe;
-    protected static final Right ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
-    protected static final Right ADMIN_RIGHT_ZIMLET            = AdminRight.R_deleteZimlet;
+    protected static Right ADMIN_RIGHT_ACCOUNT;
+    protected static Right ADMIN_RIGHT_CALENDAR_RESOURCE;
+    protected static Right ADMIN_RIGHT_CONFIG;
+    protected static Right ADMIN_RIGHT_COS;
+    protected static Right ADMIN_RIGHT_DISTRIBUTION_LIST;
+    protected static Right ADMIN_RIGHT_DOMAIN;
+    protected static Right ADMIN_RIGHT_GLOBALGRANT;
+    protected static Right ADMIN_RIGHT_SERVER;
+    protected static Right ADMIN_RIGHT_ZIMLET;
     
     static {
         
@@ -84,6 +89,18 @@ public abstract class TestACL extends TestCase {
         try {
             // create a domain
             Domain domain = mProv.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
+            
+            // setup rights
+            ADMIN_RIGHT_ACCOUNT           = AdminRight.R_renameAccount;
+            ADMIN_RIGHT_CALENDAR_RESOURCE = AdminRight.R_renameCalendarResource;
+            ADMIN_RIGHT_CONFIG            = RightManager.getInstance().getRight("testGlobalConfigRemoveMe");
+            ADMIN_RIGHT_COS               = AdminRight.R_renameCos;
+            ADMIN_RIGHT_DISTRIBUTION_LIST = AdminRight.R_renameDistributionList;
+            ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
+            ADMIN_RIGHT_GLOBALGRANT       = RightManager.getInstance().getRight("testGlobalGrantRemoveMe");
+            ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
+            ADMIN_RIGHT_ZIMLET            = AdminRight.R_deleteZimlet;
+            
         } catch (ServiceException e) {
             e.printStackTrace();
             fail();
@@ -586,16 +603,24 @@ public abstract class TestACL extends TestCase {
         }
     }
     
-    protected void verify(Account grantee, Entry target, Map<String, Object> attrs, GetOrSet getOrSet, AllowedAttrs expected) {
+    protected void verify(Account grantee, Entry target, GetOrSet getOrSet, AllowedAttrs expected) {
         try {
+            // call RightChecker directly instead of mAM, we want to verify the interim result.
             AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
-                                            mAM.canGetAttrs(grantee, target, attrs) :
-                                            mAM.canSetAttrs(grantee, target, attrs);
+                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS) :
+                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
             // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
             assertEquals(expected, allowedAttrs);
         } catch (ServiceException e) {
             fail();
         }
+        
+
+    }
+        
+    protected void verify(Account grantee, Entry target, Right right, Map<String, Object> attrs, AllowOrDeny expected) throws ServiceException {
+        boolean actual = mAM.canDo(grantee, target, right, attrs, null);
+        assertEquals(expected.allow(), actual);
     }
     
        
@@ -647,7 +672,6 @@ public abstract class TestACL extends TestCase {
         
         if (mAM instanceof RoleAccessManager) {
             TestUtil.runTest(TestACLAttrRight.class);
-            TestUtil.runTest(TestACLComboRight.class);
             TestUtil.runTest(TestACLRight.class);
         }
     }

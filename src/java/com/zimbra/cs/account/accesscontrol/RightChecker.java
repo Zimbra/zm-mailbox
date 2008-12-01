@@ -15,11 +15,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.AccessManager.AllowedAttrs;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AttributeCardinality;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
@@ -28,12 +25,64 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.Server;
 
 public class RightChecker {
 
     private static final Log sLog = LogFactory.getLog(RightChecker.class);
+    
+    // public only for unittest
+    public static class AllowedAttrs {
+        public enum Result {
+            ALLOW_ALL,
+            DENY_ALL,
+            ALLOW_SOME;
+        }
+        
+        private Result mResult;
+        private Set<String> mAllowSome;
+
+        
+        private AllowedAttrs(Result result, Set<String> allowSome) {
+            mResult = result;
+            mAllowSome = allowSome;
+        }
+        
+        public Result getResult() {
+            return mResult;
+        }
+        
+        public Set<String> getAllowed() {
+            return mAllowSome;
+        }
+        
+        public String dump() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("result = " + mResult + "\n");
+            
+            if (mResult == Result.ALLOW_SOME) {
+                sb.append("allowed = (");
+                for (String a : mAllowSome)
+                    sb.append(a + " ");
+                sb.append(")\n");
+            }
+            
+            return sb.toString();
+        }
+    }
+    
+    public static final AllowedAttrs ALLOW_ALL_ATTRS() {
+        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null);
+    }
+    
+    public static final AllowedAttrs DENY_ALL_ATTRS() {
+        return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null);
+    }
+    
+    public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome) {
+        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
+    }
+    
     
     private static class SeenRight {
         private boolean mSeenRight;
@@ -301,7 +350,8 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    static AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) throws ServiceException {
+    // public only for unittest
+    public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded) throws ServiceException {
         if (rightNeeded != AdminRight.R_PSEUDO_GET_ATTRS && rightNeeded != AdminRight.R_PSEUDO_SET_ATTRS)
             throw ServiceException.FAILURE("internal error", null); 
         
@@ -369,7 +419,7 @@ public class RightChecker {
             }
         }
         
-        // todo, log result from the collectin phase
+        // todo, log result from the collecting phase
         
         //
         // computing phase
@@ -393,27 +443,27 @@ public class RightChecker {
                         allowSome.remove(attr);
                 }
             }
-            result = AccessManager.ALLOW_SOME_ATTRS(allowSome.keySet());
+            result = ALLOW_SOME_ATTRS(allowSome.keySet());
         }
         
-        // computeConDo(result, target, rightNeeded, attrs);
+        // computeCanDo(result, target, rightNeeded, attrs);
         return result;
 
     }
     
     private static AllowedAttrs processDenyAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, AttributeClass klass) throws ServiceException {
         if (allowSome.isEmpty())
-            return AccessManager.DENY_ALL_ATTRS();
+            return DENY_ALL_ATTRS();
         else {
             Set<String> allowed = allowSome.keySet();
-            return AccessManager.ALLOW_SOME_ATTRS(allowed);
+            return ALLOW_SOME_ATTRS(allowed);
         }
     }
 
     private static AllowedAttrs processAllowAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, AttributeClass klass) throws ServiceException {
         
         if (denySome.isEmpty()) {
-            return AccessManager.ALLOW_ALL_ATTRS();
+            return ALLOW_ALL_ATTRS();
         } else {
             // get all attrs that can appear on the target entry
             Set<String> allowed = new HashSet<String>();
@@ -422,7 +472,7 @@ public class RightChecker {
             // remove denied from all
             for (String d : denySome.keySet())
                 allowed.remove(d);
-            return AccessManager.ALLOW_SOME_ATTRS(allowed);
+            return ALLOW_SOME_ATTRS(allowed);
         }
     }
     
@@ -493,13 +543,13 @@ public class RightChecker {
                 return CollectAttrsResult.ALLOW_ALL;
         } else {
             // some attrs
-            for (AttrRight.Attr attr : attrRight.getAttrs()) {
+            for (String attrName : attrRight.getAttrs()) {
                 if (ace.deny()) {
                     if (attrRight.getRightType() == rightTypeNeeded)
-                        denySome.put(attr.getAttrName(), relativity);  // right type granted === right type needed
+                        denySome.put(attrName, relativity);  // right type granted === right type needed
                     // else just ignore the grant
                 } else
-                    allowSome.put(attr.getAttrName(), relativity);
+                    allowSome.put(attrName, relativity);
             }
         }
         return CollectAttrsResult.SOME;
@@ -569,10 +619,10 @@ public class RightChecker {
         Set<Right> presetRights = getEffectivePresetRights(grantee, target);
         
         // get effective setAttrs rights
-        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, null);
+        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
         
         // get effective getAttrs rights
-        AllowedAttrs allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, null);
+        AllowedAttrs allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS);
         
         // finally, populate our result 
         
@@ -584,20 +634,20 @@ public class RightChecker {
         result.setPresetRights(setToSortedList(rights));
         
         // setAttrs
-        if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL) {
+        if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
             result.setCanSetAllAttrs();
             if (expandSetAttrs)
                 result.setCanSetAttrs(expandAttrs(target));
-        } else if (allowSetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
+        } else if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
             result.setCanSetAttrs(fillDefault(target, allowSetAttrs));
         }
         
         // getAttrs
-        if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_ALL) {
+        if (allowGetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
             result.setCanGetAllAttrs();
             if (expandGetAttrs)
                 result.setCanGetAttrs(expandAttrs(target));
-        } else if (allowGetAttrs.getResult() == AccessManager.AllowedAttrs.Result.ALLOW_SOME) {
+        } else if (allowGetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
             result.setCanGetAttrs(fillDefault(target, allowGetAttrs));
         }
         
@@ -785,70 +835,80 @@ public class RightChecker {
         return granteeIds;
     }
     
-
-    /*
-     * if we set canDo to false, we must give it an attribute name if there is one in attrs
-     */
-    /*
-    private static void computeCanDo(AllowedAttrs result, Entry target, AdminRight rightNeeded, Map<String, Object> attrs) {
+    
+    static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded) throws ServiceException {
         
-        if (attrs == null) {
-            // caller just wants to get the allowed attr set, doesn't really care about the canDo result, so we set it to 
-            // null and don't bother computing it, even when the attr result is allow/deny all.
-            result.setCanDo(null);
-            
-        } else if (result.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
-            result.setCanDo(Boolean.TRUE);
-            
-        } else if (result.getResult() == AllowedAttrs.Result.DENY_ALL) {
-            // pick any attr from the requested attrs
-            String deniedAttr = "";
-            for (String a : attrs.keySet()) {
-                deniedAttr = a;
-                break;  // got one, break
-            }
-            result.setCanDo(Boolean.FALSE, deniedAttr);
-            
-        } else {
-            // allow some, check if result can accommodate rightNeeded/attrs
-            Set<String> allowed = result.getAllowed();
-            if (rightNeeded.getRightType() == Right.RightType.getAttrs) {
-                // get
-                for (String a : attrs.keySet()) {
-                    if (!allowed.contains(a)) {
-                        result.setCanDo(Boolean.FALSE, a);
-                        return;
-                    }
-                }
-                result.setCanDo(Boolean.TRUE);
-                
-            } else {
-                // set
-                Set<String> allowedWithLimit = result.getAllowedWithLimit();
-                for (String a : attrs.keySet()) {
-                    if (!allowed.contains(a)) {
-                        result.setCanDo(Boolean.FALSE, a);
-                        return;
-                    } 
-                    // allowed, see if the value it's setting to is within the inherited limit
-                    if (allowedWithLimit.contains(a)) {
-                        if (!valueWithinLimit(target, a, attrs.get(a))) {
-                            result.setCanDo(Boolean.FALSE, a);
-                            return;
-                        }
-                    }
-                }
-                result.setCanDo(Boolean.TRUE);
+        // regardless what attrs say, allow all attrs
+        if (attrsAllowed.getResult() == AllowedAttrs.Result.ALLOW_ALL)
+            return true;
+        else if (attrsAllowed.getResult() == AllowedAttrs.Result.DENY_ALL)
+            return false;
+        
+        //
+        // allow some
+        //
+        
+        // need all, nope
+        if (attrsNeeded == null)
+            return false;
+        
+        // see if all needed are allowed
+        Set<String> allowed = attrsAllowed.getAllowed();
+        for (String attr : attrsNeeded) {
+            if (!allowed.contains(attr))
+                return false;
+        }
+        return true;
+    }
+
+    
+    /**
+     * Given a result from canAccessAttrsfrom, returns if setting attrs to values is allowed.
+     * 
+     * This method DOES check for constraints.
+     * 
+     * @param attrsAllowed result from canAccessAttrs
+     * @param attrsNeeded attrs needed to be set.  Cannot be null, must specify which attrs/values to set
+     * @return
+     */
+    static boolean canSetAttrs(AllowedAttrs attrsAllowed, Account grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
+        
+        if (attrsNeeded == null)
+            throw ServiceException.FAILURE("internal error", null);
+        
+        if (attrsAllowed.getResult() == AllowedAttrs.Result.DENY_ALL)
+            return false;
+        
+        Entry constraintEntry = AttributeConstraint.getConstraintEntry(target);
+        Map<String, AttributeConstraint> constraints = (constraintEntry==null)?null:AttributeConstraint.getConstraint(constraintEntry);
+        boolean hasConstraints = (constraints != null && !constraints.isEmpty());
+        
+        if (hasConstraints) {
+            // see if the grantee can set zimbraConstraint on the constraint entry
+            // if so, the grantee can set attrs to any value (not restricted by the constraints)
+            AllowedAttrs allowedAttrsOnConstraintEntry = canAccessAttrs(grantee, constraintEntry, AdminRight.R_PSEUDO_SET_ATTRS);
+            if (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_ALL ||
+                (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_SOME &&
+                 allowedAttrsOnConstraintEntry.getAllowed().contains(Provisioning.A_zimbraConstraint)))
+                hasConstraints = false;
+        }
+        
+        boolean allowAll = (attrsAllowed.getResult() == AllowedAttrs.Result.ALLOW_ALL);
+        Set<String> allowed = attrsAllowed.getAllowed();
+        
+        for (Map.Entry<String, Object> attr : attrsNeeded.entrySet()) {
+            if (!allowAll && !allowed.contains(attr.getKey()))
+                return false;
+                  
+            if (hasConstraints) {
+                if (AttributeConstraint.violateConstraint(constraints, attr.getKey(), attr.getValue()))
+                    return false;
             }
         }
+        return true;
     }
-    
-    private static boolean valueWithinLimit(Entry target, String attrName, Object value) {
-        return true; // TODO 
-    }
-    */
-    
 
+    
     /**
      * @param args
      */

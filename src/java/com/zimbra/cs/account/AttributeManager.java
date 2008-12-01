@@ -752,6 +752,14 @@ public class AttributeManager {
     	} else
     	    throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
     }
+    
+    public AttributeType getAttributeType(String attr) throws ServiceException {
+        AttributeInfo ai = mAttrs.get(attr.toLowerCase());
+        if (ai != null)
+            return ai.getType();
+        else
+            throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
+    }
 
     private boolean hasFlag(AttributeFlag flag, String attr) {
         return mFlagToAttrsMap.get(flag).contains(attr);
