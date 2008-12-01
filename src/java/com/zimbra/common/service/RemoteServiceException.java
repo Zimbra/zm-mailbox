@@ -1,16 +1,38 @@
 package com.zimbra.common.service;
 
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.security.cert.CertificateException;
+
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
+
+import org.apache.commons.httpclient.ConnectTimeoutException;
+import org.apache.commons.httpclient.NoHttpResponseException;
+import org.apache.commons.httpclient.ProtocolException;
+
+@SuppressWarnings("serial")
 public class RemoteServiceException extends ServiceException {
 
-    public static final String CLIENT_ERROR       = "remote.CLIENT_ERROR";
-    public static final String IO_ERROR           = "remote.IO_ERROR";
-    public static final String SSLCERT_MISMATCH   = "remote.SSLCERT_MISMATCH";
-    public static final String SSLCERT_ERROR      = "remote.SSLCERT_ERROR";
-    public static final String SSLCERT_NOT_ACCEPTED      = "remote.SSLCERT_NOT_ACCEPTED";
-    public static final String SSL_HANDSHAKE      = "remote.SSL_HANDSHAKE";
-    public static final String AUTH_FAILURE       = "remote.AUTH_FAILURE";
-    public static final String SMTP_AUTH_FAILURE  = "remote.SMTP_AUTH_FAILURE";
-    public static final String SMTP_AUTH_REQUIRED = "remote.SMTP_AUTH_REQUIRED";
+    public static final String TIMEOUT              = "remote.TIMEOUT";
+    public static final String UNKNOWN_HOST         = "remote.UNKNOWN_HOST";
+    public static final String NOROUTE              = "remote.NOROUTE";
+    public static final String PROTOCOL_EXCEPTION   = "remote.PROTOCOL_EXCEPTION";
+    public static final String CONNECT_FAILURE      = "remote.CONNECT_FAILURE";
+    
+    public static final String SSLCERT_MISMATCH     = "remote.SSLCERT_MISMATCH";
+    public static final String SSLCERT_ERROR        = "remote.SSLCERT_ERROR";
+    public static final String SSLCERT_NOT_ACCEPTED = "remote.SSLCERT_NOT_ACCEPTED";
+    public static final String SSL_HANDSHAKE        = "remote.SSL_HANDSHAKE";
+    public static final String SSL_FAILURE          = "remote.SSL_FAILURE";
+    
+    public static final String AUTH_FAILURE         = "remote.AUTH_FAILURE";
+    public static final String SMTP_AUTH_FAILURE    = "remote.SMTP_AUTH_FAILURE";
+    public static final String SMTP_AUTH_REQUIRED   = "remote.SMTP_AUTH_REQUIRED";
 
     private RemoteServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -20,12 +42,24 @@ public class RemoteServiceException extends ServiceException {
         super(message, code, isReceiversFault, cause);
     }
 
-    public static RemoteServiceException CLIENT_ERROR(String msg, Throwable cause) {
-        return new RemoteServiceException(msg, CLIENT_ERROR, SENDERS_FAULT, cause);
+    public static RemoteServiceException TIMEOUT(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, TIMEOUT, SENDERS_FAULT, cause);
     }
     
-    public static RemoteServiceException IO_ERROR(String msg, Throwable cause) {
-        return new RemoteServiceException(msg, IO_ERROR, SENDERS_FAULT, cause);
+    public static RemoteServiceException UNKNOWN_HOST(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, UNKNOWN_HOST, SENDERS_FAULT, cause);
+    }
+    
+    public static RemoteServiceException NOROUTE(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, NOROUTE, SENDERS_FAULT, cause);
+    }
+    
+    public static RemoteServiceException PROTOCOL_EXCEPTION(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, PROTOCOL_EXCEPTION, SENDERS_FAULT, cause);
+    }
+    
+    public static RemoteServiceException CONNECT_FAILURE(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, CONNECT_FAILURE, SENDERS_FAULT, cause);
     }
     
     public static RemoteServiceException SSLCERT_MISMATCH(String msg, Throwable cause) {
@@ -44,6 +78,10 @@ public class RemoteServiceException extends ServiceException {
         return new RemoteServiceException(msg, SSL_HANDSHAKE, SENDERS_FAULT, cause);
     }
     
+    public static RemoteServiceException SSL_FAILURE(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, SSL_FAILURE, SENDERS_FAULT, cause);
+    }
+    
     public static RemoteServiceException AUTH_FAILURE(String msg, Throwable cause) {
         return new RemoteServiceException(msg, AUTH_FAILURE, SENDERS_FAULT, cause);
     }
@@ -54,5 +92,31 @@ public class RemoteServiceException extends ServiceException {
     
     public static RemoteServiceException SMTP_AUTH_REQUIRED(String msg, Throwable cause) {
         return new RemoteServiceException(msg, SMTP_AUTH_REQUIRED, SENDERS_FAULT, cause);
+    }
+    
+    public static void doConnectionFailures(String msg, Throwable t) throws RemoteServiceException {
+    	if (t instanceof SocketTimeoutException || t instanceof ConnectTimeoutException || t instanceof NoHttpResponseException)
+    		throw RemoteServiceException.TIMEOUT(msg, t);
+    	if (t instanceof UnknownHostException)
+    		throw RemoteServiceException.UNKNOWN_HOST(msg, t);
+    	if (t instanceof NoRouteToHostException)
+    		throw RemoteServiceException.NOROUTE(msg, t);
+    	if (t instanceof UnknownHostException)
+    		throw RemoteServiceException.UNKNOWN_HOST(msg, t);
+    	if (t instanceof ProtocolException)
+    		throw RemoteServiceException.PROTOCOL_EXCEPTION(msg, t);
+    	if (t instanceof ConnectException || t instanceof SocketException)
+    		throw RemoteServiceException.CONNECT_FAILURE(msg, t);
+    }
+    
+    public static void doSSLFailures(String msg, Throwable t) throws RemoteServiceException {
+        if (t instanceof CertificateException)
+    		throw RemoteServiceException.SSLCERT_ERROR(msg, t);
+        if (t instanceof SSLPeerUnverifiedException)
+        	throw RemoteServiceException.SSLCERT_MISMATCH(msg, t);
+    	if (t instanceof SSLHandshakeException)
+    		throw RemoteServiceException.SSL_HANDSHAKE(msg, t);
+        if (t instanceof SSLException)
+        	throw RemoteServiceException.SSL_FAILURE(msg, t);
     }
 }

@@ -35,12 +35,65 @@ import javax.net.ssl.TrustManager;
 public class CustomSSLSocketFactory extends SSLSocketFactory {
     private SSLSocketFactory factory;
     
-    public CustomSSLSocketFactory() throws GeneralSecurityException {
+    boolean verifyHostname = true;
+    
+    public CustomSSLSocketFactory(boolean verifyHostname)  throws GeneralSecurityException {
         SSLContext sslcontext = SSLContext.getInstance("TLS");
         sslcontext.init(null, new TrustManager[] { CustomTrustManager.getInstance() }, null);
         factory = sslcontext.getSocketFactory();
+        this.verifyHostname = verifyHostname;
     }
     
+    public CustomSSLSocketFactory() throws GeneralSecurityException {
+    	this(true);
+    }
+    
+    @Override
+    public Socket createSocket() throws IOException {
+    	//unfortunately javamail smtp still uses it
+    	return factory.createSocket();
+    }
+    
+    @Override
+    public Socket createSocket(InetAddress address, int port) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(address, port);
+    	if (verifyHostname)
+    		CustomSSLSocketUtil.checkCertificate(address.getHostName(), sslSocket);
+    	return sslSocket;
+    }
+    
+    @Override
+    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(address, port, localAddress, localPort);
+    	if (verifyHostname)
+    		CustomSSLSocketUtil.checkCertificate(address.getHostName(), sslSocket);
+    	return sslSocket;
+    }
+
+    @Override
+    public Socket createSocket(String host, int port) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port);
+    	if (verifyHostname)
+    		CustomSSLSocketUtil.checkCertificate(host, sslSocket);
+    	return sslSocket;
+    }
+    
+    @Override
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port, localHost, localPort);
+    	if (verifyHostname)
+    		CustomSSLSocketUtil.checkCertificate(host, sslSocket);
+    	return sslSocket;
+    }
+    
+    @Override
+    public Socket createSocket(Socket socket, String host, int port, boolean flag) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, host, port, flag);
+    	if (verifyHostname)
+    		CustomSSLSocketUtil.checkCertificate(host, sslSocket);
+    	return sslSocket;
+    }
+
     public static SocketFactory getDefault() {
     	try {
     		return new CustomSSLSocketFactory();
@@ -50,46 +103,12 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
     	}
     }
     
-    public Socket createSocket(Socket socket, String s, int i, boolean flag) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, s, i, flag);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-    
-    public Socket createSocket(InetAddress inaddr, int i, InetAddress inaddr1, int j) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(inaddr, i, inaddr1, j);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-    
-    public Socket createSocket(InetAddress inaddr, int i) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(inaddr, i);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-
-    public Socket createSocket(String s, int i, InetAddress inaddr, int j) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, i, inaddr, j);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-
-    public Socket createSocket(String s, int i) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, i);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-    
-    public Socket createSocket() throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket();
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
-    	return sslSocket;
-    }
-
+    @Override
     public String[] getDefaultCipherSuites() {
         return factory.getDefaultCipherSuites();
     }
 
+    @Override
     public String[] getSupportedCipherSuites() {
         return factory.getSupportedCipherSuites();
     }
