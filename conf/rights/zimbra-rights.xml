@@ -244,6 +244,13 @@
   <desc>rename server</desc>
 </right>
 
+<right name="viewMailQueue" type="preset" targetType="server">
+  <desc>view mail queues</desc>
+</right>
+
+<right name="manageMailQueue" type="preset" targetType="server">
+  <desc>take actions on mail queues</desc>
+</right>
 <!-- 
     cos rights
 -->
