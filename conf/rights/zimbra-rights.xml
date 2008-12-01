@@ -201,6 +201,50 @@
   </attrs>
 </right>
 
+﻿<!-- 
+    current domainAdminModifiable attrs in zimbra-attrs.xml
+ -->
+ <right name="getAccountFeatures" type="getAttrs" targetType="account,cos">
+  <desc>for unittest only, do we have a use case for this?</desc>
+  <attrs>
+    <a n="zimbraFeatureMailPriorityEnabled"/>
+    <a n="zimbraFeatureInstantNotify"/>
+    <a n="zimbraFeatureImapDataSourceEnabled"/>
+    <a n="zimbraFeaturePop3DataSourceEnabled"/>
+    <a n="zimbraFeatureIdentitiesEnabled"/>
+    <a n="zimbraFeatureMailForwardingEnabled"/>
+    <a n="zimbraFeatureContactsEnabled"/>
+    <a n="zimbraFeatureCalendarEnabled"/>
+    <a n="zimbraFeatureTasksEnabled"/>
+    <a n="zimbraFeatureTaggingEnabled"/>
+    <a n="zimbraFeatureAdvancedSearchEnabled"/>
+    <a n="zimbraFeatureSavedSearchesEnabled"/>
+    <a n="zimbraFeatureConversationsEnabled"/>
+    <a n="zimbraFeatureChangePasswordEnabled"/>
+    <a n="zimbraFeatureInitialSearchPreferenceEnabled"/>
+    <a n="zimbraFeatureFiltersEnabled"/>
+    <a n="zimbraFeatureGalEnabled"/>
+    <a n="zimbraFeatureSharingEnabled"/>
+    <a n="zimbraFeatureNotebookEnabled"/>
+    <a n="zimbraFeatureBriefcasesEnabled"/>
+    <a n="zimbraFeatureHtmlComposeEnabled"/>
+    <a n="zimbraFeatureGalAutoCompleteEnabled"/>
+    <a n="zimbraImapEnabled"/>
+    <a n="zimbraPop3Enabled"/>
+    <a n="zimbraFeatureSkinChangeEnabled"/>
+    <a n="zimbraFeatureOutOfOfficeReplyEnabled"/>
+    <a n="zimbraFeatureNewMailNotificationEnabled"/>
+    <a n="zimbraFeatureMailPollingIntervalPreferenceEnabled"/>
+    <a n="zimbraFeatureOptionsEnabled"/>
+    <a n="zimbraFeatureShortcutAliasesEnabled"/>
+    <a n="zimbraFeatureMailEnabled"/>
+    <a n="zimbraFeatureGroupCalendarEnabled"/>
+    <a n="zimbraFeatureIMEnabled"/>
+    <a n="zimbraFeatureFlaggingEnabled"/>
+  </attrs>
+</right>
+
+
 <right name="configureAdminUI" type="setAttrs" targetType="account">
   <desc>configure admin UI</desc>
   <attrs>
