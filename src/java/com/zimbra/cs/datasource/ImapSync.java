@@ -27,8 +27,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.DummySSLSocketFactory;
-import com.zimbra.common.util.CustomSSLSocketFactory;
+import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
@@ -36,7 +35,6 @@ import com.zimbra.common.util.StringUtil;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -90,15 +88,7 @@ public class ImapSync extends MailItemImport {
         }
         config.setTimeout(LC.javamail_imap_timeout.intValue());
         // config.setRawMode(true);
-        if (LC.data_source_trust_self_signed_certs.booleanValue()) {
-            config.setSSLSocketFactory(new DummySSLSocketFactory());
-        } else {
-        	try {
-        		config.setSSLSocketFactory(new CustomSSLSocketFactory());
-        	} catch (GeneralSecurityException x) {
-        		LOG.error(x);
-        	}
-        }
+        config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;
     }
 

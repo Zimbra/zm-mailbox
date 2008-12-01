@@ -58,8 +58,7 @@ import com.sun.mail.iap.CommandFailedException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.CustomSSLSocketFactory;
-import com.zimbra.common.util.DummySSLSocketFactory;
+import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
@@ -537,9 +536,7 @@ public class ImapImport extends MailItemImport {
         props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imaps.socketFactory.class",
-            LC.data_source_trust_self_signed_certs.booleanValue() ?
-                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.imaps.socketFactory.class", SSLSocketFactoryManager.getDefaultSSLSocketFactoryClassName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
         if (DEBUG) {
             props.setProperty("mail.debug", "true");

@@ -40,8 +40,7 @@ import com.sun.mail.pop3.POP3Store;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.CustomSSLSocketFactory;
-import com.zimbra.common.util.DummySSLSocketFactory;
+import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -146,9 +145,7 @@ public class Pop3Import extends MailItemImport {
         props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
         props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3s.socketFactory.class",
-            LC.data_source_trust_self_signed_certs.booleanValue() ?
-                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.pop3s.socketFactory.class", SSLSocketFactoryManager.getDefaultSSLSocketFactoryClassName());
         props.setProperty("mail.pop3s.socketFactory.fallback", "false");
         if (LC.javamail_pop3_enable_starttls.booleanValue()) {
             props.setProperty("mail.pop3.starttls.enable", "true");

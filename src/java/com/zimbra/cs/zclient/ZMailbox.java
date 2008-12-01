@@ -572,16 +572,10 @@ public class ZMailbox implements ToZJSONObject {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (Exception e) {
-            Throwable t = SystemUtil.getInnermostException(e);
-            if (t == null)
-            	t = e;
-            if (t instanceof SSLPeerUnverifiedException)
-            	throw RemoteServiceException.SSLCERT_MISMATCH(t.getMessage(), t);
-            else if (t instanceof CertificateException)
-        		throw RemoteServiceException.SSLCERT_ERROR(t.getMessage(), t);
-        	else if (t instanceof SSLHandshakeException)
-        		throw RemoteServiceException.SSL_HANDSHAKE(t.getMessage(), t);
-        	else if (e instanceof IOException)
+        	Throwable t = SystemUtil.getInnermostException(e);
+        	RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
+        	RemoteServiceException.doSSLFailures(t.getMessage(), t);
+        	if (e instanceof IOException)
         		throw ZClientException.IO_ERROR(e.getMessage(), e);
         	throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {

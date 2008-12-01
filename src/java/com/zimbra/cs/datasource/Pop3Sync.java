@@ -27,9 +27,8 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.DummySSLSocketFactory;
-import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 
@@ -48,7 +47,6 @@ import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.List;
 import java.util.Date;
-import java.security.GeneralSecurityException;
 import java.text.ParseException;
 
 public class Pop3Sync extends MailItemImport {
@@ -87,15 +85,7 @@ public class Pop3Sync extends MailItemImport {
         }
         config.setTimeout(LC.javamail_pop3_timeout.intValue());
         // config.setRawMode(true);
-        if (LC.data_source_trust_self_signed_certs.booleanValue()) {
-            config.setSSLSocketFactory(new DummySSLSocketFactory());
-        } else {
-        	try {
-        		config.setSSLSocketFactory(new CustomSSLSocketFactory());
-        	} catch (GeneralSecurityException x) {
-        		LOG.error(x);
-        	}
-        }
+        config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;
     }
     

@@ -1,18 +1,13 @@
 package com.zimbra.cs.datasource;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CustomSSLSocketUtil;
-import com.zimbra.common.util.DummySSLSocketFactory;
-import com.zimbra.common.util.CustomSSLSocketFactory;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.SSLSocketFactoryManager;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.SocketFactory;
 import java.net.Socket;
 import java.net.InetAddress;
-import java.security.GeneralSecurityException;
 import java.io.IOException;
 
 /*
@@ -27,18 +22,8 @@ public class TlsSocketFactory extends SSLSocketFactory {
 
     private static final TlsSocketFactory THE_ONE = new TlsSocketFactory();
 
-    private static final Log LOG = ZimbraLog.datasource;
-    
     protected TlsSocketFactory() {
-    	if (LC.data_source_trust_self_signed_certs.booleanValue())
-    		factory = new DummySSLSocketFactory();
-    	else {
-    		try {
-    			factory = new CustomSSLSocketFactory();
-    		} catch (GeneralSecurityException x) {
-    			LOG.error(x);
-    		}
-    	}
+    	factory = SSLSocketFactoryManager.getDefaultSSLSocketFactory();
     }
     
     public static SocketFactory getDefault() {
@@ -69,7 +54,7 @@ public class TlsSocketFactory extends SSLSocketFactory {
 
     public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
     	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, host, port, autoClose);
-    	CustomSSLSocketUtil.verifyHostname(sslSocket);
+    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
     	return sslSocket;
     }
 
