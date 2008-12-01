@@ -3786,25 +3786,46 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     If FALSE, the envelope sender will be set to the From address of the redirected message.
   </desc>
 </attr>
-
-<attr id="765" name="zimbraDataSourceDefaultPollingInterval" type="duration" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="DataSourceCallback" since="future">
-  <desc>
-    The default data source polling interval, specified separately for each data source type.  Each value is specified as "type:interval".  
-    If an interval is not specified for a given data source type, or set to 0, automated polling is off by default.
-  </desc>
-</attr>
     
-<attr id="766" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="future">
+<attr id="765" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="future">
   <desc>
       zimlets user wants to see in the UI
       note: zimlets available to a user is the union of account/cos attr zimbraZimletAvailableZimlets and domain attr zimbraZimletDomainAvailableZimlets
   </desc>
 </attr>
 
-<attr id="767" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="future">
+<attr id="766" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="future">
   <desc>
       attribute constraints
       TODO: fill all the constraints
+  </desc>
+</attr>
+
+<attr id="767" name="zimbraDataSourcePop3PollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>
+    The time interval between automated data imports for a Pop3 data source.
+    If unset or 0, the data source will not be scheduled for automated polling.
+  </desc>
+</attr>
+
+<attr id="768" name="zimbraDataSourceImapPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>
+    The time interval between automated data imports for an Imap data source.
+    If unset or 0, the data source will not be scheduled for automated polling.
+  </desc>
+</attr>
+
+<attr id="769" name="zimbraDataSourceLivePollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>
+    The time interval between automated data imports for a Live data source.
+    If unset or 0, the data source will not be scheduled for automated polling.
+  </desc>
+</attr>
+
+<attr id="770" name="zimbraDataSourceRssPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>
+    The time interval between automated data imports for a Rss data source.
+    If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 

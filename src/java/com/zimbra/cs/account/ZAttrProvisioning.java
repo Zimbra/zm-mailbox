@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081201-1302 */
+    /* build: 5.0 pshao 20081201-1421 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1534,7 +1534,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public static final String A_zimbraConstraint = "zimbraConstraint";
 
     /**
@@ -1617,17 +1617,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
-     *
-     * @since ZCS future
-     */
-    @ZAttr(id=765)
-    public static final String A_zimbraDataSourceDefaultPollingInterval = "zimbraDataSourceDefaultPollingInterval";
-
-    /**
      * email address for the data source
      */
     @ZAttr(id=495)
@@ -1664,6 +1653,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceId = "zimbraDataSourceId";
 
     /**
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     */
+    @ZAttr(id=768)
+    public static final String A_zimbraDataSourceImapPollingInterval = "zimbraDataSourceImapPollingInterval";
+
+    /**
      * DataImport class used by this data source object
      *
      * @since ZCS 5.0.10
@@ -1677,6 +1674,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=434)
     public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     */
+    @ZAttr(id=769)
+    public static final String A_zimbraDataSourceLivePollingInterval = "zimbraDataSourceLivePollingInterval";
 
     /**
      * Maximum number of data sources allowed on an account
@@ -1711,10 +1716,26 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
 
     /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     */
+    @ZAttr(id=767)
+    public static final String A_zimbraDataSourcePop3PollingInterval = "zimbraDataSourcePop3PollingInterval";
+
+    /**
      * Port number of server
      */
     @ZAttr(id=421)
     public static final String A_zimbraDataSourcePort = "zimbraDataSourcePort";
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     */
+    @ZAttr(id=770)
+    public static final String A_zimbraDataSourceRssPollingInterval = "zimbraDataSourceRssPollingInterval";
 
     /**
      * type of data source (pop3, imap, caldav, etc)
@@ -4504,7 +4525,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public static final String A_zimbraPrefZimlets = "zimbraPrefZimlets";
 
     /**

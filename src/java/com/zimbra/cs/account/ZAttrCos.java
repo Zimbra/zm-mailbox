@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081201-1302 */
+    /* build: 5.0 pshao 20081201-1421 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1339,7 +1339,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public String[] getConstraint() {
         return getMultiAttr(Provisioning.A_zimbraConstraint);
     }
@@ -1352,7 +1352,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public void setConstraint(String[] zimbraConstraint) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraConstraint, zimbraConstraint);
@@ -1368,7 +1368,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> setConstraint(String[] zimbraConstraint, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraConstraint, zimbraConstraint);
@@ -1383,7 +1383,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public void addConstraint(String zimbraConstraint) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConstraint, zimbraConstraint);
@@ -1399,7 +1399,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> addConstraint(String zimbraConstraint, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConstraint, zimbraConstraint);
@@ -1414,7 +1414,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public void removeConstraint(String zimbraConstraint) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConstraint, zimbraConstraint);
@@ -1430,7 +1430,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> removeConstraint(String zimbraConstraint, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConstraint, zimbraConstraint);
@@ -1444,7 +1444,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public void unsetConstraint() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraConstraint, "");
@@ -1459,7 +1459,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=767)
+    @ZAttr(id=766)
     public Map<String,Object> unsetConstraint(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraConstraint, "");
@@ -1790,108 +1790,178 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
      *
-     * <p>Use getDataSourceDefaultPollingIntervalAsString to access value as a string.
+     * <p>Use getDataSourceImapPollingIntervalAsString to access value as a string.
      *
-     * @see #getDataSourceDefaultPollingIntervalAsString()
+     * @see #getDataSourceImapPollingIntervalAsString()
      *
-     * @return zimbraDataSourceDefaultPollingInterval in millseconds, or -1 if unset
-     *
-     * @since ZCS future
+     * @return zimbraDataSourceImapPollingInterval in millseconds, or -1 if unset
      */
-    @ZAttr(id=765)
-    public long getDataSourceDefaultPollingInterval() {
-        return getTimeInterval(Provisioning.A_zimbraDataSourceDefaultPollingInterval, -1L);
+    @ZAttr(id=768)
+    public long getDataSourceImapPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceImapPollingInterval, -1L);
     }
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
      *
-     * @return zimbraDataSourceDefaultPollingInterval, or ampty array if unset
-     *
-     * @since ZCS future
+     * @return zimbraDataSourceImapPollingInterval, or null if unset
      */
-    @ZAttr(id=765)
-    public String[] getDataSourceDefaultPollingIntervalAsString() {
-        return getMultiAttr(Provisioning.A_zimbraDataSourceDefaultPollingInterval);
+    @ZAttr(id=768)
+    public String getDataSourceImapPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval, null);
     }
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
      *
-     * @param zimbraDataSourceDefaultPollingInterval new value
+     * @param zimbraDataSourceImapPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS future
      */
-    @ZAttr(id=765)
-    public void setDataSourceDefaultPollingInterval(String[] zimbraDataSourceDefaultPollingInterval) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=768)
+    public void setDataSourceImapPollingInterval(String zimbraDataSourceImapPollingInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, zimbraDataSourceDefaultPollingInterval);
+        attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, zimbraDataSourceImapPollingInterval);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
      *
-     * @param zimbraDataSourceDefaultPollingInterval new value
+     * @param zimbraDataSourceImapPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS future
      */
-    @ZAttr(id=765)
-    public Map<String,Object> setDataSourceDefaultPollingInterval(String[] zimbraDataSourceDefaultPollingInterval, Map<String,Object> attrs) {
+    @ZAttr(id=768)
+    public Map<String,Object> setDataSourceImapPollingInterval(String zimbraDataSourceImapPollingInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, zimbraDataSourceDefaultPollingInterval);
+        attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, zimbraDataSourceImapPollingInterval);
         return attrs;
     }
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS future
      */
-    @ZAttr(id=765)
-    public void unsetDataSourceDefaultPollingInterval() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=768)
+    public void unsetDataSourceImapPollingInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, "");
+        attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * The default data source polling interval, specified separately for
-     * each data source type. Each value is specified as
-     * &quot;type:interval&quot;. If an interval is not specified for a given
-     * data source type, or set to 0, automated polling is off by default.
+     * The time interval between automated data imports for an Imap data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS future
      */
-    @ZAttr(id=765)
-    public Map<String,Object> unsetDataSourceDefaultPollingInterval(Map<String,Object> attrs) {
+    @ZAttr(id=768)
+    public Map<String,Object> unsetDataSourceImapPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceDefaultPollingInterval, "");
+        attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * <p>Use getDataSourceLivePollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceLivePollingIntervalAsString()
+     *
+     * @return zimbraDataSourceLivePollingInterval in millseconds, or -1 if unset
+     */
+    @ZAttr(id=769)
+    public long getDataSourceLivePollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceLivePollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @return zimbraDataSourceLivePollingInterval, or null if unset
+     */
+    @ZAttr(id=769)
+    public String getDataSourceLivePollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceLivePollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceLivePollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=769)
+    public void setDataSourceLivePollingInterval(String zimbraDataSourceLivePollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceLivePollingInterval, zimbraDataSourceLivePollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceLivePollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=769)
+    public Map<String,Object> setDataSourceLivePollingInterval(String zimbraDataSourceLivePollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceLivePollingInterval, zimbraDataSourceLivePollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=769)
+    public void unsetDataSourceLivePollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceLivePollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Live data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=769)
+    public Map<String,Object> unsetDataSourceLivePollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceLivePollingInterval, "");
         return attrs;
     }
 
@@ -2118,6 +2188,182 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetDataSourcePollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * <p>Use getDataSourcePop3PollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourcePop3PollingIntervalAsString()
+     *
+     * @return zimbraDataSourcePop3PollingInterval in millseconds, or -1 if unset
+     */
+    @ZAttr(id=767)
+    public long getDataSourcePop3PollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourcePop3PollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @return zimbraDataSourcePop3PollingInterval, or null if unset
+     */
+    @ZAttr(id=767)
+    public String getDataSourcePop3PollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourcePop3PollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourcePop3PollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=767)
+    public void setDataSourcePop3PollingInterval(String zimbraDataSourcePop3PollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, zimbraDataSourcePop3PollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourcePop3PollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=767)
+    public Map<String,Object> setDataSourcePop3PollingInterval(String zimbraDataSourcePop3PollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, zimbraDataSourcePop3PollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=767)
+    public void unsetDataSourcePop3PollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Pop3 data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=767)
+    public Map<String,Object> unsetDataSourcePop3PollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * <p>Use getDataSourceRssPollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceRssPollingIntervalAsString()
+     *
+     * @return zimbraDataSourceRssPollingInterval in millseconds, or -1 if unset
+     */
+    @ZAttr(id=770)
+    public long getDataSourceRssPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceRssPollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @return zimbraDataSourceRssPollingInterval, or null if unset
+     */
+    @ZAttr(id=770)
+    public String getDataSourceRssPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceRssPollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceRssPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=770)
+    public void setDataSourceRssPollingInterval(String zimbraDataSourceRssPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceRssPollingInterval, zimbraDataSourceRssPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceRssPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=770)
+    public Map<String,Object> setDataSourceRssPollingInterval(String zimbraDataSourceRssPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceRssPollingInterval, zimbraDataSourceRssPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=770)
+    public void unsetDataSourceRssPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceRssPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Rss data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=770)
+    public Map<String,Object> unsetDataSourceRssPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceRssPollingInterval, "");
         return attrs;
     }
 
@@ -16464,7 +16710,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public String[] getPrefZimlets() {
         return getMultiAttr(Provisioning.A_zimbraPrefZimlets);
     }
@@ -16479,7 +16725,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public void setPrefZimlets(String[] zimbraPrefZimlets) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
@@ -16497,7 +16743,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> setPrefZimlets(String[] zimbraPrefZimlets, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
@@ -16514,7 +16760,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public void addPrefZimlets(String zimbraPrefZimlets) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
@@ -16532,7 +16778,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> addPrefZimlets(String zimbraPrefZimlets, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
@@ -16549,7 +16795,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public void removePrefZimlets(String zimbraPrefZimlets) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
@@ -16567,7 +16813,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> removePrefZimlets(String zimbraPrefZimlets, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefZimlets, zimbraPrefZimlets);
@@ -16583,7 +16829,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public void unsetPrefZimlets() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZimlets, "");
@@ -16600,7 +16846,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS future
      */
-    @ZAttr(id=766)
+    @ZAttr(id=765)
     public Map<String,Object> unsetPrefZimlets(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZimlets, "");
