@@ -179,7 +179,6 @@ public class Acl extends ResourceProperty {
 		if ((rights & ACL.RIGHT_READ) > 0) {
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_CURRENT_USER_PRIVILEGE_SET);
-			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_FREE_BUSY);
 		}
 		if ((rights & ACL.RIGHT_WRITE) > 0) {
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_BIND);
@@ -191,6 +190,8 @@ public class Acl extends ResourceProperty {
 		}
 		if ((rights & ACL.RIGHT_ADMIN) > 0)
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNLOCK);
+		if ((rights & ACL.RIGHT_FREEBUSY) > 0)
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_FREE_BUSY);
 		return grant;
 	}
 	
@@ -200,14 +201,14 @@ public class Acl extends ResourceProperty {
 		sRightsMap = new HashMap<String, Short>();
 		sRightsMap.put(DavElements.P_READ, ACL.RIGHT_READ);
 		sRightsMap.put(DavElements.P_READ_CURRENT_USER_PRIVILEGE_SET, ACL.RIGHT_READ);
-		sRightsMap.put(DavElements.P_READ_FREE_BUSY, ACL.RIGHT_READ);
-		sRightsMap.put(DavElements.P_BIND, ACL.RIGHT_WRITE);
-		sRightsMap.put(DavElements.P_UNBIND, ACL.RIGHT_WRITE);
+		//sRightsMap.put(DavElements.P_READ_FREE_BUSY, ACL.RIGHT_FREEBUSY);
+		//sRightsMap.put(DavElements.P_BIND, ACL.RIGHT_WRITE);
+		//sRightsMap.put(DavElements.P_UNBIND, ACL.RIGHT_WRITE);
 		sRightsMap.put(DavElements.P_WRITE, ACL.RIGHT_WRITE);
-		sRightsMap.put(DavElements.P_WRITE_ACL, ACL.RIGHT_WRITE);
-		sRightsMap.put(DavElements.P_WRITE_CONTENT, ACL.RIGHT_WRITE);
-		sRightsMap.put(DavElements.P_WRITE_PROPERTIES, ACL.RIGHT_WRITE);
-		sRightsMap.put(DavElements.P_UNLOCK, ACL.RIGHT_WRITE); // XXX
+		//sRightsMap.put(DavElements.P_WRITE_ACL, ACL.RIGHT_WRITE);
+		//sRightsMap.put(DavElements.P_WRITE_CONTENT, ACL.RIGHT_WRITE);
+		//sRightsMap.put(DavElements.P_WRITE_PROPERTIES, ACL.RIGHT_WRITE);
+		//sRightsMap.put(DavElements.P_UNLOCK, ACL.RIGHT_WRITE);
 	}
 	
 	private static class PrincipalCollectionSet extends ResourceProperty {
