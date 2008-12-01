@@ -142,34 +142,301 @@
 ********************
 -->
 
-
 <!-- 
-    domain rights
+========================================================
+                      account rights
+========================================================
 -->
 
-<right name="createAccount" type="preset" targetType="domain">
-  <desc>create account in the domain</desc>
+<right name="getAccount" type="getAttrs" targetType="account">
+  <desc>get all account attributes</desc>
 </right>
 
-<right name="createAlias" type="preset" targetType="domain">
-  <desc>create alias in the domain</desc>
+<right name="modifyAccount" type="setAttrs" targetType="account">
+  <desc>modify all account attributes</desc>
 </right>
 
-<right name="createSubDomain" type="preset" targetType="domain">
-  <desc>create a top-level domain</desc>
+<right name="listAccount" type="preset" targetType="account">
+  <desc>see account in GetAllAccounts/SearchDirectoryResponse</desc>
 </right>
+
+<right name="renameAccount" type="preset" targetType="account">
+  <desc>rename account</desc>
+</right>
+
+<right name="deleteAccount" type="preset" targetType="account">
+  <desc>delete account</desc>
+</right>
+
+<right name="addAccountAlias" type="preset" targetType="account">
+  <desc>add account alias</desc>
+</right>
+
+<right name="removeAccountAlias" type="preset" targetType="account">
+  <desc>remove account alias</desc>
+</right>
+          
+<!--
+    TODO:      
+          - getMailboxDump                     : get mailbox dump for legal intercept
+          - moveMailbox                        : move mailbox from one server to another
+          - reindexMailbox                     : reindex mailbox
+          - viewEmail                          : view the account's email
+          
+          - backupAccount                      : backup account
+          - restoreAccount                     : restore account from backup
+-->
+ 
+<right name="setAccountPassword" type="preset" targetType="account">
+  <desc>set account password</desc>
+</right>         
+          
+<right name="configureQuota" type="setAttrs" targetType="account,cos">
+  <desc>configure quota</desc>
+  <attrs>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
+  </attrs>
+</right>
+
+<right name="configureAdminUI" type="setAttrs" targetType="account">
+  <desc>configure admin UI</desc>
+  <attrs>
+    <a n="zimbraAdminConsoleUIComponents"/>
+  </attrs>
+</right>
+          
+<!-- 
+    TODO:     
+          - configureFeature                   : enable/disable features
+          - configurePasswordRule              : configure password rules
+          - configureLoginPolicy               : configure login/lockout policies
+          - configureZimlet                    : configure available zimlets
+          - configureTheme                     : configure available themes(skins)
+
+-->
+
+
+<!-- 
+========================================================
+                 calendar resource rights
+========================================================
+-->
+
+<right name="getCalendarResource" type="getAttrs" targetType="resource">
+  <desc>get all calendar resource attributes</desc>
+</right>
+
+<right name="modifyCalendarResource" type="setAttrs" targetType="resource">
+  <desc>modify all calendar resource attributes</desc>
+</right>
+
+<right name="listCalendarResource" type="preset" targetType="resource">
+  <desc>see calendar resource in GetAllCalendarResources/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameCalendarResource" type="preset" targetType="resource">
+  <desc>rename calendar resource</desc>
+</right>
+
+<right name="deleteCalendarResource" type="preset" targetType="resource">
+  <desc>delete calendar resource</desc>
+</right>
+
+<right name="addCalendarResourceAlias" type="preset" targetType="resource">
+  <desc>add calendar resource alias</desc>
+</right>
+
+<right name="removeCalendarResourceAlias" type="preset" targetType="resource">
+  <desc>remove calendar resource alias</desc>
+</right>
+
+<!-- 
+   TODO:
+
+          - getMailboxDump                     : get mailbox dump for legal intercept
+          - moveMailbox                        : move mailbox from one server to another
+          - reindexMailbox                     : reindex mailbox
+          - viewEmail                          : view the calendar resource's email
+          
+          - backupCalenceResource              : backup calendar resource
+          - restoreCalenceResource             : restore calendar resource from backup
+-->
+       
+<right name="setCalenceResourcePassword" type="preset" targetType="account">
+  <desc>set calendar resource password</desc>
+</right>     
+
+
+<!-- 
+========================================================
+                      COS rights
+========================================================
+-->
+
+<right name="getCos" type="getAttrs" targetType="cos">
+  <desc>get all cos attributes</desc>
+</right>
+
+<right name="modifyCos" type="setAttrs" targetType="cos">
+  <desc>set all cos attributes</desc>
+</right>
+
+<right name="listCos" type="preset" targetType="cos">
+  <desc>see cos in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameCos" type="preset" targetType="cos">
+  <desc>rename cos</desc>
+</right>
+
+<right name="deleteCos" type="preset" targetType="cos">
+  <desc>delete cos</desc>
+</right>
+
+<right name="assignCos" type="preset" targetType="cos">
+  <desc>assign the cos (to domains or accounts)</desc>
+</right>
+
+<right name="configureCosConstraint" type="setAttrs" targetType="cos">
+  <desc>configure cos constraint</desc>
+  <attrs>
+    <a n="zimbraConstraint"/>
+  </attrs>
+</right>
+
+<!-- 
+  TODO:         
+          - configureQuota                     : configure quota
+          - configureFeature                   : enable/disable features
+          - configurePasswordRule              : configure password rules
+          - configureLoginPolicy               : configure login/lockout policies
+          - configureZimlet                    : configure available zimlets
+          - configureTheme                     : configure available themes(skins)
+-->
+
+
+<!-- 
+========================================================
+                      config rights
+========================================================
+-->
+
+<right name="getGlobalConfig" type="getAttrs" targetType="config">
+  <desc>get all global config attributes</desc>
+</right>
+
+<right name="modifyGlobalConfig" type="setAttrs" targetType="config">
+  <desc>modify all global config attributes</desc>
+</right>
+
+<right name="configureGlobalConfigConstraint" type="setAttrs" targetType="config">
+  <desc>configure global config constraint</desc>
+  <attrs>
+    <a n="zimbraConstraint"/>
+  </attrs>
+</right>
+
+<!-- 
+========================================================
+                 distribution list rights
+========================================================
+-->
+
+<right name="getDistributionList" type="getAttrs" targetType="distributionlist">
+  <desc>get all distribution list attributes</desc>
+</right>
+
+<right name="modifyDistributionList" type="setAttrs" targetType="distributionlist">
+  <desc>set all distribution list attributes</desc>
+</right>
+
+<right name="listDistributionList" type="preset" targetType="distributionlist">
+  <desc>see distribution list in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameDistributionList" type="preset" targetType="distributionlist">
+  <desc>rename distribution list</desc>
+</right>
+
+<right name="deleteDistributionList" type="preset" targetType="distributionlist">
+  <desc>delete distribution list</desc>
+</right>
+
+<right name="addDistributionListAlias" type="preset" targetType="distributionlist">
+  <desc>add distribution list alias</desc>
+</right>
+
+<right name="removeDistributionListAlias" type="preset" targetType="distributionlist">
+  <desc>remove distribution list alias</desc>
+</right>
+
+<right name="addDistributionListMember" type="preset" targetType="distributionlist">
+  <desc>add member to distribution list</desc>
+</right>
+
+<right name="removeDistributionListMember" type="preset" targetType="distributionlist">
+  <desc>remove member from distribution list</desc>
+</right>
+
+
+<!-- 
+========================================================
+                      domain rights
+========================================================
+-->
 
 <right name="getDomain" type="getAttrs" targetType="domain">
   <desc>get all domain attributes</desc>
 </right>
 
 <right name="modifyDomain" type="setAttrs" targetType="domain">
-  <desc>modify all domain attributes</desc>
+  <desc>set all domain attributes</desc>
 </right>
 
-<right name="deleteDmain" type="preset" targetType="domain">
+<right name="listDomain" type="preset" targetType="domain">
+  <desc>see domain in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameDomain" type="preset" targetType="domain">
+  <desc>rename domain</desc>
+</right>
+
+<right name="deleteDomain" type="preset" targetType="domain">
   <desc>delete domain</desc>
 </right>
+
+<right name="createSubDomain" type="preset" targetType="domain">
+  <desc>create sub domain</desc>
+</right>
+          
+<!--       
+  TODO:      
+          - crossMailboxSearch                : run search mail (CMBS) functionality
+-->   
+
+<right name="createAccount" type="preset" targetType="domain">
+  <desc>create account in the domain</desc>
+</right>
+
+<right name="createCalendarResource" type="preset" targetType="domain">
+  <desc>create calendar resource in the domain</desc>
+</right>
+
+<right name="createDistributionList" type="preset" targetType="domain">
+  <desc>create distribution list in the domain</desc>
+</right>
+
+<right name="createAlias" type="preset" targetType="domain">
+  <desc>create alias in this domain</desc>
+</right>
+
+<!--  
+  TODO:  (do we need this?)
+  - deleteAlias                       : delete alias in this domain
+-->
 
 <right name="configureExternalGAL" type="setAttrs" targetType="domain">
   <desc>configure attributes for external GAL</desc>
@@ -179,14 +446,14 @@
     <a n="zimbraGalLdapSearchBase"/>
     <a n="zimbraGalLdapBindDn"/>
     <a n="zimbraGalLdapBindPassword"/>
-	<a n="zimbraGalLdapFilter"/>
-	<a n="zimbraGalAutoCompleteLdapFilter"/>
-	<a n="zimbraGalSyncLdapURL"/>
-	<a n="zimbraGalSyncLdapSearchBase"/>
-	<a n="zimbraGalSyncLdapFilter"/>
-	<a n="zimbraGalSyncLdapAuthMech"/>
-	<a n="zimbraGalSyncLdapBindDn"/>
-	<a n="zimbraGalSyncLdapBindPassword"/>							   	     
+    <a n="zimbraGalLdapFilter"/>
+    <a n="zimbraGalAutoCompleteLdapFilter"/>
+    <a n="zimbraGalSyncLdapURL"/>
+    <a n="zimbraGalSyncLdapSearchBase"/>
+    <a n="zimbraGalSyncLdapFilter"/>
+    <a n="zimbraGalSyncLdapAuthMech"/>
+    <a n="zimbraGalSyncLdapBindDn"/>
+    <a n="zimbraGalSyncLdapBindPassword"/>                                   
   </attrs> 
 </right>
 
@@ -201,133 +468,127 @@
     <a n="zimbraAuthLdapSearchBindDn"/>
     <a n="zimbraAuthLdapSearchBindPassword"/>            
   </attrs> 
-</right>
-   
-<right name="configureZimbraNotebookAccount" type="setAttrs" targetType="domain">
-	<desc>allow modifying zimbraNotebookAccount attr</desc>
-	<attrs>
-		<a n="zimbraNotebookAccount"/>
-  </attrs> 		
-</right> 
+</right>         
+          
 
-<right name="initNotebook" type="preset" targetType="domain">
-  <desc>permission to call InitNotebookRequest</desc>
-</right>
- 
+    
 <!-- 
-    global rights
--->
-<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
-  <desc>test global grant target for now, delete after test is done</desc>
+========================================================
+                    server rights
+========================================================
+-->   
+
+
+<right name="getServer" type="getAttrs" targetType="server">
+  <desc>get all server attributes</desc>
 </right>
 
-<right name="createCos" type="preset" targetType="global">
-  <desc>create COS</desc>
+<right name="modifyServer" type="setAttrs" targetType="server">
+  <desc>set all server attributes</desc>
 </right>
 
-<right name="createTopDomain" type="preset" targetType="global">
-  <desc>create a top-level domain</desc>
+<right name="listServer" type="preset" targetType="server">
+  <desc>see server in GetAllCos/SearchDirectoryResponse</desc>
 </right>
 
-<!-- 
-    server rights
--->
 <right name="renameServer" type="preset" targetType="server">
   <desc>rename server</desc>
 </right>
 
-<right name="getServer" type="preset" targetType="server">
-  <desc>rename server</desc>
+<right name="deleteServer" type="preset" targetType="server">
+  <desc>delete server</desc>
 </right>
-
-<right name="modifyServer" type="preset" targetType="server">
-  <desc>rename server</desc>
-</right>
-
+       
 <right name="viewMailQueue" type="preset" targetType="server">
   <desc>view mail queues</desc>
 </right>
 
 <right name="manageMailQueue" type="preset" targetType="server">
   <desc>take actions on mail queues</desc>
-</right>
+</right>       
+       
 <!-- 
-    cos rights
+  TODO:
+          - deployAdminExtension             : deploy admin extensions
+          - editAdminExtension               : edit admin extensions
+          - removeAdminExtension             : remove admin extensions
+          
+          - manageCertificate                : manage certificates
+          - deployZimlets                    : deploy zimlets
+
+          - configureMTA                     : configure MTA
+          - configurePOP3                    : configure POP3
+          - configureIMAP                    : configure IMAP
+          - configurePOPProxy                : configure POP3 proxy
+          - configureIMAPProxy               : configure IMAP proxy
+          - configureVolumes                 : configure volumes
+          - configureServiceEnabled          : configure services enabled
 -->
 
+<!-- 
+========================================================
+                    zimlet rights
+========================================================
+--> 
 
-<right name="renameCos" type="preset" targetType="cos">
-  <desc>rename cos</desc>
+<right name="getZimlet" type="getAttrs" targetType="zimlet">
+  <desc>get all zimlet attributes</desc>
 </right>
 
-<right name="modifyCos" type="setAttrs" targetType="cos">
-  <desc>set all cos attributes</desc>
+<right name="modifyZimlet" type="setAttrs" targetType="zimlet">
+  <desc>set all zimlet attributes</desc>
 </right>
 
-<right name="deleteCos" type="preset" targetType="cos">
-  <desc>delete COS</desc>
+<right name="listZimlet" type="preset" targetType="zimlet">
+  <desc>see zimlet in GetAllZimlets</desc>
 </right>
 
-<right name="listCos" type="preset" targetType="cos">
-  <desc>see cos in GetAllCos/SearchDirectoryResponse</desc>
+<right name="deleteZimlet" type="preset" targetType="zimlet">
+  <desc>delete zimlet</desc>
 </right>
+
 
 <!-- 
-	global config rights
+========================================================
+                    global grant rights
+========================================================
+-->
+
+<right name="createCos" type="preset" targetType="global">
+  <desc>create cos</desc>
+</right>
+
+<right name="createServer" type="preset" targetType="global">
+  <desc>create server</desc>
+</right>
+
+<right name="createTopDomain" type="preset" targetType="global">
+  <desc>create a top-level domain</desc>
+</right>
+
+<right name="createZimlet" type="preset" targetType="global">
+  <desc>create zimlet</desc>
+</right>
+
+          
+
+
+<!-- 
+========================================================
+                 for unittest only - remove
+========================================================
 -->
 
 <right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
   <desc>test global config target for now, delete after test is done</desc>
 </right>
 
-<!-- 
-    account rights
--->
-<right name="renameAccount" type="preset" targetType="account">
-  <desc>rename account</desc>
-</right>
-
-<right name="deleteAccount" type="preset" targetType="account">
-  <desc>delete account</desc>
-</right>
-
-<right name="renameCalendarResource" type="preset" targetType="resource">
-  <desc>rename calendar resource</desc>
-</right>
-
-<right name="renameDistributionList" type="preset" targetType="distributionlist">
-  <desc>rename distribution list</desc>
-</right>
-
-<right name="setPassword" type="preset" targetType="account">
-  <desc>change account's password</desc>
-</right>
-
-
-<right name="deleteZimlet" type="preset" targetType="zimlet">
-  <desc>delete zimlet</desc>
-</right>
-
-<right name="getAccount" type="getAttrs" targetType="account">
-  <desc>get all account attributes</desc>
-</right>
-
-<right name="modifyAccount" type="setAttrs" targetType="account">
-  <desc>set all account attributes</desc>
+<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
+  <desc>test global grant target for now, delete after test is done</desc>
 </right>
 
 <right name="viewDummy" type="getAttrs" targetType="account,cos">
   <desc>for unittest only, do we have a use case for this?</desc>
-  <attrs>
-      <a n="zimbraMailQuota"/>
-      <a n="zimbraQuotaWarnPercent"/>
-      <a n="zimbraQuotaWarnInterval"/>
-      <a n="zimbraQuotaWarnMessage"/>
-  </attrs>
-</right>
-
-<right name="configureQuota" type="setAttrs" targetType="account,cos">
-  <desc>configure quota</desc>
   <attrs>
       <a n="zimbraMailQuota"/>
       <a n="zimbraQuotaWarnPercent"/>
@@ -343,49 +604,6 @@
     <r n="renameAccount"/>
     <r n="configureQuota"/>
   </rights>
-</right>
-
-<!-- 
-    current domainAdminModifiable attrs in zimbra-attrs.xml
- -->
- <right name="getAccountFeatures" type="getAttrs" targetType="account,cos">
-  <desc>for unittest only, do we have a use case for this?</desc>
-  <attrs>
-    <a n="zimbraFeatureMailPriorityEnabled"/>
-    <a n="zimbraFeatureInstantNotify"/>
-    <a n="zimbraFeatureImapDataSourceEnabled"/>
-    <a n="zimbraFeaturePop3DataSourceEnabled"/>
-    <a n="zimbraFeatureIdentitiesEnabled"/>
-    <a n="zimbraFeatureMailForwardingEnabled"/>
-    <a n="zimbraFeatureContactsEnabled"/>
-    <a n="zimbraFeatureCalendarEnabled"/>
-    <a n="zimbraFeatureTasksEnabled"/>
-    <a n="zimbraFeatureTaggingEnabled"/>
-    <a n="zimbraFeatureAdvancedSearchEnabled"/>
-    <a n="zimbraFeatureSavedSearchesEnabled"/>
-    <a n="zimbraFeatureConversationsEnabled"/>
-    <a n="zimbraFeatureChangePasswordEnabled"/>
-    <a n="zimbraFeatureInitialSearchPreferenceEnabled"/>
-    <a n="zimbraFeatureFiltersEnabled"/>
-    <a n="zimbraFeatureGalEnabled"/>
-    <a n="zimbraFeatureSharingEnabled"/>
-    <a n="zimbraFeatureNotebookEnabled"/>
-    <a n="zimbraFeatureBriefcasesEnabled"/>
-    <a n="zimbraFeatureHtmlComposeEnabled"/>
-    <a n="zimbraFeatureGalAutoCompleteEnabled"/>
-    <a n="zimbraImapEnabled"/>
-    <a n="zimbraPop3Enabled"/>
-    <a n="zimbraFeatureSkinChangeEnabled"/>
-    <a n="zimbraFeatureOutOfOfficeReplyEnabled"/>
-    <a n="zimbraFeatureNewMailNotificationEnabled"/>
-    <a n="zimbraFeatureMailPollingIntervalPreferenceEnabled"/>
-    <a n="zimbraFeatureOptionsEnabled"/>
-    <a n="zimbraFeatureShortcutAliasesEnabled"/>
-    <a n="zimbraFeatureMailEnabled"/>
-    <a n="zimbraFeatureGroupCalendarEnabled"/>
-    <a n="zimbraFeatureIMEnabled"/>
-    <a n="zimbraFeatureFlaggingEnabled"/>
-  </attrs>
 </right>
 
 <right name="modifyDomainAdminAttrs" type="setAttrs" targetType="account">
@@ -404,14 +622,5 @@
     <r n="modifyDomainAdminAttrs"/>
   </rights>
 </right>
-
-<right name="configureAdminUI" type="setAttrs" targetType="account">
-  <desc>configure admin UI</desc>
-  <attrs>
-    <a n="zimbraAdminConsoleUIComponents"/>
-  </attrs>
-</right>
-
-
 
 </rights>
