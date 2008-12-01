@@ -28,6 +28,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.service.ServiceException;
+
 public class DateUtil {
 
     /**
@@ -483,6 +485,40 @@ public class DateUtil {
                 }
             } catch (NumberFormatException e) {
                 return defaultValue;
+            }
+        }
+    }
+    
+    public static long getTimeInterval(String value) throws ServiceException {
+        if (value == null || value.length() == 0)
+            throw ServiceException.FAILURE("no value", null);
+        else {
+            try {
+                char units = value.charAt(value.length()-1);
+                if (units >= '0' && units <= '9') {
+                    return Long.parseLong(value)*1000;
+                } else {
+                    long n = Long.parseLong(value.substring(0, value.length()-1));
+                    switch (units) {
+                    case 'd':
+                        n = n * Constants.MILLIS_PER_DAY;
+                        break;
+                    case 'h':
+                        n = n * Constants.MILLIS_PER_HOUR;
+                        break;
+                    case 'm':
+                        n = n * Constants.MILLIS_PER_MINUTE;
+                        break;
+                    case 's':
+                        n = n * Constants.MILLIS_PER_SECOND;
+                        break;
+                    default:
+                        throw ServiceException.FAILURE("unknown unit", null);
+                    }
+                    return n;
+                }
+            } catch (NumberFormatException e) {
+                throw ServiceException.FAILURE("invalid format", e);
             }
         }
     }

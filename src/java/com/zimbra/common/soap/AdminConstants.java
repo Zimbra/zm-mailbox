@@ -341,8 +341,8 @@ public class AdminConstants {
     // rights
     public static final QName GET_RIGHT_REQUEST = QName.get("GetRightRequest", NAMESPACE);
     public static final QName GET_RIGHT_RESPONSE = QName.get("GetRightResponse", NAMESPACE);
-    public static final QName GET_ALL_RIGHT_REQUEST = QName.get("GetAllRightsRequest", NAMESPACE);
-    public static final QName GET_ALL_RIGHT_RESPONSE = QName.get("GetAllRightsResponse", NAMESPACE);
+    public static final QName GET_ALL_RIGHTS_REQUEST = QName.get("GetAllRightsRequest", NAMESPACE);
+    public static final QName GET_ALL_RIGHTS_RESPONSE = QName.get("GetAllRightsResponse", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_REQUEST = QName.get("GetEffectiveRightsRequest", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_RESPONSE = QName.get("GetEffectiveRightsResponse", NAMESPACE);
     public static final QName GET_GRANTS_REQUEST = QName.get("GetGrantsRequest", NAMESPACE);
