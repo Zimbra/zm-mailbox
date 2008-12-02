@@ -241,7 +241,7 @@ public class LC {
     public static final KnownKey postfix_bounce_queue_lifetime;
     public static final KnownKey postfix_command_directory;
     public static final KnownKey postfix_daemon_directory;
-    public static final KnownKey postfix_enable_smtpd_policyd
+    public static final KnownKey postfix_enable_smtpd_policyd;
     public static final KnownKey postfix_header_checks;
     public static final KnownKey postfix_in_flow_delay;
     public static final KnownKey postfix_lmtp_connection_cache_destinations;
