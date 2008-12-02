@@ -75,7 +75,9 @@ public class TcpPop3Handler extends Pop3Handler {
             fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
         NetUtil.setSSLEnabledCipherSuites(sock, mConfig.getSSLExcludeCiphers());
         sock.setUseClientMode(false);
-        sock.startHandshake();
+        String cipherSuite = sock.getSession().getCipherSuite();
+        if (cipherSuite == null || cipherSuite.equals("") || cipherSuite.equals("SSL_NULL_WITH_NULL_NULL"))
+        	sock.startHandshake();
         ZimbraLog.pop.debug("suite: "+ sock.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(sock.getInputStream());
         mOutputStream = new BufferedOutputStream(sock.getOutputStream());
