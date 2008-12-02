@@ -194,6 +194,7 @@ public class LiveData {
     public static ParsedContact getParsedContact(JDAVContact jcontact,
         Contact contact) throws ServiceException {
         boolean group = false;
+        String im = null;
         String mail = "";
         Map jFields = jcontact.getFields();
         Map<String, String> fields = new HashMap<String, String>();
@@ -232,7 +233,7 @@ public class LiveData {
                 case postalcode: fields.put(Contact.A_workPostalCode, val); break;
                 case st: fields.put(Contact.A_workState, val); break;
                 case street: fields.put(Contact.A_workStreet, val); break;
-                case msgrAddress: fields.put(Contact.A_imAddress1, "msn://" + val); break;
+                case msgrAddress: im = val; fields.put(Contact.A_imAddress1, "msn://" + val); break;
                 case busmail: fields.put(Contact.A_workEmail1, val); break;
                 case otherTelephone: fields.put(Contact.A_workAltPhone, val); break;
                 case group: group = true; break;
@@ -246,6 +247,18 @@ public class LiveData {
             fields.put(Contact.A_dlist, mail);
             fields.put(Contact.A_type, Contact.TYPE_GROUP);
         } else {
+            if (!fields.containsKey(Contact.A_firstName) &&
+                !fields.containsKey(Contact.A_lastName)) {
+                String fileAs;
+
+                if ((fileAs = fields.get(Contact.A_fullName)) != null ||
+                    (fileAs = fields.get(Contact.A_nickname)) != null ||
+                    (fileAs = fields.get(Contact.A_email)) != null ||
+                    (fileAs = fields.get(Contact.A_email2)) != null ||
+                    (fileAs = fields.get(Contact.A_workEmail1)) != null ||
+                    (fileAs = im) != null)
+                    fields.put(Contact.A_fileAs, Contact.FA_EXPLICIT + ":" + fileAs);
+            }
             fields.put(Contact.A_email, mail);
         }
         return contact == null ? new ParsedContact(fields) :
