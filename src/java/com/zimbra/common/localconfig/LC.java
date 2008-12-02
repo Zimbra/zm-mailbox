@@ -963,7 +963,7 @@ public class LC {
         mailboxd_keystore_base_password.setDefault("zimbra");
         
         mailboxd_truststore = new KnownKey("mailboxd_truststore");
-        mailboxd_truststore.setDefault("${zimbra_java_home}" + FS + "lib" + FS + "security" + FS + "cacerts");
+        mailboxd_truststore.setDefault("${zimbra_home}" + FS + "conf" + FS + "cacerts");
 
         mailboxd_truststore_password = new KnownKey("mailboxd_truststore_password");
         mailboxd_truststore_password.setDefault("changeit");
