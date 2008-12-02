@@ -164,7 +164,7 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
             oldPath.renameTo(newPath);
         }
 
-        private void delete(File file) throws IOException {
+        private void delete(File file) {
             file.delete();
         }
     }
