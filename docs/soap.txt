@@ -1558,12 +1558,17 @@ if nest="1" on the request, response looks like this:
 
 ----------
 
-<GetFolderRequest [visible="0|1"]>
+<GetFolderRequest [visible="0|1"] [tr="0|1"]>
   [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"]/>]
 </GetFolderRequest>
 
   - either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
       if neither is present, the descent of the folder hierarchy begins at the mailbox's root folder (id 1).
+
+  - if "tr" is 1, we traverse mountpoints and retrieve the item counts, ACL, and subfolders from all mountpoint targets
+      if "tr" is 0, mountpoints are listed but not expanded and they always appear to have no contents
+
+  - if you specified an explicit <folder> and that folder happens to be a mountpoint, we always expand it as if "tr" was 1
 
   - if "visible" is 1, we include all visible subfolders of the specified folder
       when you have full rights on the mailbox, this is indistinguishable from the normal <GetFolderResponse>
@@ -1583,8 +1588,10 @@ if nest="1" on the request, response looks like this:
   </folder>
 </GetFolderResponse>
 
-GetFolderResponse always has exactly 1 folder element within it.  Without a base
-folder ID that folder element will represent the virtual root folder.
+GetFolderResponse always has exactly 1 element within it.  Without a base
+folder ID that folder element will represent the virtual root folder.  (Note
+that this folder element may be a <folder>, <search>, or <link>, depending on
+the requested folder's type.)
 
 ----------
 

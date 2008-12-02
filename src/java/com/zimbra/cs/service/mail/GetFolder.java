@@ -35,18 +35,16 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class GetFolder extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { MailConstants.E_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+    @Override protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    @Override protected boolean checkMountpointProxy(Element request)  { return false; }
+    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
@@ -68,50 +66,84 @@ public class GetFolder extends MailDocumentHandler {
 		ItemId iid = new ItemId(parentId, zsc);
 
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
-		
+        boolean traverse = request.getAttributeBool(MailConstants.A_TRAVERSE, false);
+
         FolderNode rootnode = getFolderTree(octxt, mbox, iid, visible);
+        // if the requested folder was a mountpoint, always resolve it
+        traverse |= rootnode != null && rootnode.mFolder instanceof Mountpoint;
 
 		Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
-    		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
-    		if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
-    			handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
+            List<Pair<Element, Mountpoint>> mptinfo = traverse ? new ArrayList<Pair<Element, Mountpoint>>(3) : null;
+    		encodeFolderNode(ifmt, octxt, response, rootnode, true, mptinfo);
+
+    		if (mptinfo != null && !mptinfo.isEmpty()) {
+    		    for (Pair<Element, Mountpoint> mount : mptinfo)
+    		        handleMountpoint(mount.getSecond(), mount.getFirst(), zsc, context);
+    		}
         }
 
 		return response;
 	}
 	
 	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
-	    return encodeFolderNode(ifmt, octxt, parent, node, false);
+	    return encodeFolderNode(ifmt, octxt, parent, node, false, null);
 	}
 
-	private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey) {
+	private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node,
+	                                        boolean exposeAclAccessKey, List<Pair<Element, Mountpoint>> mptinfo) {
 		Element eFolder;
         if (node.mFolder != null)
             eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, exposeAclAccessKey);
         else
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
 
+        if (mptinfo != null && node.mFolder instanceof Mountpoint)
+            mptinfo.add(new Pair<Element, Mountpoint>(eFolder, (Mountpoint) node.mFolder));
+
 		for (FolderNode subNode : node.mSubfolders)
-			encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey);
+			encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey, mptinfo);
 
 		return eFolder;
 	}
 
-
-    private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
+    private void handleMountpoint(Mountpoint mpt, Element eMountpoint, ZimbraSoapContext zsc, Map<String, Object> context)
 	throws ServiceException, SoapFaultException {
+        // no mountpoints pointing to the same account!
+        if (mpt.getAccount().getId().equalsIgnoreCase(mpt.getOwnerId()))
+            return;
+
+        ItemId iidLocal = new ItemId(mpt);
         ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+        Element request = zsc.createElement(MailConstants.GET_FOLDER_REQUEST);
+        request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, iidRemote.toString());
+
         Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
-        proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
-        if (proxied != null) {
-            eRoot.addAttribute(MailConstants.A_REST_URL, proxied.getAttribute(MailConstants.A_REST_URL, null));
-            eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
+        Element target = proxied.getOptionalElement(MailConstants.E_FOLDER);
+        if (target != null)
+            transferMountpointAttributes(eMountpoint, target);
+    }
 
-            for (Element eRemote : proxied.listElements()) {
-                eRoot.addElement(eRemote.detach());
-            }
+    public static void transferMountpointAttributes(Element eMountpoint, Element eTarget) {
+        if (eMountpoint == null || eTarget == null)
+            return;
+
+        // transfer folder counts to the serialized mountpoint from the serialized target folder
+        eMountpoint.addAttribute(MailConstants.A_UNREAD, eTarget.getAttribute(MailConstants.A_UNREAD, null));
+        eMountpoint.addAttribute(MailConstants.A_NUM, eTarget.getAttribute(MailConstants.A_NUM, null));
+        eMountpoint.addAttribute(MailConstants.A_SIZE, eTarget.getAttribute(MailConstants.A_SIZE, null));
+        eMountpoint.addAttribute(MailConstants.A_URL, eTarget.getAttribute(MailConstants.A_URL, null));
+        eMountpoint.addAttribute(MailConstants.A_RIGHTS, eTarget.getAttribute(MailConstants.A_RIGHTS, null));
+        if (eTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
+            eMountpoint.addAttribute(MailConstants.A_FLAGS, "u" + eMountpoint.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+
+        // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
+        for (Element child : eTarget.listElements()) {
+            if (child.getName().equals(MailConstants.E_ACL))
+                eMountpoint.addUniqueElement(child.clone());
+            else
+                eMountpoint.addElement(child.clone());
         }
     }
     
