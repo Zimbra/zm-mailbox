@@ -16,15 +16,16 @@
  */
 package com.zimbra.cs.util.yauth;
 
-import java.io.IOException;
+import com.zimbra.common.service.ServiceException;
 
-public class AuthenticationException extends IOException {
+@SuppressWarnings("serial")
+public class AuthenticationException extends ServiceException {
     private final ErrorCode code;
     private String captchaUrl;
     private String captchaData;
 
     public AuthenticationException(ErrorCode code, String msg) {
-        super(msg);
+        super(msg, "yauth." + code.name(), false);
         this.code = code;
     }
 

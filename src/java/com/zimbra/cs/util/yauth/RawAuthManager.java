@@ -33,7 +33,7 @@ public final class RawAuthManager {
     }
 
     public RawAuth authenticate(String appId, String user, String pass)
-        throws IOException {
+        throws AuthenticationException, IOException {
         RawAuth auth = cookies.get(key(appId, user));
         if (auth == null || auth.isExpired()) {
             // Cookie missing or expired, so get a new one
@@ -72,7 +72,7 @@ public final class RawAuthManager {
                                           final String user,
                                           final String pass) {
         return new Authenticator() {
-            public RawAuth authenticate() throws IOException {
+            public RawAuth authenticate() throws AuthenticationException, IOException {
                 return RawAuthManager.this.authenticate(appId, user, pass);
             }
             public void invalidate() {
