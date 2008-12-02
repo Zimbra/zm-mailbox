@@ -24,6 +24,16 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.GetMethod;
+
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -32,10 +42,13 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
+import com.zimbra.common.service.ServiceException.InternalArgument;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.wiki.Wiki;
@@ -74,15 +87,9 @@ public class SaveDocument extends WikiDocumentHandler {
                 Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
                 doc = new Doc(up, explicitName, explicitCtype);
             } else if (msgElem != null) {
-                String msgid = msgElem.getAttribute(MailConstants.A_ID);
                 String part = msgElem.getAttribute(MailConstants.A_PART);
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
-                Message msg = mbox.getMessageById(octxt, Integer.parseInt(msgid));
-                try {
-                    doc = new Doc(Mime.getMimePart(msg.getMimeMessage(), part), explicitName, explicitCtype);
-                } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("cannot get part " + part + " from message " + msgid, e);
-                }
+                ItemId iid = new ItemId(msgElem.getAttribute(MailConstants.A_ID), zsc);
+                doc = fetchMimePart(octxt, iid, part, explicitName, explicitCtype, zsc.getAuthToken());
             } else {
                 String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
                 doc = new Doc(inlineContent, explicitName, explicitCtype);
@@ -99,8 +106,13 @@ public class SaveDocument extends WikiDocumentHandler {
             int ver = (int) docElem.getAttributeLong(MailConstants.A_VERSION, 0);
 
             WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
-            WikiPage page = WikiPage.create(doc.name, getAuthor(zsc), doc.contentType, doc.getInputStream());
-            Wiki.addPage(ctxt, page, itemId, ver, fid);
+            WikiPage page = null;
+            try {
+            	page = WikiPage.create(doc.name, getAuthor(zsc), doc.contentType, doc.getInputStream());
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("can't save document", e);
+            }
+        	Wiki.addPage(ctxt, page, itemId, ver, fid);
             Document docItem = page.getWikiItem(ctxt);
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
@@ -108,8 +120,6 @@ public class SaveDocument extends WikiDocumentHandler {
             m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
             m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
             success = true;
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("can't save document", e);
         } finally {
             if (success && doc != null)
                 doc.cleanup();
@@ -117,12 +127,48 @@ public class SaveDocument extends WikiDocumentHandler {
         return response;
     }
 
+    private Doc fetchMimePart(OperationContext octxt, ItemId itemId, String partId, String name, String ct, AuthToken authtoken) throws ServiceException {
+    	String accountId = itemId.getAccountId();
+    	Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
+    	if (Provisioning.onLocalServer(acct)) {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
+            Message msg = mbox.getMessageById(octxt, itemId.getId());
+            try {
+                return new Doc(Mime.getMimePart(msg.getMimeMessage(), partId), name, ct);
+            } catch (MessagingException e) {
+                throw ServiceException.RESOURCE_UNREACHABLE("can't fetch mime part msgId="+itemId+", partId="+partId, e);
+            } catch (IOException e) {
+                throw ServiceException.RESOURCE_UNREACHABLE("can't fetch mime part msgId="+itemId+", partId="+partId, e);
+            }
+    	}
+    	
+        String url = UserServlet.getRestUrl(acct) + "?auth=co&id=" + itemId + "&part=" + partId;
+        HttpClient client = new HttpClient();
+        GetMethod get = new GetMethod(url);
+        authtoken.encode(client, get, false, acct.getAttr(Provisioning.A_zimbraMailHost));
+        try {
+            int statusCode = client.executeMethod(get);
+            if (statusCode != HttpStatus.SC_OK)
+                throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote mime part", null, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
+
+            Header ctHeader = get.getResponseHeader("Content-Type");
+            ContentType contentType = new ContentType(ctHeader.getValue());
+
+            return new Doc(get.getResponseBodyAsStream(), contentType, name, ct);
+        } catch (HttpException e) {
+            throw ServiceException.PROXY_ERROR(e, url);
+        } catch (IOException e) {
+            throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote mime part", e, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
+        }
+    }
+    
 	private static class Doc {
 		String name;
 		String contentType;
 		private Upload up;
 		private MimePart mp;
 		private String sp;
+		private InputStream in;
 
 		Doc(MimePart mpart, String filename, String ctype) {
             mp = mpart;
@@ -146,6 +192,17 @@ public class SaveDocument extends WikiDocumentHandler {
             if (contentType != null)
                 contentType = new ContentType(contentType).setParameter("charset", "utf-8").toString();
         }
+        
+        Doc(InputStream in, ContentType ct, String filename, String ctype) {
+        	this.in = in;
+        	name = ct.getParameter("name");
+        	if (name == null)
+        		name = "New Document";
+        	contentType = ct.getValue();
+        	if (contentType == null)
+        		contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            overrideProperties(filename, ctype);
+        }
 
         private void overrideProperties(String filename, String ctype) {
             if (filename != null && !filename.trim().equals(""))
@@ -162,6 +219,8 @@ public class SaveDocument extends WikiDocumentHandler {
     				return mp.getInputStream();
     			else if (sp != null)
     			    return new ByteArrayInputStream(sp.getBytes("utf-8"));
+    			else if (in != null)
+    				return in;
     			else
     				throw new IOException("no contents");
 			} catch (MessagingException e) {
@@ -171,6 +230,8 @@ public class SaveDocument extends WikiDocumentHandler {
 		public void cleanup() {
 			if (up != null)
                 FileUploadServlet.deleteUpload(up);
+			if (in != null)
+				try { in.close(); } catch (IOException e) {}
 		}
 	}
 
