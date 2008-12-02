@@ -62,7 +62,8 @@ public abstract class MailItemImport implements DataSource.DataImport {
     }
 
     protected Message addMessage(OperationContext octxt, ParsedMessage pm,
-        int folderId, int flags) throws ServiceException, IOException {
+                                 int folderId, int flags)
+        throws ServiceException, IOException {
         SharedDeliveryContext context = new SharedDeliveryContext();
         Message msg = null;
         switch (folderId) {

@@ -120,6 +120,17 @@ public class RemoteFolder {
         deleted += size;
     }
 
+    public void deleteMessage(long uid) throws IOException {
+        ensureSelected();
+        debug("deleting message with uid %d", uid);
+        String seq = String.valueOf(uid);
+        connection.uidStore(seq, "+FLAGS.SILENT", "(\\Deleted)");
+        // If UIDPLUS supported, then expunge deleted message
+        if (connection.hasUidPlus()) {
+            connection.uidExpunge(seq);
+        }
+    }
+
     /**
      * Closes folder and optionally expunges deleted messages.
      * 
@@ -188,7 +199,7 @@ public class RemoteFolder {
     public Mailbox select() throws IOException {
         return connection.select(path);
     }
-    
+
     public boolean isSelected() {
         Mailbox mb = connection.getMailbox();
         return mb != null && mb.getName().equals(path);

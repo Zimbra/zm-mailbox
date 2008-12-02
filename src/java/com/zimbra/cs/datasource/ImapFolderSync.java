@@ -27,12 +27,14 @@ import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
@@ -54,6 +56,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Collections;
+import java.sql.SQLException;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -72,10 +75,18 @@ class ImapFolderSync {
     private long maxUid;
     private boolean completed;
     private MailDateFormat mdf;
+    private int totalErrors;
 
     private static final Log LOG = ZimbraLog.datasource;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
+
+    // Max number of errors before we generate report and skip item
+    private static final int MAX_ITEM_ERRORS = 3;
+
+    // Max number of total per-item failures before we abort sync
+    private static final int MAX_TOTAL_ERRORS = 10;
+
 
     // This capability is specific to Yahoo's IMAP service
     private static final String AUTH_XYMCOOKIEB64 = "AUTH=XYMCOOKIEB64";
@@ -181,17 +192,17 @@ class ImapFolderSync {
             syncState.setLastModSeq(pushChanges(lastModSeq));
         }
         // Fetch new messages
-        List<Long> deletedUids = new ArrayList<Long>();
+        List<Long> uidsToDelete = new ArrayList<Long>();
         maxUid = uidNext > 0 ? uidNext - 1 : 0;
         if (maxUid <= 0 || lastUid < maxUid) {
-            fetchMessages(lastUid + 1, deletedUids);
+            fetchMessages(lastUid + 1, uidsToDelete);
         }
         if (!addedUids.isEmpty()) {
             Collections.sort(addedUids, Collections.reverseOrder());
-            fetchMessages(addedUids, deletedUids);
+            fetchMessages(addedUids, uidsToDelete);
         }
         // Delete and expunge messages
-        deleteMessages(deletedUids);
+        deleteMessages(uidsToDelete);
         remoteFolder.close();
 
         // Update sync state for new mailbox status
@@ -246,8 +257,7 @@ class ImapFolderSync {
         }
     }
 
-    private int pushChanges(int lastModSeq)
-        throws ServiceException, IOException {
+    private int pushChanges(int lastModSeq) throws ServiceException, IOException {
         localFolder.debug("pushChanges: lastModSeq = %d", lastModSeq);
         List<Integer> deletedIds;
         List<Integer> modifiedIds;
@@ -263,11 +273,16 @@ class ImapFolderSync {
         if (deletedIds == null) {
             deletedIds = new ArrayList<Integer>();
         }
-        if (modifiedIds != null && !modifiedIds.isEmpty()) {
+        if (modifiedIds != null) {
             for (int id : modifiedIds) {
+                clearError(id);
                 Message msg = localFolder.getMessage(id);
                 if (msg != null) {
-                    pushModification(msg, deletedIds);
+                    try {
+                        pushModification(msg, deletedIds);
+                    } catch (Exception e) {
+                        pushFailed(id, "Push modification failed", e);
+                    }
                 }
             }
         }
@@ -280,15 +295,19 @@ class ImapFolderSync {
     private void pushDeletes(List<Integer> deletedIds)
         throws ServiceException, IOException {
         int folderId = localFolder.getId();
-        List<Long> deletedUids = new ArrayList<Long>();
         for (int id : deletedIds) {
+            clearError(id);
             Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
             if (pair != null) {
                 DbImapMessage.deleteImapMessage(mailbox, folderId, id);
-                deletedUids.add(pair.getFirst().getUid());
+                long uid = pair.getFirst().getUid();
+                try {
+                    remoteFolder.deleteMessage(uid);
+                } catch (IOException e) {
+                    pushFailed(id, "Push delete failed", e);
+                }
             }
         }
-        deleteMessages(deletedUids);
     }
 
     /*
@@ -442,7 +461,7 @@ class ImapFolderSync {
         remoteFolder.info("Appending %d new message(s) to remote IMAP folder",
                           newIds.size());
         try {
-            if (connection.hasUidPlus() || isYahoo()) {
+            if (hasUidPlus()) {
                 appendMessages(newIds);
             } else {
                 appendMessagesNoUidPlus(newIds);
@@ -459,15 +478,21 @@ class ImapFolderSync {
         for (int id : ids) {
             Message msg = localFolder.getMessage(id);
             if (msg == null) {
+                clearError(id);
                 continue; // Message must have been deleted
             }
-            remoteFolder.debug("Appending new message with item id %d", id);
-            long uid = appendMessage(msg);
-            if (uid <= 0) {
-                throw ServiceException.FAILURE(
-                    "UIDPLUS supported but no UID returned for appended message", null);
+            if (skipItem(id)) {
+                LOG.debug("Skipping append of item %d due to errors", id);
+                continue;
             }
-            storeImapMessage(uid, id, msg.getFlagBitmask());
+            remoteFolder.debug("Appending new message with item id %d", id);
+            try {
+                long uid = appendMessage(msg);
+                storeImapMessage(uid, id, msg.getFlagBitmask());
+                clearError(id);
+            } catch (Exception e) {
+                syncFailed(id, "Append message failed", e);
+            }
         }
     }
 
@@ -476,7 +501,15 @@ class ImapFolderSync {
         MimeMessage mm = msg.getMimeMessage(false);
         Flags flags = SyncUtil.zimbraToImapFlags(msg.getFlagBitmask());
         Date date = SyncUtil.getInternalDate(msg, mm);
-        return remoteFolder.appendMessage(mm, flags, date);
+        long uid = remoteFolder.appendMessage(mm, flags, date);
+        if (uid <= 0 && hasUidPlus()) {
+            throw new CommandFailedException("APPEND", "UIDPLUS supported but UID not returned");
+        }
+        return uid;
+    }
+
+    private boolean hasUidPlus() {
+        return connection.hasUidPlus() || isYahoo();
     }
 
     private void appendMessagesNoUidPlus(List<Integer> ids)
@@ -490,15 +523,24 @@ class ImapFolderSync {
         for (int id : ids) {
             Message msg = localFolder.getMessage(id);
             if (msg == null) {
+                clearError(id);
                 continue; // Message must have just been deleted
+            }
+            if (skipItem(id)) {
+                LOG.debug("Skipping append of item %d due to errors", id);
+                continue;
             }
             remoteFolder.debug("Appending new message with item id %d", id);
             MimeMessage mm = msg.getMimeMessage(false);
             AppendInfo ai = new AppendInfo(msg, mm);
             Flags flags = SyncUtil.zimbraToImapFlags(ai.zflags);
             Date date = SyncUtil.getInternalDate(msg, mm);
-            remoteFolder.appendMessage(mm, flags, date);
-            appended.put(appendKey(mm.getSentDate(), ai.messageId), ai);
+            try {
+                remoteFolder.appendMessage(mm, flags, date);
+                appended.put(appendKey(mm.getSentDate(), ai.messageId), ai);
+            } catch (IOException e) {
+                syncFailed(id, "Append message failed", e);
+            }
         }
         // Find UIDs for messages just appended
         mdf = new MailDateFormat();
@@ -512,7 +554,12 @@ class ImapFolderSync {
                     String key = appendKey(date, env.getMessageId());
                     AppendInfo ai = appended.remove(key);
                     if (ai != null) {
-                        storeImapMessage(md.getUid(), ai.itemId, ai.zflags);
+                        try {
+                            storeImapMessage(md.getUid(), ai.itemId, ai.zflags);
+                        } catch (ServiceException e) {
+                            syncFailed(ai.itemId,
+                                "Couldn't store message tracker for uid " + md.getUid(), e);
+                        }
                     }
                 }
             });
@@ -525,21 +572,25 @@ class ImapFolderSync {
         // delete the local message that has just been appended since we
         // already have a copy
         for (AppendInfo ai : appended.values()) {
-            MessageData md = findMessage(ai);
-            if (md != null) {
-                long uid = md.getUid();
-                // Check for duplicate message
-                int id = DbImapMessage.getLocalMessageId(mailbox, folderId, uid);
-                if (id > 0) {
-                    remoteFolder.info("Deleting duplicate message with item " +
-                                      "id %d, uid %d", ai.itemId, uid);
-                    mailbox.delete(null, ai.itemId, MailItem.TYPE_UNKNOWN);
+            try {
+                MessageData md = findMessage(ai);
+                if (md != null) {
+                    long uid = md.getUid();
+                    // Check for duplicate message
+                    int id = DbImapMessage.getLocalMessageId(mailbox, folderId, uid);
+                    if (id > 0) {
+                        remoteFolder.info("Deleting duplicate message with item " +
+                            "id %d, uid %d", ai.itemId, uid);
+                        mailbox.delete(null, ai.itemId, MailItem.TYPE_UNKNOWN);
+                    } else {
+                        storeImapMessage(uid, ai.itemId, ai.zflags);
+                    }
                 } else {
-                    storeImapMessage(uid, ai.itemId, ai.zflags);
+                    remoteFolder.warn("Unable to determine UID for appended " +
+                        "message with item id " + ai.itemId, null);
                 }
-            } else {
-                remoteFolder.warn("Unable to determine UID for appended " +
-                                  "message with item id " + ai.itemId, null);
+            } catch (Exception e) {
+                syncFailed(ai.itemId, "Find message failed", e);
             }
         }
     }
@@ -605,6 +656,7 @@ class ImapFolderSync {
                               newLocalIds.size());
             // TODO Handle append failure for individual messages
             for (int id : newLocalIds) {
+                clearError(id);
                 Message msg = localFolder.getMessage(id);
                 if (msg != null) {
                     appendMessage(msg);
@@ -624,12 +676,12 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         String seq = 1 + ":" + lastUid;
         remoteFolder.debug("Fetching flags for UID sequence %s", seq);
-        List<Long> deletedUids = fetchFlags(seq, msgIds);
-        if (!deletedUids.isEmpty()) {
+        List<Long> uidsToDelete = fetchFlags(seq, msgIds);
+        if (!uidsToDelete.isEmpty()) {
             // Delete IMAP messages that have been removed locally
-            deleteMessages(deletedUids);
+            List<Long> deleted = deleteMessages(uidsToDelete);
             // Remove local message trackers
-            for (long uid : deletedUids) {
+            for (long uid : deleted) {
                 ImapMessage msg = trackedMsgs.getByUid(uid);
                 DbImapMessage.deleteImapMessage(
                     mailbox, tracker.getItemId(), msg.getItemId());
@@ -637,34 +689,40 @@ class ImapFolderSync {
         }
     }
 
-    private List<Long> fetchFlags(String seq, Set<Integer> msgIds)
+    private List<Long> fetchFlags(String seq, Set<Integer> existingMsgIds)
         throws ServiceException, IOException {
         Map<Long, MessageData> mds = connection.uidFetch(seq, "FLAGS");
         // Remove messages that have been flagged \Deleted
         removeDeleted(mds);
-        List<Long> deletedUids = new ArrayList<Long>();
+        List<Long> uidsToDelete = new ArrayList<Long>();
         for (MessageData md : mds.values()) {
-            Long uid = md.getUid();
+            long uid = md.getUid();
             ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
-            if (trackedMsg == null) {
+            if (trackedMsg != null) {
+                int msgId = trackedMsg.getItemId();
+                if (existingMsgIds.contains(msgId)) {
+                    existingMsgIds.remove(msgId);
+                    try {
+                        updateFlags(trackedMsg, md.getFlags());
+                        clearError(msgId);
+                    } catch (MailServiceException.NoSuchItemException e) {
+                        // Message was deleted locally
+                        uidsToDelete.add(uid);
+                        clearError(msgId);
+                    } catch (Exception e) {
+                        syncFailed(msgId, "Unable to update message flags", e);
+                    }
+                } else {
+                    uidsToDelete.add(uid);
+                    clearError(msgId);
+                }
+            } else {
                 remoteFolder.debug(
                     "Adding new message with UID %d detected while syncing flags", uid);
                 addedUids.add(uid);
-                continue;
             }
-            int msgId = trackedMsg.getItemId();
-            if (msgIds.contains(msgId)) {
-                msgIds.remove(msgId);
-                try {
-                    updateFlags(trackedMsg, md.getFlags());
-                    continue;
-                } catch (MailServiceException.NoSuchItemException e) {
-                    // Message was deleted locally
-                }
-            }
-            deletedUids.add(uid);
         }
-        return deletedUids;
+        return uidsToDelete;
     }
 
     // Updates flags for specified message.
@@ -709,21 +767,22 @@ class ImapFolderSync {
         }
     }
 
-    private void fetchMessages(long startUid, List<Long> deletedUids)
+    private void fetchMessages(long startUid, List<Long> uidsToDelete)
         throws ServiceException, IOException {
         List<Long> uids = remoteFolder.getUids(startUid, maxUid);
         if (uids.size() > 0) {
-            fetchMessages(uids, deletedUids);
+            fetchMessages(uids, uidsToDelete);
         }
     }
 
-    private void fetchMessages(List<Long> uids, List<Long> deletedUids)
+    private void fetchMessages(List<Long> uids, List<Long> uidsToDelete)
         throws ServiceException, IOException {
         remoteFolder.debug("Fetching %d new IMAP message(s)", uids.size());
         long lastCheckTime = System.currentTimeMillis();
+        removeSkippedUids(uids);
         Iterator<Long> ui = uids.iterator();
         while (ui.hasNext()) {
-            fetchMessages(nextFetchSeq(ui), deletedUids);
+            fetchMessages(nextFetchSeq(ui), uidsToDelete);
             // Send pending messages if any...
             ds.checkPendingMessages();
             long time = System.currentTimeMillis();
@@ -736,7 +795,7 @@ class ImapFolderSync {
                     remoteFolder.debug("Fetching %d newly arrived IMAP message(s)", newUids.size());
                     Iterator<Long> nui = newUids.iterator();
                     do {
-                        fetchMessages(nextFetchSeq(nui), deletedUids);
+                        fetchMessages(nextFetchSeq(nui), uidsToDelete);
                     } while (nui.hasNext());
                     maxUid = newUids.get(0);
                 }
@@ -744,6 +803,18 @@ class ImapFolderSync {
         }
     }
 
+    // Remove UIDs which should be skipped due to errors
+    private void removeSkippedUids(List<Long> uids) {
+        Iterator<Long> it = uids.iterator();
+        while (it.hasNext()) {
+            long uid = it.next();
+            if (skipUid(uid)) {
+                LOG.debug("Skipping fetch of uid %d due to errors", uid);
+                it.remove();
+            }
+        }
+    }
+    
     private String nextFetchSeq(Iterator<Long> uids) {
         StringBuilder sb = new StringBuilder();
         sb.append(uids.next());
@@ -752,12 +823,11 @@ class ImapFolderSync {
         }
         return sb.toString();
     }
-
-    private void fetchMessages(String seq, final List<Long> deletedUids)
+    
+    private void fetchMessages(String seq, final List<Long> uidsToDelete)
         throws ServiceException, IOException {
         final Map<Long, MessageData> flagsByUid =
             connection.uidFetch(seq, "(FLAGS INTERNALDATE)");
-        // Do not fetch messages that have been flagged \Deleted
         removeDeleted(flagsByUid);
         if (!flagsByUid.isEmpty()) {
             List<Long> uids = new ArrayList<Long>(flagsByUid.keySet());
@@ -765,13 +835,20 @@ class ImapFolderSync {
             connection.uidFetch(getSequence(uids.iterator()), "BODY.PEEK[]",
                 new FetchResponseHandler() {
                     public void handleFetchResponse(MessageData md) throws Exception {
-                        handleFetch(md, flagsByUid, deletedUids);
+                        long uid = md.getUid();
+                        try {
+                            handleFetch(md, flagsByUid, uidsToDelete);
+                            clearError(uid);
+                        } catch (Exception e) {
+                            syncFailed("Fetch failed for uid " + uid, e);
+                            SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
+                        }
                     }
                 });
         }
     }
 
-    // Remove messages from map which have been flagged \Deleted
+    // Discard messages that have been flagged \Deleted
     private void removeDeleted(Map<Long, MessageData> mds) {
         Iterator<MessageData> it = mds.values().iterator();
         while (it.hasNext()) {
@@ -796,8 +873,8 @@ class ImapFolderSync {
     
     private void handleFetch(MessageData md,
                              Map<Long, MessageData> flagsByUid,
-                             List<Long> deletedUids)
-        throws ServiceException, IOException {
+                             List<Long> uidsToDelete)
+        throws ServiceException, MessagingException, IOException {
         long uid = md.getUid();
         if (uid == -1) {
             throw new MailException("Missing UID in FETCH response");
@@ -809,9 +886,6 @@ class ImapFolderSync {
         }
         remoteFolder.debug("Found new IMAP message with uid %d", uid);
         ParsedMessage pm = parseMessage(body, flagsData);
-        if (pm == null) {
-            return; // Parse error
-        }
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
         int folderId = localFolder.getId();
         Message msg = imapSync.addMessage(null, pm, folderId, zflags);
@@ -826,7 +900,7 @@ class ImapFolderSync {
             // do not create a local tracker. If message was moved to another
             // folder we will append it to the remote folder when we sync
             // that folder.
-            deletedUids.add(uid);
+            uidsToDelete.add(uid);
         }
     }
 
@@ -840,30 +914,40 @@ class ImapFolderSync {
     }
     
     private ParsedMessage parseMessage(ImapData body, MessageData md)
-        throws ServiceException, IOException {
+        throws ServiceException, MessagingException, IOException {
         Date date = md.getInternalDate();
         Long time = date != null ? (Long) date.getTime() : null;
-        try {
-            boolean indexAttachments = mailbox.attachmentsIndexingEnabled();
-            if (body.isLiteral()) {
-                File file = ((Literal) body).getFile();
-                if (file != null) {
-                    return new ParsedMessage(file, time, indexAttachments);
-                }
+        boolean indexAttachments = mailbox.attachmentsIndexingEnabled();
+        if (body.isLiteral()) {
+            File file = ((Literal) body).getFile();
+            if (file != null) {
+                return new ParsedMessage(file, time, indexAttachments);
             }
-            return new ParsedMessage(body.getBytes(), time, indexAttachments);
-        } catch (ServiceException e) {
-            localFolder.error("Skipping fetched message with uid " +
-                              md.getUid() + " due to parse error", e);
-            return null;
         }
+        return new ParsedMessage(body.getBytes(), time, indexAttachments);
     }
 
-    private void deleteMessages(List<Long> uids) throws IOException {
+    // Deletes remote messages for specified uids. Returns the UIDs that were
+    // actually deleted.
+    private List<Long> deleteMessages(List<Long> uids) throws ServiceException {
+        List<Long> deleted = new ArrayList<Long>();
         if (!uids.isEmpty()) {
-            remoteFolder.deleteMessages(uids);
+            for (long uid : uids) {
+                if (skipUid(uid)) {
+                    LOG.debug("Skipping remote delete of uid %d due to errors", uid);
+                } else {
+                    try {
+                        remoteFolder.deleteMessage(uid);
+                        stats.msgsDeletedRemotely += 1;
+                        deleted.add(uid);
+                        clearError(uid);
+                    } catch (IOException e) {
+                        syncFailed("Cannot delete message with uid " + uid, e);
+                    }
+                }
+            }
         }
-        stats.msgsDeletedRemotely += uids.size();
+        return deleted;
     }
         
     /*
@@ -878,6 +962,73 @@ class ImapFolderSync {
 
     private boolean isYahoo() {
         return connection.hasCapability(AUTH_XYMCOOKIEB64);
+    }
+
+    private boolean skipItem(int itemId) {
+        return SyncErrorManager.getErrorCount(ds, itemId) > MAX_ITEM_ERRORS;
+    }
+
+    private boolean skipUid(long uid) {
+        return SyncErrorManager.getErrorCount(ds, remoteId(uid)) > MAX_ITEM_ERRORS;
+    }
+
+    private String remoteId(long uid) {
+        long uidValidity = connection.getMailbox().getUidValidity();
+        return uidValidity + ":" + uid;
+    }
+
+    private void clearError(int itemId) {
+        SyncErrorManager.clearError(ds, itemId);
+    }
+
+    private void clearError(long uid) {
+        SyncErrorManager.clearError(ds, remoteId(uid));
+    }
+
+    private void pushFailed(int itemId, String msg, Exception e)
+        throws ServiceException {
+        checkCanContinue(msg, e);
+        ds.reportError(itemId, msg, e);
+    }
+    
+    private void syncFailed(String msg, Exception e)
+        throws ServiceException {
+        checkCanContinue(msg, e);
+        ds.reportError(-1, msg, e);
+    }
+
+    private void syncFailed(int itemId, String msg, Exception e)
+        throws ServiceException {
+        checkCanContinue(msg, e);
+        if (SyncErrorManager.incrementErrorCount(ds, itemId) == MAX_ITEM_ERRORS) {
+            ds.reportError(itemId, msg, e);
+        }
+    }
+
+    // Log error and abort sync if we can't continue
+    private void checkCanContinue(String msg, Exception e) throws ServiceException {
+        LOG.error(msg, e);
+        if (!canContinue(e)) {
+            if (e instanceof ServiceException) {
+                throw (ServiceException) e;
+            } else {
+                throw ServiceException.FAILURE(msg, e);
+            }
+        }
+    }
+
+    private boolean canContinue(Throwable e) {
+        if (!ds.isOffline() || totalErrors++ > MAX_TOTAL_ERRORS) {
+            return false;
+        }
+        if (e instanceof ServiceException) {
+            Throwable cause = e.getCause();
+            return cause == null || canContinue(cause);
+        }
+        if (e instanceof SQLException) {
+            return Db.errorMatches((SQLException) e, Db.Error.DUPLICATE_ROW);
+        }
+        return e instanceof MailException;
     }
 }
 
