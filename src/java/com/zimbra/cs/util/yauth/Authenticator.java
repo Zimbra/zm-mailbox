@@ -3,6 +3,6 @@ package com.zimbra.cs.util.yauth;
 import java.io.IOException;
 
 public interface Authenticator {
-    RawAuth authenticate() throws IOException;
+    RawAuth authenticate() throws AuthenticationException, IOException;
     void invalidate();
 }

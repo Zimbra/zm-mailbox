@@ -16,13 +16,11 @@
  */
 package com.zimbra.cs.util.yauth;
 
-import org.apache.log4j.Logger;
-
 import java.io.IOException;
 
 public abstract class TokenStore {
     public String newToken(String appId, String user, String pass)
-        throws IOException {
+        throws AuthenticationException, IOException {
         removeToken(appId, user);
         String token = RawAuth.getToken(appId, user, pass);
         putToken(appId, user, token);

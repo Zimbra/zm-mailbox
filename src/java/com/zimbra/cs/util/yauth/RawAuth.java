@@ -74,7 +74,7 @@ public class RawAuth implements Auth {
     private static final long EXPIRATION_LIMIT = 60 * 1000; // 1 minute
     
     public static String getToken(String appId, String user, String pass)
-        throws IOException {
+        throws AuthenticationException, IOException {
         debug("Sending getToken request: appId = %s, user = %s", appId, user);
         Response res = doGet(GET_AUTH_TOKEN,
             new NameValuePair(APPID, appId),
@@ -86,7 +86,7 @@ public class RawAuth implements Auth {
     }
 
     public static RawAuth authenticate(String appId, String token)
-        throws IOException {
+        throws AuthenticationException, IOException {
         debug("Sending authenticate request: appId = %s, token = %s", appId, token);
         RawAuth auth = new RawAuth(appId);
         auth.authenticate(token);
@@ -115,7 +115,7 @@ public class RawAuth implements Auth {
     }
     
     private void authenticate(String token)
-        throws IOException {
+        throws AuthenticationException, IOException {
         Response res = doGet(GET_AUTH, new NameValuePair(APPID, appId),
                                        new NameValuePair(TOKEN, token));
         cookie = res.getRequiredField(COOKIE);
@@ -130,7 +130,7 @@ public class RawAuth implements Auth {
     }
 
     private static Response doGet(String action, NameValuePair... params)
-        throws IOException {
+        throws AuthenticationException, IOException {
         String uri = BASE_URI + '/' + action;
         GetMethod method = new GetMethod(uri);
         method.setQueryString(params);

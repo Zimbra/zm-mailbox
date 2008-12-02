@@ -46,7 +46,7 @@ public class MetadataTokenStore extends TokenStore {
     }
 
     @Override
-    public String newToken(String appId, String user, String pass) throws IOException {
+    public String newToken(String appId, String user, String pass) throws AuthenticationException, IOException {
         LOG.debug("Generating new yauth token for user '%s'", user);
         return super.newToken(appId, user, pass);
     }

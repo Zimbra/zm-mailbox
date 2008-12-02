@@ -40,6 +40,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.util.yauth.AuthenticationException;
 
 
 /**
@@ -72,6 +73,8 @@ public class DataSourceManager {
         	Throwable t = SystemUtil.getInnermostException(x);
             if (t instanceof LoginException)
             	throw RemoteServiceException.AUTH_FAILURE(t.getMessage(), t);
+            if (t instanceof AuthenticationException)
+            	throw (AuthenticationException)t;
             RemoteServiceException.doConnectionFailures(ds.getHost() + ":" + ds.getPort(), t);
             RemoteServiceException.doSSLFailures(t.getMessage(), t);
             throw x;
