@@ -1,9 +1,7 @@
 package com.zimbra.cs.datasource;
 
-import com.zimbra.common.util.CustomSSLSocketUtil;
 import com.zimbra.common.util.SSLSocketFactoryManager;
 
-import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.SocketFactory;
 import java.net.Socket;
@@ -53,9 +51,7 @@ public class TlsSocketFactory extends SSLSocketFactory {
     }
 
     public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(s, host, port, autoClose);
-    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return factory.createSocket(s, host, port, autoClose);
     }
 
     public String[] getDefaultCipherSuites() {

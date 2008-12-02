@@ -158,7 +158,9 @@ class TcpImapHandler extends ImapHandler {
         SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
         NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSSLExcludeCiphers());
         tlsconn.setUseClientMode(false);
-        tlsconn.startHandshake();
+        String cipherSuite = tlsconn.getSession().getCipherSuite();
+        if (cipherSuite == null || cipherSuite.equals("") || cipherSuite.equals("SSL_NULL_WITH_NULL_NULL"))
+        	tlsconn.startHandshake();
         ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(tlsconn.getInputStream());
         mOutputStream = new BufferedOutputStream(tlsconn.getOutputStream());
