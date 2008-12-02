@@ -964,7 +964,7 @@ public class LC {
         ssl_allow_mismatched_certs = new KnownKey("ssl_allow_mismatched_certs");
         ssl_allow_mismatched_certs.setDefault("true");
         
-        ssl_allow_accept_untrusted_certs = new KnownKey("ssl_allow_accept_untrusted_certs", "false", "whether to allow accepting untrusted certificates");
+        ssl_allow_accept_untrusted_certs = new KnownKey("ssl_allow_accept_untrusted_certs", "true", "whether to allow accepting untrusted certificates");
         
         zimbra_class_sslprotocolsocketfactory = new KnownKey("zimbra_class_sslprotocolsocketfactory");
         zimbra_class_sslprotocolsocketfactory.setDefault("");
