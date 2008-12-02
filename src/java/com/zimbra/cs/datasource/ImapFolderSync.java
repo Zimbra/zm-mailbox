@@ -482,7 +482,7 @@ class ImapFolderSync {
                 continue; // Message must have been deleted
             }
             if (skipItem(id)) {
-                LOG.debug("Skipping append of item %d due to errors", id);
+                LOG.warn("Skipping append of item %d due to previous errors", id);
                 continue;
             }
             remoteFolder.debug("Appending new message with item id %d", id);
@@ -527,7 +527,7 @@ class ImapFolderSync {
                 continue; // Message must have just been deleted
             }
             if (skipItem(id)) {
-                LOG.debug("Skipping append of item %d due to errors", id);
+                LOG.warn("Skipping append of item %d due to previous errors", id);
                 continue;
             }
             remoteFolder.debug("Appending new message with item id %d", id);
@@ -809,7 +809,7 @@ class ImapFolderSync {
         while (it.hasNext()) {
             long uid = it.next();
             if (skipUid(uid)) {
-                LOG.debug("Skipping fetch of uid %d due to errors", uid);
+                LOG.warn("Skipping fetch of uid %d due to previous errors", uid);
                 it.remove();
             }
         }
@@ -934,7 +934,7 @@ class ImapFolderSync {
         if (!uids.isEmpty()) {
             for (long uid : uids) {
                 if (skipUid(uid)) {
-                    LOG.debug("Skipping remote delete of uid %d due to errors", uid);
+                    LOG.warn("Skipping remote delete of uid %d due to previous errors", uid);
                 } else {
                     try {
                         remoteFolder.deleteMessage(uid);
@@ -942,7 +942,7 @@ class ImapFolderSync {
                         deleted.add(uid);
                         clearError(uid);
                     } catch (IOException e) {
-                        syncFailed("Cannot delete message with uid " + uid, e);
+                        syncFailed(uid, "Cannot delete message with uid " + uid, e);
                     }
                 }
             }
@@ -965,11 +965,11 @@ class ImapFolderSync {
     }
 
     private boolean skipItem(int itemId) {
-        return SyncErrorManager.getErrorCount(ds, itemId) > MAX_ITEM_ERRORS;
+        return SyncErrorManager.getErrorCount(ds, itemId) >= MAX_ITEM_ERRORS;
     }
 
     private boolean skipUid(long uid) {
-        return SyncErrorManager.getErrorCount(ds, remoteId(uid)) > MAX_ITEM_ERRORS;
+        return SyncErrorManager.getErrorCount(ds, remoteId(uid)) >= MAX_ITEM_ERRORS;
     }
 
     private String remoteId(long uid) {
@@ -988,27 +988,45 @@ class ImapFolderSync {
     private void pushFailed(int itemId, String msg, Exception e)
         throws ServiceException {
         checkCanContinue(msg, e);
+        LOG.error(msg, e);
         ds.reportError(itemId, msg, e);
     }
     
     private void syncFailed(String msg, Exception e)
         throws ServiceException {
         checkCanContinue(msg, e);
+        LOG.error(msg, e);
         ds.reportError(-1, msg, e);
     }
 
     private void syncFailed(int itemId, String msg, Exception e)
         throws ServiceException {
         checkCanContinue(msg, e);
-        if (SyncErrorManager.incrementErrorCount(ds, itemId) == MAX_ITEM_ERRORS) {
-            ds.reportError(itemId, msg, e);
+        int count = SyncErrorManager.incrementErrorCount(ds, itemId);
+        if (count <= MAX_ITEM_ERRORS) {
+            LOG.error(msg, e);
+            if (count == MAX_ITEM_ERRORS) {
+                ds.reportError(itemId, msg, e);
+            }
+        }
+    }
+
+    private void syncFailed(long uid, String msg, Exception e)
+        throws ServiceException {
+        checkCanContinue(msg, e);
+        int count = SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
+        if (count <= MAX_ITEM_ERRORS) {
+            LOG.error(msg, e);
+            if (count == MAX_ITEM_ERRORS) {
+                ds.reportError(-1, msg, e);
+            }
         }
     }
 
     // Log error and abort sync if we can't continue
     private void checkCanContinue(String msg, Exception e) throws ServiceException {
-        LOG.error(msg, e);
         if (!canContinue(e)) {
+            LOG.error(msg, e);
             if (e instanceof ServiceException) {
                 throw (ServiceException) e;
             } else {
