@@ -52,12 +52,6 @@ public final class ImapConnection extends MailConnection {
 
     private static final String TAG_FORMAT = "C%02d";
 
-    private static final String UID_COPY    = "UID COPY";
-    private static final String UID_FETCH   = "UID FETCH";
-    private static final String UID_STORE   = "UID STORE";
-    private static final String UID_SEARCH  = "UID SEARCH";
-    private static final String UID_EXPUNGE = "UID EXPUNGE";
-
     public ImapConnection(ImapConfig config) {
         super(config);
     }
@@ -246,7 +240,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void uidExpunge(String seq) throws IOException {
-        newRequest(UID_EXPUNGE, seq).sendCheckStatus();
+        newUidRequest(CAtom.EXPUNGE, seq).sendCheckStatus();
     }
 
     public synchronized void mclose() throws IOException {
@@ -298,7 +292,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void uidCopy(String seq, String mbox) throws IOException {
-        newRequest(UID_COPY, seq, new MailboxName(mbox)).sendCheckStatus();
+        newUidRequest(CAtom.COPY, seq, new MailboxName(mbox)).sendCheckStatus();
     }
 
     public void fetch(String seq, Object param, ResponseHandler handler)
@@ -308,7 +302,9 @@ public final class ImapConnection extends MailConnection {
 
     public void uidFetch(String seq, Object param, ResponseHandler handler)
         throws IOException {
-        fetch(UID_FETCH, seq, param, handler);
+        ImapRequest req = newUidRequest(CAtom.FETCH, seq, param);
+        req.setResponseHandler(handler);
+        req.sendCheckStatus();
     }
 
     private void fetch(String cmd, String seq, Object param,
@@ -356,7 +352,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public List<Long> uidSearch(Object... params) throws IOException {
-        return doSearch(UID_SEARCH, params);
+        return doSearch("UID SEARCH", params);
     }
 
     @SuppressWarnings("unchecked")
@@ -394,7 +390,7 @@ public final class ImapConnection extends MailConnection {
 
     public void uidStore(String seq, String item, Object flags,
                          ResponseHandler handler) throws IOException {
-        ImapRequest req = newRequest(UID_STORE, seq, item, flags);
+        ImapRequest req = newUidRequest(CAtom.STORE, seq, item, flags);
         req.setResponseHandler(handler);
         req.sendCheckStatus();
     }
@@ -410,6 +406,11 @@ public final class ImapConnection extends MailConnection {
     public ImapRequest newRequest(String cmd, Object... params) {
         return new ImapRequest(this, new Atom(cmd), params);
     }
+
+    public ImapRequest newUidRequest(CAtom cmd, Object... params) {
+        return newRequest("UID " + cmd.toString(), params); 
+    }
+    
 
     public ImapCapabilities getCapabilities() {
         return capabilities;
