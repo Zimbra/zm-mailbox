@@ -452,14 +452,6 @@ public class ZimbraSoapContext {
 
     /** Serializes this object for use in a proxied SOAP request.  The
      *  attributes encapsulated by the <code>ZimbraContext</code> -- the
-     *  response protocol, the auth token, etc. -- are carried forward.
-     *  Notification is expressly declined. */
-    public Element toProxyCtxt() {
-        return toProxyCtxt(mRequestProtocol);
-    }
-
-    /** Serializes this object for use in a proxied SOAP request.  The
-     *  attributes encapsulated by the <code>ZimbraContext</code> -- the
      *  response protocol, the auth token, etc. -- are carried forward. */
     public Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);

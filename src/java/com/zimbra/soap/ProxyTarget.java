@@ -105,7 +105,7 @@ public class ProxyTarget {
         SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
         if (proto == SoapProtocol.Soap12 && zsc.getRequestProtocol() == SoapProtocol.Soap11)
             proto = SoapProtocol.Soap11;
-        Element envelope = proto.soapEnvelope(request, zsc.toProxyCtxt());
+        Element envelope = proto.soapEnvelope(request, zsc.toProxyCtxt(proto));
 
         SoapHttpTransport transport = null;
         try {
