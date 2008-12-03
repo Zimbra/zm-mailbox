@@ -66,7 +66,7 @@ public class LiveData {
     public void setDates(long localDate, long remoteDate) throws ServiceException {
         this.localDate = localDate;
         dsi.md.put(METADATA_KEY_DATE_LOCAL, Long.toString(localDate));
-        this.localDate = localDate;
+        this.remoteDate = remoteDate;
         dsi.md.put(METADATA_KEY_DATE_REMOTE, Long.toString(remoteDate));
     }
     
