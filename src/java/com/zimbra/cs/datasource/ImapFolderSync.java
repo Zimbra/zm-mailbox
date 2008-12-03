@@ -742,7 +742,7 @@ class ImapFolderSync {
         int newRemoteFlags = SyncUtil.imapFlagsOnly(newLocalFlags);
         if (LOG.isDebugEnabled() && (newLocalFlags != localFlags ||
             newRemoteFlags != remoteFlags || newRemoteFlags != trackedFlags)) {
-            localFolder.debug("Updated flags for message with item id %d: " +
+            localFolder.debug("Updating flags for message with item id %d: " +
                 "local=%s, tracked=%s, remote=%s, new_local=%s, new_remote=%s",
                 id, Flag.bitmaskToFlags(localFlags),
                 Flag.bitmaskToFlags(trackedFlags),
