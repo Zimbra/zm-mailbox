@@ -269,10 +269,17 @@ public abstract class MailConnection {
     protected void processContinuation(String s) throws IOException {
         byte[] decoded = Base64.decodeBase64(Ascii.getBytes(s));
         byte[] request = authenticator.evaluateChallenge(decoded);
-        if (request != null) {
-            mailOut.writeLine(Ascii.toString(Base64.encodeBase64(request)));
-            mailOut.flush();
+        String data = Ascii.toString(Base64.encodeBase64(request));
+        if (traceOut != null && traceOut.suspendTrace("<authentication data>\n")) {
+            try {
+                mailOut.writeLine(data);
+            } finally {
+                traceOut.resumeTrace();
+            }
+        } else {
+            mailOut.writeLine(data);
         }
+        mailOut.flush();
     }
 
     private void startTls() throws IOException {
