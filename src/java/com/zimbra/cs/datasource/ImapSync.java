@@ -307,7 +307,7 @@ public class ImapSync extends MailItemImport {
                 zimbraPath = localRootFolder.getPath() + "/" + relativePath;
             }
         }
-        return MailItem.normalizeItemName(zimbraPath);
+        return zimbraPath;
     }
 
     /*
