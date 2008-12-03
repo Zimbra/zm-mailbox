@@ -537,7 +537,10 @@ class ImapFolderSync {
             Date date = SyncUtil.getInternalDate(msg, mm);
             try {
                 remoteFolder.appendMessage(mm, flags, date);
-                appended.put(appendKey(mm.getSentDate(), ai.messageId), ai);
+                if (ai.messageId != null) {
+                    // TODO How can Message-ID ever be missing?
+                    appended.put(appendKey(mm.getSentDate(), ai.messageId), ai);
+                }
             } catch (IOException e) {
                 syncFailed(id, "Append message failed", e);
             }
@@ -600,8 +603,11 @@ class ImapFolderSync {
             "SENTON", ai.sentDate, "SUBJECT", ImapData.asString(ai.subject));
         for (long uid : uids) {
             MessageData md = connection.uidFetch(uid, "ENVELOPE");
-            if (md != null && ai.messageId.equals(md.getEnvelope().getMessageId())) {
-                return md;
+            if (md != null) {
+                Envelope env = md.getEnvelope();
+                if (env != null && ai.messageId.equals(env.getMessageId())) {
+                    return md;
+                }
             }
         }
         return null;
