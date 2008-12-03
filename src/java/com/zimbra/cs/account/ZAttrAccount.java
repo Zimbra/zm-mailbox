@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20081203-1514 */
+    /* build: 5.0 pshao 20081203-1534 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3968,6 +3968,8 @@ public class ZAttrAccount  extends MailTarget {
      * @see #getDataSourceImapPollingIntervalAsString()
      *
      * @return zimbraDataSourceImapPollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public long getDataSourceImapPollingInterval() {
@@ -3980,6 +3982,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @return zimbraDataSourceImapPollingInterval, or null if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public String getDataSourceImapPollingIntervalAsString() {
@@ -3993,6 +3997,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param zimbraDataSourceImapPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public void setDataSourceImapPollingInterval(String zimbraDataSourceImapPollingInterval) throws com.zimbra.common.service.ServiceException {
@@ -4009,6 +4015,8 @@ public class ZAttrAccount  extends MailTarget {
      * @param zimbraDataSourceImapPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public Map<String,Object> setDataSourceImapPollingInterval(String zimbraDataSourceImapPollingInterval, Map<String,Object> attrs) {
@@ -4023,6 +4031,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public void unsetDataSourceImapPollingInterval() throws com.zimbra.common.service.ServiceException {
@@ -4038,6 +4048,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public Map<String,Object> unsetDataSourceImapPollingInterval(Map<String,Object> attrs) {
@@ -4056,6 +4068,8 @@ public class ZAttrAccount  extends MailTarget {
      * @see #getDataSourceLivePollingIntervalAsString()
      *
      * @return zimbraDataSourceLivePollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public long getDataSourceLivePollingInterval() {
@@ -4068,6 +4082,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @return zimbraDataSourceLivePollingInterval, or null if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public String getDataSourceLivePollingIntervalAsString() {
@@ -4081,6 +4097,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param zimbraDataSourceLivePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public void setDataSourceLivePollingInterval(String zimbraDataSourceLivePollingInterval) throws com.zimbra.common.service.ServiceException {
@@ -4097,6 +4115,8 @@ public class ZAttrAccount  extends MailTarget {
      * @param zimbraDataSourceLivePollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public Map<String,Object> setDataSourceLivePollingInterval(String zimbraDataSourceLivePollingInterval, Map<String,Object> attrs) {
@@ -4111,6 +4131,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public void unsetDataSourceLivePollingInterval() throws com.zimbra.common.service.ServiceException {
@@ -4126,6 +4148,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public Map<String,Object> unsetDataSourceLivePollingInterval(Map<String,Object> attrs) {
@@ -4370,6 +4394,8 @@ public class ZAttrAccount  extends MailTarget {
      * @see #getDataSourcePop3PollingIntervalAsString()
      *
      * @return zimbraDataSourcePop3PollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public long getDataSourcePop3PollingInterval() {
@@ -4382,6 +4408,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @return zimbraDataSourcePop3PollingInterval, or null if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public String getDataSourcePop3PollingIntervalAsString() {
@@ -4395,6 +4423,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param zimbraDataSourcePop3PollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public void setDataSourcePop3PollingInterval(String zimbraDataSourcePop3PollingInterval) throws com.zimbra.common.service.ServiceException {
@@ -4411,6 +4441,8 @@ public class ZAttrAccount  extends MailTarget {
      * @param zimbraDataSourcePop3PollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public Map<String,Object> setDataSourcePop3PollingInterval(String zimbraDataSourcePop3PollingInterval, Map<String,Object> attrs) {
@@ -4425,6 +4457,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public void unsetDataSourcePop3PollingInterval() throws com.zimbra.common.service.ServiceException {
@@ -4440,6 +4474,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public Map<String,Object> unsetDataSourcePop3PollingInterval(Map<String,Object> attrs) {
@@ -4458,6 +4494,8 @@ public class ZAttrAccount  extends MailTarget {
      * @see #getDataSourceRssPollingIntervalAsString()
      *
      * @return zimbraDataSourceRssPollingInterval in millseconds, or 43200000 (12h)  if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public long getDataSourceRssPollingInterval() {
@@ -4470,6 +4508,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @return zimbraDataSourceRssPollingInterval, or "12h" if unset
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public String getDataSourceRssPollingIntervalAsString() {
@@ -4483,6 +4523,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param zimbraDataSourceRssPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public void setDataSourceRssPollingInterval(String zimbraDataSourceRssPollingInterval) throws com.zimbra.common.service.ServiceException {
@@ -4499,6 +4541,8 @@ public class ZAttrAccount  extends MailTarget {
      * @param zimbraDataSourceRssPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public Map<String,Object> setDataSourceRssPollingInterval(String zimbraDataSourceRssPollingInterval, Map<String,Object> attrs) {
@@ -4513,6 +4557,8 @@ public class ZAttrAccount  extends MailTarget {
      * automated polling.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public void unsetDataSourceRssPollingInterval() throws com.zimbra.common.service.ServiceException {
@@ -4528,6 +4574,8 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public Map<String,Object> unsetDataSourceRssPollingInterval(Map<String,Object> attrs) {
@@ -16554,6 +16602,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefDisplayExternalImages(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, "");
+        return attrs;
+    }
+
+    /**
+     * whether folder color is enabled
+     *
+     * @return zimbraPrefFolderColorEnabled, or true if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=771)
+    public boolean isPrefFolderColorEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefFolderColorEnabled, true);
+    }
+
+    /**
+     * whether folder color is enabled
+     *
+     * @param zimbraPrefFolderColorEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=771)
+    public void setPrefFolderColorEnabled(boolean zimbraPrefFolderColorEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFolderColorEnabled, zimbraPrefFolderColorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether folder color is enabled
+     *
+     * @param zimbraPrefFolderColorEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=771)
+    public Map<String,Object> setPrefFolderColorEnabled(boolean zimbraPrefFolderColorEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFolderColorEnabled, zimbraPrefFolderColorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether folder color is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=771)
+    public void unsetPrefFolderColorEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFolderColorEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether folder color is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=771)
+    public Map<String,Object> unsetPrefFolderColorEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFolderColorEnabled, "");
         return attrs;
     }
 

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20081203-1514 */
+    /* build: 5.0 pshao 20081203-1534 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1656,6 +1656,8 @@ public class ZAttrProvisioning {
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=768)
     public static final String A_zimbraDataSourceImapPollingInterval = "zimbraDataSourceImapPollingInterval";
@@ -1679,6 +1681,8 @@ public class ZAttrProvisioning {
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=769)
     public static final String A_zimbraDataSourceLivePollingInterval = "zimbraDataSourceLivePollingInterval";
@@ -1719,6 +1723,8 @@ public class ZAttrProvisioning {
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=767)
     public static final String A_zimbraDataSourcePop3PollingInterval = "zimbraDataSourcePop3PollingInterval";
@@ -1733,6 +1739,8 @@ public class ZAttrProvisioning {
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
+     *
+     * @since ZCS future
      */
     @ZAttr(id=770)
     public static final String A_zimbraDataSourceRssPollingInterval = "zimbraDataSourceRssPollingInterval";
@@ -3899,6 +3907,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=511)
     public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
+
+    /**
+     * whether folder color is enabled
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=771)
+    public static final String A_zimbraPrefFolderColorEnabled = "zimbraPrefFolderColorEnabled";
 
     /**
      * whether or not folder tree is expanded

@@ -3801,33 +3801,38 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="767" name="zimbraDataSourcePop3PollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="767" name="zimbraDataSourcePop3PollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
   <desc>
     The time interval between automated data imports for a Pop3 data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="768" name="zimbraDataSourceImapPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="768" name="zimbraDataSourceImapPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
   <desc>
     The time interval between automated data imports for an Imap data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="769" name="zimbraDataSourceLivePollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="769" name="zimbraDataSourceLivePollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
   <desc>
     The time interval between automated data imports for a Live data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="770" name="zimbraDataSourceRssPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="770" name="zimbraDataSourceRssPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
   <defaultCOSValue>12h</defaultCOSValue>
   <desc>
     The time interval between automated data imports for a Rss data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
+</attr>
+
+<attr id="771" name="zimbraPrefFolderColorEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether folder color is enabled</desc>
 </attr>
 
 
