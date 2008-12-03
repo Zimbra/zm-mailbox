@@ -74,7 +74,10 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestScheduledTaskManager.class);
         sClasses.add(TestDataSource.class);
         sClasses.add(TestPurge.class);
-        sClasses.add(TestImapImport.class);
+        
+        // XXX bburtin: commenting out TestImapImport until bug 33683 is fixed
+        // sClasses.add(TestImapImport.class);
+        
         sClasses.add(TestNotification.class);
         sClasses.add(TestMaxMessageSize.class);
         sClasses.add(TestMetadata.class);
