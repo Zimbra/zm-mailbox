@@ -94,6 +94,30 @@ public class RemoteServiceException extends ServiceException {
         return new RemoteServiceException(msg, SMTP_AUTH_REQUIRED, SENDERS_FAULT, cause);
     }
     
+    public static String getErrorCode(Throwable t) {
+        if (t instanceof SocketTimeoutException || t instanceof ConnectTimeoutException || t instanceof NoHttpResponseException)
+        	return TIMEOUT;
+        if (t instanceof UnknownHostException)
+            return UNKNOWN_HOST;
+        if (t instanceof NoRouteToHostException)
+        	return NOROUTE;
+        if (t instanceof UnknownHostException)
+            return UNKNOWN_HOST;
+        if (t instanceof ProtocolException)
+        	return PROTOCOL_EXCEPTION;
+        if (t instanceof ConnectException || t instanceof SocketException)
+            return CONNECT_FAILURE;
+        if (t instanceof CertificateException)
+            return SSLCERT_ERROR;
+        if (t instanceof SSLPeerUnverifiedException)
+            return SSLCERT_MISMATCH;
+        if (t instanceof SSLHandshakeException)
+        	return SSL_HANDSHAKE;
+        if (t instanceof SSLException)
+            return SSL_FAILURE;
+        return null;
+    }
+    
     public static void doConnectionFailures(String msg, Throwable t) throws RemoteServiceException {
     	if (t instanceof SocketTimeoutException || t instanceof ConnectTimeoutException || t instanceof NoHttpResponseException)
     		throw RemoteServiceException.TIMEOUT(msg, t);
