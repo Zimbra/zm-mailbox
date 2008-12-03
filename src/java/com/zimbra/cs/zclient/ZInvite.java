@@ -138,6 +138,7 @@ public class ZInvite implements ToZJSONObject {
         private List<String> mComments;
         private List<String> mContacts;
         private Geo mGeo;
+        private String mUrl;
         private boolean mIsException;
         private boolean mIsOrganizer;
         private long mSequenceNumber;
@@ -205,6 +206,7 @@ public class ZInvite implements ToZJSONObject {
             Element geoElem = e.getOptionalElement(MailConstants.E_CAL_GEO);
             if (geoElem != null)
                 mGeo = Geo.parse(geoElem);
+            mUrl = e.getAttribute(MailConstants.A_CAL_URL, null);
 
             mIsException = e.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
             mIsOrganizer = e.getAttributeBool(MailConstants.A_CAL_ISORG, false);
@@ -281,6 +283,8 @@ public class ZInvite implements ToZJSONObject {
             }
             if (mGeo != null)
                 mGeo.toXml(compEl);
+            if (mUrl != null)
+                compEl.addAttribute(MailConstants.A_CAL_URL, mUrl);
 
             if (mIsOrganizer) compEl.addAttribute(MailConstants.A_CAL_ISORG, mIsOrganizer);
             if (mSequenceNumber > 0) compEl.addAttribute(MailConstants.A_CAL_SEQUENCE, mSequenceNumber);
@@ -427,6 +431,14 @@ public class ZInvite implements ToZJSONObject {
             mGeo = geo;
         }
 
+        public String getUrl() {
+            return mUrl;
+        }
+
+        public void setUrl(String url) {
+            mUrl = url;
+        }
+
         public boolean isException() {
             return mIsException;
         }
@@ -565,6 +577,7 @@ public class ZInvite implements ToZJSONObject {
             zjo.putList("comments", mComments);
             zjo.putList("contacts", mContacts);
             if (mGeo != null) zjo.put("geo", mGeo.toString());
+            if (mUrl != null) zjo.put("url", mUrl);
             zjo.put("isOrganizer", mIsOrganizer);
             zjo.put("sequenceNumber", mSequenceNumber);
             zjo.put("priority", mPriority);

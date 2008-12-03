@@ -120,7 +120,8 @@ public class Invite {
             List<String> comments,
             List<String> categories,
             List<String> contacts,
-            Geo geo)
+            Geo geo,
+            String url)
             {
         setItemType(itemType);
         mMethod = lookupMethod(methodStr);
@@ -159,6 +160,7 @@ public class Invite {
         mCategories = categories != null ? categories : new ArrayList<String>();
         mContacts = contacts != null ? contacts : new ArrayList<String>();
         mGeo = geo;
+        setUrl(url);
 
         setRecurrence(recurrence);
         setRecurId(recurrenceId);
@@ -248,6 +250,7 @@ public class Invite {
             List<String> categories,
             List<String> contacts,
             Geo geo,
+            String url,
             long dtStampOrZero,
             int sequenceNoOrZero,
             String partStat,
@@ -288,7 +291,7 @@ public class Invite {
                 sentByMe,
                 description,
                 Fragment.getFragment(description, true),
-                comments, categories, contacts, geo
+                comments, categories, contacts, geo, url
         );
         
     }
@@ -350,6 +353,7 @@ public class Invite {
     private static final String FN_NUM_ALARMS      = "numAl";
     private static final String FN_ALARM           = "al";
     private static final String FN_DONT_INDEX_MM   = "noidxmm";
+    private static final String FN_URL             = "url";
 
     /**
      * This is only really public to support serializing RedoOps -- you
@@ -464,6 +468,10 @@ public class Invite {
         if (geo != null) {
             meta.put(FN_GEO, geo.encodeMetadata());
         }
+
+        String url = inv.getUrl();
+        if (url != null && url.length() > 0)
+            meta.put(FN_URL, url);
 
         if (!inv.mAlarms.isEmpty()) {
             meta.put(FN_NUM_ALARMS, inv.mAlarms.size());
@@ -672,13 +680,15 @@ public class Invite {
         if (metaGeo != null)
             geo = Geo.decodeMetadata(metaGeo);
 
+        String url = meta.get(FN_URL, null);
+
         Invite invite = new Invite(itemType, methodStr, tzMap, calItem, uid, status,
                 priority, pctComplete, completed, freebusy, transp, classProp,
                 dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
                 name, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, null, fragment,
-                comments, categories, contacts, geo);
+                comments, categories, contacts, geo, url);
 
         invite.setClassPropSetByMe(classPropSetByMe);
 
@@ -977,6 +987,8 @@ public class Invite {
     public void addComment(String comment) { mComments.add(comment); }
     public Geo getGeo() { return mGeo; }
     public void setGeo(Geo geo) { mGeo = geo; }
+    public String getUrl() { return mUrl; }
+    public void setUrl(String url) { mUrl = url != null ? url : ""; }
 
     public long getDTStamp() { return mDTStamp; }
     public void setDtStamp(long stamp) {
@@ -1250,6 +1262,8 @@ public class Invite {
     private List<String> mContacts = new ArrayList<String>();
     private List<String> mComments = new ArrayList<String>();
     private Geo mGeo;
+
+    private String mUrl;
 
     // MailItem type of calendar item containing this invite
     private byte mItemType = MailItem.TYPE_APPOINTMENT;
@@ -1812,6 +1826,9 @@ public class Invite {
                                 Geo geo = Geo.parse(prop);
                                 newInv.setGeo(geo);
                                 break;
+                            case URL:
+                                newInv.setUrl(prop.getValue());
+                                break;
                             case X_ZIMBRA_LOCAL_ONLY:
                                 if (prop.getBoolValue())
                                     newInv.setLocalOnly(true);
@@ -2133,6 +2150,11 @@ public class Invite {
         // SEQUENCE
         component.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
 
+        // URL
+        String url = getUrl();
+        if (url != null && url.length() > 0)
+            component.addProperty(new ZProperty(ICalTok.URL, url));
+
         if (isLocalOnly())
             component.addProperty(new ZProperty(ICalTok.X_ZIMBRA_LOCAL_ONLY, true));
 
@@ -2209,7 +2231,8 @@ public class Invite {
                 new ArrayList<String>(mComments),
                 new ArrayList<String>(mCategories),
                 new ArrayList<String>(mContacts),
-                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null
+                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null,
+                mUrl
                 );
         inv.setClassPropSetByMe(classPropSetByMe());
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());

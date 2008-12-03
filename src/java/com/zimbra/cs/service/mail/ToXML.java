@@ -1361,6 +1361,7 @@ public class ToXML {
 
             e.addAttribute(MailConstants.A_CAL_STATUS, invite.getStatus());
             e.addAttribute(MailConstants.A_CAL_CLASS, invite.getClassProp());
+            e.addAttribute(MailConstants.A_CAL_URL, invite.getUrl());
 
             boolean allDay = invite.isAllDayEvent();
             boolean isException = invite.hasRecurId();

@@ -745,6 +745,10 @@ public class CalendarUtils {
             newInv.setGeo(geo);
         }
 
+        // URL
+        String url = element.getAttribute(MailConstants.A_CAL_URL, null);
+        newInv.setUrl(url);
+        
         // SEQUENCE
         int seq = (int) element.getAttributeLong(MailConstants.A_CAL_SEQUENCE, 0);
         newInv.setSeqNo(seq);

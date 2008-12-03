@@ -113,6 +113,7 @@
             [priority="num"]    // priority (0 - 9; default = 0)
             [percentComplete="num (integer)"]  // percent complete for VTODO (0 - 100; default = 0)
             [completed="yyyyMMddThhmmssZ"]  // VTODO COMPLETED DATE-TIME
+            [url="url"]         // URL
         >
 
            <s DATETIME> // Start date-time (required)
@@ -693,6 +694,7 @@ OR
             [ex="1|0]  // 1 if this Invite is an Exception
             [allDay="1|0"] [name="NAME"]
             [loc="LOCATION"]
+            [url="URL"]
             [rsvp="1|0"] // rsvp - 1 if response requested, 0 if no response requested
             [calItemId="mail-item-id-of-appointment"] 
             [updatedMsgId="id" updatedCompNum="compNum"] // if these are set, then this invite has been
