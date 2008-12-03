@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -127,7 +128,8 @@ public class TestDataSource extends MailDocumentHandler {
         try {
         	DataSourceManager.test(ds);
         } catch (ServiceException x) {
-        	error = x.getMessage();
+        	Throwable t = SystemUtil.getInnermostException(x);
+        	error = t.getMessage();
         	if (error == null)
         		error = "datasource test failed";
         }
