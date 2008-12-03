@@ -93,14 +93,12 @@ public class TestDataSource extends MailDocumentHandler {
             testAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
         }
         
-        if (password == null) {
-            throw ServiceException.INVALID_REQUEST("Password not specified", null);
+        if (password != null) {
+            // Password has to be encrypted explicitly since this is a temporary object.
+            // The current implementation of LdapDataSource doesn't perform encryption until
+            // the DataSource is saved.
+            testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
         }
-        
-        // Password has to be encrypted explicitly since this is a temporary object.
-        // The current implementation of LdapDataSource doesn't perform encryption until
-        // the DataSource is saved.
-        testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
         
         // import class
         value = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSource.getDefaultImportClass(type));

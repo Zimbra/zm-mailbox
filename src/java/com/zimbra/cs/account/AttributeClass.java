@@ -41,6 +41,8 @@ public enum AttributeClass {
     dataSource("zimbraDataSource"), 
     pop3DataSource("zimbraPop3DataSource"), 
     imapDataSource("zimbraImapDataSource"),
+    rssDataSource("zimbraRssDataSource"),
+    liveDataSource("zimbraLiveDataSource"),
     signature("zimbraSignature"),
     xmppComponent("zimbraXMPPComponent"),
     aclTarget("zimbraAclTarget"),

@@ -2573,7 +2573,13 @@ or
     [username="mylogin"] [password="mypassword"]/>
 </TestDataSourceRequest>
 
-<TestDataSourceResponse success="0|1" [error="Error message"]/>
+<TestDataSourceResponse>
+   <pop3 success="0|1" [error="Error message"]/>
+   
+   or
+   
+   <imap success="0|1" [error="Error message"]/>
+</TestDataSourceResponse>
 
 Tests the connection to the specified data source.  Does not modify
 the data source or import data.  If the id is specified, uses an existing

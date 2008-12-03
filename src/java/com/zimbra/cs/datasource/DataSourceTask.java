@@ -73,8 +73,14 @@ extends ScheduledTask {
             Provisioning prov = Provisioning.getInstance();
             DataSource ds = prov.get(account, DataSourceBy.id, getDataSourceId());
             if (ds != null) {
-                // Do the work
                 ZimbraLog.addDataSourceNameToContext(ds.getName());
+                if (!ds.isEnabled()) {
+                    ZimbraLog.datasource.info("DataSource is disabled.  Cancelling future tasks.");
+                    DataSourceManager.cancelTask(mbox, getDataSourceId());
+                    return null;
+                }
+                
+                // Do the work
                 DataSourceManager.importData(ds);
             } else {
                 ZimbraLog.datasource.info("DataSource %s was deleted.  Cancelling future tasks.",

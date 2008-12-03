@@ -447,6 +447,14 @@ extends Assert {
                 mbox.deleteContact(contact.getId());
             }
         }
+        
+        // Delete data sources
+        List<ZDataSource> dataSources = mbox.getAllDataSources();
+        for (ZDataSource ds : dataSources) {
+            if (ds.getName().contains(subjectSubstring)) {
+                mbox.deleteDataSource(ds);
+            }
+        }
     }
 
     private static void deleteMessages(ZMailbox mbox, String query)

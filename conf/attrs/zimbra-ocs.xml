@@ -217,6 +217,20 @@
   </comment>
 </objectclass>
 
+<objectclass id="24" name="zimbraRssDataSource" type="STRUCTURAL">
+  <sup>zimbraDataSource</sup>
+  <desc>RSS data source object</desc>
+  <comment>
+    Represents an RSS data source.
+  </comment>
+</objectclass>
+
+<objectclass id="25" name="zimbraLiveDataSource" type="STRUCTURAL">
+  <sup>zimbraDataSource</sup>
+  <desc>Hotmail data source object</desc>
+  <comment>
+    Represents a Hotmail data source.
+  </comment>
+</objectclass>
+
 </objectclasses>
-
-

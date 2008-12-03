@@ -92,6 +92,10 @@ public class ModifyDataSource extends AdminDocumentHandler {
             return AttributeClass.pop3DataSource;
         else if (type == DataSource.Type.imap)
             return AttributeClass.imapDataSource;
+        else if (type == DataSource.Type.rss)
+            return AttributeClass.rssDataSource;
+        else if (type == DataSource.Type.live)
+            return AttributeClass.liveDataSource;
         else
             return AttributeClass.dataSource;
     }

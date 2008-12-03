@@ -58,6 +58,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 
 public class TestPop3Import extends TestCase {
     private static final String USER_NAME = "user1";
+    private static final String USER2_NAME = "user2";
     private static final String NAME_PREFIX = TestPop3Import.class.getSimpleName();
     private static final String DATA_SOURCE_NAME = NAME_PREFIX;
     private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
@@ -158,7 +159,7 @@ public class TestPop3Import extends TestCase {
         mbox.deleteMailbox();
     }
     
-    /*
+    /**
      * Tests import of a message with a date in the future (bug 17031).
      */
     @Test
@@ -187,6 +188,18 @@ public class TestPop3Import extends TestCase {
         TestUtil.importDataSource(ds, localMbox, remoteMbox);
         messages = TestUtil.search(localMbox, "in:inbox " + NAME_PREFIX);
         assertEquals("Imported message not found", 1, messages.size());
+    }
+    
+    /**
+     * Tests {@link ZMailbox#testDataSource}.
+     */
+    @Test
+    public void testTestDataSource() throws Exception {
+        ZMailbox localMbox = TestUtil.getZMailbox(USER_NAME);
+        ZPop3DataSource ds = getZDataSource();
+        ds.setUsername(USER2_NAME);
+        localMbox.modifyDataSource(ds);
+        assertNull(localMbox.testDataSource(ds));
     }
     
     /**

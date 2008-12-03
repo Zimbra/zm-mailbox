@@ -47,9 +47,11 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -5898,6 +5900,7 @@ public class Mailbox {
             Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url);
             redoRecorder.setFolderId(folder.getId());
             success = true;
+            updateRssDataSource(folder);
             return folder;
         } finally {
             endTransaction(success);
@@ -6041,8 +6044,50 @@ public class Mailbox {
             checkItemChangeID(folder);
             folder.setUrl(url);
             success = true;
+            updateRssDataSource(folder);
         } finally {
             endTransaction(success);
+        }
+    }
+    
+    /**
+     * Updates the data source for an RSS folder.  If the folder URL is set,
+     * checks or creates a data source that updates the folder.  If the URL
+     * is not set, deletes the data source if necessary.
+     */
+    protected void updateRssDataSource(Folder folder) {
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = getAccount();
+            DataSource ds = null;
+            List<DataSource> dataSources = prov.getAllDataSources(account);
+            for (DataSource i : dataSources) {
+                if (i.getType() == DataSource.Type.rss && i.getFolderId() == folder.getId()) {
+                    ds = i;
+                    break;
+                }
+            }
+
+            if (StringUtil.isNullOrEmpty(folder.getUrl())) {
+                if (ds != null) {
+                    // URL removed from folder.
+                    String dsid = ds.getId();
+                    prov.deleteDataSource(account, dsid);
+                    DataSourceManager.updateSchedule(account.getId(), dsid);
+                }
+                return;
+            }
+
+            // URL is not null or empty.  Create data source if necessary.
+            if (ds == null) {
+                Map<String, Object> attrs = new HashMap<String, Object>();
+                attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_TRUE);
+                attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(folder.getId()));
+                ds = prov.createDataSource(account, DataSource.Type.rss, "RSS-" + folder.getId(), attrs);
+                DataSourceManager.updateSchedule(account.getId(), ds.getId());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("Unable to update data source for folder %s.", folder.getPath(), e);
         }
     }
 
@@ -6076,6 +6121,7 @@ public class Mailbox {
         if (sdata.items.isEmpty()) {
             if (subscription && isCalendar)
                 emptyFolder(octxt, folderId, false);
+            updateRssDataSource(folder);
             return;
         }
 
@@ -6124,6 +6170,8 @@ public class Mailbox {
                 ZimbraLog.mailbox.warn("could not update feed metadata", e);
             }
         }
+        
+        updateRssDataSource(folder);
     }
 
     public synchronized void setSubscriptionData(OperationContext octxt, int folderId, long date, String guid) throws ServiceException {

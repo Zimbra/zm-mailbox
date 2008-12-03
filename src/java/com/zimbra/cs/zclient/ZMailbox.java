@@ -3383,6 +3383,11 @@ public class ZMailbox implements ToZJSONObject {
         invoke(req);
     }
 
+    /**
+     * Creates a data source.
+     *
+     * @return the new data source id
+     */
     public String createDataSource(ZDataSource source) throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_DATA_SOURCE_REQUEST);
         source.toElement(req);
@@ -3390,23 +3395,20 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     /**
-     *
-     * @param host pop server hostname
-     * @param port pop server port
-     * @param username pop server username
-     * @param password pop server password
-     * @return null on success, or an error string on failure.
-     * @throws ServiceException on error
+     * Tests a data source.
+     * 
+     * @return <tt>null</tt> on success, or the error string on failure
      */
-    public String testPop3DataSource(String host, int port, String username, String password) throws ServiceException {
+    public String testDataSource(ZDataSource source) throws ServiceException {
         Element req = newRequestElement(MailConstants.TEST_DATA_SOURCE_REQUEST);
-        Element pop3 = req.addElement(MailConstants.E_DS_POP3);
-        pop3.addAttribute(MailConstants.A_DS_HOST, host);
-        pop3.addAttribute(MailConstants.A_DS_PORT, port);
-        pop3.addAttribute(MailConstants.A_DS_USERNAME, username);
-        pop3.addAttribute(MailConstants.A_DS_PASSWORD, password);
+        source.toElement(req);
         Element resp = invoke(req);
-        boolean success = resp.getAttributeBool(MailConstants.A_DS_SUCCESS, false);
+        List<Element> children = resp.listElements();
+        if (children.size() == 0) {
+            return MailConstants.TEST_DATA_SOURCE_RESPONSE + " has no child elements";
+        }
+        Element dsEl = children.get(0);
+        boolean success = dsEl.getAttributeBool(MailConstants.A_DS_SUCCESS, false);
         if (!success) {
             return resp.getAttribute(MailConstants.A_DS_ERROR, "error");
         } else {
@@ -3423,9 +3425,25 @@ public class ZMailbox implements ToZJSONObject {
                 result.add(new ZPop3DataSource(ds));
             } else if (ds.getName().equals(MailConstants.E_DS_IMAP)) {
                 result.add(new ZImapDataSource(ds));
+            } else if (ds.getName().equals(MailConstants.E_DS_RSS)) {
+                result.add(new ZRssDataSource(ds));
             }
         }
         return result;
+    }
+    
+    /**
+     * Gets a data source by id.
+     * @return the data source, or <tt>null</tt> if no data source with the
+     * given id exists
+     */
+    public ZDataSource getDataSourceById(String id) throws ServiceException {
+        for (ZDataSource ds : getAllDataSources()) {
+            if (ds.getId().equals(id)) {
+                return ds;
+            }
+        }
+        return null;
     }
 
     public void modifyDataSource(ZDataSource source) throws ServiceException {

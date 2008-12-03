@@ -23,6 +23,7 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,7 +35,6 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.CalDavDataImport;
@@ -43,8 +43,8 @@ import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 /**
  * @author schemers
@@ -58,7 +58,7 @@ public class DataSource extends AccountProperty {
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
     public enum Type {
-        pop3, imap, caldav, live, yab;
+        pop3, imap, caldav, live, yab, rss;
         
         public static Type fromString(String s) throws ServiceException {
             try {
@@ -82,6 +82,10 @@ public class DataSource extends AccountProperty {
     }
     
     public interface DataImport {
+        /**
+         * Tests connecting to a data source.  
+         * @throws ServiceException if an error occurred
+         */
         public abstract void test() throws ServiceException;
 
         public abstract void importData(List<Integer> folderIds, boolean fullSync)
@@ -162,27 +166,85 @@ public class DataSource extends AccountProperty {
         String data = getAttr(Provisioning.A_zimbraDataSourcePassword);
         return data == null ? null : decryptData(getId(), data); 
     }
-    
+
     /**
-     * Returns the poll interval in milliseconds.  If <tt>zimbraDataSourcePollingInterval</tt>
+     * Returns the polling interval in milliseconds.  If <tt>zimbraDataSourcePollingInterval</tt>
      * is not specified on the data source, uses the value set for the account.  If not
      * set on either the data source or account, returns <tt>0</tt>.
      */
     public long getPollingInterval()
     throws ServiceException {
+        long interval;
         String val = getAttr(Provisioning.A_zimbraDataSourcePollingInterval);
-        if (val == null) {
-            val = getAccount().getAttr(Provisioning.A_zimbraDataSourcePollingInterval);
-        }
-        long interval = DateUtil.getTimeInterval(val, 0);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getAccount(prov);
 
-        // Don't allow anyone to poll more frequently than every 10 seconds
+        // Get interval from data source or account.
+        if (val != null) {
+            interval = getTimeInterval(Provisioning.A_zimbraDataSourcePollingInterval, 0);
+        } else {
+            migratePollingIntervalIfNecessary(prov, account);
+            switch(getType()) {
+            case pop3:
+                interval = account.getDataSourcePop3PollingInterval();
+                break;
+            case imap:
+                interval = account.getDataSourceImapPollingInterval();
+                break;
+            case live:
+                interval = account.getDataSourceLivePollingInterval();
+                break;
+            case rss:
+                interval = account.getDataSourceRssPollingInterval();
+                break;
+            default:
+                return 0;
+            }
+        }
+
+        // Don't allow anyone to poll more frequently than zimbraDataSourceMinPollingInterval
+        // or 10 seconds, whichever is greater.
+        long min = account.getDataSourceMinPollingInterval();
         long safeguard = 10 * Constants.MILLIS_PER_SECOND;
-        if (0 < interval && interval < safeguard) {
-            interval = safeguard;
+        if (min < safeguard) {
+            min = safeguard;
+        }
+        if (0 < interval && interval < min) {
+            interval = min;
         }
         
         return interval;
+    }
+    
+    /**
+     * Migrates the old <tt>zimbraDataSourcePollingInterval</tt> on account to
+     * <tt>zimbraDataSourcePop3PollingInterval</tt> and <tt>zimbraDataSourceImapPollingInterval</tt>.
+     * Runs only once per account.  This code can be removed after 6.0. 
+     */
+    private void migratePollingIntervalIfNecessary(Provisioning prov, Account account)
+    throws ServiceException {
+        // Migrate Account value.
+        String oldInterval = account.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, false);
+        if (!StringUtil.isNullOrEmpty(oldInterval)) {
+            ZimbraLog.datasource.info("Migrating account POP3 and IMAP polling intervals to %s.", oldInterval);
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
+            attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, oldInterval);
+            attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, oldInterval);
+            prov.modifyAttrs(account, attrs);
+        }
+        
+        // Migrate Cos value.
+        Cos cos = account.getCOS();
+        oldInterval = cos.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, false);
+        if (!StringUtil.isNullOrEmpty(oldInterval)) {
+            ZimbraLog.datasource.info("Migrating COS POP3 and IMAP polling intervals to %s.", oldInterval);
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
+            attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, oldInterval);
+            attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, oldInterval);
+            prov.modifyAttrs(cos, attrs);
+        }
     }
     
     /**
@@ -279,6 +341,7 @@ public class DataSource extends AccountProperty {
     	return true;
     }
 
+    @SuppressWarnings("unused")
     public void disableSync(int folderId) throws ServiceException {
         // Does nothing for online
     }
@@ -292,6 +355,7 @@ public class DataSource extends AccountProperty {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public boolean checkPendingMessages() throws ServiceException {
         // Does nothing for online
         return false;

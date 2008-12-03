@@ -1882,6 +1882,8 @@ public class ToXML {
             return MailConstants.E_DS_LIVE;
         case yab:
             return MailConstants.E_DS_YAB;
+        case rss:
+            return MailConstants.E_DS_RSS;
         default:
             return MailConstants.E_DS_UNKNOWN;
         }

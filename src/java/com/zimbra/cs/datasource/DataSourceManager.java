@@ -38,12 +38,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 
 
-/**
- * Represents an external data source, such as a POP3 or IMAP mail server,
- * from which ZCS can import <code>MailItem</code>s.
- * 
- * @author bburtin
- */
 public class DataSourceManager {
     // accountId -> dataSourceId -> ImportStatus
     private static final Map<String, Map<String, ImportStatus>> sImportStatus =
@@ -81,6 +75,8 @@ public class DataSourceManager {
             return new LiveImport(ds);
         case pop3:
             return NEW_SYNC_ENABLED ? new Pop3Sync(ds) : new Pop3Import(ds);
+        case rss:
+            return new RssImport(ds);
         default:
             throw new IllegalArgumentException(
                 "Unknown data import type: " + ds.getType());
@@ -125,7 +121,7 @@ public class DataSourceManager {
         importData(fs, null, fullSync);
     }
 
-    /*
+    /**
      * Executes the data source's <code>MailItemImport</code> implementation
      * to import data in the current thread.
      */
@@ -207,6 +203,13 @@ public class DataSourceManager {
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
             return;
         }
+        if (!ds.isEnabled()) {
+            ZimbraLog.datasource.info(
+                "Data source %s is disabled.  Deleting scheduled task.", dsId);
+            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
+            DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+            return;
+        }
         Connection conn = null;
         
         ZimbraLog.datasource.info("Updating schedule for data source %s", ds.getName());
@@ -220,7 +223,7 @@ public class DataSourceManager {
             }
             conn.commit();
         } catch (ServiceException e) {
-            ZimbraLog.datasource.warn("Unable to schedule data source %s", ds.getName());
+            ZimbraLog.datasource.warn("Unable to schedule data source %s", ds.getName(), e);
             DbPool.quietRollback(conn);
         } finally {
             DbPool.quietClose(conn);
