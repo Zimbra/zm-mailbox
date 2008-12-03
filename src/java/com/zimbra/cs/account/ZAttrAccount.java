@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081201-1421 */
+    /* build: 5.0 boris 20081203-1514 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4457,11 +4457,11 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @see #getDataSourceRssPollingIntervalAsString()
      *
-     * @return zimbraDataSourceRssPollingInterval in millseconds, or -1 if unset
+     * @return zimbraDataSourceRssPollingInterval in millseconds, or 43200000 (12h)  if unset
      */
     @ZAttr(id=770)
     public long getDataSourceRssPollingInterval() {
-        return getTimeInterval(Provisioning.A_zimbraDataSourceRssPollingInterval, -1L);
+        return getTimeInterval(Provisioning.A_zimbraDataSourceRssPollingInterval, 43200000L);
     }
 
     /**
@@ -4469,11 +4469,11 @@ public class ZAttrAccount  extends MailTarget {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @return zimbraDataSourceRssPollingInterval, or null if unset
+     * @return zimbraDataSourceRssPollingInterval, or "12h" if unset
      */
     @ZAttr(id=770)
     public String getDataSourceRssPollingIntervalAsString() {
-        return getAttr(Provisioning.A_zimbraDataSourceRssPollingInterval, null);
+        return getAttr(Provisioning.A_zimbraDataSourceRssPollingInterval, "12h");
     }
 
     /**
