@@ -1,7 +1,7 @@
 IM Soap API Reference
 =======================
 
-Some terms:
+A few terms:
 
 ROSTER: your list of buddies
 
