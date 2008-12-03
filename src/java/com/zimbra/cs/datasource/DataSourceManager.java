@@ -21,11 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.security.auth.login.LoginException;
-
-import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
@@ -40,7 +36,6 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
-import com.zimbra.cs.util.yauth.AuthenticationException;
 
 
 /**
@@ -70,13 +65,6 @@ public class DataSourceManager {
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
         } catch (ServiceException x) {
         	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
-        	Throwable t = SystemUtil.getInnermostException(x);
-            if (t instanceof LoginException)
-            	throw RemoteServiceException.AUTH_FAILURE(t.getMessage(), t);
-            if (t instanceof AuthenticationException)
-            	throw (AuthenticationException)t;
-            RemoteServiceException.doConnectionFailures(ds.getHost() + ":" + ds.getPort(), t);
-            RemoteServiceException.doSSLFailures(t.getMessage(), t);
             throw x;
         }        
     }
