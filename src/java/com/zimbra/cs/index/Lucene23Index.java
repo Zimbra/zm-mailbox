@@ -20,21 +20,17 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexCommitPoint;
-import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LogByteSizeMergePolicy;
@@ -44,11 +40,8 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FuzzyTermEnum;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
@@ -66,13 +59,11 @@ import com.zimbra.cs.stats.ZimbraPerf;
 /**
  * 
  */
-class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
+class Lucene23Index implements ILuceneIndex, ITextIndex {
     
     static {
         System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z23FSDirectory");
     }
-    
-    private static final boolean sUseDeletionPolicy = LC.zimbra_index_use_nfs_deletion_policy.booleanValue();
     
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
@@ -204,17 +195,11 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         }
     }
 
-    public void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, 
-        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
-        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, sortSubject, sortSender, deleteFirst);
-    }
-    
     public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
         String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
         
-        long start = 0;
         synchronized(getLock()) {        
             
             openIndexWriter();
@@ -277,16 +262,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         }
     }
     
-//    int countTermOccurences(String fieldName, String term) throws IOException {
-//        RefCountedIndexReader reader = getCountedIndexReader();
-//        try {
-//            TermEnum e = reader.getReader().terms(new Term(fieldName, term));
-//            return e.docFreq();
-//        } finally {
-//            reader.release();
-//        }
-//    }
-
     public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
         synchronized(getLock()) {
             openIndexWriter();
@@ -331,7 +306,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
 
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
-                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true, (sUseDeletionPolicy ? this : null));
+                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true, null);
                 
                 if (ZimbraLog.index_lucene.isDebugEnabled())
                     writer.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
@@ -343,51 +318,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         }
     }
 
-//    void enumerateDocuments(DocEnumInterface c) throws IOException {
-//        synchronized(getLock()) {        
-//            RefCountedIndexReader reader = this.getCountedIndexReader();
-//            try {
-//                IndexReader iReader = reader.getReader();
-//                int maxDoc = iReader.maxDoc();
-//                c.maxDocNo(maxDoc);
-//                for (int i = 0; i < maxDoc; i++) {
-//                    if (!c.onDocument(iReader.document(i), iReader.isDeleted(i))) {
-//                        return;
-//                    }
-//                }
-//            } finally {
-//                reader.release();
-//            }
-//        }        
-//    }
-////    
-    
-    public void checkBlobIds() throws IOException {
-        sLog.warn("Starting blob ID check for index "+this.toString());
-        List<BrowseTerm> l = new LinkedList<BrowseTerm>();
-        enumerateTermsForField("", new Term(LuceneFields.L_MAILBOX_BLOB_ID, ""),new TermEnumCallback(l));
-        
-        for (BrowseTerm result : l) {
-            String s = result.term;
-            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
-            try {
-                Query q = new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, s));
-                Hits hits = searcher.getSearcher().search(q);
-                for (int i = 0; i < hits.length(); i++) {
-                    Document d = hits.doc(i);
-                    String blobId = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
-                    if (blobId == null || !blobId.equals(s)) {
-                        sLog.warn("Stored IndexId does not match indexed ItemId (stored="+blobId+" indexed="+s);
-                    }
-                }
-                    
-            } finally {
-                searcher.release();
-            }
-        }
-        sLog.warn("Completed blob ID check for index "+this.toString());
-    }
-    
     private void enumerateTermsForField(String regex, Term firstTerm, TermEnumInterface callback) throws IOException
     {
         synchronized(getLock()) {
@@ -502,351 +432,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         }
     }
 
-//    private static class ChkIndexStage1Callback implements TermEnumInterface 
-//    {
-//        HashSet msgsInMailbox = new HashSet(); // hash of all messages in my mailbox
-//        private MailboxIndex idx = null;
-//        private ArrayList<Integer> toDelete = new ArrayList<Integer>(); // to be deleted from index
-//        SearchResult compareTo = new SearchResult();  
-//
-//        ChkIndexStage1Callback(MailboxIndex idx) {
-//            this.idx = idx;
-//        }
-//
-//        void doIndexRepair() throws IOException 
-//        {
-//            
-//            Mailbox mbox = null;
-//            try {
-//                mbox = MailboxManager.getInstance().getMailboxById(idx.mMailboxId);
-//            } catch (ServiceException e) {
-//                sLog.error("Could not get mailbox: "+idx.mMailboxId+" aborting index repair");
-//                return;
-//            }
-//                
-//            // delete first -- that way if there were any re-indexes along the way we know we're OK
-//            if (toDelete.size() > 0) {
-//                sLog.info("There are "+toDelete.size()+" items to delete");
-//                int ids[] = new int[toDelete.size()];
-//                for (int i = 0; i < toDelete.size(); i++) {
-//                    ids[i] = ((Integer)(toDelete.get(i))).intValue();
-//                }
-//                idx.deleteDocuments(ids);
-//            }
-//            
-//            
-//            // if there any messages left in this list, then they are missing from the index and 
-//            // we should try to reindex them
-//            if (msgsInMailbox.size() > 0)
-//            {
-//                sLog.info("There are "+msgsInMailbox.size() + " msgs to be re-indexed");
-//                for (Iterator iter = msgsInMailbox.iterator(); iter.hasNext();) {
-//                    SearchResult cur = (SearchResult)iter.next();
-//
-//                    try {
-//                        MailItem item = mbox.getItemById(null, cur.id, cur.type);
-//                        item.reindex(null, false /* already deleted above */, null);
-//                    } catch(ServiceException  e) {
-//                        sLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
-//                    } catch(java.lang.RuntimeException e) {
-//                        sLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
-//                    }
-//                }
-//            }
-//        }
-//
-//        public void onTerm(Term term, int docFreq) 
-//        {
-//            compareTo.id = Integer.parseInt(term.text());
-//
-//            if (!msgsInMailbox.contains(compareTo)) {
-//                sLog.info("In index but not DB: "+compareTo.id);
-//                toDelete.add(new Integer(compareTo.id));
-//            } else {
-//                // remove from the msgsInMailbox hash.  If there are still entries in this
-//                // table, then it means that there are items in the mailbox, but not in the index
-//                msgsInMailbox.remove(compareTo);
-//            }
-//        }
-//    }
-//
-//    private static class ChkIndexStage2Callback 
-//    {
-//        public List msgsInMailbox = new LinkedList(); // hash of all messages in my mailbox
-//        private ListIterator msgsIter;
-//
-//        private String mSortField;
-//        SearchResult mCur = null;
-//
-//
-//        ChkIndexStage2Callback(MailboxIndex idx, String sortField, boolean reversed) {
-//            mSortField = sortField;
-//            this.reversed = reversed;
-//        }
-//
-//        boolean beginIterating() {
-//            msgsIter = msgsInMailbox.listIterator();
-//            mCur = (SearchResult)msgsIter.next();
-//            return (mCur!= null);
-//        }
-//
-//        boolean reversed = false;
-//
-//        long compare(long lhs, long rhs) {
-//            if (!reversed) {
-//                return (lhs - rhs);
-//            } else {
-//                return (rhs - lhs);
-//            }
-//        }
-//
-//        void onDocument(Document doc) 
-//        {
-//            int idxId = Integer.parseInt(doc.get(LuceneFields.L_MAILBOX_BLOB_ID));
-//
-//            String sortField = doc.get(mSortField);
-//            String partName = doc.get(LuceneFields.L_PARTNAME);
-//            String dateStr = doc.get(LuceneFields.L_SORT_DATE);
-//            long docDate = DateField.stringToTime(dateStr);
-//            // fix for Bug 311 -- SQL truncates dates when it stores them
-//            long truncDocDate = (docDate /1000) * 1000;
-//
-//            retry: do {
-//                long curMsgDate = ((Long)(mCur.sortkey)).longValue();
-//
-//
-//                if (mCur.id == idxId) {
-//                    // next part same doc....good.  keep going..
-//                    if (curMsgDate != truncDocDate) {
-//                        sLog.info("WARN  : DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
-//                                    " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
-//                                    " "+mSortField+"="+sortField);
-//
-//                        sLog.info("\tWARNING: DB-DATE doesn't match TRUNCDATE!");
-//                    } else {
-//                        sLog.debug("OK    : DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
-//                                    " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
-//                                    " "+mSortField+"="+sortField);
-//                    }
-//                    return;
-//                } else {
-//                    if (false) {
-////                      if (!msgsIter.hasNext()) {
-////                      if (mMissingTerms == null) {
-////                      mLog.info("ERROR: end of msgIter while still iterating index");
-////                      }
-////                      mLog.info("ERROR: DB no results INDEX has mailitem: "+idxId);
-////                      return;
-//                    } else {
-//                        // 3 possibilities:
-//                        //    doc < cur
-//                        //    doc > cur
-//                        //    doc == cur
-////                      if (truncDocDate < curMsgDate) { // case 1
-//                        if (compare(truncDocDate,curMsgDate) < 0) { // case 1
-//                            sLog.info("ERROR1: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
-//                                        " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
-//                                        " "+mSortField+"="+sortField);
-//
-//                            // move on to next document
-//                            return;
-////                          } else if (truncDocDate > curMsgDate) { // case 2
-//                        } else if (compare(truncDocDate,curMsgDate)>0) { // case 2
-////                          mLog.info("ERROR2: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
-////                          " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
-////                          " "+mSortField+"="+sortField);
-//
-//                            if (!msgsIter.hasNext()) {
-//                                sLog.info("ERROR4: DB no results INDEX has mailitem: "+idxId);
-//                                return;
-//                            }
-//                            mCur = (SearchResult)msgsIter.next();
-//
-//                            continue; // try again!
-//                        } else { // same date!
-//                            // 1st,look backwards for a match
-//                            if (msgsIter.hasPrevious()) {
-//                                do {
-//                                    mCur = (SearchResult)msgsIter.previous();
-//                                    if (mCur.id == idxId) {
-//                                        continue retry;
-//                                    }
-//                                    curMsgDate = ((Long)(mCur.sortkey)).longValue();
-//                                } while(msgsIter.hasPrevious() && curMsgDate == truncDocDate);
-//
-//                                // Move the iterator fwd one, so it is on the correct time...
-//                                mCur = (SearchResult)msgsIter.next();
-//
-//                            }
-//
-//                            // now, look fwd.  Sure, we might check some twice here.  Oh well
-//                            if (msgsIter.hasNext()) {
-//                                do {
-//                                    mCur = (SearchResult)msgsIter.next();
-//                                    if (mCur.id == idxId) {
-//                                        continue retry;
-//                                    }
-//                                    curMsgDate = ((Long)(mCur.sortkey)).longValue();
-//                                } while (msgsIter.hasNext() && curMsgDate == truncDocDate);
-//
-//                                // Move the iterator back one, so it is on the correct time...
-//                                mCur = (SearchResult)msgsIter.previous();
-//                            }
-//
-//
-//                            sLog.info("ERROR3: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
-//                                        " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
-//                                        " "+mSortField+"="+sortField);
-//                            return;
-//                        } // big if...else
-//                    } // has a next
-//                } // else if IDs don't mtch
-//            } while(true);
-//        } // func
-//
-//    } // class
-//
-//    void chkIndex(boolean repair) throws ServiceException 
-//    {
-//        synchronized(getLock()) {        
-//            flush();
-//
-//            Connection conn = null;
-//            conn = DbPool.getConnection();
-//            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
-//
-//
-//            ///////////////////////////////
-//            //
-//            // Stage 1 -- look for missing or extra messages and reindex/delete as necessary.
-//            //
-//            {
-//                DbSearchConstraints c = new DbSearchConstraints();
-//
-//                c.mailbox = mbox;
-//                c.sort = DbSearch.SORT_BY_DATE;
-//                c.types = new HashSet<Byte>();
-//                c.types.add(MailItem.TYPE_CONTACT); 
-//                c.types.add(MailItem.TYPE_MESSAGE);
-//                c.types.add(MailItem.TYPE_NOTE);
-//
-//                ChkIndexStage1Callback callback = new ChkIndexStage1Callback(this);
-//
-//                DbSearch.search(callback.msgsInMailbox, conn, c);
-//                sLog.info("Verifying (repair="+(repair?"TRUE":"FALSE")+") Index for Mailbox "+this.mMailboxId+" with "+callback.msgsInMailbox.size()+" items.");
-//
-//                try {
-//                    this.enumerateTermsForField(new Term(LuceneFields.L_MAILBOX_BLOB_ID, ""), callback);
-//                } catch (IOException e) {
-//                    throw ServiceException.FAILURE("Caught IOException while enumerating fields", e);
-//                }
-//
-//                sLog.info("Stage 1 Verification complete for Mailbox "+this.mMailboxId);
-//
-//                if (repair) {
-//                    try {
-//                        sLog.info("Attempting Stage 1 Repair for mailbox "+this.mMailboxId);
-//                        callback.doIndexRepair();
-//                    } catch (IOException e) {
-//                        throw ServiceException.FAILURE("Caught IOException while repairing index", e);
-//                    }
-//                    flush();
-//                }
-//            }
-//
-//            /////////////////////////////////
-//            //
-//            // Stage 2 -- verify SORT_BY_DATE orders match up
-//            //
-//            {
-//                sLog.info("Stage 2 Verify SORT_DATE_ASCENDNIG for Mailbox "+this.mMailboxId);
-//
-//                // SORT_BY__DATE_ASC
-//                DbSearchConstraints c = new DbSearchConstraints();
-//
-//                c.mailbox = mbox;
-//                c.sort = DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING;
-//                c.types = new HashSet<Byte>();
-//                c.types.add(MailItem.TYPE_CONTACT); 
-//                c.types.add(MailItem.TYPE_MESSAGE);
-//                c.types.add(MailItem.TYPE_NOTE);
-//
-//                String lucSortField = LuceneFields.L_SORT_DATE;
-//
-//                ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, false);
-//
-//                DbSearch.search(callback.msgsInMailbox, conn, c);
-//                RefCountedIndexSearcher searcher = null;
-//                try {
-//                    callback.beginIterating();
-//                    searcher = getCountedIndexSearcher();
-//
-//                    TermQuery q = new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
-//                    Hits luceneHits = searcher.getSearcher().search(q, getSort(SortBy.DATE_ASCENDING));
-//
-//                    for (int i = 0; i < luceneHits.length(); i++) {
-//                        callback.onDocument(luceneHits.doc(i));
-//                    }
-//                } catch (IOException e) {
-//                    throw ServiceException.FAILURE("Caught IOException while enumerating fields", e);
-//                } finally {
-//                    if (searcher != null) {
-//                        searcher.release();
-//                    }
-//                }
-//
-//                sLog.info("Stage 2 Verification complete for Mailbox "+this.mMailboxId);
-//
-//            }
-//
-//            /////////////////////////////////
-//            //
-//            // Stage 3 -- verify SORT_BY_DATE orders match up
-//            //
-//            {
-//                sLog.info("Stage 3 Verify SORT_DATE_DESCENDING for Mailbox "+this.mMailboxId);
-//
-//                // SORT_BY__DATE_DESC
-//                DbSearchConstraints c = new DbSearchConstraints();
-//
-//                c.mailbox = mbox;
-//                c.sort = DbSearch.SORT_BY_DATE | DbSearch.SORT_DESCENDING;
-//
-//                c.types = new HashSet<Byte>();
-//                c.types.add(MailItem.TYPE_CONTACT); 
-//                c.types.add(MailItem.TYPE_MESSAGE);
-//                c.types.add(MailItem.TYPE_NOTE);
-//
-//
-//                String lucSortField = LuceneFields.L_SORT_DATE;
-//
-//                ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, true);
-//
-//                DbSearch.search(callback.msgsInMailbox, conn, c);
-//                RefCountedIndexSearcher searcher = null;
-//                try {
-//                    callback.beginIterating();
-//                    searcher = getCountedIndexSearcher();
-//
-//                    TermQuery q = new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
-//                    Hits luceneHits = searcher.getSearcher().search(q, getSort(SortBy.DATE_DESCENDING));
-//
-//                    for (int i = 0; i < luceneHits.length(); i++) {
-//                        callback.onDocument(luceneHits.doc(i));
-//                    }
-//                } catch (IOException e) {
-//                    throw ServiceException.FAILURE("Caught IOException while enumerating fields", e);
-//                } finally {
-//                    if (searcher != null) {
-//                        searcher.release();
-//                    }
-//                }
-//
-//                sLog.info("Stage 3 Verification complete for Mailbox "+this.mMailboxId);
-//            }
-//        }
-//    }
-
     /**
      * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
@@ -897,18 +482,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
 
     public String toString() { return "Lucene23Index at "+mIdxDirectory.toString(); }
 
-//    Collection getFieldNames() throws IOException {
-//        synchronized(getLock()) {        
-//            RefCountedIndexReader reader = this.getCountedIndexReader();
-//            try {
-//                IndexReader iReader = reader.getReader();
-//                return iReader.getFieldNames(FieldOption.ALL);
-//            } finally {
-//                reader.release(); 
-//            }
-//        }
-//    }
-    
     private long getLastWriteTime() { return mLastWriteTime; }
 
     private final Object getLock() { return mMbidx.getLock(); }
@@ -1013,17 +586,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             super.finalize();
         }
     }
-//    protected Spans getSpans(SpanQuery q) throws IOException {
-//        synchronized(getLock()) {        
-//            RefCountedIndexReader reader = this.getCountedIndexReader();
-//            try {
-//                IndexReader iReader = reader.getReader();
-//                return q.getSpans(iReader);
-//            } finally {
-//                reader.release();
-//            }
-//        }
-//    };
 
     /**
      * Close the index writer and write commit/abort entries for all
@@ -1315,29 +877,29 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         
         assert(mIndexWriterMutex.isHeldByCurrentThread());
         
-        boolean useBatchIndexing;
         try {
-            useBatchIndexing = mMbidx.useBatchedIndexing();
-        } catch (ServiceException e) {
-            throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
-        }
-        final LuceneConfigSettings.Config config;
-        if (useBatchIndexing) {
-            config = LuceneConfigSettings.batched;
-        } else {
-            config = LuceneConfigSettings.nonBatched;
-        }
-        
-        //
-        // at this point, we've put ourselves into the writer cache
-        // and we have the Write Mutex....so open the file if
-        // necessary and return
-        //
-        try {
+            boolean useBatchIndexing;
+            try {
+                useBatchIndexing = mMbidx.useBatchedIndexing();
+            } catch (ServiceException e) {
+                throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
+            }
+            final LuceneConfigSettings.Config config;
+            if (useBatchIndexing) {
+                config = LuceneConfigSettings.batched;
+            } else {
+                config = LuceneConfigSettings.nonBatched;
+            }
+            
+            //
+            // at this point, we've put ourselves into the writer cache
+            // and we have the Write Mutex....so open the file if
+            // necessary and return
+            //
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, (sUseDeletionPolicy ? this : null));
+                    mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, null);
                     if (ZimbraLog.index_lucene.isDebugEnabled())
                         mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
@@ -1347,7 +909,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, (sUseDeletionPolicy ? this : null));
+                        mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, null);
                         if (ZimbraLog.index_lucene.isDebugEnabled())
                             mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
                         
@@ -1611,69 +1173,12 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         private boolean mShutdown = false;
     }
 
-    /**
-     * See {@link IndexDeletionPolicy.onCommit(List)}
-     */
-    public void onCommit(List c) throws IOException {
-        List<IndexCommitPoint> commits = (List<IndexCommitPoint>)c;
-
-        if (commits.size() == 1)
-            return;
-        
-        synchronized(mOpenReaders) {
-            // the 0th commit point is the oldest, the size()-1th entry is the most recent
-            // the size-1th entry must never be deleted!
-            mCurrentCommitPoint = commits.get(commits.size() -1).getSegmentsFileName();
-            
-//            String secondOldestCommitPoint = commits.get(commits.size()-2).getSegmentsFileName();
-//            
-//            IndexCommitPoint oldestCommitPoint = commits.get(0);
-            
-            Set<String> toSave = new HashSet<String>(); 
-            
-            for (RefCountedIndexReader or : mOpenReaders) {
-                String orPoint = or.getCommitPoint();
-                
-                if (orPoint == null) {
-                    // the assumption here is, if the reader has a
-                    // NULL then when it was opened we had NOT ever opened the writer.
-                    // therefore the reader is pointing to the most recent point.
-                    orPoint = mCurrentCommitPoint;
-                }
-                if (orPoint != null)
-                    toSave.add(orPoint);
-            }
-            
-            int commitsSize = commits.size();
-            
-            // <size()-1 so we never touch the last one, we NEVER want to delete it 
-            for (int i = 0; i < commitsSize-1; i++) {
-                IndexCommitPoint cur = commits.get(i);
-                if (!toSave.contains(cur.getSegmentsFileName())) {
-                    cur.delete();
-                    ZimbraLog.index.debug(this.toString()+ " Deleting commit point: "+cur.getSegmentsFileName()+" because it is not referenced by open IndexReader");
-                } else
-                    ZimbraLog.index.info(this.toString()+ " Saving commit point: "+cur.getSegmentsFileName()+" because it is referenced by open IndexReader");
-            }
-        }
-    }
-
-    /**
-     * See {@link IndexDeletionPolicy.onInit(List)}
-     */
-    public void onInit(List c) throws IOException {
-        onCommit(c);
-    }
-    
-    public String getCurrentCommitPoint() { return mCurrentCommitPoint; }
-    
     public void onClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
     
-    private String mCurrentCommitPoint = null;
     List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
     
     public IndexReader reopenReader(IndexReader reader) throws IOException {
