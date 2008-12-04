@@ -175,7 +175,15 @@
 <right name="removeAccountAlias" type="preset" targetType="account">
   <desc>remove account alias</desc>
 </right>
-          
+
+<right name="viewEmail" type="preset" targetType="account">
+  <desc>view the account's email</desc>
+</right>
+
+<right name="reindexMailbox" type="preset" targetType="account">
+  <desc>reindex mailbox</desc>
+</right>          
+
 <!--
     TODO:      
           - getMailboxDump                     : get mailbox dump for legal intercept
