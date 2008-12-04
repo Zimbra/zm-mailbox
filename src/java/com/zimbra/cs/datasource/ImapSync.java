@@ -24,7 +24,6 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.SSLSocketFactoryManager;
@@ -176,7 +175,7 @@ public class ImapSync extends MailItemImport {
                     syncedFolders.put(tracker.getItemId(), ifs);
                 }
             } catch (Exception e) {
-                syncFailed(ld.getMailbox(), 0, e);
+                syncFailed(ld.getMailbox(), e);
             }
         }
     }
@@ -195,7 +194,7 @@ public class ImapSync extends MailItemImport {
                         }
                     }
                 } catch (Exception e) {
-                    syncFailed(folder.getPath(), folder.getId(), e);
+                    syncFailed(folder.getPath(), e);
                 }
             }
         }
@@ -215,7 +214,7 @@ public class ImapSync extends MailItemImport {
                     ifs.syncMessages(fullSync);
                 }
             } catch (Exception e) {
-                syncFailed(folder.getPath(), folder.getId(), e);
+                syncFailed(folder.getPath(), e);
             }
         }
     }
@@ -235,7 +234,7 @@ public class ImapSync extends MailItemImport {
                 ifs.finishSync();
             } catch (Exception e) {
                 LocalFolder folder = ifs.getLocalFolder();
-                syncFailed(folder.getPath(), folder.getId(), e);
+                syncFailed(folder.getPath(), e);
             }
         }
     }
@@ -248,20 +247,11 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private void syncFailed(String path, int itemId, Exception e)
+    private void syncFailed(String path, Exception e)
         throws ServiceException {
         String error = String.format("Synchronization of folder '%s' failed", path);
         LOG.error(error, e);
-        if (canContinue(e)) {
-            error += ". Synchronization has been disabled for this folder";
-            // Report the error and continue synchronization of other folders...
-            dataSource.reportError(itemId, error, e);
-            if (itemId > 0) {
-                dataSource.disableSync(itemId);
-            }
-        } else if (e instanceof ServiceException) {
-            throw (ServiceException) e;
-        } else {
+        if (!canContinue(e)) {
             throw ServiceException.FAILURE(error, e);
         }
     }
@@ -270,9 +260,15 @@ public class ImapSync extends MailItemImport {
      * Returns true if synchronization of other folders can continue following
      * the specified sync error.
      */
-    private boolean canContinue(Exception e) {
-        return e instanceof ServiceException || e instanceof CommandFailedException;
+    private boolean canContinue(Throwable e) {
+        if (!dataSource.isOffline()) return false;
+        if (e instanceof ServiceException) {
+            Throwable cause = e.getCause();
+            return cause == null || canContinue(cause);
+        }
+        return e instanceof CommandFailedException;
     }
+    
     /*
      * Returns the path to the Zimbra folder that stores messages for the given
      * IMAP folder. The Zimbra folder has the same path as the IMAP folder,

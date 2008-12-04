@@ -146,20 +146,38 @@ class ImapFolderSync {
                 tracker = null;
             } else if (!ds.isSyncCapable(folder) && !localFolder.getPath().equals(tracker.getLocalPath())) {
             	//we moved local into archive, so delete remote
-            	remoteFolder.delete();
-            	ds.deleteImapFolder(tracker);
+                if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
+                	ds.deleteImapFolder(tracker);
+                }
             }
         } else if (ds.isSyncEnabled(folder)) {
             String remotePath = imapSync.getRemotePath(folder);
             if (remotePath == null) {
                 return null; // not eligible for synchronization
             }
-            remoteFolder = new RemoteFolder(connection, remotePath);
-            remoteFolder.create();
-            tracker = ds.createImapFolder(folder.getId(), folder.getPath(),
-                remotePath, remoteFolder.select().getUidValidity());
+            int itemId = folder.getId();
+            remoteFolder = createRemoteFolder(remotePath, folder.getId());
+            if (remoteFolder == null) {
+                return null;
+            }
+            long uidValidity = connection.getMailbox().getUidValidity();
+            tracker = ds.createImapFolder(
+                itemId, folder.getPath(), remotePath, uidValidity);
         }
         return tracker;
+    }
+
+    private RemoteFolder createRemoteFolder(String path, int itemId)
+        throws ServiceException, IOException {
+        RemoteFolder folder = new RemoteFolder(connection, path);
+        try {
+            folder.create();
+            folder.select();
+        } catch (CommandFailedException e) {
+            syncFolderFailed(itemId, path, "Unable to create remote folder", e);
+            return null;
+        }
+        return folder;
     }
 
     /*
@@ -394,24 +412,43 @@ class ImapFolderSync {
         if (localFolder == null || (!ds.isSyncCapable(localFolder.getFolder()) &&
         		                    !localFolder.getPath().equals(tracker.getLocalPath()))) {
             LOG.debug("Local folder '%s' was deleted", tracker.getLocalPath());
-            remoteFolder.delete();
-            imapSync.getDataSource().deleteImapFolder(tracker);
+            if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
+                imapSync.getDataSource().deleteImapFolder(tracker);
+            }
             tracker = null;
             return;
         }
         // Check if local folder was renamed
         if (!localFolder.getPath().equals(tracker.getLocalPath())) {
-            renameFolder(ld);
+            renameFolder(ld, localFolder.getId());
         }
     }
 
-    private void renameFolder(ListData ld) throws ServiceException, IOException {
+    private boolean deleteRemoteFolder(RemoteFolder folder, int itemId)
+        throws ServiceException, IOException {
+        try {
+            folder.delete();
+        } catch (CommandFailedException e) {
+            syncFolderFailed(itemId, folder.getPath(), "Unable to delete remote folder", e);
+            return false;
+        }
+        return true;
+    }
+    
+    private boolean renameFolder(ListData ld, int itemId)
+        throws ServiceException, IOException {
         String localPath = localFolder.getPath();
         String newRemotePath = imapSync.getRemotePath(localFolder.getFolder());
         localFolder.info("folder was renamed (originally '%s')", tracker.getLocalPath());
         if (newRemotePath != null) {
             // Folder renamed but still under data source root
-            remoteFolder = remoteFolder.renameTo(newRemotePath);
+            try {
+                remoteFolder = remoteFolder.renameTo(newRemotePath);
+            } catch (CommandFailedException e) {
+                syncFolderFailed(itemId, localPath,
+                    "Unable to rename remote folder to " + newRemotePath, e);
+                return false;
+            }
             tracker.setLocalPath(localPath);
             tracker.setRemotePath(newRemotePath);
             ds.updateImapFolder(tracker);
@@ -423,6 +460,7 @@ class ImapFolderSync {
             // Create new local folder for remote path
             createLocalFolder(ld);
         }
+        return true;
     }
 
     private void createLocalFolder(ListData ld)
@@ -1003,6 +1041,35 @@ class ImapFolderSync {
         checkCanContinue(msg, e);
         LOG.error(msg, e);
         ds.reportError(-1, msg, e);
+    }
+
+    private void syncFolderFailed(int itemId, String path, String msg, Exception e)
+        throws ServiceException {
+        checkCanContinue(msg, e);
+        int count = SyncErrorManager.incrementErrorCount(ds, itemId);
+        if (count <= MAX_ITEM_ERRORS) {
+            LOG.error(msg, e);
+            if (count == MAX_ITEM_ERRORS) {
+                if (itemId == com.zimbra.cs.mailbox.Mailbox.ID_FOLDER_INBOX) {
+                    // Never disable sync for INBOX
+                    String error = String.format(
+                        "Synchronization of folder '%s' failed: %s", path, msg);
+                    ds.reportError(itemId, error, e);
+                } else {
+                    String error = String.format(
+                        "Synchronization of folder '%s' disabled due to error: %s",
+                         path, msg);
+                    ds.reportError(itemId, error, e);
+                    try {
+                        ds.disableSync(itemId);
+                    } catch (MailServiceException.NoSuchItemException ex) {
+                        // Ignore if local folder has been deleted
+                    }
+                    // Clear error state in case folder sync reenabled
+                    clearError(itemId);
+                }
+            }
+        }
     }
 
     private void syncFailed(int itemId, String msg, Exception e)
