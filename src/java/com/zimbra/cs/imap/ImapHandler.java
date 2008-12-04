@@ -2176,7 +2176,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         // XXX: not supporting cross-server IDLE at present
         if (mProxy != null)
-            throw new ImapParseException(tag, "command not implemented");
+            throw new ImapParseException(tag, "command not implemented", true);
 
         if (begin == IDLE_START) {
             mIdleTag = tag;
