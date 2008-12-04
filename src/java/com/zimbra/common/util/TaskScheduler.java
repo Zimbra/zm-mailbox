@@ -97,7 +97,7 @@ public class TaskScheduler<V> {
                 ZimbraLog.scheduler.debug("Executing task %s", mId);
                 mLastResult = mTask.call();
                 ZimbraLog.scheduler.debug("Task returned result %s", mLastResult);
-                
+
                 if (mCallbacks != null) {
                     for (ScheduledTaskCallback<V2> callback : mCallbacks) {
                         callback.afterTaskRun(mTask);
@@ -112,10 +112,18 @@ public class TaskScheduler<V> {
                 mLastResult = null;
             }
             
+            boolean cancelled = false;
+            if (mSchedule != null) {
+                // mSchedule may have not been set by schedule() if the task runs immediately 
+                cancelled = mSchedule.isCancelled();
+            }
+            
             // Reschedule if this is a recurring task
-            if (mRecurs && !mSchedule.isCancelled()) {
+            if (mRecurs && !cancelled) {
                 ZimbraLog.scheduler.debug("Rescheduling task %s", mId);
                 mSchedule = mThreadPool.schedule(this, mIntervalMillis, TimeUnit.MILLISECONDS);
+            } else {
+                ZimbraLog.scheduler.debug("Not rescheduling task %s.  mRecurs=%b", mId, mRecurs);
             }
             return mLastResult;
         }
