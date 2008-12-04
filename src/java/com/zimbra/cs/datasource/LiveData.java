@@ -46,6 +46,10 @@ public class LiveData {
         setDataSourceItem(ds, DbDataSource.getMapping(ds, itemID));
     }
     
+    public LiveData(DataSource ds, String remoteID) throws ServiceException {
+        setDataSourceItem(ds, DbDataSource.getReverseMapping(ds, remoteID));
+    }
+    
     public LiveData(DataSource ds, int itemID, String uid, long localDate,
         long remoteDate, int flags) throws ServiceException {
         setDataSourceItem(ds, new DataSourceItem(itemID, uid, new Metadata()));
@@ -56,6 +60,8 @@ public class LiveData {
     public LiveData(DataSource ds, DataSourceItem dsi) throws ServiceException {
         setDataSourceItem(ds, dsi);
     }
+    
+    DataSourceItem getDataSourceItem() { return dsi; }
     
     int getFlags() { return flags; }
     
@@ -96,7 +102,8 @@ public class LiveData {
     
     private void setDataSourceItem(DataSource ds, DataSourceItem dsi) throws
         ServiceException {
-        
+        if (dsi.itemId == 0 || dsi.remoteId == null)
+            throw ServiceException.RESOURCE_UNREACHABLE("Datasource item not found", null);
         this.ds = ds;
         this.dsi = dsi;
         flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS, 0);
