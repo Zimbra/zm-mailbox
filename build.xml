@@ -1182,7 +1182,6 @@
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Domain Administrator' displayName 'Domain Administrator' \
             zimbraIsAdminAccount TRUE \
-        	zimbraAdminConsoleUIComponents cartBlancheUI \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             telephoneNumber '+1 650 555 0000'   \
@@ -1198,6 +1197,12 @@
         	zimbraAdminConsoleUIComponents accountsChangePassword \
         	zimbraAdminConsoleUIComponents moveAlias \
         	zimbraAdminConsoleUIComponents accountsCreate 
+        	zimbraAdminConsoleUIComponents dlNotesTab
+        	zimbraAdminConsoleUIComponents dlMemberOfTab
+        	zimbraAdminConsoleUIComponents dlAliasesTab
+        	zimbraAdminConsoleUIComponents createDL
+        	zimbraAdminConsoleUIComponents createAlias
+        	zimbraAdminConsoleUIComponents createResource
             ca user1@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Demo User One' \
@@ -1367,7 +1372,14 @@
         	grr global usr admin@${defaultdomain.name} modifyDomain
         	grr global usr admin@${defaultdomain.name} deleteDomain
         	grr global usr admin@${defaultdomain.name} setAccountPassword
+        	grr global usr admin@${defaultdomain.name} viewEmail
+        	grr global usr admin@${defaultdomain.name} reindexMailbox
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} renameAccount
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} deleteAccount
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} addAccountAlias
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} removeAccountAlias
+        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} viewEmail
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} modifyDomainAdminAttrs
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} accountAdmin
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} setAccountPassword
