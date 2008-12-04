@@ -2097,7 +2097,7 @@ public abstract class CalendarItem extends MailItem {
                 ReplyInfo cur = iter.next();
                 
                 if (recurMatches(cur.mRecurId, recurId)) {
-                    if (cur.mSeqNo <= seqNo && cur.mDtStamp <= dtStamp) {
+                    if (cur.mSeqNo < seqNo || (cur.mSeqNo == seqNo && cur.mDtStamp < dtStamp)) {
                         iter.remove();
                     }
                 }
