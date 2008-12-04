@@ -27,7 +27,6 @@ import com.zimbra.common.util.ZimbraLog;
  */
 final class RefCountedIndexReader {
     private ILuceneIndex mIdx;
-    private String mCommitPoint;
     private IndexReader mReader;
     private int mCount = 1;
     private long mAccessTime;
@@ -35,13 +34,8 @@ final class RefCountedIndexReader {
 
     RefCountedIndexReader(ILuceneIndex idx, IndexReader reader) {
         mIdx = idx;
-        mCommitPoint = mIdx.getCurrentCommitPoint();
         mReader= reader;
         mAccessTime = System.currentTimeMillis();
-    }
-    
-    String getCommitPoint() {
-        return mCommitPoint;
     }
     
     synchronized IndexReader getReader() {
@@ -77,7 +71,6 @@ final class RefCountedIndexReader {
     synchronized void reopened(IndexReader newReader) {
         assert(mRequiresReopen && mCount==1); 
         mRequiresReopen = false;
-        mCommitPoint = mIdx.getCurrentCommitPoint();
         mReader = newReader;
     }
     

@@ -27,12 +27,43 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
  * 
  */
 interface ILuceneIndex extends ITextIndex {
-    String getCurrentCommitPoint();
+    /**
+     * Called when the reader is closed by the ReaderCache
+     * 
+     * @param reader
+     */
     void onClose(RefCountedIndexReader reader);
+    
+    /**
+     * @return A refcounted RefCountedIndexSearcher for this index.  Caller is responsible for 
+     *            calling RefCountedIndexReader.release() on the index before allowing it to go
+     *            out of scope (otherwise a RuntimeException will occur)
+     * 
+     * @throws IOException
+     */
     RefCountedIndexSearcher getCountedIndexSearcher() throws IOException;
-    Sort getSort(SortBy searchOrder);
-    void checkBlobIds() throws IOException;
+    
+    /**
+     * @param reader
+     * @return
+     * @throws IOException
+     */
     IndexReader reopenReader(IndexReader reader) throws IOException;
+    
+    /**
+     * @param searchOrder
+     * @return
+     */
+    Sort getSort(SortBy searchOrder);
+
+    
+    /**
+     * @return Total bytes written to the filesystem by Lucene - for stat logging
+     */
     long getBytesWritten();
+    
+    /**
+     * @return Total bytes read from the filesystem by Lucene - for stat logging
+     */
     long getBytesRead();
 }
