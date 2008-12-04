@@ -6271,19 +6271,18 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-
+    
     /**
-     * This is the nightly "delete old messages based on some criteria" thing that gets spawned
-     * by a cron job.  It can hopefully be moved into a zmmailbox script at some point
-     * 
-     * Purge means 'delete forever' in this case.
-     * 
-     * @param octxt
-     * @throws ServiceException
+     * Purges messages in system folders based on user- and admin-level purge settings
+     * on the account.
      */
-    public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
-        Account acct = getAccount();
-        
+    public void purgeMessages(OperationContext octxt) throws ServiceException {
+        // Look up the account outside the synchronized block, so that the mailbox
+        // doesn't get locked due to an unresponsive LDAP server (see bug 33650).
+        purgeMessages(octxt, getAccount());
+    }
+
+    private synchronized void purgeMessages(OperationContext octxt, Account acct) throws ServiceException {
         if (ZimbraLog.purge.isDebugEnabled()) {
             ZimbraLog.purge.debug("Purging messages.");
             ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
