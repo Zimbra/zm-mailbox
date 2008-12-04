@@ -204,14 +204,20 @@ public class CalendarUtils {
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, mod, oldInv.hasRecurId(), recurAllowed);
 
-        // DTSTAMP
-        mod.setDtStamp(new Date().getTime());
-
         // UID
         mod.setUid(oldInv.getUid());
 
-        // SEQUENCE
-        mod.setSeqNo(oldInv.getSeqNo() + 1);
+        // SEQUENCE and DTSTAMP
+        if (mod.isOrganizer()) {
+            mod.setSeqNo(oldInv.getSeqNo() + 1);
+            mod.setDtStamp(new Date().getTime());
+        } else {
+            // If attendee is modifying his copy, preserve SEQUENCE and DTSTAMP.
+            // If these were advanced, existing replies will get invalidated and
+            // we don't want that.
+            mod.setSeqNo(oldInv.getSeqNo());
+            mod.setDtStamp(oldInv.getDTStamp());
+        }
 
         if (oldInv.hasRecurId()) {
             mod.setRecurId(oldInv.getRecurId());
