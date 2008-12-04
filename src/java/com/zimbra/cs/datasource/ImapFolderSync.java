@@ -196,7 +196,9 @@ class ImapFolderSync {
         localFolder.debug("SyncState = " + syncState);
         long uidNext = mb.getUidNext();
         if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
-            throw new MailException("Invalid UIDNEXT (> last sync uid)");
+            LOG.warn("Ignoring inconsistent UIDNEXT from server (UIDNEXT %d but last known uid was %d)",
+                     uidNext, syncState.getLastUid());
+            uidNext = 0;
         }
         newMsgIds = new ArrayList<Integer>();
         addedUids = new ArrayList<Long>();
