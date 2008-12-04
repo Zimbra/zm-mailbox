@@ -114,7 +114,6 @@ public class LC {
     public static final KnownKey zimbra_index_max_transaction_bytes;
     public static final KnownKey zimbra_index_max_transaction_items;
     public static final KnownKey zimbra_index_lucene_autocommit;
-    public static final KnownKey zimbra_index_use_nfs_deletion_policy;
     public static final KnownKey zimbra_index_use_reader_reopen;
     
     public static final KnownKey zimbra_index_lucene_batch_use_doc_scheduler;
@@ -581,8 +580,6 @@ public class LC {
         
         zimbra_index_lucene_autocommit = new KnownKey("zimbra_index_lucene_autocommit", "false");
 
-        zimbra_index_use_nfs_deletion_policy = new KnownKey("zimbra_index_use_nfs_deletion_policy", "false");
-        
         zimbra_index_use_reader_reopen = new KnownKey("zimbra_index_use_reader_reopen", "false");
 
         
