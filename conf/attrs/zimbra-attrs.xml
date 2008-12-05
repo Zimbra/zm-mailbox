@@ -189,9 +189,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="st" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
-<attr name="street" type="string" flags="domainAdminModifiable"/>
+<attr name="street" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
-<attr name="streetAddress" type="string"  flags="domainAdminModifiable"/>
+<attr name="streetAddress" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
 <attr name="telephoneNumber" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
