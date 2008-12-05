@@ -100,7 +100,7 @@ public class SoapEngine {
      * (without throwing the exception)
      */
     private Element soapFaultEnv(SoapProtocol soapProto, String msg, ServiceException e) {
-        mLog.warn(msg, e);
+        logFault(msg, e);
         return soapProto.soapEnvelope(soapProto.soapFault(e));
     }
     
@@ -109,28 +109,21 @@ public class SoapEngine {
      * (without throwing the exception)
      */
     private Element soapFault(SoapProtocol soapProto, String msg, ServiceException e) {
-        mLog.warn(msg, e);
-        return soapProto.soapFault(e);
-    }
-
-    
-    /*
-     * This is for callers that need to:
-     *    - enclose a SOAP fault in the envelope and return (without throwing the exception)
-     *    - log the exception at warn level, which is not normally turned on
-     *    - append a unique label to the exception id (exception id is always included in the <trace> 
-     *      tag in the fault) so in the case when exception logging is not turned on we can identify 
-     *      the location where the exception was thrown.
-     */
-    private Element soapFaultWithNotes(SoapProtocol soapProto, String msg, ServiceException e) {
-        StackTraceElement[] s = Thread.currentThread().getStackTrace();
-        StackTraceElement callSite = s[3]; // third frame from top is the caller
-        e.setIdLabel(callSite);
-        mLog.warn(e.getMessage() + ": " + msg);     // do not log stack
-        mLog.debug(msg, e); // log stack
+        logFault(msg, e);
         return soapProto.soapFault(e);
     }
     
+    private void logFault(String msg, ServiceException e) {
+        if (e.getCode().equals(ServiceException.AUTH_EXPIRED) ||
+            e.getCode().equals(ServiceException.AUTH_REQUIRED)) {
+            StackTraceElement[] s = Thread.currentThread().getStackTrace();
+            StackTraceElement callSite = s[4]; // third frame from top is the caller
+            e.setIdLabel(callSite);
+            mLog.warn(e.getMessage() + ": " + msg);     // do not log stack
+            mLog.debug(msg, e); // log stack
+        } else
+            mLog.warn(msg, e);
+    }
     
     private void logDebugSoapRequest(Map<String, Object> context, Element envelope) {
         if (ZimbraLog.soap.isDebugEnabled()) {
@@ -385,25 +378,25 @@ public class SoapEngine {
                     //   note that delegated auth allows access unless the account's in maintenance mode
                     Account account = Provisioning.getInstance().get(AccountBy.id, acctId, at);
                     if (account == null)
-                        return soapFaultWithNotes(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
+                        return soapFault(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
                     
                     if (delegatedAuth && account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-                        return soapFaultWithNotes(soapProto, "delegated account in MAINTENANCE mode", ServiceException.AUTH_EXPIRED());
+                        return soapFault(soapProto, "delegated account in MAINTENANCE mode", ServiceException.AUTH_EXPIRED());
                     
                     if (!delegatedAuth && !account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                        return soapFaultWithNotes(soapProto, "account not active", ServiceException.AUTH_EXPIRED());
+                        return soapFault(soapProto, "account not active", ServiceException.AUTH_EXPIRED());
                     
                     // if using delegated auth, make sure the "admin" is really an active admin account
                     if (delegatedAuth) {
                         Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
                         if (admin == null)
-                            return soapFaultWithNotes(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
+                            return soapFault(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
                         boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
                         admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
                         if (!isAdmin)
-                            return soapFaultWithNotes(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
+                            return soapFault(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
                         if (!admin.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                            return soapFaultWithNotes(soapProto, "delegating account is not active", ServiceException.AUTH_EXPIRED());
+                            return soapFault(soapProto, "delegating account is not active", ServiceException.AUTH_EXPIRED());
                     }
 
                     // also, make sure that the target account (if any) is active
@@ -414,7 +407,7 @@ public class SoapEngine {
                         if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
                             inactive = !target.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
                         if (inactive)
-                            return soapFaultWithNotes(soapProto, "target account is not active", AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
+                            return soapFault(soapProto, "target account is not active", AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
                     }
                 }
 
