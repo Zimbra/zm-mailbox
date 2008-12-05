@@ -23,6 +23,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.Account;
@@ -54,7 +55,12 @@ public class AddAccountLogger extends AdminDocumentHandler {
         try {
             level = Level.valueOf(sLevel.toLowerCase());
         } catch (IllegalArgumentException e) {
-            throw ServiceException.INVALID_REQUEST("Invalid value for level: " + sLevel, null);
+            String error = String.format("Invalid level: %s.  Valid values are %s.",
+                sLevel, StringUtil.join(",", Level.values()));
+            throw ServiceException.INVALID_REQUEST(error, null);
+        }
+        if (!LogFactory.logExists(category)) {
+            throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
         }
         ZimbraLog.misc.info("Adding custom logger: account=%s, category=%s, level=%s",
             account.getName(), category, level);
