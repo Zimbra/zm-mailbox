@@ -1374,6 +1374,7 @@
         	grr global usr admin@${defaultdomain.name} setAccountPassword
         	grr global usr admin@${defaultdomain.name} viewEmail
         	grr global usr admin@${defaultdomain.name} reindexMailbox
+        	grr global usr admin@${defaultdomain.name} renameCos
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} renameAccount
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} deleteAccount
