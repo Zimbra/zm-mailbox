@@ -184,14 +184,15 @@ public class ProvUtil implements DebugListener {
         CONFIG("help on config-related commands"),
         COS("help on COS-related commands"), 
         DOMAIN("help on domain-related commands"), 
-        LIST("help on distribution list-related commands"), 
+        FREEBUSY("help on free/busy-related commands"),
+        LIST("help on distribution list-related commands"),
+        LOG("help on logging commands"),
         MISC("help on misc commands"),
         MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
         RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"), 
-        SERVER("help on server-related commands"),
-        FREEBUSY("help on free/busy-related commands");
+        SERVER("help on server-related commands");
         
         String mDesc;
 
@@ -207,6 +208,8 @@ public class ProvUtil implements DebugListener {
                     helpCALENDAR();
                 else if (cat == RIGHT)
                     helpRIGHT();
+                else if (cat == LOG)
+                    helpLOG();
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
@@ -264,12 +267,29 @@ public class ProvUtil implements DebugListener {
             }
             System.out.println();
         }
+        
+        static void helpLOG() {
+            System.out.println("    Log categories:");
+            int maxNameLength = 0;
+            for (String name : ZimbraLog.CATEGORY_DESCRIPTIONS.keySet()) {
+                if (name.length() > maxNameLength) {
+                    maxNameLength = name.length();
+                }
+            }
+            for (String name : ZimbraLog.CATEGORY_DESCRIPTIONS.keySet()) {
+                System.out.print("        " + name);
+                for (int i = 0; i < (maxNameLength - name.length()); i++) {
+                    System.out.print(" ");
+                }
+                System.out.format(" - %s\n", ZimbraLog.CATEGORY_DESCRIPTIONS.get(name)); 
+            }
+        }
     }
     
     public enum Command {
         
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.MISC, 3, 5),
+        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -354,7 +374,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.MISC, 0, 4),
+        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
