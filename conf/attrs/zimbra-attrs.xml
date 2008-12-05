@@ -227,11 +227,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: state or province which this object resides in</desc>
 </attr>
 
-<attr name="street" type="string" flags="domainAdminModifiable">
+<attr name="street" type="string" optionalIn="account" flags="domainAdminModifiable">
     <desc>RFC2256: street address of this object</desc>
 </attr>
 
-<attr name="streetAddress" type="string"  flags="domainAdminModifiable">
+<attr name="streetAddress" type="string" optionalIn="account" flags="domainAdminModifiable">
     <desc>RFC2256: street address of this object</desc>
 </attr>
 

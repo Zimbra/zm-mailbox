@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081203-1534 */
+    /* build: 5.0 pshao 20081204-1611 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -1151,6 +1151,130 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetSt(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_st, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @return street, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getStreet() {
+        return getAttr(Provisioning.A_street, null);
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @param street new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setStreet(String street) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_street, street);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @param street new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setStreet(String street, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_street, street);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetStreet() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_street, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetStreet(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_street, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @return streetAddress, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getStreetAddress() {
+        return getAttr(Provisioning.A_streetAddress, null);
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @param streetAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setStreetAddress(String streetAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_streetAddress, streetAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @param streetAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setStreetAddress(String streetAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_streetAddress, streetAddress);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetStreetAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_streetAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: street address of this object
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetStreetAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_streetAddress, "");
         return attrs;
     }
 
