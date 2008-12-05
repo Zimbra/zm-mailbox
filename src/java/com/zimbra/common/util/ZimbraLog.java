@@ -17,6 +17,7 @@
 package com.zimbra.common.util;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -339,6 +341,11 @@ public class ZimbraLog {
      * the "zimbra.mbxmgr" logger is used to track mailbox loading/maintenance mode
      */
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
+
+    /**
+     * Maps the log category name to its description.
+     */
+    public static final Map<String, String> CATEGORY_DESCRIPTIONS;
     
     /**
      * Keeps track of the account associated with the current thread, for
@@ -371,6 +378,41 @@ public class ZimbraLog {
         CONTEXT_KEY_ORDER.add(C_ANAME);
         CONTEXT_KEY_ORDER.add(C_MID);
         CONTEXT_KEY_ORDER.add(C_IP);
+
+        // Initialize log category descriptions.  Categories that don't have a description
+        // won't be listed in zmprov online help.
+        Map<String, String> descriptions = new TreeMap<String, String>();
+        descriptions.put(misc.getCategory(), "Miscellaneous");
+        descriptions.put(index.getCategory(), "Index operations");
+        descriptions.put(redolog.getCategory(), "Redo log operations");
+        descriptions.put(lmtp.getCategory(), "LMTP operations (incoming mail)");
+        descriptions.put(smtp.getCategory(), "SMTP operations (outgoing mail)");
+        descriptions.put(imap.getCategory(), "IMAP protocol operations");
+        descriptions.put(pop.getCategory(), "POP protocol operations");
+        descriptions.put(mailbox.getCategory(), "General mailbox operations");
+        descriptions.put(calendar.getCategory(), "Calendar operations");
+        descriptions.put(im.getCategory(), "Instant messaging operations");
+        descriptions.put(account.getCategory(), "Account operations");
+        descriptions.put(gal.getCategory(), "GAL operations");
+        descriptions.put(ldap.getCategory(), "LDAP operations");
+        descriptions.put(security.getCategory(), "Security events");
+        descriptions.put(soap.getCategory(), "SOAP protocol");
+        descriptions.put(sqltrace.getCategory(), "SQL tracing");
+        descriptions.put(dbconn.getCategory(), "Database connection tracing");
+        descriptions.put(cache.getCategory(), "In-memory cache operations");
+        descriptions.put(filter.getCategory(), "Mail filtering");
+        descriptions.put(session.getCategory(), "User session tracking");
+        descriptions.put(backup.getCategory(), "Backup and restore");
+        descriptions.put(system.getCategory(), "Startup/shutdown and other system messages");
+        descriptions.put(sync.getCategory(), "Sync client operations");
+        descriptions.put(extensions.getCategory(), "Server extension loading");
+        descriptions.put(zimlet.getCategory(), "Zimlet operations");
+        descriptions.put(wiki.getCategory(), "Wiki operations");
+        descriptions.put(op.getCategory(), "Changes to mailbox state");
+        descriptions.put(dav.getCategory(), "DAV operations");
+        descriptions.put(io.getCategory(), "Filesystem operations");
+        descriptions.put(store.getCategory(), "Mail store disk operations");
+        CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
     
     static String getContextString() {
