@@ -32,32 +32,43 @@ import com.zimbra.common.soap.Element;
  * 
  */
 public class IMConferenceRoom {
+    private enum ConfigType {
+        bool,
+        string;
+    }
+    
+    private enum Cardinality {
+        single,
+        multi;
+    }
+    
     public enum RoomConfig {
-        name("name"), 
-        hidden("muc_hidden"),
-        nothidden("muc_public"),
-        membersonly("muc_membersonly"),
-        noanonymous("muc_noanonymous"),
-        semianonymous("muc_semianonymous"),
-        passwordprotect("muc_passwordprotected"),
-        persistent("muc_persistent"),
-        temporary("muc_temporary"),
-        moderated("muc_moderated"),
-        unmoderated("muc_unmoderated"),
-        numoccupants("muc#roominfo_occupants"), // extended
-        password("muc#roomconfig_roomsecret"), // extended
-        maxusers("muc#roomconfig_maxusers"), // extended
-        longname("muc#roomconfig_roomname"), // extended
-        owners("muc#roomconfig_roomowners", true), //extended
+        name("name", ConfigType.string), // READ-ONLY 
+        hidden("muc_hidden", ConfigType.bool),
+        nothidden("muc_public", ConfigType.bool), // hidden from SOAP
+        membersonly("muc_membersonly", ConfigType.bool),
+        noanonymous("muc_noanonymous", ConfigType.bool),
+        semianonymous("muc_semianonymous", ConfigType.bool),
+        passwordprotect("muc_passwordprotected", ConfigType.bool),
+        persistent("muc_persistent", ConfigType.bool),
+        temporary("muc_temporary", ConfigType.bool), // hidden from SOAP
+        moderated("muc_moderated", ConfigType.bool),
+        unmoderated("muc_unmoderated", ConfigType.bool), // hidden from SOAP
+        numoccupants("muc#roominfo_occupants", ConfigType.string), // extended
+        password("muc#roomconfig_roomsecret", ConfigType.string), // extended
+        maxusers("muc#roomconfig_maxusers", ConfigType.string), // extended
+        longname("muc#roomconfig_roomname", ConfigType.string), // extended
+        owners("muc#roomconfig_roomowners", ConfigType.string, Cardinality.multi), //extended
         ;
         
         
-        RoomConfig(String xmppName) {
-            this(xmppName, false);
+        RoomConfig(String xmppName, ConfigType configType) {
+            this(xmppName, configType, Cardinality.single);
         }
-        RoomConfig(String xmppName, boolean isMulti) {
+        RoomConfig(String xmppName, ConfigType configType, Cardinality cardinality) {
             this.xmppName = xmppName;
-            this.isMulti = isMulti;
+            this.configType = configType;
+            this.cardinality = cardinality; 
         }
         
         private static Map<String, RoomConfig> xmppToConfigMap;
@@ -72,29 +83,60 @@ public class IMConferenceRoom {
         }
         
         public String getXMPPName() { return xmppName;}
-        public boolean isMulti() { return this.isMulti; }
+        public boolean isMulti() { return cardinality == Cardinality.multi; }
+        public ConfigType getConfigType() { return configType; }
         
         private String xmppName;
-        private boolean isMulti;
+        private ConfigType configType;
+        private Cardinality cardinality;
     }
     
     private String threadId;
     private IMChat chat;
     private Map<RoomConfig, Object> data = new HashMap<RoomConfig, Object>();
     
+    /**
+     * Express this room configuration as XML suitable for sending as SOAP/JSON to the client
+     * @param parent
+     * @return
+     */
     public Element toXML(Element parent) {
         Element toRet = parent.addElement("room");
         
         toRet.addAttribute("threadId", chat.getThreadId());
         toRet.addAttribute("addr", chat.getDestAddr());
-        
+
         for (Map.Entry<RoomConfig, Object> entry : data.entrySet()) {
             Element var = parent.addElement("var");
             RoomConfig config = entry.getKey();
-            var.addAttribute("name", config.name()); 
+            
+            // hackery to turn the opposing-flags data from XMPP (e.g. temporary/persistent) into
+            // a single true/value value (persistent=1/persistent=0) in the SOAP
+            boolean forceFalse= true;
+            if (true) {
+            switch (config) {
+                case nothidden:
+                    config = RoomConfig.hidden;
+                    break;
+                case temporary:
+                    config = RoomConfig.persistent;
+                    break;
+                case unmoderated:
+                    config = RoomConfig.moderated;
+                    break;
+                default:
+                    forceFalse= false;
+            }
+            } else
+                forceFalse= false;
+            
+            var.addAttribute("name", config.name());
             if (!config.isMulti()) {
                 String value = (String)entry.getValue();
-                var.setText(value);
+                if (forceFalse)
+                    var.setText("0");
+                else
+                    var.setText(value);
             } else {
                 var.addAttribute("multi", true);
                 List<String> values = (List<String>)entry.getValue();
@@ -220,11 +262,18 @@ public class IMConferenceRoom {
             if (entry.getValue() instanceof String) {
                 org.dom4j.Element valueElt = fieldElt.addElement("value");
                 String value = (String)entry.getValue();
-                if (invertValue) { 
-                    if ("1".equals(value))
-                        value = "0";
-                    else 
+                if (config.getConfigType() == ConfigType.bool) {
+                    if ("true".equalsIgnoreCase(value))
                         value = "1";
+                    else if ("false".equalsIgnoreCase(value)) 
+                        value = "0";
+                    
+                    if (invertValue) { 
+                        if ("1".equals(value))
+                            value = "0";
+                        else 
+                            value = "1";
+                    }
                 }
                 valueElt.setText(value);
             } else {

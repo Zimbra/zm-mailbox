@@ -237,20 +237,19 @@ Get all configuration information about the specified chat.  Note that
 
    Config Vars:
        hidden           boolean         room is hidden from RoomList
-       nothidden        boolean         opposite of hidden
+       moderated        boolean         chat is moderated
+       persistent       boolean         room not deleted if server restarts
        membersonly      boolean         only members may join
        nonanonymous     boolean         if TRUE, then users are not anonymous
        semianonymous    boolean         no idea what this means
        passwordprotect  boolean         password required to join
-       persistent       boolean         room not deleted if server restarts
-       temporary        boolean         opposite of temporary
-       moderated        boolean         
-       unmoderated      boolean
        numoccupants     integer         number of people currently in the room
-       password         string          the password for the room
+       password         string          the password for the room (make sure you set
+                                        passwordprotect to be '1' if you want the password
+                                        enabled)
        maxusers         integer         max # users allowed
-       name             string          the XMPP shortname of the room
-       longname         string          natural language name of room
+       longname         string          natural language name of room - this is the
+                                        'name' returned for the room via <IMListConferenceRooms>  
        owners           MULTI-string    list of room owners (can change config)
        
    
