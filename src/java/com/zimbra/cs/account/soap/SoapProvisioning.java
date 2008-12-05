@@ -30,6 +30,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccessManager;
@@ -47,6 +48,7 @@ import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -390,6 +392,9 @@ public class SoapProvisioning extends Provisioning {
                     a.addAttribute(AdminConstants.A_N, key);
                     a.setText((String)v);
                 }
+            } else if (value == null) {
+                Element  a = req.addElement(AdminConstants.E_A);
+                a.addAttribute(AdminConstants.A_N, key);
             } else {
                 throw ZClientException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
             }
@@ -2038,10 +2043,16 @@ public class SoapProvisioning extends Provisioning {
     }
     
     public static void main(String[] args) throws Exception {
+        CliUtil.toolSetup();
         
-        Provisioning provisioning = new SoapProvisioning();
-        Domain domain = provisioning.get(DomainBy.virtualHostname, "blah");
+        SoapProvisioning prov = new SoapProvisioning();
+        prov.soapSetURI("https://localhost:7071/service/admin/soap/");
+        prov.soapZimbraAdminAuthenticate();
 
+        Map<String, Object> acctAttrs = new HashMap<String, Object>();
+        acctAttrs.put("zimbraForeignPrincipal", null);
+        Account acct = prov.get(AccountBy.name, "user1");
+        prov.modifyAttrs(acct, acctAttrs);
     }
     
 }
