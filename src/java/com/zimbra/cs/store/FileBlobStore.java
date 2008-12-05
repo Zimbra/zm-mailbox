@@ -142,7 +142,13 @@ public class FileBlobStore extends StoreManager {
         int maxInMemorySize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
         boolean inMemoryCopyOK = 0 < sizeHint && sizeHint <= maxInMemorySize;
 
+        mLog.debug("Storing incoming blob: sizeHint=%d, path=%s, volumeId=%d, storeAsIs=%b, volume.compressBlobs=%b, " +
+            "volume.compressionThreshold=%d, maxInMemorySize=%d, inMemoryCopyOK=%b",
+            sizeHint, path, volumeId, storeAsIs, volume.getCompressBlobs(), volume.getCompressionThreshold(),
+            maxInMemorySize, inMemoryCopyOK);
+        
         if ((compress || (0 < sizeHint && sizeHint <= getDiskStreamingThreshold())) && inMemoryCopyOK) {
+            mLog.debug("Reading message into memory.");
             // Keep blob data into memory.  Data for compressed blobs
             // must be in memory for random access.  See bug 25629 for details.
             baos = new ByteArrayOutputStream(sizeHint);
