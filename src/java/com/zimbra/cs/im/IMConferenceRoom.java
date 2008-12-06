@@ -43,57 +43,119 @@ public class IMConferenceRoom {
     }
     
     public enum RoomConfig {
-        name("name", ConfigType.string), // READ-ONLY 
-        hidden("muc_hidden", ConfigType.bool),
-        nothidden("muc_public", ConfigType.bool), // hidden from SOAP
-        membersonly("muc_membersonly", ConfigType.bool),
-        noanonymous("muc_noanonymous", ConfigType.bool),
-        semianonymous("muc_semianonymous", ConfigType.bool),
-        passwordprotect("muc_passwordprotected", ConfigType.bool),
-        persistent("muc_persistent", ConfigType.bool),
-        temporary("muc_temporary", ConfigType.bool), // hidden from SOAP
-        moderated("muc_moderated", ConfigType.bool),
-        unmoderated("muc_unmoderated", ConfigType.bool), // hidden from SOAP
-        numoccupants("muc#roominfo_occupants", ConfigType.string), // extended
-        password("muc#roomconfig_roomsecret", ConfigType.string), // extended
-        maxusers("muc#roomconfig_maxusers", ConfigType.string), // extended
-        longname("muc#roomconfig_roomname", ConfigType.string), // extended
-        owners("muc#roomconfig_roomowners", ConfigType.string, Cardinality.multi), //extended
+        open("muc_open", null, ConfigType.bool),
+
+        // READ-ONLY
+        creationdate("x-muc#roominfo_creationdate", null, ConfigType.string),
+        
+        publicroom("muc_public", "muc#roomconfig_publicroom", ConfigType.bool),
+
+        moderated("muc_moderated", "muc#roomconfig_moderatedroom", ConfigType.bool),
+        
+        persistent("muc_persistent", "muc#roomconfig_persistentroom", ConfigType.bool),
+        
+        membersonly("muc_membersonly", "muc#roomconfig_membersonly", ConfigType.bool),
+        
+        noanonymous("muc_nonanonymous", null, ConfigType.bool),
+        semianonymous("muc_semianonymous", null, ConfigType.bool),
+        
+        passwordprotect("muc_passwordprotected", "muc#roomconfig_passwordprotectedroom", ConfigType.bool),
+        password(null, "muc#roomconfig_roomsecret", ConfigType.string), // extended
+        
+        numoccupants("muc#roominfo_occupants", null, ConfigType.string), // READ-ONLY, extended
+        
+        maxusers("muc#roominfo_maxusers", "muc#roomconfig_maxusers", ConfigType.string), // extended
+        
+        longname(null, "muc#roomconfig_roomname", ConfigType.string), // extended
+        description("muc#roominfo_description", "muc#roomconfig_roomdesc", ConfigType.string),
+        
+        // subject is settable by sending a message to the room with a <subject> in it
+        subject("muc#roominfo_subject", null, ConfigType.string),
+        // are Occupants allowed to change the suject?
+        subjectmodifyable("muc#roominfo_changesubject", "muc#roomconfig_changesubject", ConfigType.string),
+
+        allowinvites(null, "muc#roomconfig_allowinvites", ConfigType.bool),
+        
+        presencebroadcast(null, "muc#roomconfig_presencebroadcast", ConfigType.string, Cardinality.multi),
+
+
+        // url for logging
+        logsurl("muc#roominfo_logs", null, ConfigType.string),
+
+        // JIDs with owner affiliation
+        owners(null, "muc#roomconfig_roomowners", ConfigType.string, Cardinality.multi), //extended
+        // JIDs w/ admin affiliation
+        admins(null, "muc#roomconfig_roomadmins", ConfigType.string, Cardinality.multi),
+        
+        // Roles/Affiliations allowed to get real JIDs from the room
+        whois(null, "muc#roomconfig_whois", ConfigType.string, Cardinality.multi),
+        
+        enablelogging(null, "muc#roomconfig_enablelogging", ConfigType.string),
+        reservednick(null, "x-muc#roomconfig_reservednick", ConfigType.bool),
+        canchangenick(null, "x-muc#roomconfig_canchangenick", ConfigType.bool),
+        allowregister(null, "x-muc#roomconfig_registration", ConfigType.bool),
+        
+
+        /////////////////////////////////////
+        // NOT SURE IF THESE ARE WORKING:
+        ////////////////////////////////////
+        getmemberlist(null, "muc#roomconfig_getmemberlist", ConfigType.string, Cardinality.multi),
+        
+        // contact info for room
+        contactid("muc#roominfo_contactjid", null, ConfigType.string),
         ;
         
         
-        RoomConfig(String xmppName, ConfigType configType) {
-            this(xmppName, configType, Cardinality.single);
+        RoomConfig(String infoName, String configName, ConfigType configType) {
+            this(infoName, configName, configType, Cardinality.single);
         }
-        RoomConfig(String xmppName, ConfigType configType, Cardinality cardinality) {
-            this.xmppName = xmppName;
+        RoomConfig(String infoName, String configName, ConfigType configType, Cardinality cardinality) {
+            this.infoName = infoName;
+            this.configName = configName;
             this.configType = configType;
             this.cardinality = cardinality; 
         }
         
-        private static Map<String, RoomConfig> xmppToConfigMap;
+        private static Map<String, RoomConfig> infoToConfigMap;
+        private static Map<String, RoomConfig> configToConfigMap;
+        
         static {
-            xmppToConfigMap = new HashMap<String, RoomConfig>();
+            infoToConfigMap = new HashMap<String, RoomConfig>();
             for (RoomConfig config : RoomConfig.values()) {
-                xmppToConfigMap.put(config.getXMPPName(), config);
+                if (config.getRoominfoName() != null)
+                    infoToConfigMap.put(config.getRoominfoName(), config);
             }
+
+            configToConfigMap = new HashMap<String, RoomConfig>();
+            for (RoomConfig config : RoomConfig.values()) {
+                if (config.getRoomconfigName() != null)
+                    configToConfigMap.put(config.getRoomconfigName(), config);
+            }
+            
         }
-        public static RoomConfig lookupFromXMPPName(String xmppName) {
-            return xmppToConfigMap.get(xmppName);
+        public static RoomConfig lookupFromInfoName(String xmppName) {
+            return infoToConfigMap.get(xmppName);
+        }
+        public static RoomConfig lookupFromConfigName(String xmppName) {
+            return configToConfigMap.get(xmppName);
         }
         
-        public String getXMPPName() { return xmppName;}
+        public String getRoominfoName() { return infoName; }
+        public String getRoomconfigName() { return configName; }
         public boolean isMulti() { return cardinality == Cardinality.multi; }
         public ConfigType getConfigType() { return configType; }
         
-        private String xmppName;
+        private String infoName; // the name of the value when parsed from the roominfo, NULL if none
+        private String configName; // the name of the value used to SET in roomconfig, NULL if none
         private ConfigType configType;
         private Cardinality cardinality;
     }
     
     private String threadId;
     private IMChat chat;
+    private String addr; 
     private Map<RoomConfig, Object> data = new HashMap<RoomConfig, Object>();
+    private boolean haveOwnerConfig = false;
     
     /**
      * Express this room configuration as XML suitable for sending as SOAP/JSON to the client
@@ -103,39 +165,22 @@ public class IMConferenceRoom {
     public Element toXML(Element parent) {
         Element toRet = parent.addElement("room");
         
-        toRet.addAttribute("threadId", chat.getThreadId());
-        toRet.addAttribute("addr", chat.getDestAddr());
-
+        if (chat != null) {
+            toRet.addAttribute("threadId", chat.getThreadId());
+            toRet.addAttribute("addr", chat.getDestAddr());
+        } else {
+            toRet.addAttribute("addr", addr);
+        }
+        if (haveOwnerConfig)
+            toRet.addAttribute("owner", true);
+        
         for (Map.Entry<RoomConfig, Object> entry : data.entrySet()) {
-            Element var = parent.addElement("var");
+            Element var = toRet.addElement("var");
             RoomConfig config = entry.getKey();
-            
-            // hackery to turn the opposing-flags data from XMPP (e.g. temporary/persistent) into
-            // a single true/value value (persistent=1/persistent=0) in the SOAP
-            boolean forceFalse= true;
-            if (true) {
-            switch (config) {
-                case nothidden:
-                    config = RoomConfig.hidden;
-                    break;
-                case temporary:
-                    config = RoomConfig.persistent;
-                    break;
-                case unmoderated:
-                    config = RoomConfig.moderated;
-                    break;
-                default:
-                    forceFalse= false;
-            }
-            } else
-                forceFalse= false;
             
             var.addAttribute("name", config.name());
             if (!config.isMulti()) {
                 String value = (String)entry.getValue();
-                if (forceFalse)
-                    var.setText("0");
-                else
                     var.setText(value);
             } else {
                 var.addAttribute("multi", true);
@@ -146,51 +191,97 @@ public class IMConferenceRoom {
                 }
             }
         }
-        
         return parent;
     }
     
     public String toString() {
-        return "Room("+threadId+" "+chat.getDestAddr()+")";
+        return "Room("+threadId+" "+(chat != null ? chat.getDestAddr() : addr)+")";
     }
     
     IMConferenceRoom(IMChat chat) {
         this.chat = chat;
+        addr = null;
     }
+    
+    IMConferenceRoom(String addr) {
+        this.addr = addr;
+        chat = null;
+    }
+    
     
     private void parseNonExtended(org.dom4j.Element item) {
         String var = item.attributeValue("var");
-        RoomConfig config = RoomConfig.lookupFromXMPPName(var);
-        if (config != null) {
+        RoomConfig config = RoomConfig.lookupFromInfoName(var);
+        if (config == null) {
+            // special-case public, temporary and unmoderated
+            if ("muc_hidden".equals(var)) {
+                data.put(RoomConfig.publicroom, "0");
+            } else if ("muc_unmoderated".equals(var)) {
+                data.put(RoomConfig.moderated, "0");
+            } else if ("muc_temporary".equals(var)) {
+                data.put(RoomConfig.persistent, "0");
+            }
+        } else {
             data.put(config, "1");
         }
     }
     
     private void parseExtended(String name, List<String> values) {
-        RoomConfig config = RoomConfig.lookupFromXMPPName(name);
+        RoomConfig config = RoomConfig.lookupFromInfoName(name);
         if (config != null && values.size() > 0) {
-            switch (config) {
-                case numoccupants:
-                case password:
-                case maxusers:
-                case longname:
-                    data.put(config, values.get(0));
-                    break;
-                case owners:
-                    data.put(config, values);
-                    break;
+            if (config.isMulti())
+                data.put(config, values);
+            else
+                data.put(config, values.get(0));
+        }
+    }
+    
+    private void parseExtendedConfig(String name, List<String> values) {
+        RoomConfig config = RoomConfig.lookupFromConfigName(name);
+        if (config != null && values.size() > 0) {
+            if (config.isMulti())
+                data.put(config, values);
+            else
+                data.put(config, values.get(0));
+        }
+    }
+    
+    
+    void parseConfigurationForm(org.dom4j.Element x) {
+        if ("jabber:x:data".equals(x.getNamespaceURI())) {
+            XDataFormImpl form = new XDataFormImpl();
+            form.parse(x);
+            for (Iterator fieldIter = form.getFields(); fieldIter.hasNext();) {
+                FormField field = (FormField)fieldIter.next();
+                List<String> values = new ArrayList<String>();
+                for (Iterator<String> valueIter = field.getValues(); valueIter.hasNext();) 
+                    values.add(valueIter.next());
+                parseExtendedConfig(field.getVariable(), values);
             }
         }
+        haveOwnerConfig = true;
+    }
+    
+    public static IMConferenceRoom emptyRoom(IMChat chat) {
+        return new IMConferenceRoom(chat);
+    }
+    
+    public static IMConferenceRoom emptyRoom(String destAddr) {
+        return new IMConferenceRoom(destAddr);
     }
 
     @SuppressWarnings("unchecked")
-    public static IMConferenceRoom parseRoomInfo(IMChat chat, IQ iq) {
+    public static IMConferenceRoom parseRoomInfo(IMChat chat, String addr, IQ iq) {
+        assert(chat == null || addr == null);
         org.dom4j.Element child = iq.getChildElement();
         if (!"http://jabber.org/protocol/disco#info".equals(child.getNamespaceURI()))
             throw new IllegalArgumentException("Expecting a disco#info, got: "+iq.toXML());
         
-        IMConferenceRoom room = new IMConferenceRoom(chat);
-        org.dom4j.Element identity = child.element("identity");
+        IMConferenceRoom room;
+        if (chat != null)
+            room = new IMConferenceRoom(chat);
+        else
+            room = new IMConferenceRoom(addr);
         
         for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)child.elementIterator("feature");iter.hasNext();) {
             org.dom4j.Element item = iter.next();
@@ -207,13 +298,6 @@ public class IMConferenceRoom {
                     List<String> values = new ArrayList<String>();
                     for (Iterator<String> valueIter = field.getValues(); valueIter.hasNext();) 
                         values.add(valueIter.next());
-//                    Pair p = new Pair<String,List<String>>(field.getVariable(), values);
-//                    room.extendedInfo.add(p);
-//                    if ("muc#roominfo_occupants".equals(field.getVariable())) {
-//                        Iterator<String> valueIter = field.getValues();
-//                        if (valueIter.hasNext()) {
-//                            room.numOccupants = Integer.parseInt(valueIter.next());
-//                  }
                     room.parseExtended(field.getVariable(), values);
                 }
             }
@@ -231,34 +315,9 @@ public class IMConferenceRoom {
             String var = entry.getKey();
             RoomConfig config = RoomConfig.valueOf(var);
             org.dom4j.Element fieldElt = x.addElement("field");
-            boolean invertValue = false;
-            // MUC spec quirk -- some values are read in one place, but written in a different one
-            switch (config) {
-                case temporary:
-                    invertValue = true;
-                    // FALL-THROUGH!
-                case persistent:
-                    fieldElt.addAttribute("var", "muc#roomconfig_persistentroom");
-                    break;
-                case hidden:
-                    invertValue = true;
-                    // FALL-THROUGH
-                case nothidden:
-                    fieldElt.addAttribute("var", "muc#roomconfig_publicroom");
-                    break;
-                case unmoderated:
-                    invertValue = true;
-                    // FALL-THROUGH
-                case moderated:
-                    fieldElt.addAttribute("var", "muc#roomconfig_moderated");
-                    break;
-                case passwordprotect:
-                    fieldElt.addAttribute("var", "muc#roomconfig_passwordprotectedroom");
-                    break;
-                default:
-                    fieldElt.addAttribute("var", config.getXMPPName());
-                break;
-            }
+            
+            fieldElt.addAttribute("var", config.getRoomconfigName());
+            
             if (entry.getValue() instanceof String) {
                 org.dom4j.Element valueElt = fieldElt.addElement("value");
                 String value = (String)entry.getValue();
@@ -268,12 +327,6 @@ public class IMConferenceRoom {
                     else if ("false".equalsIgnoreCase(value)) 
                         value = "0";
                     
-                    if (invertValue) { 
-                        if ("1".equals(value))
-                            value = "0";
-                        else 
-                            value = "1";
-                    }
                 }
                 valueElt.setText(value);
             } else {

@@ -214,18 +214,31 @@ ERROR codes:
 
 **also look for notification: <n type="enteredchat" thread="threadId"/>**
 
-        
 
 IMGetChatConfiguration
 -----------------------
 Get all configuration information about the specified chat.  Note that
-1:1 chats will have almost no configuration while
+1:1 chats will have almost no configuration while MUC chats have many config
 
-<IMGetChatConfiguration thread="threadId"/>
+<IMGetChatConfiguration (thread="threadId" || addr="address") [requestOwnerConfig="1"]/>
 
-<IMGetChatConfigurationResponse thread="threadId" isMUC="1|0">
+  thread: a threadId from a chat you have already joined (see IMJoinChat)
+  
+  addr: a direct address for the conference room (e.g. roomname@conference.domain.com)
+  
+  requestOwnerConfig: if TRUE, then attempt to get the "owner's" config for the room, all values private or public.
+                      you can only get the owner's config for a room you have joined (thread specified)
+                      you can only get the owner's config if you are an owner of the room
+
+                      
+<IMGetChatConfifurationResponse (thread="threadId" || addr="address") isMuc="1|0" error="ERROR_CODE"/>
+   ERROR_CODES:
+     not_allowed:   you requested the owner config information but you are not an owner of this room
+     no_response_from_remote: the conference service did not respond to our requests
+     not_a_conference_room: the requested conference room doesn't exist, or you don't have permission to access it in that way
+
+<IMGetChatConfigurationResponse (thread="threadId" || addr="address") isMUC="1|0">
    [<var name="name">VALUE</var>]*
-   
    [
       <var name="name" multi="1">
          [<value>VALUE</value>]+
@@ -235,22 +248,57 @@ Get all configuration information about the specified chat.  Note that
 
    isMUC: if TRUE then this is a chatroom, otherwise it is a 1:1 chat
 
+
+   "Role" - something you have while you're IN the chat room
+             - Moderator, None, Participant, Visitor
+
+   "Affiliation" - a description of the rights you have to the room, not
+                  related to being actually "in" the room. 
+             - Owner, Admin, Member, Outcast, None
+   
    Config Vars:
-       hidden           boolean         room is hidden from RoomList
+   ------------
+       open             boolean         room is unlocked and may be entered?
+       creationdate     string          date this room was created
+       publicroom       boolean         room is hidden from RoomList
        moderated        boolean         chat is moderated
        persistent       boolean         room not deleted if server restarts
-       membersonly      boolean         only members may join
+       membersonly      boolean         only members may join, only admins can invite
        nonanonymous     boolean         if TRUE, then users are not anonymous
        semianonymous    boolean         no idea what this means
-       passwordprotect  boolean         password required to join
-       numoccupants     integer         number of people currently in the room
+       passwordprotect  boolean         is a password required to join
        password         string          the password for the room (make sure you set
                                         passwordprotect to be '1' if you want the password
                                         enabled)
+       numoccupants     integer         number of people currently in the room
        maxusers         integer         max # users allowed
        longname         string          natural language name of room - this is the
-                                        'name' returned for the room via <IMListConferenceRooms>  
+                                        'name' returned for the room via <IMListConferenceRooms>
+       description      string          short description of room
+
+       subject          string          current subject in room
+       subjectmodifyable boolean        can the subject be modified by participants?
+
+       allowinvites     boolean         allow Occupants to invite others
+
+       presencebroadcast MULTI-string   list of Roles which get presence updates
+       
+       whois            MULTI-string    list of Affiliations who may discover real JIDs of Occupants  
        owners           MULTI-string    list of room owners (can change config)
+       admins           MULTI-string    list of users with ADMIN affiliation
+
+       enablelogging    boolean         log room conversations
+       reservednick     boolean         only login with registered nickname?
+       canchangenick    boolean         allow occupants to change nicknames
+       allowregister    boolean         allow users to register with the room
+
+
+FUTRUE - either don't work, or I haven't verified they work...but they're in the XMPP spec
+------
+       getmemberlist    MULTI-string    list of Roles/Affiliations that may retrieve member list
+       contactid        string - extended - roominfo_contactjid = contact address for room
+       logs_url         string - extended - roominfo_logs - URL for archived discussions from room
+
        
    
 IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, etc
@@ -266,9 +314,12 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 
 RESPONSES:
 
-// chat unknown (server restart?  server flushed it due to idleness?)
-// use <IMJoinConferenceRoomRequest> to join/create a MUC
 <IMModifyChatResponse thread="threadID" error="not_found"/>
+  // chat unknown (server restart?  server flushed it due to idleness?)
+  // use <IMJoinConferenceRoomRequest> to join/create a MUC
+
+<IMModifyChatResponse thread="threadID" error="not_allowed"/>
+  // you do not have permission to modify this chat (not owner/admin)
 
 // successful
 <IMModifyChatResponse thread="threadId"/>

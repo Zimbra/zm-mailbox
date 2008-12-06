@@ -38,6 +38,7 @@ import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
+import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Presence;
 import org.xmpp.packet.Roster;
 import org.xmpp.packet.IQ.Type;
@@ -1065,7 +1066,10 @@ public class IMPersona extends ClassLogger {
             } catch (InterruptedException ex) { }
         }
         if (iqc.isError()) {
-            throw ServiceException.FAILURE("Error sending iq query for server: "+iqc.getRespnse(), null);
+            if (iqc.getResult().getError().getType() == PacketError.Type.auth)
+                throw IMServiceException.NOT_ALLOWED(iqc.getResult().getFrom().toString());
+            else 
+                throw IMServiceException.XMPP_ERROR("during iq:query", iqc.getResult());
         }
         return iqc.result;
     }
@@ -1230,27 +1234,81 @@ public class IMPersona extends ClassLogger {
         return toRet;
     }
     
-    public IMConferenceRoom getConferenceRoom(String threadId) throws ServiceException {
+    public IMConferenceRoom getConferenceRoom(String threadId, String addr, boolean requestOwnerConfig) throws ServiceException {
         if (Thread.holdsLock(this.getLock())) {
             throw new IllegalStateException("May not make this request while holding Persona lock!");
         }
+
+        assert(threadId == null || addr == null);
         
-        IMChat chat = getChat(threadId);
-        if (chat == null)
-            throw MailServiceException.NO_SUCH_CHAT(threadId);
-        
-        if (!chat.isMUC())
-            return null;
-        
-        String addr = chat.getDestAddr();
+        IMChat chat = null;
+        if (threadId != null) {
+            chat = getChat(threadId);
+            if (chat == null)
+                throw MailServiceException.NO_SUCH_CHAT(threadId);
+            
+            if (!chat.isMUC())
+                return null;
+            addr = chat.getDestAddr();            
+        }
         
         DiscoInfoResult roomDi = syncGetDiscoInfo(addr);
         if (roomDi == null)
-            throw ServiceException.FAILURE("Could not contact room at: "+addr, null);
+            throw IMServiceException.NO_RESPONSE_FROM_REMOTE(" attempting to fetch disco#info", addr);
+        
+        IMConferenceRoom room = null;
             
-        if (!roomDi.category.equals("conference") || !roomDi.type.equals("text")) 
-            throw ServiceException.FAILURE(addr+" is not a conference room", null);
-        IMConferenceRoom room = IMConferenceRoom.parseRoomInfo(chat, roomDi.resultIQ);
+        if (!"conference".equals(roomDi.category) || !"text".equals(roomDi.type)) {
+            if (!requestOwnerConfig) {
+                throw IMServiceException.NOT_A_CONFERENCE_ROOM(addr);
+            } else {
+                // room MIGHT be hidden....lets instantiate an empty room and try for the config form
+                if (chat != null)
+                    room = IMConferenceRoom.emptyRoom(chat);
+                else
+                    room = IMConferenceRoom.emptyRoom(addr);
+            }
+        } else {
+            room = IMConferenceRoom.parseRoomInfo(chat, addr, roomDi.resultIQ);
+        }
+        
+        
+        if (requestOwnerConfig) {
+            
+            // request the config form
+            //          <iq from='crone1@shakespeare.lit/desktop'
+            //                id='create1'
+            //                to='darkcave@chat.shakespeare.lit'
+            //                type='get'>
+            //              <query xmlns='http://jabber.org/protocol/muc#owner'/>
+            //            </iq>
+            IQ iq = new IQ();
+            synchronized(getLock()) {
+                iq.setType(Type.get);
+                iq.setID("IQQuery-"+(mCurRequestId++));
+                iq.setChildElement("query", "http://jabber.org/protocol/muc#owner");
+                iq.setTo(addr);
+            }
+          
+            IQ configForm = syncIQQuery(iq);
+            if (configForm == null) {
+                throw IMServiceException.NO_RESPONSE_FROM_REMOTE("attempting to fetch room configuration form from conference service - "+iq.toXML(), addr);
+            }
+            
+            if (configForm.getType() == Type.error) {
+                if (configForm.getError().getType() == PacketError.Type.auth)
+                    throw IMServiceException.NOT_ALLOWED(addr);
+                else
+                    throw IMServiceException.XMPP_ERROR("attempting to fetch config form", configForm);
+            } else {
+                org.dom4j.Element child = configForm.getChildElement();
+                
+                org.dom4j.Element x = child.element("x");
+                if (x != null) {
+                    room.parseConfigurationForm(x);
+                }
+            }
+        }
         
         return room;
     }
@@ -1354,19 +1412,22 @@ public class IMPersona extends ClassLogger {
         // find the identity
         org.dom4j.Element identity = child.element("identity");
         
-        toRet.category = identity.attributeValue("category", "");
-        toRet.type = identity.attributeValue("type", "");
-        toRet.jid = iq.getFrom().toBareJID();
-        toRet.name = identity.attributeValue("name", "");
-        toRet.resultIQ = iq;
-        
-        // find all the features
-        for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)child.elementIterator("feature");iter.hasNext();) {
-            org.dom4j.Element item = iter.next();
-            ZimbraLog.im.info("Found feature: "+item.asXML());
-            String var = item.attributeValue("var", null);
-            if (var != null)
-                toRet.features.add(var);
+        if (identity != null) {
+            
+            toRet.category = identity.attributeValue("category", "");
+            toRet.type = identity.attributeValue("type", "");
+            toRet.jid = iq.getFrom().toBareJID();
+            toRet.name = identity.attributeValue("name", "");
+            toRet.resultIQ = iq;
+            
+            // find all the features
+            for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)child.elementIterator("feature");iter.hasNext();) {
+                org.dom4j.Element item = iter.next();
+                ZimbraLog.im.info("Found feature: "+item.asXML());
+                String var = item.attributeValue("var", null);
+                if (var != null)
+                    toRet.features.add(var);
+            }
         }
         return toRet;
     }

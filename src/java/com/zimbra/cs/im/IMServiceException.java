@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.im;
 
+import org.xmpp.packet.Packet;
+
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -25,8 +27,13 @@ public class IMServiceException extends ServiceException {
     private static final long serialVersionUID = 8303045261247860050L;
     
     public static final String INVALID_ADDRESS = "im.INVALID_ADDRESS";
+    public static final String NOT_ALLOWED = "im.NOT_ALLOWED";
+    public static final String NOT_A_CONFERENCE_ROOM = "im.NOT_A_CONFERENCE_ROOM";
+    public static final String NO_RESPONSE_FROM_REMOTE = "im.NO_RESPONSE";
+    public static final String XMPP_ERROR = "im.XMPP_ERROR";
     
     public static final String ADDR = "addr";
+    public static final String PACKET = "packet";
     
     IMServiceException(String message, String code, boolean isReceiversFault, Argument... args) {
         super(message, code, isReceiversFault, args);
@@ -35,4 +42,21 @@ public class IMServiceException extends ServiceException {
     public static IMServiceException INVALID_ADDRESS(String addr) {
         return new IMServiceException("address is invalid: "+addr, INVALID_ADDRESS, SENDERS_FAULT, new Argument(ADDR, addr, Argument.Type.STR));
     }
+    
+    public static IMServiceException NOT_ALLOWED(String addr) {
+        return new IMServiceException("Permission denied trying to access: "+addr, NOT_ALLOWED, SENDERS_FAULT, new Argument(ADDR, addr, Argument.Type.STR));
+    }
+    
+    public static IMServiceException NOT_A_CONFERENCE_ROOM(String addr) {
+        return new IMServiceException(addr+" is not a conference room", NOT_A_CONFERENCE_ROOM, SENDERS_FAULT, new Argument(ADDR, addr, Argument.Type.STR));
+    }
+    
+    public static IMServiceException NO_RESPONSE_FROM_REMOTE(String info, String addr) {
+        return new IMServiceException("No response from addr: "+addr+" while "+info, NO_RESPONSE_FROM_REMOTE, SENDERS_FAULT, new Argument(ADDR, addr, Argument.Type.STR));
+    }
+    
+    public static IMServiceException XMPP_ERROR(String info, Packet packet) {
+        return new IMServiceException("XMPP error: "+info+" - "+packet.toXML(), XMPP_ERROR, SENDERS_FAULT, new Argument(PACKET, packet.toXML(), Argument.Type.STR));  
+    }
+    
 }
