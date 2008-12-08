@@ -464,6 +464,9 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureZimlet                    : configure available zimlets
           - configureTheme                     : configure available themes(skins)
 
+          - grantRight                         : can grant/revoke rights 
+                                                 (see 3.6 The grantRight Right and crossDomainAdmin Right)
+          
 
 3.5.2 calendar resource:
           - getCalendarResource                : get all calendar resource attributes
@@ -554,6 +557,9 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureExternalGAL              : configure external GAL
           - configureExternaAuth              : configure external auth
           - configureZimbraNotebookAccount    : setAttr zimbraNotebookAccount
+          
+          - crossDomainAdmin                  : the "cross domain admin" right
+                                                (see 3.6 The grantRight Right and crossDomainAdmin Right)
     
 >>>>> OPEN-ISSUE-1          
           Should we consider domain hierarchy like we do for DLs? 
@@ -611,11 +617,223 @@ Depending on the context, there are three aspects of targets that need to be dea
           
           - deleteZimlet                     : delete zimlet
 
+
+
+3.6 The grantRight Right and crossDomainAdmin Right
+     
+The grantRight right and crossDomainAdmin right are two special rights that play a role in our 
+ACL granting/revoking/checking infrastructure.  They are described in details in this section.  
+
+ 
+3.6.1 The grantRight Right  (account right)
+
+An admin must have an effective grantRight right in order to grant and revoke rights.
+
+In addition to the privileges of being able to grant/revoke rights, the grantRight right, 
+is a "can do all", or "wildcard" right.  It works as follows:
+
+    1. Only a "system admin" can grant the grantRight right. (see 4.  Admin Accounts and Admin Groups)
+
+    2. Like a regular right, all the target/grantee/right rules apply.  
+          e.g. - if granted on a domain, is effective on all accounts in the domain.
+               - if granted to a group, all members in the group have the right
+               - if is explicitly denied on a more specific target/grantee, the right is negated.
+
+    3. It is a "wildcard" right.   The ACL checking code will always also check the grantRight 
+       right while checking any right.  As long as the authed admin has an effective grantRight right, 
+       the request will be allowed, even if the actual required right(e.g. createAccount) is explicitly denied.
+  
+    4. Can grant *any* right to *anyone* on *any* target entry that is in the target body covered by the target 
+       on which the grantRight right is granted.
+       e.g. If I have a grantRight right on a domain entry, I can grant any right to anyone on any entry in the domain.
+            If I have a grantRight right on a cos entry, I can grant any right to anyone on this cos.
+
+    5. ***important***: *Cannot* grant/revoke the grantRight right.
+
+    6. ***important***: Admins with grantRight rights must assume full responsibility of any security impact caused 
+                        by the grants they make.  
+                        e.g. if you grant someone right to change your password, that someone can change your password 
+                             and login as you and assume all your privileges.
+
+      
+
+3.6.2 The crossDomainAdmin Right  (domain right)
+
+The purpose of the crossDomainAdmin right is to close security holes that could be opened by adding users from an
+"unrelated management umbrella" to a distribution list that is under the administration of anotehr "management umbrella".
+
+An "management umbrella" is the concept of "one admin or a group of admins can manage several domains".  
+
+e.g. - adminA@X.com can manage(e.g. CreateAccount, ModifyAccount, ...) users in domain X.com, Y.com, and Z.com.
+     - adminB@P.com can manage users in domain P.com, Q.com, and R.com.
+     - adminGroup@M.com can manage users in domains M.com and N.com
+     
+In the above example, domain X.com, Y.com, and Z.com is under the same "management umbrella", domains 
+P.com, Q.com, and R.com are under the same "management umbrella", and domains M.com and N.com are 
+under the same "management umbrella".   The three "management umbrella"s are "unrelated" to one another.
+
+This can be implemented by granting he grantRight right on the domains, as follows:
+
+domain X.com (grant: {id-of-adminA@X.com} usr grantRight)
+domain Y.com (grant: {id-of-adminA@X.com} usr grantRight)
+domain Z.com (grant: {id-of-adminA@X.com} usr grantRight)
+
+domain P.com (grant: {id-of-adminB@P.com} usr grantRight)
+domain Q.com (grant: {id-of-adminB@P.com} usr grantRight)
+domain R.com (grant: {id-of-adminB@P.com} usr grantRight)
+
+domain M.com (grant: {id-of-adminGroup@M.com} grp grantRight)
+domain N.com (grant: {id-of-adminGroup@M.com} grp grantRight)
+
+Note: by adding admin users to adminGroup@M.com, you are giving right that is allowed to the 
+adminGroup@M.com to the admin user.  Members of adminGroup@M.com can be in *any* domain. 
+e.g. admin@B.com, admin@C.com.  This, the behavior that admin@B.com, admin@C.com *can* manage 
+users in M.com and N.com, is NOT a security hole.   Because they are added explicitly by the 
+admin who decides "who can manage domains M.com an N.com".    That is, adding out-of-domain 
+admins to a grantee group is fine, it is not a security concern.
+
+However, adding out-of-domain users to a "target group" can open security holes.
+
+Using the above example, consider this hierarchy:
+    domain X.com
+        group DL@X.com
+            user user1@X.com
+            user user2@Y.com
+            user user3@Z.com 
+            user user4@P.com
+            
+    Now, it is fine when adminA@X.com (remember he has the grantRight right, which is a "can do all" right) 
+    changes password on users user1@X.com, user2@Y.com, user3@Z.com, because adminA@X.com also has a grantRight 
+    grant on domains Y.com and Z.com, and remember the grantzRight is a "wildcard" right, which allows anythig.
+    
+    But, if adminA@X.com is changing password on user4@P.com, this is a security hole and we should NOT allow
+    it.  
+    
+    However, if letting adminA@X.com execute rights on user4@P.com is desired, we provide a way so that management 
+    of domain P.com can say "sure, admins from domain X can administrate users in my domain".
+    
+    The mechanism is the "crossDomainAdmin" right.  It works as follows:  
+    
+    - The crossDomainAdmin right is a domain right.  That is, it is only applicable only when granted 
+      on a domain.
+       
+    - The "grantee" of a crossDomainAdmin right is, and has to be a domain. This is the only case when 
+      the grantee of a grant is not an account or group.
+      
+    - The grant looks:
+      {id-of-allowed-domain} dom crossDomainAdmin
+      
+      for example:
+      On domain P.com, the admin who has the privilege to grant right on domain P.com can grant:
+          {id-of-domain-X.com} dom crossDomainAdmin
+          {id-of-domain-Y.com} dom crossDomainAdmin
+          
+      The two grants allows admins in domain X.com and Y.com (note, they don't have any other right on domain 
+      P.com) to execute their rights on users in P.com.   
+
+
+Internally, the algorithm for deciding on cross domain ACL checking is:
+1. Go through the regular checking, if denied, stop
+
+2. Otherwise (i.e. allowed) check if the target is a "domain-ed" entry.
+   A domian-ed entry is a: domain, distribution list, account, alias, 
+   or calendar resource.   If the target is not a domain-ed entry, allow 
+   the right, stop.
+   
+3. Otherwise (i.e. target is a domain-ed entry) check if the authed admin 
+   is in the same domain of the target.  If it is, allow the right, stop.
+   
+4. Otherwise (i.e. target is a domained-ed entry and is in a different domain),
+   check if the grant that allows the right is granted on a target that is in 
+   the same domain of the target. If it is, allow the right, stop.
+   
+   this is the case:
+        domain X.com (grant: allow admin@Y.com right)
+           user1@X.com  <-- the target
+           
+   Although user is in a different domain(X.com) than the authed admin's domain(Y.com),
+   the grant is on X.com, which is the same domain of the target entry (user1@X.com).
+   For this case, it is natually allowed without having to check the crossDomainAdmin right. 
+   
+5. Otherwise (i.e. the grant that allows it is *not* in the same domain of the target), 
+   check if the authed admin has the crossDomainAdmin right on the domain in which the
+   target entry is in,  If it is, allow the right, stop.
+   
+   this is the case:
+        domain X.com
+           group group@X.com (grant: {id-of-adminB@X.com} usr rightFoo)   <-- the grant
+               user user1@P.com   <-- the target
+               
+        then on domain P.com, if either:
+        - domain X.com has the crossDomainAdmin right, or
+        - adminB@X.com also has rightFoo (or the grantRight right, remember it is a wildcard right) right
+        then it is allowed.
+        
+        that is: either     
+        domain P.com (grant: {id-of-domain-X.com} dom crossDomainAdmin)
+        or
+        domain P.com (grant: {id-of-adminB@X.com} usr rightFoo)
+        or
+        domain P.com (grant: {id-of-adminB@X.com} usr grantRight)
+        
+        
+6. Otherwise, deny.               
+     
+
+
+==================================
+4. Admin Accounts and Admin Groups
+================================== 
+
+4.1 How to Provision Admin Accounts and Admin Groups
+    - A "system admin account" is an account with the account attribute zimbraIsSystemAdminAccount set to TRUE.
+    
+    - An "admin account" is an account with the account attribute zimbraIsAdminAccount set to TRUE.
+    
+    - An "admin group" is a distribution list with the DL attribute zimbraIsAdminGroup set to TRUE.
+    
+    - Only admin accounts and admin groups can be added as members of admin groups. 
+
+
+4.2 For Granting/Revoking
+    - Only admin accounts can grant/revoke admin rights.  
+    
+    - Only admin accounts/groups can received any grants, i.e. being the grantee of an admin grant.
+    
+
+4.3 System Admin
+    - A "system admin" is a "can do all" admin.  It is allowed for all admin SOAP commands, including 
+      granting/revoking *any* right on *any* target to *any* admin/group.   
+      e.g. an account with zimbraIsSystemAdminAccount=TRUE is allowed to CreateAccount *without* an explicit 
+      createAccount right.
+      
+    - The most important privilege of a system admin is being able to grant and revoke the grantRight right.
+      A "regular" admin (i.e. zimbraIsAdminAccount==TRUE) cannot grant the grantRight right.
+       
+    - A system admin can create other system admins, by setting their zimbraIsSystemAdminAccount to TRUE.  
+    
+  
+
+4.4 Grants Are Valid only When the Grantee's Admin Flag is On 
+    - When an account's zimbraIsAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
+      the admin account become invalid.  
+      When zimbraIsAdminAccount is changed from FALSE to TRUE, all existing grants automatically become 
+      valid again.
+
+    - When a group's zimbraIsAdminGroup is is changed from TRUE to FALSE, all existing grants to the admin 
+      group become invalid.    
+      When zimbraIsAdminGroup is changed from FALSE to TRUE, all existing grants automatically become valid again.
+
+    - The above let admins temporary disable things without having to blow away and later recreate the grants.
+
+
+
+ 
 =================
-4. Storage - LDAP
+5. Storage - LDAP
 =================
 
-4.1 Grants
+5.1 Grants
 
     A grant, which is represented by an ACE, is stored in a LDAP attribute zimbraACE on target entries.  
 
@@ -676,8 +894,8 @@ Depending on the context, there are three aspects of targets that need to be dea
 
 
     
-4.2 Add the "global grant" Entry
-    cn=globalgrant,cn=zimbra
+5.2 Add the "global grant" Entry
+    DN: cn=globalgrant,cn=zimbra
     
     - For granting grants that affect all entries on the system.  e.g all cos's, all servers, all domains.
     
@@ -685,12 +903,42 @@ Depending on the context, there are three aspects of targets that need to be dea
       e.g. createTopDomain, createCos, createServer.
            
 
-    
-===================
-5. Granting Rules
-===================
+5.3 Add ACL Related Attributes
 
-5.1 The Most Specific Grant Takes Precedence
+- zimbraACE 
+       see 5.1
+
+- zimbraConstratint
+      <attr id="766" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="6.0">
+        <desc>
+            attribute constraints
+            TODO: fill all the constraints
+        </desc>
+      </attr>
+
+- zimbraIsSystemAdminAccount
+      see 4.
+      
+      <attr id="31" name="zimbraIsAdminAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo">
+          <desc>set to true for admin accounts</desc>
+      </attr>
+
+- zimbraIsAdminGroup
+      see 4.
+      
+     
+5.4 Deprecated Attributes
+
+- zimbraIsDomainAdminAccount
+      All right checking will be based on ACL.   zimbraIsDomainAdminAccount will be ignored throughout the server code.
+      Current accounts with zimbraIsDomainAdminAccount=TRUE will be migrated by granting them the equivalent rights.
+      
+      
+=====================
+6. ACL Checking Rules
+=====================
+
+6.1 The Most Specific Grant Takes Precedence
     A) Target Scope
        
        most specific                                                          least specific 
@@ -777,7 +1025,7 @@ Depending on the context, there are three aspects of targets that need to be dea
              the authed account is a member of)
                                   
 
-5.2 Negative Grants Takes Precedence Over Positive Grants
+6.2 Negative Grants Takes Precedence Over Positive Grants
     If grants are all equally related to the target and grantee, and they conflict - dome deny, some allow,
     then the negative grant takes precedence.
     
@@ -798,7 +1046,7 @@ Depending on the context, there are three aspects of targets that need to be dea
        
     
     
-5.3 For Get{object}/Modify{object} SOAP Requests
+6.3 For Get{object}/Modify{object} SOAP Requests
     All positive/negative rights will be expanded down to each attribute level and computed into an
     effective set of attributes allowed for read/write.
     
@@ -806,16 +1054,14 @@ Depending on the context, there are three aspects of targets that need to be dea
     to be read/modified; otherwise the entire request will be denied(PERM_DENIED exception) and no attribute 
     is returned/modified.
 
-                             
 
 ===============
-6. Admin SOAP
+7. Admin SOAP
 ===============
-6.1 Granting/Revoking/Checking/Getting Rights on a Target
+7.1 Granting/Revoking/Checking/Getting Rights on a Target
     
-6.1.1 GrantRightRequest
-      Grant right on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets granted to itself 
-      to other admins.
+7.1.1 GrantRightRequest
+      Grant right on a target.
     
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
@@ -848,9 +1094,8 @@ Depending on the context, there are three aspects of targets that need to be dea
 <GrantRightResponse/>
 
 
-6.1.2 RevokeRightRequest
-      Revoke right previously granted on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets 
-      granted to itself to other admins.
+7.1.2 RevokeRightRequest
+      Revoke right previously granted on a target.
  
 <RevokeRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
@@ -861,7 +1106,7 @@ Depending on the context, there are three aspects of targets that need to be dea
 <RevokeRightResponse/>
 
 
-6.1.3 CheckRightRequest
+7.1.3 CheckRightRequest
       Check if a principal has the specified right on target.
     
 <CheckRightRequest>
@@ -874,14 +1119,16 @@ Depending on the context, there are three aspects of targets that need to be dea
 </CheckPermissionRequest>
 
 {right-name}: right name
-              must be a preset, getAttrs, or setAttrs right, currently combo
-              right is not supported.
+              must be a preset, getAttrs, or setAttrs right, it cannot be a combo right.
                 
-              if right is a setAttrs right, an attr/value map must be provided 
+              If right is a setAttrs right, an attr/value map can be provided 
               in <attrs>, which contains the attrs/values that are attempted to
               be modified.   If one of the values to be modified violates one of 
               the constraint for the the attributes, the result in CheckRightResponse
-              will be allow="0".
+              will be allow="0".  If attr/value map is not provided, system will just 
+              check if all attributes defined by the setAttrs right are allowed, 
+              without taking into account any constraint. 
+               
               
 
 <CheckRightResponse allow="{1|0}">
@@ -934,7 +1181,8 @@ Depending on the context, there are three aspects of targets that need to be dea
               
          <CheckRightResponse hasRight="0">     
          
-6.1.4 GetGrantsRequest
+         
+7.1.4 GetGrantsRequest
       Returns all grants on the specified target entry.
       The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
       
@@ -947,11 +1195,11 @@ Depending on the context, there are three aspects of targets that need to be dea
 </GetGrantsResponse>  
    
          
-6.1.4 GetEffectiveRightsRequest
+7.1.5 GetEffectiveRightsRequest
       Returns all *effective* rights the authenticated admin has on the specified target entry.
     
       Effective rights are the rights the admin is actually allowed.  It is the net result of 
-      applying "5. Granting Rules" on the target and grantee.  Specifically denied rights 
+      applying ACL checking rules given the target and grantee.  Specifically denied rights 
       will *not* be returned.
     
       The result can help the admin console decide on what tabs to display after a target 
@@ -986,18 +1234,25 @@ if <grantee> is omitted, it means the account identified by the auth token.
   <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
       <right n="{right-name}"/>+
       <setAttrs [all="{all}"]>
-          <a n="..." [min="{min-constraint}"] [max="max-constraint"] [values="{common-separated-allowed-values}"]>
+          <a n="...">
               [<default>
                    <v>...</v>+
                </default>]
-          </a>
+              [<constraint>
+                   [<min>{min}</min>]
+                   [<max>{max}</max>]
+                   [<values>
+                       <v>...</v>+
+                    </values>]
+               </constraint>]       
+          </a>+
       </setAttrs>
       <getAttrs [all="{all}"]>
         <a n="...">
               [<default>
                    <v>...</v>+
                </default>]
-          </a>
+          </a>+
       </getAttrs>
   </target>
 </GetEffectiveRightsResponse>   
@@ -1044,9 +1299,81 @@ if <grantee> is omitted, it means the account identified by the auth token.
     </GetEffectiveRightsRequest>
 
          
-6.2 Get/GetAll Right Definition
+7.1.6 GetCreateObjectAttrsRequest
+      
+      Returns attributes, with defaults and constratints if any,  that can be set by the authed admin when an 
+      object is created.
+      
+      GetCreateObjectAttrsRequest returns the equivalent of setAttrs portion of GetEffectiveRightsResponse.
+      GetCreateObjectAttrsRequest is needed becasue GetEffectiveRightsRequest requires a target, but when we are 
+      creating a object, the target object does not exist yet.
+      
+      The result can help the admin console decide on what tabs/attributes to display for creating objects.
+    
 
-6.2.1 GetRightRequest
+<GetCreateObjectAttrsRequest>
+    <target type="{target-type}">
+    [<domain by="{domain-by}">...</domain>]
+    [<cos by="{cos-by}">...</cos>]
+</GetCreateObjectAttrsRequest>    
+
+<domain> : required if {target-type} is "account"
+           ignored otherwise
+          
+<cos>    : optional if {target-type} is "account", if missing, default cos of the domain will be used
+           ignored otherwise
+          
+e.g. 1  creating an account:
+
+<GetCreateObjectAttrsRequest>
+  <target type="account"/>  
+  <domain by="name">test.com</domain>
+  <cos by="name">standard</cos>
+</GetCreateObjectAttrsRequest>
+
+<GetCreateObjectAttrsResponse>
+    <setAttrs>
+          <a n="zimbraMailQuota"/>
+              <constraint>
+                  <min>1</min>
+                  <max>3</max>
+              </constraint>
+              <default>
+                  <v>2</v>
+              </default>
+          <a n="zimbraMailStatus"/>
+          <a n="zimbraFeatureCalendarEnabled"/>
+          ...
+    </setAttrs>
+</GetCreateObjectAttrsResponse>
+
+
+e.g. 2 creating a server:
+
+<GetCreateObjectAttrsRequest>
+  <target type="server"/>  
+</GetCreateObjectAttrsRequest>
+
+<GetCreateObjectAttrsResponse>
+    <target type="server"/>
+    <setAttrs>
+          <a n="zimbraLmtpExposeVersionOnBanner"/>
+          <a n="zimbraXMPPServerDialbackKey"/>
+          <a n="zimbraReverseProxyImapEnabledCapability"/>
+              <constraint>
+                  <values>
+                      <v>IMAP4rev1</v>
+                      <v>BINARY</v>
+                  </values>
+              </constraint>    
+          ...
+    </setAttrs>
+</GetCreateObjectAttrsResponse>
+         
+         
+7.2 Get/GetAll Right Definition
+
+7.2.1 GetRightRequest
       Get a right definition.
     
 <GetRightRequest [expandAllAttrs="{expand-all-attrs}"]>
@@ -1080,7 +1407,7 @@ if <grantee> is omitted, it means the account identified by the auth token.
                - combo: always not present
 
 
-6.2.2 GetAllRights
+7.2.2 GetAllRights
       Get all system defined rights
       
 <GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"]/>
@@ -1113,13 +1440,26 @@ See <GetRightResponse> for description of each <right> in the response.
 
 
 ===========
-7. zmprov
+8. zmprov
 ===========
+
+8.1 zmprov -l (ldap)
+    - zmprov -l will continue to support all it is supporting now, including create/delete/rename any objects and modifying 
+      any non-immutable attributes
+
+    - "zmprov -l" is ***not*** restricted by any ACL.   
+    
+    - This is reasonable and is not a security hole because in order to run "zmprov -l", someone must actually logon to a box 
+      ZCS is installed and has read access to localconfig.xml, which contains the LDAP root password.
+
+
+8.2 zmprov (via soap)
+
 TODO
 
                 
 ==========================
-8. Backwards compatibility
+9. Backwards compatibility
 ==========================
 - For current admins (zimbraIsAdminAccount), allow:
      - All permissions on global config
@@ -1134,15 +1474,17 @@ Customers can then turn off those bits and explicitly grant only the permissions
 
 
 ===========================
-9. References, requirements
+10. References, requirements
 ===========================
 - Kevin Kluge's requirement doc: 
   https://dogfood.zimbra.com/home/kluge/Public/delegateAdmin
 
-- http://bugzilla.zimbra.com/show_bug.cgi?id=11515
-  role based delegate administration
+- role based delegate administration
+  http://bugzilla.zimbra.com/show_bug.cgi?id=11515
 
-- http://bugzilla.zimbra.com/show_bug.cgi?id=18277
-  server side infrastructure for role based delegated administration
+- server side infrastructure for role based delegated administration
+  http://bugzilla.zimbra.com/show_bug.cgi?id=18277
 
-
+- Customer Care App Requirements 
+  http://twiki.corp.yahoo.com/view/Mail/ZimbraCustomerCareApp
+  
