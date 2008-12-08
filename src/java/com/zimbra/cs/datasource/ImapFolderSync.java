@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.Collection;
 import java.sql.SQLException;
 
 class ImapFolderSync {
@@ -875,22 +876,41 @@ class ImapFolderSync {
         final Map<Long, MessageData> flagsByUid =
             connection.uidFetch(seq, "(FLAGS INTERNALDATE)");
         removeDeleted(flagsByUid);
-        if (!flagsByUid.isEmpty()) {
-            List<Long> uids = new ArrayList<Long>(flagsByUid.keySet());
-            Collections.sort(uids);
-            connection.uidFetch(getSequence(uids.iterator()), "BODY.PEEK[]",
-                new FetchResponseHandler() {
-                    public void handleFetchResponse(MessageData md) throws Exception {
-                        long uid = md.getUid();
-                        try {
-                            handleFetch(md, flagsByUid, uidsToDelete);
-                            clearError(uid);
-                        } catch (Exception e) {
-                            syncFailed("Fetch failed for uid " + uid, e);
-                            SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
-                        }
-                    }
-                });
+        final Set<Long> uidSet = flagsByUid.keySet();
+        if (uidSet.isEmpty()) return;
+        FetchResponseHandler handler = new FetchResponseHandler() {
+            public void handleFetchResponse(MessageData md) throws Exception {
+                long uid = md.getUid();
+                try {
+                    handleFetch(md, flagsByUid, uidsToDelete);
+                    clearError(uid);
+                } catch (Exception e) {
+                    syncFailed("Fetch failed for uid " + uid, e);
+                    SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
+                }
+                uidSet.remove(uid);
+            }
+        };
+        // Try fetching group of messages first
+        LOG.debug("Fetching messages for sequence: " + seq);
+        try {
+            connection.uidFetch(getSequence(uidSet), "BODY.PEEK[]", handler);
+        } catch (CommandFailedException e) {
+            LOG.error("UID FETCH failed: " + e.toString(), e);
+        }
+        if (uidSet.isEmpty()) return;
+        LOG.info("Fetching remaining messages one at a time for UIDs: " + uidSet);
+        for (long uid : getOrderedUids(uidSet)) {
+            try {
+                LOG.info("Fetching message for uid: " + uid);
+                MessageData md = connection.uidFetch(uid, "BODY.PEEK[]");
+                handler.handleFetchResponse(md);
+            } catch (Exception e) {
+                LOG.error("Error while fetching message for UID %d", uid, e);
+            }
+        }
+        if (!uidSet.isEmpty()) {
+            LOG.error("Unable to fetch messages for uids: " + uidSet);
         }
     }
 
@@ -908,15 +928,22 @@ class ImapFolderSync {
         }
     }
 
-    private String getSequence(Iterator<Long> uids) {
+    private static String getSequence(Set<Long> uidSet) {
         StringBuilder sb = new StringBuilder();
-        sb.append(uids.next());
-        while (uids.hasNext()) {
-            sb.append(',').append(uids.next());
+        Iterator<Long> it = getOrderedUids(uidSet).iterator();
+        sb.append(it.next());
+        while (it.hasNext()) {
+            sb.append(',').append(it.next());
         }
         return sb.toString();
     }
-    
+
+    private static Collection<Long> getOrderedUids(Collection<Long> uidSet) {
+        List<Long> uids = new ArrayList<Long>(uidSet);
+        Collections.sort(uids, Collections.reverseOrder());
+        return uids;
+    }
+
     private void handleFetch(MessageData md,
                              Map<Long, MessageData> flagsByUid,
                              List<Long> uidsToDelete)
