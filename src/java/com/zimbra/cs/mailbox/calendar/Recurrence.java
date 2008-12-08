@@ -692,9 +692,6 @@ public class Recurrence
             } else if (mRecur != null) {
                 long endMillis = mRecur.getEstimatedEndTime(mDtStart).getTime();
                 ParsedDateTime end = ParsedDateTime.fromUTCTime(endMillis, mDtStart.getTimeZone());
-                ParsedDateTime until = mRecur.getUntil();
-                if (until != null && until.compareTo(end) < 0)
-                    end = until;
                 if (mDuration != null)
                     end = end.add(mDuration);
                 return end;
