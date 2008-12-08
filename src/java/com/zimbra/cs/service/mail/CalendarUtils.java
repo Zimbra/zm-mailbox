@@ -22,6 +22,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
@@ -278,29 +282,55 @@ public class CalendarUtils {
         return toRet;
     }
 
-    // TRUE if the list contains the atendee, comparing by URI
-    private static boolean attendeeListContains(List /* ZAttendee */list,
-            ZAttendee at) {
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            ZAttendee cur = (ZAttendee) iter.next();
-            if (cur.addressesMatch(at)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv) {
+    // Compare the attendee lists in old and new invites to figure out which attendees are being removed.
+    // Distribution lists are taken into consideration.
+    public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv) throws ServiceException {
         List<ZAttendee> list = new ArrayList<ZAttendee>();
         // compare the new attendee list with the existing one...if attendees
         // have been removed, then
-        // we need to send them individual cancelation messages
+        // we need to send them individual cancellation messages
         List<ZAttendee> newAts = newInv.getAttendees();
         List<ZAttendee> oldAts = oldInv.getAttendees();
-        for (Iterator iter = oldAts.iterator(); iter.hasNext();) {
-            ZAttendee cur = (ZAttendee) iter.next();
-            if (!attendeeListContains(newAts, cur)) {
+        for (ZAttendee cur : oldAts) {
+            boolean matches = false;
+            for (ZAttendee newAt : newAts) {
+                if (cur.addressesMatch(newAt)) {
+                    matches = true;
+                    break;
+                }
+            }
+            if (!matches)
                 list.add(cur);
+        }
+        if (list.isEmpty())
+            return list;
+
+        // Find out which of the new attendees are distribution lists.
+        Provisioning prov = Provisioning.getInstance();
+        List<String /* zimbraId */> newAtsDL = new ArrayList<String>();
+        for (ZAttendee at : newAts) {
+            String addr = at.getAddress();
+            if (addr != null) {
+                DistributionList dl = prov.get(DistributionListBy.name, addr);
+                if (dl != null)
+                    newAtsDL.add(dl.getId());
+            }
+        }
+        // Check to see if attendees to be removed are members of DLs.  Those that belong to a DL in new attendee
+        // list aren't considered removed.
+        for (Iterator<ZAttendee> removedIter = list.iterator(); removedIter.hasNext(); ) {
+            ZAttendee removedAt = removedIter.next();
+            String removedAddr = removedAt.getAddress();
+            if (removedAddr != null) {
+                Account removedAcct = prov.get(AccountBy.name, removedAddr);
+                if (removedAcct != null) {
+                    for (String dl : newAtsDL) {
+                        if (prov.inDistributionList(removedAcct, dl)) {
+                            removedIter.remove();
+                            break;
+                        }
+                    }
+                }
             }
         }
         return list;
