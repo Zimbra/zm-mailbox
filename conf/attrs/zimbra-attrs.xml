@@ -523,7 +523,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="78" name="zimbraRedoLogRolloverFileSizeKB" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>102400</globalConfigValue>
+  <globalConfigValue>1048576</globalConfigValue>
   <desc>redo.log file rolls over when it gets to this size</desc>
 </attr>
 

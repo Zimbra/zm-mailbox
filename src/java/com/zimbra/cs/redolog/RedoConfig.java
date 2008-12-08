@@ -122,7 +122,7 @@ public class RedoConfig {
     }
 
     private long mRedoLogRolloverFileSizeKB;
-    private static final long D_REDOLOG_ROLLOVER_FILESIZE_KB = 10240;
+    private static final long D_REDOLOG_ROLLOVER_FILESIZE_KB = 1048576;
     /**
      * Returns the redolog rollover threshold filesize.
      * The current redolog file is rolled over if it reaches or exceeds

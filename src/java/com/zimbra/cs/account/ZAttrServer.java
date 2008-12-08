@@ -8929,11 +8929,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * redo.log file rolls over when it gets to this size
      *
-     * @return zimbraRedoLogRolloverFileSizeKB, or 102400 if unset
+     * @return zimbraRedoLogRolloverFileSizeKB, or 1048576 if unset
      */
     @ZAttr(id=78)
     public int getRedoLogRolloverFileSizeKB() {
-        return getIntAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB, 102400);
+        return getIntAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB, 1048576);
     }
 
     /**
