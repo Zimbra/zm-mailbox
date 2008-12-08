@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081208-1053 */
+    /* build: 5.0 pshao 20081208-1152 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1017,6 +1017,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=743)
     public static final String A_zimbraAdminConsoleDNSCheckEnabled = "zimbraAdminConsoleDNSCheckEnabled";
+
+    /**
+     * admin console login message
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public static final String A_zimbraAdminConsoleLoginMessage = "zimbraAdminConsoleLoginMessage";
 
     /**
      * logout URL for admin console to send the user to upon explicit loggin

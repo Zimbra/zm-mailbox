@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081208-1053 */
+    /* build: 5.0 pshao 20081208-1152 */
 
     /**
      * Zimbra access control list
@@ -540,6 +540,140 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAdminConsoleDNSCheckEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminConsoleDNSCheckEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * admin console login message
+     *
+     * @return zimbraAdminConsoleLoginMessage, or ampty array if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public String[] getAdminConsoleLoginMessage() {
+        return getMultiAttr(Provisioning.A_zimbraAdminConsoleLoginMessage);
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param zimbraAdminConsoleLoginMessage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public void setAdminConsoleLoginMessage(String[] zimbraAdminConsoleLoginMessage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminConsoleLoginMessage, zimbraAdminConsoleLoginMessage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param zimbraAdminConsoleLoginMessage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public Map<String,Object> setAdminConsoleLoginMessage(String[] zimbraAdminConsoleLoginMessage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminConsoleLoginMessage, zimbraAdminConsoleLoginMessage);
+        return attrs;
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param zimbraAdminConsoleLoginMessage new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public void addAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminConsoleLoginMessage, zimbraAdminConsoleLoginMessage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param zimbraAdminConsoleLoginMessage new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public Map<String,Object> addAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAdminConsoleLoginMessage, zimbraAdminConsoleLoginMessage);
+        return attrs;
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param zimbraAdminConsoleLoginMessage existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public void removeAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAdminConsoleLoginMessage, zimbraAdminConsoleLoginMessage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param zimbraAdminConsoleLoginMessage existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public Map<String,Object> removeAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAdminConsoleLoginMessage, zimbraAdminConsoleLoginMessage);
+        return attrs;
+    }
+
+    /**
+     * admin console login message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public void unsetAdminConsoleLoginMessage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminConsoleLoginMessage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin console login message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=772)
+    public Map<String,Object> unsetAdminConsoleLoginMessage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminConsoleLoginMessage, "");
         return attrs;
     }
 
