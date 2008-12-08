@@ -1842,7 +1842,7 @@ public class IMPersona extends ClassLogger {
 //        return mSharedGroups.contains(name);
 //    }
 
-    public Pair<String, List<MucStatusCode>> joinChat(String addr, String threadId, String nickname) throws ServiceException {
+    public Pair<String, List<MucStatusCode>> joinConferenceRoom(String addr, String threadId, String nickname, String password) throws ServiceException {
         IMChat chat;
         synchronized(getLock()) {
             if (threadId == null || threadId.length() == 0) {
@@ -1856,7 +1856,7 @@ public class IMPersona extends ClassLogger {
                 mChats.put(threadId, chat);
             }
         }
-        List<MucStatusCode> status = chat.syncJoinMUCChat(addr, nickname);
+        List<MucStatusCode> status = chat.syncJoinMUCChat(addr, nickname, password);
         return new Pair<String, List<MucStatusCode>>(chat.getThreadId(), status);
     }
 

@@ -706,7 +706,7 @@ public class IMChat extends ClassLogger {
         mPersona.xmppRoute(mPendingJoin);
     }
 
-    List<MucStatusCode> syncJoinMUCChat(String roomAddr, String nickname) {
+    List<MucStatusCode> syncJoinMUCChat(String roomAddr, String nickname, String password) throws ServiceException {
         if (nickname != null)
             mNickname = nickname;
         
@@ -714,12 +714,18 @@ public class IMChat extends ClassLogger {
         MUC Example 15. Jabber User Seeks to Enter a Room (Groupchat 1.0)
         <presence
             from='hag66@shakespeare.lit/pda'
-            to='darkcave@macbeth.shakespeare.lit/thirdwitch'/>
+            to='darkcave@macbeth.shakespeare.lit/thirdwitch'>
+            [<x xmlns="http://jabber.org/protocol/muc"><password>PW</password></x>]
+        </presence>    
          */
         this.mIsMUC = true;
         mDestJid = new JID(roomAddr);
         mPendingJoin = new JoinRoom(mPersona.getFullJidAsString(), getMUCJidWithNickname());
-        boolean success = false;
+        if (password != null) {
+            org.dom4j.Element x = mPendingJoin.getChildElement("x", "http://jabber.org/protocol/muc");
+            org.dom4j.Element pw = x.addElement("password");
+            pw.setText(password);
+        }
         Presence response = null;
         
         synchronized(mPendingJoin) {

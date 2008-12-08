@@ -37,9 +37,10 @@ public class IMJoinConferenceRoom extends IMDocumentHandler {
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID, null);
         String addr = request.getAttribute(IMConstants.A_ADDRESS);
         String nickname = request.getAttribute("nick", null);
+        String password = request.getAttribute("password", null);
         
         IMPersona persona = super.getRequestedPersona(zsc);
-        Pair<String, List<MucStatusCode>> results = persona.joinChat(addr, threadId, nickname);
+        Pair<String, List<MucStatusCode>> results = persona.joinConferenceRoom(addr, threadId, nickname, password);
         StringBuilder errors = new StringBuilder();
         StringBuilder status = new StringBuilder();
         for (MucStatusCode code : results.getSecond()) {
