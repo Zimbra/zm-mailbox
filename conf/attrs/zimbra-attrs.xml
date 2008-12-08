@@ -3597,4 +3597,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>when set to TRUE, free/busy for the account is not calculated from local mailbox.</desc>
 </attr>
 
+<attr id="772" name="zimbraAdminConsoleLoginMessage" type="string" cardinality="multi" optionalIn="globalConfig" since="5.0.12">
+  <desc>admin console login message</desc>
+</attr>
+
 </attrs>
