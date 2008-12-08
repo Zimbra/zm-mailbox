@@ -38,8 +38,8 @@ public class IMConstants {
     public static final QName IM_MODIFY_CHAT_RESPONSE  = QName.get("IMModifyChatResponse", NAMESPACE);
     public static final QName IM_SEND_MESSAGE_REQUEST  = QName.get("IMSendMessageRequest", NAMESPACE);
     public static final QName IM_SEND_MESSAGE_RESPONSE = QName.get("IMSendMessageResponse", NAMESPACE);
-    public static final QName IM_JOIN_CHAT_REQUEST = QName.get("IMJoinChatRequest", NAMESPACE);
-    public static final QName IM_JOIN_CHAT_RESPONSE = QName.get("IMJoinChatResponse", NAMESPACE);
+    public static final QName IM_JOIN_CONFERENCE_ROOM_REQUEST = QName.get("IMJoinConferenceRoomRequest", NAMESPACE);
+    public static final QName IM_JOIN_CONFERENCE_ROOM_RESPONSE = QName.get("IMJoinConferenceRoomResponse", NAMESPACE);
     
     public static final QName IM_GET_PRIVACY_LIST_REQUEST = QName.get("IMGetPrivacyListRequest", NAMESPACE);
     public static final QName IM_GET_PRIVACY_LIST_RESPONSE = QName.get("IMGetPrivacyListResponse", NAMESPACE);
@@ -54,7 +54,16 @@ public class IMConstants {
     
     public static final QName IM_SET_IDLE_REQUEST = QName.get("IMSetIdleRequest", NAMESPACE);
     public static final QName IM_SET_IDLE_RESPONSE = QName.get("IMSetIdleResponse", NAMESPACE);
-
+    
+    public static final QName IM_LIST_CONFERENCE_SERVICES_REQUEST = QName.get("IMListConferenceServicesRequest", NAMESPACE);    
+    public static final QName IM_LIST_CONFERENCE_SERVICES_RESPONSE = QName.get("IMListConferenceServicesResponse", NAMESPACE);
+    
+    public static final QName IM_LIST_CONFERENCE_ROOMS_REQUEST = QName.get("IMListConferenceRoomsRequest", NAMESPACE);
+    public static final QName IM_LIST_CONFERENCE_ROOMS_RESPONSE = QName.get("IMListConferenceRoomsResponse", NAMESPACE);
+    
+    public static final QName IM_GET_CHAT_CONFIGURATION_REQUEST = QName.get("IMGetChatConfigurationRequest", NAMESPACE);    
+    public static final QName IM_GET_CHAT_CONFIGURATION_RESPONSE = QName.get("IMGetChatConfigurationResponse", NAMESPACE);
+    
     public static final String A_ACTION         = "action";
     public static final String A_AUTHORIZED     = "authorized";
     public static final String A_THREAD_ID      = "thread";

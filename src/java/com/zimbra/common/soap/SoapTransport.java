@@ -20,16 +20,17 @@
  */
 package com.zimbra.common.soap;
 
-import java.util.Map;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+
 import org.dom4j.DocumentException;
 import org.dom4j.ElementHandler;
 import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Map;
 
 /**
  * Abstract class for sending a soap message.
@@ -53,7 +54,7 @@ public abstract class SoapTransport {
     
     public interface DebugListener {
         public void sendSoapMessage(Element envelope);
-        public void receiveSoapMessage(Element envelope);        
+        public void receiveSoapMessage(Element envelope);
     }
 
     protected SoapTransport() {
@@ -140,8 +141,7 @@ public abstract class SoapTransport {
      * @param name the SOAP client name
      * @param version the SOAP client version number, or <code>null</code>
      */
-    public void setUserAgent(String name, String
-        version) {
+    public void setUserAgent(String name, String version) {
         mUserAgentName = name;
         mUserAgentVersion = version;
     }
@@ -174,7 +174,8 @@ public abstract class SoapTransport {
 
     protected String generateSoapMessage(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) {
     	if (raw) {
-            if (mDebugListener != null) mDebugListener.sendSoapMessage(document);
+            if (mDebugListener != null)
+                mDebugListener.sendSoapMessage(document);
     		return SoapProtocol.toString(document, mPrettyPrint);
         }
 
@@ -189,22 +190,25 @@ public abstract class SoapTransport {
         }
         SoapProtocol responseProto = mResponseProto == null ? proto : mResponseProto;
 
-        Element context = SoapUtil.toCtxt(proto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
-        if (mAuthToken != null) SoapUtil.addSessionToCtxt(context, mSessionId);
+        String targetId = requestedAccountId != null ? requestedAccountId : mTargetAcctId;
+        String targetName = targetId == null ? mTargetAcctName : null;
+
+        Element context = SoapUtil.toCtxt(proto, mAuthToken);
+        if (noSession) {
+            SoapUtil.disableNotificationOnCtxt(context);
+        } else {
+            SoapUtil.addSessionToCtxt(context, mAuthToken == null ? null : mSessionId, mMaxNotifySeq);
+        }
+        SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
         SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
         if (mUserAgentName != null)
             SoapUtil.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
-
-        if (requestedAccountId != null)
-            context.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(requestedAccountId);
-        if (mMaxNotifySeq != -1)
-            context.addElement(ZimbraNamespace.E_NOTIFY).addAttribute(HeaderConstants.A_SEQNO, mMaxNotifySeq);
         if (responseProto != proto)
-            context.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, responseProto == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
+            SoapUtil.addResponseProtocolToCtxt(context, responseProto);
 
         Element envelope = proto.soapEnvelope(document, context);
-        if (mDebugListener != null) mDebugListener.sendSoapMessage(envelope);
-
+        if (mDebugListener != null)
+            mDebugListener.sendSoapMessage(envelope);
         return SoapProtocol.toString(envelope, getPrettyPrint());
     }
 
@@ -251,15 +255,17 @@ public abstract class SoapTransport {
 
         mContext = proto.getHeader(env, HeaderConstants.CONTEXT);
         if (mContext != null) {
-            String sid = mContext.getAttribute(HeaderConstants.E_SESSION_ID, null);
+            String sid = mContext.getAttribute(HeaderConstants.E_SESSION, null);
+            // be backwards-compatible for sanity-preservation purposes
+            if (sid == null)
+                mContext.getAttribute("sessionId", null);
             if (sid != null)
                 mSessionId = sid;
         }
 
         if (proto.isFault(e)) {
-            if (mTargetAcctId != null) {
+            if (mTargetAcctId != null)
                 proto.updateArgumentsForRemoteFault(e, mTargetAcctId);
-            }
             throw proto.soapFault(e);
         } else
             return e;
