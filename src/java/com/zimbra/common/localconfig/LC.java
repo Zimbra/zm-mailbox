@@ -1153,10 +1153,10 @@ public class LC {
         javamail_smtp_debug.setDefault("false");
 
         javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout");
-        javamail_pop3_timeout.setDefault("60");
+        javamail_pop3_timeout.setDefault("20");
                                                  
         javamail_imap_timeout = new KnownKey("javamail_imap_timeout");
-        javamail_imap_timeout.setDefault("60");
+        javamail_imap_timeout.setDefault("20");
         
         javamail_smtp_timeout = new KnownKey("javamail_smtp_timeout");
         javamail_smtp_timeout.setDefault("60");
