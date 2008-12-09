@@ -1290,12 +1290,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     Blob setContent(Blob blob, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
-        short volumeId = blob.getVolumeId();
         addRevision(false);
-
-        // catch the "was no blob, is no blob" case
-        if (digest == null && getDigest() == null)
-            return null;
 
         // update the item's relevant attributes
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
@@ -1326,12 +1321,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         int size = blob == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
-            getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
+        getFolder().updateSize(0, size - mData.size);
+
+        short volumeId = blob == null ? -1 : blob.getVolumeId();
         mData.setBlobDigest(digest);
         mData.date     = mMailbox.getOperationTimestamp();
-        mData.volumeId = blob == null ? -1 : volumeId;
+        mData.volumeId = volumeId;
         mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
         mBlob = null;

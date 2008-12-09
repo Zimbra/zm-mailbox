@@ -2459,13 +2459,13 @@ public class Mailbox {
         }
     }
 
-    public synchronized int countImapRecent(OperationContext octxt, int folderId) throws ServiceException {
+    public synchronized int getImapRecent(OperationContext octxt, int folderId) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("openImapFolder", octxt);
 
             Folder folder = checkAccess(getFolderById(folderId));
-            int recent = DbMailItem.countImapRecent(folder);
+            int recent = folder.getImapRECENT();
             success = true;
             return recent;
         } finally {
@@ -5861,10 +5861,7 @@ public class Mailbox {
                 }
                 
                 try {
-                    if (pc.getBlob() == null && con.getDigest() == null)
-                        con.setFields(pc);
-                    else
-                        con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
+                    con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }

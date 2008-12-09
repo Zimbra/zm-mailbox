@@ -79,6 +79,7 @@ public class Folder extends MailItem {
     private int       mImapUIDNEXT;
     private int       mImapMODSEQ;
     private int       mImapRECENT;
+    private int       mImapRECENTCutoff;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -146,24 +147,53 @@ public class Folder extends MailItem {
         return mSyncData == null ? null : new SyncData(mSyncData);
     }
 
-    /**
-     * Returns the date the folder was last sync'ed from external
-     * data source.
-     */
+    /** Returns the date the folder was last sync'ed from an external
+     *  data source. */
     public long getLastSyncDate() {
         return mSyncData == null ? 0 : mSyncData.lastDate;
     }
-    
+
     /** Returns the last assigned item ID in the enclosing Mailbox the last
      *  time the folder was accessed via a read/write IMAP session.  If there
      *  is such a session already active, returns the last item ID in the
-     *  Mailbox.  This value is used to calculate the \Recent flag. */
-    public int getImapRECENT() {
+     *  Mailbox.  This value is used to calculate the \Recent flag when it
+     *  has not already been cached. */
+    public int getImapRECENTCutoff() {
         for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
             ImapFolder i4folder = (ImapFolder) s;
             if (i4folder.getId() == mId && i4folder.isWritable())
                 return mMailbox.getLastItemId();
         }
+        return mImapRECENTCutoff;
+    }
+
+    /** Returns the number of messages in the folder that would be considered
+     *  \Recent in an IMAP session.  If there is currently a READ-WRITE IMAP
+     *  session open on the folder, by definition all other IMAP connections
+     *  will see no \Recent messages.  <i>(Note that as such, this method
+     *  should <u>not</u> be called by IMAP sessions that have this folder
+     *  selected.)</i>  Otherwise, it is the number of messages/chats/contacts
+     *  added to the folder, moved to the folder, or edited in the folder
+     *  since the last such IMAP session. */
+    int getImapRECENT() throws ServiceException {
+        // no contents means no \Recent items (duh)
+        if (getSize() == 0)
+            return 0;
+
+        // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
+        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+            ImapFolder i4folder = (ImapFolder) s;
+            if (i4folder.getId() == mId && i4folder.isWritable())
+                return 0;
+        }
+
+        // if no active sessions, use a cached value if possible
+        if (mImapRECENT >= 0)
+            return mImapRECENT;
+
+        // final option is to calculate the number of \Recent messages
+        markItemModified(Change.MODIFIED_SIZE);
+        mImapRECENT = DbMailItem.countImapRecent(this, getImapRECENTCutoff());
         return mImapRECENT;
     }
 
@@ -467,7 +497,7 @@ public class Folder extends MailItem {
      * @param countDelta  The change in item count, negative or positive.
      * @param sizeDelta   The change in total size, negative or positive. */
     void updateSize(int countDelta, long sizeDelta) throws ServiceException {
-        if (!trackSize() || (countDelta == 0 && sizeDelta == 0))
+        if (!trackSize())
             return;
         // if we go negative, that's OK!  just pretend we're at 0.
         markItemModified(Change.MODIFIED_SIZE);
@@ -477,19 +507,22 @@ public class Folder extends MailItem {
             updateHighestMODSEQ();
         mData.size = Math.max(0, mData.size + countDelta);
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
+        mImapRECENT = -1;
     }
 
     /** Sets the number of items in the folder and their total size.
      * @param count      The folder's new item count.
      * @param totalSize  The folder's new total size. */
     void setSize(long count, long totalSize) throws ServiceException {
-        if (!trackSize() || (count == 0 && totalSize == 0))
+        if (!trackSize())
             return;
         markItemModified(Change.MODIFIED_SIZE);
         if (count > mData.size)
             updateUIDNEXT();
-        if (count != mData.size)
+        if (count != mData.size) {
             updateHighestMODSEQ();
+            mImapRECENT = -1;
+        }
         mData.size = count;
         mTotalSize = totalSize;
     }
@@ -523,11 +556,12 @@ public class Folder extends MailItem {
     /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
      *  last assigned item ID. */
     void checkpointRECENT() throws ServiceException {
-        if (mImapRECENT == mMailbox.getLastItemId())
+        if (mImapRECENTCutoff == mMailbox.getLastItemId())
             return;
 
         markItemModified(Change.INTERNAL_ONLY);
-        mImapRECENT = mMailbox.getLastItemId();
+        mImapRECENT = 0;
+        mImapRECENTCutoff = mMailbox.getLastItemId();
         saveMetadata();
     }
 
@@ -665,7 +699,7 @@ public class Folder extends MailItem {
         data.flags    = flags & Flag.FLAGS_FOLDER;
         data.name     = name;
         data.subject  = name;
-        data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
+        data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         DbMailItem.create(mbox, data);
@@ -1076,7 +1110,8 @@ public class Folder extends MailItem {
         mTotalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
         mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
         mImapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
-        mImapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, 0);
+        mImapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, -1);
+        mImapRECENTCutoff = (int) meta.getLong(Metadata.FN_RECENT_CUTOFF, 0);
 
         if (meta.containsKey(Metadata.FN_URL) || meta.containsKey(Metadata.FN_SYNC_DATE))
             mSyncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
@@ -1091,14 +1126,14 @@ public class Folder extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT);
+        return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff);
     }
 
-    private static String encodeMetadata(byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
-        return encodeMetadata(new Metadata(), color, version, attributes, hint, rights, fsd, uidnext, totalSize, modseq, imapRecent).toString();
+    private static String encodeMetadata(byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
+        return encodeMetadata(new Metadata(), color, version, attributes, hint, rights, fsd, uidnext, totalSize, modseq, imapRecent, imapRecentCutoff).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
@@ -1111,6 +1146,8 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_MODSEQ, modseq);
         if (imapRecent > 0)
             meta.put(Metadata.FN_RECENT, imapRecent);
+        if (imapRecentCutoff > 0)
+            meta.put(Metadata.FN_RECENT_CUTOFF, imapRecentCutoff);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
         if (fsd != null && fsd.url != null && !fsd.url.equals("")) {

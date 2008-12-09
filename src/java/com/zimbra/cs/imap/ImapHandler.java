@@ -1931,7 +1931,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 else if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
                     recent = mSelectedFolder.getRecentCount();
                 else
-                    recent = mbox.countImapRecent(getContext(), folder.getId());
+                    recent = mbox.getImapRecent(getContext(), folder.getId());
                 uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
                 uvv = ImapFolder.getUIDValidity(folder);
                 unread = folder.getUnreadCount();

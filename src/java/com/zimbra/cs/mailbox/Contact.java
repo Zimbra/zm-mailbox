@@ -705,38 +705,6 @@ public class Contact extends MailItem {
         saveData(getFileAsString(mFields));
     }
 
-    /** Alters an existing contact's fields.  Depending on the value of the
-     *  <tt>replace</tt> parameter, will either modify the existing fields
-     *  or completely replace the old ones with the supplied <tt>Map</tt>.
-     *  Blank field values cause the field to be deleted from a contact.
-     *  The resulting contact must have at least one non-blank field value.
-     * 
-     * @param fields   The set of contact fields.
-     * @perms {@link ACL#RIGHT_WRITE} on the contact
-     * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><tt>service.INVALID_REQUEST</tt> - if the resulting set of
-     *        contact fields is empty
-     *    <li><tt>service.FAILURE</tt> - if there's a database failure
-     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul> */
-    void setFields(ParsedContact pc) throws ServiceException {
-        if (!canAccess(ACL.RIGHT_WRITE))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the contact");
-
-        markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE);
-
-        mFields = pc.getFields();
-        if (mFields == null || mFields.isEmpty())
-            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-
-    	// XXX: should update mData.size and Mailbox.size and folder.size
-        addRevision(false);
-
-        mData.date = mMailbox.getOperationTimestamp();
-        mData.contentChanged(mMailbox);
-        saveData(getFileAsString());
-	}
-
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
     @Override MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
@@ -808,7 +776,7 @@ public class Contact extends MailItem {
         StringBuffer sb = new StringBuffer();
         sb.append("contact: {");
         appendCommonMembers(sb);
-        for (Map.Entry entry : mFields.entrySet())
+        for (Map.Entry<String, String> entry : mFields.entrySet())
             sb.append(", ").append(entry.getKey()).append(": ").append(entry.getValue());
         sb.append("}");
         return sb.toString();

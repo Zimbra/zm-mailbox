@@ -115,7 +115,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             mHandler.activateExtension(ActivatedExtension.CONDSTORE);
 
         // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
-        mInitialRECENT = ((Folder) path.getFolder()).getImapRECENT();
+        mInitialRECENT = ((Folder) path.getFolder()).getImapRECENTCutoff();
     }
 
     @Override public Session register() throws ServiceException {
@@ -130,7 +130,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         // load the folder's contents
         loadFolder(octxt, folder);
 
-        // need these to be set *after* loading the folder because UID renumbering affects them
+        // can't set these until *after* loading the folder because UID renumbering affects them
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
         mInitialMODSEQ = folder.getImapMODSEQ();
@@ -269,7 +269,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
         mInitialMODSEQ = folder.getImapMODSEQ();
-        mInitialRECENT = folder.getImapRECENT();
+        mInitialRECENT = folder.getImapRECENTCutoff();
 
         // in order to avoid screwing up the RECENT value, this must come after snapshotRECENT() and folder.getImapRECENT()
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
@@ -1095,14 +1095,14 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                     }
                 } else if (!inFolder && !isVirtual()) {
                     markMessageExpunged(i4msg);
-                } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
-                    i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), changeId, this);
                 } else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
                     markMessageExpunged(i4msg);
                     if (!isVirtual())
                         newItems.add(item);
                     if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + item.getId());
+                } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
+                    i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), changeId, this);
                 }
             }
         }

@@ -781,21 +781,25 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
-                        "  sender = ?, subject = ?, name = ?, metadata = ?," +
+                        " SET type = ?, imap_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
+                        "  blob_digest = ?, sender = ?, subject = ?, name = ?, metadata = ?," +
                         "  mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType());
+            if (item.getImapUid() >= 0)
+                stmt.setInt(pos++, item.getImapUid());
+            else
+                stmt.setNull(pos++, Types.INTEGER);
+            // messages in virtual conversations are stored with a null parent_id
             if (item.getParentId() <= 0)
-                // Messages in virtual conversations are stored with a null parent_id
                 stmt.setNull(pos++, Types.INTEGER);
             else
                 stmt.setInt(pos++, item.getParentId());
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setLong(pos++, item.getSize());
-            stmt.setString(pos++, item.getDigest());
             stmt.setInt(pos++, item.getInternalFlagBitmask());
+            stmt.setString(pos++, item.getDigest());
             stmt.setString(pos++, checkSenderLength(sender));
             stmt.setString(pos++, checkSubjectLength(subject));
             stmt.setString(pos++, name);
@@ -2509,7 +2513,7 @@ public class DbMailItem {
         }
     }
 
-    public static int countImapRecent(Folder folder) throws ServiceException {
+    public static int countImapRecent(Folder folder, int uidCutoff) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
         Connection conn = mbox.getOperationConnection();
@@ -2523,7 +2527,7 @@ public class DbMailItem {
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folder.getId());
-            stmt.setInt(pos++, folder.getImapRECENT());
+            stmt.setInt(pos++, uidCutoff);
             rs = stmt.executeQuery();
 
             return (rs.next() ? rs.getInt(1) : 0);
