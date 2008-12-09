@@ -171,7 +171,7 @@ public class MetadataDump {
             stmt.setString(1, email.toUpperCase());
             rs = stmt.executeQuery();
             if (!rs.next())
-                throw ServiceException.FAILURE("Account " + email + " not found on this host", null);
+                throw ServiceException.INVALID_REQUEST("Account " + email + " not found on this host", null);
             return rs.getInt(1);
         } finally {
             DbPool.closeResults(rs);
@@ -180,7 +180,7 @@ public class MetadataDump {
     }
 
     private static Row getItemRow(Connection conn, int groupId, int mboxId, int itemId)
-    throws SQLException, ServiceException {
+    throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -189,7 +189,7 @@ public class MetadataDump {
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
             if (!rs.next())
-                throw ServiceException.FAILURE(
+                throw ServiceException.INVALID_REQUEST(
                         "No such item: mbox=" + mboxId + ", item=" + itemId,
                         null);
             Row row = new Row();
@@ -203,6 +203,8 @@ public class MetadataDump {
                 row.addColumn(colName, colValue);
             }
             return row;
+        } catch (SQLException e) {
+            throw ServiceException.INVALID_REQUEST("No such item: mbox=" + mboxId + ", item=" + itemId, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -210,7 +212,7 @@ public class MetadataDump {
     }
 
     private static List<Row> getRevisionRows(Connection conn, int groupId, int mboxId, int itemId)
-    throws SQLException, ServiceException {
+    throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -234,6 +236,8 @@ public class MetadataDump {
                 rows.add(row);
             }
             return rows;
+        } catch (SQLException e) {
+            throw ServiceException.INVALID_REQUEST("No such item: mbox=" + mboxId + ", item=" + itemId, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -271,89 +275,96 @@ public class MetadataDump {
         return fmt.format(time);
     }
 
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup();
-        int mboxId = 0;
-        int itemId = 0;
-
-        CommandLine cl = parseArgs(args);
-        if (cl.hasOption(OPT_HELP)) {
-            usage(null);
-            System.exit(0);
-        }
-
-        // Get data from file.
-        String infileName = cl.getOptionValue(OPT_FILE);
-        if (infileName != null) {
-            File file = new File(infileName);
-            if (file.exists()) {
-                String encoded = loadFromFile(file);
-                Metadata md = new Metadata(encoded);
-                String pretty = md.prettyPrint();
-                System.out.println(pretty);
-                return;
-            } else {
-                System.err.println("File " + infileName + " does not exist");
-                System.exit(1);
-            }
-        }
-
-        // Get data from db.
-        Connection conn = null;
-
+    public static void main(String[] args) {
         try {
-            String mboxIdStr = cl.getOptionValue(OPT_MAILBOX_ID);
-            String itemIdStr = cl.getOptionValue(OPT_ITEM_ID);
-            if (mboxIdStr == null || itemIdStr == null) {
+            CliUtil.toolSetup();
+            int mboxId = 0;
+            int itemId = 0;
+    
+            CommandLine cl = parseArgs(args);
+            if (cl.hasOption(OPT_HELP)) {
                 usage(null);
-                System.exit(1);
+                System.exit(0);
             }
-            if (mboxIdStr.matches("\\d+")) {
-                try {
-                    mboxId = Integer.parseInt(mboxIdStr);
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid mailbox id " + mboxIdStr);
+    
+            // Get data from file.
+            String infileName = cl.getOptionValue(OPT_FILE);
+            if (infileName != null) {
+                File file = new File(infileName);
+                if (file.exists()) {
+                    String encoded = loadFromFile(file);
+                    Metadata md = new Metadata(encoded);
+                    String pretty = md.prettyPrint();
+                    System.out.println(pretty);
+                    return;
+                } else {
+                    System.err.println("File " + infileName + " does not exist");
                     System.exit(1);
                 }
-            } else {
-                conn = DbPool.getConnection();
-                mboxId = lookupMailboxIdFromEmail(conn, mboxIdStr);
             }
+    
+            // Get data from db.
+            Connection conn = null;
+    
             try {
-                itemId = Integer.parseInt(itemIdStr);
-            } catch (NumberFormatException e) {
-                usage(null);
-                System.exit(1);
-            }
-
-            if (conn == null)
-                conn = DbPool.getConnection();
-            int groupId = getMailboxGroup(conn, mboxId);
-
-            boolean first = true;
-
-            Row item = getItemRow(conn, groupId, mboxId, itemId);
-            List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId);
-
-            // main item
-            if (!revs.isEmpty())
-                printBanner(System.out, "Current Revision");
-            item.print(System.out);
-            first = false;
-
-            // revisions
-            for (Row rev : revs) {
-                String version = rev.get("version");
-                if (!first) {
-                    System.out.println();
-                    System.out.println();
+                String mboxIdStr = cl.getOptionValue(OPT_MAILBOX_ID);
+                String itemIdStr = cl.getOptionValue(OPT_ITEM_ID);
+                if (mboxIdStr == null || itemIdStr == null) {
+                    usage(null);
+                    System.exit(1);
                 }
-                printBanner(System.out, "Revision " + version);
-                rev.print(System.out);
+                if (mboxIdStr.matches("\\d+")) {
+                    try {
+                        mboxId = Integer.parseInt(mboxIdStr);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Invalid mailbox id " + mboxIdStr);
+                        System.exit(1);
+                    }
+                } else {
+                    conn = DbPool.getConnection();
+                    mboxId = lookupMailboxIdFromEmail(conn, mboxIdStr);
+                }
+                try {
+                    itemId = Integer.parseInt(itemIdStr);
+                } catch (NumberFormatException e) {
+                    usage(null);
+                    System.exit(1);
+                }
+    
+                if (conn == null)
+                    conn = DbPool.getConnection();
+                int groupId = getMailboxGroup(conn, mboxId);
+    
+                boolean first = true;
+    
+                Row item = getItemRow(conn, groupId, mboxId, itemId);
+                List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId);
+    
+                // main item
+                if (!revs.isEmpty())
+                    printBanner(System.out, "Current Revision");
+                item.print(System.out);
                 first = false;
+    
+                // revisions
+                for (Row rev : revs) {
+                    String version = rev.get("version");
+                    if (!first) {
+                        System.out.println();
+                        System.out.println();
+                    }
+                    printBanner(System.out, "Revision " + version);
+                    rev.print(System.out);
+                    first = false;
+                }
+            } finally {
+                DbPool.quietClose(conn);
             }
-        } finally {
-            DbPool.quietClose(conn);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println();
+            System.err.println();
+            e.printStackTrace();
         }
     }
 }
