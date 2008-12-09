@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081208-1152 */
+    /* build: 5.0 jhahm 20081208-1642 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9920,73 +9920,6 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefCalendarAllowForwardedInvite(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, "");
-        return attrs;
-    }
-
-    /**
-     * whether calendar invite part without method parameter in Content-Type
-     * header is auto-added to calendar
-     *
-     * @return zimbraPrefCalendarAllowMethodlessInvite, or false if unset
-     */
-    @ZAttr(id=687)
-    public boolean isPrefCalendarAllowMethodlessInvite() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, false);
-    }
-
-    /**
-     * whether calendar invite part without method parameter in Content-Type
-     * header is auto-added to calendar
-     *
-     * @param zimbraPrefCalendarAllowMethodlessInvite new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     */
-    @ZAttr(id=687)
-    public void setPrefCalendarAllowMethodlessInvite(boolean zimbraPrefCalendarAllowMethodlessInvite) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, zimbraPrefCalendarAllowMethodlessInvite ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether calendar invite part without method parameter in Content-Type
-     * header is auto-added to calendar
-     *
-     * @param zimbraPrefCalendarAllowMethodlessInvite new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=687)
-    public Map<String,Object> setPrefCalendarAllowMethodlessInvite(boolean zimbraPrefCalendarAllowMethodlessInvite, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, zimbraPrefCalendarAllowMethodlessInvite ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether calendar invite part without method parameter in Content-Type
-     * header is auto-added to calendar
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     */
-    @ZAttr(id=687)
-    public void unsetPrefCalendarAllowMethodlessInvite() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether calendar invite part without method parameter in Content-Type
-     * header is auto-added to calendar
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=687)
-    public Map<String,Object> unsetPrefCalendarAllowMethodlessInvite(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, "");
         return attrs;
     }
 

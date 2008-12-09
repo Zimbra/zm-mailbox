@@ -42,8 +42,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -57,13 +55,14 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -1164,7 +1163,6 @@ public class ParsedMessage {
 
     public static class CalendarPartInfo {
         public ZVCalendar cal;
-        public boolean hasMethodParam;
         public ICalTok method;
         public boolean wasForwarded;
     }
@@ -1172,8 +1170,6 @@ public class ParsedMessage {
     private void setCalendarPartInfo(MPartInfo mpi, ZVCalendar cal) {
         mCalendarPartInfo = new CalendarPartInfo();
         mCalendarPartInfo.cal = cal;
-        String method = mpi.getContentTypeParameter("method");
-        mCalendarPartInfo.hasMethodParam = method != null;
         mCalendarPartInfo.method = cal.getMethod();
 
         mCalendarPartInfo.wasForwarded = false;
@@ -1195,6 +1191,10 @@ public class ParsedMessage {
         if (mCalendarPartInfo == null)
             ignoreCalendar = isBouncedCalendar(mpi);
         else
+            ignoreCalendar = true;
+
+        String methodParam = (new ContentType(mpi.getMimePart().getContentType())).getParameter("method");
+        if (methodParam == null && !LC.calendar_allow_invite_without_method.booleanValue())
             ignoreCalendar = true;
 
         String toRet = "";

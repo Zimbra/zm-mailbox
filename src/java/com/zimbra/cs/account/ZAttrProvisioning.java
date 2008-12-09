@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081208-1152 */
+    /* build: 5.0 jhahm 20081208-1642 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3735,13 +3735,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=686)
     public static final String A_zimbraPrefCalendarAllowForwardedInvite = "zimbraPrefCalendarAllowForwardedInvite";
-
-    /**
-     * whether calendar invite part without method parameter in Content-Type
-     * header is auto-added to calendar
-     */
-    @ZAttr(id=687)
-    public static final String A_zimbraPrefCalendarAllowMethodlessInvite = "zimbraPrefCalendarAllowMethodlessInvite";
 
     /**
      * whether calendar invite part with PUBLISH method is auto-added to

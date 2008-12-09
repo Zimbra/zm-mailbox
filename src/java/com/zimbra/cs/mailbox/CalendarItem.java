@@ -3038,9 +3038,6 @@ public abstract class CalendarItem extends MailItem {
         if (cpi.wasForwarded &&
             !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, true))
             return false;
-        if (!cpi.hasMethodParam &&
-            !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, false))
-            return false;
         return true;
     }
 
