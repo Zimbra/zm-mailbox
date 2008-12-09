@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20081208-1642 */
+    /* build: 5.0 pshao 20081209-1114 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1021,7 +1021,7 @@ public class ZAttrProvisioning {
     /**
      * admin console login message
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public static final String A_zimbraAdminConsoleLoginMessage = "zimbraAdminConsoleLoginMessage";

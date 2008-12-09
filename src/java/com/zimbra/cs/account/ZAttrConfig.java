@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20081208-1642 */
+    /* build: 5.0 pshao 20081209-1114 */
 
     /**
      * Zimbra access control list
@@ -548,7 +548,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraAdminConsoleLoginMessage, or ampty array if unset
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public String[] getAdminConsoleLoginMessage() {
@@ -561,7 +561,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraAdminConsoleLoginMessage new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public void setAdminConsoleLoginMessage(String[] zimbraAdminConsoleLoginMessage) throws com.zimbra.common.service.ServiceException {
@@ -577,7 +577,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public Map<String,Object> setAdminConsoleLoginMessage(String[] zimbraAdminConsoleLoginMessage, Map<String,Object> attrs) {
@@ -592,7 +592,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraAdminConsoleLoginMessage new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public void addAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage) throws com.zimbra.common.service.ServiceException {
@@ -608,7 +608,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public Map<String,Object> addAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage, Map<String,Object> attrs) {
@@ -623,7 +623,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraAdminConsoleLoginMessage existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public void removeAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage) throws com.zimbra.common.service.ServiceException {
@@ -639,7 +639,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public Map<String,Object> removeAdminConsoleLoginMessage(String zimbraAdminConsoleLoginMessage, Map<String,Object> attrs) {
@@ -653,7 +653,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public void unsetAdminConsoleLoginMessage() throws com.zimbra.common.service.ServiceException {
@@ -668,7 +668,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=772)
     public Map<String,Object> unsetAdminConsoleLoginMessage(Map<String,Object> attrs) {
