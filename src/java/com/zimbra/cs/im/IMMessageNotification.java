@@ -31,6 +31,7 @@ public class IMMessageNotification extends IMBaseMessageNotification {
     public IMMessageNotification(IMAddr fromAddr, String threadId, IMMessage message, int seqNo) {
         super(fromAddr.toString(), threadId, message.isTyping(), message.getTimestamp());
         mMessage = message;
+        mSeqNo = seqNo;
         try { mToAddr = message.getTo().toString(); } catch (Exception e) {} // why in exception? figure out and comment me!  
     }
     

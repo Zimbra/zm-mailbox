@@ -63,8 +63,7 @@ public class IMGetChat extends IMDocumentHandler {
         {
             Element e = ce.addElement(IMConstants.E_PARTICIPANTS);
             for (Participant part : chat.participants()) {
-                Element pe = e.addElement(IMConstants.E_PARTICIPANT);
-                pe.addAttribute(IMConstants.A_ADDRESS, part.getAddress().getAddr());
+                part.toXML(e);
             }
         }
         

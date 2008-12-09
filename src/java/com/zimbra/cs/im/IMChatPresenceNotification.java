@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -22,32 +22,37 @@ import java.util.List;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMChat.MucStatusCode;
+import com.zimbra.cs.im.IMChat.Participant;
 
-public class IMLeftChatNotification extends IMChatNotification {
-    
+public class IMChatPresenceNotification extends IMChatNotification {
+    private Participant part;
+    private boolean entered;
     List<MucStatusCode> statusCodes;
-    boolean isMe;
-
-    IMLeftChatNotification(IMAddr from, boolean isMe, String threadId, List<MucStatusCode> statusCodes) {
-        super(from, threadId);
-        this.statusCodes = statusCodes;
-        this.isMe = isMe;
-    }
     
+    IMChatPresenceNotification(IMAddr addr, String threadId, boolean entered, Participant part, List<MucStatusCode> statusCodes) {
+        super(addr, threadId);
+        this.part = part;
+        this.entered = entered;
+        this.statusCodes = statusCodes;
+    }
+
     public String toString() {
-        return new Formatter().format("IMLeftChatNotification: %s", super.toString()).toString();
+        return new Formatter().format("IMChatPresenceNotification: %s, %s", 
+                                      super.toString(), part.toString()).toString();
     }
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.common.soap.Element)
      */
     public Element toXml(Element parent) {
-        Element toRet = create(parent, IMConstants.E_LEFTCHAT);
+        Element toRet;
+        if (entered)
+            toRet = create(parent, IMConstants.E_ENTEREDCHAT);
+        else
+            toRet = create(parent, IMConstants.E_CHATPRESENCE);
         super.toXml(toRet);
+        part.toXML(toRet);
         
-        if (isMe) 
-            toRet.addAttribute("me",true);
-
         StringBuilder errors = new StringBuilder();
         StringBuilder status = new StringBuilder();
         
@@ -66,7 +71,7 @@ public class IMLeftChatNotification extends IMChatNotification {
             toRet.addAttribute("status", status.toString());
         if (errors.length() > 0)
             toRet.addAttribute("error", errors.toString()); 
-        
+            
         return toRet;
     }
 }

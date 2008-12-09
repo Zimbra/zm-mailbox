@@ -9,9 +9,16 @@ CHAT: an ongoing threaded conversation between you and one or more
 other participants.  Some chats are 1:1 and some are multi-user (part
 of a conference room)
 
-
 GATEWAY: a service that allows the user to connect to 3rd party IM
 services, e.g. the Yahoo! IM service.
+
+ROLE: In MUC chat, this is something you have while you're IN the chat room
+      - Moderator, None, Participant, Visitor
+
+AFFILIATION: in MUC chat, a description of the rights you have to the room, not
+      related to being actually "in" the room. 
+      - Owner, Admin, Member, Outcast, None
+   
 
 ------------------------------------------
 
@@ -36,8 +43,9 @@ IMGetRoster -- get buddy list
      <chats>
         [  // 0 or more active chats
            <chat thread="threadID">
-              <pcps> // participants
-                 [<p addr="foo@bar.com"/>]* // participants (NOT including yourself) in this chat
+              <pcps> // participants in this chat
+                 [<p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                      [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>]*
               </pcps>
            </chat>
         ]*
@@ -126,8 +134,9 @@ IMGetChat -- return the chat history (param = num messages)
 // chat known:
 <IMGetChatResponse>
    <chat thread="threadID">
-      <pcps> // like email-element-cache -- only valid for this single message!
-         <p id="num" addr="foo@bar.com" [name="friendly"] [resource="resource"]/>*
+      <pcps>  // PARTICIPANT
+         <p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                 [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>*
       </pcps>
       <messages>
          <message seq="sequence-number" ts="timestamp" from="id">
@@ -249,13 +258,6 @@ Get all configuration information about the specified chat.  Note that
    isMUC: if TRUE then this is a chatroom, otherwise it is a 1:1 chat
 
 
-   "Role" - something you have while you're IN the chat room
-             - Moderator, None, Participant, Visitor
-
-   "Affiliation" - a description of the rights you have to the room, not
-                  related to being actually "in" the room. 
-             - Owner, Admin, Member, Outcast, None
-   
    Config Vars:
    ------------
        open             boolean         room is unlocked and may be entered?
@@ -492,10 +494,22 @@ IM NOTIFICATIONS
                    <n type="subscribe" from="FROMADDR"/> 
                 ]*
                 [
-                   <n type="enteredchat" thread="chat-id" addr="ADDRESS"/> // specified user entered the chat
+                   <n type="enteredchat" thread="chat-id" addr="ADDRESS"> // specified user entered the chat
+                      <p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                          [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>
+                   </n>   
                 ]*
                 [
-                   <n type="leftchat" thread="chat-id" addr="ADDRESS"/> // specified user left the chat
+                   <n type="chatpresence" thread="chat-id" addr="ADDRESS" role="ROLE" affiliation="AFFILIATION"> // presence update for chat user
+                      <p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                          [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>
+                   </n>   
+                ]*
+                [
+                   <n type="leftchat" [me="1"] thread="chat-id" addr="ADDRESS"/> // specified user left the chat
+                ]*
+                [
+                   <n type="chatclosed" thread="chat-id"/> // specified chat has been closed
                 ]*
                 [
                  // An invitation to join a group chat:

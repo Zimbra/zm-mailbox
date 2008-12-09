@@ -29,15 +29,18 @@ import java.util.TimerTask;
 
 import javax.mail.MessagingException;
 
+import org.jivesoftware.wildfire.muc.MUCRole.Affiliation;
+import org.jivesoftware.wildfire.muc.MUCRole.Role;
 import org.xmpp.muc.JoinRoom;
 import org.xmpp.muc.LeaveRoom;
 import org.xmpp.packet.JID;
-import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Presence;
 import org.xmpp.packet.Presence.Type;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.util.ClassLogger;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,23 +64,50 @@ public class IMChat extends ClassLogger {
         private IMAddr mAddress;
         private String mName;
         private String mResource;
-
-        private void init(IMAddr address, String resource, String name)
+        private Affiliation mAffiliation = null;;
+        private Role mRole = null;
+        private boolean mIsMe = false;
+        
+        private void init(IMAddr address, boolean isMe, String resource, String name, Role role, Affiliation affiliation)
         {
             mAddress = address;
+            mIsMe = isMe;
             mName = name;
             mResource = resource;
+            mRole = role;
+            mAffiliation = affiliation;
         }
 
         public IMAddr getAddress() { return mAddress; }
         public String getName()    { return mName; }
         public String mResource()  { return mResource; }
-
-        public Participant(IMAddr address) {
-            init(address, null, null);
+        public Affiliation getAffiliation() { return mAffiliation; }
+        public Role getRole() { return mRole; }
+        
+        public void setAffiliation(Affiliation aff) { mAffiliation = aff; }
+        public void setRole(Role r) { mRole = r; }
+        public void setName(String name) { mName = name; }
+        
+        public Participant(IMAddr address, boolean isMe) {
+            init(address, isMe, null, null, null, null);
         }
-        public Participant(IMAddr address, String resource, String name) {
-            init(address, resource, name);
+        public Participant(IMAddr address, boolean isMe, String resource, String name, Role role, Affiliation affiliation) {
+            init(address, isMe, resource, name, role, affiliation);
+        }
+        
+        public Element toXML(Element e) {
+            Element pe = e.addElement(IMConstants.E_PARTICIPANT);
+            pe.addAttribute(IMConstants.A_ADDRESS, getAddress().getAddr());
+            if (mIsMe) 
+                pe.addAttribute("me", true);
+            if (mName != null)
+                pe.addAttribute("fulladdr", mName);
+            if (getRole() != null) 
+                pe.addAttribute(IMConstants.A_ROLE, getRole().name());
+            if (getAffiliation() != null)
+                pe.addAttribute(IMConstants.A_AFFILIATION, getAffiliation().name());
+            
+            return pe;
         }
     }
 
@@ -176,6 +206,7 @@ public class IMChat extends ClassLogger {
             flush();
             mIsClosed = true;
         }
+        
     }
 
     /*
@@ -249,7 +280,11 @@ public class IMChat extends ClassLogger {
     void handlePresencePacket(boolean toMe, org.xmpp.packet.Presence pres) {
         info("Got a presence update packet for chat: %s", pres);
         if (isMUC()) {
-            String fromNick = pres.getFrom().getResource(); 
+            String fromNick = pres.getFrom().getResource();
+            boolean isMe = false;
+            if (fromNick.equals(this.mNickname))
+                isMe = true;
+            
             if (pres.getType() == org.xmpp.packet.Presence.Type.error) {
                 if (mPendingJoin != null && getMyNickname().equals(fromNick)) {
                     synchronized(mPendingJoin) {
@@ -259,7 +294,11 @@ public class IMChat extends ClassLogger {
                         pj.notifyAll();
                     }
                 } else {
-                    addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart("ERROR: "+pres.toXML()), false);
+//                  addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart("ERROR: "+pres.toXML()), false);
+                    IMErrorMessageNotification not = new IMErrorMessageNotification(pres.getFrom().toBareJID(), this.getThreadId(), 
+                                                                                    false, System.currentTimeMillis(), 
+                                                                                    pres.toXML(), pres.getError().getCondition());
+                    mPersona.postIMNotification(not);
                 }
             } else {
                 if (mPendingJoin != null && getMyNickname().equals(fromNick)) {
@@ -271,41 +310,63 @@ public class IMChat extends ClassLogger {
                     }
                 }
                 
-                JID  fromFullJID = null;
+                String fromFullJID = null;
+                Affiliation affiliation = Affiliation.none;
+                Role role = Role.none;
+                
+                List<MucStatusCode> statusCodes = new ArrayList<MucStatusCode>();
                 
                 // find the full jid if available
                 org.dom4j.Element x;
                 if ((x = pres.getChildElement("x", "http://jabber.org/protocol/muc#user")) != null) {
                     org.dom4j.Element item = x.element("item");
                     if (item != null) {
-                        fromFullJID = new JID(item.attributeValue("jid"));
+                        fromFullJID = item.attributeValue("jid");
+                        String affiliationStr = item.attributeValue("affiliation");
+                        if (affiliationStr != null) {
+                            affiliation = Affiliation.valueOf(affiliationStr);
+                        }
+                        String roleStr = item.attributeValue("role");
+                        if (roleStr != null) {
+                            role = Role.valueOf(roleStr);
+                        }
+                    }
+                    
+                    for (Iterator<org.dom4j.Element> statusIter = x.elementIterator("status"); statusIter.hasNext();) {
+                        org.dom4j.Element status = statusIter.next();
+                        if (status != null) {
+                            String code = status.attributeValue("code");
+                            int num = Integer.parseInt(code);
+                            statusCodes.add(MucStatusCode.lookup(num));
+                        }
                     }
                 }
-
-                String action = "entered";
+                
+                Participant p;
+                
                 if (pres.getType()==Presence.Type.unavailable) { 
-                    action = "left";
-                    removeParticipant(new IMAddr(fromNick));
-                    if (fromFullJID != null) { 
-                        removeParticipant(new IMAddr(fromFullJID));
-                        IMLeftChatNotification not = new IMLeftChatNotification(IMAddr.fromJID(fromFullJID), getThreadId());
-                        mPersona.postIMNotification(not);
+                    p = removeParticipant(new IMAddr(fromNick));
+                    if (p != null) {
+                        IMLeftChatNotification left = new IMLeftChatNotification(p.getAddress(), isMe, getThreadId(), statusCodes);
+                        mPersona.postIMNotification(left);
                     }
                 } else {
-                    if (fromFullJID != null) {
-                        getParticipant(true, new IMAddr(fromFullJID), fromFullJID.getResource(), fromFullJID.getNode());
-                        IMEnteredChatNotification not = new IMEnteredChatNotification(IMAddr.fromJID(fromFullJID), getThreadId());
-                        mPersona.postIMNotification(not);
-                    } else {
-                        getParticipant(true, new IMAddr(fromNick), "", fromNick.toString());
-                    }
+                    IMAddr toUse = new IMAddr(fromNick);
+                    boolean isNewPart = false;
+                    if (!hasParticipant(toUse))
+                        isNewPart = true;
+                    p = updateParticipant(true, toUse, isMe, fromNick, fromFullJID, role, affiliation);
+                    
+                    IMChatPresenceNotification not = new IMChatPresenceNotification(toUse, getThreadId(), isNewPart, p, statusCodes);
+                    mPersona.postIMNotification(not);
                 }
-                String body = new Formatter().format("%s has %s the chat.",
-                            pres.getFrom().getResource(), action).toString();
-                addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart(body), false);
+//              String body = new Formatter().format("%s has %s the chat.",
+//              pres.getFrom().getResource(), action).toString();
+//              addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart(body), false);
             }
         }
     }
+    
     
     /*
     MUC Example 32. Delivery of Discussion History:
@@ -346,6 +407,11 @@ public class IMChat extends ClassLogger {
         </decline>
       </x>
     </message>
+    
+<message from="pass2@conference.timsmac2.liquidsys.com/user3" to="user3@timsmac2.liquidsys.com/zcs" type="groupchat">
+  <body>aasdsa</body>
+  <x xmlns="jabber:x:delay" stamp="20081209T02:49:20" from="user3@timsmac2.liquidsys.com/zcs"/>
+</message>    
      */    
     /**
      * @param toMe
@@ -403,8 +469,11 @@ public class IMChat extends ClassLogger {
                     if (resource != null && resource.length() > 0) {
                         messageFrom = msg.getFrom().getResource();
                         if (!isError && getMyNickname().equals(messageFrom)) {
-                            info("Skipping MUC message from me: %s", msg);
-                            return;
+                            // is it a history message?
+                            if (msg.getChildElement("x", "jabber:x:delay") == null) {
+                                info("Skipping MUC message from me: %s", msg);
+                                return;
+                            }
                         }
                     } else {
                         debug("Message is from Conference itself"); 
@@ -530,15 +599,6 @@ public class IMChat extends ClassLogger {
                 //
                 org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
                 html.add(message.getBody().getXHTML().createCopy());
-            } else {
-                // fixed in adium 1.2.7 -- removed hack
-                // if you go to re-enable it, don't forget to HTML-escape the plaintext!
-//                // adium apparently doesn't display text messages in current builds, workaround for now, encode plaintext as HTML version
-//                org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
-//                org.dom4j.Element body = html.addElement("body",  "http://www.w3.org/1999/xhtml");
-//                org.dom4j.Element span = body.addElement("span");
-//                span.addAttribute("style", "");
-//                span.setText(message.getBody().getPlainText());
             }
         }
         
@@ -650,47 +710,12 @@ public class IMChat extends ClassLogger {
                 return toRet;
         }
         
-//        public static MucStatusCode lookup(int value) {
-//            switch (value) {
-//                case 100: return EnteringRoomJIDAvailable;
-//                case 101: return AffiliationChange;
-//                case 102: return ShowsUnavailableMembers;
-//                case 103: return DoesNotShowUnavailableMembers;
-//                case 104: return ConfigurationChange;
-//                case 110: return OccupantPresence;
-//                case 170: return LoggingEnabled;
-//                case 171: return LoggingDisabled;
-//                case 172: return NonAnonymous;
-//                case 173: return SemiAnonymous;
-//                case 174: return FullyAnonymous;
-//                case 201: return NewRoomCreated;
-//                case 210: return RoomnickChanged;
-//                case 301: return YouHaveBeenBanned;
-//                case 303: return NewRoomNickname;
-//                case 307: return KickedFromRoom;
-//                case 321: return RemovedForAffiliationChange;
-//                case 322: return RemovedForMembersOnly;
-//                case 332: return RemovedShutdown;
-//                case 401: return PasswordRequired;
-//                case 403: return Banned;
-//                case 404: return NoSuchRoom;
-//                case 405: return NotAllowed;
-//                case 406: return MustUseReservedRoomnick;
-//                case 407: return NotAMember;
-//                case 409: return NicknameConflict;
-//                case 503: return MaxUsers;
-//                default: return Unknown;
-//            }
-//        }
-        
         MucStatusCode(int code) {
             mCode = code; 
         }
         public boolean isError() { return mCode >= 400; }
         
-        private boolean mIsError = false; 
         private int mCode;
-        
     }
     
     void joinMUCChat(String roomAddr) {
@@ -765,7 +790,6 @@ public class IMChat extends ClassLogger {
         }
         return toRet;
     }
-    
 
     void addUserToChat(IMAddr addr, String inviteMessage) throws ServiceException {
         if (!this.mIsMUC) {
@@ -805,28 +829,40 @@ public class IMChat extends ClassLogger {
 
     public String getThreadId() { return mThreadId; }
     
-    Participant getParticipant(IMAddr addrFrom) {
-        return this.getParticipant(false, addrFrom, null, null);
+    boolean hasParticipant(IMAddr addrFrom) {
+        Participant part = mParticipants.get(addrFrom);
+        return part != null;
     }
-
-    private Participant getParticipant(boolean create, IMAddr addrFrom, String resourceFrom, String nameFrom)
+    
+    /**
+     * @param create
+     * @param addrFrom
+     * @param resourceFrom
+     * @param nameFrom
+     * @param role
+     * @param affiliation
+     * @return TRUE if the participant was created
+     */
+    private Participant updateParticipant(boolean create, IMAddr addrFrom, boolean isMe, String resourceFrom, String nameFrom,
+                                          Role role, Affiliation affiliation)
     {
         Participant part = mParticipants.get(addrFrom);
         if (create && part == null) {
-            part = new Participant(addrFrom, resourceFrom,  nameFrom);
+            part = new Participant(addrFrom, isMe, resourceFrom,  nameFrom, role, affiliation);
             mParticipants.put(addrFrom, part);
-            IMEnteredChatNotification entered = new IMEnteredChatNotification(addrFrom, getThreadId());
-            mPersona.postIMNotification(entered);
+        } else if (part != null) {
+            if (role != null)
+                part.setRole(role);
+            if (affiliation != null)
+                part.setAffiliation(affiliation);
+            if (nameFrom != null)
+                part.setName(nameFrom);
         }
         return part;
     }
     
     private Participant removeParticipant(IMAddr addr) {
         Participant p = mParticipants.remove(addr);
-        if (p != null) {
-            IMLeftChatNotification left = new IMLeftChatNotification(addr, getThreadId());
-            mPersona.postIMNotification(left);
-        }
         return p;
     }
 

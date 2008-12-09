@@ -32,6 +32,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMServiceException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -87,7 +88,7 @@ public class IMModifyChat extends IMDocumentHandler {
 
     private void handleConfigure(IMPersona persona, IMChat chat, Element request, Element response) throws ServiceException {
         if (!chat.isMUC())
-            throw ServiceException.FAILURE("Only MUC chats can be configured", null);
+            throw IMServiceException.NOT_A_MUC_CHAT(chat.getThreadId());
         
         Map<String, Object> data = new HashMap<String, Object>();
         for (Iterator<Element> iter = request.elementIterator("var"); iter.hasNext();) {
@@ -110,5 +111,8 @@ public class IMModifyChat extends IMDocumentHandler {
             }
         }
         IQ result = persona.configureChat(chat, data);
+        if (result == null) {
+            throw IMServiceException.NO_RESPONSE_FROM_REMOTE("Attempting to configure chat "+chat.toString(), chat.getThreadId());
+        }
     }
 }

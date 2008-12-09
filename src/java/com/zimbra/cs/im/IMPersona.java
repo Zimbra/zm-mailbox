@@ -479,10 +479,17 @@ public class IMPersona extends ClassLogger {
         };
     }
 
+    /**
+     * Call this to close and leave the chat
+     * 
+     * @param octxt
+     * @param chat
+     */
     public void closeChat(OperationContext octxt, IMChat chat) {
         synchronized(getLock()) {
             chat.closeChat();
             mChats.remove(chat.getThreadId());
+            postIMNotification(new IMChatCloseNotification(chat.getThreadId()));
         }
     }
     
@@ -722,7 +729,7 @@ public class IMPersona extends ClassLogger {
         IMChat toRet = mChats.get(thread);
         if (toRet == null && create) {
             Participant part;
-            part = new IMChat.Participant(fromAddress);
+            part = new IMChat.Participant(fromAddress, false);
             if (thread == null)
                 throw new IllegalArgumentException("Cannot create a chat with a NULL threadId");
             toRet = new IMChat(this, thread, part);
@@ -1062,7 +1069,7 @@ public class IMPersona extends ClassLogger {
         sendRequest(iq, iqc);
         synchronized(iqc) {
             try {
-                iqc.wait(1000);
+                iqc.wait(5000);
             } catch (InterruptedException ex) { }
         }
         if (iqc.isError()) {
@@ -1121,11 +1128,11 @@ public class IMPersona extends ClassLogger {
         sendRequest(iq, dic);
         synchronized(dic) {
             try {
-                dic.wait(1000);
+                dic.wait(5000);
             } catch (InterruptedException ex) { }
         }
         if (dic.isError()) {
-            throw ServiceException.FAILURE("Error fetching disco#info for server: "+dic.getRespnse(), null);
+            throw IMServiceException.XMPP_ERROR("Error fetching disco#info for server", dic.getRespnse());
         }
         
         return dic.getDiscoInfoResult();
@@ -1180,11 +1187,11 @@ public class IMPersona extends ClassLogger {
         sendRequest(iq, dic);
         synchronized(dic) {
             try {
-                dic.wait(1000);
+                dic.wait(5000);
             } catch (InterruptedException ex) { }
         }
         if (dic.isError()) {
-            throw ServiceException.FAILURE("Error fetching disco#info for server: "+dic.getRespnse(), null);
+            throw IMServiceException.XMPP_ERROR("Error fetching disco#info for server", dic.getRespnse());
         }
         return dic.getDiscoItemsResult();
     }
@@ -1217,14 +1224,14 @@ public class IMPersona extends ClassLogger {
         // make sure there's a conference service at the requested location
         DiscoInfoResult svcDI = syncGetDiscoInfo(svc);
         if (svcDI == null)
-            throw ServiceException.FAILURE("Could not contact service at: "+svc, null);
+            throw IMServiceException.NO_RESPONSE_FROM_REMOTE("Could not contact service at: "+svc, svc);
         if (!"conference".equals(svcDI.category) || !"text".equals(svcDI.type)) 
-            throw ServiceException.FAILURE("Service at "+svc+" is not a conference service", null);
+            throw IMServiceException.NOT_A_CONFERENCE_SERVICE(svc);
         
         // fetch the items
         DiscoItemsResult svcItems = syncGetDiscoItems(svc);
         if (svcItems == null) 
-            throw ServiceException.FAILURE("Could not fetch rooms from conference service at "+svc, null);
+            throw IMServiceException.NO_RESPONSE_FROM_REMOTE("Could not fetch rooms from conference service at: "+svc, svc);
 
         List<Pair<String /*name*/, String /*JID*/>> toRet = new ArrayList<Pair<String /*name*/, String /*JID*/>> ();
         for (DiscoItemResult item : svcItems.items) {
@@ -1372,7 +1379,6 @@ public class IMPersona extends ClassLogger {
         }
         IMConferenceRoom.generateConfigIQ(iq, data);
         
-        
         IQ configFormResult = syncIQQuery(iq);
         return configFormResult;
         
@@ -1437,6 +1443,7 @@ public class IMPersona extends ClassLogger {
         public String jid;
     }
     
+    
     private void handleMessagePacket(boolean toMe, Message msg) {
         // is it a gateway notification?  If so, then stop processing it here
         Element xe = msg.getChildElement("x", "zimbra:interop");
@@ -1481,7 +1488,7 @@ public class IMPersona extends ClassLogger {
                 // user in it
                 for (IMChat cur : mChats.values()) {
                     if ((cur.participants().size() <= 2)
-                                && (cur.getParticipant(new IMAddr(remoteJID)) != null)) {
+                                    && (cur.hasParticipant(new IMAddr(remoteJID)))) {
                         threadId = cur.getThreadId();
                         break;
                     }
@@ -1497,7 +1504,6 @@ public class IMPersona extends ClassLogger {
                         threadId = (toMe ? msg.getFrom() : msg.getTo()).toBareJID();
                     }
                 }
-                
                 
             }
             chat = getChat(true, threadId, new IMAddr(remoteJID));
@@ -2003,7 +2009,7 @@ public class IMPersona extends ClassLogger {
                 for (IMChat cur : mChats.values()) {
                     // find an existing point-to-point chat with that user in it
                     if (cur.participants().size() <= 2) {
-                        if (cur.getParticipant(toAddr) != null) {
+                        if (cur.hasParticipant(toAddr)) {
                             chat = cur;
                         break;
                         }
@@ -2017,7 +2023,7 @@ public class IMPersona extends ClassLogger {
                 mCurChatId++;
                 // add the other user as the first participant in this chat
                 IMChat.Participant part;
-                part = new IMChat.Participant(toAddr);
+                part = new IMChat.Participant(toAddr, false);
                 chat = new IMChat(this, threadId, part);
                 assert(threadId != null);
                 mChats.put(threadId, chat);
