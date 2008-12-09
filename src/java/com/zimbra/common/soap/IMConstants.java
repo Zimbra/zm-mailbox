@@ -88,6 +88,8 @@ public class IMConstants {
     public static final String A_ERROR          = "error";
     public static final String A_IS_IDLE        = "isIdle";
     public static final String A_IDLE_TIME      = "idleTime";
+    public static final String A_ROLE           = "role";
+    public static final String A_AFFILIATION    = "affiliation";
 
     public static final String E_LIST           = "list";
     public static final String E_MESSAGES       = "messages";
@@ -103,6 +105,7 @@ public class IMConstants {
     public static final String E_PRESENCE       = "presence";
     public static final String E_LEFTCHAT       = "leftchat";
     public static final String E_ENTEREDCHAT    = "enteredchat";
+    public static final String E_CHATPRESENCE   = "chatpresence";
     public static final String E_INVITED        = "invited";
     public static final String E_SUBSCRIBE      = "subscribe";
     public static final String E_SUBSCRIBED     = "subscribed";
