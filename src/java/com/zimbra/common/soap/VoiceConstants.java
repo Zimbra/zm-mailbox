@@ -70,6 +70,7 @@ public class VoiceConstants {
     public static final String E_VOICEMSG      = "vm";
     public static final String E_UPLOAD        = "upload";
  
+    public static final String A_ACCOUNT_NUMBER = "accountNumber";
     public static final String A_NAME          = "name";
     public static final String A_ID            = "id";
     public static final String A_VMSG_DURATION = "du";
