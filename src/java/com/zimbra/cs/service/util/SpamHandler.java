@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.BlobDataSource;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -301,7 +302,7 @@ public class SpamHandler {
                 sSpamHeaderValue = spamHeaderValue;
                 sSpamPattern = Pattern.compile(spamHeaderValue);
             }
-            String val = msg.getHeader(spamHeader, null);
+            String val = Mime.getHeader(msg, spamHeader);
             if (val != null) {
                 Matcher m = sSpamPattern.matcher(val);
                 if (m.matches()) {

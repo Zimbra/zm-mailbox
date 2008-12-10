@@ -137,20 +137,6 @@ extends TestCase {
         assertTrue(pm.getSubject().contains("newsubject"));
     }
     
-    /**
-     * Tests {@link Mime#isSpam}.
-     */
-    public void testSpam()
-    throws Exception {
-        String content = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", RECIPIENT_NAME, RECIPIENT_NAME, null);
-        MimeMessage msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
-        assertFalse(SpamHandler.isSpam(msg));
-        
-        content = "X-Spam-Flag: YES\r\n" + content;
-        msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
-        assertTrue(SpamHandler.isSpam(msg));
-    }
-    
     private void verifyParsedMessage(ParsedMessage pm, ExpectedResults expected)
     throws Exception {
         // Run tests multiple times to make sure the API's don't alter the state of the ParsedMessage

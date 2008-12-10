@@ -89,6 +89,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestParsedMessage.class);
         sClasses.add(TestUserServlet.class);
         sClasses.add(TestFilterExisting.class);
+        sClasses.add(TestSpam.class);
     };
     
     /**
