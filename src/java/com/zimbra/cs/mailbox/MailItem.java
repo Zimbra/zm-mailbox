@@ -1378,10 +1378,6 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     Blob setContent(InputStream dataStream, int dataLength, String digest, short volumeId, Object content)
     throws ServiceException, IOException {
-        // catch the "was no blob, is no blob" case
-        if (digest == null && getDigest() == null)
-            return null;
-
         // delete the old blob *unless* we've already rewritten it in this transaction
         if (getSavedSequence() != mMailbox.getOperationChangeID()) {
             boolean delete = true;
@@ -1408,9 +1404,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         int size = dataStream == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
-            getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
+        getFolder().updateSize(0, size - mData.size);
+
         mData.setBlobDigest(digest);
         mData.date     = mMailbox.getOperationTimestamp();
         mData.volumeId = dataStream == null ? -1 : volumeId;

@@ -23,9 +23,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
 
-/**
- * @author dkarp
- */
 public class Mountpoint extends Folder {
 
     private String mOwnerId;
@@ -70,15 +67,15 @@ public class Mountpoint extends Folder {
      *  first place.</i>
      * 
      * @see #grantAccess(String, byte, short, boolean) */
-    void revokeAccess(String liquidId) {
+    @Override void revokeAccess(String liquidId) {
         return;
     }
 
-    boolean canHaveChildren() { return false; }
-    boolean trackUnread()     { return false; }
-    boolean canParent(MailItem child)  { return false; }
-    boolean canContain(MailItem child) { return false; }
-    boolean canContain(byte type)      { return false; }
+    @Override boolean canHaveChildren() { return false; }
+    @Override boolean trackUnread()     { return false; }
+    @Override boolean canParent(MailItem child)  { return false; }
+    @Override boolean canContain(MailItem child) { return false; }
+    @Override boolean canContain(byte type)      { return false; }
 
     /** Creates a new Mountpoint pointing at a remote item and persists it
      *  to the database.  A real nonnegative item ID must be supplied from
@@ -142,23 +139,20 @@ public class Mountpoint extends Folder {
         return mpt;
     }
 
-    @Override
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         if (!getFolder().canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
     	deleteSingleFolder(writeTombstones);
     }
 
 
-    @Override
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mOwnerId = meta.get(Metadata.FN_ACCOUNT_ID);
         mRemoteId = (int) meta.getLong(Metadata.FN_REMOTE_ID);
     }
 
-    @Override
-    Metadata encodeMetadata(Metadata meta) {
+    @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mOwnerId, mRemoteId);
     }
 
@@ -169,7 +163,7 @@ public class Mountpoint extends Folder {
     static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attrs, byte view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
-        return Folder.encodeMetadata(meta, color, version, attrs, view, null, null, 0, 0, 0, 0);
+        return Folder.encodeMetadata(meta, color, version, attrs, view, null, null, 0, 0, 0, 0, 0);
     }
 
     @Override public String toString() {
