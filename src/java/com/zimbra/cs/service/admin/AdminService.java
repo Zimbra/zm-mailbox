@@ -205,7 +205,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_RIGHT_REQUEST, new GetRight());
         dispatcher.registerHandler(AdminConstants.GET_ALL_RIGHTS_REQUEST, new GetAllRights());
         dispatcher.registerHandler(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST, new GetEffectiveRights());
-        dispatcher.registerHandler(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST, new GetEffectiveRights());
+        dispatcher.registerHandler(AdminConstants.GET_CREATE_OBJECT_ATTRS_REQUEST, new GetCreateObjectAttrs());
         dispatcher.registerHandler(AdminConstants.GET_GRANTS_REQUEST, new GetGrants());
         dispatcher.registerHandler(AdminConstants.CHECK_RIGHT_REQUEST, new CheckRight());
         dispatcher.registerHandler(AdminConstants.GRANT_RIGHT_REQUEST, new GrantRight());

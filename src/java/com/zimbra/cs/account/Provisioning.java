@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
@@ -1561,6 +1562,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
+    public EffectiveRights getCreateObjectAttrs(String targetType,
+                                                DomainBy domainBy, String domainStr,
+                                                CosBy cosBy, String cosStr,
+                                                GranteeBy granteeBy, String grantee) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+            
     public abstract RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException;
             
     public abstract void grantRight(String targetType, TargetBy targetBy, String target,

@@ -348,6 +348,10 @@ public class ProvUtil implements DebugListener {
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
         GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5),
+        
+        // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
+        GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
+        
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_GRANTS("getGrants", "gg", "{target-type} [{target-id|target-name}]", Category.RIGHT, 1, 2),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
@@ -693,6 +697,9 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_EFFECTIVE_RIGHTS:
             doGetEffectiveRights(args);
+            break;
+        case GET_CREATE_OBJECT_ATTRS:
+            doGetCreateObjectAttrs(args);
             break;
         case GET_GRANTS:
             doGetGrants(args);
@@ -2708,6 +2715,46 @@ public class ProvUtil implements DebugListener {
                 }
             }
         }
+    }
+    
+    /*
+     * for testing only, not used in production
+     */
+    private void doGetCreateObjectAttrs(String[] args) throws ServiceException, ArgException {
+        String targetType = args[1];
+       
+        DomainBy domainBy = null;
+        String domain = null;
+        if (!args[2].equals("null")) {
+            domainBy = guessDomainBy(args[2]);
+            domain = args[2];
+        }
+        
+        CosBy cosBy = null;
+        String cos = null;
+        if (!args[3].equals("null")) {
+            cosBy = guessCosBy(args[3]);
+            cos = args[3];
+        }
+        
+        GranteeBy granteeBy = null;
+        String grantee = null;
+        
+        /* 
+         * take grantee arg only if LdapProvisioning
+         * for SoapProvisioning, -a {admin account} -p {password} is required with zmprov
+         */
+        if (mProv instanceof LdapProvisioning) {
+            granteeBy = guessGranteeBy(args[4]);
+            grantee = args[4];
+        }
+        
+        RightCommand.EffectiveRights effRights = mProv.getCreateObjectAttrs(targetType,
+                                                                            domainBy, domain,
+                                                                            cosBy, cos,
+                                                                            granteeBy, grantee);
+        
+        displayAttrs("set", true, effRights.canSetAllAttrs(), effRights.canSetAttrs());
     }
     
     private void doGetGrants(String[] args) throws ServiceException, ArgException {

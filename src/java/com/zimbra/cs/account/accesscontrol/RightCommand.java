@@ -16,11 +16,18 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class RightCommand {
     
@@ -141,10 +148,12 @@ public class RightCommand {
         
         String mAttrName;
         Set<String> mDefault;
+        AttributeConstraint mConstraint;
         
-        EffectiveAttr(String attrName, Set<String> defaultValue) {
+        EffectiveAttr(String attrName, Set<String> defaultValue, AttributeConstraint constraint) {
             mAttrName = attrName;
             mDefault = defaultValue;
+            mConstraint = constraint;
         }
         
         public String getAttrName() { return mAttrName; }
@@ -155,6 +164,11 @@ public class RightCommand {
             else
                 return mDefault; 
         }
+        
+        AttributeConstraint getConstraint() {
+            return mConstraint;
+        }
+        
     }
     
     public static class EffectiveRights {
@@ -186,7 +200,14 @@ public class RightCommand {
             mGranteeName = granteeName;
         }
         
-        public EffectiveRights(Element parent) throws ServiceException {
+        public EffectiveRights(Element parent, boolean isCreateObjectAttrs) throws ServiceException {
+            if (isCreateObjectAttrs)
+                fromXML_CreateObjectAttrs(parent);
+            else
+                fromXML_EffectiveRights(parent);
+        }
+        
+        private void fromXML_EffectiveRights(Element parent) throws ServiceException {
             //
             // grantee
             //
@@ -223,11 +244,45 @@ public class RightCommand {
             mCanGetAttrs = fromXML(eGetAttrs);
         }
         
+        private void fromXML_CreateObjectAttrs(Element parent) throws ServiceException {
+            // setAttrs
+            Element eSetAttrs = parent.getElement(AdminConstants.E_SET_ATTRS);
+            if (eSetAttrs.getAttributeBool(AdminConstants.A_ALL, false))
+                mCanSetAllAttrs = true;
+            
+            mCanSetAttrs = fromXML(eSetAttrs);
+        }
+        
         private TreeMap<String, EffectiveAttr> fromXML(Element eAttrs) throws ServiceException {
             TreeMap<String, EffectiveAttr> attrs = new TreeMap<String, EffectiveAttr>();
             
+            AttributeManager am = AttributeManager.getInstance();
+            
             for (Element eAttr : eAttrs.listElements(AdminConstants.E_A)) {
                 String attrName = eAttr.getAttribute(AdminConstants.A_N);
+                
+                // constraint
+                Element eConstraint = eAttr.getOptionalElement(AdminConstants.E_CONSTRAINT);
+                AttributeConstraint constraint = null;
+                if (eConstraint != null) {
+                    constraint = AttributeConstraint.newConstratint(am, attrName);
+                    
+                    Element eMin = eConstraint.getOptionalElement(AdminConstants.E_MIN);
+                    if (eMin != null)
+                        constraint.setMin(eMin.getText());
+                        
+                    Element eMax = eConstraint.getOptionalElement(AdminConstants.E_MAX);
+                    if (eMax != null)
+                        constraint.setMax(eMin.getText());
+                    
+                    Element eValues = eConstraint.getOptionalElement(AdminConstants.E_VALUES);
+                    if (eValues != null) {
+                        for (Element eValue : eValues.listElements(AdminConstants.E_VALUE))
+                            constraint.addValue(eValue.getText());
+                    }
+                }
+                
+                // default
                 Element eDefault = eAttr.getOptionalElement(AdminConstants.E_DEFAULT);
                 Set<String> defaultValues = null;
                 if (eDefault != null) {
@@ -236,14 +291,15 @@ public class RightCommand {
                         defaultValues.add(eValue.getText());
                     }
                 }
-                EffectiveAttr ea = new EffectiveAttr(attrName, defaultValues);
+                
+                EffectiveAttr ea = new EffectiveAttr(attrName, defaultValues, null);  // TODO, constraint
                 attrs.put(attrName, ea);
             }
             
             return attrs;
         }
         
-        public void toXML(Element parent) {
+        public void toXML_getEffectiveRights(Element parent) {
             //
             // grantee
             //
@@ -272,6 +328,13 @@ public class RightCommand {
            
         }
         
+        public void toXML_getCreateObjectAttrs(Element parent) {
+            
+            // setAttrs
+            toXML(parent, AdminConstants.E_SET_ATTRS, mCanSetAllAttrs, mCanSetAttrs);
+            
+        }
+        
         private void toXML(Element parent, String elemName, boolean allAttrs, SortedMap<String, EffectiveAttr> attrs) {
             Element eAttrs = parent.addElement(elemName);
             if (allAttrs) {
@@ -281,11 +344,36 @@ public class RightCommand {
             for (EffectiveAttr ea : attrs.values()) {
                 Element eAttr = eAttrs.addElement(AdminConstants.E_A);
                 eAttr.addAttribute(AdminConstants.A_N, ea.getAttrName());
+                
+                // constraint
+                AttributeConstraint constraint = ea.getConstraint();
+                if (constraint != null) {
+                    Element eConstraint = eAttr.addElement(AdminConstants.E_CONSTRAINT);
+                    
+                    String min = constraint.getMin();
+                    if (min != null)
+                        eConstraint.addElement(AdminConstants.E_MIN).setText(min);
+                    
+                    String max = constraint.getMax();
+                    if (max != null)
+                        eConstraint.addElement(AdminConstants.E_MAX).setText(max);
+                    
+                    Set<String> values = constraint.getValues();
+                    if (values != null) {
+                        Element eValues = eConstraint.addElement(AdminConstants.E_VALUES);
+                        for (String v : values)
+                            eValues.addElement(AdminConstants.E_VALUE).setText(v);
+                    }
+                        
+                }
+                
+                // default
                 if (!ea.getDefault().isEmpty()) {
                     Element eDefault = eAttr.addElement(AdminConstants.E_DEFAULT);
                     for (String v : ea.getDefault())
                         eDefault.addElement(AdminConstants.E_VALUE).setText(v);
                 }
+                
             }
         }
 
@@ -390,6 +478,28 @@ public class RightCommand {
         return er;
     }
     
+    public static EffectiveRights getCreateObjectAttrs(Provisioning prov,
+                                                       String targetType,
+                                                       DomainBy domainBy, String domainStr,
+                                                       CosBy cosBy, String cosStr,
+                                                       GranteeBy granteeBy, String grantee) throws ServiceException {
+        
+        TargetType tt = TargetType.fromString(targetType);
+        Entry targetEntry = RightChecker.createPseudoTarget(prov, tt, domainBy, domainStr, cosBy, cosStr);
+       
+        // grantee
+        GranteeType gt = GranteeType.GT_USER;
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+        // granteeEntry right must be an Account
+        Account granteeAcct = (Account)granteeEntry;
+        
+        String targetId = (targetEntry instanceof NamedEntry)? ((NamedEntry)targetEntry).getId() : "";
+        EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel(), granteeAcct.getId(), granteeAcct.getName());
+        
+        RightChecker.getEffectiveRights(granteeAcct, targetEntry, true, true, er);
+        return er;
+    }
+    
     public static ACL getGrants(Provisioning prov,
                                 String targetType, TargetBy targetBy, String target) throws ServiceException {
         
@@ -452,7 +562,6 @@ public class RightCommand {
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
         eRight.addAttribute(AdminConstants.A_TYPE, right.getRightType().name());
         eRight.addAttribute(AdminConstants.A_TARGET_TYPE, right.getTargetTypeStr());
-        // todo defined by 
             
         eRight.addElement(AdminConstants.E_DESC).setText(right.getDesc());
             

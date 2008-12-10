@@ -37,6 +37,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Alias;
@@ -68,6 +70,7 @@ import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -5395,7 +5398,22 @@ public class LdapProvisioning extends Provisioning {
     public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
                                                            GranteeBy granteeBy, String grantee,
                                                            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        return RightCommand.getEffectiveRights(this, targetType, targetBy, target, granteeBy, grantee, expandSetAttrs, expandGetAttrs);
+        return RightCommand.getEffectiveRights(this, 
+                                               targetType, targetBy, target, 
+                                               granteeBy, grantee, 
+                                               expandSetAttrs, expandGetAttrs);
+    }
+    
+    @Override
+    public EffectiveRights getCreateObjectAttrs(String targetType,
+                                                DomainBy domainBy, String domainStr,
+                                                CosBy cosBy, String cosStr,
+                                                GranteeBy granteeBy, String grantee) throws ServiceException {
+        return RightCommand.getCreateObjectAttrs(this,
+                                                 targetType,
+                                                 domainBy, domainStr,
+                                                 cosBy, cosStr,
+                                                 granteeBy, grantee);
     }
     
     @Override

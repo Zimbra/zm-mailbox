@@ -45,6 +45,18 @@ class AttributeConstraint {
         mValues.add(value);
     }
     
+    Set<String> getValues() {
+        return mValues;
+    }
+    
+    String getMin() {
+        return null;
+    }
+    
+    String getMax() {
+        return null;
+    }
+    
     boolean violateMinMax(String value) throws ServiceException {
         return false;
     }
@@ -119,6 +131,14 @@ class AttributeConstraint {
             }
         }
         
+        String getMin() {
+            return (mMin == null)? null : mMin.toString();
+        }
+        
+        String getMax() {
+            return (mMax == null)? null : mMax.toString();
+        }
+        
         boolean violateMinMax(String valueStr) throws ServiceException {
             try {
                 Integer value = Integer.valueOf(valueStr);
@@ -156,6 +176,14 @@ class AttributeConstraint {
             } catch (NumberFormatException e) {
                 // bad constraint, treat it as there is no max constraint TODO: log?
             }
+        }
+        
+        String getMin() {
+            return (mMin == null)? null : mMin.toString();
+        }
+        
+        String getMax() {
+            return (mMax == null)? null : mMax.toString();
         }
         
         boolean violateMinMax(String valueStr) throws ServiceException {
@@ -197,6 +225,14 @@ class AttributeConstraint {
             }
         }
         
+        String getMin() {
+            return (mMin == null)? null : mMin.toString();
+        }
+        
+        String getMax() {
+            return (mMax == null)? null : mMax.toString();
+        }
+        
         boolean violateMinMax(String valueStr) throws ServiceException {
             try {
                 Long value = DateUtil.getTimeInterval(valueStr);
@@ -233,6 +269,14 @@ class AttributeConstraint {
             Date date = DateUtil.parseGeneralizedTime(max);
             if (date != null)
                 mMax = date.getTime();
+        }
+        
+        String getMin() {
+            return (mMin == null)? null : mMin.toString();
+        }
+        
+        String getMax() {
+            return (mMax == null)? null : mMax.toString();
         }
         
         boolean violateMinMax(String valueStr) throws ServiceException {
@@ -276,7 +320,7 @@ class AttributeConstraint {
         return constraint;
     }
         
-    private static AttributeConstraint newConstratint(AttributeManager am, String attrName) throws ServiceException {
+    static AttributeConstraint newConstratint(AttributeManager am, String attrName) throws ServiceException {
         AttributeType at = am.getAttributeType(attrName);
         
         switch (at) {

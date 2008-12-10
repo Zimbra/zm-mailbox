@@ -17,15 +17,23 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Zimlet;
 
 public class RightChecker {
 
@@ -654,6 +662,23 @@ public class RightChecker {
         return result;
     }
     
+    static RightCommand.EffectiveRights getEffectiveAttrs(Account grantee, Entry target, 
+                                                          RightCommand.EffectiveRights result) throws ServiceException {
+        
+        // get effective setAttrs rights 
+        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+        
+        // setAttrs
+        if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
+            result.setCanSetAllAttrs();
+            result.setCanSetAttrs(expandAttrs(target));
+        } else if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
+            result.setCanSetAttrs(fillDefault(target, allowSetAttrs));
+        }
+        
+        return result;
+    }
+    
     private static List<String> setToSortedList(Set<String> set) {
         List<String> list = new ArrayList<String>(set);
         Collections.sort(list);
@@ -661,15 +686,20 @@ public class RightChecker {
     }
     
     private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, AllowedAttrs allowSetAttrs) throws ServiceException {
-        return fillDefault(target, allowSetAttrs.getAllowed());
+        return fillDefaultAndConstratint(target, allowSetAttrs.getAllowed());
     }
     
     private static SortedMap<String, RightCommand.EffectiveAttr> expandAttrs(Entry target) throws ServiceException {
-        return fillDefault(target, TargetType.getAttrsInClass(target));
+        return fillDefaultAndConstratint(target, TargetType.getAttrsInClass(target));
     }
     
-    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, Set<String> attrs) throws ServiceException {
+    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefaultAndConstratint(Entry target, Set<String> attrs) throws ServiceException {
         SortedMap<String, RightCommand.EffectiveAttr> effAttrs = new TreeMap<String, RightCommand.EffectiveAttr>();
+        
+        Entry constraintEntry = AttributeConstraint.getConstraintEntry(target);
+        Map<String, AttributeConstraint> constraints = (constraintEntry==null)?null:AttributeConstraint.getConstraint(constraintEntry);
+        boolean hasConstraints = (constraints != null && !constraints.isEmpty());
+
         for (String attrName : attrs) {
             Set<String> defaultValues = null;
             
@@ -681,7 +711,8 @@ public class RightChecker {
                 defaultValues = new HashSet<String>(Arrays.asList((String[])defaultValue));
             }
 
-            effAttrs.put(attrName, new RightCommand.EffectiveAttr(attrName, defaultValues));
+            AttributeConstraint constraint = (hasConstraints)?constraints.get(attrName):null;
+            effAttrs.put(attrName, new RightCommand.EffectiveAttr(attrName, defaultValues, constraint));
         }
         return effAttrs;
     }
@@ -908,7 +939,80 @@ public class RightChecker {
         return true;
     }
 
+    /*
+     * construct a pseudo target
+     */
+    static Entry createPseudoTarget(Provisioning prov,
+                                    TargetType targetType, 
+                                    DomainBy domainBy, String domainStr,
+                                    CosBy cosBy, String cosStr) throws ServiceException {
+        
+        Entry targetEntry = null;
+        String zimbraId = LdapUtil.generateUUID();
+        Map<String, Object> attrMap = new HashMap<String, Object>();
+        Config config = prov.getConfig();
+        
+        Domain domain = null;
+        if (targetType == TargetType.account ||
+            targetType == TargetType.resource ||
+            targetType == TargetType.distributionlist) {
+            
+            // need a domain
+            
+            if (domainBy == null || domainStr == null)
+                throw ServiceException.INVALID_REQUEST("domainBy and domain identifier is required", null);
     
+            domain = prov.get(domainBy, domainStr);
+            if (domain == null)
+                throw AccountServiceException.NO_SUCH_DOMAIN(domainStr);
+        }
+        
+        switch (targetType) {
+        case account:
+        case resource:
+            Cos cos = null;
+            if (cosBy != null && cosStr != null) {
+                cos = prov.get(cosBy, cosStr);
+                if (cos == null)
+                    throw AccountServiceException.NO_SUCH_COS(cosStr);
+            } else {
+                String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
+                if (domainCosId != null) cos = prov.get(CosBy.id, domainCosId);
+                if (cos == null) cos = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
+            }
+            targetEntry = new Account("pseudo@"+domain.getName(),
+                                       zimbraId,
+                                       attrMap,
+                                       cos.getAccountDefaults(),
+                                       prov);
+            break;
+            
+        case cos:  
+            targetEntry = new Cos("pseudocos", zimbraId, attrMap, prov);
+            break;
+        case distributionlist:
+            throw ServiceException.INVALID_REQUEST("unsupported target for createPseudoTarget", null);
+            // targetEntry = new DistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov);  TODO
+            break;
+        case domain:
+            targetEntry = new Domain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
+            break;
+        case server:  
+            targetEntry = new Server("pseudo.pseudo", zimbraId, attrMap, config.getServerDefaults(), prov);
+            break;
+        case xmppcomponent:
+            targetEntry = new XMPPComponent("pseudo", zimbraId, attrMap, prov);
+            break;
+        case zimlet:
+            targetEntry = new Zimlet("pseudo", zimbraId, attrMap, prov);
+            break;
+        default: 
+            throw ServiceException.INVALID_REQUEST("unsupported target for createPseudoTarget", null);
+        }
+        
+        return targetEntry;
+    }
+
     /**
      * @param args
      */

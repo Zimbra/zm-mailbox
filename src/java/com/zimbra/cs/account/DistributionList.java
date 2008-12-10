@@ -34,7 +34,7 @@ public class DistributionList extends ZAttrDistributionList {
      */
     boolean mIsAclGroup;
     
-    protected DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+    public DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
     }
 

@@ -53,7 +53,7 @@ public class GetEffectiveRights  extends RightDocumentHandler {
             grantee = eGrantee.getText();
         } else {
             granteeBy = GranteeBy.id;
-            grantee = zsc.getRequestedAccountId();  // TODO: need to check if the authe user has right to do this the request account, if they are not the same
+            grantee = zsc.getRequestedAccountId();  // TODO: need to check if the authed user has right to do this the request account, if they are not the same
         }
         
         RightCommand.EffectiveRights er = RightCommand.getEffectiveRights(Provisioning.getInstance(),
@@ -62,7 +62,7 @@ public class GetEffectiveRights  extends RightDocumentHandler {
                                                                           expandSetAttrs, expandGetAttrs);
         
         Element resp = zsc.createElement(AdminConstants.GET_EFFECTIVE_RIGHTS_RESPONSE);
-        er.toXML(resp);
+        er.toXML_getEffectiveRights(resp);
         return resp;
     }
 

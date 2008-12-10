@@ -49,6 +49,8 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -1986,7 +1988,38 @@ public class SoapProvisioning extends Provisioning {
             toXML(req, null, granteeBy, grantee);
         
         Element resp = invoke(req);
-        return new RightCommand.EffectiveRights(resp);
+        return new RightCommand.EffectiveRights(resp, false);
+    }
+    
+    @Override
+    public RightCommand.EffectiveRights getCreateObjectAttrs(String targetType,
+                                                             DomainBy domainBy, String domain,
+                                                             CosBy cosBy, String cos,
+                                                             GranteeBy granteeBy, String grantee) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_CREATE_OBJECT_ATTRS_REQUEST);
+        
+        Element eTarget = req.addElement(AdminConstants.E_TARGET);
+        eTarget.addAttribute(AdminConstants.A_TYPE, targetType);
+        
+        if (domainBy != null && domain != null) {
+            Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
+            eDomain.addAttribute(AdminConstants.A_BY, domainBy.toString());
+            eDomain.setText(domain);
+        }
+        
+        if (cosBy != null && cos != null) {
+            Element eCos = req.addElement(AdminConstants.E_COS);
+            eCos.addAttribute(AdminConstants.A_BY, cosBy.toString());
+            eCos.setText(cos);
+        }
+        
+        /*
+        if (granteeBy != null && grantee != null)
+            toXML(req, null, granteeBy, grantee);
+        */
+        
+        Element resp = invoke(req);
+        return new RightCommand.EffectiveRights(resp, true);
     }
     
     @Override
