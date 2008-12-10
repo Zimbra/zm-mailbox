@@ -345,6 +345,8 @@ public class AdminConstants {
     public static final QName GET_ALL_RIGHTS_RESPONSE = QName.get("GetAllRightsResponse", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_REQUEST = QName.get("GetEffectiveRightsRequest", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_RESPONSE = QName.get("GetEffectiveRightsResponse", NAMESPACE);
+    public static final QName GET_CREATE_OBJECT_ATTRS_REQUEST = QName.get("GetCreateObjectAttrsRequest", NAMESPACE);
+    public static final QName GET_CREATE_OBJECT_ATTRS_RESPONSE = QName.get("GetCreateObjectAttrsResponse", NAMESPACE);
     public static final QName GET_GRANTS_REQUEST = QName.get("GetGrantsRequest", NAMESPACE);
     public static final QName GET_GRANTS_RESPONSE = QName.get("GetGrantsResponse", NAMESPACE);
     public static final QName GRANT_RIGHT_REQUEST = QName.get("GrantRightRequest", NAMESPACE);
@@ -577,17 +579,21 @@ public class AdminConstants {
     
     // right
     public static final String E_ATTRS       = "attrs";
+    public static final String E_CONSTRAINT  = "constraint";
     public static final String E_DEFAULT     = "default";
     public static final String E_DESC        = "desc";
     public static final String E_GET_ATTRS   = "getAttrs";
     public static final String E_GRANT       = "grant";
     public static final String E_GRANTEE     = "grantee";
+    public static final String E_MAX         = "max";
+    public static final String E_MIN         = "min";
     public static final String E_RIGHTS      = "rights";
     public static final String E_R           = "r";
     public static final String E_RIGHT       = "right";
     public static final String E_TARGET      = "target";
     public static final String E_SET_ATTRS   = "setAttrs";
     public static final String E_VALUE       = "v";
+    public static final String E_VALUES      = "values";
     public static final String E_VIA         = "via";
     public static final String A_ALL         = "all";
     public static final String A_ALLOW       = "allow";
