@@ -993,7 +993,7 @@ public class RightChecker {
         case distributionlist:
             throw ServiceException.INVALID_REQUEST("unsupported target for createPseudoTarget", null);
             // targetEntry = new DistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov);  TODO
-            break;
+            // break;
         case domain:
             targetEntry = new Domain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
             break;
