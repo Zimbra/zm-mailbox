@@ -3834,5 +3834,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>admin console login message</desc>
 </attr>
 
+<attr id="773" name="zimbraFeatureDiscardInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="future">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>enable end-user mail discarding defined in mail filters features</desc>
+</attr>
 
 </attrs>

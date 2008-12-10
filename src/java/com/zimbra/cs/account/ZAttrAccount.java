@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081209-1114 */
+    /* build: 5.0 pshao 20081209-1606 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -5681,6 +5681,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureConversationsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * enable end-user mail discarding defined in mail filters features
+     *
+     * @return zimbraFeatureDiscardInFiltersEnabled, or true if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=773)
+    public boolean isFeatureDiscardInFiltersEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDiscardInFiltersEnabled, true);
+    }
+
+    /**
+     * enable end-user mail discarding defined in mail filters features
+     *
+     * @param zimbraFeatureDiscardInFiltersEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=773)
+    public void setFeatureDiscardInFiltersEnabled(boolean zimbraFeatureDiscardInFiltersEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDiscardInFiltersEnabled, zimbraFeatureDiscardInFiltersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable end-user mail discarding defined in mail filters features
+     *
+     * @param zimbraFeatureDiscardInFiltersEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=773)
+    public Map<String,Object> setFeatureDiscardInFiltersEnabled(boolean zimbraFeatureDiscardInFiltersEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDiscardInFiltersEnabled, zimbraFeatureDiscardInFiltersEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable end-user mail discarding defined in mail filters features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=773)
+    public void unsetFeatureDiscardInFiltersEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDiscardInFiltersEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable end-user mail discarding defined in mail filters features
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=773)
+    public Map<String,Object> unsetFeatureDiscardInFiltersEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDiscardInFiltersEnabled, "");
         return attrs;
     }
 

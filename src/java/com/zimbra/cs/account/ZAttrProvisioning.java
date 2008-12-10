@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081209-1114 */
+    /* build: 5.0 pshao 20081209-1606 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1973,6 +1973,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=140)
     public static final String A_zimbraFeatureConversationsEnabled = "zimbraFeatureConversationsEnabled";
+
+    /**
+     * enable end-user mail discarding defined in mail filters features
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=773)
+    public static final String A_zimbraFeatureDiscardInFiltersEnabled = "zimbraFeatureDiscardInFiltersEnabled";
 
     /**
      * filter prefs enabled
