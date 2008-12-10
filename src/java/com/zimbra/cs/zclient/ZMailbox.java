@@ -321,15 +321,6 @@ public class ZMailbox implements ToZJSONObject {
 		public void setRequestedSkin(String skin) { mRequestedSkin = skin; }
 	}
 
-	private static class VoiceStorePrincipal {
-		private String mId;
-		private String mName;
-		public VoiceStorePrincipal(String id, String name) {
-			mId = id;
-			mName = name;
-		}
-	}
-
     private ZAuthToken mAuthToken;
     private SoapHttpTransport mTransport;
     private NotifyPreference mNotifyPreference;
@@ -347,7 +338,7 @@ public class ZMailbox implements ToZJSONObject {
     private String mClientIp;
     private List<ZPhoneAccount> mPhoneAccounts;
     private Map<String, ZPhoneAccount> mPhoneAccountMap;
-	private VoiceStorePrincipal mVoiceStorePrincipal;
+	private Element mVoiceStorePrincipal;
 	private long mSize;
 	private boolean mHasMyCard;
 	private ZContact mMyCard;
@@ -4187,9 +4178,7 @@ public class ZMailbox implements ToZJSONObject {
             Element req = newRequestElement(VoiceConstants.GET_VOICE_INFO_REQUEST);
             Element response = invoke(req);
 			Element storePrincipalEl = response.getElement(VoiceConstants.E_STOREPRINCIPAL);
-			String id = storePrincipalEl.getAttribute(VoiceConstants.A_ID);
-			String name = storePrincipalEl.getAttribute(VoiceConstants.A_NAME);
-			mVoiceStorePrincipal = new VoiceStorePrincipal(id, name);
+			mVoiceStorePrincipal = storePrincipalEl.clone();
 			List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
             for (Element element : phoneElements) {
                 ZPhoneAccount account = new ZPhoneAccount(element, this);
@@ -4202,9 +4191,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
 	private void setVoiceStorePrincipal(Element req) {
-		Element el = req.addElement(VoiceConstants.E_STOREPRINCIPAL);
-		el.addAttribute(MailConstants.A_ID, mVoiceStorePrincipal.mId);
-		el.addAttribute(MailConstants.A_NAME, mVoiceStorePrincipal.mName);
+		req.addElement(mVoiceStorePrincipal.clone());
 	}
 
 	public ZPhoneAccount getPhoneAccount(String name) throws ServiceException {
