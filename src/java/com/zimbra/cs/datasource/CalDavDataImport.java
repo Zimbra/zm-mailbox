@@ -148,6 +148,7 @@ public class CalDavDataImport extends MailItemImport {
     	String href;
     	String etag;
     }
+    
     private List<Integer> syncFolders() throws ServiceException, IOException, DavException {
     	ArrayList<Integer> ret = new ArrayList<Integer>();
     	DataSource ds = getDataSource();
@@ -158,17 +159,35 @@ public class CalDavDataImport extends MailItemImport {
 		for (String name : calendars.keySet()) {
 			String url = calendars.get(name);
 			DataSourceItem f = DbDataSource.getReverseMapping(ds, url);
-			if (f.itemId == 0) {
-				Folder newFolder = null;
+			Folder folder = null;
+			if (f.itemId != 0) {
+				// check if the folder is valid
 				try {
-					newFolder = mbox.getFolderByName(octxt, rootFolder.getId(), name);
-				} catch (MailServiceException.NoSuchItemException e) {
-					newFolder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, DEFAULT_FOLDER_FLAGS, (byte)0, null);
+					folder = mbox.getFolderById(octxt, f.itemId);
+				} catch (ServiceException se) {
+					if (se.getCode() != MailServiceException.NO_SUCH_FOLDER)
+						throw se;
+					f.itemId = 0;
 				}
-				f.itemId = newFolder.getId();
-				f.remoteId = url;
+			}
+			if (f.itemId == 0) {
+				try {
+					// check if we can use the folder
+					folder = mbox.getFolderByName(octxt, rootFolder.getId(), name);
+					if (folder.getDefaultView() != MailItem.TYPE_APPOINTMENT) {
+						name = name + " (" + getDataSource().getName() + ")";
+						folder = null;
+					}
+				} catch (MailServiceException.NoSuchItemException e) {
+				}
+				
+				if (folder == null)
+					folder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, DEFAULT_FOLDER_FLAGS, (byte)0, null);
+				
+				f.itemId = folder.getId();
 				f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
+				f.remoteId = url;
 				DbDataSource.addMapping(ds, f);
 			} else if (f.md == null) {
 	    		ZimbraLog.datasource.warn("syncFolders: empty metadata for item %d", f.itemId);
@@ -177,11 +196,14 @@ public class CalDavDataImport extends MailItemImport {
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
 				DbDataSource.addMapping(ds, f);
 			}
-			Folder folder = mbox.getFolderById(octxt, f.itemId);
 			String fname = folder.getName();
 			if (!fname.equals(name)) {
         		ZimbraLog.datasource.warn("renaming folder %s to %s", fname, name);
-				mbox.rename(octxt, f.itemId, MailItem.TYPE_FOLDER, name, folder.getFolderId());
+        		try {
+    				mbox.rename(octxt, f.itemId, MailItem.TYPE_FOLDER, name, folder.getFolderId());
+        		} catch (ServiceException e) {
+        			ZimbraLog.datasource.warn("folder rename failed", e);
+        		}
 			}
 			ret.add(f.itemId);
 		}

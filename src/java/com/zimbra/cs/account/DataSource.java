@@ -23,6 +23,7 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,6 +43,8 @@ import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.db.DbImapFolder;
+import com.zimbra.cs.db.DbDataSource;
+import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -343,6 +346,14 @@ public class DataSource extends AccountProperty {
     
     public Mailbox getMailbox() throws ServiceException {
         return MailboxManager.getInstance().getMailboxByAccount(getAccount());
+    }
+    
+    public Collection<DataSourceItem> getItemMappings() throws ServiceException {
+    	return DbDataSource.getAllMappings(this);
+    }
+    
+    public void deleteItemMappings() throws ServiceException {
+    	DbDataSource.deleteAllMappings(this);
     }
     
     private static byte[] randomSalt() {
