@@ -990,7 +990,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="194" name="zimbraMtaAuthEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Value for postconf smtpd_use_tls</desc>
+  <desc>Value for postconf smtpd_tls_security_level</desc>
 </attr>
 
 <attr id="195" name="zimbraMtaBlockedExtension" type="string" max="64" cardinality="multi" optionalIn="globalConfig">

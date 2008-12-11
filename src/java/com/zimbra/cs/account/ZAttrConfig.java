@@ -9611,7 +9611,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf smtpd_use_tls
+     * Value for postconf smtpd_tls_security_level
      *
      * @return zimbraMtaAuthEnabled, or true if unset
      */
@@ -9621,7 +9621,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf smtpd_use_tls
+     * Value for postconf smtpd_tls_security_level
      *
      * @param zimbraMtaAuthEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9634,7 +9634,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf smtpd_use_tls
+     * Value for postconf smtpd_tls_security_level
      *
      * @param zimbraMtaAuthEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9648,7 +9648,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf smtpd_use_tls
+     * Value for postconf smtpd_tls_security_level
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -9660,7 +9660,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf smtpd_use_tls
+     * Value for postconf smtpd_tls_security_level
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

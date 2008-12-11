@@ -3201,7 +3201,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAntiSpamLockMethod = "zimbraMtaAntiSpamLockMethod";
 
     /**
-     * Value for postconf smtpd_use_tls
+     * Value for postconf smtpd_tls_security_level
      */
     @ZAttr(id=194)
     public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
