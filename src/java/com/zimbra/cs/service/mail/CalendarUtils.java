@@ -203,7 +203,7 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static ParseMimeMessage.InviteParserResult parseInviteForModify(
-            Account account, byte itemType, Element inviteElem, Invite oldInv,
+            Account account, byte itemType, Element inviteElem, Invite oldInv, Invite seriesInv,
             List<ZAttendee> attendeesToCancel, boolean recurAllowed)
             throws ServiceException {
         Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv.getTimeZoneMap(), false);
@@ -216,7 +216,14 @@ public class CalendarUtils {
 
         // SEQUENCE and DTSTAMP
         if (mod.isOrganizer()) {
-            mod.setSeqNo(oldInv.getSeqNo() + 1);
+            // Set sequence to the max of 1) what the modifying client specified (if any),
+            // 2) current sequence + 1, and 3) current sequence of the series, if we're modifying
+            // an exception instance.  This is to satisfy Outlook's requirement that an up-to-date
+            // exception instance should have a sequence greater than or equal to the series sequence.
+            // (bug 19111)
+            int seriesSeq = seriesInv != null ? seriesInv.getSeqNo() : 0;
+            int newSeq = Math.max(Math.max(mod.getSeqNo(), oldInv.getSeqNo() + 1), seriesSeq);
+            mod.setSeqNo(newSeq);
             mod.setDtStamp(new Date().getTime());
         } else {
             // If attendee is modifying his copy, preserve SEQUENCE and DTSTAMP.
