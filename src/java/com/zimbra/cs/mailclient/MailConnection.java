@@ -291,9 +291,7 @@ public abstract class MailConnection {
             return;
         }
         SSLSocket sock = newSSLSocket(socket);
-        String cipherSuite = sock.getSession().getCipherSuite();
-        if (cipherSuite == null || cipherSuite.equals("") || cipherSuite.equals("SSL_NULL_WITH_NULL_NULL"))
-        	sock.startHandshake();
+        sock.startHandshake();
         initStreams(sock.getInputStream(), sock.getOutputStream());
     }
 
