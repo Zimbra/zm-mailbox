@@ -44,10 +44,12 @@ public class ModifyCalendarItem extends CalendarRequest {
     protected class ModifyCalendarItemParser extends ParseMimeMessage.InviteParser {
         protected Mailbox mmbox;
         protected Invite mInv;
+        protected Invite mSeriesInv;
         
-        ModifyCalendarItemParser(Mailbox mbox, Invite inv) {
+        ModifyCalendarItemParser(Mailbox mbox, Invite inv, Invite seriesInv) {
             mmbox = mbox;
             mInv = inv;
+            mSeriesInv = seriesInv;
         }
         
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem)
@@ -55,7 +57,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             List<ZAttendee> atsToCancel = new ArrayList<ZAttendee>();
 
             ParseMimeMessage.InviteParserResult toRet =
-                CalendarUtils.parseInviteForModify(account, getItemType(), inviteElem, mInv, atsToCancel, !mInv.hasRecurId());
+                CalendarUtils.parseInviteForModify(account, getItemType(), inviteElem, mInv, mSeriesInv, atsToCancel, !mInv.hasRecurId());
 
             // send cancellations to any invitees who have been removed...
             if (atsToCancel.size() > 0)
@@ -106,10 +108,11 @@ public class ModifyCalendarItem extends CalendarRequest {
             if (inv == null) {
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
             }
+            Invite seriesInv = calItem.getDefaultInviteOrNull();
             int folderId = calItem.getFolderId();
             if (!isInterMboxMove && iidFolder != null)
                 folderId = iidFolder.getId();
-            modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv,
+            modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
                                response, isInterMboxMove);
         }
 
@@ -127,12 +130,12 @@ public class ModifyCalendarItem extends CalendarRequest {
     private Element modifyCalendarItem(
             ZimbraSoapContext zsc, OperationContext octxt, Element request,
             Account acct, Mailbox mbox, int folderId,
-            CalendarItem calItem, Invite inv, Element response, boolean isInterMboxMove)
+            CalendarItem calItem, Invite inv, Invite seriesInv, Element response, boolean isInterMboxMove)
     throws ServiceException {
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
         
-        ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv);
+        ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv, seriesInv);
         
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
         dat.mDontNotifyAttendees = isInterMboxMove;
