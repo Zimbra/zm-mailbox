@@ -1045,8 +1045,22 @@ public class SoapSession extends Session {
             for (Element child : elem.listElements())
                 transferMountpointContents(child, octxt, mountpoints);
         } else {
-            // transfer folder counts, subfolders, and ACLs to the serialized mountpoint from the serialized target folder
-            GetFolder.transferMountpointAttributes(elem, target);
+            // transfer folder counts to the serialized mountpoint from the serialized target folder
+            elem.addAttribute(MailConstants.A_UNREAD, target.getAttribute(MailConstants.A_UNREAD, null));
+            elem.addAttribute(MailConstants.A_NUM, target.getAttribute(MailConstants.A_NUM, null));
+            elem.addAttribute(MailConstants.A_SIZE, target.getAttribute(MailConstants.A_SIZE, null));
+            elem.addAttribute(MailConstants.A_URL, target.getAttribute(MailConstants.A_URL, null));
+            elem.addAttribute(MailConstants.A_RIGHTS, target.getAttribute(MailConstants.A_RIGHTS, null));
+            if (target.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
+                elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+
+            // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
+            for (Element child : target.listElements()) {
+                if (child.getName().equals(MailConstants.E_ACL))
+                    elem.addUniqueElement(child.clone());
+                else
+                    elem.addElement(child.clone());
+            }
         }
     }
 
