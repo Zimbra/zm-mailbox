@@ -162,7 +162,10 @@ public final class MailboxIndex
         } catch (ServiceException e) {
             zq.doneWithQuery();
             throw e;
-        } catch (Throwable t) {
+        } catch (OutOfMemoryError e) {
+            // DON'T try to cleanup here, we're going to hard shutdown!!
+            throw e;
+        } catch (Throwable t) { // OOME handled by above
             zq.doneWithQuery();
             throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
         }
