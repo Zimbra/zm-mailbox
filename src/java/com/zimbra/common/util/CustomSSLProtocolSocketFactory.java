@@ -42,21 +42,15 @@ public class CustomSSLProtocolSocketFactory implements SecureProtocolSocketFacto
     }
 
     public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, host, port, autoClose);
-    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(socket, host, port, autoClose), host, true);
     }
     
     public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port);
-    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port), host, true);
     }
     
     public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort) throws IOException, UnknownHostException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port, clientHost, clientPort);
-    	CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port, clientHost, clientPort), host, true);
     }
 
     public Socket createSocket(String host, int port, InetAddress localAddress, int localPort, HttpConnectionParams params) throws IOException, UnknownHostException, ConnectTimeoutException {

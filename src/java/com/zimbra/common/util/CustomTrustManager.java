@@ -87,7 +87,7 @@ public class CustomTrustManager implements X509TrustManager {
 				throw new CertificateException("key store empty");
 			getKeyStoreTrustManager().checkServerTrusted(chain, authType);
 		} catch (CertificateException x) {
-			String hostname = CustomSSLSocketUtil.getCertificateHostname(); //stored as threadlocal if triggered from CustomSSLSocketUtil
+			String hostname = CustomSSLSocket.getCertificateHostname(); //stored as threadlocal if triggered from CustomSSLSocketUtil
 			if (hostname == null)
 				hostname = SSLCertInfo.getCertificateCN(chain[0]);
 			String certInfo = handleCertificateCheckFailure(hostname, chain[0], false);

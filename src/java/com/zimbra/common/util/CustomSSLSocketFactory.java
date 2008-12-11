@@ -50,48 +50,33 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
     
     @Override
     public Socket createSocket() throws IOException {
-    	//unfortunately javamail smtp still uses it
-    	return factory.createSocket();
+    	//javamail smtp uses unconnected socket
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(), null, verifyHostname);
     }
     
     @Override
     public Socket createSocket(InetAddress address, int port) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(address, port);
-    	if (verifyHostname)
-    		CustomSSLSocketUtil.checkCertificate(address.getHostName(), sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(address, port), address.getHostName(), verifyHostname);
     }
     
     @Override
     public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(address, port, localAddress, localPort);
-    	if (verifyHostname)
-    		CustomSSLSocketUtil.checkCertificate(address.getHostName(), sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(address, port, localAddress, localPort), address.getHostName(), verifyHostname);
     }
 
     @Override
     public Socket createSocket(String host, int port) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port);
-    	if (verifyHostname)
-    		CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port), host, verifyHostname);
     }
     
     @Override
     public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(host, port, localHost, localPort);
-    	if (verifyHostname)
-    		CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port, localHost, localPort), host, verifyHostname);
     }
     
     @Override
     public Socket createSocket(Socket socket, String host, int port, boolean flag) throws IOException {
-    	SSLSocket sslSocket = (SSLSocket)factory.createSocket(socket, host, port, flag);
-    	if (verifyHostname)
-    		CustomSSLSocketUtil.checkCertificate(host, sslSocket);
-    	return sslSocket;
+    	return new CustomSSLSocket((SSLSocket)factory.createSocket(socket, host, port, flag), host, verifyHostname);
     }
 
     public static SocketFactory getDefault() {
