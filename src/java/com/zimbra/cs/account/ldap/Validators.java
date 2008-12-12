@@ -236,12 +236,12 @@ public class Validators {
             // make query into:  (&query(|(zimbracosid=cosId)(featureEnabled=true)))
             // query is already bracketed
             StringBuilder queryFilter = new StringBuilder();
-            queryFilter.append("(&").append(query).append(")(|");
+            queryFilter.append("(&").append(query).append("(|");
             for (String cosId : cosCount.keySet())
                 queryFilter.append("(zimbracosid=").append(cosId).append(")");
             for (String featureAttr : featureCount.keySet())
                 queryFilter.append("(").append(featureAttr).append("=TRUE)");
-            queryFilter.append(")");
+            queryFilter.append("))");
             query = queryFilter.toString();
 
             ZimbraLdapContext zlc = null;
