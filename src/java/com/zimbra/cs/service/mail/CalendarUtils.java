@@ -829,52 +829,43 @@ public class CalendarUtils {
         }
 
         // DTEND (for VEVENT) or DUE (for VTODO)
-        {
-            Element e = element.getOptionalElement(MailConstants.E_CAL_END_TIME);
-            if (e != null) {
-                if (element.getOptionalElement(MailConstants.E_CAL_DURATION) != null) {
+        Element endElem = element.getOptionalElement(MailConstants.E_CAL_END_TIME);
+        if (endElem != null) {
+            ParsedDateTime dt = parseDtElement(endElem, tzMap, newInv);
+
+            if (allDay && !newInv.isTodo()) {
+                // HACK ALERT: okay, campers, here's the deal.
+                // By definition, our end dates are EXCLUSIVE: DTEND is not
+                // included.. eg a meeting 7-8pm actually stops at 7:59
+                //
+                // This makes sense for normal appointments, but apparently
+                // this rule is confusing to people when making
+                // all-day-events
+                //
+                // For all-day-events, people want to say that a 1-day-long
+                // appointment starts on 11/1 and ends on 11/1, for example
+                // this is inconsistent (and incompatible with RFC2445) but
+                // it is what people want. Sooo, we to a bit of a hacky
+                // translation when sending/receiving all-day-events.
+                //     
+                dt = dt.add(ParsedDuration.ONE_DAY);
+            }
+            if (dt.hasTime()) {
+                if (allDay) {
                     throw ServiceException.INVALID_REQUEST(
-                                    "<comp> may have <e> end or <d> duration but not both",
+                                    "AllDay event must have DATE, not DATETIME for start time",
                                     null);
                 }
-                ParsedDateTime dt = parseDtElement(e, tzMap, newInv);
-
-                if (allDay && !newInv.isTodo()) {
-                    // HACK ALERT: okay, campers, here's the deal.
-                    // By definition, our end dates are EXCLUSIVE: DTEND is not
-                    // included.. eg a meeting 7-8pm actually stops at 7:59
-                    //
-                    // This makes sense for normal appointments, but apparently
-                    // this rule is confusing to people when making
-                    // all-day-events
-                    //
-                    // For all-day-events, people want to say that a 1-day-long
-                    // appointment starts on 11/1 and ends on 11/1, for example
-                    // this is inconsistent (and incompatible with RFC2445) but
-                    // it is what people want. Sooo, we to a bit of a hacky
-                    // translation when sending/receiving all-day-events.
-                    //     
-                    dt = dt.add(ParsedDuration.ONE_DAY);
+            } else {
+                if (!allDay) {
+                    throw ServiceException.INVALID_REQUEST(
+                                    "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
+                                    null);
                 }
-                if (dt.hasTime()) {
-                    if (allDay) {
-                        throw ServiceException.INVALID_REQUEST(
-                                        "AllDay event must have DATE, not DATETIME for start time",
-                                        null);
-                    }
-                } else {
-                    if (!allDay) {
-                        throw ServiceException.INVALID_REQUEST(
-                                        "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
-                                        null);
-                    }
-                }
-                newInv.setDtEnd(dt);
             }
-        }
-
-        // DURATION
-        {
+            newInv.setDtEnd(dt);
+        } else {
+            // DURATION
             Element d = element.getOptionalElement(MailConstants.E_CAL_DURATION);
             if (d != null) {
                 ParsedDuration pd = ParsedDuration.parse(d);
