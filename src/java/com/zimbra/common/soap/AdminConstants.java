@@ -80,6 +80,7 @@ public class AdminConstants {
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get("DeleteDomainResponse", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get("GetAllDomainsRequest", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get("GetAllDomainsResponse", NAMESPACE);
+    
 
     public static final QName CREATE_COS_REQUEST = QName.get("CreateCosRequest", NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get("CreateCosResponse", NAMESPACE);
@@ -300,6 +301,9 @@ public class AdminConstants {
     public static final QName FLUSH_CACHE_REQUEST = QName.get("FlushCacheRequest", NAMESPACE);
     public static final QName FLUSH_CACHE_RESPONSE = QName.get("FlushCacheResponse", NAMESPACE);
 
+    public static final QName COUNT_ACCOUNT_REQUEST = QName.get("CountAccountRequest", NAMESPACE);
+    public static final QName COUNT_ACCOUNT_RESPONSE = QName.get("CountAccountResponse", NAMESPACE);
+    
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
@@ -355,7 +359,7 @@ public class AdminConstants {
     public static final QName REVOKE_RIGHT_RESPONSE = QName.get("RevokeRightResponse", NAMESPACE);
     public static final QName CHECK_RIGHT_REQUEST = QName.get("CheckRightRequest", NAMESPACE);
     public static final QName CHECK_RIGHT_RESPONSE = QName.get("CheckRightResponse", NAMESPACE);
-
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
