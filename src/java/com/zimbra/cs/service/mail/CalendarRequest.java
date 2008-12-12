@@ -290,19 +290,36 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 csd.mInvite.setFragment(pm.getFragment());
             }
 
-            ItemId msgId = null;
-
             int[] ids = null;
-            // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
-            // because sendMimMessage will delete uploaded attachments as a side-effect.
-            if (updateOwnAppointment)
-                ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+            ItemId msgId = null;
+            if (!csd.mInvite.isCancel()) {
+                // For create/modify requests, we want to first update the local mailbox (organizer's)
+                // and send invite emails only if local change succeeded.  This order is also necessary
+                // because of the side-effect relating to attachments.  (see below comments)
 
-            // Next, notify any attendees.
-            if (!csd.mDontNotifyAttendees)
-                msgId = mbox.getMailSender().sendMimeMessage(
-                        octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                        csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+                // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
+                // because sendMimMessage will delete uploaded attachments as a side-effect.
+                if (updateOwnAppointment)
+                    ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                // Next, notify any attendees.
+                if (!csd.mDontNotifyAttendees)
+                    msgId = mbox.getMailSender().sendMimeMessage(
+                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+            } else {
+                // But if we're sending a cancel request, send emails first THEN update the local mailbox.
+                // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
+                // if we couldn't notify the attendees.
+                //
+                // This order has a problem when there's an attachment, but cancel requests should not
+                // have an attachment, so we're okay.
+                if (!csd.mDontNotifyAttendees)
+                    msgId = mbox.getMailSender().sendMimeMessage(
+                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+                if (updateOwnAppointment)
+                    ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+            }
 
             if (updateOwnAppointment && response != null && ids != null) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
