@@ -299,6 +299,9 @@ public class AdminConstants {
     public static final QName FLUSH_CACHE_REQUEST = QName.get("FlushCacheRequest", NAMESPACE);
     public static final QName FLUSH_CACHE_RESPONSE = QName.get("FlushCacheResponse", NAMESPACE);
 
+    public static final QName COUNT_ACCOUNT_REQUEST = QName.get("CountAccountRequest", NAMESPACE);
+    public static final QName COUNT_ACCOUNT_RESPONSE = QName.get("CountAccountResponse", NAMESPACE);
+
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
