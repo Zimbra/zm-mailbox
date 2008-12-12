@@ -56,6 +56,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -296,6 +297,7 @@ public class ProvUtil implements DebugListener {
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
+        COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
         CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
@@ -562,6 +564,9 @@ public class ProvUtil implements DebugListener {
             break; 
         case COPY_COS:
             System.out.println(mProv.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
+            break;  
+        case COUNT_ACCOUNT:
+            doCountAccount(args);
             break;  
         case CREATE_ACCOUNT:
             System.out.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMap(args, 3)).getId());
@@ -1441,6 +1446,22 @@ public class ProvUtil implements DebugListener {
         SearchGalResult result = mProv.autoCompleteGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, 100);
         for (GalContact contact : result.getMatches())
             dumpContact(contact);
+    }
+    
+    private void doCountAccount(String[] args) throws ServiceException {
+        String domain = args[1];
+        Domain d = lookupDomain(domain);
+
+        CountAccountResult result = mProv.countAccount(d);
+        String formatHeading = "%-20s %-40s %s\n";
+        String format = "%-20s %-40s %d\n";
+        System.out.printf(formatHeading, "cos name", "cos id", "# of accounts");
+        System.out.printf(formatHeading, "--------------------", "----------------------------------------", "--------------------");
+        for (CountAccountResult.CountAccountByCos c : result.getCountAccountByCos()) {
+            System.out.printf(format, c.getCosName(), c.getCosId(), c.getCount());
+        }
+        
+        System.out.println();
     }    
     
     private void doSyncGal(String[] args) throws ServiceException {

@@ -5628,6 +5628,66 @@ public class LdapProvisioning extends Provisioning {
             throw new UnsupportedOperationException(); 
     }
     
+    private static class CountAccountVisitor implements NamedEntry.Visitor {
+        
+        private static class Result {
+            Result(String name) {
+                mName = name;
+                mCount= 0;
+            }
+            String mName;
+            long mCount;
+        }
+        
+        Provisioning mProv;
+        Map<String, Result> mResult = new HashMap<String, Result>();
+        
+        CountAccountVisitor(Provisioning prov) {
+            mProv = prov;
+        }
+        
+        public void visit(NamedEntry entry) throws ServiceException {
+            if (!(entry instanceof Account))
+                return;
+            
+            if (entry instanceof CalendarResource)
+                return;
+            
+            Account acct = (Account)entry;
+            if (acct.getBooleanAttr(Provisioning.A_zimbraIsSystemResource, false))
+                return;
+            
+            Cos cos = mProv.getCOS(acct);
+            Result r = mResult.get(cos.getId());
+            if (r == null) {
+                r = new Result(cos.getName());
+                mResult.put(cos.getId(), r);
+            }
+            r.mCount++;
+        }
+        
+        CountAccountResult getResult() {
+            CountAccountResult result = new CountAccountResult();
+            for (Map.Entry<String, Result> r : mResult.entrySet()) {
+                result.addCountAccountByCosResult(r.getKey(), r.getValue().mName, r.getValue().mCount);
+            }
+            return result;
+        }
+    }
+    
+    @Override
+    public CountAccountResult countAccount(Domain domain) throws ServiceException {
+        CountAccountVisitor visitor = new CountAccountVisitor(this);
+        // getAllAccounts(domain, visitor);
+        searchObjects(mDIT.filterAccountsByDomain(domain, false), 
+                      new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource}, 
+                      mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()), 
+                      Provisioning.SA_ACCOUNT_FLAG, 
+                      visitor,
+                      0);
+
+        return visitor.getResult();
+    }
     
     public static void testAuthDN(String args[]) {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));

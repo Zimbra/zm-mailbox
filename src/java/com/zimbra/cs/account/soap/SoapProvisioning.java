@@ -50,6 +50,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning;
@@ -2073,6 +2074,23 @@ public class SoapProvisioning extends Provisioning {
             }
         }
         invoke(req);
+    }
+    
+    @Override
+    public CountAccountResult countAccount(Domain domain) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.COUNT_ACCOUNT_REQUEST);
+        Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
+        eDomain.setText(domain.getId());
+        eDomain.addAttribute(AdminConstants.A_BY, DomainBy.id.name());
+        Element resp = invoke(req);
+        
+        CountAccountResult result = new CountAccountResult();
+        for (Element eCos : resp.listElements(AdminConstants.E_COS)) {
+            result.addCountAccountByCosResult(eCos.getAttribute(AdminConstants.A_ID), 
+                                              eCos.getAttribute(AdminConstants.A_NAME), 
+                                              Long.valueOf(eCos.getText()));
+        }
+        return result;
     }
     
     public static void main(String[] args) throws Exception {

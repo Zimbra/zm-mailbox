@@ -194,6 +194,8 @@ public class AdminService implements DocumentService {
         
         dispatcher.registerHandler(AdminConstants.FLUSH_CACHE_REQUEST, new FlushCache());
         
+        dispatcher.registerHandler(AdminConstants.COUNT_ACCOUNT_REQUEST, new CountAccount());
+        
         dispatcher.registerHandler(AdminConstants.GET_SERVER_NIFS_REQUEST, new GetServerNIFs());
         
         // f/b mgmt
@@ -223,6 +225,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ALL_XMPPCOMPONENTS_REQUEST, new GetAllXMPPComponents());
         dispatcher.registerHandler(AdminConstants.DELETE_XMPPCOMPONENT_REQUEST, new DeleteXMPPComponent());
 
+        
     }
 
     /**

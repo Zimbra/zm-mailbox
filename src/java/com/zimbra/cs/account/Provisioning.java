@@ -1638,7 +1638,41 @@ public abstract class Provisioning extends ZAttrProvisioning {
         
         flushCache(cet, entries);    
     }
+    
+    public static class CountAccountResult {
+        public static class CountAccountByCos {
+            
+            CountAccountByCos(String cosId, String cosName, long count) {
+                mCosId = cosId;
+                mCosName = cosName;
+                mCount = count;
+            }
+            
+            private String mCosId;
+            private String mCosName;
+            private long mCount;
+            
+            public String getCosId()   { return mCosId;}
+            public String getCosName() { return mCosName; }
+            public long getCount()        { return mCount; }
+        }
+        
+        private List<CountAccountByCos> mCountAccountByCos = new ArrayList<CountAccountByCos>();
+        
+        public void addCountAccountByCosResult(String cosId, String cosName, long count) {
+            CountAccountByCos r = new CountAccountByCos(cosId, cosName, count);
+            mCountAccountByCos.add(r);
+        }
+        
+        public List<CountAccountByCos> getCountAccountByCos() {
+            return mCountAccountByCos;
+        }
+        
+    }
 
+    public CountAccountResult countAccount(Domain domain) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
     /**
      * checks to make sure the specified address is a valid email address (addr part only, no personal part)

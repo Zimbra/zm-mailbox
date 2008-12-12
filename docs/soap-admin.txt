@@ -2009,6 +2009,35 @@ in soap-waitset.txt
 
 <FlushCacheResponse/>
 
+
+-----------------------------
+
+# count number of accounts by cos in a domain, 
+
+<CountAccountRequest>
+    <domain by="{domain-by}">...</domain>
+</CountAccountRequest>
+
+
+<CountAccountResponse>
+    <cos id="{cos-id}" name="cos-name">{account-count}</cos>+
+</CountAccountResponse>
+
+    Note, it doesn't include any account with zimbraIsSystemResource=TRUE,
+    nor does it include any calendar resources.
+
+    
+
+e.g.
+<CountAccountResponse>
+   <cos id="044382d5-f2c5-4265-9a1a-ac255fce729f" name="basic">123</cos>
+   <cos id="723d7cf6-8d76-443a-b5f3-c56563a8b4c7" name="standard">456</cos>
+   <cos id="35c6e603-123a-4a08-b485-b00e1f6d1663" name="premium">789</cos>
+   <cos id="35c6e603-123a-4a08-b485-b00e1f6d1663" name="default">55</cos>
+</CountAccountResponse>
+
+
+
 ---------------------------------------------------------------------------
 # Get server's network interfaces. Returns IP  addresses and net masks
 # This call will use zmrcd to call /opt/zimbra/libexec/zmserverips 
