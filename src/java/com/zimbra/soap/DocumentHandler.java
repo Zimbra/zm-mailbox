@@ -271,6 +271,8 @@ public abstract class DocumentHandler {
     }
 
     public static Session getReferencedSession(ZimbraSoapContext zsc) {
+        if (zsc == null)
+            return null;
         SessionInfo sinfo = zsc.getSessionInfo();
         return sinfo == null ? null : SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
     }
