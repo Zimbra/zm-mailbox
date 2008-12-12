@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081209-1606 */
+    /* build: 5.0 pshao 20081212-1142 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1017,6 +1017,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=743)
     public static final String A_zimbraAdminConsoleDNSCheckEnabled = "zimbraAdminConsoleDNSCheckEnabled";
+
+    /**
+     * whether configuring external LDAP auth is enabled in admin console
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=774)
+    public static final String A_zimbraAdminConsoleLDAPAuthEnabled = "zimbraAdminConsoleLDAPAuthEnabled";
 
     /**
      * admin console login message
@@ -4449,10 +4457,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefSkin = "zimbraPrefSkin";
 
     /**
-     * whether standard client should operate in accessilbity Mode
+     * whether standard client should operate in accessibility Mode
      */
     @ZAttr(id=689)
-    public static final String A_zimbraPrefStandardClientAccessilbityMode = "zimbraPrefStandardClientAccessilbityMode";
+    public static final String A_zimbraPrefStandardClientAccessibilityMode = "zimbraPrefStandardClientAccessibilityMode";
 
     /**
      * whether or not tag tree is expanded

@@ -39,7 +39,7 @@ public class ZAttrRight extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081209-1606 */
+    /* build: 5.0 pshao 20081212-1142 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by

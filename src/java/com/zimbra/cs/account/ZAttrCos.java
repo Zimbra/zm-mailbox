@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081209-1606 */
+    /* build: 5.0 pshao 20081212-1142 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -16165,64 +16165,64 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether standard client should operate in accessilbity Mode
+     * whether standard client should operate in accessibility Mode
      *
-     * @return zimbraPrefStandardClientAccessilbityMode, or false if unset
+     * @return zimbraPrefStandardClientAccessibilityMode, or false if unset
      */
     @ZAttr(id=689)
-    public boolean isPrefStandardClientAccessilbityMode() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, false);
+    public boolean isPrefStandardClientAccessibilityMode() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefStandardClientAccessibilityMode, false);
     }
 
     /**
-     * whether standard client should operate in accessilbity Mode
+     * whether standard client should operate in accessibility Mode
      *
-     * @param zimbraPrefStandardClientAccessilbityMode new value
+     * @param zimbraPrefStandardClientAccessibilityMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=689)
-    public void setPrefStandardClientAccessilbityMode(boolean zimbraPrefStandardClientAccessilbityMode) throws com.zimbra.common.service.ServiceException {
+    public void setPrefStandardClientAccessibilityMode(boolean zimbraPrefStandardClientAccessibilityMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, zimbraPrefStandardClientAccessilbityMode ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessibilityMode, zimbraPrefStandardClientAccessibilityMode ? Provisioning.TRUE : Provisioning.FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * whether standard client should operate in accessilbity Mode
+     * whether standard client should operate in accessibility Mode
      *
-     * @param zimbraPrefStandardClientAccessilbityMode new value
+     * @param zimbraPrefStandardClientAccessibilityMode new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=689)
-    public Map<String,Object> setPrefStandardClientAccessilbityMode(boolean zimbraPrefStandardClientAccessilbityMode, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefStandardClientAccessibilityMode(boolean zimbraPrefStandardClientAccessibilityMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, zimbraPrefStandardClientAccessilbityMode ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessibilityMode, zimbraPrefStandardClientAccessibilityMode ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
     }
 
     /**
-     * whether standard client should operate in accessilbity Mode
+     * whether standard client should operate in accessibility Mode
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=689)
-    public void unsetPrefStandardClientAccessilbityMode() throws com.zimbra.common.service.ServiceException {
+    public void unsetPrefStandardClientAccessibilityMode() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, "");
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessibilityMode, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * whether standard client should operate in accessilbity Mode
+     * whether standard client should operate in accessibility Mode
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=689)
-    public Map<String,Object> unsetPrefStandardClientAccessilbityMode(Map<String,Object> attrs) {
+    public Map<String,Object> unsetPrefStandardClientAccessibilityMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessilbityMode, "");
+        attrs.put(Provisioning.A_zimbraPrefStandardClientAccessibilityMode, "");
         return attrs;
     }
 
