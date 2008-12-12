@@ -212,7 +212,7 @@ public class ContactAutoComplete {
 		Provisioning prov = Provisioning.getInstance();
 		Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
 		ZimbraLog.gal.debug("querying gal");
-		Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.ALL;
+		Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
 		Domain d = prov.getDomain(account);
         SearchGalResult sgr = prov.autoCompleteGal(d, str, type, limit - result.entries.size());
         if (sgr.getHadMore() || sgr.getTokenizeKey() != null) {
