@@ -52,11 +52,10 @@ public class BlobConsistencyCheck {
      */
     final static Object[][] OPTION_LIST = {
         { "z", "gzip",     "test compressed blobs",         false, false },
-        { "p", "password", "zimbra user mysql password",    true,  false },
         { "h", "help",     "this help message",             false, false },
-        { "f", "file",     "save/load report to/from file", true,  false },
+        { "f", "file",     "save report to file",           true,  false },
         { "k", "skip-fs",  "skip blob store reverse check", false, false },
-        { "l", "load",     "display report from file",      true,  false },
+        { "l", "load",     "load/display report from file", true,  false },
         { "u", "user",     "check only the user/mbox-id",   true,  false },
         //{ "r", "repair",   "repair/delete missing blobs",   false, false },
         //{ "c", "force",    "required when repairing",       false, false },
@@ -85,17 +84,7 @@ public class BlobConsistencyCheck {
             return;
         }
 
-        if (cmdLine.hasOption("p"))
-            mysqlPasswd = cmdLine.getOptionValue("p");
-        else
-            mysqlPasswd = LC.get(LC.zimbra_mysql_password.key());
-
-        if (!cmdLine.hasOption("l") &&
-                (mysqlPasswd == null || "".equals(mysqlPasswd.trim()))) {
-            System.err.println(LOCAL_CONFIG +
-                    ": no mysql password found, rerun with -p");
-            return;
-        }
+        mysqlPasswd = LC.zimbra_mysql_password.value();
 
         if (cmdLine.hasOption("r") && !cmdLine.hasOption("f")) {
             System.err.println("--repair requires --file to be specified");
@@ -107,6 +96,13 @@ public class BlobConsistencyCheck {
         } else if (cmdLine.hasOption("f")) {
             reportFile = new File(cmdLine.getOptionValue("f"));
         }
+        if (reportFile != null) {
+            File parent = reportFile.getParentFile();
+            if (!parent.exists() || !parent.isDirectory()) {
+                System.out.println("ERROR: " + parent + " directory does not exist");
+                System.exit(1);
+            }
+        }
 
         if (cmdLine.hasOption("r") && !cmdLine.hasOption("c")) {
             // repair
@@ -116,6 +112,10 @@ public class BlobConsistencyCheck {
         } else if (cmdLine.hasOption("l")) {
             // display report
             reportFile = new File(cmdLine.getOptionValue("l"));
+            if (!reportFile.exists() || !reportFile.isFile()) {
+                System.out.println("ERROR: " + reportFile + " does not exist");
+                System.exit(1);
+            }
             new ReportDisplay(reportFile).run();
         } else {
             // lazy, need pointers...
