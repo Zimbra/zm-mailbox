@@ -2649,7 +2649,8 @@ public final class ZimbraQuery {
                         allVisibleFolders.addAll(mbox.getFolderList(octxt, DbSearch.SORT_NONE));
                     }
                     for (Folder f : allVisibleFolders) {
-                        if (CalendarItem.allowPrivateAccess(f, authAcct, false)) {
+                        if (f.getType() == MailItem.TYPE_FOLDER &&
+                        		CalendarItem.allowPrivateAccess(f, authAcct, false)) {
                             hasFolderRightPrivateSet.add(f);
                         }
                     }

@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ProxiedHit;
@@ -139,9 +140,6 @@ public class ContactAutoComplete {
     private Collection<Integer> mDefaultFolders;
     private Collection<String> mEmailKeys;
     
-    private static final Integer[] DEFAULT_FOLDERS = {
-    	Mailbox.ID_FOLDER_CONTACTS, FOLDER_ID_GAL
-    };
 	private static final String[] DEFAULT_EMAIL_KEYS = {
 		Contact.A_email, Contact.A_email2, Contact.A_email3
 	};
@@ -160,22 +158,14 @@ public class ContactAutoComplete {
 			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields);
 			if (emailKeys != null)
 				mEmailKeys = Arrays.asList(emailKeys.split(","));
+	        mIncludeGal = acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
+	                acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false);
 		} catch (ServiceException se) {
 			ZimbraLog.gal.warn("error initializing ContactAutoComplete", se);
 		}
 		mAccountId = accountId;
-		if (mDefaultFolders == null)
-			mDefaultFolders = Arrays.asList(DEFAULT_FOLDERS);
-		if (mDefaultFolders.contains(FOLDER_ID_GAL)) {
-			mDefaultFolders.remove(FOLDER_ID_GAL);
-			mIncludeGal = true;
-		}
 		if (mEmailKeys == null)
 			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
-	}
-	
-	public void addExtraEmailKey(String key) {
-		mEmailKeys.add(key);
 	}
 	
 	public boolean includeGal() {
@@ -221,10 +211,6 @@ public class ContactAutoComplete {
 	private void queryGal(String str, int limit, AutoCompleteResult result) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
-        if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
-                account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))) {
-        	return;
-        }
 		ZimbraLog.gal.debug("querying gal");
 		Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.ALL;
 		Domain d = prov.getDomain(account);
@@ -274,21 +260,35 @@ public class ContactAutoComplete {
 	
 	private void queryFolders(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
 		str = str.toLowerCase();
-		String query = generateQuery(str, folders);
-		ZimbraLog.gal.debug("querying folders: "+query);
         ZimbraQueryResults qres = null;
         try {
     		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
     		Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
     		HashMap<ItemId,Integer> mountpoints = new HashMap<ItemId,Integer>();
-    		for (int fid : folders) {
-    			Folder f = mbox.getFolderById(octxt, fid);
-    			if (f instanceof Mountpoint) {
-    				Mountpoint mp = (Mountpoint) f;
-    				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), fid);
+    		if (folders == null) {
+    			ArrayList<Integer> allFolders = new ArrayList<Integer>();
+    			for (Folder f : mbox.getFolderList(octxt, DbSearch.SORT_NONE)) {
+    				if (f.getDefaultView() != MailItem.TYPE_CONTACT)
+    					continue;
+    				allFolders.add(f.getId());
+        			if (f instanceof Mountpoint) {
+        				Mountpoint mp = (Mountpoint) f;
+        				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), f.getId());
+        			}
     			}
+    			folders = allFolders;
+    		} else {
+        		for (int fid : folders) {
+        			Folder f = mbox.getFolderById(octxt, fid);
+        			if (f instanceof Mountpoint) {
+        				Mountpoint mp = (Mountpoint) f;
+        				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), fid);
+        			}
+        		}
     		}
-			qres = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, 100);
+    		String query = generateQuery(str, folders);
+    		ZimbraLog.gal.debug("querying folders: "+query);
+			qres = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, limit);
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;

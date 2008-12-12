@@ -3741,12 +3741,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="759" name="zimbraContactAutoCompleteFolderIds" type="string" max="16" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
-  <defaultCOSValue>0,7</defaultCOSValue>
+<attr id="759" name="zimbraContactAutoCompleteFolderIds" type="string" max="128" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
   <desc>
     Comma separates list of folder Ids that should be used to search for
-    contacts when generating auto-complete contact list.  Folder id of 0
-    is used to include GAL contacts in the response.
+    contacts when generating auto-complete contact list.  If unset all contact
+    folders in the mailbox will be searched for auto completion.
   </desc>
 </attr>
 

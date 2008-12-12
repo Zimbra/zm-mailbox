@@ -2359,7 +2359,7 @@ public class Mailbox {
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 result = new ArrayList<MailItem>(mFolderCache.size());
                 for (Folder subfolder : mFolderCache.values()) {
-                    if (subfolder.getType() == type)
+                    if (subfolder.getType() == type || type == MailItem.TYPE_FOLDER)
                         if (folder == null || subfolder.getFolderId() == folderId)
                             result.add(subfolder);
                 }
