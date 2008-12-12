@@ -27,6 +27,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -72,6 +73,7 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         addAttr(response, Provisioning.A_zimbraId, account.getId());
         addAttr(response, Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost));
  
+        doCos(account, response);
         addUrls(response, account);
         
         return response;
@@ -108,6 +110,15 @@ public class GetAccountInfo extends AdminDocumentHandler  {
             Element e = response.addElement(AdminConstants.E_A);
             e.addAttribute(AdminConstants.A_N, name);
             e.setText(value);
+        }
+    }
+    
+    static void doCos(Account acct, Element response) throws ServiceException {
+        Cos cos = Provisioning.getInstance().getCOS(acct);
+        if (cos != null) {
+            Element eCos = response.addUniqueElement(AdminConstants.E_COS);
+            eCos.addAttribute(AdminConstants.A_ID, cos.getId());
+            eCos.addAttribute(AdminConstants.A_NAME, cos.getName());
         }
     }
 }
