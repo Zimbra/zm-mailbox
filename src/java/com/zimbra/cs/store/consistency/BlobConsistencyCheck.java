@@ -125,28 +125,26 @@ public class BlobConsistencyCheck {
                 String userName = cmdLine.getOptionValue("u");
                 try {
                     mailboxId[0] = Integer.parseInt(userName);
-                    mboxGroupId[0] = mailboxId[0] % 100;
-                    if (mboxGroupId[0] == 0) mboxGroupId[0] = 100;
                 }
                 catch (NumberFormatException e) { } // ignore
-                if (mailboxId[0] == -1) {
-                    System.out.println("Looking up user: " + userName);
-                    Provisioning p = Provisioning.getInstance();
-                    Account acct = p.getAccount(userName);
-                    if (acct == null) {
-                        System.out.println("ERROR: " + userName + " not found!");
-                        return;
-                    }
-                    String uuid = acct.getId();
-                    if (!userName.equals(uuid)) {
-                        System.out.println(userName + ": resolves to " + uuid);
-                    }
-                    Connection c = null;
-                    try {
-                        c = DriverManager.getConnection(
-                                ReportGenerator.JDBC_URL + "zimbra",
-                                ZIMBRA_USER, mysqlPasswd);
-                        StatementExecutor e = new StatementExecutor(c);
+                Connection c = null;
+                try {
+                    c = DriverManager.getConnection(
+                            ReportGenerator.JDBC_URL + "zimbra",
+                            ZIMBRA_USER, mysqlPasswd);
+                    StatementExecutor e = new StatementExecutor(c);
+                    if (mailboxId[0] == -1) {
+                        System.out.println("Looking up user: " + userName);
+                        Provisioning p = Provisioning.getInstance();
+                        Account acct = p.getAccount(userName);
+                        if (acct == null) {
+                            System.out.println("ERROR: " + userName + " not found!");
+                            System.exit(1);
+                        }
+                        String uuid = acct.getId();
+                        if (!userName.equals(uuid)) {
+                            System.out.println(userName + ": resolves to " + uuid);
+                        }
                         e.query("SELECT id, group_id FROM mailbox where account_id = ?",
                                 new Object[] { uuid }, new ObjectMapper() {
                             public void mapRow(ResultSet rs) throws SQLException {
@@ -154,10 +152,20 @@ public class BlobConsistencyCheck {
                                 mboxGroupId[0] = rs.getInt(2);
                             }
                         });
+                    } else {
+                        System.out.println(
+                                "Validating mailbox id: " + mailboxId[0]);
+                        Object r = e.query("SELECT group_id FROM mailbox where id = ?",
+                                new Object[] { mailboxId[0] });
+                        if (r == null) {
+                            System.out.println("ERROR: mbox " + mailboxId[0] + " not found");
+                            System.exit(1);
+                        }
+                        mboxGroupId[0] = ((Number) r).intValue();
                     }
-                    finally {
-                        if (c != null) c.close();
-                    }
+                }
+                finally {
+                    if (c != null) c.close();
                 }
             }
             // generate report
