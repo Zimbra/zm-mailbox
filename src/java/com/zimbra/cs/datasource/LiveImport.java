@@ -61,32 +61,30 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class LiveImport extends MailItemImport {
+    private Session session;
     private JDAVMailStore store;
 
     public LiveImport(DataSource ds) throws ServiceException {
         super(ds);
-        store = new JDAVMailStore(getSession(ds), null);
-
-    }
-    
-    private static Session getSession(DataSource ds) {
+        
         boolean debug = Boolean.getBoolean("ZimbraJavamailDebug") ||
             LC.javamail_imap_debug.booleanValue() || ds.isDebugTraceEnabled();
         Long timeout = LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
         Properties props = new Properties();
-
-        if (timeout > 0) {
-            props.setProperty("mail.davmail.connectiontimeout", timeout.toString());
-            props.setProperty("mail.davail.timeout", timeout.toString());
-        }
+    
         if (debug)
             props.setProperty("mail.debug", "true");
-        Session session = Session.getInstance(props);
+        props.setProperty("mail.davmail.deletetotrash", "false");
+        if (timeout > 0) {
+            props.setProperty("mail.davmail.connectiontimeout", timeout.toString());
+            props.setProperty("mail.davmail.timeout", timeout.toString());
+        }
+        session = Session.getInstance(props);
         if (debug)
             session.setDebug(true);
-        return session;
+        store = new JDAVMailStore(session, null);
     }
-
+    
     public synchronized void test() throws ServiceException {
         DataSource ds = getDataSource();
         try {
@@ -388,6 +386,7 @@ public class LiveImport extends MailItemImport {
         Map<Integer, DataSourceItem> dsMsgsById = new HashMap<Integer,
             DataSourceItem>();
         Set<Integer> localIds = new HashSet<Integer>();
+        int flagBitmasks = 0;
         Message[] msgArray = remoteFolder.getMessages();
         int numAddedLocally = 0;
         int numAddedRemotely = 0;
@@ -396,9 +395,15 @@ public class LiveImport extends MailItemImport {
         int numMatched = 0;
         int numMoved = 0;
         int numUpdated = 0;
+        final int[] FLAG_BITMASKS = {
+            Flag.BITMASK_DRAFT,
+            Flag.BITMASK_UNREAD
+        };
 
         ZimbraLog.datasource.debug("Found %d messages in %s", msgArray.length,
             remoteFolder.getFullName());
+        for (int flag : FLAG_BITMASKS)
+            flagBitmasks |= flag;
         for (DataSourceItem dsMsg : dsMsgs)
             dsMsgsById.put(dsMsg.itemId, dsMsg);
         localIds.addAll(mbox.listItemIds(null, MailItem.TYPE_MESSAGE, folderId));
@@ -425,9 +430,9 @@ public class LiveImport extends MailItemImport {
                             remoteDate.getTime(), mbox.attachmentsIndexingEnabled()),
                             folderId, remoteFlags);
                     if (localMsg != null) {
-                        ld = new LiveData(ds, localMsg.getId(),
-                            remoteMsg.getMessageID(), localMsg.getChangeDate(),
-                            remoteDate.getTime(), remoteFlags);
+                        ld = new LiveData(ds, localMsg.getId(), folderId,
+                            localMsg.getChangeDate(), remoteMsg.getMessageID(),
+                            remoteFolder.getUID(), remoteDate.getTime(), remoteFlags);
                         try {
                             ld.add();
                         } catch (Exception ee) {
@@ -450,42 +455,39 @@ public class LiveImport extends MailItemImport {
                     continue;
                 }
                 
-                int localFlags = 0;
-                boolean localModify = localMsg.getChangeDate() > ld.getLocalDate();
+                int localFlags = localMsg.getFlagBitmask();
                 int newFlags = localFlags;
-                int trackedFlags = ld.getFlags();
+                int trackedFlags = ld.getRemoteFlags();
+                int newTrackedFlags = trackedFlags;
                 boolean updated = false;
-                final int[] REMOTE_FLAG_BITMASKS = {
-                    Flag.BITMASK_DRAFT,
-                    Flag.BITMASK_UNREAD
-                };
     
-                for (int flag : REMOTE_FLAG_BITMASKS)
-                    localFlags |= flag;
-                localFlags = localMsg.getFlagBitmask() & localFlags;
-                for (int flag : REMOTE_FLAG_BITMASKS) {
+                for (int flag : FLAG_BITMASKS) {
                     if ((remoteFlags & flag) != (trackedFlags & flag))
                         newFlags = (remoteFlags & flag) == 0 ?
-                            localFlags & ~flag : localFlags | flag;
+                            newFlags & ~flag : newFlags | flag;
+                    newTrackedFlags = (remoteFlags & flag) == 0 ?
+                        newTrackedFlags & ~flag : newTrackedFlags | flag;
                 }
                 if (newFlags != localFlags) {
                     mbox.setTags(octxt, localId, MailItem.TYPE_MESSAGE,
-                        newFlags, MailItem.TAG_UNCHANGED);
+                        localFlags = newFlags, MailItem.TAG_UNCHANGED);
                     updated = true;
                 }
-                if ((newFlags & Flag.BITMASK_UNREAD) !=
-                    (remoteFlags & Flag.BITMASK_UNREAD)) {
-                    setFlags(remoteMsg, newFlags);
+                newFlags = remoteFlags;
+                for (int flag : FLAG_BITMASKS) {
+                    if ((localFlags & flag) != (trackedFlags & flag))
+                        newFlags = (localFlags & flag) == 0 ?
+                            newFlags & ~flag : newFlags | flag;
+                    newTrackedFlags = (localFlags & flag) == 0 ?
+                        newTrackedFlags & ~flag : newTrackedFlags | flag;
+                }
+                if (newFlags != remoteFlags) {
+                    setRemoteFlags(remoteMsg, newFlags);
                     updated = true;
                 }
-                if (newFlags != trackedFlags) {
-                    ld.setFlags(newFlags);
+                if (newTrackedFlags != trackedFlags) {
+                    ld.setRemoteFlags(newFlags);
                     updated = true;
-                }
-                if (updated) {
-                    ld.setDates(localMsg.getChangeDate(),
-                        remoteMsg.getReceivedDate().getTime());
-                    ld.update();
                 }
                 if (localIds.contains(localId)) {
                     localIds.remove(localId);
@@ -499,18 +501,24 @@ public class LiveImport extends MailItemImport {
                     } else {
                         numMatched++;
                     }
+                } else if (ld.getRemoteFolderId().equals(remoteFolder.getUID())) {
+                    ZimbraLog.datasource.debug("Message was moved locally. Deleting remote copy with UID %s.",
+                        remoteMsg.getMessageID());
+                    remoteMsg.setFlag(Flags.Flag.DELETED, true);
+                    numDeletedRemotely++;
                 } else {
-                    if (localModify) {
-                        remoteMsg.setFlag(Flags.Flag.DELETED, true);
-                        ZimbraLog.datasource.debug("Message was moved locally. Deleting remote copy with UID %s.",
-                            remoteMsg.getMessageID());
-                    } else {
-                        mbox.move(octxt, ld.getDataSourceItem().itemId,
-                            MailItem.TYPE_MESSAGE, folderId);
-                        ZimbraLog.datasource.debug("Message with UID %s was moved remotely. Deleting local copy.",
-                            remoteMsg.getMessageID());
-                    }
+                    ZimbraLog.datasource.debug("Message with UID %s was moved remotely. Deleting local copy.",
+                        remoteMsg.getMessageID());
+                    mbox.move(octxt, ld.getDataSourceItem().itemId,
+                        MailItem.TYPE_MESSAGE, folderId);
+                    ld.setFolderIds(folderId, remoteFolder.getUID());
                     numMoved++;
+                    updated = true;
+                }
+                if (updated) {
+                    ld.setDates(localMsg.getChangeDate(),
+                        remoteMsg.getReceivedDate().getTime());
+                    ld.update();
                 }
             } catch (Exception e) {
                 ZimbraLog.datasource.error("Error creating/modifying local copy of new remote message %s.",
@@ -522,6 +530,8 @@ public class LiveImport extends MailItemImport {
             try {
                 LiveData ld = null;
                 com.zimbra.cs.mailbox.Message localMsg = mbox.getMessageById(octxt, localId);
+                Date remoteDate;
+                JDAVMailMessage remoteMsg = null;
                 
                 try {
                     ld = new LiveData(ds, localId);
@@ -529,24 +539,24 @@ public class LiveImport extends MailItemImport {
                 }
                 if (ld == null) {
                     MimeMessage mimeMsg = localMsg.getMimeMessage(false);
+                    String[] newUids;
                     
                     ZimbraLog.datasource.debug("Found new local message %d. Creating remote copy.",
                         localId);
-                    setFlags(mimeMsg, localMsg.getFlagBitmask());
-                    
-                    String[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] {
+                    setRemoteFlags(mimeMsg, localMsg.getFlagBitmask());
+                    newUids = remoteFolder.appendUIDMessages(new MimeMessage[] {
                         mimeMsg });
-                    JDAVMailMessage remoteMsg = (JDAVMailMessage)remoteFolder.getMessage(remoteFolder.getMessageCount());
-                    Date date = remoteMsg.getReceivedDate();
-    
-                    if (date == null)
-                        date = new Date(localMsg.getDate());
-                    ld = new LiveData(ds, localMsg.getId(),
-                        newUids[0], localMsg.getChangeDate(), date.getTime(),
+                    remoteMsg = (JDAVMailMessage)remoteFolder.getMessage(remoteFolder.getMessageCount());
+                    remoteDate = remoteMsg.getReceivedDate();
+                    if (remoteDate == null)
+                        remoteDate = new Date(localMsg.getDate());
+                    ld = new LiveData(ds, localMsg.getId(), folderId,
+                        localMsg.getChangeDate(), newUids[0],
+                        remoteFolder.getUID(), remoteDate.getTime(),
                         getZimbraFlags(remoteMsg));
                     try {
                         ld.add();
-                    } catch (Exception ee) {
+                    } catch (Exception e) {
                         ld.delete();
                         ld.add();
                     }
@@ -554,26 +564,57 @@ public class LiveImport extends MailItemImport {
                 } else {
                     String remoteId = ld.getDataSourceItem().remoteId;
 
-                    if (localMsg.getChangeDate() > ld.getLocalDate()) {
-                        if (folderId != Mailbox.ID_FOLDER_TRASH) {
-                            MimeMessage mimeMsg = localMsg.getMimeMessage(false);
-                            
-                            // cannot move remote msg so recreate instead
-                            ZimbraLog.datasource.debug("Message was moved locally. Recreating remote copy from UID %s.",
-                                remoteId);
-                            setFlags(mimeMsg, localMsg.getFlagBitmask());
-                            
-                            remoteFolder.appendUIDMessages(new MimeMessage[] {
-                                mimeMsg });
-                            ld.setDates(localMsg.getChangeDate(), ld.getRemoteDate());
-                            ld.update();
-                        }
-                    } else {
-                        ZimbraLog.datasource.debug("Message %s was deleted remotely. Deleting local copy.",
+                    if (ld.getRemoteFolderId().equals(remoteFolder.getUID())) {
+                        ZimbraLog.datasource.debug("Message with UID %s was deleted remotely. Deleting local copy.",
                             remoteId);
                         mbox.delete(octxt, localId, MailItem.TYPE_MESSAGE);
                         ld.delete();
                         numDeletedLocally++;
+                    } else {
+                        for (Folder folder : remoteFolders) {
+                            JDAVMailFolder oldFolder = (JDAVMailFolder)folder;
+                            
+                            if (oldFolder.getUID().equals(ld.getRemoteFolderId())) {
+                                if (!oldFolder.isOpen())
+                                    oldFolder.open(Folder.READ_WRITE);
+                                for (int i = 1; i <= oldFolder.getMessageCount(); i++) {
+                                    JDAVMailMessage oldMsg = (JDAVMailMessage)oldFolder.getMessage(i);
+                                    
+                                    if (oldMsg.getMessageID().equals(ld.getDataSourceItem().remoteId)) {
+                                        remoteMsg = oldMsg;
+                                        break;
+                                    }
+                                }
+                                oldFolder.close(false);
+                                break;
+                            }
+                        }
+                        if (remoteMsg == null) {
+                            MimeMessage mimeMsg = localMsg.getMimeMessage(false);
+                            
+                            // cannot move remote msg so recreate instead
+                            ZimbraLog.datasource.debug("Message was moved locally and removed remotely. Recreating remote copy from UID %s.",
+                                remoteId);
+                            setRemoteFlags(mimeMsg, localMsg.getFlagBitmask());
+                            remoteFolder.appendUIDMessages(new MimeMessage[] {
+                                mimeMsg });
+                            remoteMsg = (JDAVMailMessage)remoteFolder.getMessage(remoteFolder.getMessageCount());
+                            remoteDate = remoteMsg.getReceivedDate();
+                            if (remoteDate == null)
+                                remoteDate = new Date(localMsg.getDate());
+                            ld.setDates(localMsg.getChangeDate(), remoteDate.getTime());
+                        } else {
+                            ZimbraLog.datasource.debug("Message was moved locally. Moving UID %s remotely.",
+                                remoteId);
+                            remoteFolder.moveMessages(new JDAVMailMessage[] {
+                                remoteMsg });
+                            setRemoteFlags(remoteMsg, localMsg.getFlagBitmask());
+                            ld.setDates(localMsg.getChangeDate(), ld.getRemoteDate());
+                        }
+                        ld.setFolderIds(localMsg.getFolderId(),
+                            remoteFolder.getUID());
+                        ld.setRemoteFlags(localMsg.getFlagBitmask() & flagBitmasks);
+                        ld.update();
                     }
                 }
             } catch (Exception e) {
@@ -770,7 +811,8 @@ public class LiveImport extends MailItemImport {
                     LiveData.getParsedContact(remoteContact, null),
                     folderTracker.itemId, null);
                 LiveData ld = new LiveData(ds, localContact.getId(),
-                    remoteContact.getUID(), localContact.getChangeDate(),
+                    localFolder.getFolderId(), localContact.getChangeDate(),
+                    remoteContact.getUID(), contactFolder.getURI().toString(),
                     remoteContact.getModifiedDate().getTime(), 0);
 
                 try {
@@ -798,7 +840,8 @@ public class LiveImport extends MailItemImport {
                     LiveData.getParsedContact(remoteGroup, null),
                     folderTracker.itemId, null);
                 LiveData ld = new LiveData(ds, localGroup.getId(),
-                    remoteGroup.getUID(), localGroup.getChangeDate(),
+                    localFolder.getFolderId(), localGroup.getChangeDate(),
+                    remoteGroup.getUID(), contactFolder.getURI().toString(),
                     remoteGroup.getModifiedDate().getTime(), 0);
     
                 ZimbraLog.datasource.debug("Found new remote group %s. Creating local copy.",
@@ -833,22 +876,26 @@ public class LiveImport extends MailItemImport {
                 } else {
                     JDAVContact remoteContact = LiveData.getJDAVContact(localContact);
                     String[] newUids = null;
+                    String nickName = remoteContact.getField(JDAVContact.Fields.nickname) + '-';
                     
                     ZimbraLog.datasource.debug("Found new local contact %s. Creating remote copy.",
                         remoteContact.getName());
-                    for (int i = 0; i < 5; i++) {
+                    for (int i = 1; i < 5; i++) {
                         try {
                             newUids = contactFolder.appendUIDContacts(new JDAVContact[] { remoteContact } );
                             break;
                         } catch (Exception e) {
-                            String s = remoteContact.getField(JDAVContact.Fields.nickname) + '-';
-    
-                            remoteContact.setField(JDAVContact.Fields.nickname, s);
+                            remoteContact.setField(JDAVContact.Fields.nickname,
+                                nickName + '-' + Integer.toString(i));
                         }
                     }
-                    if (newUids != null) {
+                    if (newUids == null) {
+                        ZimbraLog.datasource.error("Unable to create remote ontact %s.",
+                            remoteContact.getName());
+                    } else {
                         LiveData ld = new LiveData(ds, localContact.getId(),
-                            newUids[0], localContact.getChangeDate(),
+                            localFolder.getFolderId(), localContact.getChangeDate(),
+                            newUids[0], contactFolder.getURI().toString(),
                             remoteContact.getModifiedDate().getTime(), 0);
 
                         try {
@@ -876,7 +923,7 @@ public class LiveImport extends MailItemImport {
             numDeletedLocally, numAddedRemotely, numDeletedRemotely);
     }
     
-    private void setFlags(Message msg, int newFlags) throws MessagingException {
+    private void setRemoteFlags(Message msg, int newFlags) throws MessagingException {
         Flags remoteFlags = msg.getFlags();
         
         try {

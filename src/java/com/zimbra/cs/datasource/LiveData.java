@@ -34,13 +34,17 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mime.ParsedContact;
 
 public class LiveData {
-    private int flags;
+    private int localFolderId;
     private long localDate, remoteDate;
+    private int remoteFlags;
+    private String remoteFolderId;
     private DataSource ds;
     private DataSourceItem dsi;
     private static final String METADATA_KEY_DATE_LOCAL = "dl";
     private static final String METADATA_KEY_DATE_REMOTE = "dr";
-    private static final String METADATA_KEY_FLAGS = "f";
+    private static final String METADATA_KEY_FLAGS_REMOTE = "fgr";
+    private static final String METADATA_KEY_FOLDER_LOCAL = "fl";
+    private static final String METADATA_KEY_FOLDER_REMOTE = "fr";
     
     public LiveData(DataSource ds, int itemID) throws ServiceException {
         setDataSourceItem(ds, DbDataSource.getMapping(ds, itemID));
@@ -50,11 +54,13 @@ public class LiveData {
         setDataSourceItem(ds, DbDataSource.getReverseMapping(ds, remoteID));
     }
     
-    public LiveData(DataSource ds, int itemID, String uid, long localDate,
-        long remoteDate, int flags) throws ServiceException {
-        setDataSourceItem(ds, new DataSourceItem(itemID, uid, new Metadata()));
+    public LiveData(DataSource ds, int localId, int localFolderId,
+        long localDate, String remoteId, String remoteFolderId, long remoteDate,
+        int remoteFlags) throws ServiceException {
+        setDataSourceItem(ds, new DataSourceItem(localId, remoteId, new Metadata()));
         setDates(localDate, remoteDate);
-        setFlags(flags);
+        setFolderIds(localFolderId, remoteFolderId);
+        setRemoteFlags(remoteFlags);
     }
     
     public LiveData(DataSource ds, DataSourceItem dsi) throws ServiceException {
@@ -63,11 +69,15 @@ public class LiveData {
     
     DataSourceItem getDataSourceItem() { return dsi; }
     
-    int getFlags() { return flags; }
-    
+    int getLocalFolderId() { return localFolderId; }
+
     long getLocalDate() { return localDate; }
     
     long getRemoteDate() { return remoteDate; }
+
+    int getRemoteFlags() { return remoteFlags; }
+    
+    String getRemoteFolderId() { return remoteFolderId; }
 
     public void setDates(long localDate, long remoteDate) throws ServiceException {
         this.localDate = localDate;
@@ -76,9 +86,16 @@ public class LiveData {
         dsi.md.put(METADATA_KEY_DATE_REMOTE, Long.toString(remoteDate));
     }
     
-    public void setFlags(int flags) throws ServiceException {
-        this.flags = flags;
-        dsi.md.put(METADATA_KEY_FLAGS, Integer.toString(flags));
+    public void setFolderIds(int localFolderId, String remoteFolderId) throws ServiceException {
+        this.localFolderId = localFolderId;
+        dsi.md.put(METADATA_KEY_FOLDER_LOCAL, Integer.toString(localFolderId));
+        this.remoteFolderId = remoteFolderId;
+        dsi.md.put(METADATA_KEY_FOLDER_REMOTE, remoteFolderId);
+    }
+
+    public void setRemoteFlags(int remoteFlags) throws ServiceException {
+        this.remoteFlags = remoteFlags;
+        dsi.md.put(METADATA_KEY_FLAGS_REMOTE, Integer.toString(remoteFlags));
     }
 
     public void add() throws ServiceException {
@@ -106,9 +123,11 @@ public class LiveData {
             throw ServiceException.RESOURCE_UNREACHABLE("Datasource item not found", null);
         this.ds = ds;
         this.dsi = dsi;
-        flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS, 0);
         localDate = dsi.md.getLong(METADATA_KEY_DATE_LOCAL, 0);
+        localFolderId = (int)dsi.md.getLong(METADATA_KEY_FOLDER_LOCAL, -1);
         remoteDate = dsi.md.getLong(METADATA_KEY_DATE_REMOTE, 0);
+        remoteFlags = (int)dsi.md.getLong(METADATA_KEY_FLAGS_REMOTE, 0);
+        remoteFolderId = dsi.md.get(METADATA_KEY_FOLDER_REMOTE, "");
     }
     
     public static JDAVContact getJDAVContact(Contact contact) throws ServiceException {
