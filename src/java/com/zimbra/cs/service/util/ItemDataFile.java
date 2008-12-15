@@ -227,7 +227,6 @@ public class ItemDataFile {
             te = new TarEntry(path + ".meta");
             te.setGroupName(MailItem.getNameForType(id.ud.type));
             te.setMajorDeviceId(id.ud.type);
-            te.setMinorDeviceId(id.ud.id);
             te.setModTime(mf.lastModified());
             te.setSize(meta.length);
             tos.putNextEntry(te);
@@ -241,7 +240,6 @@ public class ItemDataFile {
             te = new TarEntry(path + ".meta");
             te.setGroupName(MailItem.getNameForType(id.ud.type));
             te.setMajorDeviceId(id.ud.type);
-            te.setMinorDeviceId(id.ud.id);
             te.setModTime(mf.lastModified());
             te.setSize(f.length());
             tos.putNextEntry(te);
