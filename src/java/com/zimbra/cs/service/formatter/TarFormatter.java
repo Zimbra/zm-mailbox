@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.formatter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -140,7 +139,8 @@ public class TarFormatter extends Formatter {
                 filename = context.targetMailbox.getAccountId() + '.' +
                     df.format(date).replace('/', '-') + sdf.format(date);
             }
-            filename += ".tgz";
+            if (!filename.endsWith(".tgz"))
+                filename += ".tgz";
             context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
                 "; filename=" + HttpUtil.encodeFilename(context.req, filename));
             context.resp.setContentType("application/x-tar-compressed");
@@ -184,9 +184,11 @@ public class TarFormatter extends Formatter {
                 if (context.target instanceof Folder) {
                     Folder f = (Folder)context.target;
                     
-                    if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
+                    if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
+                        conversations = false;
                         query = "under:\"" + f.getPath() + "\"" +
-                            (query == null ? "" : " " + query); 
+                            (query == null ? "" : " " + query);
+                    }
                 }
                 if (query == null || query.equals("")) {
                     SortPath sp = new SortPath();
@@ -338,7 +340,7 @@ public class TarFormatter extends Formatter {
             cnts.put(fid, cnt);
             cnt /= BATCH;
             if (cnt > 0)
-                fldr = fldr + '!' + cnt + '/'; 
+                fldr = fldr + '!' + cnt; 
         }
         try {
             String path = getEntryName(mi, fldr, name, ext, names);
@@ -359,7 +361,6 @@ public class TarFormatter extends Formatter {
             }
             entry.setGroupName(MailItem.getNameForType(mi));
             entry.setMajorDeviceId(mi.getType());
-            entry.setMinorDeviceId(mi.getId());
             entry.setModTime(mi.getChangeDate());
             entry.setSize(meta.length);
             if (tos == null) {
@@ -490,11 +491,12 @@ public class TarFormatter extends Formatter {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
                 for (byte type : searchTypes) {
                     if (type == MailItem.TYPE_CONVERSATION) {
-                        byte[] newTypes = new byte[types.length() - 1];
+                        int idx = 0;
+                        byte[] newTypes = new byte[searchTypes.length - 1];
     
                         for (byte t : searchTypes)
                             if (t != MailItem.TYPE_CONVERSATION)
-                                newTypes[newTypes.length] = t;
+                                newTypes[idx++] = t;
                         searchTypes = newTypes;
                         break;
                     }
@@ -584,7 +586,6 @@ public class TarFormatter extends Formatter {
                     if (id == null) {
                         addError(errs, te.getName(), "item content missing meta");
                     } else if (id.ud.type != te.getMajorDeviceId() ||
-                        id.ud.id != te.getMinorDeviceId() ||
                         (id.ud.getBlobDigest() != null && id.ud.size !=
                         te.getSize())) {
                         addError(errs, te.getName(),
