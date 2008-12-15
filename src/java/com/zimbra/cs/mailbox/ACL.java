@@ -98,6 +98,7 @@ public class ACL {
     static Map<String, Object> getAnonAttrs() {
         Map<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_uid, "public");
+        attrs.put(Provisioning.A_zimbraId, GUID_PUBLIC);
         return attrs;
     }
     
