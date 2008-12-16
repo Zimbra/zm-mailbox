@@ -463,6 +463,11 @@ public abstract class Provisioning {
     public static final String A_zimbraDomainRenameInfo = "zimbraDomainRenameInfo";
     
     /**
+     * for alias domain
+     */
+    public static final String A_zimbraDomainAliasTargetId = "zimbraDomainAliasTargetId";
+    
+    /**
      * Hostname visited by the client to domain name mapping, in order to make
      * virtual hosting work.
      */
@@ -1684,6 +1689,29 @@ public abstract class Provisioning {
                 if (cos != null) acct.setCachedData(DATA_COS, cos);
         }
         return cos;
+    }
+    
+    public String getEmailAddrByDomainAlias(String emailAddress) throws ServiceException {
+        String addr = null;
+        
+        String parts[] = emailAddress.split("@");
+        if (parts.length == 2) {
+            Domain domain = get(DomainBy.name, parts[1]);
+            if (domain != null) {
+                String domainType = domain.getAttr(A_zimbraDomainType);
+                if (DOMAIN_TYPE_ALIAS.equals(domainType)) {
+                    String targetDomainId = domain.getAttr(A_zimbraDomainAliasTargetId);
+                    if (targetDomainId != null) {
+                        domain = get(DomainBy.id, targetDomainId);  
+                        if (domain != null) {
+                            addr = parts[0] + "@" + domain.getName();
+                        }
+                    }
+                }
+            }
+        }
+        
+        return addr;
     }
     
     /**
