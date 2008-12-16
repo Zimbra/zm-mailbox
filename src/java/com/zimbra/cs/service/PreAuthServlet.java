@@ -215,7 +215,8 @@ public class PreAuthServlet extends ZimbraServlet {
 
     private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ServiceException {
         boolean isAdmin = authToken.isDomainAdmin() || authToken.isAdmin();
-        authToken.encode(resp, isAdmin);
+        boolean secureCookie = req.getScheme().equals("https");
+        authToken.encode(resp, isAdmin, secureCookie);
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
         if (redirectURL != null) {

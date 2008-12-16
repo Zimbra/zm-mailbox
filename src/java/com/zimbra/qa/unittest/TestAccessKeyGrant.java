@@ -156,7 +156,7 @@ public class TestAccessKeyGrant extends TestCase {
         }
 
         @Override
-        public void encode(HttpServletResponse resp, boolean isAdminReq)
+        public void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie)
                 throws ServiceException {
             // TODO Auto-generated method stub
             throw ServiceException.FAILURE("Not implemented", null);
