@@ -24,6 +24,7 @@ import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.MultiTreeMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -34,6 +35,7 @@ public class ContactRankings {
 	private static final String KEY_NAME = "n";
 	private static final String KEY_FOLDER = "o";
 	private static final String KEY_RANKING = "r";
+	private static final String KEY_LAST_ACCESSED = "t";
 	
 	private int mTableSize;
 	private String mAccountId;
@@ -56,6 +58,7 @@ public class ContactRankings {
 		rankings.writeToDatabase();
 	}
 	public synchronized void increment(String email, String displayName) {
+		long now = System.currentTimeMillis();
 		ContactEntry entry = mEntryMap.getFirst(email.toLowerCase());
 		if (entry == null) {
 			entry = new ContactEntry();
@@ -63,6 +66,7 @@ public class ContactRankings {
 			entry.mRanking = 1;
 			entry.setName(displayName);
 			entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
+			entry.mLastAccessed = now;
 			updateContactInfo(entry);
 			
 			if (mEntrySet.size() < mTableSize)
@@ -71,16 +75,19 @@ public class ContactRankings {
 				while (mEntrySet.size() > mTableSize)
 					remove(mEntrySet.first());
 				ContactEntry firstEntry = mEntrySet.first();
-				if (firstEntry.mRanking == 0) {
+				if (firstEntry.mRanking <= 0) {
 					remove(firstEntry);
 					add(entry);
 				} else {
-					for (ContactEntry e : mEntrySet)
-						e.mRanking--;
+					for (ContactEntry e : mEntrySet) {
+						int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
+						e.mRanking -= weeksOld;
+					}
 				}
 			}
 		} else {
 			entry.mRanking++;
+			entry.mLastAccessed = now;
 			if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
 					entry.mDisplayName.length() == 0)
 				updateContactInfo(entry);
@@ -90,6 +97,7 @@ public class ContactRankings {
 		ContactAutoComplete auto = new ContactAutoComplete(mAccountId);
 		ContactEntry storedContact = null;
 		try {
+			auto.setIncludeRankingResults(false);
 			ContactAutoComplete.AutoCompleteResult res = auto.query(entry.mEmail, null, 1);
 			if (res.entries.size() == 0)
 				return;
@@ -117,6 +125,7 @@ public class ContactRankings {
 			if (k.startsWith(str)) {
 				for (ContactEntry entry : mEntryMap.get(k)) {
 					if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
+							folders == null ||
 							folders.contains(entry.mFolderId)) {
 						entries.add(entry);
 						ZimbraLog.gal.debug("adding "+entry.toString());
@@ -147,6 +156,8 @@ public class ContactRankings {
         		entry.mFolderId = num.intValue();
         		num = (Long)m.get(KEY_RANKING);
         		entry.mRanking = num.intValue();
+        		num = (Long)m.get(KEY_LAST_ACCESSED);
+        		entry.mLastAccessed = num.longValue();
         		add(entry);
         	}
         }
@@ -160,6 +171,7 @@ public class ContactRankings {
 			m.put(KEY_NAME, entry.mDisplayName);
 			m.put(KEY_FOLDER, entry.mFolderId);
 			m.put(KEY_RANKING, entry.mRanking);
+			m.put(KEY_LAST_ACCESSED, entry.mLastAccessed);
 			config.put(entry.mEmail, m);
 		}
 		mbox.setConfig(null, CONFIG_KEY_CONTACT_RANKINGS, config);

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -72,6 +73,8 @@ public class ContactAutoComplete {
         ItemId mId;
         int mFolderId;
         int mRanking;
+        long mLastAccessed;
+        
         public String getEmail() {
         	if (mDlist != null)
         		return mDlist;
@@ -126,6 +129,7 @@ public class ContactAutoComplete {
         	else
         		buf.append(getEmail());
         	buf.append(" (").append(mFolderId).append(")");
+        	buf.append(" ").append(new Date(mLastAccessed));
         }
 	}
     
@@ -134,6 +138,7 @@ public class ContactAutoComplete {
     
     private String mAccountId;
     private boolean mIncludeGal;
+    private boolean mIncludeRankingResults;
     
     private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
     
@@ -166,6 +171,7 @@ public class ContactAutoComplete {
 		mAccountId = accountId;
 		if (mEmailKeys == null)
 			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
+		mIncludeRankingResults = true;
 	}
 	
 	public boolean includeGal() {
@@ -173,6 +179,9 @@ public class ContactAutoComplete {
 	}
 	public void setIncludeGal(boolean includeGal) {
 		mIncludeGal = includeGal;
+	}
+	public void setIncludeRankingResults(boolean includeRankingResults) {
+		mIncludeRankingResults = includeRankingResults;
 	}
 	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
@@ -183,7 +192,8 @@ public class ContactAutoComplete {
 		if (folders == null)
 			folders = mDefaultFolders;
 		
-		queryRankingTable(str, folders, limit, result);
+		if (mIncludeRankingResults)
+			queryRankingTable(str, folders, limit, result);
 		if (result.entries.size() >= limit)
 			return result;
 		
