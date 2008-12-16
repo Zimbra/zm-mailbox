@@ -98,7 +98,11 @@ public class InitNotebook extends AdminDocumentHandler {
     	if (username == null)
     		username = entry.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 
-    	if (username != null && prov.get(AccountBy.name, username) == null)
-    		prov.createAccount(username, password, null);
+    	if (username != null && prov.get(AccountBy.name, username) == null) {
+    	    Map<String,Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
+    		prov.createAccount(username, password, attrs);
+    	}
 	}
 }
