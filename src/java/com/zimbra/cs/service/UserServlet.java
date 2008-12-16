@@ -323,7 +323,8 @@ public class UserServlet extends ZimbraServlet {
                     
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {
-                        context.authToken.encode(context.resp, isAdminRequest);
+                        boolean secureCookie = context.req.getScheme().equals("https");
+                        context.authToken.encode(context.resp, isAdminRequest, secureCookie);
                     }
                 }
                 // always return

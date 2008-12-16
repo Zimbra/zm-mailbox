@@ -139,7 +139,7 @@ public abstract class TestACL extends TestCase {
         }
 
         @Override
-        public void encode(HttpServletResponse resp, boolean isAdminReq)
+        public void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie)
                 throws ServiceException {
             // TODO Auto-generated method stub
 
