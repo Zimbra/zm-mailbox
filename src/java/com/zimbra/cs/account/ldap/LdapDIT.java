@@ -497,6 +497,10 @@ public class LdapDIT {
      *   zimlet
      * ==========
      */    
+    public String zimletBaseDN() {
+        return BASE_DN_ZIMLET;
+    }
+    
     public String zimletNameToDN(String name) {
         return NAMING_RDN_ATTR_ZIMLET + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ZIMLET;
     }

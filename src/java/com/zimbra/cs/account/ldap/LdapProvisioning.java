@@ -3491,7 +3491,7 @@ public class LdapProvisioning extends Provisioning {
     	ZimbraLdapContext zlc = null;
     	try {
     		zlc = new ZimbraLdapContext();
-    		NamingEnumeration ne = zlc.searchDir(mDIT.configBranchBaseDN(), LdapFilter.allZimlets(), sSubtreeSC);
+    		NamingEnumeration ne = zlc.searchDir(mDIT.zimletBaseDN(), LdapFilter.allZimlets(), sSubtreeSC);
     		while (ne.hasMore()) {
     			SearchResult sr = (SearchResult) ne.next();
              result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes(), this));
@@ -5896,7 +5896,7 @@ public class LdapProvisioning extends Provisioning {
         // zimlet
         printFilter("all zimlets",
                     "general",
-                    mDIT.configBranchBaseDN(),
+                    mDIT.zimletBaseDN(),
                     LdapFilter.allZimlets());
         
     }
@@ -5906,14 +5906,15 @@ public class LdapProvisioning extends Provisioning {
      */
     public static void main(String[] args) throws Exception {
         LdapProvisioning prov = (LdapProvisioning)Provisioning.getInstance();
-        // prov.printFilters();
+        prov.printFilters();
         
-        
+        /*
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         acctAttrs.put("zimbraYahooId", null);
         //  prov.createAccount("u1@phoebe.mac", "test123", acctAttrs);
         Account acct = prov.get(AccountBy.name, "u1@phoebe.mac");
         prov.modifyAttrs(acct, acctAttrs);
+        */
     }
 
 }
