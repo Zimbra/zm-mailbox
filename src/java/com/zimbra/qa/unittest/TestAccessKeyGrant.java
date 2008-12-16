@@ -419,7 +419,7 @@ public class TestAccessKeyGrant extends TestCase {
      * 
      * ready to run the test
      */
-    public void testCalendarGet_Yahoo_accesskey() throws Exception {
+    public void disable_testCalendarGet_Yahoo_accesskey() throws Exception {
         
         HttpClient client = new HttpClient();
         
@@ -440,9 +440,9 @@ public class TestAccessKeyGrant extends TestCase {
     
     /*
      * use zmmailbox to grant guest access:
-     * mbox user1@phoebe.mac> mfg Calendar quest g1@guest.com zzz r
+     * zmmailbox -z -m user1@phoebe.mac mfg Calendar guest g1@guest.com zzz r
      */
-    public void disable_testCalendarGet_guest() throws Exception {
+    public void testCalendarGet_guest() throws Exception {
         
         HttpState initialState = new HttpState();
         
