@@ -5228,7 +5228,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     public synchronized void alterTag(OperationContext octxt, int itemId, byte type, int tagId, boolean addTag) throws ServiceException {
         alterTag(octxt, new int[] { itemId }, type, tagId, addTag, null);
     }
@@ -6117,7 +6117,24 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    public synchronized void setFolderDefaultView(OperationContext octxt, int folderId, byte view) throws ServiceException {
+        SetFolderDefaultView redoRecorder = new SetFolderDefaultView(mId, folderId, view);
 
+        boolean success = false;
+        try {
+            beginTransaction("setFolderDefaultView", octxt, redoRecorder);
+
+            Folder folder = getFolderById(folderId);
+            if (!checkItemChangeID(folder))
+                throw MailServiceException.MODIFY_CONFLICT();
+            folder.setDefaultView(view);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     public synchronized void setFolderUrl(OperationContext octxt, int folderId, String url) throws ServiceException {
         SetFolderUrl redoRecorder = new SetFolderUrl(mId, folderId, url);
 
