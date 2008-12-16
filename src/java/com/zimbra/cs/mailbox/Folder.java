@@ -708,6 +708,25 @@ public class Folder extends MailItem {
         folder.finishCreation(parent);
         return folder;
     }
+    
+    /**
+     * Change the default view of this Folder.  Currently this call is only used during migration to correct a
+     * folder created with wrong view.
+     * 
+     * @param view the new default view of this folder
+     * @throws ServiceException
+     */
+    void setDefaultView(byte view) throws ServiceException {
+        if (!isMutable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+        if (view == mDefaultView)
+            return;
+        markItemModified(Change.MODIFIED_VIEW);
+        mDefaultView = view;
+        saveMetadata();
+    }
 
     /** Sets the remote URL for the folder.  This can point to a remote
      *  calendar (<tt>.ics</tt> file), an RSS feed, etc.  Note that you

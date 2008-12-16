@@ -23,6 +23,7 @@ import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -34,6 +35,7 @@ import com.zimbra.common.util.StringUtil;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -159,11 +161,15 @@ public class ImapSync extends MailItemImport {
 
     private List<Folder> getLocalFolders() {
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
+        List<Folder> mailFolders = new ArrayList<Folder>(folders.size());
+        for (Folder f : folders)
+        	if (f.getDefaultView() == MailItem.TYPE_MESSAGE)
+        		mailFolders.add(f);
         // Reverse order of local folders to ensure that children are
         // processed before parent folders. This avoids problems when
         // deleting folders.
-        Collections.reverse(folders);
-        return folders;
+        Collections.reverse(mailFolders);
+        return mailFolders;
     }
 
     private void syncRemoteFolders(List<ListData> folders) throws ServiceException {
