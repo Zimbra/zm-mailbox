@@ -365,6 +365,29 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return cos;
     }
     
+    public String getEmailAddrByDomainAlias(String emailAddress) throws ServiceException {
+        String addr = null;
+        
+        String parts[] = emailAddress.split("@");
+        if (parts.length == 2) {
+            Domain domain = get(DomainBy.name, parts[1]);
+            if (domain != null) {
+                String domainType = domain.getAttr(A_zimbraDomainType);
+                if (DOMAIN_TYPE_ALIAS.equals(domainType)) {
+                    String targetDomainId = domain.getAttr(A_zimbraDomainAliasTargetId);
+                    if (targetDomainId != null) {
+                        domain = getDomainById(targetDomainId);
+                        if (domain != null) {
+                            addr = parts[0] + "@" + domain.getName();
+                        }
+                    }
+                }
+            }
+        }
+        
+        return addr;
+    }
+    
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
      * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.

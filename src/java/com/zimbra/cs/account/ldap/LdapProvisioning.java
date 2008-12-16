@@ -649,6 +649,23 @@ public class LdapProvisioning extends Provisioning {
      */
     private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
         
+        Account account = getAccountByNameInternal(emailAddress, loadFromMaster);
+        
+        // if not found, see if the domain is an alias domain and if so try to get account by the alias domain target
+        if (account == null) {
+            String addrByDomainAlias = getEmailAddrByDomainAlias(emailAddress);
+            if (addrByDomainAlias != null)
+                account = getAccountByNameInternal(addrByDomainAlias, loadFromMaster);
+        }
+        
+        return account;
+    }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByNameInternal(java.lang.String)
+     */
+    private Account getAccountByNameInternal(String emailAddress, boolean loadFromMaster) throws ServiceException {
+        
         emailAddress = fixupAccountName(emailAddress);
         
         Account account = sAccountCache.getByName(emailAddress);

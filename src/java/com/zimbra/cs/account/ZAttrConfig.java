@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081212-1142 */
+    /* build: 5.0 pshao 20081215-2359 */
 
     /**
      * Zimbra access control list

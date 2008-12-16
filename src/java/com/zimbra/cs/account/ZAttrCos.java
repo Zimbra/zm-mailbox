@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081212-1142 */
+    /* build: 5.0 pshao 20081215-2359 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1614,22 +1614,22 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. Folder id of 0 is
-     * used to include GAL contacts in the response.
+     * contacts when generating auto-complete contact list. If unset all
+     * contact folders in the mailbox will be searched for auto completion.
      *
-     * @return zimbraContactAutoCompleteFolderIds, or "0,7" if unset
+     * @return zimbraContactAutoCompleteFolderIds, or null if unset
      *
      * @since ZCS future
      */
     @ZAttr(id=759)
     public String getContactAutoCompleteFolderIds() {
-        return getAttr(Provisioning.A_zimbraContactAutoCompleteFolderIds, "0,7");
+        return getAttr(Provisioning.A_zimbraContactAutoCompleteFolderIds, null);
     }
 
     /**
      * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. Folder id of 0 is
-     * used to include GAL contacts in the response.
+     * contacts when generating auto-complete contact list. If unset all
+     * contact folders in the mailbox will be searched for auto completion.
      *
      * @param zimbraContactAutoCompleteFolderIds new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1645,8 +1645,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. Folder id of 0 is
-     * used to include GAL contacts in the response.
+     * contacts when generating auto-complete contact list. If unset all
+     * contact folders in the mailbox will be searched for auto completion.
      *
      * @param zimbraContactAutoCompleteFolderIds new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1663,8 +1663,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. Folder id of 0 is
-     * used to include GAL contacts in the response.
+     * contacts when generating auto-complete contact list. If unset all
+     * contact folders in the mailbox will be searched for auto completion.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1679,8 +1679,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. Folder id of 0 is
-     * used to include GAL contacts in the response.
+     * contacts when generating auto-complete contact list. If unset all
+     * contact folders in the mailbox will be searched for auto completion.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

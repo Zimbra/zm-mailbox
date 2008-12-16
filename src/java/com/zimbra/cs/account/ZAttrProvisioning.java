@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081212-1142 */
+    /* build: 5.0 pshao 20081215-2359 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1567,8 +1567,8 @@ public class ZAttrProvisioning {
 
     /**
      * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. Folder id of 0 is
-     * used to include GAL contacts in the response.
+     * contacts when generating auto-complete contact list. If unset all
+     * contact folders in the mailbox will be searched for auto completion.
      *
      * @since ZCS future
      */
@@ -1817,6 +1817,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=300)
     public static final String A_zimbraDomainAdminModifiableAttr = "zimbraDomainAdminModifiableAttr";
+
+    /**
+     * zimbraId of domain alias target
+     */
+    @ZAttr(id=775)
+    public static final String A_zimbraDomainAliasTargetId = "zimbraDomainAliasTargetId";
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes

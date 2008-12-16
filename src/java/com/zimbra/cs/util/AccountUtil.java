@@ -177,6 +177,15 @@ public class AccountUtil {
             if (givenAddress.equalsIgnoreCase(accountAliases[j]))
                 return true;
         }
+        
+        try {
+            String addrByDomainAlias = Provisioning.getInstance().getEmailAddrByDomainAlias(givenAddress);
+            if (addrByDomainAlias != null && addrByDomainAlias.equals(accountAddress))
+                return true;
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("unable to get addr by alias domain" + e);
+        }
+        
         return false;
     }
 

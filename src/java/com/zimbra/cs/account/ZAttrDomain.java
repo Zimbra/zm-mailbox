@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081212-1142 */
+    /* build: 5.0 pshao 20081215-2359 */
 
     /**
      * RFC2256: descriptive information
@@ -1717,6 +1717,68 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetDNSCheckHostname(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSCheckHostname, "");
+        return attrs;
+    }
+
+    /**
+     * zimbraId of domain alias target
+     *
+     * @return zimbraDomainAliasTargetId, or null if unset
+     */
+    @ZAttr(id=775)
+    public String getDomainAliasTargetId() {
+        return getAttr(Provisioning.A_zimbraDomainAliasTargetId, null);
+    }
+
+    /**
+     * zimbraId of domain alias target
+     *
+     * @param zimbraDomainAliasTargetId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=775)
+    public void setDomainAliasTargetId(String zimbraDomainAliasTargetId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, zimbraDomainAliasTargetId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraId of domain alias target
+     *
+     * @param zimbraDomainAliasTargetId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=775)
+    public Map<String,Object> setDomainAliasTargetId(String zimbraDomainAliasTargetId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, zimbraDomainAliasTargetId);
+        return attrs;
+    }
+
+    /**
+     * zimbraId of domain alias target
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=775)
+    public void unsetDomainAliasTargetId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraId of domain alias target
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=775)
+    public Map<String,Object> unsetDomainAliasTargetId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, "");
         return attrs;
     }
 
