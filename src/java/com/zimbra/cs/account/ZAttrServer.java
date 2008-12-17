@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081215-2359 */
+    /* build: 5.0 pshao 20081216-1559 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1726,6 +1726,78 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetClusterType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraClusterType, "");
+        return attrs;
+    }
+
+    /**
+     * convertd URL
+     *
+     * @return zimbraConvertdURL, or null if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=776)
+    public String getConvertdURL() {
+        return getAttr(Provisioning.A_zimbraConvertdURL, null);
+    }
+
+    /**
+     * convertd URL
+     *
+     * @param zimbraConvertdURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=776)
+    public void setConvertdURL(String zimbraConvertdURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertdURL, zimbraConvertdURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * convertd URL
+     *
+     * @param zimbraConvertdURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=776)
+    public Map<String,Object> setConvertdURL(String zimbraConvertdURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertdURL, zimbraConvertdURL);
+        return attrs;
+    }
+
+    /**
+     * convertd URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=776)
+    public void unsetConvertdURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertdURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * convertd URL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=776)
+    public Map<String,Object> unsetConvertdURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertdURL, "");
         return attrs;
     }
 

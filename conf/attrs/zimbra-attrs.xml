@@ -3843,8 +3843,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether configuring external LDAP auth is enabled in admin console</desc>
 </attr>
 
-<attr id="775" name="zimbraDomainAliasTargetId" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="775" name="zimbraDomainAliasTargetId" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.12">
   <desc>zimbraId of domain alias target</desc>
+</attr>
+
+<attr id="776" name="zimbraConvertdURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="future">
+  <desc>convertd URL</desc>
 </attr>
 
 </attrs>

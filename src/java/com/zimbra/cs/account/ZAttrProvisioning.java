@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081215-2359 */
+    /* build: 5.0 pshao 20081216-1559 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1593,6 +1593,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";
 
     /**
+     * convertd URL
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=776)
+    public static final String A_zimbraConvertdURL = "zimbraConvertdURL";
+
+    /**
      * Object classes to add when creating a zimbra cos object.
      *
      * @since ZCS future
@@ -1820,6 +1828,8 @@ public class ZAttrProvisioning {
 
     /**
      * zimbraId of domain alias target
+     *
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=775)
     public static final String A_zimbraDomainAliasTargetId = "zimbraDomainAliasTargetId";

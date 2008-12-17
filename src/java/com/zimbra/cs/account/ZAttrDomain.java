@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081215-2359 */
+    /* build: 5.0 pshao 20081216-1559 */
 
     /**
      * RFC2256: descriptive information
@@ -1724,6 +1724,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraId of domain alias target
      *
      * @return zimbraDomainAliasTargetId, or null if unset
+     *
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=775)
     public String getDomainAliasTargetId() {
@@ -1735,6 +1737,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraDomainAliasTargetId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=775)
     public void setDomainAliasTargetId(String zimbraDomainAliasTargetId) throws com.zimbra.common.service.ServiceException {
@@ -1749,6 +1753,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainAliasTargetId new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=775)
     public Map<String,Object> setDomainAliasTargetId(String zimbraDomainAliasTargetId, Map<String,Object> attrs) {
@@ -1761,6 +1767,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraId of domain alias target
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=775)
     public void unsetDomainAliasTargetId() throws com.zimbra.common.service.ServiceException {
@@ -1774,6 +1782,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
      */
     @ZAttr(id=775)
     public Map<String,Object> unsetDomainAliasTargetId(Map<String,Object> attrs) {
