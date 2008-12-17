@@ -77,7 +77,7 @@ implements LmtpCallback {
         
         private String mMessageId;
         
-        private MimeMessageWithId(String messageId) {
+        private MimeMessageWithId(String messageId) throws MessagingException {
             super(JMSession.getSession());
             mMessageId = messageId;
         }

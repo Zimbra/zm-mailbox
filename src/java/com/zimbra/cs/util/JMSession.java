@@ -19,52 +19,68 @@ package com.zimbra.cs.util;
 
 
 import java.util.Properties;
+import java.util.Random;
 
+import javax.mail.MessagingException;
 import javax.mail.Session;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 
 /**
  * @author schemers
  */
 public class JMSession {
-    private static Session mSession;
-    
-    private static Log mLog = LogFactory.getLog(JMSession.class);
-    
-    private static SmtpConfig sSmtpConfig;
-    
+
     static {
-        try {
-            sSmtpConfig = new SmtpConfig();
-            String timeout = sSmtpConfig.getTimeoutMS()+"";
-            Properties props = new Properties();
-            props.setProperty("mail.mime.address.strict", "false");
-            props.setProperty("mail.smtp.host", sSmtpConfig.getHostname());
-            props.setProperty("mail.smtp.port", sSmtpConfig.getPort()+"");
-            props.setProperty("mail.smtp.connectiontimeout", timeout);
-            props.setProperty("mail.smtp.timeout", timeout);
-            props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
-            
-            props.setProperty("mail.smtp.sendpartial", Boolean.toString(sSmtpConfig.getSendPartial()));
-            mSession = createSession(props); 
-            
-            // Assume that most malformed base64 errors occur due to incorrect delimiters,
-            // as opposed to errors in the data itself.  See bug 11213 for more details.
-            System.setProperty("mail.mime.base64.ignoreerrors", "true");
-            
-            mLog.debug("SMTP Server: "+sSmtpConfig.getHostname());
-        } catch (ServiceException e) {
-            mLog.fatal("unable to initialize Java Mail session", e);
-            // TODO: System.exit? For now mSession will be null and something else will croak
-        }
+        // Assume that most malformed base64 errors occur due to incorrect delimiters,
+        // as opposed to errors in the data itself.  See bug 11213 for more details.
+        System.setProperty("mail.mime.base64.ignoreerrors", "true");
     }
     
-    public static Session createSession(Properties props) {
+    /**
+     * Returns a new JavaMail session that has the latest SMTP settings from LDAP.
+     */
+    public static Session getSession()
+    throws MessagingException {
+        return getSession(null);
+    }
+    
+    /**
+     * Returns a new JavaMail session that has the latest SMTP settings from LDAP.
+     * Settings are retrieved from the local server and overridden by the domain.
+     * 
+     * @param domain the domain, or <tt>null</tt> to use server settings
+     */
+    public static Session getSession(Domain domain)
+    throws MessagingException {
+        Server server = null;
+        String smtpHost = null;
+        
+        try {
+            server = Provisioning.getInstance().getLocalServer();
+            smtpHost = getSmtpHost(server, domain);
+        } catch (ServiceException e) {
+            throw new MessagingException("Unable initialize JavaMail session", e);
+        }
+        
+        Properties props = new Properties();
+        props.setProperty("mail.mime.address.strict", "false");
+        props.setProperty("mail.smtp.host", smtpHost);
+        props.setProperty("mail.smtp.port", getValue(server, domain, Provisioning.A_zimbraSmtpPort));
+        props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
+
+        String timeout = getValue(server, domain, Provisioning.A_zimbraSmtpTimeout);
+        props.setProperty("mail.smtp.connectiontimeout", timeout);
+        props.setProperty("mail.smtp.timeout", timeout);
+        
+        Boolean sendPartial = Boolean.parseBoolean(getValue(server, domain, Provisioning.A_zimbraSmtpSendPartial));
+        props.setProperty("mail.smtp.sendpartial", sendPartial.toString());
+        
         Session session = Session.getInstance(props);
         if (LC.javamail_smtp_debug.booleanValue()) {
             session.setDebug(true);
@@ -72,11 +88,45 @@ public class JMSession {
         return session;
     }
     
-    public static SmtpConfig getSmtpConfig() {
-    	return sSmtpConfig;
+    /**
+     * Returns the attr value from the server or domain.
+     */
+    private static String getValue(Server server, Domain domain, String attrName) {
+        String value = null;
+        if (domain != null) {
+            value = domain.getAttr(attrName);
+        }
+        if (StringUtil.isNullOrEmpty(value)) {
+            return server.getAttr(attrName);
+        }
+        return value;
     }
     
-    public static Session getSession() {
-        return mSession;
+    private static final Random RANDOM = new Random();
+    
+    /**
+     * Returns a random value specified for <tt>zimbraSmtpHostname</tt> on the 
+     * server or domain.
+     *  
+     * @param server the server
+     * @param domain the domain, or <tt>null</tt> to use server settings
+     */
+    private static String getSmtpHost(Server server, Domain domain)
+    throws ServiceException {
+        String[] hosts = null;
+        if (domain != null) {
+            hosts = domain.getSmtpHostname();
+        }
+        if (hosts == null || hosts.length == 0) {
+            hosts = server.getSmtpHostname();
+        }
+        if (hosts == null || hosts.length == 0) {
+            throw ServiceException.FAILURE("Could not determine SMTP hostname.", null);
+        }
+        if (hosts.length == 1) {
+            return hosts[0];
+        } else {
+            return hosts[RANDOM.nextInt(hosts.length)];
+        }
     }
 }
