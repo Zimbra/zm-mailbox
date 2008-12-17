@@ -86,6 +86,7 @@ public class CalDavDataImport extends MailItemImport {
     public void test() throws ServiceException {
     	mClient = new CalDavClient(getTargetUrl());
 		mClient.setCredential(getUsername(), getDecryptedPassword());
+		mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
 		try {
 			mClient.login(getPrincipalUrl());
 		} catch (Exception x) {
@@ -134,6 +135,7 @@ public class CalDavDataImport extends MailItemImport {
     	if (mClient == null) {
         	mClient = new CalDavClient(getTargetUrl());
     		mClient.setCredential(getUsername(), getDecryptedPassword());
+    		mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
     		mClient.login(getPrincipalUrl());
     	}
     	return mClient;

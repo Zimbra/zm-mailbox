@@ -118,7 +118,7 @@ public class WebDavClient {
 	public HttpInputStream sendPut(String href, byte[] buf, String contentType, String etag) throws IOException {
 		PutMethod put = new PutMethod(mBaseUrl + href);
 		put.setRequestEntity(new ByteArrayRequestEntity(buf, contentType));
-		if (ZimbraLog.dav.isDebugEnabled() && contentType.startsWith("text"))
+		if (mDebugEnabled && contentType.startsWith("text"))
 			ZimbraLog.dav.debug("PUT payload: \n"+new String(buf, "UTF-8"));
 		if (etag != null)
 			put.setRequestHeader(DavProtocol.HEADER_IF_MATCH, etag);
@@ -127,7 +127,7 @@ public class WebDavClient {
 	}
 	
 	protected HttpMethod execute(DavRequest req) throws IOException {
-		if (ZimbraLog.dav.isDebugEnabled())
+		if (mDebugEnabled)
 			ZimbraLog.dav.debug("Request payload: \n"+req.getRequestMessageString());
 		return executeMethod(req.getHttpMethod(mBaseUrl), req.getDepth());
 	}
@@ -147,7 +147,7 @@ public class WebDavClient {
 		}
 		m.setRequestHeader("Depth", depth);
 		mClient.executeMethod(m);
-		if (ZimbraLog.dav.isDebugEnabled() && m.getResponseBody() != null)
+		if (mDebugEnabled && m.getResponseBody() != null)
 			ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
 
         return m;
@@ -173,9 +173,14 @@ public class WebDavClient {
 		return mPassword;
 	}
 	
+	public void setDebugEnabled(boolean b) {
+	    mDebugEnabled = b; 
+	}
+	
 	private String mUserAgent;
 	private String mBaseUrl;
 	private String mUsername;
 	private String mPassword;
 	private HttpClient mClient;
+	private boolean mDebugEnabled = false;
 }
