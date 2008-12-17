@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -572,7 +573,8 @@ public class ChartUtil {
         try {
             writer = new FileWriter(new File(mDestDir, "index.html"));
             writer.write("<html>\n<head>\n<title>"
-                    + StringUtil.escapeHtml(mTitle)
+                    + StringUtil.escapeHtml(mTitle) + " "
+                    + DateFormat.getDateInstance().format(mMinDate)
                     + "</title>\n</head>\n<body bgcolor=\"#eeeeee\">\n");
             writer.write("<h1>" + StringUtil.escapeHtml(mTitle) + "</h1>\n");
 
