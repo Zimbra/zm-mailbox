@@ -74,9 +74,6 @@ public class CustomTrustManager implements X509TrustManager {
             	ZimbraLog.security.debug("X509Certificate[" + i + "]=" + chain[i]);
             }
         }
-		
-		for (X509Certificate cert : chain)
-			cert.checkValidity();
         
 		try {
 			getDefaultTrustManager().checkServerTrusted(chain, authType);
