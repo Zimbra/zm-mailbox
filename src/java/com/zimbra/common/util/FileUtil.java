@@ -127,6 +127,20 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Returns <tt>true</tt> if the given file is gzipped.
+     */
+    public static boolean isGzipped(File file) throws IOException {
+        InputStream in = null;
+        try {
+            FileInputStream fin = new FileInputStream(file);
+            in = new BufferedInputStream(fin);
+            return ByteUtil.isGzipped(in);
+        } finally {
+            in.close();
+        }
+    }
+
     public static void copy(File from, File to, boolean sync) throws IOException {
     	FileInputStream fin = null;
     	FileOutputStream fout = null;

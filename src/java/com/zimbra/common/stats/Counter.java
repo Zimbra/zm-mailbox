@@ -39,6 +39,8 @@ implements Accumulator {
     private String mCountName;
     private String mTotalName;
     private String mAverageName;
+    private long mPreviousCount = 0;
+    private long mPreviousTotal = 0;
     
     public Counter(String name, String units) {
         mCountName = name + "_count";
@@ -63,12 +65,28 @@ implements Accumulator {
         return mTotal;
     }
     
-    public double getAverage() {
+    public synchronized double getAverage() {
         if (mCount == 0) {
             return 0.0;
         } else {
             return (double) mTotal / (double) mCount;
         }
+    }
+
+    /**
+     * Returns the count for the previous time interval, before
+     * {@link #reset} was called.
+     */
+    public long getPreviousCount() {
+        return mPreviousCount;
+    }
+    
+    /**
+     * Returns the total for the previous time interval, before
+     * {@link #reset} was called.
+     */
+    public long getPreviousTotal() {
+        return mPreviousTotal;
     }
     
     /**
@@ -123,6 +141,8 @@ implements Accumulator {
     }
     
     public synchronized void reset() {
+        mPreviousCount = mCount;
+        mPreviousTotal = mTotal;
         mCount = 0;
         mTotal = 0;
     }
