@@ -16,7 +16,10 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -119,7 +122,7 @@ public class ContactRankings {
 	}
 	public synchronized Collection<ContactEntry> query(String str, Collection<Integer> folders) {
 		ZimbraLog.gal.debug("querying ranking database");
-		TreeSet<ContactEntry> entries = new TreeSet<ContactEntry>();
+		ArrayList<ContactEntry> entries = new ArrayList<ContactEntry>();
 		str = str.toLowerCase();
 		for (String k : mEntryMap.tailMap(str).keySet()) {
 			if (k.startsWith(str)) {
@@ -134,7 +137,9 @@ public class ContactRankings {
 			} else
 				break;
 		}
-		return entries;
+		ContactEntry[] earray = entries.toArray(new ContactEntry[0]);
+		Arrays.sort(earray, Collections.reverseOrder());
+		return Arrays.asList(earray);
 	}
 	private synchronized void readFromDatabase() throws ServiceException {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
