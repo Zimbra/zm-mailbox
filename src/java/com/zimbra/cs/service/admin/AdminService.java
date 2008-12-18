@@ -31,11 +31,6 @@ import com.zimbra.soap.DocumentService;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.dom4j.QName;
-
-/**
- * @author schemers
- */
 public class AdminService implements DocumentService {
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
@@ -127,6 +122,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
 
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
+        dispatcher.registerHandler(AdminConstants.RECALCULATE_MAILBOX_COUNTS_REQUEST, new RecalculateMailboxCounts());
 
         // zimlet
         dispatcher.registerHandler(AdminConstants.GET_ZIMLET_REQUEST, new GetZimlet());

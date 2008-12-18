@@ -937,6 +937,14 @@ public class SoapProvisioning extends Provisioning {
         return new ReIndexInfo(resp.getAttribute(AdminConstants.A_STATUS), progress);
     }
 
+    public long recalculateMailboxCounts(Account acct) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.RECALCULATE_MAILBOX_COUNTS_REQUEST);
+        req.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, acct.getId());
+        Server server = getServer(acct);
+        Element resp = invoke(req, server.getAttr(A_zimbraServiceHostname));
+        return resp.getElement(AdminConstants.E_MAILBOX).getAttributeLong(AdminConstants.A_QUOTA_USED);
+    }
+
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
         return getAllServers(service, true);      

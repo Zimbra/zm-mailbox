@@ -1534,7 +1534,7 @@ public class Mailbox {
         }
     }
 
-    synchronized void recalculateFolderAndTagCounts() throws ServiceException {
+    public synchronized void recalculateFolderAndTagCounts() throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("recalculateFolderAndTagCounts", null);

@@ -92,7 +92,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     protected String[] getProxiedResourceElementPath()  { return null; }
     protected String[] getProxiedServerPath()           { return null; }
     
-    private Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken) throws ServiceException {
+    protected Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken) throws ServiceException {
         Account acct = null;
         
         // first try getting it from master if not in cache

@@ -404,7 +404,7 @@ Access: domain admin sufficient (though a domain admin can't specify "domains" a
 </GetQuotaUsageRequest>
 
 <GetQuotaUsageResponse more="{more-flag}" [searchTotal="{search-total}"]>
-  <account name="{name}" id="{id}" used="quota-used" limit="quota-limit"/>+
+  <account name="{name}" id="{id}" used="{quota-used}" limit="{quota-limit}"/>+
 </GetQuotaUsageResponse>
 
 Notes:
@@ -804,7 +804,23 @@ Notes:
 
 purges aged messages out of trash, spam, and entire mailbox
   (if <mbox> element is omitted, purges all mailboxes on server)
-  
+
+-----------------------------
+
+<RecalculateMailboxCountsRequest>
+   <mbox id="{account-id}"/>
+</RecalculateMailboxCountsRequest>
+
+<RecalculateMailboxCountsResponse>
+   <mbox id="{account-id}" used="{quota-used}"/>
+</RecalculateMailboxCountsResponse>
+
+forces immediate recalculation of total mailbox quota usage and all folder unread and size counts
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <ReIndexRequest action="start|status|cancel">
@@ -820,7 +836,7 @@ purges aged messages out of trash, spam, and entire mailbox
       {ids] = comma-separated list of IDs to re-index.  
       {types} 	= comma-separated list.  Legal values are:
                   conversation|message|contact|appointment|task|note|wiki|document
-               
+
 Access: domain admin sufficient
 
    note: this request is by default proxied to the account's home server
