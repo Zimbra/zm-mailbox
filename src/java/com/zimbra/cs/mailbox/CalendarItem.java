@@ -2209,10 +2209,21 @@ public abstract class CalendarItem extends MailItem {
 
             for (ReplyInfo cur : mReplies) {
                 if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
-                    if (
-                            (cur.mRecurId == null && inst == null) || // asking for default instance
-                            (inst!=null && cur.mRecurId != null && cur.mRecurId.withinRange(inst.getStart())) // matches specific requested instance
-                    ) {
+                    boolean match = cur.mRecurId == null && inst == null;  // asking for default instance
+                    if (!match) {
+                        if (inst != null && cur.mRecurId != null) {  // matches specific requested instance
+                            long instStart = inst.getStart();
+                            if (inst.mInvId != null) {
+                                RecurId instRecurId = inst.mInvId.getRecurrenceId();
+                                if (instRecurId != null) {
+                                    // For an exception instance, use the time in RECURRENCE-ID rather than DTSTART. (bug 33181)
+                                    instStart = instRecurId.getDt().getUtcTime();
+                                }
+                            }
+                            match = cur.mRecurId.withinRange(instStart);
+                        }
+                    }
+                    if (match) {
                         //
                         // we found exactly what they're looking for!  Either the default (and they asked for it) or the
                         // specific one they asked for
