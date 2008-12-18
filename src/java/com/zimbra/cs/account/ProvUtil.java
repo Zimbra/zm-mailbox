@@ -267,6 +267,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
+        RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.MISC, 0, 4),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
@@ -288,7 +289,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         SOAP(".soap", ".s"),
-        SYNC_GAL("syncGal", "syg","{domain} [{token}]", Category.MISC, 1, 2),
+        SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
         UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3);
 
         private String mName;
@@ -762,6 +763,9 @@ public class ProvUtil implements DebugListener {
         case REINDEX_MAILBOX:
             doReIndexMailbox(args);
             break;
+        case RECALCULATE_MAILBOX_COUNTS:
+            doRecalculateMailboxCounts(args);
+            break;
         case SELECT_MAILBOX:
             if (!(mProv instanceof SoapProvisioning))
                 throwSoapOnly();
@@ -892,7 +896,16 @@ public class ProvUtil implements DebugListener {
             System.out.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n",
                               progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
     }
-    
+
+    private void doRecalculateMailboxCounts(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(args[1]);
+        long quotaUsed = sp.recalculateMailboxCounts(acct);
+        System.out.printf("account: " + acct.getName() + "\nquotaUsed: " + quotaUsed + "\n");
+    }
+
     private class AccountLoggerOptions {
         String server;
         String[] args;
