@@ -555,7 +555,7 @@ public class Mailbox {
      *  present, each account can have at most one <tt>Mailbox</tt>.
      *  
      * @throws AccountServiceException if no account exists */
-    public synchronized Account getAccount() throws ServiceException {
+    public Account getAccount() throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, getAccountId());
         if (acct != null)
             return acct;
