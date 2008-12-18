@@ -19,7 +19,6 @@ package com.zimbra.common.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-
 public class AdminConstants {
     public static final String NAMESPACE_STR = "urn:zimbraAdmin";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
@@ -195,6 +194,8 @@ public class AdminConstants {
 
     public static final QName REINDEX_REQUEST = QName.get("ReIndexRequest", NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get("ReIndexResponse", NAMESPACE);
+    public static final QName RECALCULATE_MAILBOX_COUNTS_REQUEST = QName.get("RecalculateMailboxCountsRequest", NAMESPACE);
+    public static final QName RECALCULATE_MAILBOX_COUNTS_RESPONSE = QName.get("RecalculateMailboxCountsResponse", NAMESPACE);
 
     public static final QName GET_ZIMLET_REQUEST = QName.get("GetZimletRequest", NAMESPACE);
     public static final QName GET_ZIMLET_RESPONSE = QName.get("GetZimletResponse", NAMESPACE);
