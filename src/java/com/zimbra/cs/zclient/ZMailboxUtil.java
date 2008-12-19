@@ -28,6 +28,7 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -2618,11 +2619,7 @@ public class ZMailboxUtil implements DebugListener {
         String parts[] = unencoded.split("/");
         if (parts != null) {
             for (int i = 0; i < parts.length; i++) {
-                try {
-                    parts[i] = URLEncoder.encode(parts[i], "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    throw ServiceException.FAILURE("Unable to encode URL: " + unencoded, e);
-                }
+                parts[i] = HttpUtil.encodePath(parts[i]);
             }
             encoded.append(StringUtil.join("/", parts));
         } else {
