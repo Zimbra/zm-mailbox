@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081218-1541 */
+    /* build: 5.0 pshao 20081218-2247 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11033,6 +11033,106 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetReverseProxyRouteLookupTimeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyRouteLookupTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * <p>Use getReverseProxyRouteLookupTimeoutCacheAsString to access value as a string.
+     *
+     * @see #getReverseProxyRouteLookupTimeoutCacheAsString()
+     *
+     * @return zimbraReverseProxyRouteLookupTimeoutCache in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public long getReverseProxyRouteLookupTimeoutCache() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyRouteLookupTimeoutCache, 60000L);
+    }
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * @return zimbraReverseProxyRouteLookupTimeoutCache, or "60s" if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public String getReverseProxyRouteLookupTimeoutCacheAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyRouteLookupTimeoutCache, "60s");
+    }
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * @param zimbraReverseProxyRouteLookupTimeoutCache new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public void setReverseProxyRouteLookupTimeoutCache(String zimbraReverseProxyRouteLookupTimeoutCache) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRouteLookupTimeoutCache, zimbraReverseProxyRouteLookupTimeoutCache);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * @param zimbraReverseProxyRouteLookupTimeoutCache new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public Map<String,Object> setReverseProxyRouteLookupTimeoutCache(String zimbraReverseProxyRouteLookupTimeoutCache, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRouteLookupTimeoutCache, zimbraReverseProxyRouteLookupTimeoutCache);
+        return attrs;
+    }
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public void unsetReverseProxyRouteLookupTimeoutCache() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRouteLookupTimeoutCache, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public Map<String,Object> unsetReverseProxyRouteLookupTimeoutCache(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRouteLookupTimeoutCache, "");
         return attrs;
     }
 

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081218-1541 */
+    /* build: 5.0 pshao 20081218-2247 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5019,6 +5019,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=745)
     public static final String A_zimbraReverseProxyRouteLookupTimeout = "zimbraReverseProxyRouteLookupTimeout";
+
+    /**
+     * Time interval (ms) given to mail route lookup handler to cache a
+     * failed response to route a previous lookup request (after this time
+     * elapses, Proxy retries this host)
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=778)
+    public static final String A_zimbraReverseProxyRouteLookupTimeoutCache = "zimbraReverseProxyRouteLookupTimeoutCache";
 
     /**
      * whether nginx should send ID command for imap
