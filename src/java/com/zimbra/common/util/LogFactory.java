@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -54,13 +53,6 @@ public class LogFactory {
             }
         }        
         return log;
-    }
-    
-    /**
-     * Returns <tt>true</tt> if a logger with the given name exists.
-     */
-    public static boolean logExists(String name) {
-        return (LogManager.exists(name) != null);
     }
     
     /**

@@ -94,7 +94,9 @@ class SerialFileCopier implements FileCopier {
         oldPath.renameTo(newPath);
     }
 
-    public void delete(File file, FileCopierCallback cb, Object cbarg) {
+    public void delete(File file,
+                       FileCopierCallback cb, Object cbarg)
+    throws IOException {
         file.delete();
     }
 }
