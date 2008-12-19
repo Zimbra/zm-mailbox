@@ -610,7 +610,10 @@ public class ZimbraLog {
         if (contextMap != null) {
             contextMap.clear();
         }
-        getAccountNamesForThread().clear();
+        Set<String> accountNames = sAccountNames.get();
+        if (accountNames != null) {
+            accountNames.clear();
+        }
         sContextString.remove();
     }
 
