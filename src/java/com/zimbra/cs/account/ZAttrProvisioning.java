@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081216-1559 */
+    /* build: 5.0 pshao 20081218-1541 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1516,6 +1516,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=279)
     public static final String A_zimbraCertAuthorityKeySelfSigned = "zimbraCertAuthorityKeySelfSigned";
+
+    /**
+     * change password URL
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=777)
+    public static final String A_zimbraChangePasswordURL = "zimbraChangePasswordURL";
 
     /**
      * zimbraId of child accounts

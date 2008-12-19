@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081216-1559 */
+    /* build: 5.0 pshao 20081218-1541 */
 
     /**
      * Zimbra access control list
@@ -3492,6 +3492,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetCertAuthorityKeySelfSigned(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCertAuthorityKeySelfSigned, "");
+        return attrs;
+    }
+
+    /**
+     * change password URL
+     *
+     * @return zimbraChangePasswordURL, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=777)
+    public String getChangePasswordURL() {
+        return getAttr(Provisioning.A_zimbraChangePasswordURL, null);
+    }
+
+    /**
+     * change password URL
+     *
+     * @param zimbraChangePasswordURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=777)
+    public void setChangePasswordURL(String zimbraChangePasswordURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChangePasswordURL, zimbraChangePasswordURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * change password URL
+     *
+     * @param zimbraChangePasswordURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=777)
+    public Map<String,Object> setChangePasswordURL(String zimbraChangePasswordURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChangePasswordURL, zimbraChangePasswordURL);
+        return attrs;
+    }
+
+    /**
+     * change password URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=777)
+    public void unsetChangePasswordURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChangePasswordURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * change password URL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=777)
+    public Map<String,Object> unsetChangePasswordURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChangePasswordURL, "");
         return attrs;
     }
 
