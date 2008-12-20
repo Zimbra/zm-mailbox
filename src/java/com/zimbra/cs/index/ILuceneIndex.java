@@ -32,7 +32,7 @@ interface ILuceneIndex extends ITextIndex {
      * 
      * @param reader
      */
-    void onClose(RefCountedIndexReader reader);
+    void onReaderClose(RefCountedIndexReader reader);
     
     /**
      * @return A refcounted RefCountedIndexSearcher for this index.  Caller is responsible for 

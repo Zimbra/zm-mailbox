@@ -33,6 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
@@ -46,6 +47,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.op.IndexItem;
 //import com.zimbra.cs.service.admin.ReIndex;
 import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Encapsulates the Index for one particular mailbox
@@ -312,9 +314,18 @@ public final class MailboxIndex
 
     static {
         ZimbraLog.index.info("Using Lucene Jar version 2.3 or higher");
-        sLuceneFactory = new Lucene23Factory();
+        String factClassname = LC.zimbra_index_factory_classname.value(); 
+        if (factClassname != null && factClassname.length() > 0) {
+            try {
+                sLuceneFactory = (ILuceneFactory)(Class.forName(factClassname).newInstance());
+            } catch (Exception e) {
+                ZimbraLog.index.fatal("Unable to instantiate Index Factory "+factClassname+" specified in LC.zimbra_index_factory_classname", e);
+                Zimbra.halt("Unable to instantiate Index Factory "+factClassname+" specified in LC.zimbra_index_factory_classname");
+            }
+        } else {
+            sLuceneFactory = new Lucene23Factory();
+        }
     }
-
 
     private ILuceneIndex mLucene;
     private ITextIndex mTextIndex;
