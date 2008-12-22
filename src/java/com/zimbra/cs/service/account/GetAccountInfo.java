@@ -85,7 +85,9 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         if (pubUrl != null)
             response.addAttribute(AccountConstants.E_PUBLIC_URL, pubUrl, Element.Disposition.CONTENT);
         
-        String changePasswordUrl = domain.getAttr(Provisioning.A_zimbraChangePasswordURL);
+        String changePasswordUrl = null;
+        if (domain != null)
+            changePasswordUrl = domain.getAttr(Provisioning.A_zimbraChangePasswordURL);
         if (changePasswordUrl == null)
             changePasswordUrl = pubUrl;
         response.addAttribute(AccountConstants.E_CHANGE_PASSWORD_URL, changePasswordUrl, Element.Disposition.CONTENT);
