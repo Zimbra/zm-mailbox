@@ -38,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.datasource.CalDavDataImport;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
@@ -226,6 +227,10 @@ public class DataSource extends AccountProperty {
      */
     private void migratePollingIntervalIfNecessary(Provisioning prov, Account account)
     throws ServiceException {
+        if (!(prov instanceof LdapProvisioning)) {
+            // Only run migration on the server
+            return;
+        }
         // Migrate Account value.
         String oldInterval = account.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, false);
         if (!StringUtil.isNullOrEmpty(oldInterval)) {
@@ -234,7 +239,7 @@ public class DataSource extends AccountProperty {
             attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
             attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, oldInterval);
             attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, oldInterval);
-            prov.modifyAttrs(account, attrs);
+            prov.modifyAttrs(account, attrs, true, false); // Don't run callback so we don't trigger database code.
         }
         
         // Migrate Cos value.
@@ -246,7 +251,7 @@ public class DataSource extends AccountProperty {
             attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "");
             attrs.put(Provisioning.A_zimbraDataSourcePop3PollingInterval, oldInterval);
             attrs.put(Provisioning.A_zimbraDataSourceImapPollingInterval, oldInterval);
-            prov.modifyAttrs(cos, attrs);
+            prov.modifyAttrs(cos, attrs, true, false);  // Don't run callback so we don't trigger database code.
         }
     }
     
