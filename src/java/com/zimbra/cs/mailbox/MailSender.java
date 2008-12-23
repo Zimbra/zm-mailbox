@@ -82,17 +82,44 @@ public class MailSender {
         FORWARD    // Forwarding another message
     }
 
+    /**
+     * Send MimeMessage out as an email.
+     * @param octxt operation context
+     * @param mbox mailbox
+     * @param mm the outgoing message
+     * @param newContacts contacts to add, or <tt>null</tt>
+     * @param uploads uploads to attach, or <tt>null</tt>
+     * @param origMsgId if replying or forwarding, item ID of original message
+     * @param replyType {@link #MSGTYPE_REPLY} if this is a reply, {@link #MSGTYPE_FORWARD}
+     *     if this is a forward, or <tt>null</tt>
+     * @param identityId the id of the identity to send as, or <tt>null</tt> to use the default
+     * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
+     *                              some addresses fail (no error is returned!)
+     * @param replyToSender if true and if setting Sender header, set Reply-To
+     *                      header to the same address, otherwise don't set
+     *                      Reply-To, letting the recipient MUA choose to whom
+     *                      to send reply
+     * 
+     * @return the id of the copy in the first saved folder, or <tt>null</tt>
+     * @throws ServiceException
+     */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
                                   ItemId origMsgId, String replyType, String identityId,
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
-        Identity identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
-        if (identity == null)
-            identity = Provisioning.getInstance().getDefaultIdentity(authuser);
-
-        boolean saveToSent = identity.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
+        Identity identity = null;
+        boolean saveToSent = true;
+        
+        if (authuser != null) {
+            if (identityId != null) {
+                identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
+            } else {
+                identity = Provisioning.getInstance().getDefaultIdentity(authuser); 
+            }
+            saveToSent = identity.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
+        }
 
         return sendMimeMessage(octxt, mbox, saveToSent, mm, newContacts, uploads, origMsgId, replyType, identity,
                                ignoreFailedAddresses, replyToSender);
@@ -123,15 +150,15 @@ public class MailSender {
 
     /**
      * Send MimeMessage out as an email.
-     * Returns the msg-id of the copy in the first saved folder, or 0 if none
-     * @param mbox
-     * @param mm the MimeMessage to send
-     * @param newContacts
-     * @param uploads
+     * @param octxt operation context
+     * @param mbox mailbox
+     * @param mm the outgoing message
+     * @param newContacts contacts to add, or <tt>null</tt>
+     * @param uploads uploads to attach, or <tt>null</tt>
      * @param origMsgId if replying or forwarding, item ID of original message
-     * @param replyType reply/forward type (null if original, which is neither
-     *                  reply nor forward)
-     * @param identity identity
+     * @param replyType {@link #MSGTYPE_REPLY} if this is a reply, {@link #MSGTYPE_FORWARD}
+     *     if this is a forward, or <tt>null</tt>
+     * @param identity the identity to send as, or <tt>null</tt> to use the default
      * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
      *                              some addresses fail (no error is returned!)
      * @param replyToSender if true and if setting Sender header, set Reply-To
@@ -139,10 +166,9 @@ public class MailSender {
      *                      Reply-To, letting the recipient MUA choose to whom
      *                      to send reply
      * 
-     * @return
+     * @return the id of the copy in the first saved folder, or <tt>null</tt>
      * @throws ServiceException
      */
-
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
                                   ItemId origMsgId, String replyType, Identity identity,
@@ -495,13 +521,7 @@ public class MailSender {
         }
 
         public String getMessage() {
-            String msg = super.getMessage();
-            if (msg == null) {
-                Exception next = mMex.getNextException();
-                if (next != null)
-                    msg = next.getLocalizedMessage();
-            }
-            return msg;
+            return mMex.getMessage();
         }
 
         public synchronized String toString() {
