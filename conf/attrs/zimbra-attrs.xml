@@ -3860,4 +3860,45 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Time interval (ms) given to mail route lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)</desc>
 </attr>
 
+<attr id="779" name="zimbraReverseProxyUseExternalRoute" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="5.0.12">
+  <desc>
+      There is a deployment scenario for migrations where all of the customers users are pointed at the zimbra POP IMAP reverse proxy.  
+      We then want their connections proxied back to the legacy system for for not-yet-non-migrated users.
+      If this attribute is TRUE, reverse proxy lookup sevlet should check to see if zimbraExternal* is set on the domain.  If so it is used.  
+      If not, lookup proceeds as usual.
+  </desc>
+</attr>
+
+<attr id="780" name="zimbraExternalPop3Port" type="port" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external pop3 port</desc>
+</attr>
+
+<attr id="781" name="zimbraExternalPop3SSLPort" type="port" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external pop3 SSL port</desc>
+</attr>
+
+<attr id="782" name="zimbraExternalImapPort" type="port" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external imap port</desc>
+</attr>
+
+<attr id="783" name="zimbraExternalImapSSLPort" type="port" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external imap SSL port</desc>
+</attr>
+
+<attr id="784" name="zimbraExternalPop3Hostname" type="string" max="256" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external pop3 hostname</desc>
+</attr>
+
+<attr id="785" name="zimbraExternalPop3SSLHostname" type="string" max="256" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external pop3 SSL hostname</desc>
+</attr>
+
+<attr id="786" name="zimbraExternalImapHostname" type="string" max="256" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external imap hostname</desc>
+</attr>
+
+<attr id="787" name="zimbraExternalImapSSLHostname" type="string" max="256" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
+  <desc>external imap SSL hostname</desc>
+</attr>
+
 </attrs>

@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081218-2247 */
+    /* build: 5.0 pshao 20081223-1112 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4999,6 +4999,582 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetExcludeFromCMBSearch(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "");
+        return attrs;
+    }
+
+    /**
+     * external imap hostname
+     *
+     * @return zimbraExternalImapHostname, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=786)
+    public String getExternalImapHostname() {
+        return getAttr(Provisioning.A_zimbraExternalImapHostname, null);
+    }
+
+    /**
+     * external imap hostname
+     *
+     * @param zimbraExternalImapHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=786)
+    public void setExternalImapHostname(String zimbraExternalImapHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapHostname, zimbraExternalImapHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap hostname
+     *
+     * @param zimbraExternalImapHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=786)
+    public Map<String,Object> setExternalImapHostname(String zimbraExternalImapHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapHostname, zimbraExternalImapHostname);
+        return attrs;
+    }
+
+    /**
+     * external imap hostname
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=786)
+    public void unsetExternalImapHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap hostname
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=786)
+    public Map<String,Object> unsetExternalImapHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapHostname, "");
+        return attrs;
+    }
+
+    /**
+     * external imap port
+     *
+     * @return zimbraExternalImapPort, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public String getExternalImapPort() {
+        return getAttr(Provisioning.A_zimbraExternalImapPort, null);
+    }
+
+    /**
+     * external imap port
+     *
+     * @param zimbraExternalImapPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public void setExternalImapPort(String zimbraExternalImapPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapPort, zimbraExternalImapPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap port
+     *
+     * @param zimbraExternalImapPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public Map<String,Object> setExternalImapPort(String zimbraExternalImapPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapPort, zimbraExternalImapPort);
+        return attrs;
+    }
+
+    /**
+     * external imap port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public void unsetExternalImapPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public Map<String,Object> unsetExternalImapPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapPort, "");
+        return attrs;
+    }
+
+    /**
+     * external imap SSL hostname
+     *
+     * @return zimbraExternalImapSSLHostname, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=787)
+    public String getExternalImapSSLHostname() {
+        return getAttr(Provisioning.A_zimbraExternalImapSSLHostname, null);
+    }
+
+    /**
+     * external imap SSL hostname
+     *
+     * @param zimbraExternalImapSSLHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=787)
+    public void setExternalImapSSLHostname(String zimbraExternalImapSSLHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLHostname, zimbraExternalImapSSLHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap SSL hostname
+     *
+     * @param zimbraExternalImapSSLHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=787)
+    public Map<String,Object> setExternalImapSSLHostname(String zimbraExternalImapSSLHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLHostname, zimbraExternalImapSSLHostname);
+        return attrs;
+    }
+
+    /**
+     * external imap SSL hostname
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=787)
+    public void unsetExternalImapSSLHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap SSL hostname
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=787)
+    public Map<String,Object> unsetExternalImapSSLHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLHostname, "");
+        return attrs;
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @return zimbraExternalImapSSLPort, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public String getExternalImapSSLPort() {
+        return getAttr(Provisioning.A_zimbraExternalImapSSLPort, null);
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @param zimbraExternalImapSSLPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public void setExternalImapSSLPort(String zimbraExternalImapSSLPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLPort, zimbraExternalImapSSLPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @param zimbraExternalImapSSLPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public Map<String,Object> setExternalImapSSLPort(String zimbraExternalImapSSLPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLPort, zimbraExternalImapSSLPort);
+        return attrs;
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public void unsetExternalImapSSLPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public Map<String,Object> unsetExternalImapSSLPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLPort, "");
+        return attrs;
+    }
+
+    /**
+     * external pop3 hostname
+     *
+     * @return zimbraExternalPop3Hostname, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=784)
+    public String getExternalPop3Hostname() {
+        return getAttr(Provisioning.A_zimbraExternalPop3Hostname, null);
+    }
+
+    /**
+     * external pop3 hostname
+     *
+     * @param zimbraExternalPop3Hostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=784)
+    public void setExternalPop3Hostname(String zimbraExternalPop3Hostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Hostname, zimbraExternalPop3Hostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 hostname
+     *
+     * @param zimbraExternalPop3Hostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=784)
+    public Map<String,Object> setExternalPop3Hostname(String zimbraExternalPop3Hostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Hostname, zimbraExternalPop3Hostname);
+        return attrs;
+    }
+
+    /**
+     * external pop3 hostname
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=784)
+    public void unsetExternalPop3Hostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Hostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 hostname
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=784)
+    public Map<String,Object> unsetExternalPop3Hostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Hostname, "");
+        return attrs;
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @return zimbraExternalPop3Port, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public String getExternalPop3Port() {
+        return getAttr(Provisioning.A_zimbraExternalPop3Port, null);
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @param zimbraExternalPop3Port new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public void setExternalPop3Port(String zimbraExternalPop3Port) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Port, zimbraExternalPop3Port);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @param zimbraExternalPop3Port new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public Map<String,Object> setExternalPop3Port(String zimbraExternalPop3Port, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Port, zimbraExternalPop3Port);
+        return attrs;
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public void unsetExternalPop3Port() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Port, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public Map<String,Object> unsetExternalPop3Port(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Port, "");
+        return attrs;
+    }
+
+    /**
+     * external pop3 SSL hostname
+     *
+     * @return zimbraExternalPop3SSLHostname, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=785)
+    public String getExternalPop3SSLHostname() {
+        return getAttr(Provisioning.A_zimbraExternalPop3SSLHostname, null);
+    }
+
+    /**
+     * external pop3 SSL hostname
+     *
+     * @param zimbraExternalPop3SSLHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=785)
+    public void setExternalPop3SSLHostname(String zimbraExternalPop3SSLHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLHostname, zimbraExternalPop3SSLHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 SSL hostname
+     *
+     * @param zimbraExternalPop3SSLHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=785)
+    public Map<String,Object> setExternalPop3SSLHostname(String zimbraExternalPop3SSLHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLHostname, zimbraExternalPop3SSLHostname);
+        return attrs;
+    }
+
+    /**
+     * external pop3 SSL hostname
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=785)
+    public void unsetExternalPop3SSLHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 SSL hostname
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=785)
+    public Map<String,Object> unsetExternalPop3SSLHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLHostname, "");
+        return attrs;
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @return zimbraExternalPop3SSLPort, or null if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public String getExternalPop3SSLPort() {
+        return getAttr(Provisioning.A_zimbraExternalPop3SSLPort, null);
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @param zimbraExternalPop3SSLPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public void setExternalPop3SSLPort(String zimbraExternalPop3SSLPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, zimbraExternalPop3SSLPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @param zimbraExternalPop3SSLPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public Map<String,Object> setExternalPop3SSLPort(String zimbraExternalPop3SSLPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, zimbraExternalPop3SSLPort);
+        return attrs;
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public void unsetExternalPop3SSLPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public Map<String,Object> unsetExternalPop3SSLPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, "");
         return attrs;
     }
 
@@ -24429,6 +25005,103 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetQuotaWarnPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        return attrs;
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @return zimbraReverseProxyUseExternalRoute, or false if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public boolean isReverseProxyUseExternalRoute() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRoute, false);
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @param zimbraReverseProxyUseExternalRoute new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public void setReverseProxyUseExternalRoute(boolean zimbraReverseProxyUseExternalRoute) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, zimbraReverseProxyUseExternalRoute ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @param zimbraReverseProxyUseExternalRoute new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public Map<String,Object> setReverseProxyUseExternalRoute(boolean zimbraReverseProxyUseExternalRoute, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, zimbraReverseProxyUseExternalRoute ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public void unsetReverseProxyUseExternalRoute() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public Map<String,Object> unsetReverseProxyUseExternalRoute(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, "");
         return attrs;
     }
 

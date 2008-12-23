@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081218-2247 */
+    /* build: 5.0 pshao 20081223-1112 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1939,6 +1939,70 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=501)
     public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";
+
+    /**
+     * external imap hostname
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=786)
+    public static final String A_zimbraExternalImapHostname = "zimbraExternalImapHostname";
+
+    /**
+     * external imap port
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public static final String A_zimbraExternalImapPort = "zimbraExternalImapPort";
+
+    /**
+     * external imap SSL hostname
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=787)
+    public static final String A_zimbraExternalImapSSLHostname = "zimbraExternalImapSSLHostname";
+
+    /**
+     * external imap SSL port
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public static final String A_zimbraExternalImapSSLPort = "zimbraExternalImapSSLPort";
+
+    /**
+     * external pop3 hostname
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=784)
+    public static final String A_zimbraExternalPop3Hostname = "zimbraExternalPop3Hostname";
+
+    /**
+     * external pop3 port
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public static final String A_zimbraExternalPop3Port = "zimbraExternalPop3Port";
+
+    /**
+     * external pop3 SSL hostname
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=785)
+    public static final String A_zimbraExternalPop3SSLHostname = "zimbraExternalPop3SSLHostname";
+
+    /**
+     * external pop3 SSL port
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
      * advanced search button enabled
@@ -5050,6 +5114,19 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=640)
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public static final String A_zimbraReverseProxyUseExternalRoute = "zimbraReverseProxyUseExternalRoute";
 
     /**
      * Limit how many times a user can login via the proxy. Setting limit to
