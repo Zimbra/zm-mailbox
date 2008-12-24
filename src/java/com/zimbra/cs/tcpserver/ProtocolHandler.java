@@ -19,6 +19,7 @@ package com.zimbra.cs.tcpserver;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
 
 import java.io.IOException;
@@ -122,6 +123,8 @@ public abstract class ProtocolHandler implements Runnable {
 
         mHandlerThread = Thread.currentThread();
         mServer.addActiveHandler(this);
+        ZimbraLog.clearContext();
+        
         try {
             if (setupConnection(mConnection)) {
                 if (authenticate())
@@ -146,6 +149,8 @@ public abstract class ProtocolHandler implements Runnable {
                 mLog.info("Exception while closing connection", ioe);
             }
         }
+        
+        ZimbraLog.clearContext();
         mServer.removeActiveHandler(this);
         mHandlerThread = null;
         mLog.info("Handler exiting normally");

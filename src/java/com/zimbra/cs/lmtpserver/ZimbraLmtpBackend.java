@@ -320,9 +320,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 	                    targetMailboxIds.add(new Integer(mbox.getId()));
                 }
             }
-            
+
+            ZimbraLog.removeAccountFromContext();
             logEnvelope(env, msgId);
-            ZimbraLog.clearContext();
 
             SharedDeliveryContext sharedDeliveryCtxt =
             	new SharedDeliveryContext(shared, targetMailboxIds);
@@ -425,7 +425,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         status = LmtpStatus.TRYAGAIN;
                         ZimbraLog.lmtp.warn("try again for message " + rcptEmail + ": exception occurred", e);
                     } finally {
-                        ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
                         if (shared && rd != null && rd.esd) {
                             rd.mbox.endSharedDelivery();
