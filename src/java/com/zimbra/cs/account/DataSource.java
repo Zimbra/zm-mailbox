@@ -201,6 +201,12 @@ public class DataSource extends AccountProperty {
             case rss:
                 interval = account.getDataSourceRssPollingInterval();
                 break;
+            case caldav:
+                interval = account.getDataSourceCaldavPollingInterval();
+                break;
+            case yab:
+                interval = account.getDataSourceYabPollingInterval();
+                break;
             default:
                 return 0;
             }

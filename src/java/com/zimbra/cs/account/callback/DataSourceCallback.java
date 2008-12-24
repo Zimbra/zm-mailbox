@@ -53,6 +53,8 @@ public class DataSourceCallback extends AttributeCallback {
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceImapPollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceLivePollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceRssPollingInterval);
+        INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceCaldavPollingInterval);
+        INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceYabPollingInterval);
     }
     
     /**

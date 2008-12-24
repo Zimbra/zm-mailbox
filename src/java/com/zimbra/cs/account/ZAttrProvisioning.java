@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081223-1112 */
+    /* build: 5.0 pshao 20081223-1440 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1643,6 +1643,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceAttribute = "zimbraDataSourceAttribute";
 
     /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public static final String A_zimbraDataSourceCaldavPollingInterval = "zimbraDataSourceCaldavPollingInterval";
+
+    /**
      * Which security layer to use for connection (cleartext, ssl, starttls)
      */
     @ZAttr(id=425)
@@ -1744,9 +1754,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourcePassword = "zimbraDataSourcePassword";
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      */
     @ZAttr(id=455)
     public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
@@ -1799,6 +1816,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=422)
     public static final String A_zimbraDataSourceUsername = "zimbraDataSourceUsername";
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public static final String A_zimbraDataSourceYabPollingInterval = "zimbraDataSourceYabPollingInterval";
 
     /**
      * For selective enabling of debug logging

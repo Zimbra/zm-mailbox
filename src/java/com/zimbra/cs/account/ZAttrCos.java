@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081223-1112 */
+    /* build: 5.0 pshao 20081223-1440 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1844,6 +1844,106 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * <p>Use getDataSourceCaldavPollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceCaldavPollingIntervalAsString()
+     *
+     * @return zimbraDataSourceCaldavPollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public long getDataSourceCaldavPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceCaldavPollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @return zimbraDataSourceCaldavPollingInterval, or null if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public String getDataSourceCaldavPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceCaldavPollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceCaldavPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public void setDataSourceCaldavPollingInterval(String zimbraDataSourceCaldavPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCaldavPollingInterval, zimbraDataSourceCaldavPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceCaldavPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public Map<String,Object> setDataSourceCaldavPollingInterval(String zimbraDataSourceCaldavPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCaldavPollingInterval, zimbraDataSourceCaldavPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public void unsetDataSourceCaldavPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCaldavPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Caldav data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=788)
+    public Map<String,Object> unsetDataSourceCaldavPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCaldavPollingInterval, "");
+        return attrs;
+    }
+
+    /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
@@ -2182,9 +2282,16 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      *
      * <p>Use getDataSourcePollingIntervalAsString to access value as a string.
      *
@@ -2198,9 +2305,16 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      *
      * @return zimbraDataSourcePollingInterval, or null if unset
      */
@@ -2210,9 +2324,16 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      *
      * @param zimbraDataSourcePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2225,9 +2346,16 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      *
      * @param zimbraDataSourcePollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2241,9 +2369,16 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -2255,9 +2390,16 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The time interval between automated data imports for a data source, or
-     * all data sources owned by an account. If unset or 0, the data source
-     * will not be scheduled for automated polling.
+     * Prior to 6.0.1: The time interval between automated data imports for a
+     * data source, or all data sources owned by an account. If unset or 0,
+     * the data source will not be scheduled for automated polling. Since
+     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * are migrated to protocol specific
+     * zimbraDataSource{proto}PollingInterval attributes. 1. if
+     * zimbraDataSourcePollingInterval is set on data source, use it 2.
+     * otherwise use the zimbraDataSource{Proto}PollingInterval on
+     * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
+     * account/cos, use 0, which means no automated polling.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2466,6 +2608,106 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetDataSourceRssPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceRssPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * <p>Use getDataSourceYabPollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceYabPollingIntervalAsString()
+     *
+     * @return zimbraDataSourceYabPollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public long getDataSourceYabPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceYabPollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * @return zimbraDataSourceYabPollingInterval, or null if unset
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public String getDataSourceYabPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceYabPollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * @param zimbraDataSourceYabPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public void setDataSourceYabPollingInterval(String zimbraDataSourceYabPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceYabPollingInterval, zimbraDataSourceYabPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * @param zimbraDataSourceYabPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public Map<String,Object> setDataSourceYabPollingInterval(String zimbraDataSourceYabPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceYabPollingInterval, zimbraDataSourceYabPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public void unsetDataSourceYabPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceYabPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a Yahoo address
+     * book data source. If unset or 0, the data source will not be scheduled
+     * for automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS future
+     */
+    @ZAttr(id=789)
+    public Map<String,Object> unsetDataSourceYabPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceYabPollingInterval, "");
         return attrs;
     }
 
