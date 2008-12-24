@@ -532,6 +532,19 @@ public class ZimbraLog {
     }
     
     /**
+     * Removes all account-specific values from the current thread's
+     * logging context.
+     */
+    public static void removeAccountFromContext() {
+        removeFromContext(C_ID);
+        removeFromContext(C_MID);
+        removeFromContext(C_NAME);
+        removeFromContext(C_ANAME);
+        removeFromContext(C_ITEM);
+        removeFromContext(C_MSG_ID);
+    }
+    
+    /**
      * Adds ip to the current thread's logging context.
      */
     public static void addIpToContext(String ipAddress) {
