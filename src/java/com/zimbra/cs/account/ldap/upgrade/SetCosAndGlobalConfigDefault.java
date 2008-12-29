@@ -1,5 +1,6 @@
 package com.zimbra.cs.account.ldap.upgrade;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,21 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
         }
     }
     
+    /*
+     * return values as: value1, value2, value3, ...
+     */
+    private String formatMultiValue(Collection<String> values) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (String v : values) {
+            if (!first)
+                sb.append(", ");
+            sb.append(v);
+            first = false;
+        }
+        return sb.toString();
+    }
+    
     private void doEntry(ZimbraLdapContext zlc, Entry entry, String entryName, AttributeClass klass) throws ServiceException {
         
         System.out.println();
@@ -81,10 +97,14 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
                     System.out.println("Checking " + entryName + " attribute: " + attr + "(" + attrVersion + ")");
                 }
                 
-                // already has a value, skip it
-                if (entry.getAttr(attr) != null) {
-                    if (mVerbose)
-                        System.out.println("    already has value, skipping");
+                String curVal = entry.getAttr(attr);
+                if (curVal != null) {
+                    // already has a value, skip it
+                    if (mVerbose) {
+                        if (ai.getCardinality() == AttributeCardinality.multi)
+                            curVal = formatMultiValue(entry.getMultiAttrSet(attr));
+                        System.out.println("    skipping - already has value: " + curVal);
+                    }
                     continue;
                 }
                 
@@ -100,7 +120,7 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
                         
                 if (values == null || values.size() ==0) {
                     if (mVerbose)
-                        System.out.println("    does not have a default value, skipping");
+                        System.out.println("    skipping - does not have a default value");
                     continue;
                 }
                 
@@ -109,15 +129,7 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
                     System.out.println("    setting " + entryName + " attribute " + attr + "(" + attrVersion + ")" + " to: " + values.get(0));
                     attrValues.put(attr, values.get(0));
                 } else {
-                    StringBuilder sb = new StringBuilder();
-                    boolean first = true;
-                    for (String s : values) {
-                        if (!first)
-                            sb.append(", ");
-                        sb.append(s);
-                        first = false;
-                    }
-                    System.out.println("    setting " + entryName + " attribute " + attr + "(" + attrVersion + ")" + " to: " + sb);
+                    System.out.println("    setting " + entryName + " attribute " + attr + "(" + attrVersion + ")" + " to: " + formatMultiValue(values));
                     attrValues.put(attr, values.toArray(new String[0]));
                 }
                 

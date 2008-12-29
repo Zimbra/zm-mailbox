@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081223-1440 */
+    /* build: 5.0 pshao 20081229-1423 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1734,7 +1734,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraConvertdURL, or null if unset
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=776)
     public String getConvertdURL() {
@@ -1747,7 +1747,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraConvertdURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=776)
     public void setConvertdURL(String zimbraConvertdURL) throws com.zimbra.common.service.ServiceException {
@@ -1763,7 +1763,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=776)
     public Map<String,Object> setConvertdURL(String zimbraConvertdURL, Map<String,Object> attrs) {
@@ -1777,7 +1777,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=776)
     public void unsetConvertdURL() throws com.zimbra.common.service.ServiceException {
@@ -1792,7 +1792,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=776)
     public Map<String,Object> unsetConvertdURL(Map<String,Object> attrs) {
@@ -4947,7 +4947,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMailRedirectSetEnvelopeSender, or true if unset
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=764)
     public boolean isMailRedirectSetEnvelopeSender() {
@@ -4962,7 +4962,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraMailRedirectSetEnvelopeSender new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=764)
     public void setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender) throws com.zimbra.common.service.ServiceException {
@@ -4980,7 +4980,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=764)
     public Map<String,Object> setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender, Map<String,Object> attrs) {
@@ -4996,7 +4996,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=764)
     public void unsetMailRedirectSetEnvelopeSender() throws com.zimbra.common.service.ServiceException {
@@ -5013,7 +5013,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=764)
     public Map<String,Object> unsetMailRedirectSetEnvelopeSender(Map<String,Object> attrs) {

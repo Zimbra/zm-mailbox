@@ -366,6 +366,11 @@ public class AttributeManager {
                 else
                     description = deprecateInfo + ".  Orig desc: " + description;
             }
+            
+            // since is required after(inclusive) oid 710
+            if (sinceVer == null && id >= 710) {
+                error(name, file, "missing since (required after(inclusive) oid 710)");
+            }
 
             // Check that if id is specified, then cardinality is specified.
             if (id > 0  && cardinality == null) {

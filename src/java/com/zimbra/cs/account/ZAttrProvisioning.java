@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081223-1440 */
+    /* build: 5.0 pshao 20081229-1423 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1059,7 +1059,7 @@ public class ZAttrProvisioning {
     /**
      * UI components available for the authed admin in admin console
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=761)
     public static final String A_zimbraAdminConsoleUIComponents = "zimbraAdminConsoleUIComponents";
@@ -1409,7 +1409,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra calendar resource object.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=753)
     public static final String A_zimbraCalendarResourceExtraObjectClass = "zimbraCalendarResourceExtraObjectClass";
@@ -1556,7 +1556,7 @@ public class ZAttrProvisioning {
     /**
      * attribute constraints TODO: fill all the constraints
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=766)
     public static final String A_zimbraConstraint = "zimbraConstraint";
@@ -1568,7 +1568,7 @@ public class ZAttrProvisioning {
      * attributes for GAL objects are mapped to Contact compatible attributes
      * via zimbraGalLdapAttrMap.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=760)
     public static final String A_zimbraContactAutoCompleteEmailFields = "zimbraContactAutoCompleteEmailFields";
@@ -1578,7 +1578,7 @@ public class ZAttrProvisioning {
      * contacts when generating auto-complete contact list. If unset all
      * contact folders in the mailbox will be searched for auto completion.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=759)
     public static final String A_zimbraContactAutoCompleteFolderIds = "zimbraContactAutoCompleteFolderIds";
@@ -1595,7 +1595,7 @@ public class ZAttrProvisioning {
      * ranking table are given the priority when generating the auto-complete
      * contact list.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=758)
     public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";
@@ -1603,7 +1603,7 @@ public class ZAttrProvisioning {
     /**
      * convertd URL
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=776)
     public static final String A_zimbraConvertdURL = "zimbraConvertdURL";
@@ -1611,7 +1611,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra cos object.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=754)
     public static final String A_zimbraCosExtraObjectClass = "zimbraCosExtraObjectClass";
@@ -1647,7 +1647,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=788)
     public static final String A_zimbraDataSourceCaldavPollingInterval = "zimbraDataSourceCaldavPollingInterval";
@@ -1699,7 +1699,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=768)
     public static final String A_zimbraDataSourceImapPollingInterval = "zimbraDataSourceImapPollingInterval";
@@ -1724,7 +1724,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=769)
     public static final String A_zimbraDataSourceLivePollingInterval = "zimbraDataSourceLivePollingInterval";
@@ -1773,7 +1773,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=767)
     public static final String A_zimbraDataSourcePop3PollingInterval = "zimbraDataSourcePop3PollingInterval";
@@ -1789,7 +1789,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=770)
     public static final String A_zimbraDataSourceRssPollingInterval = "zimbraDataSourceRssPollingInterval";
@@ -1822,7 +1822,7 @@ public class ZAttrProvisioning {
      * book data source. If unset or 0, the data source will not be scheduled
      * for automated polling.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=789)
     public static final String A_zimbraDataSourceYabPollingInterval = "zimbraDataSourceYabPollingInterval";
@@ -1887,7 +1887,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra domain object.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=755)
     public static final String A_zimbraDomainExtraObjectClass = "zimbraDomainExtraObjectClass";
@@ -1904,7 +1904,7 @@ public class ZAttrProvisioning {
     /**
      * ZimbraID of the domain that this component is registered under
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=741)
     public static final String A_zimbraDomainId = "zimbraDomainId";
@@ -2100,7 +2100,7 @@ public class ZAttrProvisioning {
     /**
      * enable end-user mail discarding defined in mail filters features
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=773)
     public static final String A_zimbraFeatureDiscardInFiltersEnabled = "zimbraFeatureDiscardInFiltersEnabled";
@@ -2173,7 +2173,7 @@ public class ZAttrProvisioning {
     /**
      * whether import export folder feature is enabled
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=750)
     public static final String A_zimbraFeatureImportExportFolderEnabled = "zimbraFeatureImportExportFolderEnabled";
@@ -2846,7 +2846,7 @@ public class ZAttrProvisioning {
     /**
      * IM service
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=762)
     public static final String A_zimbraIMService = "zimbraIMService";
@@ -3155,7 +3155,7 @@ public class ZAttrProvisioning {
      * moved to the Trash folder. If FALSE, a message is purged from Trash
      * based on the date that it was added to the mailbox.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=748)
     public static final String A_zimbraMailPurgeUseChangeDateForTrash = "zimbraMailPurgeUseChangeDateForTrash";
@@ -3171,7 +3171,7 @@ public class ZAttrProvisioning {
      * will be set to the users address. If FALSE, the envelope sender will
      * be set to the From address of the redirected message.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=764)
     public static final String A_zimbraMailRedirectSetEnvelopeSender = "zimbraMailRedirectSetEnvelopeSender";
@@ -4043,7 +4043,7 @@ public class ZAttrProvisioning {
     /**
      * whether folder color is enabled
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=771)
     public static final String A_zimbraPrefFolderColorEnabled = "zimbraPrefFolderColorEnabled";
@@ -4249,7 +4249,7 @@ public class ZAttrProvisioning {
     /**
      * last used yahoo id
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=757)
     public static final String A_zimbraPrefIMYahooId = "zimbraPrefIMYahooId";
@@ -4395,7 +4395,7 @@ public class ZAttrProvisioning {
     /**
      * whether mandatory spell check is enabled
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=749)
     public static final String A_zimbraPrefMandatorySpellCheckEnabled = "zimbraPrefMandatorySpellCheckEnabled";
@@ -4671,7 +4671,7 @@ public class ZAttrProvisioning {
      * is the union of account/cos attr zimbraZimletAvailableZimlets and
      * domain attr zimbraZimletDomainAvailableZimlets
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=765)
     public static final String A_zimbraPrefZimlets = "zimbraPrefZimlets";
@@ -5216,7 +5216,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra server object.
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=756)
     public static final String A_zimbraServerExtraObjectClass = "zimbraServerExtraObjectClass";
@@ -5224,7 +5224,7 @@ public class ZAttrProvisioning {
     /**
      * ZimbraID of the server that this component is running on
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=742)
     public static final String A_zimbraServerId = "zimbraServerId";
@@ -5680,7 +5680,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP Category of the component
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=737)
     public static final String A_zimbraXMPPComponentCategory = "zimbraXMPPComponentCategory";
@@ -5688,7 +5688,7 @@ public class ZAttrProvisioning {
     /**
      * class name of the XMPP component
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=763)
     public static final String A_zimbraXMPPComponentClassName = "zimbraXMPPComponentClassName";
@@ -5696,7 +5696,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP Type of the component
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=739)
     public static final String A_zimbraXMPPComponentFeatures = "zimbraXMPPComponentFeatures";
@@ -5704,7 +5704,7 @@ public class ZAttrProvisioning {
     /**
      * Name of the XMPP Component
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=740)
     public static final String A_zimbraXMPPComponentName = "zimbraXMPPComponentName";
@@ -5712,7 +5712,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP Type of the component
      *
-     * @since ZCS future
+     * @since ZCS 6.0
      */
     @ZAttr(id=738)
     public static final String A_zimbraXMPPComponentType = "zimbraXMPPComponentType";

@@ -157,6 +157,9 @@ abstract class LdapUpgrade {
         
         upgrade.parseCommandLine(cl);
         upgrade.doUpgrade();
+        
+        System.out.println("\n\n--------------");
+        System.out.println("all done");
     }
 
 }
