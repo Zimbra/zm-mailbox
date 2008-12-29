@@ -1475,6 +1475,16 @@ public abstract class Provisioning {
     public static final String A_zimbraReverseProxyImapEnabledCapability = "zimbraReverseProxyImapEnabledCapability";
     public static final String A_zimbraReverseProxyPop3EnabledCapability = "zimbraReverseProxyPop3EnabledCapability";
     
+    public static final String A_zimbraReverseProxyUseExternalRoute      = "zimbraReverseProxyUseExternalRoute";
+    public static final String A_zimbraExternalPop3Port                  = "zimbraExternalPop3Port";
+    public static final String A_zimbraExternalPop3SSLPort               = "zimbraExternalPop3SSLPort";
+    public static final String A_zimbraExternalImapPort                  = "zimbraExternalImapPort";
+    public static final String A_zimbraExternalImapSSLPort               = "zimbraExternalImapSSLPort";
+    public static final String A_zimbraExternalPop3Hostname              = "zimbraExternalPop3Hostname";
+    public static final String A_zimbraExternalPop3SSLHostname           = "zimbraExternalPop3SSLHostname";
+    public static final String A_zimbraExternalImapHostname              = "zimbraExternalImapHostname";
+    public static final String A_zimbraExternalImapSSLHostname           = "zimbraExternalImapSSLHostname";
+    
     public static final String A_zimbraVirtualIPAddress                 = "zimbraVirtualIPAddress";
     
     /*
