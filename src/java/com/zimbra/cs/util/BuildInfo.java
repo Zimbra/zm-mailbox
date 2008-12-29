@@ -152,6 +152,10 @@ public class BuildInfo {
             
             return mPatch - version.mPatch;
         }
+        
+        public boolean isFuture() {
+            return mFuture;
+        }
 
         public String toString() {
             return mVersion;

@@ -1,8 +1,6 @@
 package com.zimbra.cs.account.ldap.upgrade;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.naming.NamingException;
@@ -11,22 +9,13 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -49,6 +38,9 @@ abstract class LdapUpgrade {
     };
     
     abstract void doUpgrade() throws ServiceException;
+    
+    void parseCommandLine(CommandLine cl) throws ServiceException {}
+    void usage(HelpFormatter helpFormatter) {}
     
     static void modifyAttrs(Entry entry, ZimbraLdapContext initZlc, Map attrs) throws NamingException, ServiceException {
         ZimbraLdapContext zlc = initZlc;
@@ -90,12 +82,20 @@ abstract class LdapUpgrade {
     }
     
     private static String getCommandUsage() {
-        return "com.zimbra.cs.util.LdapUpgrade <options>";
+        return "com.zimbra.cs.util.LdapUpgrade <options> [args]";
     }
     
-    private static void usage(ParseException e) {
-        if (e != null) {
+    static void usage() {
+        usage(null, null, null);
+    }
+    
+    static void usage(ParseException e, LdapUpgrade ldapUpgrade, String errMsg) {
+        if (e != null)
             System.out.println("Error parsing command line arguments: " + e.getMessage());
+        
+        if (errMsg != null) {
+            System.out.println(errMsg);
+            System.out.println();
         }
 
         Options opts = getAllOptions();
@@ -104,7 +104,9 @@ abstract class LdapUpgrade {
         formatter.printHelp(pw, formatter.getWidth(), getCommandUsage(),
                             null, opts, formatter.getLeftPadding(), formatter.getDescPadding(),
                             null);
+        
         pw.flush();
+        ldapUpgrade.usage(formatter);
     }
     
     /**
@@ -123,17 +125,17 @@ abstract class LdapUpgrade {
             if (cl == null)
                 throw new ParseException("");
         } catch (ParseException e) {
-            usage(e);
+            LdapUpgrade.usage(e, null, null);
             System.exit(1);
         }
         
         if (cl.hasOption(O_HELP)) {
-            usage(null);
+            LdapUpgrade.usage();
             System.exit(1);
         }
 
         if (!cl.hasOption(O_BUG)) {
-            usage(null);
+            LdapUpgrade.usage();
             System.exit(1);
         }
         
@@ -142,7 +144,9 @@ abstract class LdapUpgrade {
         String bug = cl.getOptionValue(O_BUG);
         LdapUpgrade upgrade = null;
         
-        if ("29978".equalsIgnoreCase(bug)) {
+        if ("27075".equalsIgnoreCase(bug)) {
+            upgrade = new SetCosAndGlobalConfigDefault(verbose);
+        } else if ("29978".equalsIgnoreCase(bug)) {
             upgrade = new DomainPublicServiceProtocolAndPort(verbose);
         } else if ("32557".equalsIgnoreCase(bug)) {
             upgrade = new DomainObjectClassAmavisAccount(verbose);
@@ -151,9 +155,8 @@ abstract class LdapUpgrade {
             System.exit(1);
         }
         
+        upgrade.parseCommandLine(cl);
         upgrade.doUpgrade();
-        
-
     }
 
 }

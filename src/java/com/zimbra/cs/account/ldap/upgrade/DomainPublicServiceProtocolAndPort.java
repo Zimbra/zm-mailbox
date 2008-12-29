@@ -183,9 +183,11 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
             } catch (ServiceException e) {
                 // log the exception and continue
                 System.out.println("Caught ServiceException while modifying domain " + domain.getName());
+                e.printStackTrace();
             } catch (NamingException e) {
                 // log the exception and continue
                 System.out.println("Caught NamingException while modifying domain " + domain.getName());
+                e.printStackTrace();
             }
         }
         

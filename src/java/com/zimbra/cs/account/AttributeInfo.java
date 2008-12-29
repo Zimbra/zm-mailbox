@@ -434,15 +434,15 @@ public class AttributeInfo {
         return mOptionalInClasses != null && mOptionalInClasses.contains(cls);
     }
 
-    AttributeCardinality getCardinality() {
+    public AttributeCardinality getCardinality() {
         return mCardinality;
     }
    
-    List<String> getGlobalConfigValues() {
+    public List<String> getGlobalConfigValues() {
         return mGlobalConfigValues;
     }
    
-    List<String> getDefaultCosValues() {
+    public List<String> getDefaultCosValues() {
         return mDefaultCOSValues;
     }
 
@@ -450,7 +450,7 @@ public class AttributeInfo {
         return mImmutable;
     }
     
-    BuildInfo.Version getSince() {
+    public BuildInfo.Version getSince() {
         return mSince;
     }
 }
