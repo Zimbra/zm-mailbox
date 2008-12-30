@@ -17,8 +17,10 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081229-1512 */
+    /* build: 5.0 pshao 20081230-1116 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -513,6 +515,125 @@ public class ZAttrDistributionList extends MailTarget {
     public Map<String,Object> unsetACE(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraACE, "");
+        return attrs;
+    }
+
+    /**
+     * time object was created
+     *
+     * <p>Use getCreateTimestampAsString to access value as a string.
+     *
+     * @see #getCreateTimestampAsString()
+     *
+     * @return zimbraCreateTimestamp as Date, null if unset or unable to parse
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public Date getCreateTimestamp() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null);
+    }
+
+    /**
+     * time object was created
+     *
+     * @return zimbraCreateTimestamp, or null if unset
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public String getCreateTimestampAsString() {
+        return getAttr(Provisioning.A_zimbraCreateTimestamp, null);
+    }
+
+    /**
+     * time object was created
+     *
+     * @param zimbraCreateTimestamp new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time object was created
+     *
+     * @param zimbraCreateTimestamp new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        return attrs;
+    }
+
+    /**
+     * time object was created
+     *
+     * @param zimbraCreateTimestamp new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public void setCreateTimestampAsString(String zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time object was created
+     *
+     * @param zimbraCreateTimestamp new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public Map<String,Object> setCreateTimestampAsString(String zimbraCreateTimestamp, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp);
+        return attrs;
+    }
+
+    /**
+     * time object was created
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public void unsetCreateTimestamp() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time object was created
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
         return attrs;
     }
 

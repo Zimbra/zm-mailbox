@@ -771,6 +771,7 @@ public class LdapProvisioning extends Provisioning {
             else
                 zimbraIdStr = uuid;
             attrs.put(A_zimbraId, zimbraIdStr);
+            attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
 
             // TODO: uncomment when ready
             //attrs.put(A_zimbraVersion, AccountVersion.CURRENT_VERSION+"");
@@ -1320,6 +1321,7 @@ public class LdapProvisioning extends Provisioning {
                 zlc.simpleCreate(aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName,
                                    Provisioning.A_zimbraId, aliasUuid,
+                                   Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()),
                                    Provisioning.A_zimbraAliasTargetId, targetEntryId} );
             } catch (NameAlreadyBoundException e) {
                 /*
@@ -1337,6 +1339,7 @@ public class LdapProvisioning extends Provisioning {
                     zlc.simpleCreate(aliasDn, "zimbraAlias",
                             new String[] { Provisioning.A_uid, aliasName,
                                            Provisioning.A_zimbraId, aliasUuid,
+                                           Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()),
                                            Provisioning.A_zimbraAliasTargetId, targetEntryId} );
                 } else if (targetEntryId.equals(targetEntry.getId())) {
                     // the alias target points this account/DL
@@ -1515,6 +1518,7 @@ public class LdapProvisioning extends Provisioning {
 
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
+            attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             attrs.put(A_zimbraDomainName, name);
 
             String mailStatus = (String) domainAttrs.get(A_zimbraMailStatus);
@@ -1778,6 +1782,7 @@ public class LdapProvisioning extends Provisioning {
         }
         allAttrs.remove(Provisioning.A_objectClass);
         allAttrs.remove(Provisioning.A_zimbraId);
+        allAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
         allAttrs.remove(Provisioning.A_cn);
         allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {
@@ -1801,6 +1806,7 @@ public class LdapProvisioning extends Provisioning {
 
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
+            attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             attrs.put(A_cn, destCosName);
             String dn = mDIT.cosNametoDN(destCosName);
             zlc.createEntry(dn, attrs, "createCos");
@@ -2217,6 +2223,7 @@ public class LdapProvisioning extends Provisioning {
 
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
+            attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             attrs.put(A_cn, name);
             String dn = mDIT.serverNametoDN(name);
 
@@ -2491,6 +2498,7 @@ public class LdapProvisioning extends Provisioning {
 
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
+            attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             attrs.put(A_zimbraMailAlias, listAddress);
             attrs.put(A_mail, listAddress);
 
@@ -3525,6 +3533,7 @@ public class LdapProvisioning extends Provisioning {
     		LdapUtil.addAttr(attrs, A_objectClass, "zimbraZimletEntry");
     		LdapUtil.addAttr(attrs, A_zimbraZimletEnabled, Provisioning.FALSE);
     		LdapUtil.addAttr(attrs, A_zimbraZimletIndexingEnabled, hasKeyword);
+    		LdapUtil.addAttr(attrs, A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
     		
     		String dn = mDIT.zimletNameToDN(name);
     		zlc.createEntry(dn, attrs, "createZimlet");
@@ -5326,6 +5335,7 @@ public class LdapProvisioning extends Provisioning {
             
             String compId = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, compId);
+            attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             attrs.put(A_cn, name);
             String dn = mDIT.xmppcomponentNameToDN(name);
             

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081229-1512 */
+    /* build: 5.0 pshao 20081230-1116 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1627,6 +1627,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=21)
     public static final String A_zimbraCOSInheritedAttr = "zimbraCOSInheritedAttr";
+
+    /**
+     * time object was created
+     *
+     * @since ZCS 6.0
+     */
+    @ZAttr(id=790)
+    public static final String A_zimbraCreateTimestamp = "zimbraCreateTimestamp";
 
     /**
      * set to 1 or 3 to specify customer care account tier level
