@@ -55,6 +55,9 @@ public class ZGetInfoResult implements ToZJSONObject {
     private List<String> mMailURLs;
     private Set<String> mEmailAddresses;
     private Date mPrevSession;
+    private String mChangePasswordURL;
+    private String mPublicURL;
+
 
     static Map<String, List<String>> getMap(Element e, String root, String elName) throws ServiceException {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
@@ -92,6 +95,8 @@ public class ZGetInfoResult implements ToZJSONObject {
         mPublicURLBase = e.getAttribute(AccountConstants.E_PUBLIC_URL, null);
 		long prevSession = e.getAttributeLong(AccountConstants.E_PREVIOUS_SESSION, 0);
         mPrevSession = prevSession != 0 ? new Date(prevSession) : new Date();
+        mChangePasswordURL = e.getAttribute(AccountConstants.E_CHANGE_PASSWORD_URL, null);
+        mPublicURL = e.getAttribute(AccountConstants.E_PUBLIC_URL, null);
 
         mMailURLs = new ArrayList<String>();
         String mailUrl = e.getAttribute(AccountConstants.E_SOAP_URL, null);
@@ -182,6 +187,14 @@ public class ZGetInfoResult implements ToZJSONObject {
 
     public String getRecent() {
         return mRecent;
+    }
+
+    public String getChangePasswordURL() {
+        return mChangePasswordURL;
+    }
+
+    public String getPublicURL() {
+        return mPublicURL;
     }
 
     public List<String> getMailURL() {
