@@ -53,7 +53,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
         
         if (domain == null && domainBy != DomainBy.name && domainBy != DomainBy.virtualHostname) {
             // domain not found, and we don't have info for walking up sub domains
-            // can't do much, we probably don't want to return global config values in this case.
+            // return attributes on global config 
+            toXML(response, prov.getConfig(), applyConfig);
         } else {
             /*
              * for all the attrs we can return (like login/logout URL), start stripping off 
