@@ -132,7 +132,6 @@ public class LdapProvisioning extends Provisioning {
     public static final String C_zimbraDomain = "zimbraDomain";
     public static final String C_zimbraMailList = "zimbraDistributionList";
     public static final String C_zimbraMailRecipient = "zimbraMailRecipient";
-    public static final String C_zimbraRight = "zimbraRight";
     public static final String C_zimbraServer = "zimbraServer";
     public static final String C_zimbraCalendarResource = "zimbraCalendarResource";
     public static final String C_zimbraAlias = "zimbraAlias";
@@ -216,7 +215,7 @@ public class LdapProvisioning extends Provisioning {
         mDIT = new LdapDIT(this);
     }
     
-    LdapDIT getDIT() { // package access until it needs to be promoted.
+    public LdapDIT getDIT() {
         return mDIT;
     }
     
@@ -4457,6 +4456,7 @@ public class LdapProvisioning extends Provisioning {
                 identityId = LdapUtil.generateUUID();
                 attrs.put(A_zimbraPrefIdentityId, identityId);
             }
+            attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             
             zlc.createEntry(dn, attrs, "createIdentity");
 
@@ -4726,6 +4726,7 @@ public class LdapProvisioning extends Provisioning {
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(signatureAttrs, attrs);
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraSignature");
+            attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             
             zlc.createEntry(dn, attrs, "createSignature");
 
@@ -5084,7 +5085,8 @@ public class LdapProvisioning extends Provisioning {
                 String encrypted = passwdAlreadyEncrypted ? password : DataSource.encryptData(dsId, password);
                 attrs.put(A_zimbraDataSourcePassword, encrypted);
             }
-
+            attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            
             zlc.createEntry(dn, attrs, "createDataSource");
 
             DataSource ds = getDataSourceById(ldapEntry, dsId, zlc);

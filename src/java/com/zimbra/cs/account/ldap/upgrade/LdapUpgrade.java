@@ -23,11 +23,12 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 abstract class LdapUpgrade {
     
+    protected String mBug;
     protected boolean mVerbose;
     protected LdapProvisioning mProv;
     
-    LdapUpgrade(boolean verbose) throws ServiceException {
-        
+    LdapUpgrade(String bug, boolean verbose) throws ServiceException {
+        mBug = bug;
         mVerbose = verbose;
         
         Provisioning prov = Provisioning.getInstance();
@@ -39,7 +40,7 @@ abstract class LdapUpgrade {
     
     abstract void doUpgrade() throws ServiceException;
     
-    void parseCommandLine(CommandLine cl) throws ServiceException {}
+    boolean parseCommandLine(CommandLine cl) { return true; }
     void usage(HelpFormatter helpFormatter) {}
     
     static void modifyAttrs(Entry entry, ZimbraLdapContext initZlc, Map attrs) throws NamingException, ServiceException {
@@ -99,7 +100,7 @@ abstract class LdapUpgrade {
         }
 
         Options opts = getAllOptions();
-        PrintWriter pw = new PrintWriter(System.err, true);
+        PrintWriter pw = new PrintWriter(System.out, true);
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(pw, formatter.getWidth(), getCommandUsage(),
                             null, opts, formatter.getLeftPadding(), formatter.getDescPadding(),
@@ -145,17 +146,22 @@ abstract class LdapUpgrade {
         LdapUpgrade upgrade = null;
         
         if ("27075".equalsIgnoreCase(bug)) {
-            upgrade = new SetCosAndGlobalConfigDefault(verbose);
+            upgrade = new SetCosAndGlobalConfigDefault(bug, verbose);
+        } else if ("22033".equalsIgnoreCase(bug)) {
+            upgrade = new SetZimbraCreateTimestamp(bug, verbose);
         } else if ("29978".equalsIgnoreCase(bug)) {
-            upgrade = new DomainPublicServiceProtocolAndPort(verbose);
+            upgrade = new DomainPublicServiceProtocolAndPort(bug, verbose);
         } else if ("32557".equalsIgnoreCase(bug)) {
-            upgrade = new DomainObjectClassAmavisAccount(verbose);
+            upgrade = new DomainObjectClassAmavisAccount(bug, verbose);
         } else {
             System.out.println("unrecognized bug number");
             System.exit(1);
         }
         
-        upgrade.parseCommandLine(cl);
+        if (!upgrade.parseCommandLine(cl)) {
+            System.exit(1);
+        }
+        
         upgrade.doUpgrade();
         
         System.out.println("\n\n--------------");

@@ -3923,7 +3923,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,domain,server,calendarResource,xmppComponent,zimletEntry" since="6.0">
+<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,signature,calendarResource,xmppComponent,zimletEntry" since="6.0">
   <desc>time object was created</desc>
 </attr>
 

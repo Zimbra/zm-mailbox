@@ -18,8 +18,8 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     
-    DomainPublicServiceProtocolAndPort(boolean verbose) throws ServiceException {
-        super(verbose);
+    DomainPublicServiceProtocolAndPort(String bug, boolean verbose) throws ServiceException {
+        super(bug, verbose);
     }
     
     private static String genQuery(List<Server> servers) {
@@ -369,7 +369,7 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     }
     
     public static void main(String[] args) throws ServiceException {
-        DomainPublicServiceProtocolAndPort upgrade = new DomainPublicServiceProtocolAndPort(true);
+        DomainPublicServiceProtocolAndPort upgrade = new DomainPublicServiceProtocolAndPort("test", true);
         upgrade.populateTestData();
     }
 }

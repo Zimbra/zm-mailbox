@@ -18,8 +18,8 @@ import com.zimbra.cs.account.ldap.upgrade.DomainPublicServiceProtocolAndPort.Dom
 
 public class DomainObjectClassAmavisAccount extends LdapUpgrade {
 
-    DomainObjectClassAmavisAccount(boolean verbose) throws ServiceException {
-        super(verbose);
+    DomainObjectClassAmavisAccount(String bug, boolean verbose) throws ServiceException {
+        super(bug, verbose);
     }
     
     static class AddDomainObjectClassAmavisAccountVisitor extends LdapUpgrade.UpgradeVisitor implements NamedEntry.Visitor {
@@ -89,7 +89,7 @@ public class DomainObjectClassAmavisAccount extends LdapUpgrade {
             visitor = new AddDomainObjectClassAmavisAccountVisitor(mProv, zlc,  mVerbose);
             
             for (String base : bases) {
-                // should really have one base, but iterate thought the arrya anyway
+                // should really have one base, but iterate thought the array anyway
                 if (mVerbose) {
                     System.out.println("LDAP search base: " + base);
                     System.out.println("LDAP search query: " + query);

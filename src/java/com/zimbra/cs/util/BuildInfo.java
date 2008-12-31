@@ -84,17 +84,21 @@ public class BuildInfo {
             
             String[] parts = version.split("\\.");
             
-            if (parts.length == 1)
-                mMajor = Integer.parseInt(parts[0]);
-            else if (parts.length == 2) {
-                mMajor = Integer.parseInt(parts[0]);
-                mMinor = Integer.parseInt(parts[1]);
-            } else if (parts.length == 3) {
-                mMajor = Integer.parseInt(parts[0]);
-                mMinor = Integer.parseInt(parts[1]);
-                mPatch = Integer.parseInt(parts[2]);
-            } else
-                throw ServiceException.FAILURE("invalid version format:" + version, null); 
+            try {
+                if (parts.length == 1)
+                    mMajor = Integer.parseInt(parts[0]);
+                else if (parts.length == 2) {
+                    mMajor = Integer.parseInt(parts[0]);
+                    mMinor = Integer.parseInt(parts[1]);
+                } else if (parts.length == 3) {
+                    mMajor = Integer.parseInt(parts[0]);
+                    mMinor = Integer.parseInt(parts[1]);
+                    mPatch = Integer.parseInt(parts[2]);
+                } else
+                    throw ServiceException.FAILURE("invalid version format:" + version, null); 
+            } catch (NumberFormatException e) {
+                throw ServiceException.FAILURE("invalid version format:" + version, e); 
+            }
         }
         
         /**

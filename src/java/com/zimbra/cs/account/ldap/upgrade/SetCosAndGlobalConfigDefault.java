@@ -27,25 +27,31 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
 
     private Version mSince;
     
-    SetCosAndGlobalConfigDefault(boolean verbose) throws ServiceException {
-        super(verbose);
+    SetCosAndGlobalConfigDefault(String bug, boolean verbose) throws ServiceException {
+        super(bug, verbose);
     }
     
     @Override
-    void parseCommandLine(CommandLine cl) throws ServiceException {
+    boolean parseCommandLine(CommandLine cl) {
         String[] args = cl.getArgs();
         if (args == null || args.length != 1) {
             LdapUpgrade.usage(null, this, "missing required argument: since");
-            throw ServiceException.INVALID_REQUEST("missing since", null);
+            return false;
         }
         
-        mSince = new Version(args[0]);
+        try {
+            mSince = new Version(args[0]);
+        } catch (ServiceException e) {
+            LdapUpgrade.usage(null, this, "invalid version: " + args[0]);
+            return false;
+        }
+        return true;
     }
     
     @Override
     void usage(HelpFormatter helpFormatter) {
         System.out.println();
-        System.out.println("args:");
+        System.out.println("args for bug " + mBug + ":");
         System.out.println("    {since}  (e.g. 5.0.12)");
         System.out.println();
     }
