@@ -3636,27 +3636,27 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether NGINX mail proxy will pass upstream server errors back to the downstream email clients</desc>
 </attr>
 
-<attr id="737" name="zimbraXMPPComponentCategory" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0">
+<attr id="737" name="zimbraXMPPComponentCategory" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0.0">
   <desc>XMPP Category of the component</desc>
 </attr>
 
-<attr id="738" name="zimbraXMPPComponentType" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0">
+<attr id="738" name="zimbraXMPPComponentType" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0.0">
   <desc>XMPP Type of the component</desc>
 </attr>
 
-<attr id="739" name="zimbraXMPPComponentFeatures" type="string" cardinality="multi" optionalIn="xmppComponent" since="6.0">
+<attr id="739" name="zimbraXMPPComponentFeatures" type="string" cardinality="multi" optionalIn="xmppComponent" since="6.0.0">
   <desc>XMPP Type of the component</desc>
 </attr>
 
-<attr id="740" name="zimbraXMPPComponentName" type="string" cardinality="single" optionalIn="xmppComponent" since="6.0">
+<attr id="740" name="zimbraXMPPComponentName" type="string" cardinality="single" optionalIn="xmppComponent" since="6.0.0">
   <desc>Name of the XMPP Component</desc>
 </attr>
 
-<attr id="741" name="zimbraDomainId" type="id" cardinality="single" requiredIn="xmppComponent" since="6.0">
+<attr id="741" name="zimbraDomainId" type="id" cardinality="single" requiredIn="xmppComponent" since="6.0.0">
   <desc>ZimbraID of the domain that this component is registered under</desc>
 </attr>
 
-<attr id="742" name="zimbraServerId" type="id" cardinality="single" requiredIn="xmppComponent" since="6.0">
+<attr id="742" name="zimbraServerId" type="id" cardinality="single" requiredIn="xmppComponent" since="6.0.0">
   <desc>ZimbraID of the server that this component is running on</desc>
 </attr>  
 
@@ -3684,7 +3684,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>If true, an X-Authenticated-User header will be added to messages sent via SendMsgRequest.</desc>
 </attr>
 
-<attr id="748" name="zimbraMailPurgeUseChangeDateForTrash" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0">
+<attr id="748" name="zimbraMailPurgeUseChangeDateForTrash" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     If TRUE, a message is purged from trash based on the date that it was moved
@@ -3693,12 +3693,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="749" name="zimbraPrefMandatorySpellCheckEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0">
+<attr id="749" name="zimbraPrefMandatorySpellCheckEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether mandatory spell check is enabled</desc>
 </attr>
 
-<attr id="750" name="zimbraFeatureImportExportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0">
+<attr id="750" name="zimbraFeatureImportExportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether import export folder feature is enabled</desc>
 </attr>
@@ -3713,33 +3713,33 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>when set to TRUE, free/busy for the account is not calculated from local mailbox.</desc>
 </attr>
 
-<attr id="753" name="zimbraCalendarResourceExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0">
+<attr id="753" name="zimbraCalendarResourceExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0.0">
   <globalConfigValue>amavisAccount</globalConfigValue>
   <desc>Object classes to add when creating a zimbra calendar resource object.
   </desc>
 </attr>
 
-<attr id="754" name="zimbraCosExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0">
+<attr id="754" name="zimbraCosExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0.0">
   <desc>Object classes to add when creating a zimbra cos object.
   </desc>
 </attr>
 
-<attr id="755" name="zimbraDomainExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0">
+<attr id="755" name="zimbraDomainExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0.0">
   <globalConfigValue>amavisAccount</globalConfigValue>
   <desc>Object classes to add when creating a zimbra domain object.
   </desc>
 </attr>
 
-<attr id="756" name="zimbraServerExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0">
+<attr id="756" name="zimbraServerExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="6.0.0">
   <desc>Object classes to add when creating a zimbra server object.
   </desc>
 </attr>
 
-<attr id="757" name="zimbraPrefIMYahooId" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="6.0">
+<attr id="757" name="zimbraPrefIMYahooId" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="6.0.0">
   <desc>last used yahoo id</desc>
 </attr>
 
-<attr id="758" name="zimbraContactRankingTableSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0">
+<attr id="758" name="zimbraContactRankingTableSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>40</defaultCOSValue>
   <desc>
     Size of the contact ranking table.  Ranking table is used to keep track of
@@ -3748,7 +3748,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="759" name="zimbraContactAutoCompleteFolderIds" type="string" max="128" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0">
+<attr id="759" name="zimbraContactAutoCompleteFolderIds" type="string" max="128" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <desc>
     Comma separates list of folder Ids that should be used to search for
     contacts when generating auto-complete contact list.  If unset all contact
@@ -3756,7 +3756,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0">
+<attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>email,email2,email3</defaultCOSValue>
   <desc>
     Comma separates list of attributes in contact object to search for
@@ -3767,20 +3767,20 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="761" name="zimbraAdminConsoleUIComponents" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="6.0">
+<attr id="761" name="zimbraAdminConsoleUIComponents" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="6.0.0">
   <desc>UI components available for the authed admin in admin console</desc>
 </attr>
 
-<attr id="762" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="762" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>zimbra</defaultCOSValue>
   <desc>IM service</desc>
 </attr>
 
-<attr id="763" name="zimbraXMPPComponentClassName" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0">
+<attr id="763" name="zimbraXMPPComponentClassName" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0.0">
   <desc>class name of the XMPP component</desc>
 </attr>
 
-<attr id="764" name="zimbraMailRedirectSetEnvelopeSender" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0">
+<attr id="764" name="zimbraMailRedirectSetEnvelopeSender" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>
     If TRUE, the envelope sender of a message redirected by mail filters will be set to the users address.  
@@ -3788,42 +3788,42 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
     
-<attr id="765" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="6.0">
+<attr id="765" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="6.0.0">
   <desc>
       zimlets user wants to see in the UI
       note: zimlets available to a user is the union of account/cos attr zimbraZimletAvailableZimlets and domain attr zimbraZimletDomainAvailableZimlets
   </desc>
 </attr>
 
-<attr id="766" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="6.0">
+<attr id="766" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="6.0.0">
   <desc>
       attribute constraints
       TODO: fill all the constraints
   </desc>
 </attr>
 
-<attr id="767" name="zimbraDataSourcePop3PollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="767" name="zimbraDataSourcePop3PollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <desc>
     The time interval between automated data imports for a Pop3 data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="768" name="zimbraDataSourceImapPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="768" name="zimbraDataSourceImapPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <desc>
     The time interval between automated data imports for an Imap data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="769" name="zimbraDataSourceLivePollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="769" name="zimbraDataSourceLivePollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <desc>
     The time interval between automated data imports for a Live data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="770" name="zimbraDataSourceRssPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="770" name="zimbraDataSourceRssPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>12h</defaultCOSValue>
   <desc>
     The time interval between automated data imports for a Rss data source.
@@ -3831,7 +3831,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="771" name="zimbraPrefFolderColorEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0">
+<attr id="771" name="zimbraPrefFolderColorEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether folder color is enabled</desc>
 </attr>
@@ -3840,7 +3840,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>admin console login message</desc>
 </attr>
 
-<attr id="773" name="zimbraFeatureDiscardInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="773" name="zimbraFeatureDiscardInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>enable end-user mail discarding defined in mail filters features</desc>
 </attr>
@@ -3854,7 +3854,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimbraId of domain alias target</desc>
 </attr>
 
-<attr id="776" name="zimbraConvertdURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0">
+<attr id="776" name="zimbraConvertdURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
   <desc>convertd URL</desc>
 </attr>
 
@@ -3908,21 +3908,21 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>external imap SSL hostname</desc>
 </attr>
 
-<attr id="788" name="zimbraDataSourceCaldavPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="788" name="zimbraDataSourceCaldavPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <desc>
     The time interval between automated data imports for a Caldav data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="789" name="zimbraDataSourceYabPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0">
+<attr id="789" name="zimbraDataSourceYabPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <desc>
     The time interval between automated data imports for a Yahoo address book data source.
     If unset or 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
-<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,signature,calendarResource,xmppComponent,zimletEntry" since="6.0">
+<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,signature,calendarResource,xmppComponent,zimletEntry" since="6.0.0">
   <desc>time object was created</desc>
 </attr>
 

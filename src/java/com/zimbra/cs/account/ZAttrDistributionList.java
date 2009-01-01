@@ -36,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081231-1622 */
+    /* build: 5.0 pshao 20081231-1711 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -527,7 +527,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraCreateTimestamp as Date, null if unset or unable to parse
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
@@ -539,7 +539,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraCreateTimestamp, or null if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
@@ -552,7 +552,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraCreateTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
@@ -568,7 +568,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
@@ -583,7 +583,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraCreateTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public void setCreateTimestampAsString(String zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
@@ -599,7 +599,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestampAsString(String zimbraCreateTimestamp, Map<String,Object> attrs) {
@@ -613,7 +613,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public void unsetCreateTimestamp() throws com.zimbra.common.service.ServiceException {
@@ -628,7 +628,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {

@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081231-1622 */
+    /* build: 5.0 pshao 20081231-1711 */
 
     /**
      * Zimbra access control list
@@ -3194,7 +3194,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraCalendarResourceExtraObjectClass, or ampty array if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public String[] getCalendarResourceExtraObjectClass() {
@@ -3207,7 +3207,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCalendarResourceExtraObjectClass new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public void setCalendarResourceExtraObjectClass(String[] zimbraCalendarResourceExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -3223,7 +3223,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public Map<String,Object> setCalendarResourceExtraObjectClass(String[] zimbraCalendarResourceExtraObjectClass, Map<String,Object> attrs) {
@@ -3238,7 +3238,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCalendarResourceExtraObjectClass new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public void addCalendarResourceExtraObjectClass(String zimbraCalendarResourceExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -3254,7 +3254,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public Map<String,Object> addCalendarResourceExtraObjectClass(String zimbraCalendarResourceExtraObjectClass, Map<String,Object> attrs) {
@@ -3269,7 +3269,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCalendarResourceExtraObjectClass existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public void removeCalendarResourceExtraObjectClass(String zimbraCalendarResourceExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -3285,7 +3285,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public Map<String,Object> removeCalendarResourceExtraObjectClass(String zimbraCalendarResourceExtraObjectClass, Map<String,Object> attrs) {
@@ -3299,7 +3299,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public void unsetCalendarResourceExtraObjectClass() throws com.zimbra.common.service.ServiceException {
@@ -3314,7 +3314,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=753)
     public Map<String,Object> unsetCalendarResourceExtraObjectClass(Map<String,Object> attrs) {
@@ -3821,7 +3821,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraConstraint, or ampty array if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public String[] getConstraint() {
@@ -3834,7 +3834,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraConstraint new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public void setConstraint(String[] zimbraConstraint) throws com.zimbra.common.service.ServiceException {
@@ -3850,7 +3850,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public Map<String,Object> setConstraint(String[] zimbraConstraint, Map<String,Object> attrs) {
@@ -3865,7 +3865,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraConstraint new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public void addConstraint(String zimbraConstraint) throws com.zimbra.common.service.ServiceException {
@@ -3881,7 +3881,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public Map<String,Object> addConstraint(String zimbraConstraint, Map<String,Object> attrs) {
@@ -3896,7 +3896,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraConstraint existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public void removeConstraint(String zimbraConstraint) throws com.zimbra.common.service.ServiceException {
@@ -3912,7 +3912,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public Map<String,Object> removeConstraint(String zimbraConstraint, Map<String,Object> attrs) {
@@ -3926,7 +3926,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public void unsetConstraint() throws com.zimbra.common.service.ServiceException {
@@ -3941,7 +3941,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=766)
     public Map<String,Object> unsetConstraint(Map<String,Object> attrs) {
@@ -3955,7 +3955,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraConvertdURL, or null if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=776)
     public String getConvertdURL() {
@@ -3968,7 +3968,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraConvertdURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=776)
     public void setConvertdURL(String zimbraConvertdURL) throws com.zimbra.common.service.ServiceException {
@@ -3984,7 +3984,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=776)
     public Map<String,Object> setConvertdURL(String zimbraConvertdURL, Map<String,Object> attrs) {
@@ -3998,7 +3998,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=776)
     public void unsetConvertdURL() throws com.zimbra.common.service.ServiceException {
@@ -4013,7 +4013,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=776)
     public Map<String,Object> unsetConvertdURL(Map<String,Object> attrs) {
@@ -4027,7 +4027,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraCosExtraObjectClass, or ampty array if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public String[] getCosExtraObjectClass() {
@@ -4040,7 +4040,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCosExtraObjectClass new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public void setCosExtraObjectClass(String[] zimbraCosExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -4056,7 +4056,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public Map<String,Object> setCosExtraObjectClass(String[] zimbraCosExtraObjectClass, Map<String,Object> attrs) {
@@ -4071,7 +4071,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCosExtraObjectClass new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public void addCosExtraObjectClass(String zimbraCosExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -4087,7 +4087,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public Map<String,Object> addCosExtraObjectClass(String zimbraCosExtraObjectClass, Map<String,Object> attrs) {
@@ -4102,7 +4102,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCosExtraObjectClass existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public void removeCosExtraObjectClass(String zimbraCosExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -4118,7 +4118,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public Map<String,Object> removeCosExtraObjectClass(String zimbraCosExtraObjectClass, Map<String,Object> attrs) {
@@ -4132,7 +4132,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public void unsetCosExtraObjectClass() throws com.zimbra.common.service.ServiceException {
@@ -4147,7 +4147,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=754)
     public Map<String,Object> unsetCosExtraObjectClass(Map<String,Object> attrs) {
@@ -4165,7 +4165,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraCreateTimestamp as Date, null if unset or unable to parse
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
@@ -4177,7 +4177,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraCreateTimestamp, or null if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
@@ -4190,7 +4190,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCreateTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
@@ -4206,7 +4206,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
@@ -4221,7 +4221,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraCreateTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public void setCreateTimestampAsString(String zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
@@ -4237,7 +4237,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestampAsString(String zimbraCreateTimestamp, Map<String,Object> attrs) {
@@ -4251,7 +4251,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public void unsetCreateTimestamp() throws com.zimbra.common.service.ServiceException {
@@ -4266,7 +4266,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=790)
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
@@ -4540,7 +4540,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraDomainExtraObjectClass, or ampty array if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public String[] getDomainExtraObjectClass() {
@@ -4553,7 +4553,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraDomainExtraObjectClass new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public void setDomainExtraObjectClass(String[] zimbraDomainExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -4569,7 +4569,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public Map<String,Object> setDomainExtraObjectClass(String[] zimbraDomainExtraObjectClass, Map<String,Object> attrs) {
@@ -4584,7 +4584,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraDomainExtraObjectClass new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public void addDomainExtraObjectClass(String zimbraDomainExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -4600,7 +4600,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public Map<String,Object> addDomainExtraObjectClass(String zimbraDomainExtraObjectClass, Map<String,Object> attrs) {
@@ -4615,7 +4615,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraDomainExtraObjectClass existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public void removeDomainExtraObjectClass(String zimbraDomainExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -4631,7 +4631,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public Map<String,Object> removeDomainExtraObjectClass(String zimbraDomainExtraObjectClass, Map<String,Object> attrs) {
@@ -4645,7 +4645,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public void unsetDomainExtraObjectClass() throws com.zimbra.common.service.ServiceException {
@@ -4660,7 +4660,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=755)
     public Map<String,Object> unsetDomainExtraObjectClass(Map<String,Object> attrs) {
@@ -9286,7 +9286,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraMailRedirectSetEnvelopeSender, or true if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=764)
     public boolean isMailRedirectSetEnvelopeSender() {
@@ -9301,7 +9301,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraMailRedirectSetEnvelopeSender new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=764)
     public void setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender) throws com.zimbra.common.service.ServiceException {
@@ -9319,7 +9319,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=764)
     public Map<String,Object> setMailRedirectSetEnvelopeSender(boolean zimbraMailRedirectSetEnvelopeSender, Map<String,Object> attrs) {
@@ -9335,7 +9335,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=764)
     public void unsetMailRedirectSetEnvelopeSender() throws com.zimbra.common.service.ServiceException {
@@ -9352,7 +9352,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=764)
     public Map<String,Object> unsetMailRedirectSetEnvelopeSender(Map<String,Object> attrs) {
@@ -18628,7 +18628,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraServerExtraObjectClass, or ampty array if unset
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public String[] getServerExtraObjectClass() {
@@ -18641,7 +18641,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraServerExtraObjectClass new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public void setServerExtraObjectClass(String[] zimbraServerExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -18657,7 +18657,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public Map<String,Object> setServerExtraObjectClass(String[] zimbraServerExtraObjectClass, Map<String,Object> attrs) {
@@ -18672,7 +18672,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraServerExtraObjectClass new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public void addServerExtraObjectClass(String zimbraServerExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -18688,7 +18688,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public Map<String,Object> addServerExtraObjectClass(String zimbraServerExtraObjectClass, Map<String,Object> attrs) {
@@ -18703,7 +18703,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraServerExtraObjectClass existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public void removeServerExtraObjectClass(String zimbraServerExtraObjectClass) throws com.zimbra.common.service.ServiceException {
@@ -18719,7 +18719,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public Map<String,Object> removeServerExtraObjectClass(String zimbraServerExtraObjectClass, Map<String,Object> attrs) {
@@ -18733,7 +18733,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public void unsetServerExtraObjectClass() throws com.zimbra.common.service.ServiceException {
@@ -18748,7 +18748,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=756)
     public Map<String,Object> unsetServerExtraObjectClass(Map<String,Object> attrs) {

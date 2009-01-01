@@ -17,7 +17,11 @@
 
 package com.zimbra.cs.util;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.Versions;
 
 public class BuildInfo {
@@ -64,15 +68,39 @@ public class BuildInfo {
         
         public static final String FUTURE = "future";
         
+        private static Pattern mPattern = Pattern.compile("([a-zA-Z]+)(\\d*)");
+        
+        enum Release {
+            BETA, M, RC,GA;
+            
+            public static Release fromString(String rel) throws ServiceException {
+                try {
+                    return Release.valueOf(rel);
+                } catch (IllegalArgumentException e) {
+                    throw ServiceException.INVALID_REQUEST("unknown release: " + rel, e);
+                }
+            }
+        }
+        
         private boolean mFuture;
         private int mMajor;
         private int mMinor;
         private int mPatch;
+        private Release mRel;
+        private int mRelNum;
         private String mVersion;
         
         /**
          * 
-         * @param version String in the format of <major number>.<minor number>.<patch number>
+         * @param version String in the format of {major number}.{minor number}.{patch number}_{release}{release number}
+         * 
+         * e.g.
+         *     6
+         *     6.0
+         *     6.0.0
+         *     6.0.0_BETA1
+         *     6.0.0_RC1
+         *     6.0.0_GA
          */
         public Version(String version) throws ServiceException {
             mVersion = version;
@@ -81,8 +109,21 @@ public class BuildInfo {
                 return;
             }
                 
+            String ver = version;
+            int underscoreAt = version.lastIndexOf('_');
+            if (underscoreAt != -1) {
+                ver = version.substring(0, underscoreAt);
+                String rel = version.substring(underscoreAt+1);
+                Matcher matcher = mPattern.matcher(version);
+                if (matcher.find()) {
+                    mRel = Release.fromString(matcher.group(1));
+                    String relNum = matcher.group(2);
+                    if (!StringUtil.isNullOrEmpty(relNum))
+                        mRelNum = Integer.parseInt(relNum);
+                }
+            }
             
-            String[] parts = version.split("\\.");
+            String[] parts = ver.split("\\.");
             
             try {
                 if (parts.length == 1)
@@ -99,6 +140,7 @@ public class BuildInfo {
             } catch (NumberFormatException e) {
                 throw ServiceException.FAILURE("invalid version format:" + version, e); 
             }
+            
         }
         
         /**
@@ -108,6 +150,8 @@ public class BuildInfo {
          *     Version.compare("5.0.10", "5.0.9")  returns > 0
          *     Version.compare("5.0.10", "5.0.10") returns == 0
          *     Version.compare("5.0", "5.0.9")     returns < 0
+         *     Version.compare("5.0.10_RC1", "5.0.10_BETA3") returns > 0
+         *     Version.compare("5.0.10_GA", "5.0.10_RC2") returns > 0
          * 
          * @param versionX
          * @param versionY
@@ -154,7 +198,23 @@ public class BuildInfo {
             if (r != 0)
                 return r;
             
-            return mPatch - version.mPatch;
+            r = mPatch - version.mPatch;
+            if (r != 0)
+                return r;
+            
+            if (mRel != null) {
+                if (version.mRel != null) {
+                    r = mRel.ordinal() - version.mRel.ordinal();
+                    if (r != 0)
+                        return r;
+                    
+                    return mRelNum - version.mRelNum;
+                } else
+                    return 1;
+            } else if (version.mRel != null) {
+                return -1;
+            } else
+                return 0;
         }
         
         public boolean isFuture() {
