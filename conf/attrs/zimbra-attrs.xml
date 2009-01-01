@@ -2182,15 +2182,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="455" name="zimbraDataSourcePollingInterval" type="duration" min="0" cardinality="single" optionalIn="dataSource,account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
   <desc>
     Prior to 6.0.1:
-	    The time interval between automated data imports for a data source, or
-	    all data sources owned by an account.  If unset or 0,
-	    the data source will not be scheduled for automated polling.
-	    
+        The time interval between automated data imports for a data source, or
+        all data sources owned by an account.  If unset or 0,
+        the data source will not be scheduled for automated polling.
     Since 6.0.1:
-	    Deprecated on account/cos since 6.0.1.  Values on account/cos are migrated to protocol specific zimbraDataSource{proto}PollingInterval attributes.
-	    1. if zimbraDataSourcePollingInterval is set on data source, use it
-	    2. otherwise use the zimbraDataSource{Proto}PollingInterval on account/cos
-	    3. if zimbraDataSource{Proto}PollingInterval is not set on account/cos, use 0, which means no automated polling.
+        Deprecated on account/cos since 6.0.1.  Values on account/cos are migrated to protocol specific zimbraDataSource{proto}PollingInterval attributes.
+        1. if zimbraDataSourcePollingInterval is set on data source, use it
+        2. otherwise use the zimbraDataSource{Proto}PollingInterval on account/cos
+        3. if zimbraDataSource{Proto}PollingInterval is not set on account/cos, use 0, which means no automated polling.
   </desc>
 </attr>
 
