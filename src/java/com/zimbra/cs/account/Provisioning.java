@@ -57,7 +57,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String DEFAULT_COS_NAME = "default";
 
     public static final String SERVICE_MAILBOX   = "mailbox";
-    public static final String SERVICE_MEMCACHED = "imapproxy";
+    public static final String SERVICE_MEMCACHED = "memcached";
 
     /**
      * generate appts that try to be compatible with exchange
