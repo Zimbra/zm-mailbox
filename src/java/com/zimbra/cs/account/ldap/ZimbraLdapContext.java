@@ -71,11 +71,11 @@ public class ZimbraLdapContext {
     
 
     static {
-        String ldapHost = LC.ldap_host.value();
-        String ldapPort = LC.ldap_port.value();
         
         sLdapURL = LC.ldap_url.value().trim();
         if (sLdapURL.length() == 0) {
+            String ldapHost = LC.ldap_host.value();
+            String ldapPort = LC.ldap_port.value();
             sLdapURL = "ldap://" + ldapHost + ":" + ldapPort + "/";
         }
         sLdapMasterURL = LC.ldap_master_url.value().trim();
@@ -112,6 +112,14 @@ public class ZimbraLdapContext {
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             startTLSDebugText.append(", allow untrusted certs");
         sStartTLSDebugText = startTLSDebugText.toString();
+    }
+
+    /*
+     * called from ProvUtil
+     */
+    public static synchronized void forceMasterURL() {
+        sLdapURL = sLdapMasterURL;
+        sLdapRequireStartTLS = sLdapMasterRequireStartTLS;
     }
     
     public static String getLdapURL() {

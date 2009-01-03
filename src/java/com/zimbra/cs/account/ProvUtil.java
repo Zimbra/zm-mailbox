@@ -77,6 +77,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveAttr;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
@@ -104,6 +105,7 @@ public class ProvUtil implements DebugListener {
     private boolean mVerbose = false;
     private boolean mDebug = false;
     private boolean mUseLdap = LC.zimbra_zmprov_default_to_ldap.booleanValue(); 
+    private boolean mUseLdapMaster = false;
     private String mAccount = null;
     private String mPassword = null;
     private ZAuthToken mAuthToken = null;
@@ -119,7 +121,7 @@ public class ProvUtil implements DebugListener {
     
     public void setVerbose(boolean verbose) { mVerbose = verbose; }
     
-    public void setUseLdap(boolean useLdap) { mUseLdap = useLdap; }
+    public void setUseLdap(boolean useLdap, boolean useMaster) { mUseLdap = useLdap; mUseLdapMaster = useMaster; }
 
     public void setAccount(String account) { mAccount = account; mUseLdap = false;}
 
@@ -137,6 +139,8 @@ public class ProvUtil implements DebugListener {
         }
         mUseLdap = false;
     }
+    
+    public boolean useLdap() { return mUseLdap; }
 
     private void usage() {
         usage(null);
@@ -173,6 +177,7 @@ public class ProvUtil implements DebugListener {
         System.out.println("  -Y/--authtokenfile {authtoken file}   " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
         System.out.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                            debug mode (dumps SOAP messages)");
+        System.out.println("  -m/--master                           use LDAP master (only valid with -l)");
         System.out.println("");
         doHelp(null);
         System.exit(1);
@@ -497,9 +502,11 @@ public class ProvUtil implements DebugListener {
     }
     
     public void initProvisioning() throws ServiceException, IOException {
-        if (mUseLdap)
+        if (mUseLdap) {
             mProv = Provisioning.getInstance();
-        else {
+            if (mUseLdapMaster)
+                ZimbraLdapContext.forceMasterURL();
+        } else {
             SoapProvisioning sp = new SoapProvisioning();            
             sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
             if (mDebug) sp.soapSetTransportDebugListener(this);
@@ -2303,6 +2310,7 @@ public class ProvUtil implements DebugListener {
         options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for account/password");        
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");
+        options.addOption("m", "master", false, "use LDAP master (has to be used with --ldap)");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
         
@@ -2323,7 +2331,8 @@ public class ProvUtil implements DebugListener {
         }
         
         pu.setVerbose(cl.hasOption('v'));
-        if (cl.hasOption('l')) pu.setUseLdap(true);
+        if (cl.hasOption('l'))
+            pu.setUseLdap(true, cl.hasOption('m'));
         
         if (err || cl.hasOption('h')) {
             pu.usage();
@@ -2364,6 +2373,12 @@ public class ProvUtil implements DebugListener {
             pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
         }
         if (cl.hasOption('d')) pu.setDebug(true);
+        
+        if (!pu.useLdap() && cl.hasOption('m')) {
+            printError("error: cannot specify -m when -l is not specified");
+            System.exit(2);
+        }
+        
         
         args = cl.getArgs();
         
