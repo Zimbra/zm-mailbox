@@ -91,6 +91,7 @@ public class Pop3Sync extends MailItemImport {
     
     public synchronized void test() throws ServiceException {
         validateDataSource();
+        enableTrace(connection.getPop3Config());
         try {
             connect();
         } finally {

@@ -288,6 +288,10 @@ public final class Pop3Connection extends MailConnection {
     public boolean hasCapability(String cap) {
         return capabilities != null && capabilities.hasCapability(cap);
     }
+
+    public Pop3Config getPop3Config() {
+        return (Pop3Config) config;
+    }
     
     public Pop3Response sendCommand(String cmd, Object args) throws IOException {
         mailOut.write(cmd);
