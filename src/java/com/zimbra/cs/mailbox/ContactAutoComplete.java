@@ -154,10 +154,10 @@ public class ContactAutoComplete {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
-			String defaultFolders = acct.getAttr(Provisioning.A_zimbraPrefAddrBookAutoComplete);
-			if (defaultFolders != null) {
+			String[] defaultFolders = acct.getMultiAttr(Provisioning.A_zimbraPrefAddrBookAutoComplete);
+			if (defaultFolders.length > 0) {
 				mDefaultFolders = new ArrayList<Integer>();
-				for (String fid : defaultFolders.split(","))
+				for (String fid : defaultFolders)
 					mDefaultFolders.add(Integer.parseInt(fid));
 			}
 			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields);
