@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090105-1107 */
+    /* build: 5.0 pshao 20090105-1125 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3842,7 +3842,7 @@ public class ZAttrProvisioning {
      * @since ZCS 6.0.0
      */
     @ZAttr(id=759)
-    public static final String A_zimbraPrefAddrBookAutocomplete = "zimbraPrefAddrBookAutocomplete";
+    public static final String A_zimbraPrefAddrBookAutoComplete = "zimbraPrefAddrBookAutoComplete";
 
     /**
      * After login, whether the advanced client should enforce minimum

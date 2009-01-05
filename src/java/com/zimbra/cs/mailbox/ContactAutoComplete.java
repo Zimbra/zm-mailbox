@@ -154,7 +154,7 @@ public class ContactAutoComplete {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
-			String defaultFolders = acct.getAttr(Provisioning.A_zimbraPrefAddrBookAutocomplete);
+			String defaultFolders = acct.getAttr(Provisioning.A_zimbraPrefAddrBookAutoComplete);
 			if (defaultFolders != null) {
 				mDefaultFolders = new ArrayList<Integer>();
 				for (String fid : defaultFolders.split(","))
