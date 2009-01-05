@@ -306,10 +306,15 @@ public class LdapUtil {
     }
     
     public static Attribute addAttr(Attributes attrs, String name, Set<String> values) {
-        BasicAttribute a = new BasicAttribute(name);
+        Attribute a = attrs.get(name);
+        if (a == null) {
+            a = new BasicAttribute(name);
+            attrs.put(a);
+        }
+        
         for (String value : values)
             a.add(value);
-        attrs.put(a);
+        
         return a;
     }
 

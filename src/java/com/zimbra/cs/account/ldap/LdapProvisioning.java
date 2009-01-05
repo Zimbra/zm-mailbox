@@ -691,15 +691,22 @@ public class LdapProvisioning extends Provisioning {
             return c;
     }
     
-    public Account createAccount(String emailAddress, String password, Map<String, Object> acctAttrs) throws ServiceException {
-        return createAccount(emailAddress, password, acctAttrs, mDIT.handleSpecialAttrs(acctAttrs), null);
+    @Override
+    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException {
+        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, false);
+    }
+    
+    @Override
+    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean addOnlyOCsInAttrs) throws ServiceException {
+        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, addOnlyOCsInAttrs);
     }
     
     private Account createAccount(String emailAddress,
                                   String password,
                                   Map<String, Object> acctAttrs,
                                   SpecialAttrs specialAttrs,
-                                  String[] additionalObjectClasses) throws ServiceException {
+                                  String[] additionalObjectClasses,
+                                  boolean addOnlyOCsInAttrs) throws ServiceException {
         
         validEmailAddress(emailAddress);
         
@@ -747,23 +754,25 @@ public class LdapProvisioning extends Provisioning {
                     throw ServiceException.INVALID_REQUEST("invalid attribute for CreateAccount: "+a, null);
             }
             
-            Set<String> ocs;
-            if (additionalObjectClasses == null) {
-                // We are creating a pure account object, get all object classes for account
-                ocs = LdapObjectClass.getAccountObjectClasses(this);
-            } else {
-                // We are creating a "subclass" of account (e.g. calendar resource), get just the
-                // zimbra default object classes for account, then add extra object classes needed 
-                // by the subclass.  
-                // It doesn't matter if the additionalObjectClasses already contains object classes 
-                // added by the getAccountObjectClasses(this, true).  When additional object classes
-                // are added to the set, duplicated once will only appear once.
-                ocs = LdapObjectClass.getAccountObjectClasses(this, true);
-                for (int i = 0; i < additionalObjectClasses.length; i++)
-                    ocs.add(additionalObjectClasses[i]);
+            if (!addOnlyOCsInAttrs) {
+                Set<String> ocs;
+                if (additionalObjectClasses == null) {
+                    // We are creating a pure account object, get all object classes for account
+                    ocs = LdapObjectClass.getAccountObjectClasses(this);
+                } else {
+                    // We are creating a "subclass" of account (e.g. calendar resource), get just the
+                    // zimbra default object classes for account, then add extra object classes needed 
+                    // by the subclass.  
+                    // It doesn't matter if the additionalObjectClasses already contains object classes 
+                    // added by the getAccountObjectClasses(this, true).  When additional object classes
+                    // are added to the set, duplicated once will only appear once.
+                    ocs = LdapObjectClass.getAccountObjectClasses(this, true);
+                    for (int i = 0; i < additionalObjectClasses.length; i++)
+                        ocs.add(additionalObjectClasses[i]);
+                }
+                Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
             }
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
-                        
+            
             String zimbraIdStr;
             if (uuid == null)
                 zimbraIdStr = LdapUtil.generateUUID();
@@ -3578,7 +3587,7 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         
         Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(this);
-        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]));
+        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]), false);
 
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
