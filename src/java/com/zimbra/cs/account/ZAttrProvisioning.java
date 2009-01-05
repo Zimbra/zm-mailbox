@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090103-2021 */
+    /* build: 5.0 pshao 20090105-1107 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1574,16 +1574,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=760)
     public static final String A_zimbraContactAutoCompleteEmailFields = "zimbraContactAutoCompleteEmailFields";
-
-    /**
-     * Comma separates list of folder Ids that should be used to search for
-     * contacts when generating auto-complete contact list. If unset all
-     * contact folders in the mailbox will be searched for auto completion.
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public static final String A_zimbraContactAutoCompleteFolderIds = "zimbraContactAutoCompleteFolderIds";
 
     /**
      * Maximum number of contacts allowed in mailbox. 0 means no limit.
@@ -3843,6 +3833,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=307)
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
+
+    /**
+     * Folder Ids that should be used to search for contacts when generating
+     * auto-complete contact list. If unset all contact folders in the
+     * mailbox will be searched for auto completion.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public static final String A_zimbraPrefAddrBookAutocomplete = "zimbraPrefAddrBookAutocomplete";
 
     /**
      * After login, whether the advanced client should enforce minimum
