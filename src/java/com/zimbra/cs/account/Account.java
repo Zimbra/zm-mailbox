@@ -242,6 +242,7 @@ public class Account extends ZAttrAccount  {
             return accountStatus;
         else if (domainStatus.equals(Provisioning.DOMAIN_STATUS_LOCKED)) {
             if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE) ||
+                accountStatus.equals(Provisioning.ACCOUNT_STATUS_PENDING) ||
                 accountStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED))
                 return accountStatus;
             else
@@ -249,13 +250,15 @@ public class Account extends ZAttrAccount  {
         } else if (domainStatus.equals(Provisioning.DOMAIN_STATUS_MAINTENANCE) ||
                    domainStatus.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) ||
                    domainStatus.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN)) {
-            if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED))
+            if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_PENDING) ||
+                accountStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED))
                 return accountStatus;
             else
                 return Provisioning.ACCOUNT_STATUS_MAINTENANCE;
         } else {
-            assert(domainStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED));
+            // domainStatus is Provisioning.DOMAIN_STATUS_CLOSED
             return Provisioning.ACCOUNT_STATUS_CLOSED;
         }
     }
 }
+ 

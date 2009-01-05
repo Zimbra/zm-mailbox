@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081231-1711 */
+    /* build: 5.0 pshao 20090103-2021 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -51,6 +51,7 @@ public class ZAttrProvisioning {
     public static enum AccountStatus {
         active("active"),
         lockout("lockout"),
+        pending("pending"),
         locked("locked"),
         maintenance("maintenance"),
         closed("closed");
@@ -65,6 +66,7 @@ public class ZAttrProvisioning {
         }
         public boolean isActive() { return this == active;}
         public boolean isLockout() { return this == lockout;}
+        public boolean isPending() { return this == pending;}
         public boolean isLocked() { return this == locked;}
         public boolean isMaintenance() { return this == maintenance;}
         public boolean isClosed() { return this == closed;}
@@ -1945,20 +1947,27 @@ public class ZAttrProvisioning {
      * domain status. enum values are akin to those of zimbraAccountStatus
      * zimbraAccountStatus values: active - active lockout - no login until
      * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) closed - no login, no
-     * delivery(bouncing mails) zimbraDomainStatus values: all values for
-     * zimbraAccountStatus (except for lockout, see mapping below) suspended
-     * - maintenance + no creating/deleting/modifying accounts/DLs under the
-     * domain. shutdown - suspended + no modifying domain attrs (can only be
-     * set internally, cannot be set in admin console or zmprov) How
-     * zimbraDomainStatus affects account behavior :
-     * ------------------------------------- zimbraDomainStatus account
-     * behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * closed, else locked maintenance zimbraAccountStatus if it is closed,
-     * else maintenance suspended zimbraAccountStatus if it is closed, else
-     * maintenance shutdown zimbraAccountStatus if it is closed, else
-     * maintenance closed closed
+     * delivery(try again, no bouncing) pending - no login, no
+     * delivery(bouncing mails), Account behavior is like closed, except that
+     * when the status is being set to pending, account addresses are not
+     * removed from distribution lists. The use case is for hosted. New
+     * account creation based on invites that are not completed until user
+     * accepts TOS on account creation confirmation page. closed - no login,
+     * no delivery(bouncing mails) all addresses (account main email and all
+     * aliases) of the account are removed from all distribution lists.
+     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
+     * for lockout, see mapping below) suspended - maintenance + no
+     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
+     * suspended + no modifying domain attrs (can only be set internally,
+     * cannot be set in admin console or zmprov) How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      */
     @ZAttr(id=535)
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";

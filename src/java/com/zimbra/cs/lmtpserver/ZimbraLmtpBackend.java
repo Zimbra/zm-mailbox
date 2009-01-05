@@ -104,6 +104,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 return LmtpStatus.TRYAGAIN;
             }
 
+            if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_PENDING)) {
+                ZimbraLog.lmtp.info("rejecting address " + addr + ": account status pending");
+                return LmtpStatus.REJECT;
+            }
+            
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
                 ZimbraLog.lmtp.info("rejecting address " + addr + ": account status closed");
                 return LmtpStatus.REJECT;

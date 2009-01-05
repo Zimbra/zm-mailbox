@@ -257,7 +257,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
-<attr id="2" name="zimbraAccountStatus" type="enum" value="active,maintenance,locked,closed,lockout" callback="AccountStatus" cardinality="single" requiredIn="account" flags="domainAdminModifiable">
+<attr id="2" name="zimbraAccountStatus" type="enum" value="active,maintenance,locked,closed,lockout,pending" callback="AccountStatus" cardinality="single" requiredIn="account" flags="domainAdminModifiable">
   <desc>account status</desc>
 </attr>
 
@@ -2578,7 +2578,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
             lockout     - no login until lockout duration is over
             locked      - no login
             maintenance - no login, no delivery(try again, no bouncing)
+            pending     - no login, no delivery(bouncing mails), 
+                          Account behavior is like closed, except that when the status is being set to 
+                          pending, account addresses are not removed from distribution lists.
+                          The use case is for hosted.  New account creation based on invites 
+                          that are not completed until user accepts TOS on account creation confirmation page.  
             closed      - no login, no delivery(bouncing mails)
+                          all addresses (account main email and all aliases) of the 
+                          account are removed from all distribution lists.
         
         zimbraDomainStatus values:
             all values for zimbraAccountStatus (except for lockout, see mapping below)
@@ -2590,13 +2597,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
         zimbraDomainStatus   account behavior
         -------------------------------------
         active               zimbraAccountStatus
-        locked               zimbraAccountStatus if it is maintenance or closed,
+        locked               zimbraAccountStatus if it is maintenance or pending or closed,
                              else locked
-        maintenance          zimbraAccountStatus if it is closed, 
+        maintenance          zimbraAccountStatus if it is pending or closed, 
                              else maintenance
-        suspended            zimbraAccountStatus if it is closed, 
+        suspended            zimbraAccountStatus if it is pending or closed, 
                              else maintenance
-        shutdown             zimbraAccountStatus if it is closed, 
+        shutdown             zimbraAccountStatus if it is pending or closed, 
                              else maintenance                     
         closed               closed
   </desc>

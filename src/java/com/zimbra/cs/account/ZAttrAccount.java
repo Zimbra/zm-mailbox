@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20081231-1711 */
+    /* build: 5.0 pshao 20090103-2021 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -1814,7 +1814,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @return zimbraAccountStatus, or null if unset and/or has invalid value
      */
@@ -1826,7 +1826,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @return zimbraAccountStatus, or null if unset
      */
@@ -1838,7 +1838,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @param zimbraAccountStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1853,7 +1853,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @param zimbraAccountStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1869,7 +1869,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @param zimbraAccountStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1884,7 +1884,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @param zimbraAccountStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1900,7 +1900,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1914,7 +1914,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * account status
      *
-     * <p>Valid values: [active, closed, lockout, locked, maintenance]
+     * <p>Valid values: [active, closed, pending, lockout, locked, maintenance]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

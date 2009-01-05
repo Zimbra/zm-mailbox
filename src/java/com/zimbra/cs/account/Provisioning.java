@@ -138,6 +138,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String ACCOUNT_STATUS_LOCKOUT = "lockout";
 
     /**
+     * the account is marked pending and shouldn't allow logins and/or access.
+     * 
+     * Account behavior is like closed, except that when the status is being set to 
+     * pending, account addresses are not removed from distribution lists.
+     * The use case is for hosted.  New account creation based on invites 
+     * that are not completed until user accepts TOS on account creation confirmation page.
+     */
+    public static final String ACCOUNT_STATUS_PENDING = "pending";
+    
+    /**
      * the account is marked closed (future garbage collection) and shouldn't allow logins and/or access.
      */
     public static final String ACCOUNT_STATUS_CLOSED = "closed";
@@ -542,7 +552,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
-    
+
     /**
      * deletes the specified account, removing the account and all email aliases.
      * does not remove any mailbox associated with the account.

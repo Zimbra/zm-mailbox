@@ -47,7 +47,7 @@ public class AccountStatus extends AttributeCallback {
         else
             status = mod.value();
 
-        if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
+        if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED) || status.equals(Provisioning.ACCOUNT_STATUS_PENDING)) {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         } else if (attrsToModify.get(Provisioning.A_zimbraMailStatus) == null) {
             // the request is not also changing zimbraMailStatus, set = zimbraMailStatus to enabled
@@ -90,7 +90,7 @@ public class AccountStatus extends AttributeCallback {
         String status = account.getAccountStatus(prov);
         
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
-            ZimbraLog.misc.info("removing closed account and all its aliases from all distribution lists");
+            ZimbraLog.misc.info("removing account address and all its aliases from all distribution lists");
             
             String aliases[] = account.getMailAlias();
             String addrs[] = new String[aliases.length+1];
