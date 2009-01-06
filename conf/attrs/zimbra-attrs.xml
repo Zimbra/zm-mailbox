@@ -1806,7 +1806,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Indicates the account is a resource used by the system such as spam accounts or Notebook accounts.</desc>
 </attr>
 
-<attr id="377" name="zimbraPublicServiceHostname" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
+<attr id="377" name="zimbraPublicServiceHostname" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited">
   <desc>Name to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
@@ -3448,11 +3448,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Allowed reverse proxy IP addresses.  Lookup servlet will only generate authtokens if request was made from one of these IP addresses</desc>
 </attr>
 
-<attr id="698" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
+<attr id="698" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited">
   <desc>Protocol to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
-<attr id="699" name="zimbraPublicServicePort" type="port" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
+<attr id="699" name="zimbraPublicServicePort" type="port" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited">
   <desc>Port to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
