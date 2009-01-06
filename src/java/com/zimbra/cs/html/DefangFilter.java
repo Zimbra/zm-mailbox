@@ -640,7 +640,7 @@ public class DefangFilter extends DefaultFilter {
         }
         if (aName.equalsIgnoreCase("style")) {
             result = value.replaceAll("/\\*.*\\*/","");
-            result = result.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
+            result = result.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","none");
             result = result.replaceAll("expression\\s*\\(.*\\)","");
         }
         if (!result.equals(value)) {
