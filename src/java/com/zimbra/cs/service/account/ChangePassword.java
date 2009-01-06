@@ -40,6 +40,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ChangePassword extends AccountDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	    
+	    if (!checkPasswordSecurity(context))
+            throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+	    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         

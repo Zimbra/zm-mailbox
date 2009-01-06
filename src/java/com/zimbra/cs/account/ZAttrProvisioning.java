@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090105-1125 */
+    /* build: 5.0 pshao 20090105-2353 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3074,6 +3074,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=215)
     public static final String A_zimbraMailCatchAllForwardingAddress = "zimbraMailCatchAllForwardingAddress";
+
+    /**
+     * Whether to allow password sent to non-secured port when zimbraMailMode
+     * is mixed. If it set to TRUE the server will allow login with clear
+     * text AuthRequests and change password with clear text
+     * ChangePasswordRequest. If it set to FALSE the server will return an
+     * error if an attempt is made to ChangePasswordRequest or AuthRequest.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=791)
+    public static final String A_zimbraMailClearTextPasswordEnabled = "zimbraMailClearTextPasswordEnabled";
 
     /**
      * RFC822 email address of this recipient for local delivery

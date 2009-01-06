@@ -65,6 +65,12 @@ public class Auth extends AccountDocumentHandler {
                 
                 addAccountToLogContextByAuthToken(prov, at);
                 
+                // this could've been done in the very beginning of the method,
+                // we do it here instead - after the account is added to log context 
+                // so the account will show in log context
+                if (!checkPasswordSecurity(context))
+                    throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+                
                 if (at.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
@@ -100,6 +106,12 @@ public class Auth extends AccountDocumentHandler {
                 throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
 
             AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+            
+            // this could've been done in the very beginning of the method,
+            // we do it here instead - after the account is added to log context 
+            // so the account will show in log context
+            if (!checkPasswordSecurity(context))
+                throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
             
             long expires = 0;
 

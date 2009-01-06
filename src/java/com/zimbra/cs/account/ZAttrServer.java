@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090105-1125 */
+    /* build: 5.0 pshao 20090105-2353 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4595,6 +4595,98 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetLogToSyslog(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLogToSyslog, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port when zimbraMailMode
+     * is mixed. If it set to TRUE the server will allow login with clear
+     * text AuthRequests and change password with clear text
+     * ChangePasswordRequest. If it set to FALSE the server will return an
+     * error if an attempt is made to ChangePasswordRequest or AuthRequest.
+     *
+     * @return zimbraMailClearTextPasswordEnabled, or true if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=791)
+    public boolean isMailClearTextPasswordEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMailClearTextPasswordEnabled, true);
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port when zimbraMailMode
+     * is mixed. If it set to TRUE the server will allow login with clear
+     * text AuthRequests and change password with clear text
+     * ChangePasswordRequest. If it set to FALSE the server will return an
+     * error if an attempt is made to ChangePasswordRequest or AuthRequest.
+     *
+     * @param zimbraMailClearTextPasswordEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=791)
+    public void setMailClearTextPasswordEnabled(boolean zimbraMailClearTextPasswordEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailClearTextPasswordEnabled, zimbraMailClearTextPasswordEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port when zimbraMailMode
+     * is mixed. If it set to TRUE the server will allow login with clear
+     * text AuthRequests and change password with clear text
+     * ChangePasswordRequest. If it set to FALSE the server will return an
+     * error if an attempt is made to ChangePasswordRequest or AuthRequest.
+     *
+     * @param zimbraMailClearTextPasswordEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=791)
+    public Map<String,Object> setMailClearTextPasswordEnabled(boolean zimbraMailClearTextPasswordEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailClearTextPasswordEnabled, zimbraMailClearTextPasswordEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port when zimbraMailMode
+     * is mixed. If it set to TRUE the server will allow login with clear
+     * text AuthRequests and change password with clear text
+     * ChangePasswordRequest. If it set to FALSE the server will return an
+     * error if an attempt is made to ChangePasswordRequest or AuthRequest.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=791)
+    public void unsetMailClearTextPasswordEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailClearTextPasswordEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port when zimbraMailMode
+     * is mixed. If it set to TRUE the server will allow login with clear
+     * text AuthRequests and change password with clear text
+     * ChangePasswordRequest. If it set to FALSE the server will return an
+     * error if an attempt is made to ChangePasswordRequest or AuthRequest.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=791)
+    public Map<String,Object> unsetMailClearTextPasswordEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailClearTextPasswordEnabled, "");
         return attrs;
     }
 

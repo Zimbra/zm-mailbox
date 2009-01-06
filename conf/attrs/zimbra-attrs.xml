@@ -3932,4 +3932,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>time object was created</desc>
 </attr>
 
+<attr id="791" name="zimbraMailClearTextPasswordEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>
+    Whether to allow password sent to non-secured port when zimbraMailMode is mixed.
+    If it set to TRUE the server will allow login with clear text AuthRequests and change password with clear text ChangePasswordRequest.
+    If it set to FALSE the server will return an error if an attempt is made to ChangePasswordRequest or AuthRequest.  
+  </desc>
+</attr>
+
+
 </attrs>
