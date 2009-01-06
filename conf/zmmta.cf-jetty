@@ -43,6 +43,7 @@ SECTION mta DEPENDS amavis
   LOCAL postfix_enable_smtpd_policyd
   REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
 	VAR zimbraMtaRestriction
+	VAR zimbraMtaAuthEnabled
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraMtaRecipientDelimiter
 	VAR zimbraMtaMyNetworks
@@ -64,6 +65,12 @@ SECTION mta DEPENDS amavis
 	fi
 	if VAR zimbraMtaNonSmtpdMilters
 		POSTCONF non_smtpd_milters VAR zimbraMtaNonSmtpdMilters
+	fi
+	if VAR zimbraMtaAuthEnabled
+		POSTCONF smtpd_tls_security_level                             may
+	fi
+	if !VAR zimbraMtaAuthEnabled
+		POSTCONF smtpd_tls_security_level                             none
 	fi
 	LOCAL zimbra_server_hostname
 	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
