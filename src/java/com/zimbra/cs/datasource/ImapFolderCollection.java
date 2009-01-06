@@ -38,23 +38,23 @@ public class ImapFolderCollection implements Iterable<ImapFolder> {
     }
     
     public void add(ImapFolder imapFolder) {
-        mByLocalPath.put(imapFolder.getLocalPath(), imapFolder);
-        mByRemotePath.put(imapFolder.getRemotePath(), imapFolder);
+        mByLocalPath.put(imapFolder.getLocalPath().toLowerCase(), imapFolder);
+        mByRemotePath.put(imapFolder.getRemotePath().toLowerCase(), imapFolder);
         mByItemId.put(imapFolder.getItemId(), imapFolder);
     }
     
     public void remove(ImapFolder imapFolder) {
-        mByLocalPath.remove(imapFolder.getLocalPath());
-        mByRemotePath.remove(imapFolder.getRemotePath());
+        mByLocalPath.remove(imapFolder.getLocalPath().toLowerCase());
+        mByRemotePath.remove(imapFolder.getRemotePath().toLowerCase());
         mByItemId.remove(imapFolder.getItemId());
     }
     
     public ImapFolder getByLocalPath(String localPath) {
-        return mByLocalPath.get(localPath);
+        return mByLocalPath.get(localPath.toLowerCase());
     }
     
     public ImapFolder getByRemotePath(String remotePath) {
-        return mByRemotePath.get(remotePath);
+        return mByRemotePath.get(remotePath.toLowerCase());
     }
     
     public ImapFolder getByItemId(int itemId) {
