@@ -53,7 +53,20 @@ import com.zimbra.znative.IO;
 public class FileBlobStore extends StoreManager {
 
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
-    private static int DEFAULT_DISK_STREAMING_THRESHOLD = 32 * 1024 * 1024;
+    private static final int DEFAULT_DISK_STREAMING_THRESHOLD = 32 * 1024 * 1024;
+    private static final int sDiskStreamingThreshold;
+
+    static {
+        int threshold = DEFAULT_DISK_STREAMING_THRESHOLD;
+        try {
+            threshold = Provisioning.getInstance().getLocalServer().getIntAttr(
+                Provisioning.A_zimbraMailDiskStreamingThreshold, DEFAULT_DISK_STREAMING_THRESHOLD);
+        } catch (ServiceException e) {
+            ZimbraLog.store.warn("Unable to determine disk streaming threshold.  Using default of %d.",
+                DEFAULT_DISK_STREAMING_THRESHOLD);
+        }
+        sDiskStreamingThreshold = threshold;
+    }
 
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
@@ -90,15 +103,7 @@ public class FileBlobStore extends StoreManager {
      * or <tt>32MB</tt>, if the attribute is not set.
      */
     public static int getDiskStreamingThreshold() {
-        int threshold = DEFAULT_DISK_STREAMING_THRESHOLD;
-        try {
-            threshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-                Provisioning.A_zimbraMailDiskStreamingThreshold, DEFAULT_DISK_STREAMING_THRESHOLD);
-        } catch (ServiceException e) {
-            ZimbraLog.store.warn("Unable to determine disk streaming threshold.  Using default of %d.",
-                DEFAULT_DISK_STREAMING_THRESHOLD);
-        }
-        return threshold;
+        return sDiskStreamingThreshold;
     }
 
     @Override public String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException {

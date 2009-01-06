@@ -2071,15 +2071,6 @@ public class Invite {
                     ZProperty xMsOlkSender = new ZProperty("X-MS-OLK-SENDER");
                     xMsOlkSender.setValue(sentByParam);
                     component.addProperty(xMsOlkSender);
-                    String sentByAddr = organizer.getSentBy();
-                    if (sentByAddr != null && sentByAddr.indexOf('@') != -1 && sentByAddr.indexOf(':') == -1) {
-                        Account sentByAcct = Provisioning.getInstance().get(AccountBy.name, sentByAddr);
-                        if (sentByAcct != null) {
-                            String displayName = sentByAcct.getAttr(Provisioning.A_displayName, null);
-                            if (displayName != null)
-                                xMsOlkSender.addParameter(new ZParameter(ICalTok.CN, displayName));
-                        }
-                    }
                 }
             }
         }
