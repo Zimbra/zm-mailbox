@@ -3945,4 +3945,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>stat thread name prefixes</desc>
 </attr>
 
+<attr id="793" name="zimbraSmtpEnableTrace" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
+  <desc>Whether to enable smtp debug trace</desc>
+</attr>
+
+
 </attrs>

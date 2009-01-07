@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090107-1417 */
+    /* build: 5.0 pshao 20090107-1438 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5354,6 +5354,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=669)
     public static final String A_zimbraSkinSelectionColor = "zimbraSkinSelectionColor";
+
+    /**
+     * Whether to enable smtp debug trace
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=793)
+    public static final String A_zimbraSmtpEnableTrace = "zimbraSmtpEnableTrace";
 
     /**
      * the SMTP server to connect to when sending mail

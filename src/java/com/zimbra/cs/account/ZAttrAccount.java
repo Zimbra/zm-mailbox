@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090107-1417 */
+    /* build: 5.0 pshao 20090107-1438 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -25902,6 +25902,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetSignatureName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSignatureName, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable smtp debug trace
+     *
+     * @return zimbraSmtpEnableTrace, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=793)
+    public boolean isSmtpEnableTrace() {
+        return getBooleanAttr(Provisioning.A_zimbraSmtpEnableTrace, false);
+    }
+
+    /**
+     * Whether to enable smtp debug trace
+     *
+     * @param zimbraSmtpEnableTrace new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=793)
+    public void setSmtpEnableTrace(boolean zimbraSmtpEnableTrace) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableTrace, zimbraSmtpEnableTrace ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable smtp debug trace
+     *
+     * @param zimbraSmtpEnableTrace new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=793)
+    public Map<String,Object> setSmtpEnableTrace(boolean zimbraSmtpEnableTrace, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableTrace, zimbraSmtpEnableTrace ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable smtp debug trace
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=793)
+    public void unsetSmtpEnableTrace() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableTrace, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable smtp debug trace
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=793)
+    public Map<String,Object> unsetSmtpEnableTrace(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableTrace, "");
         return attrs;
     }
 
