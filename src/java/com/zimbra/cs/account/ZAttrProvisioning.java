@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090107-1438 */
+    /* build: 5.0 pshao 20090107-1520 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1352,6 +1352,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=652)
     public static final String A_zimbraCalendarCalDavDisableScheduling = "zimbraCalendarCalDavDisableScheduling";
+
+    /**
+     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * advertised as Calendar only and Todo only via CalDAV. When set to
+     * FALSE, Calendar folders will be able to store both appointments and
+     * tasks, and Todo folders will not be advertised as CalDAV enabled.
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=794)
+    public static final String A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection = "zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection";
 
     /**
      * compatibility mode for calendar server

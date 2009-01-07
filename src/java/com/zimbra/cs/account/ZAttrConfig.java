@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090107-1438 */
+    /* build: 5.0 pshao 20090107-1520 */
 
     /**
      * Zimbra access control list
@@ -2669,6 +2669,93 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetCalendarCalDavDisableScheduling(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarCalDavDisableScheduling, "");
+        return attrs;
+    }
+
+    /**
+     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * advertised as Calendar only and Todo only via CalDAV. When set to
+     * FALSE, Calendar folders will be able to store both appointments and
+     * tasks, and Todo folders will not be advertised as CalDAV enabled.
+     *
+     * @return zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, or false if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=794)
+    public boolean isCalendarCalDavUseDistinctAppointmentAndToDoCollection() {
+        return getBooleanAttr(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, false);
+    }
+
+    /**
+     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * advertised as Calendar only and Todo only via CalDAV. When set to
+     * FALSE, Calendar folders will be able to store both appointments and
+     * tasks, and Todo folders will not be advertised as CalDAV enabled.
+     *
+     * @param zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=794)
+    public void setCalendarCalDavUseDistinctAppointmentAndToDoCollection(boolean zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * advertised as Calendar only and Todo only via CalDAV. When set to
+     * FALSE, Calendar folders will be able to store both appointments and
+     * tasks, and Todo folders will not be advertised as CalDAV enabled.
+     *
+     * @param zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=794)
+    public Map<String,Object> setCalendarCalDavUseDistinctAppointmentAndToDoCollection(boolean zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * advertised as Calendar only and Todo only via CalDAV. When set to
+     * FALSE, Calendar folders will be able to store both appointments and
+     * tasks, and Todo folders will not be advertised as CalDAV enabled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=794)
+    public void unsetCalendarCalDavUseDistinctAppointmentAndToDoCollection() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * advertised as Calendar only and Todo only via CalDAV. When set to
+     * FALSE, Calendar folders will be able to store both appointments and
+     * tasks, and Todo folders will not be advertised as CalDAV enabled.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=794)
+    public Map<String,Object> unsetCalendarCalDavUseDistinctAppointmentAndToDoCollection(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, "");
         return attrs;
     }
 
