@@ -137,7 +137,7 @@ public class FileUtil {
             in = new BufferedInputStream(fin);
             return ByteUtil.isGzipped(in);
         } finally {
-            in.close();
+            ByteUtil.closeStream(in);
         }
     }
 
