@@ -17,10 +17,12 @@
 
 package com.zimbra.cs.lmtpserver.utils;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -65,6 +67,7 @@ public class LmtpInject {
         mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
         mOptions.addOption(null, "smtp",     false, "use SMTP protocol instead of LMTP");
         mOptions.addOption("h", "help",      false, "display usage information");
+        mOptions.addOption(null, "noValidation", false, "don't validate file content");
     }
 
     private static void usage(String errmsg) {
@@ -76,7 +79,7 @@ public class LmtpInject {
             "zmlmtpinject -r <recip1> [recip2 ...] -s <sender> [options]",
             "  <file1 [file2 ...] | -d <dir>>",
             mOptions,
-            "Specified paths contain rfc822 messages.  If -d is specified, file arguments are ignored.");
+            "Specified paths contain rfc822 messages.  Files may be gzipped.  If -d is specified, file arguments are ignored.");
         System.exit((errmsg == null) ? 0 : 1);
     }
 
@@ -194,6 +197,28 @@ public class LmtpInject {
                 files[i] = new File(args[i]);
             }
         }
+        
+        // Validate file content.
+        if (!cl.hasOption("noValidation")) {
+            for (File file : files) {
+                InputStream in = null;
+                try {
+                    in = new FileInputStream(file);
+                    if (FileUtil.isGzipped(file)) {
+                        in = new GZIPInputStream(in);
+                    }
+                    in = new BufferedInputStream(in); // Required for RFC 822 check
+                    if (!EmailUtil.isRfc822Message(in)) {
+                        mLog.error("%s does not contain a valid RFC 822 message.", file.getPath());
+                        System.exit(-1);
+                    }
+                } catch (IOException e) {
+                    mLog.error("An error occurred while validating file content.", e);
+                } finally {
+                    ByteUtil.closeStream(in);
+                }
+            }
+        }
 
         int numRuns = 1;
         if (cl.hasOption("z")) {
@@ -273,7 +298,7 @@ public class LmtpInject {
                 "submitted=%d failed=%d\n" +
                 "maximum concurrent active connections: %d\n" +
                 "%.2fs, %.2fms/msg, %.2fmps\n" +
-                "average message zie = %.2fKB\n",
+                "average message size = %.2fKB\n",
                 succeeded, failedThisTime,
                 injector.mHwmActiveClients,
                 elapsed, msPerMsg, msgPerSec,
@@ -452,12 +477,12 @@ public class LmtpInject {
             long howmany = count - lastCount;
             double rate = 0.0;
             if (elapsed > 0)
-                rate = (double) howmany * 1000.0 / (double) elapsed;
+                rate = howmany * 1000.0 / elapsed;
 
             long elapsedTotal = now - startTime;
             double rateAvg = 0.0;
             if (elapsedTotal > 0)
-                rateAvg = (double) count * 1000.0 / (double) elapsedTotal;
+                rateAvg = count * 1000.0 / elapsedTotal;
 
             String prefix = mWarmedUp ? "[progress]" : "[warm-up]";
             System.out.printf(
@@ -531,13 +556,24 @@ public class LmtpInject {
             mDriver.incActiveClients();
             String filename = mFile.getName();
             LmtpClient client = null;
+            InputStream in = null;
             try {
                 //mLog.info("Processing " + filename);
 
                 client = mDriver.getClient();
 
                 boolean ok = false;
-                ok = client.sendMessage(new FileInputStream(mFile), mDriver.getRecipients(), mDriver.getSender(), filename, mFile.length());
+                long dataLength;
+
+                if (FileUtil.isGzipped(mFile)) {
+                    dataLength = ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(mFile)));
+                    in = new GZIPInputStream(new FileInputStream(mFile));
+                } else {
+                    dataLength = mFile.length();
+                    in = new FileInputStream(mFile);
+                }
+                
+                ok = client.sendMessage(in, mDriver.getRecipients(), mDriver.getSender(), filename, dataLength);
                 if (ok) {
                     mDriver.incSuccess();
                     mDriver.addToFileSizeTotal(mFile.length());
@@ -548,6 +584,7 @@ public class LmtpInject {
                 mDriver.incFailure();
                 mLog.warn("Delivery failed for " + filename + ": ", e);
             } finally {
+                ByteUtil.closeStream(in);
                 if (client != null) {
                     try {
                         mDriver.releaseClient(client);

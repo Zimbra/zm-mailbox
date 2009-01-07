@@ -17,17 +17,19 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.common.util.EmailUtil;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import junit.framework.TestCase;
+
+import com.zimbra.common.util.EmailUtil;
 
 /**
  * @author bburtin
  */
 public class TestEmailUtil extends TestCase
 {
-    public void testSplit()
-    {
+    public void testSplit() {
         assertNull(EmailUtil.getLocalPartAndDomain("foo"));
         assertNull(EmailUtil.getLocalPartAndDomain("foo@"));
         assertNull(EmailUtil.getLocalPartAndDomain("@foo"));
@@ -36,5 +38,34 @@ public class TestEmailUtil extends TestCase
         assertNotNull(parts);
         assertEquals("jspiccoli", parts[0]);
         assertEquals("example.zimbra.com", parts[1]);
+    }
+    
+    /**
+     * Tests {@link EmailUtil#isRfc822Message}.
+     */
+    public void testRfc822()
+    throws Exception {
+        assertTrue(isRfc822Message("Content-Type: text/plain"));
+        assertFalse(isRfc822Message("Content-Type text/plain"));
+        assertFalse(isRfc822Message("Content-Type\r\n  :text/plain"));
+        
+        // Test a line longer than 998 characters.
+        StringBuilder buf = new StringBuilder();
+        for (int i = 1; i <= 998; i++) {
+            buf.append("X");
+        }
+        buf.append(": Y");
+        assertFalse(isRfc822Message(buf.toString()));
+        
+    }
+    
+    private boolean isRfc822Message(String content)
+    throws IOException {
+        return EmailUtil.isRfc822Message(new ByteArrayInputStream(content.getBytes()));
+    }
+    
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.runTest(TestEmailUtil.class);
     }
 }

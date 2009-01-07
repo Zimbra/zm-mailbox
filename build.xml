@@ -834,6 +834,13 @@
             <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
             <arg path="data/TestMailRaw"/>
         </java>
+        <echo>LmtpInject spam for ${account-to-inject.email}</echo>
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
+              failonerror="true">
+            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
+            <arg path="data/TestMailSpam"/>
+        	<arg line="--noValidation"/>
+        </java>
         <echo>Importing Wiki documents for ${account-to-inject.email}</echo>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="impn ${account-to-inject.email} data/wiki/user1 /"/>

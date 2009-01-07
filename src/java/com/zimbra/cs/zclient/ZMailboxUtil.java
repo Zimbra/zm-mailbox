@@ -17,17 +17,59 @@
 
 package com.zimbra.cs.zclient;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
@@ -35,12 +77,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
@@ -58,46 +97,6 @@ import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author schemers
@@ -319,14 +318,15 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_URL = new Option("u", "url", true, "url to connect to");
     static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
     static Option O_VIEW = new Option("V", "view", true, "default type for folder (appointment,contact,conversation,document,message,task,wiki)");
+    static Option O_NO_VALIDATION = new Option(null, "noValidation", false, "don't validate file content");
 
     enum Command {
+        ADD_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
+        ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE, O_FLAGS, O_NO_VALIDATION),
+        ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
-        ADD_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
-        ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE, O_FLAGS),
-        ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
         // CHECK_PERMISSION("checkPermission", "cp", "[right1 [right2...]]", "check if the user has the specified right on target.", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
@@ -835,11 +835,12 @@ public class ZMailboxUtil implements DebugListener {
 
     private String  afterOpt() { return mCommandLine.getOptionValue(O_AFTER.getOpt()); }
 
-
     private SearchSortBy searchSortByOpt() throws ServiceException {
         String sort = mCommandLine.getOptionValue(O_SORT.getOpt());
         return (sort == null ? null : SearchSortBy.fromString(sort));
     }
+    
+    private boolean validateOpt() { return !mCommandLine.hasOption(O_NO_VALIDATION.getLongOpt()); }
 
     enum ExecuteStatus {OK, EXIT};
 
@@ -1611,10 +1612,22 @@ public class ZMailboxUtil implements DebugListener {
         System.setProperty("mail.mime.base64.ignoreerrors", "true");
     }
 
-    private void addMessage(String folderId, String flags, String tags, long date, File file) throws ServiceException, IOException {
+    private void addMessage(String folderId, String flags, String tags, long date, File file, boolean validate) throws ServiceException, IOException {
         //String aid = mMbox.uploadAttachments(new File[] {file}, 5000);
 
-        byte[] data = ByteUtil.getContent(file);
+        InputStream in = new BufferedInputStream(new FileInputStream(file));  // Buffering required for gzip check
+        long sizeHint = -1;
+        if (ByteUtil.isGzipped(in)) {
+            in = new GZIPInputStream(in);
+        } else {
+            sizeHint = file.length();
+        }
+        
+        byte[] data = ByteUtil.getContent(in, (int) sizeHint);
+        if (validate && !EmailUtil.isRfc822Message(new ByteArrayInputStream(data))) {
+            throw ZClientException.CLIENT_ERROR(file.getPath() + " does not contain a valid RFC 822 message", null);
+        }
+        
         try {
             if (date == -1) {
                 MimeMessage mm = new MimeMessage(mSession, new ByteArrayInputStream(data));
@@ -1634,6 +1647,7 @@ public class ZMailboxUtil implements DebugListener {
         String tags = tagsOpt();
         String flags = flagsOpt();
         long date = dateOpt(-1);
+        boolean validate = validateOpt();
 
         for (int i=1; i < args.length; i++) {
             File file = new File(args[i]);
@@ -1641,10 +1655,10 @@ public class ZMailboxUtil implements DebugListener {
                 // TODO: should we recurse?
                 for (File child : file.listFiles()) {
                     if (child.isFile())
-                        addMessage(folderId, flags, tags, date, child);
+                        addMessage(folderId, flags, tags, date, child, validate);
                 }
             } else {
-                addMessage(folderId, flags, tags, date, file);
+                addMessage(folderId, flags, tags, date, file, validate);
             }
         }
     }
