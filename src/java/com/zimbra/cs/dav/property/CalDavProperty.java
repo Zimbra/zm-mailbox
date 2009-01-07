@@ -17,7 +17,9 @@
 package com.zimbra.cs.dav.property;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -31,6 +33,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 
@@ -46,8 +49,8 @@ import com.zimbra.cs.mime.Mime;
  */
 public class CalDavProperty extends ResourceProperty {
 
-	public static ResourceProperty getSupportedCalendarComponentSet() {
-		return new SupportedCalendarComponentSet();
+	public static ResourceProperty getSupportedCalendarComponentSet(byte view) {
+		return new SupportedCalendarComponentSet(view);
 	}
 	
 	public static ResourceProperty getSupportedCalendarData() {
@@ -93,14 +96,31 @@ public class CalDavProperty extends ResourceProperty {
 	
 	private static final CalComponent[] sSUPPORTED_COMPONENTS = {
 		CalComponent.VCALENDAR,
-		CalComponent.VEVENT,    CalComponent.VTODO, 
 		CalComponent.VTIMEZONE, CalComponent.VFREEBUSY
 	};
 	
 	private static class SupportedCalendarComponentSet extends CalDavProperty {
-		public SupportedCalendarComponentSet() {
+		public SupportedCalendarComponentSet(byte view) {
 			super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET);
-			for (CalComponent comp : sSUPPORTED_COMPONENTS) {
+			ArrayList<CalComponent> comps = new ArrayList<CalComponent>();
+			Collections.addAll(comps, sSUPPORTED_COMPONENTS);
+			Provisioning prov = Provisioning.getInstance();
+			boolean useDistinctCollectionType = false;
+			try {
+				useDistinctCollectionType = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, false);
+			} catch (ServiceException se) {
+				ZimbraLog.dav.warn("can't get zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection in globalConfig", se);
+			}
+			if (!useDistinctCollectionType) {
+				comps.add(CalComponent.VEVENT);
+				comps.add(CalComponent.VTODO);
+			} else if (view == MailItem.TYPE_APPOINTMENT) {
+				comps.add(CalComponent.VEVENT);
+			} else if (view == MailItem.TYPE_TASK) {
+				comps.add(CalComponent.VTODO);
+			}
+			
+			for (CalComponent comp : comps) {
 				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_COMP);
 				e.addAttribute(DavElements.P_NAME, comp.name());
 				mChildren.add(e);
