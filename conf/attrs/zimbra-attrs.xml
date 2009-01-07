@@ -3941,5 +3941,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="792" name="zimbraStatThreadNamePrefix" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
+  <desc>stat thread name prefixes</desc>
+</attr>
 
 </attrs>

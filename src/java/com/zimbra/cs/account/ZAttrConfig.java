@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090105-2353 */
+    /* build: 5.0 pshao 20090107-1417 */
 
     /**
      * Zimbra access control list
@@ -21115,6 +21115,140 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSslCaKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSslCaKey, "");
+        return attrs;
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @return zimbraStatThreadNamePrefix, or ampty array if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public String[] getStatThreadNamePrefix() {
+        return getMultiAttr(Provisioning.A_zimbraStatThreadNamePrefix);
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param zimbraStatThreadNamePrefix new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public void setStatThreadNamePrefix(String[] zimbraStatThreadNamePrefix) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStatThreadNamePrefix, zimbraStatThreadNamePrefix);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param zimbraStatThreadNamePrefix new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public Map<String,Object> setStatThreadNamePrefix(String[] zimbraStatThreadNamePrefix, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStatThreadNamePrefix, zimbraStatThreadNamePrefix);
+        return attrs;
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param zimbraStatThreadNamePrefix new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public void addStatThreadNamePrefix(String zimbraStatThreadNamePrefix) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraStatThreadNamePrefix, zimbraStatThreadNamePrefix);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param zimbraStatThreadNamePrefix new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public Map<String,Object> addStatThreadNamePrefix(String zimbraStatThreadNamePrefix, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraStatThreadNamePrefix, zimbraStatThreadNamePrefix);
+        return attrs;
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param zimbraStatThreadNamePrefix existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public void removeStatThreadNamePrefix(String zimbraStatThreadNamePrefix) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraStatThreadNamePrefix, zimbraStatThreadNamePrefix);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param zimbraStatThreadNamePrefix existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public Map<String,Object> removeStatThreadNamePrefix(String zimbraStatThreadNamePrefix, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraStatThreadNamePrefix, zimbraStatThreadNamePrefix);
+        return attrs;
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public void unsetStatThreadNamePrefix() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStatThreadNamePrefix, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stat thread name prefixes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public Map<String,Object> unsetStatThreadNamePrefix(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStatThreadNamePrefix, "");
         return attrs;
     }
 

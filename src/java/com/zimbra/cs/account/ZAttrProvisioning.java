@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090105-2353 */
+    /* build: 5.0 pshao 20090107-1417 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5543,6 +5543,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=564)
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
+
+    /**
+     * stat thread name prefixes
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=792)
+    public static final String A_zimbraStatThreadNamePrefix = "zimbraStatThreadNamePrefix";
 
     /**
      * The maximum batch size for each ZimbraSync transaction. Default value
