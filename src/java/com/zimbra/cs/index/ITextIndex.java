@@ -27,7 +27,8 @@ import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.redolog.op.IndexItem;
 
 /**
- * 
+ * Currently, only the index-write APIs are fully abstracted from Lucene.  The search APIs
+ * use ILuceneIndex directly.
  */
 interface ITextIndex {
 
@@ -35,14 +36,7 @@ interface ITextIndex {
      * Store the specified MailItem in the Index.  If deleteFirst is false, then we are sure that
      * this MailItem is not already in the index, and so we can skip the check-update step.
      */
-    void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, String sortSubject, String sortSender, boolean deleteFirst) throws IOException;
-    
-    /**
-     * Store the specified MailItem in the Index.  If deleteFirst is false, then we are sure that
-     * this MailItem is not already in the index, and so we can skip the check-update step.
-     */
     void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, String sortSubject, String sortSender, boolean deleteFirst) throws IOException;
-    
 
     /**
      * Delete all the documents from the index that have indexIds as specified 

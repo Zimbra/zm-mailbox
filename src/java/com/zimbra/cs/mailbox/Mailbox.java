@@ -6862,7 +6862,7 @@ public class Mailbox {
                 List<Integer> deferredTagsToSet = new ArrayList<Integer>();
                 
                 try {
-                    if (mMailboxIndex != null)
+                    if (mMailboxIndex != null && (mCurrentChange.indexItemsToDelete.size() > 0))
                         mMailboxIndex.deleteDocuments(mCurrentChange.indexItemsToDelete);
                 } catch (IOException e) {
                     if (ZimbraLog.index.isDebugEnabled())
@@ -6968,7 +6968,8 @@ public class Mailbox {
                     ZimbraLog.index.warn("Possibly corrupt index: "+numIndexingExceptions+" indexing operations failed in mailbox transaction.");
                     mLastIndexingFailureTimestamp = System.currentTimeMillis();
                 }
-            }
+                
+            } // if indexing needed
             
             // 4. Commit the main transaction in database.
             if (conn != null) {
