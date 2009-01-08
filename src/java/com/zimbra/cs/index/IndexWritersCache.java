@@ -33,17 +33,40 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
 /**
- * 
+  
+  Model writers via a state machine.  4 possible states:
+    - CLOSED    
+    - WRITING
+    - IDLE
+    - FLUSHING
+  
+   Valid state transitions:
+      I->W - BeginWriting 
+      C->W - BeginWriting
+      W->I - DoneWriting
+      I->F - BeginFlush
+      F->C - FlushCompleted
+
+    All writes must happen between a BeginWriting()...DoneWriting() pair.  The pair should be inside a synchronized block.
+    
+    Threads block in the following places:
+      1) If they're trying to open, and need a slot (mWaitingForSlot list)
+      2) In various states, if they're being flushed by another thread (latch on the writer)
+      3) The sweeper waits on the global cache lock
+      
  */
 class IndexWritersCache {
+    // all open writers
     private Set<IndexWriter> mOpenWriters = new LinkedHashSet<IndexWriter>();
+
+    // writers in the IDLE state
     private Set<IndexWriter> mIdleWriters = new LinkedHashSet<IndexWriter>();
 
     /**
      * How often do we walk the list of open IndexWriters looking for idle writers
      * to close.  On very busy systems, the default time might be too long.
      */
-    private long mSweeperTimeout = 30 * Constants.MILLIS_PER_SECOND;
+    private final long mSweeperTimeout;
 
 
     /**
@@ -67,7 +90,6 @@ class IndexWritersCache {
     private boolean mShutdown = false;
     private Thread mSweeperThread = null;
     private List<CountDownLatch> mWaitingForSlot = new ArrayList<CountDownLatch>();
-//    private List<CountDownLatch> mWaitingForFlush = new ArrayList<CountDownLatch>();
     
     private ThreadPool mPool = new ThreadPool("IndexWriterFlush", mFlushPoolSize);
     
@@ -99,12 +121,13 @@ class IndexWritersCache {
     }
     
     static abstract class IndexWriter {
-        abstract void doWriterOpen() throws IOException; // NoOp if already open
+        /**
+         * Must handle (presumably a NoOp) the case where the writer is already open
+         * @throws IOException
+         */
+        abstract void doWriterOpen() throws IOException;
         abstract void doWriterClose();
         abstract long getLastWriteTime();
-        
-        protected IndexWriter() {
-        }
         
         public WriterState getState() {
             return mState;
@@ -131,7 +154,13 @@ class IndexWritersCache {
     }
     
     public void flushAllWriters() {
-        // FIXME TODO
+        List<IndexWriter> toFlush = new ArrayList<IndexWriter>();
+        synchronized(this) {
+            toFlush.addAll(mOpenWriters);
+        }
+        for (IndexWriter w : toFlush) {
+            flush(w);
+        }
     }
     
     public void beginWriting(IndexWriter w) throws IOException {
@@ -230,6 +259,9 @@ class IndexWritersCache {
         } catch (InterruptedException e) {}
     }
     
+    /**
+     * Called in the sweeper thread
+     */
     private void doSweep() {
         try {
             while(true) {
@@ -314,6 +346,8 @@ class IndexWritersCache {
     void flush(IndexWriter target) {
         synchronized(this) {
             while (target.getState() == WriterState.FLUSHING) {
+                // already flushing...have to wait for that flush to finish
+                // so that we can return
                 try {
                     this.wait(10); // TODO FIXME
                 } catch (InterruptedException e) {}
@@ -374,7 +408,7 @@ class IndexWritersCache {
         public void doWriterOpen() {
             if (!opened) {
                 try {
-                    Thread.sleep(0);
+                    Thread.sleep(0); 
                     opened = true;
                 } catch (InterruptedException e) {}
             }
@@ -479,7 +513,6 @@ class IndexWritersCache {
 //            } catch (InterruptedException e) {}
         }
     }
-    
 
     /**
      * @param args
