@@ -92,7 +92,7 @@ public class CalendarCollection extends Collection {
 		desc.setStringValue(description);
 		desc.setProtected(true);
 		addProperty(desc);
-		addProperty(CalDavProperty.getSupportedCalendarComponentSet());
+		addProperty(CalDavProperty.getSupportedCalendarComponentSet(f.getDefaultView()));
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		

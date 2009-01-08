@@ -375,6 +375,13 @@ public class UrlNamespace {
             		resource = new RemoteCollection(ctxt, mp);
                 break;
 			case MailItem.TYPE_FOLDER :
+				boolean useDistinctCollectionType = false;
+				try {
+					Provisioning prov = Provisioning.getInstance();
+					useDistinctCollectionType = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, false);
+				} catch (ServiceException se) {
+					ZimbraLog.dav.warn("can't get zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection in globalConfig", se);
+				}
 				Folder f = (Folder) item;
 				viewType = f.getDefaultView();
 				if (f.getId() == Mailbox.ID_FOLDER_INBOX)
@@ -382,6 +389,8 @@ public class UrlNamespace {
 				else if (f.getId() == Mailbox.ID_FOLDER_SENT)
 					resource = new ScheduleOutbox(ctxt, f);
 				else if (viewType == MailItem.TYPE_APPOINTMENT)
+					resource = getCalendarCollection(ctxt, f);
+				else if (useDistinctCollectionType && viewType == MailItem.TYPE_TASK)
 					resource = getCalendarCollection(ctxt, f);
 				else
 					resource = new Collection(ctxt, f);
