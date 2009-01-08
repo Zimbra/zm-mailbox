@@ -68,6 +68,7 @@ public class DataSourceCallback extends AttributeCallback {
                           Entry entry, boolean isCreate)
     throws ServiceException {
         if (isCreate) {
+            // No old value, so nothing to do.  Creation is handled in postModify().
             return;
         }
         if (INTERVAL_ATTRS.contains(attrName)) {
