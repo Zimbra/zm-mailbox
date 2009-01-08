@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090107-1520 */
+    /* build: 5.0 boris 20090108-1131 */
 
     /**
      * Zimbra access control list
@@ -21206,7 +21206,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @return zimbraStatThreadNamePrefix, or ampty array if unset
      *
@@ -21214,11 +21215,12 @@ public class ZAttrConfig extends Entry {
      */
     @ZAttr(id=792)
     public String[] getStatThreadNamePrefix() {
-        return getMultiAttr(Provisioning.A_zimbraStatThreadNamePrefix);
+        String[] value = getMultiAttr(Provisioning.A_zimbraStatThreadNamePrefix); return value.length > 0 ? value : new String[] {"btpool","pool","LmtpServer","ImapServer","ImapSSLServer","Pop3Server","Pop3SSLServer","ScheduledTask","Timer","AnonymousIoService","CloudRoutingReaderThread","GC","SocketAcceptor","Thread"};
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param zimbraStatThreadNamePrefix new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21233,7 +21235,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param zimbraStatThreadNamePrefix new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21249,7 +21252,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param zimbraStatThreadNamePrefix new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21264,7 +21268,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param zimbraStatThreadNamePrefix new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -21280,7 +21285,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param zimbraStatThreadNamePrefix existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21295,7 +21301,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param zimbraStatThreadNamePrefix existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -21311,7 +21318,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21325,7 +21333,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

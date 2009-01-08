@@ -3942,7 +3942,25 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="792" name="zimbraStatThreadNamePrefix" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
-  <desc>stat thread name prefixes</desc>
+  <globalConfigValue>btpool</globalConfigValue>
+  <globalConfigValue>pool</globalConfigValue>
+  <globalConfigValue>LmtpServer</globalConfigValue>
+  <globalConfigValue>ImapServer</globalConfigValue>
+  <globalConfigValue>ImapSSLServer</globalConfigValue>
+  <globalConfigValue>Pop3Server</globalConfigValue>
+  <globalConfigValue>Pop3SSLServer</globalConfigValue>
+  <globalConfigValue>ScheduledTask</globalConfigValue>
+  <globalConfigValue>Timer</globalConfigValue>
+  <globalConfigValue>AnonymousIoService</globalConfigValue>
+  <globalConfigValue>CloudRoutingReaderThread</globalConfigValue>
+  <globalConfigValue>GC</globalConfigValue>
+  <globalConfigValue>SocketAcceptor</globalConfigValue>
+  <globalConfigValue>Thread</globalConfigValue>
+  <desc>
+    Prefixes of thread names.  Each value is a column in
+    threads.csv that tracks the number of threads whose
+    name starts with the given prefix.
+  </desc>
 </attr>
 
 <attr id="793" name="zimbraSmtpEnableTrace" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">

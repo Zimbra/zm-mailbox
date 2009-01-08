@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090107-1520 */
+    /* build: 5.0 boris 20090108-1131 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5564,7 +5564,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
 
     /**
-     * stat thread name prefixes
+     * Prefixes of thread names. Used in threads.csv to track the number of
+     * threads whose name starts with each prefix.
      *
      * @since ZCS 6.0.0
      */
