@@ -1378,15 +1378,23 @@ public class ToXML {
                 e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, rid.getDtZ());
             }
 
-            if (allDay)
-                e.addAttribute(MailConstants.A_CAL_ALLDAY, true);
-
             boolean forceUTC =
                 DebugConfig.calendarForceUTC && !isRecurring && !isException && !allDay;
             ParsedDateTime dtStart = invite.getStartTime();
             if (dtStart != null) {
-                if (forceUTC)
+                if (forceUTC) {
+                    dtStart = (ParsedDateTime) dtStart.clone();
                     dtStart.toUTC();
+                }
+                // fixup for bug 30121
+                if (allDay && dtStart.hasTime()) {
+                    // If this is supposed to be an all-day event but DTSTART has time part, clear the time part.
+                    dtStart = (ParsedDateTime) dtStart.clone();
+                    dtStart.setHasTime(false);
+                } else if (!allDay && !dtStart.hasTime()){
+                    // If the event isn't marked all-day but DTSTART has no time part, mark the event all-day.
+                    allDay = true;
+                }
                 Element startElt = e.addElement(MailConstants.E_CAL_START_TIME);
                 startElt.addAttribute(MailConstants.A_CAL_DATETIME, dtStart.getDateTimePartString(false));
                 if (!allDay) {
@@ -1398,8 +1406,19 @@ public class ToXML {
 
             ParsedDateTime dtEnd = invite.getEndTime();
             if (dtEnd != null) {
-                if (forceUTC)
+                if (forceUTC) {
+                    dtEnd = (ParsedDateTime) dtEnd.clone();
                     dtEnd.toUTC();
+                }
+                // fixup for bug 30121
+                if (allDay && dtEnd.hasTime()) {
+                    // If this is supposed to be an all-day event but DTEND has time part, clear the time part.
+                    dtEnd = (ParsedDateTime) dtEnd.clone();
+                    dtEnd.setHasTime(false);
+                } else if (!allDay && !dtEnd.hasTime()) {
+                    // If the event isn't marked all-day but DTEND has no time part, mark the event all-day.
+                    allDay = true;
+                }
                 Element endElt = e.addElement(MailConstants.E_CAL_END_TIME);
                 if (!allDay) {
                     String tzName = dtEnd.getTZName();
@@ -1419,6 +1438,9 @@ public class ToXML {
             if (dur != null) {
                 dur.toXml(e);
             }
+
+            if (allDay)
+                e.addAttribute(MailConstants.A_CAL_ALLDAY, true);
         }
 
         return e;

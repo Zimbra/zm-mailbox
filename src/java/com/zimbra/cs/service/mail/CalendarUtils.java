@@ -759,10 +759,6 @@ public class CalendarUtils {
             }
         }
 
-        boolean allDay = element.getAttributeBool(MailConstants.A_CAL_ALLDAY,
-                false);
-        newInv.setIsAllDayEvent(allDay);
-
         String name = element.getAttribute(MailConstants.A_NAME, "");
         String location = element.getAttribute(MailConstants.A_CAL_LOCATION, "");
 
@@ -802,36 +798,44 @@ public class CalendarUtils {
         // SUMMARY (aka Name or Subject)
         newInv.setName(name);
 
+        boolean allDay = element.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
+        newInv.setIsAllDayEvent(allDay);
+
         // DTSTART
-        {
-            Element s;
-            if (newInv.isTodo())
-                s = element.getOptionalElement(MailConstants.E_CAL_START_TIME);
-            else
-                s = element.getElement(MailConstants.E_CAL_START_TIME);
-            if (s != null) {
-                ParsedDateTime dt = parseDtElement(s, tzMap, newInv);
-                if (dt.hasTime()) {
-                    if (allDay) {
-                        throw ServiceException.INVALID_REQUEST(
-                                        "AllDay event must have DATE, not DATETIME for start time",
-                                        null);
-                    }
-                } else {
-                    if (!allDay) {
-                        throw ServiceException.INVALID_REQUEST(
-                                        "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
-                                        null);
-                    }
-                }
-                newInv.setDtStart(dt);
+        Element startElem;
+        if (newInv.isTodo())
+            startElem = element.getOptionalElement(MailConstants.E_CAL_START_TIME);
+        else
+            startElem = element.getElement(MailConstants.E_CAL_START_TIME);
+        if (startElem != null) {
+            ParsedDateTime dt = parseDtElement(startElem, tzMap, newInv);
+            // fixup for bug 30121
+            if (allDay && dt.hasTime()) {
+                // If this is supposed to be an all-day event but DTSTART has time part, clear the time part.
+                dt.setHasTime(false);
+            } else if (!allDay && !dt.hasTime()) {
+                // If the event isn't marked as all-day but DTSTART is date-only, the client simply forgot
+                // to mark it all-day.  Do all-day implicitly.
+                allDay = true;
+                newInv.setIsAllDayEvent(allDay);
             }
+            newInv.setDtStart(dt);
         }
 
         // DTEND (for VEVENT) or DUE (for VTODO)
         Element endElem = element.getOptionalElement(MailConstants.E_CAL_END_TIME);
         if (endElem != null) {
             ParsedDateTime dt = parseDtElement(endElem, tzMap, newInv);
+            // fixup for bug 30121
+            if (allDay && dt.hasTime()) {
+                // If this is supposed to be an all-day event but DTEND has time part, clear the time part.
+                dt.setHasTime(false);
+            } else if (!allDay && !dt.hasTime()) {
+                // If the event isn't marked as all-day but DTEND is date-only, the client simply forgot
+                // to mark it all-day.  Do all-day implicitly.
+                allDay = true;
+                newInv.setIsAllDayEvent(allDay);
+            }
 
             if (allDay && !newInv.isTodo()) {
                 // HACK ALERT: okay, campers, here's the deal.
@@ -849,19 +853,6 @@ public class CalendarUtils {
                 // translation when sending/receiving all-day-events.
                 //     
                 dt = dt.add(ParsedDuration.ONE_DAY);
-            }
-            if (dt.hasTime()) {
-                if (allDay) {
-                    throw ServiceException.INVALID_REQUEST(
-                                    "AllDay event must have DATE, not DATETIME for start time",
-                                    null);
-                }
-            } else {
-                if (!allDay) {
-                    throw ServiceException.INVALID_REQUEST(
-                                    "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
-                                    null);
-                }
             }
             newInv.setDtEnd(dt);
         } else {
@@ -1189,6 +1180,9 @@ public class CalendarUtils {
             }
         }
 
+        // all-day
+        cancel.setIsAllDayEvent(inv.isAllDayEvent());  // bug 30121
+
         // DTSTART, DTEND, and LOCATION (Outlook seems to require these, even
         // though they are optional according to RFC2446.)
         ParsedDateTime dtStart = recurId == null ? inv.getStartTime() : recurId.getDt();
@@ -1198,6 +1192,8 @@ public class CalendarUtils {
             if (dur != null)
                 cancel.setDtEnd(dtStart.add(dur));
         }
+
+        // LOCATION
         cancel.setLocation(inv.getLocation());
 
         // SEQUENCE
