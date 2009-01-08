@@ -161,7 +161,6 @@ public class LC {
     public static final KnownKey soap_max_in_memory_buffer_size;
 
     public static final KnownKey ldap_host;
-    public static final KnownKey ldap_log_level;
     public static final KnownKey ldap_port;
     public static final KnownKey ldap_url;
     public static final KnownKey ldap_master_url;
@@ -181,9 +180,25 @@ public class LC {
     public static final KnownKey ldap_postfix_password;
     public static final KnownKey ldap_amavis_password;
     public static final KnownKey ldap_nginx_password;
-    public static final KnownKey ldap_require_tls;
     public static final KnownKey ldap_starttls_supported;
-    
+    public static final KnownKey ldap_common_loglevel;
+    public static final KnownKey ldap_common_require_tls;
+    public static final KnownKey ldap_common_threads;
+    public static final KnownKey ldap_common_toolthreads;
+    public static final KnownKey ldap_db_cachefree;
+    public static final KnownKey ldap_db_cachesize;
+    public static final KnownKey ldap_db_checkpoint;
+    public static final KnownKey ldap_db_dncachesize;
+    public static final KnownKey ldap_db_idlcachesize;
+    public static final KnownKey ldap_accesslog_cachefree;
+    public static final KnownKey ldap_accesslog_cachesize;
+    public static final KnownKey ldap_accesslog_checkpoint;
+    public static final KnownKey ldap_accesslog_dncachesize;
+    public static final KnownKey ldap_accesslog_idlcachesize;
+    public static final KnownKey ldap_overlay_syncprov_checkpoint;
+    public static final KnownKey ldap_overlay_syncprov_sessionlog;
+    public static final KnownKey ldap_overlay_accesslog_logpurge;
+
 
     public static final KnownKey ldap_cache_account_maxsize;
     public static final KnownKey ldap_cache_account_maxage;
@@ -646,8 +661,56 @@ public class LC {
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
 
-        ldap_log_level = new KnownKey("ldap_log_level");
-        ldap_log_level.setDefault("49152");
+        ldap_common_loglevel = new KnownKey("ldap_common_loglevel");
+        ldap_common_loglevel.setDefault("49152");
+
+        ldap_common_require_tls = new KnownKey("ldap_common_require_tls");
+        ldap_common_require_tls.setDefault("0");
+
+        ldap_common_threads = new KnownKey("ldap_common_threads");
+        ldap_common_threads.setDefault("8");
+
+        ldap_common_toolthreads = new KnownKey("ldap_common_toolthreads");
+        ldap_common_toolthreads.setDefault("1");
+
+        ldap_db_cachefree = new KnownKey("ldap_db_cachefree");
+        ldap_db_cachefree.setDefault("1");
+
+        ldap_db_cachesize = new KnownKey("ldap_db_cachesize");
+        ldap_db_cachesize.setDefault("10000");
+
+        ldap_db_idlcachesize = new KnownKey("ldap_db_idlcachesize");
+        ldap_db_idlcachesize.setDefault("10000");
+
+        ldap_db_dncachesize = new KnownKey("ldap_db_dncachesize");
+        ldap_db_dncachesize.setDefault("20000");
+
+        ldap_db_checkpoint = new KnownKey("ldap_db_checkpoint");
+        ldap_db_checkpoint.setDefault("64 5");
+
+        ldap_accesslog_cachefree = new KnownKey("ldap_accesslog_cachefree");
+        ldap_accesslog_cachefree.setDefault("1");
+
+        ldap_accesslog_cachesize = new KnownKey("ldap_accesslog_cachesize");
+        ldap_accesslog_cachesize.setDefault("10000");
+
+        ldap_accesslog_idlcachesize = new KnownKey("ldap_accesslog_idlcachesize");
+        ldap_accesslog_idlcachesize.setDefault("10000");
+
+        ldap_accesslog_dncachesize = new KnownKey("ldap_accesslog_dncachesize");
+        ldap_accesslog_dncachesize.setDefault("20000");
+
+        ldap_accesslog_checkpoint = new KnownKey("ldap_accesslog_checkpoint");
+        ldap_accesslog_checkpoint.setDefault("64 5");
+
+        ldap_overlay_syncprov_checkpoint = new KnownKey("ldap_overlay_syncprov_checkpoint");
+        ldap_overlay_syncprov_checkpoint.setDefault("20 10");
+
+        ldap_overlay_syncprov_sessionlog = new KnownKey("ldap_overlay_syncprov_sessionlog");
+        ldap_overlay_syncprov_sessionlog.setDefault("500");
+
+        ldap_overlay_accesslog_logpurge = new KnownKey("ldap_overlay_accesslog_logpurge");
+        ldap_overlay_accesslog_logpurge.setDefault("07+00:00  01+00:00");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("");
@@ -709,9 +772,6 @@ public class LC {
 
         ldap_starttls_supported = new KnownKey("ldap_starttls_supported"); 
         ldap_starttls_supported.setDefault("0");
-
-        ldap_require_tls = new KnownKey("ldap_require_tls");
-        ldap_require_tls.setDefault("false");
 
         ldap_cache_account_maxsize = new KnownKey("ldap_cache_account_maxsize", "20000");
 
