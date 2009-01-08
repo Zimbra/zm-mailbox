@@ -796,7 +796,12 @@ public class ProvUtil implements DebugListener {
         	break;
         }
         case REMOVE_ACCOUNT_ALIAS:
-            mProv.removeAlias(lookupAccount(args[1], false), args[2]);
+            Account acct = lookupAccount(args[1], false);
+            mProv.removeAlias(acct, args[2]);
+            // even if acct is null, we still invoke removeAlias and throw an exception afterwards.
+            // this is so dangling aliases can be cleaned up as much as possible
+            if (acct == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(args[1]);
             break;
         case REMOVE_ACCOUNT_LOGGER:
             alo = parseAccountLoggerOptions(args);
@@ -872,7 +877,12 @@ public class ProvUtil implements DebugListener {
             mProv.addAlias(lookupDistributionList(args[1]), args[2]);
             break;
         case REMOVE_DISTRIBUTION_LIST_ALIAS:
-            mProv.removeAlias(lookupDistributionList(args[1], false), args[2]);
+            DistributionList dl = lookupDistributionList(args[1], false);
+            mProv.removeAlias(dl, args[2]);
+            // even if dl is null, we still invoke removeAlias and throw an exception afterwards.
+            // this is so dangling aliases can be cleaned up as much as possible
+            if (dl == null)
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(args[1]);
             break;
         case RENAME_DISTRIBUTION_LIST:
             mProv.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);

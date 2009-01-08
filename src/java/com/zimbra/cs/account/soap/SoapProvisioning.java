@@ -1169,20 +1169,24 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_ALIAS_REQUEST);
-        req.addElement(AdminConstants.E_ID).setText(acct.getId());
+        if (acct != null)
+            req.addElement(AdminConstants.E_ID).setText(acct.getId());
         req.addElement(AdminConstants.E_ALIAS).setText(alias);
         invoke(req);
-        reload(acct);
+        if (acct != null)
+            reload(acct);
     }
 
     @Override
     public void removeAlias(DistributionList dl, String alias)
             throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST);
-        req.addElement(AdminConstants.E_ID).setText(dl.getId());
+        if (dl != null)
+            req.addElement(AdminConstants.E_ID).setText(dl.getId());
         req.addElement(AdminConstants.E_ALIAS).setText(alias);
         invoke(req);
-        reload(dl);
+        if (dl != null)
+            reload(dl);
     }
 
     @Override
