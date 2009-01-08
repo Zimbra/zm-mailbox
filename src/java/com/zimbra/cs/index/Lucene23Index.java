@@ -76,7 +76,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         }
         
         for (Lucene23Index idx : toFlush) {
-            idx.closeIndexWriter(); 
+            idx.closeIndexWriter();  
         }
     }
 
@@ -202,7 +202,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         
         synchronized(getLock()) {        
             
-            openIndexWriter();
+            beginWriting();
             try {
                 assert(mIndexWriterMutex.isHeldByCurrentThread());
                 assert(mIndexWriter != null);
@@ -250,21 +250,15 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                 // flush if the index has had a lot written to it without a flush.
                 updateLastWriteTime();
             } finally {
-                mIndexWriterMutex.unlock();
+                doneWriting();
             }
 
-            if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
-                if (sLog.isDebugEnabled()) {
-                    sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
-                }
-                flush();
-            }
         }
     }
     
     public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
         synchronized(getLock()) {
-            openIndexWriter();
+            beginWriting();
             try {
                 for (int i = 0; i < itemIds.size(); i++) {
                     try {
@@ -287,7 +281,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                     }
                 }
             } finally {
-                mIndexWriterMutex.unlock();
+                doneWriting();
             }
             return itemIds; // success
         }
@@ -593,7 +587,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
      */
     private void closeIndexWriter() 
     {
-        assert(!mIndexWriterMutex.isHeldByCurrentThread());
+        assert(!mIndexWriterMutex.isHeldByCurrentThread()); // we'll deadlock with global lock if this is held!
         int sizeAfter = -1;
         synchronized (sOpenIndexWriters) {
             sReservedWriterSlots++;
@@ -734,8 +728,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                 // directory should get initialized as a result.
                 File indexDir = mIdxDirectory.getFile();
                 if (indexDirIsEmpty(indexDir)) {
-                    openIndexWriter();
-                    mIndexWriterMutex.unlock();
+                    beginWriting();
+                    doneWriting();
                     closeIndexWriter();
                     try {
                         reader = IndexReader.open(mIdxDirectory);
@@ -801,7 +795,20 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         }
     }
     
-    private void openIndexWriter() throws IOException
+    private void doneWriting() throws IOException {
+        assert(Thread.holdsLock(getLock()));
+        assert(mIndexWriterMutex.isHeldByCurrentThread());
+        mIndexWriterMutex.unlock();
+        
+        if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
+            }
+            flush();
+        }
+    }
+    
+    private void beginWriting() throws IOException
     {
         ZimbraPerf.COUNTER_IDX_WRT_OPENED.increment();
         
@@ -871,86 +878,20 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                 }
             } else if (mustSleep) {
                 assert(!mIndexWriterMutex.isHeldByCurrentThread());
-                try { Thread.sleep(100); } catch (Exception e) {};
+                try { Thread.sleep(10); } catch (Exception e) {};
             }
         } while (haveReservedSlot || mustSleep);
         
         assert(mIndexWriterMutex.isHeldByCurrentThread());
         
         try {
-            boolean useBatchIndexing;
-            try {
-                useBatchIndexing = mMbidx.useBatchedIndexing();
-            } catch (ServiceException e) {
-                throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
-            }
-            final LuceneConfigSettings.Config config;
-            if (useBatchIndexing) {
-                config = LuceneConfigSettings.batched;
-            } else {
-                config = LuceneConfigSettings.nonBatched;
-            }
-            
             //
             // at this point, we've put ourselves into the writer cache
             // and we have the Write Mutex....so open the file if
             // necessary and return
             //
             if (mIndexWriter == null) {
-                try {
-//                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, null);
-                    if (ZimbraLog.index_lucene.isDebugEnabled())
-                        mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-//                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-
-                } catch (IOException e1) {
-//                    mLog.debug("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
-                    File indexDir  = mIdxDirectory.getFile();
-                    if (indexDirIsEmpty(indexDir)) {
-//                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, null);
-                        if (ZimbraLog.index_lucene.isDebugEnabled())
-                            mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                        
-//                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        if (mIndexWriter == null) 
-                            throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
-                    } else {
-                        mIndexWriter = null;
-                        IOException ioe = new IOException("Could not create index " + mIdxDirectory.toString() + " (directory already exists)");
-                        ioe.initCause(e1);
-                        throw ioe;
-                    }
-                }
-
-                if (config.useSerialMergeScheduler)
-                    mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
-                
-                mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
-                mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
-                mIndexWriter.setMergeFactor(config.mergeFactor);
-                
-                if (config.useDocScheduler) {
-                    LogDocMergePolicy policy = new LogDocMergePolicy();
-                    mIndexWriter.setMergePolicy(policy);
-                    policy.setUseCompoundDocStore(config.useCompoundFile);
-                    policy.setUseCompoundFile(config.useCompoundFile);
-                    policy.setMergeFactor(config.mergeFactor);
-                    policy.setMinMergeDocs((int)config.minMerge);
-                    if (config.maxMerge != Integer.MAX_VALUE) 
-                        policy.setMaxMergeDocs((int)config.maxMerge);
-                } else {
-                    LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
-                    mIndexWriter.setMergePolicy(policy);
-                    policy.setUseCompoundDocStore(config.useCompoundFile);
-                    policy.setUseCompoundFile(config.useCompoundFile);
-                    policy.setMergeFactor(config.mergeFactor);
-                    policy.setMinMergeMB(((double)config.minMerge)/1024.0);
-                    if (config.maxMerge != Integer.MAX_VALUE)
-                        policy.setMaxMergeMB(((double)config.maxMerge)/1024.0);
-                }
-
+                openIndexWriter();
             } else {
                 ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
             }
@@ -963,6 +904,78 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                 mIndexWriterMutex.unlock();
                 assert(!mIndexWriterMutex.isHeldByCurrentThread());
             }
+        }
+    }
+    
+    private void openIndexWriter() throws IOException {
+        assert(mIndexWriterMutex.isHeldByCurrentThread());
+        assert(Thread.holdsLock(getLock()));
+
+        boolean useBatchIndexing;
+        try {
+            useBatchIndexing = mMbidx.useBatchedIndexing();
+        } catch (ServiceException e) {
+            throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
+        }
+        final LuceneConfigSettings.Config config;
+        if (useBatchIndexing) {
+            config = LuceneConfigSettings.batched;
+        } else {
+            config = LuceneConfigSettings.nonBatched;
+        }
+        
+        try {
+//          sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+            mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, null);
+            if (ZimbraLog.index_lucene.isDebugEnabled())
+                mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+//          sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+
+        } catch (IOException e1) {
+//            mLog.debug("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
+            File indexDir  = mIdxDirectory.getFile();
+            if (indexDirIsEmpty(indexDir)) {
+//              sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, null);
+                if (ZimbraLog.index_lucene.isDebugEnabled())
+                    mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+                
+//              sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                if (mIndexWriter == null) 
+                    throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
+            } else {
+                mIndexWriter = null;
+                IOException ioe = new IOException("Could not create index " + mIdxDirectory.toString() + " (directory already exists)");
+                ioe.initCause(e1);
+                throw ioe;
+            }
+        }
+
+        if (config.useSerialMergeScheduler)
+            mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
+        
+        mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
+        mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
+        mIndexWriter.setMergeFactor(config.mergeFactor);
+        
+        if (config.useDocScheduler) {
+            LogDocMergePolicy policy = new LogDocMergePolicy();
+            mIndexWriter.setMergePolicy(policy);
+            policy.setUseCompoundDocStore(config.useCompoundFile);
+            policy.setUseCompoundFile(config.useCompoundFile);
+            policy.setMergeFactor(config.mergeFactor);
+            policy.setMinMergeDocs((int)config.minMerge);
+            if (config.maxMerge != Integer.MAX_VALUE) 
+                policy.setMaxMergeDocs((int)config.maxMerge);
+        } else {
+            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
+            mIndexWriter.setMergePolicy(policy);
+            policy.setUseCompoundDocStore(config.useCompoundFile);
+            policy.setUseCompoundFile(config.useCompoundFile);
+            policy.setMergeFactor(config.mergeFactor);
+            policy.setMinMergeMB(((double)config.minMerge)/1024.0);
+            if (config.maxMerge != Integer.MAX_VALUE)
+                policy.setMaxMergeMB(((double)config.maxMerge)/1024.0);
         }
     }
     
