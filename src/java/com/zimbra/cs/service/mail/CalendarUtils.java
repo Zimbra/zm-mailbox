@@ -929,11 +929,7 @@ public class CalendarUtils {
         // ORGANIZER
         Element orgElt = element
                 .getOptionalElement(MailConstants.E_CAL_ORGANIZER);
-        if (orgElt == null) {
-            if (hasAttendees && !LC.calendar_allow_null_organizer_with_attendees.booleanValue())
-                throw ServiceException.INVALID_REQUEST(
-                        "missing organizer when attendees are present", null);
-        } else {
+        if (orgElt != null) {
             ZOrganizer org = ZOrganizer.parse(orgElt);
             newInv.setOrganizer(org);
         }
