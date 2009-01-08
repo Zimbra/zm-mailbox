@@ -89,7 +89,7 @@ final class RefCountedIndexReader {
             ZimbraLog.im.debug("Caught exception while closing IndexReader: ", e);
         } finally {
             mReader= null;
-            mIdx.onClose(this);
+            mIdx.onReaderClose(this);
         }
     }
 }

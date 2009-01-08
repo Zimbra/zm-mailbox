@@ -1,4 +1,5 @@
- /* ***** BEGIN LICENSE BLOCK *****
+/*
+ * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007 Zimbra, Inc.
@@ -21,11 +22,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.document.DateField;
@@ -47,7 +45,6 @@ import org.apache.lucene.store.SingleInstanceLockFactory;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
@@ -56,10 +53,12 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.stats.ZimbraPerf;
 
+
 /**
  * 
  */
-class Lucene23Index implements ILuceneIndex, ITextIndex {
+public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILuceneIndex, ITextIndex{
+
     
     static {
         System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z23FSDirectory");
@@ -69,32 +68,19 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         if (DebugConfig.disableIndexing)
             return;
         
-        List<Lucene23Index> toFlush;
-        synchronized(sOpenIndexWriters) {
-            toFlush = new ArrayList<Lucene23Index>(sOpenIndexWriters.size());
-            toFlush.addAll(sOpenIndexWriters.keySet());
-        }
-        
-        for (Lucene23Index idx : toFlush) {
-            idx.closeIndexWriter();  
-        }
+        sIndexWritersCache.flushAllWriters();
     }
 
     static void shutdown() {
         if (DebugConfig.disableIndexing)
             return;
 
-        sSweeper.signalShutdown();
-        try {
-            sSweeper.join();
-        } catch (InterruptedException e) {}
-        
         sIndexReadersCache.signalShutdown();
         try {
             sIndexReadersCache.join();
         } catch (InterruptedException e) {}
 
-        flushAllWriters();
+        sIndexWritersCache.shutdown();
     }
 
     static void startup() {
@@ -103,27 +89,18 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
             return;
         }
         
-        // In case startup is called twice in a row without shutdown in between
-        if (sSweeper != null && sSweeper.isAlive()) {
-            shutdown();
+        if (sIndexWritersCache != null) {
+            // in case startup is somehow called twice
+            sIndexWritersCache.shutdown();
         }
         
         sMaxUncommittedOps = LC.zimbra_index_max_uncommitted_operations.intValue();
-        sLRUSize = LC.zimbra_index_lru_size.intValue();
-        if (sLRUSize < 10) sLRUSize = 10;
-        sIdleWriterFlushTimeMS = 1000 * LC.zimbra_index_idle_flush_time.intValue();
-        
-        sSweeperFrequencyMs = Constants.MILLIS_PER_SECOND * LC.zimbra_index_sweep_frequency.longValue();
-        if (sSweeperFrequencyMs <= 0)
-            sSweeperFrequencyMs = Constants.MILLIS_PER_SECOND;
-        
-        sSweeper = new IndexWritersSweeper();
-        sSweeper.start();
-        
         sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(), 
             LC.zimbra_index_reader_idle_flush_time.longValue() * 1000, 
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
         sIndexReadersCache.start();
+        
+        sIndexWritersCache = new IndexWritersCache(LC.zimbra_index_lru_size.intValue()); 
     }
 
     /**
@@ -142,7 +119,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     }        
     
     
-    Lucene23Index(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
+    LuceneIndex(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
         
@@ -199,12 +176,11 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
-        
+    
         synchronized(getLock()) {        
             
             beginWriting();
             try {
-                assert(mIndexWriterMutex.isHeldByCurrentThread());
                 assert(mIndexWriter != null);
 
                 for (Document doc : docs) {
@@ -415,14 +391,12 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     }
     
     /**
-     * Force all outstanding index writes to go through.  
+     * Force all outstanding index writes to go through. Do not return until complete 
      */
     public void flush() {
         synchronized(getLock()) {
-            if (isIndexWriterOpen()) 
-                closeIndexWriter();
-            else
-                sIndexReadersCache.removeIndexReader(this);
+            sIndexWritersCache.flush(this);
+            sIndexReadersCache.removeIndexReader(this);
         }
     }
 
@@ -474,9 +448,9 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         }
     }
 
-    public String toString() { return "Lucene23Index at "+mIdxDirectory.toString(); }
+    public String toString() { return "LuceneIndex at "+mIdxDirectory.toString(); }
 
-    private long getLastWriteTime() { return mLastWriteTime; }
+    long getLastWriteTime() { return mLastWriteTime; }
 
     private final Object getLock() { return mMbidx.getLock(); }
 
@@ -525,12 +499,12 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         LinkedList<SpellSuggestQueryInfo.Suggestion> toRet = null;
 
         token = token.toLowerCase();
-
+        
         try {
             RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
                 IndexReader iReader = searcher.getReader();
-
+                
                 Term term = new Term(field, token);
                 int freq = iReader.docFreq(term);
                 int numDocs = iReader.numDocs();
@@ -582,84 +556,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     }
 
     /**
-     * Close the index writer and write commit/abort entries for all
-     * pending IndexItem redo operations.
-     */
-    private void closeIndexWriter() 
-    {
-        assert(!mIndexWriterMutex.isHeldByCurrentThread()); // we'll deadlock with global lock if this is held!
-        int sizeAfter = -1;
-        synchronized (sOpenIndexWriters) {
-            sReservedWriterSlots++;
-            mIndexWriterMutex.lock();
-            if (sOpenIndexWriters.remove(this) != null) {
-                sizeAfter = sOpenIndexWriters.size();
-                ZimbraPerf.COUNTER_IDX_WRT.increment(sizeAfter);                
-            }
-        }
-        
-        // only need to do a log output if we actually removed one
-        if (sLog.isDebugEnabled() && sizeAfter > -1)
-            sLog.debug("closeIndexWriter: map size after close = " + sizeAfter);
-        
-        try {
-            closeIndexWriterAfterRemove();
-        } finally {
-            assert(mIndexWriterMutex.isHeldByCurrentThread());
-            mIndexWriterMutex.unlock();
-            synchronized(sOpenIndexWriters) {
-                sReservedWriterSlots--;
-                assert(mIndexWriter == null);
-            }
-        }
-    }
-    
-    private void closeIndexWriterAfterRemove() {
-        assert(mIndexWriterMutex.isHeldByCurrentThread());
-
-        if (mIndexWriter == null) {
-            return;
-        }
-
-        if (sLog.isDebugEnabled())
-            sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
-
-        IndexWriter writer = mIndexWriter;
-        mIndexWriter = null;
-
-        boolean success = true;
-        try {
-            // Flush all changes to file system before committing redos.
-            writer.close();
-        } catch (IOException e) {
-            success = false;
-            sLog.error("Caught Exception " + e + " in Lucene23Index.closeIndexWriter", e);
-            // TODO: Is it okay to eat up the exception?
-        } finally {
-            // Write commit entries to redo log for all IndexItem entries
-            // whose changes were written to disk by mIndexWriter.close()
-            // above.
-            for (Iterator<IndexItem> iter = mUncommittedRedoOps.iterator(); iter.hasNext();) {
-                IndexItem op = iter.next();
-                if (success) {
-                    if (op.commitAllowed())
-                        op.commit();
-                    else {
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("IndexItem (" + op +
-                            ") not allowed to commit yet; attaching to parent operation");
-                        }
-                        op.attachToParent();
-                    }
-                } else
-                    op.abort();
-                iter.remove();
-            }
-            assert(mUncommittedRedoOps.size() == 0);
-        }
-    }
-    
-    /**
     Levenshtein distance also known as edit distance is a measure of similiarity
     between two strings where the distance is measured as the number of character 
     deletions, insertions or substitutions required to transform one string to 
@@ -710,14 +606,11 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         BooleanQuery.setMaxClauseCount(10000); 
 
         synchronized(getLock()) {
-            if (isIndexWriterOpen()) 
-                closeIndexWriter();
+            flush();
             
             RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
             if (toRet != null)
                 return toRet;
-            
-            assert(!isIndexWriterOpen());
             
             IndexReader reader = null;
             try {
@@ -730,7 +623,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                 if (indexDirIsEmpty(indexDir)) {
                     beginWriting();
                     doneWriting();
-                    closeIndexWriter();
+                    flush();
                     try {
                         reader = IndexReader.open(mIdxDirectory);
                     } catch (IOException e1) {
@@ -786,129 +679,34 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     }
     
     
-    private boolean isIndexWriterOpen() {
-        mIndexWriterMutex.lock();
-        try {
-            return mIndexWriter != null;
-        } finally {
-            mIndexWriterMutex.unlock();
-        }
-    }
-    
     private void doneWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
-        assert(mIndexWriterMutex.isHeldByCurrentThread());
-        mIndexWriterMutex.unlock();
-        
         if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
             if (sLog.isDebugEnabled()) {
                 sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
             }
             flush();
+        } else {
+            sIndexWritersCache.doneWriting(this);
         }
+        updateLastWriteTime();
     }
     
     private void beginWriting() throws IOException
     {
         ZimbraPerf.COUNTER_IDX_WRT_OPENED.increment();
-        
         assert(Thread.holdsLock(getLock()));
-        assert(!mIndexWriterMutex.isHeldByCurrentThread());
         
         // uncache the IndexReader if it is cached
         sIndexReadersCache.removeIndexReader(this);
-
-        //
-        // First, get a 'slot' in the cache, closing some other Writer
-        // if necessary to do it...
-        boolean haveReservedSlot = false;
-        boolean mustSleep = false;
-        do {
-            // Entry cases:
-            //       - We might get a slot (or already be in cache) and be done
-            //
-            //       - We might reserve a slot and go down to close a Writer
-            //
-            //       - We couldn't find anything to close, so we just did a sleep
-            //         and hope to retry again
-            //
-            //       - We just closed a writer, and we reserved a spot
-            //         so we know there will be room this time.
-            Lucene23Index toClose;
-            synchronized(sOpenIndexWriters) {
-                toClose = null;
-                mustSleep = false;
-                
-                if (haveReservedSlot) {
-                    sReservedWriterSlots--;
-                    haveReservedSlot = false;
-                    assert(sOpenIndexWriters.size() + sReservedWriterSlots < sLRUSize);
-                }
-
-                if (sOpenIndexWriters.containsKey(this)) {
-                    mIndexWriterMutex.lock();
-                    sOpenIndexWriters.remove(this);  // maintain order in the LinkedHashMap
-                    sOpenIndexWriters.put(this, this);
-                } else if (sOpenIndexWriters.size() + sReservedWriterSlots < sLRUSize) {
-                    mIndexWriterMutex.lock();
-                    sOpenIndexWriters.put(this, this);
-                } else {
-                    if (!sOpenIndexWriters.isEmpty()) {
-                        // find the oldest (first when iterating) entry to remove
-                        toClose = sOpenIndexWriters.keySet().iterator().next();
-                        sReservedWriterSlots++;
-                        haveReservedSlot = true;
-                        sOpenIndexWriters.remove(toClose);
-                        toClose.mIndexWriterMutex.lock();
-                    } else {
-                        sLog.info("MI"+this.toString()+"LRU empty and all slots reserved...retrying");
-                        mustSleep = true;
-                    }
-                }
-                ZimbraPerf.COUNTER_IDX_WRT.increment(sOpenIndexWriters.size());
-            } // synchronized(mOpenIndexWriters)
-            
-            if (toClose != null) {
-                assert(toClose.mIndexWriterMutex.isHeldByCurrentThread());
-                assert(!mIndexWriterMutex.isHeldByCurrentThread());
-                try {
-                    toClose.closeIndexWriterAfterRemove();
-                } finally {
-                    toClose.mIndexWriterMutex.unlock();
-                }
-            } else if (mustSleep) {
-                assert(!mIndexWriterMutex.isHeldByCurrentThread());
-                try { Thread.sleep(10); } catch (Exception e) {};
-            }
-        } while (haveReservedSlot || mustSleep);
         
-        assert(mIndexWriterMutex.isHeldByCurrentThread());
-        
-        try {
-            //
-            // at this point, we've put ourselves into the writer cache
-            // and we have the Write Mutex....so open the file if
-            // necessary and return
-            //
-            if (mIndexWriter == null) {
-                openIndexWriter();
-            } else {
-                ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
-            }
-            // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
-            // however we also track the number of uncomitted-operations on the index, and will force a 
-            // flush if the index has had a lot written to it without a flush.
-            updateLastWriteTime();
-        } finally {
-            if (mIndexWriter == null) {
-                mIndexWriterMutex.unlock();
-                assert(!mIndexWriterMutex.isHeldByCurrentThread());
-            }
-        }
+        sIndexWritersCache.beginWriting(this);
     }
     
-    private void openIndexWriter() throws IOException {
-        assert(mIndexWriterMutex.isHeldByCurrentThread());
+    void doWriterOpen() throws IOException {
+        if (mIndexWriter != null)
+            return; // already open!
+        
         assert(Thread.holdsLock(getLock()));
 
         boolean useBatchIndexing;
@@ -917,6 +715,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         } catch (ServiceException e) {
             throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
         }
+        
         final LuceneConfigSettings.Config config;
         if (useBatchIndexing) {
             config = LuceneConfigSettings.batched;
@@ -932,7 +731,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
 //          sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
         } catch (IOException e1) {
-//            mLog.debug("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
+            sLog.debug("Caught exception trying to open index: "+e, e);
             File indexDir  = mIdxDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
 //              sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
@@ -979,28 +778,54 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         }
     }
     
+    void doWriterClose() {
+        if (mIndexWriter == null) {
+            return;
+        }
+
+        if (sLog.isDebugEnabled())
+            sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
+
+        IndexWriter writer = mIndexWriter;
+        mIndexWriter = null;
+
+        boolean success = true;
+        try {
+            // Flush all changes to file system before committing redos.
+            writer.close();
+        } catch (IOException e) {
+            success = false;
+            sLog.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
+            // TODO: Is it okay to eat up the exception?
+        } finally {
+            // Write commit entries to redo log for all IndexItem entries
+            // whose changes were written to disk by mIndexWriter.close()
+            // above.
+            for (Iterator<IndexItem> iter = mUncommittedRedoOps.iterator(); iter.hasNext();) {
+                IndexItem op = iter.next();
+                if (success) {
+                    if (op.commitAllowed())
+                        op.commit();
+                    else {
+                        if (sLog.isDebugEnabled()) {
+                            sLog.debug("IndexItem (" + op +
+                            ") not allowed to commit yet; attaching to parent operation");
+                        }
+                        op.attachToParent();
+                    }
+                } else
+                    op.abort();
+                iter.remove();
+            }
+            assert(mUncommittedRedoOps.size() == 0);
+        }
+    }
+    
 
     private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); }
 
-    /**
-     * How many open indexWriters do we allow?  This value must be >= the # threads in the system, and really 
-     * should be a good bit higher than that to lessen thrash.  Ideally this value will never get hit in a
-     * "real" system, instead the indexes will be flushed via timeout or # ops -- but this value is here so
-     * that the # open file descriptors is controlled.
-     */
-    private static int sLRUSize;
-    
-    /**
-     * After we add a document to it, how long do we hold an index open for writing before closing it 
-     * (and therefore flushing the writes to disk)?
-     * 
-     * Note that there are other things that might cause us to flush the index to disk -- e.g. if the user
-     * does a search on the index, or if the system decides there are too many open IndexWriters (see 
-     * sLRUSize) 
-     */
-    private static long sIdleWriterFlushTimeMS;
-
     private static IndexReadersCache sIndexReadersCache;
+    private static IndexWritersCache sIndexWritersCache;
     
     private static Log sLog = ZimbraLog.index;
     
@@ -1012,19 +837,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
      */
     private static int sMaxUncommittedOps;
     
-    private static LinkedHashMap<Lucene23Index, Lucene23Index> sOpenIndexWriters =
-        new LinkedHashMap<Lucene23Index, Lucene23Index>(200, 0.75f, true);
-    
-    private static int sReservedWriterSlots = 0;
-    
-    private static IndexWritersSweeper sSweeper = null;
-    
-    /**
-     * How often do we walk the list of open IndexWriters looking for idle writers
-     * to close.  On very busy systems, the default time might be too long.
-     */
-    private static long sSweeperFrequencyMs = 30 * Constants.MILLIS_PER_SECOND;
-    
     /**
      * This static array saves us from the time required to create a new array
      * everytime editDistance is called.
@@ -1033,7 +845,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     private Z23FSDirectory mIdxDirectory = null;
     
     private IndexWriter mIndexWriter;
-    private ReentrantLock mIndexWriterMutex = new ReentrantLock();
     
     private volatile long mLastWriteTime = 0;
     
@@ -1041,6 +852,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     private SortBy mLatestSortBy = null;
     private MailboxIndex mMbidx;
     private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
+    
+    
     static abstract class DocEnumInterface {
         void maxDocNo(int num) {};
         abstract boolean onDocument(Document doc, boolean isDeleted);
@@ -1075,124 +888,13 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         abstract void onTerm(Term term, int docFreq); 
     }
     
-    private static final class IndexWritersSweeper extends Thread {
-        
-        public IndexWritersSweeper() {
-            super("IndexWritersSweeperThread");
-        }
-        
-        /**
-         * Main loop for the Sweeper thread.  This thread does a sweep automatically
-         * every (mSweepIntervalMS) ms, or it will run a sweep when woken up
-         * bia the wakeupSweeperThread() API
-         */
-        @Override
-        public void run() {
-            sLog.info(getName() + " thread starting");
-
-            boolean shutdown = false;
-            long startTime = System.currentTimeMillis();
-
-            while (!shutdown) {
-                // Sleep until next scheduled wake-up time, or until notified.
-                synchronized (this) {
-                    if (!mShutdown) {  // Don't go into wait() if shutting down.  (bug 1962)
-                        long now = System.currentTimeMillis();
-                        long until = startTime + sSweeperFrequencyMs;
-                        if (until > now) {
-                            try {
-                                wait(until - now);
-                            } catch (InterruptedException e) {}
-                        }
-                    }
-                    shutdown = mShutdown;
-                }
-
-                startTime = System.currentTimeMillis();
-                
-
-                // Flush out index writers that have been idle too long.
-                Lucene23Index toRemove = null;
-                int removed = 0;
-                int sizeAfter = 0;
-                int sizeBefore = -1;
-                do {
-                    try {
-                        synchronized (sOpenIndexWriters) {
-                            if (sizeBefore == -1)
-                                sizeBefore = sOpenIndexWriters.size();
-                            toRemove = null;
-                            long cutoffTime = startTime - sIdleWriterFlushTimeMS;
-                            for (Iterator it = sOpenIndexWriters.entrySet().iterator(); toRemove==null && it.hasNext(); ) {
-                                Map.Entry entry = (Map.Entry) it.next();
-                                Lucene23Index mi = (Lucene23Index) entry.getKey();
-                                if (mi.getLastWriteTime() < cutoffTime) {
-                                    removed++;
-                                    toRemove = mi;
-                                    it.remove();
-                                    toRemove.mIndexWriterMutex.lock();
-                                    sReservedWriterSlots++;
-                                }
-                            }
-                            sizeAfter = sOpenIndexWriters.size();
-                            ZimbraPerf.COUNTER_IDX_WRT.increment(sizeAfter);
-                        }
-                        if (toRemove != null) {
-                            try {
-                                ZimbraLog.addMboxToContext(toRemove.mMbidx.getMailboxId());
-                                toRemove.closeIndexWriterAfterRemove();
-                                ZimbraLog.removeMboxFromContext();
-                            } finally {
-                                toRemove.mIndexWriterMutex.unlock();
-                                assert(!toRemove.mIndexWriterMutex.isHeldByCurrentThread());
-                                synchronized(sOpenIndexWriters) {
-                                    sReservedWriterSlots--;
-                                    assert(toRemove.mIndexWriter == null);
-                                }
-                            }
-                        }
-                    } finally {
-                        if (toRemove != null && toRemove.mIndexWriterMutex.isHeldByCurrentThread()) {
-                            sLog.error("Error: sweeper still holding mutex for %s at end of cycle!", toRemove.mIndexWriter);
-                            assert(false);
-                            toRemove.mIndexWriterMutex.unlock();
-                        }
-                    }
-                    synchronized(this) {
-                        if (mShutdown)
-                            shutdown = true;
-                    }
-                } while (!shutdown && toRemove != null);
-                
-                long elapsed = System.currentTimeMillis() - startTime;
-                
-                if (removed > 0 || sizeAfter > 0)
-                    sLog.info("open index writers sweep: before=" + sizeBefore +
-                                ", closed=" + removed +
-                                ", after=" + sizeAfter + " (" + elapsed + "ms)");
-            }
-
-            sLog.info(getName() + " thread exiting");
-        }
-
-        /**
-         * Shutdown the sweeper thread
-         */
-        synchronized void signalShutdown() {
-            mShutdown = true;
-            notify();
-        }
-        
-        private boolean mShutdown = false;
-    }
-
     public void onReaderClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
     
-    List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
+    private List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
     
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();
