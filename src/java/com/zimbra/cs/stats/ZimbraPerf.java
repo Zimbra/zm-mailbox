@@ -34,7 +34,6 @@ import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.common.stats.StatsDumper;
 import com.zimbra.common.stats.StatsDumperDataSource;
 import com.zimbra.common.stats.StopWatch;
-import com.zimbra.common.stats.ThreadStats;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -174,21 +173,6 @@ public class ZimbraPerf {
     private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
     private static boolean sIsInitialized = false;
 
-    private static final String[] THREAD_NAME_PREFIXES = new String[] { 
-        "btpool",
-        "pool",
-        "LmtpHandler",
-        "ImapHandler",
-        "Pop3Handler",
-        "ScheduledTask",
-        "Timer",
-        "AnonymousIoService",
-        "FLAP processor",
-        "GC",
-        "SocketAcceptor",
-        "Thread"
-    };
-    
     public synchronized static void initialize() {
         if (sIsInitialized) {
             sLog.warn("Detected a second call to ZimbraPerf.initialize()", new Exception());
@@ -246,13 +230,13 @@ public class ZimbraPerf {
         COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowTotal(false);
         
         StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
-        ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES, "threads.csv");
-        StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
 
         StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
 
+        ThreadStats threadStats = new ThreadStats("threads.csv");
+        StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
         
         // Initialize JMX
         MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
