@@ -42,10 +42,12 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminConstants.E_ID);
+	    String id = request.getAttribute(AdminConstants.E_ID, null);
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    DistributionList dl = prov.get(DistributionListBy.id, id);
+	    DistributionList dl = null;
+	    if (id != null)
+	        prov.get(DistributionListBy.id, id);
             
         String dlName = "";
         if (dl != null) {

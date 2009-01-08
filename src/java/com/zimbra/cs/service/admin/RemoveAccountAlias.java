@@ -52,10 +52,12 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminConstants.E_ID);
+	    String id = request.getAttribute(AdminConstants.E_ID, null);
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
+	    Account account = null;
+	    if (id != null)
+	        prov.get(AccountBy.id, id, zsc.getAuthToken());
         
         String acctName = "";
         if (account != null) {
