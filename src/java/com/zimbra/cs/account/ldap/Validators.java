@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.ldap.LdapProvisioning.ProvisioningValidator;
 
 public class Validators {
@@ -226,7 +227,7 @@ public class Validators {
         private static Set<String> getCosFeatures(LdapProvisioning prov, Map<String,Set<String>> cosFeatureMap, String cosId)
         throws ServiceException {
             if (!cosFeatureMap.containsKey(cosId)) {
-                Cos cos = prov.getCosById(cosId);
+                Cos cos = prov.get(CosBy.id, cosId);
                 Map<String,Object> cosAttrs = cos.getAttrs(true);
                 cosFeatureMap.put(cosId, new HashSet<String>());
                 for (Map.Entry<String,Object> entry : cosAttrs.entrySet()) {
