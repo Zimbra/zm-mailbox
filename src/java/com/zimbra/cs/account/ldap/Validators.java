@@ -35,6 +35,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning.ProvisioningValidator;
@@ -123,6 +124,7 @@ public class Validators {
             HashMap<String,Integer> cosLimitMap = new HashMap<String,Integer>();
             HashMap<String,Integer> featureCountMap = new HashMap<String,Integer>();
             HashMap<String,Integer> featureLimitMap = new HashMap<String,Integer>();
+            HashMap<String,Set<String>> cosFeatureMap = new HashMap<String,Set<String>>();
 
             String emailAddress = (String) args[0];
             if (emailAddress == null)
@@ -158,6 +160,7 @@ public class Validators {
                 parseLimit(cosLimitMap, limit);
             for (String limit : featureLimit)
                 parseLimit(featureLimitMap, limit);
+            
             // populate count maps with the cos and features we are interested in
             for (Map.Entry<String,Integer> e : cosLimitMap.entrySet())
                 cosCountMap.put(e.getKey(), 0);
@@ -167,6 +170,8 @@ public class Validators {
             String desiredCosId = (String) attrs.get(Provisioning.A_zimbraCOSId);
             if (desiredCosId == null)
                 desiredCosId = defaultCosId;
+            
+            Set<String> cosFeatures = getCosFeatures(prov, cosFeatureMap, desiredCosId);
             Set<String> desiredFeatures = new HashSet<String>();
             for (Map.Entry<String,Object> entry : attrs.entrySet()) {
                 String k = entry.getKey();
@@ -174,6 +179,10 @@ public class Validators {
                         && "true".equalsIgnoreCase(entry.getValue().toString())) {
                         desiredFeatures.add(k);
                 }
+            }
+            for (String feature : cosFeatures) {
+                if (featureLimitMap.containsKey(feature))
+                    desiredFeatures.add(feature);
             }
             String originalCosId = null;
             if (account != null)
@@ -191,7 +200,7 @@ public class Validators {
             }
             if ((desiredCosId != null && !desiredCosId.equals(originalCosId)
                     && cosLimitMap.containsKey(desiredCosId)) || desiredFeatures.size() > 0) {
-                buildDomainCounts(prov, domainName, defaultCosId, cosCountMap, featureCountMap);
+                buildDomainCounts(prov, domainName, defaultCosId, cosCountMap, featureCountMap, cosFeatureMap);
                 if (desiredCosId != null && !desiredCosId.equals(originalCosId)
                         && cosLimitMap.containsKey(desiredCosId)) {
                     if (cosCountMap.containsKey(desiredCosId)
@@ -214,6 +223,24 @@ public class Validators {
             }
         }
         
+        private static Set<String> getCosFeatures(LdapProvisioning prov, Map<String,Set<String>> cosFeatureMap, String cosId)
+        throws ServiceException {
+            if (!cosFeatureMap.containsKey(cosId)) {
+                Cos cos = prov.getCosById(cosId);
+                Map<String,Object> cosAttrs = cos.getAttrs(true);
+                cosFeatureMap.put(cosId, new HashSet<String>());
+                for (Map.Entry<String,Object> entry : cosAttrs.entrySet()) {
+                    String name = entry.getKey();
+                    if (name.toLowerCase().startsWith("zimbrafeature")
+                            && name.toLowerCase().endsWith("enabled")) {
+                        Object value = entry.getValue();
+                        if (value != null && "true".equalsIgnoreCase(value.toString()))
+                            cosFeatureMap.get(cosId).add(name);
+                    }
+                }
+            }
+            return cosFeatureMap.get(cosId);
+        }
         private static void parseLimit(HashMap<String,Integer> map, String limit) {
             String[] parts = limit.split(":");
             int max = -1;
@@ -230,19 +257,9 @@ public class Validators {
         
         // mostly pawned off from LdapProvisioning.countAccounts(domain)
         private void buildDomainCounts(LdapProvisioning prov, String domain, String defaultCos,
-                Map<String,Integer> cosCount, Map<String,Integer> featureCount)
+                Map<String,Integer> cosCount, Map<String,Integer> featureCount, Map<String,Set<String>> cosFeatureMap)
         throws ServiceException {
             String query = LdapFilter.allNonSystemAccounts();
-            // make query into:  (&query(|(zimbracosid=cosId)(featureEnabled=true)))
-            // query is already bracketed
-            StringBuilder queryFilter = new StringBuilder();
-            queryFilter.append("(&").append(query).append("(|");
-            for (String cosId : cosCount.keySet())
-                queryFilter.append("(zimbracosid=").append(cosId).append(")");
-            for (String featureAttr : featureCount.keySet())
-                queryFilter.append("(").append(featureAttr).append("=TRUE)");
-            queryFilter.append("))");
-            query = queryFilter.toString();
 
             ZimbraLdapContext zlc = null;
             try {
@@ -266,6 +283,7 @@ public class Validators {
                             String dn = sr.getNameInNamespace();
                             // skip admin accounts
                             if (dn.endsWith("cn=zimbra")) continue;
+
                             Attributes attrs = sr.getAttributes();
                             Attribute objectclass = attrs.get("objectclass");
                             if (objectclass == null) {
@@ -278,15 +296,25 @@ public class Validators {
                                 if (cosIdAttr != null)
                                     cosId = (String) cosIdAttr.get();
                                 incrementCount(cosCount, cosId);
+                                Set<String> cosFeatures = getCosFeatures(prov, cosFeatureMap, cosId);
 
                                 NamingEnumeration<? extends Attribute> e = attrs.getAll();
+                                Set<String> acctFeatures = new HashSet<String>();
                                 while (e.hasMore()) {
                                     Attribute at = e.next();
                                     String name = at.getID();
+                                    Object atValue = at.get();
+                                    String value = null;
+                                    if (atValue != null)
+                                        value = at.get().toString();
                                     if (name.toLowerCase().startsWith("zimbrafeature")
-                                            && name.toLowerCase().endsWith("enabled"))
-                                        incrementCount(featureCount, name);
+                                            && name.toLowerCase().endsWith("enabled")
+                                            && "true".equalsIgnoreCase(value))
+                                        acctFeatures.add(name);
                                 }
+                                acctFeatures.addAll(cosFeatures);
+                                for (String feature : acctFeatures)
+                                    incrementCount(featureCount, feature);
                             }
                         }
                     } finally {
