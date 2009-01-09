@@ -57,7 +57,7 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
- * 
+ * Currently the default Lucene provider, this class will eventually be deprecated in favor of the LuceneIndex class
  */
 class Lucene23Index implements ILuceneIndex, ITextIndex {
     

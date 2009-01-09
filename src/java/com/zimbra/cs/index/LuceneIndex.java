@@ -55,7 +55,8 @@ import com.zimbra.cs.stats.ZimbraPerf;
 
 
 /**
- * 
+ * An updated Lucene provider that uses the IndexWritersCache to manage the index LRU.  This class 
+ * is currently activated via a LC key but will eventually become the default
  */
 public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILuceneIndex, ITextIndex{
 
@@ -100,7 +101,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
         sIndexReadersCache.start();
         
-        sIndexWritersCache = new IndexWritersCache(LC.zimbra_index_lru_size.intValue()); 
+        sIndexWritersCache = new IndexWritersCache(); 
     }
 
     /**
