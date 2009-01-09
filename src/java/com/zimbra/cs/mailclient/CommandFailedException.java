@@ -22,6 +22,7 @@ package com.zimbra.cs.mailclient;
 public class CommandFailedException extends MailException {
     private final String cmd;
     private final String error;
+    private String request; // Optional request that caused the error
 
     /**
      * Creates a new <tt>CommandFailedException</tt> for the specified
@@ -53,6 +54,14 @@ public class CommandFailedException extends MailException {
         return error;
     }
 
+    public void setRequest(String req) {
+        request = req;
+    }
+
+    public String getRequest() {
+        return request;
+    }
+    
     /**
      * Returns the exception detail message.
      * 
