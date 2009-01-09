@@ -105,6 +105,7 @@ public class LC {
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
     public static final KnownKey zimbra_index_sweep_frequency;
+    public static final KnownKey zimbra_index_flush_pool_size;
     
     public static final KnownKey zimbra_index_reader_lru_size;
     public static final KnownKey zimbra_index_reader_idle_flush_time;
@@ -579,6 +580,7 @@ public class LC {
         zimbra_index_idle_flush_time.setDefault("600");
 
         zimbra_index_sweep_frequency = new KnownKey("zimbra_index_sweep_frequency", "30");
+        zimbra_index_flush_pool_size = new KnownKey("zimbra_index_flush_pool_size", "10");
 
         zimbra_index_reader_lru_size  = new KnownKey("zimbra_index_reader_lru_size");
         zimbra_index_reader_lru_size.setDefault("20");
