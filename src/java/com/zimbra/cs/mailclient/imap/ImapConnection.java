@@ -464,8 +464,7 @@ public final class ImapConnection extends MailConnection {
             }
             assert res.isContinuation();
             if (!req.isAuthenticate()) {
-                throw new CommandFailedException(
-                    req.getCommand().getName(), "Unexpected continuation response");
+                throw req.failed("Unexpected continuation response");
             }
             processContinuation(res.getResponseText().getText());
         }
@@ -485,9 +484,11 @@ public final class ImapConnection extends MailConnection {
             }
         }
         if (traceOut != null && traceOut.isEnabled()) {
+            int size = lit.getSize();
             int maxSize = getImapConfig().getMaxLiteralTraceSize();
-            if (maxSize >= 0 && lit.getSize() > maxSize) {
-                traceOut.suspendTrace("<<< literal data not shown >>>");
+            if (maxSize >= 0 && size > maxSize) {
+                String msg = String.format("<literal %d bytes>", size);
+                traceOut.suspendTrace(msg);
                 try {
                     lit.writeData(out);
                 } finally {

@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Arrays;
 import java.util.Date;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 
 public class ImapRequest {
@@ -91,8 +92,7 @@ public class ImapRequest {
                  res.getTag() + ")");
          }
          if (!res.isOK()) {
-             throw new CommandFailedException(
-                 cmd.getName(), res.getResponseText().getText());
+             throw failed(res.getResponseText().getText());
          }
     }
 
@@ -177,10 +177,71 @@ public class ImapRequest {
         }
     }
 
+    public CommandFailedException failed(String error) {
+        CommandFailedException cfe = new CommandFailedException(cmd.getName(), error);
+        try {
+            cfe.setRequest(toString());
+        } catch (Exception e) {
+        }
+        return cfe;
+    }
+    
     public String toString() {
-        StringBuilder sb = new StringBuilder(tag);
-        sb.append(' ').append(cmd);
-        if (params != null) sb.append(" <data>");
+        StringBuilder sb = new StringBuilder();
+        sb.append(tag).append(' ').append(cmd);
+        if (params != null) {
+            if (cmd.getCAtom() == CAtom.LOGIN && params.size() > 1) {
+                sb.append(' ');
+                append(sb, params.get(0));
+                sb.append(" <password>");
+            } else {
+                for (Object param : params) {
+                    sb.append(' ');
+                    append(sb, param);
+                }
+            }
+        }
         return sb.toString();
+    }
+
+    private void append(StringBuilder sb, Object param) {
+        if (param instanceof String) {
+            String s = (String) param;
+            sb.append(s.length() > 0 ? s : "\"\"");
+        } else if (param instanceof Quoted) { 
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ((Quoted) param).write(baos);
+            } catch (IOException e) {
+                throw new AssertionError();
+            }
+            sb.append(baos.toString());
+        } else if (param instanceof Literal) {
+            sb.append("<literal ");
+            sb.append(((Literal) param).getSize());
+            sb.append(" bytes>");
+        } else if (param instanceof MailboxName) {
+            String encoded = ((MailboxName) param).encode();
+            append(sb, ImapData.asAString(encoded));
+        } else if (param instanceof IDInfo) {
+            append(sb, ((IDInfo) param).toRequestParam());
+        } else if (param instanceof Date) {
+            append(sb, new Quoted(toInternalDate((Date) param)));
+        } else if (param instanceof Object[]) {
+            append(sb, Arrays.asList((Object[]) param));
+        } else if (param instanceof List) {
+            sb.append('(');
+            Iterator it = ((List) param).iterator();
+            if (it.hasNext()) {
+                append(sb, it.next());
+                while (it.hasNext()) {
+                    sb.append(' ');
+                    append(sb, it.next());
+                }
+            }
+            sb.append(')');
+        } else { // Atom, Flags, Object 
+            sb.append(param.toString());
+        }
     }
 }

@@ -35,10 +35,6 @@ public final class Quoted extends ImapData {
         return Type.QUOTED;
     }
 
-    public String getString() {
-        return string;
-    }
-
     public int getSize() {
         return string.length();
     }
@@ -70,7 +66,7 @@ public final class Quoted extends ImapData {
             obj != null && obj.getClass() == Quoted.class &&
             string.equals(((Quoted) obj).string);
     }
-    
+
     public String toString() {
         return string;
     }
