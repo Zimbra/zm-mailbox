@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ThreadPool;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -66,7 +65,7 @@ class IndexWritersCache {
      * How often do we walk the list of open IndexWriters looking for idle writers
      * to close.  On very busy systems, the default time might be too long.
      */
-    private final long mSweeperTimeout;
+    private final long mSweeperTimeout = LC.zimbra_index_sweep_frequency.intValueWithinRange(1, 3600) * Constants.MILLIS_PER_SECOND;
 
 
     /**
@@ -77,14 +76,14 @@ class IndexWritersCache {
      * does a search on the index, or if the system decides there are too many open IndexWriters (see 
      * sLRUSize) 
      */
-    private final long mMaxIdleTime;
+    private final long mMaxIdleTime = 1000 * LC.zimbra_index_idle_flush_time.intValueWithinRange(1,60*60*24);
     
     /**
      * How many open indexWriters do we allow?  This value is here so that the # open file 
      * descriptors and amount of buffered index memory is controlled.
      */
-    private final int mMaxOpen;   // maximum allowed in the LRU
-    private final int mFlushPoolSize = 5;
+    private final int mMaxOpen = LC.zimbra_index_lru_size.intValueWithinRange(10, Integer.MAX_VALUE);   // maximum allowed in the LRU
+    private final int mFlushPoolSize = LC.zimbra_index_flush_pool_size.intValueWithinRange(1, 100);
     
     private int mNumFlushing = 0; // number queued or running async flush tasks
     private boolean mShutdown = false;
@@ -101,16 +100,7 @@ class IndexWritersCache {
     }
     
     
-    public IndexWritersCache(int maxOpen) {
-        mMaxOpen = (maxOpen > 10 ? maxOpen : 10);
-        
-        mMaxIdleTime = 1000 * LC.zimbra_index_idle_flush_time.intValue();
-        
-        long sweeperTimeout = Constants.MILLIS_PER_SECOND * LC.zimbra_index_sweep_frequency.longValue();
-        if (sweeperTimeout <= 0)
-            sweeperTimeout = Constants.MILLIS_PER_SECOND;
-        mSweeperTimeout = sweeperTimeout;
-        
+    public IndexWritersCache() {
         Runnable sweeper = new Runnable() {
             public void run() {
                 doSweep();
@@ -408,7 +398,7 @@ class IndexWritersCache {
         public void doWriterOpen() {
             if (!opened) {
                 try {
-                    Thread.sleep(0); 
+                    Thread.sleep(0);
                     opened = true;
                 } catch (InterruptedException e) {}
             }
@@ -513,7 +503,7 @@ class IndexWritersCache {
 //            } catch (InterruptedException e) {}
         }
     }
-
+    
     /**
      * @param args
      */
@@ -522,8 +512,8 @@ class IndexWritersCache {
         int numWriters  = 10000;
         for (int testNum = 0; testNum < 10; testNum++) {
             int cacheSize = (testNum+1)*200;
-//            int cacheSize = 100;
-            IndexWritersCache cache = new IndexWritersCache(cacheSize);
+            LC.zimbra_index_lru_size.setDefault(Integer.toString(cacheSize));
+            IndexWritersCache cache = new IndexWritersCache();
             ThreadPool testPool = new ThreadPool("Test",10);
             Random r = new Random(1234);
 
