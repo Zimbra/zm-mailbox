@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20090108-1131 */
+    /* build: 5.0 pshao 20090109-1434 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9936,158 +9936,6 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @return zimbraPrefAddrBookAutoComplete, or ampty array if unset
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public String[] getPrefAddrBookAutoComplete() {
-        return getMultiAttr(Provisioning.A_zimbraPrefAddrBookAutoComplete);
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param zimbraPrefAddrBookAutoComplete new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public void setPrefAddrBookAutoComplete(String[] zimbraPrefAddrBookAutoComplete) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAddrBookAutoComplete, zimbraPrefAddrBookAutoComplete);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param zimbraPrefAddrBookAutoComplete new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public Map<String,Object> setPrefAddrBookAutoComplete(String[] zimbraPrefAddrBookAutoComplete, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAddrBookAutoComplete, zimbraPrefAddrBookAutoComplete);
-        return attrs;
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param zimbraPrefAddrBookAutoComplete new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public void addPrefAddrBookAutoComplete(String zimbraPrefAddrBookAutoComplete) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefAddrBookAutoComplete, zimbraPrefAddrBookAutoComplete);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param zimbraPrefAddrBookAutoComplete new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public Map<String,Object> addPrefAddrBookAutoComplete(String zimbraPrefAddrBookAutoComplete, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefAddrBookAutoComplete, zimbraPrefAddrBookAutoComplete);
-        return attrs;
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param zimbraPrefAddrBookAutoComplete existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public void removePrefAddrBookAutoComplete(String zimbraPrefAddrBookAutoComplete) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefAddrBookAutoComplete, zimbraPrefAddrBookAutoComplete);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param zimbraPrefAddrBookAutoComplete existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public Map<String,Object> removePrefAddrBookAutoComplete(String zimbraPrefAddrBookAutoComplete, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefAddrBookAutoComplete, zimbraPrefAddrBookAutoComplete);
-        return attrs;
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public void unsetPrefAddrBookAutoComplete() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAddrBookAutoComplete, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public Map<String,Object> unsetPrefAddrBookAutoComplete(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAddrBookAutoComplete, "");
-        return attrs;
-    }
-
-    /**
      * After login, whether the advanced client should enforce minimum
      * display resolution
      *
@@ -16277,6 +16125,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefSentMailFolder(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSentMailFolder, "");
+        return attrs;
+    }
+
+    /**
+     * whether end-user wants auto-complete from shared address books.
+     *
+     * @return zimbraPrefSharedAddrBookAutoCompleteEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public boolean isPrefSharedAddrBookAutoCompleteEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, false);
+    }
+
+    /**
+     * whether end-user wants auto-complete from shared address books.
+     *
+     * @param zimbraPrefSharedAddrBookAutoCompleteEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public void setPrefSharedAddrBookAutoCompleteEnabled(boolean zimbraPrefSharedAddrBookAutoCompleteEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, zimbraPrefSharedAddrBookAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether end-user wants auto-complete from shared address books.
+     *
+     * @param zimbraPrefSharedAddrBookAutoCompleteEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public Map<String,Object> setPrefSharedAddrBookAutoCompleteEnabled(boolean zimbraPrefSharedAddrBookAutoCompleteEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, zimbraPrefSharedAddrBookAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether end-user wants auto-complete from shared address books.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public void unsetPrefSharedAddrBookAutoCompleteEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether end-user wants auto-complete from shared address books.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public Map<String,Object> unsetPrefSharedAddrBookAutoCompleteEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, "");
         return attrs;
     }
 

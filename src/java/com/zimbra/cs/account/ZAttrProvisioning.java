@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20090108-1131 */
+    /* build: 5.0 pshao 20090109-1434 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3858,16 +3858,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
 
     /**
-     * Folder Ids that should be used to search for contacts when generating
-     * auto-complete contact list. If unset all contact folders in the
-     * mailbox will be searched for auto completion.
-     *
-     * @since ZCS 6.0.0
-     */
-    @ZAttr(id=759)
-    public static final String A_zimbraPrefAddrBookAutoComplete = "zimbraPrefAddrBookAutoComplete";
-
-    /**
      * After login, whether the advanced client should enforce minimum
      * display resolution
      */
@@ -4579,6 +4569,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=103)
     public static final String A_zimbraPrefSentMailFolder = "zimbraPrefSentMailFolder";
+
+    /**
+     * whether end-user wants auto-complete from shared address books.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=759)
+    public static final String A_zimbraPrefSharedAddrBookAutoCompleteEnabled = "zimbraPrefSharedAddrBookAutoCompleteEnabled";
 
     /**
      * keyboard shortcuts
@@ -5564,8 +5562,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @since ZCS 6.0.0
      */

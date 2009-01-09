@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20090108-1131 */
+    /* build: 5.0 pshao 20090109-1434 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -12620,8 +12620,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @return zimbraStatThreadNamePrefix, or ampty array if unset
      *
@@ -12633,8 +12633,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param zimbraStatThreadNamePrefix new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12649,8 +12649,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param zimbraStatThreadNamePrefix new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12666,8 +12666,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param zimbraStatThreadNamePrefix new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12682,8 +12682,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param zimbraStatThreadNamePrefix new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -12699,8 +12699,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param zimbraStatThreadNamePrefix existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12715,8 +12715,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param zimbraStatThreadNamePrefix existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -12732,8 +12732,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12747,8 +12747,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Prefixes of thread names. Used in threads.csv to track the number of
-     * threads whose name starts with each prefix.
+     * Prefixes of thread names. Each value is a column in threads.csv that
+     * tracks the number of threads whose name starts with the given prefix.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

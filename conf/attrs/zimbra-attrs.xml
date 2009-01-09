@@ -3755,11 +3755,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="759" name="zimbraPrefAddrBookAutoComplete" type="string" max="128" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
-  <desc>
-    Folder Ids that should be used to search for contacts when generating auto-complete contact list.  
-    If unset all contact folders in the mailbox will be searched for auto completion.
-  </desc>
+<attr id="759" name="zimbraPrefSharedAddrBookAutoCompleteEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether end-user wants auto-complete from shared address books.</desc>
 </attr>
 
 <attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
