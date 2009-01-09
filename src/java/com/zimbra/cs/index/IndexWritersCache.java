@@ -28,6 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ThreadPool;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -288,11 +289,10 @@ class IndexWritersCache {
                         } catch (InterruptedException e) { }
                     } else {
                         for (IndexWriter w : toFlush) {
-                            AsyncFlush af = new AsyncFlush(w);
-                            assert(w.getState() == WriterState.IDLE);
-                            mNumFlushing++;
-                            w.setState(WriterState.FLUSHING);
-                            mIdleWriters.remove(w);
+                        	assert(w.getState() == WriterState.IDLE);
+                        	mNumFlushing++;
+                        	w.setState(WriterState.FLUSHING);
+                        	mIdleWriters.remove(w);
                         }
                     }
                 }
@@ -303,17 +303,23 @@ class IndexWritersCache {
                     AsyncFlush af = new AsyncFlush(w);
                     try {
                         mPool.execute(af);
+                    } catch (OutOfMemoryError e) {
+                    	Zimbra.halt("OutOfMemory in IndexWritersCache.doSweep", e);
                     } catch (InterruptedException e) {
-                        synchronized(this) {
-                            mNumFlushing--;
-                        }
+                    	ZimbraLog.index.debug("Sweeper hit interruptedException attempting to async flush "+w+". Flushing synchronously.");
+                    	flushInternal(w);
                     } catch (Throwable t) {
                         System.err.println("Error! "+t);
+                        synchronized(this) {
+                        	mNumFlushing--;
+                        	w.setState(WriterState.IDLE);
+                        	mIdleWriters.add(w);
+                        }
                     }
                 }
             }
         } catch (OutOfMemoryError e) {
-            Zimbra.halt("OutOfMemory in IndexWritersCache.doSweep", e);
+        	Zimbra.halt("OutOfMemory in IndexWritersCache.doSweep", e);
         }
     }
     
@@ -338,12 +344,12 @@ class IndexWritersCache {
             while (target.getState() == WriterState.FLUSHING) {
                 // already flushing...have to wait for that flush to finish
                 // so that we can return
-                try {
-                    this.wait(10); // TODO FIXME
-                } catch (InterruptedException e) {}
+            	try {
+            		this.wait(100); 
+            	} catch (InterruptedException e) {}
             }
             if (target.getState() == WriterState.CLOSED)
-                return;
+            	return;
             if (target.getState() == WriterState.WRITING)
                 doneWriting(target);
             
