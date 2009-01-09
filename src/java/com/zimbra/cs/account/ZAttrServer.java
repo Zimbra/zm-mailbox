@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-1434 */
+    /* build: 5.0 pshao 20090109-1546 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3019,6 +3019,8 @@ public class ZAttrServer extends NamedEntry {
      * Whether to expose version on IMAP banner
      *
      * @return zimbraImapExposeVersionOnBanner, or false if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=693)
     public boolean isImapExposeVersionOnBanner() {
@@ -3030,6 +3032,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraImapExposeVersionOnBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=693)
     public void setImapExposeVersionOnBanner(boolean zimbraImapExposeVersionOnBanner) throws com.zimbra.common.service.ServiceException {
@@ -3044,6 +3048,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraImapExposeVersionOnBanner new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=693)
     public Map<String,Object> setImapExposeVersionOnBanner(boolean zimbraImapExposeVersionOnBanner, Map<String,Object> attrs) {
@@ -3056,6 +3062,8 @@ public class ZAttrServer extends NamedEntry {
      * Whether to expose version on IMAP banner
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=693)
     public void unsetImapExposeVersionOnBanner() throws com.zimbra.common.service.ServiceException {
@@ -3069,6 +3077,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=693)
     public Map<String,Object> unsetImapExposeVersionOnBanner(Map<String,Object> attrs) {
@@ -4220,6 +4230,8 @@ public class ZAttrServer extends NamedEntry {
      * Whether to expose version on LMTP banner
      *
      * @return zimbraLmtpExposeVersionOnBanner, or false if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=691)
     public boolean isLmtpExposeVersionOnBanner() {
@@ -4231,6 +4243,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraLmtpExposeVersionOnBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=691)
     public void setLmtpExposeVersionOnBanner(boolean zimbraLmtpExposeVersionOnBanner) throws com.zimbra.common.service.ServiceException {
@@ -4245,6 +4259,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraLmtpExposeVersionOnBanner new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=691)
     public Map<String,Object> setLmtpExposeVersionOnBanner(boolean zimbraLmtpExposeVersionOnBanner, Map<String,Object> attrs) {
@@ -4257,6 +4273,8 @@ public class ZAttrServer extends NamedEntry {
      * Whether to expose version on LMTP banner
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=691)
     public void unsetLmtpExposeVersionOnBanner() throws com.zimbra.common.service.ServiceException {
@@ -4270,6 +4288,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=691)
     public Map<String,Object> unsetLmtpExposeVersionOnBanner(Map<String,Object> attrs) {
@@ -8096,6 +8116,8 @@ public class ZAttrServer extends NamedEntry {
      * Whether to expose version on POP3 banner
      *
      * @return zimbraPop3ExposeVersionOnBanner, or false if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=692)
     public boolean isPop3ExposeVersionOnBanner() {
@@ -8107,6 +8129,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraPop3ExposeVersionOnBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=692)
     public void setPop3ExposeVersionOnBanner(boolean zimbraPop3ExposeVersionOnBanner) throws com.zimbra.common.service.ServiceException {
@@ -8121,6 +8145,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraPop3ExposeVersionOnBanner new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=692)
     public Map<String,Object> setPop3ExposeVersionOnBanner(boolean zimbraPop3ExposeVersionOnBanner, Map<String,Object> attrs) {
@@ -8133,6 +8159,8 @@ public class ZAttrServer extends NamedEntry {
      * Whether to expose version on POP3 banner
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=692)
     public void unsetPop3ExposeVersionOnBanner() throws com.zimbra.common.service.ServiceException {
@@ -8146,6 +8174,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=692)
     public Map<String,Object> unsetPop3ExposeVersionOnBanner(Map<String,Object> attrs) {
@@ -9526,6 +9556,8 @@ public class ZAttrServer extends NamedEntry {
      * realm is not specified in GSSAPI Authentication
      *
      * @return zimbraReverseProxyDefaultRealm, or null if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=703)
     public String getReverseProxyDefaultRealm() {
@@ -9538,6 +9570,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraReverseProxyDefaultRealm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=703)
     public void setReverseProxyDefaultRealm(String zimbraReverseProxyDefaultRealm) throws com.zimbra.common.service.ServiceException {
@@ -9553,6 +9587,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyDefaultRealm new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=703)
     public Map<String,Object> setReverseProxyDefaultRealm(String zimbraReverseProxyDefaultRealm, Map<String,Object> attrs) {
@@ -9566,6 +9602,8 @@ public class ZAttrServer extends NamedEntry {
      * realm is not specified in GSSAPI Authentication
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=703)
     public void unsetReverseProxyDefaultRealm() throws com.zimbra.common.service.ServiceException {
@@ -9580,6 +9618,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=703)
     public Map<String,Object> unsetReverseProxyDefaultRealm(Map<String,Object> attrs) {
@@ -10478,6 +10518,8 @@ public class ZAttrServer extends NamedEntry {
      * <p>Valid values: [both, https, redirect, http, mixed]
      *
      * @return zimbraReverseProxyMailMode, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public ZAttrProvisioning.ReverseProxyMailMode getReverseProxyMailMode() {
@@ -10492,6 +10534,8 @@ public class ZAttrServer extends NamedEntry {
      * <p>Valid values: [both, https, redirect, http, mixed]
      *
      * @return zimbraReverseProxyMailMode, or null if unset
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public String getReverseProxyMailModeAsString() {
@@ -10507,6 +10551,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraReverseProxyMailMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public void setReverseProxyMailMode(ZAttrProvisioning.ReverseProxyMailMode zimbraReverseProxyMailMode) throws com.zimbra.common.service.ServiceException {
@@ -10525,6 +10571,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyMailMode new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public Map<String,Object> setReverseProxyMailMode(ZAttrProvisioning.ReverseProxyMailMode zimbraReverseProxyMailMode, Map<String,Object> attrs) {
@@ -10542,6 +10590,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraReverseProxyMailMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public void setReverseProxyMailModeAsString(String zimbraReverseProxyMailMode) throws com.zimbra.common.service.ServiceException {
@@ -10560,6 +10610,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyMailMode new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public Map<String,Object> setReverseProxyMailModeAsString(String zimbraReverseProxyMailMode, Map<String,Object> attrs) {
@@ -10576,6 +10628,8 @@ public class ZAttrServer extends NamedEntry {
      * <p>Valid values: [both, https, redirect, http, mixed]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public void unsetReverseProxyMailMode() throws com.zimbra.common.service.ServiceException {
@@ -10593,6 +10647,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public Map<String,Object> unsetReverseProxyMailMode(Map<String,Object> attrs) {
@@ -12285,6 +12341,8 @@ public class ZAttrServer extends NamedEntry {
      * If FALSE, GetVersionInfoRequest returns a SOAP fault.
      *
      * @return zimbraSoapExposeVersion, or false if unset
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=708)
     public boolean isSoapExposeVersion() {
@@ -12297,6 +12355,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param zimbraSoapExposeVersion new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=708)
     public void setSoapExposeVersion(boolean zimbraSoapExposeVersion) throws com.zimbra.common.service.ServiceException {
@@ -12312,6 +12372,8 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraSoapExposeVersion new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=708)
     public Map<String,Object> setSoapExposeVersion(boolean zimbraSoapExposeVersion, Map<String,Object> attrs) {
@@ -12325,6 +12387,8 @@ public class ZAttrServer extends NamedEntry {
      * If FALSE, GetVersionInfoRequest returns a SOAP fault.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=708)
     public void unsetSoapExposeVersion() throws com.zimbra.common.service.ServiceException {
@@ -12339,6 +12403,8 @@ public class ZAttrServer extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=708)
     public Map<String,Object> unsetSoapExposeVersion(Map<String,Object> attrs) {

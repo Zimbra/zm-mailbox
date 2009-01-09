@@ -42,7 +42,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-1434 */
+    /* build: 5.0 pshao 20090109-1546 */
 
     /**
      * RFC2256: descriptive information
@@ -631,6 +631,8 @@ public class ZAttrDomain extends NamedEntry {
      * out
      *
      * @return zimbraAdminConsoleLoginURL, or null if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=696)
     public String getAdminConsoleLoginURL() {
@@ -643,6 +645,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraAdminConsoleLoginURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=696)
     public void setAdminConsoleLoginURL(String zimbraAdminConsoleLoginURL) throws com.zimbra.common.service.ServiceException {
@@ -658,6 +662,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraAdminConsoleLoginURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=696)
     public Map<String,Object> setAdminConsoleLoginURL(String zimbraAdminConsoleLoginURL, Map<String,Object> attrs) {
@@ -671,6 +677,8 @@ public class ZAttrDomain extends NamedEntry {
      * out
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=696)
     public void unsetAdminConsoleLoginURL() throws com.zimbra.common.service.ServiceException {
@@ -685,6 +693,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=696)
     public Map<String,Object> unsetAdminConsoleLoginURL(Map<String,Object> attrs) {
@@ -698,6 +708,8 @@ public class ZAttrDomain extends NamedEntry {
      * out
      *
      * @return zimbraAdminConsoleLogoutURL, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=684)
     public String getAdminConsoleLogoutURL() {
@@ -710,6 +722,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraAdminConsoleLogoutURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=684)
     public void setAdminConsoleLogoutURL(String zimbraAdminConsoleLogoutURL) throws com.zimbra.common.service.ServiceException {
@@ -725,6 +739,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraAdminConsoleLogoutURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=684)
     public Map<String,Object> setAdminConsoleLogoutURL(String zimbraAdminConsoleLogoutURL, Map<String,Object> attrs) {
@@ -738,6 +754,8 @@ public class ZAttrDomain extends NamedEntry {
      * out
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=684)
     public void unsetAdminConsoleLogoutURL() throws com.zimbra.common.service.ServiceException {
@@ -752,6 +770,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=684)
     public Map<String,Object> unsetAdminConsoleLogoutURL(Map<String,Object> attrs) {
@@ -7246,6 +7266,8 @@ public class ZAttrDomain extends NamedEntry {
      * Port to be used in public API such as REST or SOAP proxy.
      *
      * @return zimbraPublicServicePort, or null if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=699)
     public String getPublicServicePort() {
@@ -7257,6 +7279,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraPublicServicePort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=699)
     public void setPublicServicePort(String zimbraPublicServicePort) throws com.zimbra.common.service.ServiceException {
@@ -7271,6 +7295,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraPublicServicePort new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=699)
     public Map<String,Object> setPublicServicePort(String zimbraPublicServicePort, Map<String,Object> attrs) {
@@ -7283,6 +7309,8 @@ public class ZAttrDomain extends NamedEntry {
      * Port to be used in public API such as REST or SOAP proxy.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=699)
     public void unsetPublicServicePort() throws com.zimbra.common.service.ServiceException {
@@ -7296,6 +7324,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=699)
     public Map<String,Object> unsetPublicServicePort(Map<String,Object> attrs) {
@@ -7308,6 +7338,8 @@ public class ZAttrDomain extends NamedEntry {
      * Protocol to be used in public API such as REST or SOAP proxy.
      *
      * @return zimbraPublicServiceProtocol, or null if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=698)
     public String getPublicServiceProtocol() {
@@ -7319,6 +7351,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraPublicServiceProtocol new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=698)
     public void setPublicServiceProtocol(String zimbraPublicServiceProtocol) throws com.zimbra.common.service.ServiceException {
@@ -7333,6 +7367,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraPublicServiceProtocol new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=698)
     public Map<String,Object> setPublicServiceProtocol(String zimbraPublicServiceProtocol, Map<String,Object> attrs) {
@@ -7345,6 +7381,8 @@ public class ZAttrDomain extends NamedEntry {
      * Protocol to be used in public API such as REST or SOAP proxy.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=698)
     public void unsetPublicServiceProtocol() throws com.zimbra.common.service.ServiceException {
@@ -7358,6 +7396,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=698)
     public Map<String,Object> unsetPublicServiceProtocol(Map<String,Object> attrs) {
@@ -8356,6 +8396,8 @@ public class ZAttrDomain extends NamedEntry {
      * link for admin users in the web client
      *
      * @return zimbraWebClientAdminReference, or null if unset
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=701)
     public String getWebClientAdminReference() {
@@ -8367,6 +8409,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraWebClientAdminReference new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=701)
     public void setWebClientAdminReference(String zimbraWebClientAdminReference) throws com.zimbra.common.service.ServiceException {
@@ -8381,6 +8425,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraWebClientAdminReference new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=701)
     public Map<String,Object> setWebClientAdminReference(String zimbraWebClientAdminReference, Map<String,Object> attrs) {
@@ -8393,6 +8439,8 @@ public class ZAttrDomain extends NamedEntry {
      * link for admin users in the web client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=701)
     public void unsetWebClientAdminReference() throws com.zimbra.common.service.ServiceException {
@@ -8406,6 +8454,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=701)
     public Map<String,Object> unsetWebClientAdminReference(Map<String,Object> attrs) {

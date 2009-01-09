@@ -3365,140 +3365,140 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>After login, whether the advanced client should enforce minimum display resolution</desc>
 </attr>
 
-<attr id="679" name="zimbraPrefIMFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="679" name="zimbraPrefIMFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Flash title bar when a new IM arrives</desc>
 </attr>
 
-<attr id="680" name="zimbraPrefMailFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="680" name="zimbraPrefMailFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Flash title bar when a new email arrives</desc>
 </attr>
 
-<attr id="681" name="zimbraPrefMailFlashIcon" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="681" name="zimbraPrefMailFlashIcon" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Flash icon when a new email arrives</desc>
 </attr>
 
-<attr id="682" name="zimbraPrefCalendarReminderFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="682" name="zimbraPrefCalendarReminderFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Flash title when on appointment remimnder notification</desc>
 </attr>
 
-<attr id="683" name="zimbraDataSourceEnableTrace" type="boolean" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable">
+<attr id="683" name="zimbraDataSourceEnableTrace" type="boolean" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="5.0.7">
   <desc>Whether to enable debug trace of this data source</desc>
 </attr>
 
-<attr id="684" name="zimbraAdminConsoleLogoutURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="684" name="zimbraAdminConsoleLogoutURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
 </attr>
 
-<attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.8">
   <desc>whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.  See also related attributes zimbraMailProxyPort and zimbraMailSSLProxyPort</desc>
 </attr>
 
-<attr id="686" name="zimbraPrefCalendarAllowForwardedInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="686" name="zimbraPrefCalendarAllowForwardedInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether calendar invite part in a forwarded email is auto-added to calendar</desc>
 </attr>
 
-<attr id="688" name="zimbraPrefCalendarAllowPublishMethodInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="688" name="zimbraPrefCalendarAllowPublishMethodInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether calendar invite part with PUBLISH method is auto-added to calendar</desc>
 </attr>
 
-<attr id="689" name="zimbraPrefStandardClientAccessibilityMode" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="689" name="zimbraPrefStandardClientAccessibilityMode" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether standard client should operate in accessibility Mode</desc>
 </attr>
 
-<attr id="690" name="zimbraCalendarCalDavDisableFreebusy" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="690" name="zimbraCalendarCalDavDisableFreebusy" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>set true to turn off handling free/busy lookup for CalDAV</desc>
 </attr>
 
-<attr id="691" name="zimbraLmtpExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="691" name="zimbraLmtpExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on LMTP banner</desc>
 </attr>
 
-<attr id="692" name="zimbraPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="692" name="zimbraPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on POP3 banner</desc>
 </attr>
 
-<attr id="693" name="zimbraImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="693" name="zimbraImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on IMAP banner</desc>
 </attr>
 
-<attr id="694" name="zimbraPrefListViewColumns" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="694" name="zimbraPrefListViewColumns" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.9">
   <desc>list view columns in web client</desc>
 </attr>
 
-<attr id="695" name="zimbraXMPPServerDialbackKey" type="ostring" max="128" immutable="1" cardinality="multi" optionalIn="globalConfig">
+<attr id="695" name="zimbraXMPPServerDialbackKey" type="ostring" max="128" immutable="1" cardinality="multi" optionalIn="globalConfig" since="5.0.9">
   <desc>Shared Secret for XMPP Server Dialback Protocol</desc>
 </attr>
 
-<attr id="696" name="zimbraAdminConsoleLoginURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="696" name="zimbraAdminConsoleLoginURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.9">
   <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
 </attr>
 
-<attr id="697" name="zimbraReverseProxyAdminIPAddress" type="astring" max="256" cardinality="multi" optionalIn="globalConfig">
+<attr id="697" name="zimbraReverseProxyAdminIPAddress" type="astring" max="256" cardinality="multi" optionalIn="globalConfig" since="5.0.9">
   <desc>Allowed reverse proxy IP addresses.  Lookup servlet will only generate authtokens if request was made from one of these IP addresses</desc>
 </attr>
 
-<attr id="698" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited">
+<attr id="698" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="5.0.9">
   <desc>Protocol to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
-<attr id="699" name="zimbraPublicServicePort" type="port" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited">
+<attr id="699" name="zimbraPublicServicePort" type="port" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="5.0.9">
   <desc>Port to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
-<attr id="700" name="zimbraReverseProxyAdminPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="700" name="zimbraReverseProxyAdminPortAttribute" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.9">
   <globalConfigValue>zimbraAdminPort</globalConfigValue>
   <desc>the attribute that identifies the zimbra admin bind port</desc>
 </attr>
 
-<attr id="701" name="zimbraWebClientAdminReference" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="701" name="zimbraWebClientAdminReference" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.9">
   <desc>link for admin users in the web client</desc>
 </attr>
 
-<attr id="702" name="zimbraPrefCalendarAllowCancelEmailToSelf" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="702" name="zimbraPrefCalendarAllowCancelEmailToSelf" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.9">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to allow a cancel email sent to organizer of appointment</desc>
 </attr>
 
-<attr id="703" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="703" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
   <desc>The default realm that will be used by NGINX mail proxy, when the realm is not specified in GSSAPI Authentication</desc>
 </attr>
 
-<attr id="704" name="zimbraFeatureMailForwardingInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="704" name="zimbraFeatureMailForwardingInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.10">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>enable end-user mail forwarding defined in mail filters features</desc>
 </attr>
 
-<attr id="705" name="zimbraPrefIMBuddyListSort" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="705" name="zimbraPrefIMBuddyListSort" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
   <desc>IM buddy list sort order</desc>
 </attr>
 
-<attr id="706" name="zimbraPrefIMHideOfflineBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="706" name="zimbraPrefIMHideOfflineBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to hide IM offline buddies</desc>
 </attr>
 
-<attr id="707" name="zimbraPrefIMHideBlockedBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="707" name="zimbraPrefIMHideBlockedBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to hide IM blocked buddies</desc>
 </attr>
 
-<attr id="708" name="zimbraSoapExposeVersion" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="708" name="zimbraSoapExposeVersion" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>If TRUE, enables support for GetVersionInfo for account SOAP requests.  If FALSE, GetVersionInfoRequest returns a SOAP fault.</desc>
 </attr>
 
-<attr id="709" name="zimbraCalendarMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="709" name="zimbraCalendarMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
   <defaultCOSValue>1</defaultCOSValue>
   <desc>maximum number of revisions to keep for calendar items (appointments and tasks). 0 means unlimited.</desc>
 </attr>

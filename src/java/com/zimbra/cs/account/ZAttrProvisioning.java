@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-1434 */
+    /* build: 5.0 pshao 20090109-1546 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1039,6 +1039,8 @@ public class ZAttrProvisioning {
     /**
      * logout URL for admin console to send the user to upon explicit loggin
      * out
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=696)
     public static final String A_zimbraAdminConsoleLoginURL = "zimbraAdminConsoleLoginURL";
@@ -1046,6 +1048,8 @@ public class ZAttrProvisioning {
     /**
      * logout URL for admin console to send the user to upon explicit loggin
      * out
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=684)
     public static final String A_zimbraAdminConsoleLogoutURL = "zimbraAdminConsoleLogoutURL";
@@ -1343,6 +1347,8 @@ public class ZAttrProvisioning {
 
     /**
      * set true to turn off handling free/busy lookup for CalDAV
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=690)
     public static final String A_zimbraCalendarCalDavDisableFreebusy = "zimbraCalendarCalDavDisableFreebusy";
@@ -1373,6 +1379,8 @@ public class ZAttrProvisioning {
     /**
      * maximum number of revisions to keep for calendar items (appointments
      * and tasks). 0 means unlimited.
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=709)
     public static final String A_zimbraCalendarMaxRevisions = "zimbraCalendarMaxRevisions";
@@ -1683,6 +1691,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to enable debug trace of this data source
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=683)
     public static final String A_zimbraDataSourceEnableTrace = "zimbraDataSourceEnableTrace";
@@ -2222,6 +2232,8 @@ public class ZAttrProvisioning {
 
     /**
      * enable end-user mail forwarding defined in mail filters features
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=704)
     public static final String A_zimbraFeatureMailForwardingInFiltersEnabled = "zimbraFeatureMailForwardingInFiltersEnabled";
@@ -2780,6 +2792,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to expose version on IMAP banner
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=693)
     public static final String A_zimbraImapExposeVersionOnBanner = "zimbraImapExposeVersionOnBanner";
@@ -2989,6 +3003,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to expose version on LMTP banner
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=691)
     public static final String A_zimbraLmtpExposeVersionOnBanner = "zimbraLmtpExposeVersionOnBanner";
@@ -3784,6 +3800,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to expose version on POP3 banner
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=692)
     public static final String A_zimbraPop3ExposeVersionOnBanner = "zimbraPop3ExposeVersionOnBanner";
@@ -3886,6 +3904,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether to allow a cancel email sent to organizer of appointment
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=702)
     public static final String A_zimbraPrefCalendarAllowCancelEmailToSelf = "zimbraPrefCalendarAllowCancelEmailToSelf";
@@ -3893,6 +3913,8 @@ public class ZAttrProvisioning {
     /**
      * whether calendar invite part in a forwarded email is auto-added to
      * calendar
+     *
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=686)
     public static final String A_zimbraPrefCalendarAllowForwardedInvite = "zimbraPrefCalendarAllowForwardedInvite";
@@ -3900,6 +3922,8 @@ public class ZAttrProvisioning {
     /**
      * whether calendar invite part with PUBLISH method is auto-added to
      * calendar
+     *
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=688)
     public static final String A_zimbraPrefCalendarAllowPublishMethodInvite = "zimbraPrefCalendarAllowPublishMethodInvite";
@@ -3974,6 +3998,8 @@ public class ZAttrProvisioning {
 
     /**
      * Flash title when on appointment remimnder notification
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=682)
     public static final String A_zimbraPrefCalendarReminderFlashTitle = "zimbraPrefCalendarReminderFlashTitle";
@@ -4188,6 +4214,8 @@ public class ZAttrProvisioning {
 
     /**
      * IM buddy list sort order
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=705)
     public static final String A_zimbraPrefIMBuddyListSort = "zimbraPrefIMBuddyListSort";
@@ -4206,18 +4234,24 @@ public class ZAttrProvisioning {
 
     /**
      * Flash title bar when a new IM arrives
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=679)
     public static final String A_zimbraPrefIMFlashTitle = "zimbraPrefIMFlashTitle";
 
     /**
      * whether to hide IM blocked buddies
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=707)
     public static final String A_zimbraPrefIMHideBlockedBuddies = "zimbraPrefIMHideBlockedBuddies";
 
     /**
      * whether to hide IM offline buddies
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=706)
     public static final String A_zimbraPrefIMHideOfflineBuddies = "zimbraPrefIMHideOfflineBuddies";
@@ -4327,6 +4361,8 @@ public class ZAttrProvisioning {
 
     /**
      * list view columns in web client
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=694)
     public static final String A_zimbraPrefListViewColumns = "zimbraPrefListViewColumns";
@@ -4350,12 +4386,16 @@ public class ZAttrProvisioning {
 
     /**
      * Flash icon when a new email arrives
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=681)
     public static final String A_zimbraPrefMailFlashIcon = "zimbraPrefMailFlashIcon";
 
     /**
      * Flash title bar when a new email arrives
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=680)
     public static final String A_zimbraPrefMailFlashTitle = "zimbraPrefMailFlashTitle";
@@ -4611,6 +4651,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether standard client should operate in accessibility Mode
+     *
+     * @since ZCS 6.0.0
      */
     @ZAttr(id=689)
     public static final String A_zimbraPrefStandardClientAccessibilityMode = "zimbraPrefStandardClientAccessibilityMode";
@@ -4740,12 +4782,16 @@ public class ZAttrProvisioning {
 
     /**
      * Port to be used in public API such as REST or SOAP proxy.
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=699)
     public static final String A_zimbraPublicServicePort = "zimbraPublicServicePort";
 
     /**
      * Protocol to be used in public API such as REST or SOAP proxy.
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=698)
     public static final String A_zimbraPublicServiceProtocol = "zimbraPublicServiceProtocol";
@@ -4843,12 +4889,16 @@ public class ZAttrProvisioning {
     /**
      * Allowed reverse proxy IP addresses. Lookup servlet will only generate
      * authtokens if request was made from one of these IP addresses
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=697)
     public static final String A_zimbraReverseProxyAdminIPAddress = "zimbraReverseProxyAdminIPAddress";
 
     /**
      * the attribute that identifies the zimbra admin bind port
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=700)
     public static final String A_zimbraReverseProxyAdminPortAttribute = "zimbraReverseProxyAdminPortAttribute";
@@ -4889,6 +4939,8 @@ public class ZAttrProvisioning {
     /**
      * The default realm that will be used by NGINX mail proxy, when the
      * realm is not specified in GSSAPI Authentication
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=703)
     public static final String A_zimbraReverseProxyDefaultRealm = "zimbraReverseProxyDefaultRealm";
@@ -5064,6 +5116,8 @@ public class ZAttrProvisioning {
      * whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
+     *
+     * @since ZCS 5.0.8
      */
     @ZAttr(id=685)
     public static final String A_zimbraReverseProxyMailMode = "zimbraReverseProxyMailMode";
@@ -5421,6 +5475,8 @@ public class ZAttrProvisioning {
     /**
      * If TRUE, enables support for GetVersionInfo for account SOAP requests.
      * If FALSE, GetVersionInfoRequest returns a SOAP fault.
+     *
+     * @since ZCS 5.0.10
      */
     @ZAttr(id=708)
     public static final String A_zimbraSoapExposeVersion = "zimbraSoapExposeVersion";
@@ -5715,6 +5771,8 @@ public class ZAttrProvisioning {
 
     /**
      * link for admin users in the web client
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=701)
     public static final String A_zimbraWebClientAdminReference = "zimbraWebClientAdminReference";
@@ -5780,6 +5838,8 @@ public class ZAttrProvisioning {
 
     /**
      * Shared Secret for XMPP Server Dialback Protocol
+     *
+     * @since ZCS 5.0.9
      */
     @ZAttr(id=695)
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
