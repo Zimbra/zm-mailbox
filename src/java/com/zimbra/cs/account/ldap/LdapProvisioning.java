@@ -2132,6 +2132,7 @@ public class LdapProvisioning extends Provisioning {
         // if there aren't, we need to delete the people trees first, then delete the domain.
         ZimbraLdapContext zlc = null;
         LdapDomain d = null;
+        String acctBaseDn = null;
         try {
             zlc = new ZimbraLdapContext(true);
 
@@ -2141,7 +2142,7 @@ public class LdapProvisioning extends Provisioning {
 
             String name = d.getName();
 
-            String acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
+            acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
             if (!acctBaseDn.equals(d.getDN()))
                 zlc.unbindEntry(acctBaseDn);
 
@@ -2177,7 +2178,28 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
         } catch (ContextNotEmptyException e) {
-            throw AccountServiceException.DOMAIN_NOT_EMPTY(d.getName());
+            // get a few entries to include in the error message
+            StringBuilder sb = new StringBuilder();
+            sb.append(" (remaining entries: ");
+            try {
+                int maxEntriesToGet = 5;
+                SearchControls searchControls =
+                    new SearchControls(SearchControls.SUBTREE_SCOPE, maxEntriesToGet, 0, null, false, false);
+                NamingEnumeration ne = zlc.searchDir(acctBaseDn, "(objectClass=*)", searchControls);
+                while (ne.hasMore()) {
+                    SearchResult sr = (SearchResult) ne.next();
+                    // don't show the dn itself
+                    if (!sr.getNameInNamespace().equals(acctBaseDn))
+                        sb.append("[" + sr.getNameInNamespace() + "] ");
+                }
+                ne.close();
+            } catch (SizeLimitExceededException sle) {
+                // this is fine
+            } catch (NamingException ne) {
+                ZimbraLog.account.warn("unable to get sample entries in non-empty domain " + d.getName() + " for reporting", ne);
+            }
+            sb.append("...)");
+            throw AccountServiceException.DOMAIN_NOT_EMPTY(d.getName() + sb.toString(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge domain: "+zimbraId, e);
         } finally {

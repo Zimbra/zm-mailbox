@@ -186,8 +186,8 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("no such domain: "+name, NO_SUCH_DOMAIN, SENDERS_FAULT, null);
     }    
     
-    public static AccountServiceException DOMAIN_NOT_EMPTY(String name) {
-        return new AccountServiceException("domain not empty: "+name+". You may beed to remove the value in zimbraNotebookAccount attribute before deleting accounts in this domain.", DOMAIN_NOT_EMPTY, SENDERS_FAULT, null);
+    public static AccountServiceException DOMAIN_NOT_EMPTY(String name, Exception e) {
+        return new AccountServiceException("domain not empty: "+name, DOMAIN_NOT_EMPTY, SENDERS_FAULT, e);
     }        
     
     public static AccountServiceException NO_SUCH_COS(String name) {
