@@ -1328,7 +1328,8 @@ public class Recurrence
                         Instance inst = iter.next();
                         if (inst != null) {
                             long st = inst.getStart();
-                            if (st < start || st >= end)
+                            long et = inst.getEnd();
+                            if (et < start || st >= end)
                                 iter.remove();
                         }
                     }
