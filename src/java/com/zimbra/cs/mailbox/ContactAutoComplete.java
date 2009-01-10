@@ -142,7 +142,7 @@ public class ContactAutoComplete {
     
     private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
     
-    private Collection<Integer> mDefaultFolders;
+    private boolean mIncludeSharedFolders;
     private Collection<String> mEmailKeys;
     
 	private static final String[] DEFAULT_EMAIL_KEYS = {
@@ -154,12 +154,7 @@ public class ContactAutoComplete {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
-			String[] defaultFolders = acct.getMultiAttr(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled);
-			if (defaultFolders.length > 0) {
-				mDefaultFolders = new ArrayList<Integer>();
-				for (String fid : defaultFolders)
-					mDefaultFolders.add(Integer.parseInt(fid));
-			}
+			mIncludeSharedFolders = acct.getBooleanAttr(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, false);
 			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields);
 			if (emailKeys != null)
 				mEmailKeys = Arrays.asList(emailKeys.split(","));
@@ -189,8 +184,6 @@ public class ContactAutoComplete {
 		AutoCompleteResult result = new AutoCompleteResult();
 		if (limit <= 0)
 			return result;
-		if (folders == null)
-			folders = mDefaultFolders;
 		
 		if (mIncludeRankingResults)
 			queryRankingTable(str, folders, limit, result);
@@ -284,6 +277,8 @@ public class ContactAutoComplete {
         			if (f instanceof Mountpoint) {
         				Mountpoint mp = (Mountpoint) f;
         				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), f.getId());
+        				if (mIncludeSharedFolders)
+        					allFolders.add(f.getId());
         			}
     			}
     			folders = allFolders;
