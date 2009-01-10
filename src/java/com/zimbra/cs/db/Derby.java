@@ -220,7 +220,8 @@ public class Derby extends Db {
                 "INSERT INTO zimbra.config(name, value, description) VALUES\n" +
                 "\t('db.version', '" + Versions.DB_VERSION + "', 'db schema version'),\n" + 
                 "\t('index.version', '" + Versions.INDEX_VERSION + "', 'index version'),\n" +
-                "\t('redolog.version', '" + redoVer + "', 'redolog version');\n";
+                "\t('redolog.version', '" + redoVer + "', 'redolog version'),\n" +
+                "\t('offline.db.version', '" + OfflineVersions.OFFLINE_DB_VERSION + "', 'offline db schema version');\n";
 
             Writer output = new BufferedWriter(new FileWriter(outFile));
             output.write(outStr);
