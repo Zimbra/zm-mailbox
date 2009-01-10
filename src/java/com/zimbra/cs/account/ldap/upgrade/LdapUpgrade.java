@@ -153,6 +153,9 @@ abstract class LdapUpgrade {
             upgrade = new DomainPublicServiceProtocolAndPort(bug, verbose);
         } else if ("32557".equalsIgnoreCase(bug)) {
             upgrade = new DomainObjectClassAmavisAccount(bug, verbose);
+        } else if ("33814".equalsIgnoreCase(bug)) {
+            // note: has to be run *before* running -b 27075
+            upgrade = new MigrateZimbraMtaAuthEnabled(bug, verbose);
         } else {
             System.out.println("unrecognized bug number");
             System.exit(1);
