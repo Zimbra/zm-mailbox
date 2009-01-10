@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-1546 */
+    /* build: 5.0 pshao 20090109-2001 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -368,6 +368,22 @@ public class ZAttrProvisioning {
         }
         public boolean isEnabled() { return this == enabled;}
         public boolean isDisabled() { return this == disabled;}
+    }
+
+    public static enum MtaTlsSecurityLevel {
+        may("may"),
+        none("none");
+        private String mValue;
+        private MtaTlsSecurityLevel(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaTlsSecurityLevel fromString(String s) throws ServiceException {
+            for (MtaTlsSecurityLevel value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isMay() { return this == may;}
+        public boolean isNone() { return this == none;}
     }
 
     public static enum PrefCalendarInitialView {
@@ -3370,6 +3386,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAntiSpamLockMethod = "zimbraMtaAntiSpamLockMethod";
 
     /**
+     * Deprecated since: 6.0.0. deprecated in favor of
+     * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      */
     @ZAttr(id=194)
@@ -3469,6 +3487,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaRestriction = "zimbraMtaRestriction";
 
     /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=796)
+    public static final String A_zimbraMtaSaslAuthEnable = "zimbraMtaSaslAuthEnable";
+
+    /**
      * value for postfix smtpd_milters
      */
     @ZAttr(id=672)
@@ -3479,6 +3505,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=200)
     public static final String A_zimbraMtaTlsAuthOnly = "zimbraMtaTlsAuthOnly";
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
 
     /**
      * A signed activation key that authorizes this installation.

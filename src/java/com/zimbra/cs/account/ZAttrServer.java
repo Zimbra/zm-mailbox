@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-1546 */
+    /* build: 5.0 pshao 20090109-2001 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -5891,6 +5891,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 6.0.0. deprecated in favor of
+     * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      *
      * @return zimbraMtaAuthEnabled, or true if unset
@@ -5901,6 +5903,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 6.0.0. deprecated in favor of
+     * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      *
      * @param zimbraMtaAuthEnabled new value
@@ -5914,6 +5918,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 6.0.0. deprecated in favor of
+     * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      *
      * @param zimbraMtaAuthEnabled new value
@@ -5928,6 +5934,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 6.0.0. deprecated in favor of
+     * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5940,6 +5948,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 6.0.0. deprecated in favor of
+     * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -6807,6 +6817,78 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * @return zimbraMtaSaslAuthEnable, or true if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=796)
+    public boolean isMtaSaslAuthEnable() {
+        return getBooleanAttr(Provisioning.A_zimbraMtaSaslAuthEnable, true);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * @param zimbraMtaSaslAuthEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=796)
+    public void setMtaSaslAuthEnable(boolean zimbraMtaSaslAuthEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * @param zimbraMtaSaslAuthEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=796)
+    public Map<String,Object> setMtaSaslAuthEnable(boolean zimbraMtaSaslAuthEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=796)
+    public void unsetMtaSaslAuthEnable() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=796)
+    public Map<String,Object> unsetMtaSaslAuthEnable(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, "");
+        return attrs;
+    }
+
+    /**
      * value for postfix smtpd_milters
      *
      * @return zimbraMtaSmtpdMilters, or null if unset
@@ -6927,6 +7009,137 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaTlsAuthOnly(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaTlsAuthOnly, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @return zimbraMtaTlsSecurityLevel, or ZAttrProvisioning.MtaTlsSecurityLevel.may if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public ZAttrProvisioning.MtaTlsSecurityLevel getMtaTlsSecurityLevel() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaTlsSecurityLevel); return v == null ? ZAttrProvisioning.MtaTlsSecurityLevel.may : ZAttrProvisioning.MtaTlsSecurityLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaTlsSecurityLevel.may; }
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @return zimbraMtaTlsSecurityLevel, or "may" if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public String getMtaTlsSecurityLevelAsString() {
+        return getAttr(Provisioning.A_zimbraMtaTlsSecurityLevel, "may");
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @param zimbraMtaTlsSecurityLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public void setMtaTlsSecurityLevel(ZAttrProvisioning.MtaTlsSecurityLevel zimbraMtaTlsSecurityLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, zimbraMtaTlsSecurityLevel.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @param zimbraMtaTlsSecurityLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public Map<String,Object> setMtaTlsSecurityLevel(ZAttrProvisioning.MtaTlsSecurityLevel zimbraMtaTlsSecurityLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, zimbraMtaTlsSecurityLevel.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @param zimbraMtaTlsSecurityLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public void setMtaTlsSecurityLevelAsString(String zimbraMtaTlsSecurityLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, zimbraMtaTlsSecurityLevel);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @param zimbraMtaTlsSecurityLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public Map<String,Object> setMtaTlsSecurityLevelAsString(String zimbraMtaTlsSecurityLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, zimbraMtaTlsSecurityLevel);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public void unsetMtaTlsSecurityLevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_security_level
+     *
+     * <p>Valid values: [none, may]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=795)
+    public Map<String,Object> unsetMtaTlsSecurityLevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, "");
         return attrs;
     }
 
