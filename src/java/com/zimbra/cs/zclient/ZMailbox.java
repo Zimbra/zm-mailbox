@@ -3526,6 +3526,14 @@ public class ZMailbox implements ToZJSONObject {
     	return invoke(req).getElement(MailConstants.E_DOC).getAttribute(MailConstants.A_ID);
     }
 
+    public ZDocument getDocument(String id) throws ServiceException {
+        Element req = newRequestElement(MailConstants.GET_ITEM_REQUEST);
+        Element item = req.addUniqueElement(MailConstants.E_ITEM);
+        item.addAttribute(MailConstants.A_ID, id);
+        Element e = invoke(req).getElement(MailConstants.E_DOC);
+        return new ZDocument(e);
+    }
+
     public String createWiki(String folderId, String name, String contents) throws ServiceException {
     	Element req = newRequestElement(MailConstants.SAVE_WIKI_REQUEST);
     	Element doc = req.addUniqueElement(MailConstants.E_WIKIWORD);

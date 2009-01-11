@@ -47,13 +47,13 @@ public class ZDocument implements ZItem, ToZJSONObject {
     	mVersion = e.getAttribute(MailConstants.A_VERSION);
     	mEditor = e.getAttribute(MailConstants.A_LAST_EDITED_BY);
     	mCreator = e.getAttribute(MailConstants.A_CREATOR);
-    	mRestUrl = e.getAttribute(MailConstants.A_REST_URL);
+    	mRestUrl = e.getAttribute(MailConstants.A_REST_URL, null);
     	mCreatedDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
     	mModifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
     	mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mSize = e.getAttributeLong(MailConstants.A_SIZE,0);
         mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
-        mTagIds = e.getAttribute(MailConstants.A_TAGS);
+        mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
