@@ -178,11 +178,16 @@ public class ImapRequest {
     }
 
     public CommandFailedException failed(String error) {
+        return failed(error, null);
+    }
+    
+    public CommandFailedException failed(String error, Throwable cause) {
         CommandFailedException cfe = new CommandFailedException(cmd.getName(), error);
         try {
             cfe.setRequest(toString());
         } catch (Exception e) {
         }
+        cfe.initCause(cause);
         return cfe;
     }
     
