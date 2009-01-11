@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.mailclient;
 
+import java.net.SocketTimeoutException;
+
 /**
  * Indicates that a mail protocol command has failed.
  */
@@ -60,6 +62,21 @@ public class CommandFailedException extends MailException {
 
     public String getRequest() {
         return request;
+    }
+
+    /**
+     * Returns true if use of mail connection can continue even after this
+     * command failure.
+     * 
+     * @return true if the mail connection is still usable
+     */
+    public boolean canContinue() {
+        Throwable e = getCause();
+        return e == null || e instanceof MailException && !(e instanceof ParseException);
+    }
+
+    public boolean isTimeout() {
+        return getCause() instanceof SocketTimeoutException;
     }
     
     /**

@@ -21,6 +21,7 @@ import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
 
@@ -34,6 +35,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.net.SocketTimeoutException;
 
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 import org.apache.log4j.Logger;
@@ -457,7 +459,14 @@ public final class ImapConnection extends MailConnection {
         }
         // Wait for final response, handle continuation response
         while (true) {
-            ImapResponse res = waitForResponse();
+            ImapResponse res;
+            try {
+                res = waitForResponse();
+            } catch (SocketTimeoutException e) {
+                throw req.failed("Timeout waiting for response", e);
+            } catch (MailException e) {
+                throw req.failed("Error in response", e);
+            }
             if (res.isTagged()) {
                 request = null;
                 return res;
@@ -530,8 +539,12 @@ public final class ImapConnection extends MailConnection {
             if (response != null) {
                 return response;
             }
-            throw (IOException)
-                new IOException("Error in response handler").initCause(error);
+            if (error instanceof IOException) {
+                throw (IOException) error; 
+            } else {
+                throw (IOException)
+                    new IOException("Error in response handler").initCause(error);
+            }
         } finally {
             response = null;
         }

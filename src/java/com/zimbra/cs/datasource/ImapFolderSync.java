@@ -1103,13 +1103,21 @@ class ImapFolderSync {
 
     private void syncFailed(int itemId, String msg, Exception e)
         throws ServiceException {
-        checkCanContinue(msg, e);
+        // For command failures, increment error count before checking if
+        // we can continue with other requests
+        if (!(e instanceof CommandFailedException)) {
+            checkCanContinue(msg, e);
+        }
         int count = SyncErrorManager.incrementErrorCount(ds, itemId);
         if (count <= MAX_ITEM_ERRORS) {
             LOG.error(msg, e);
             if (count == MAX_ITEM_ERRORS) {
                 ds.reportError(itemId, msg, e);
             }
+        }
+        if (e instanceof CommandFailedException &&
+            !((CommandFailedException) e).canContinue()) {
+            throw ServiceException.FAILURE(msg, e);
         }
     }
 
@@ -1140,15 +1148,14 @@ class ImapFolderSync {
     private boolean canContinue(Throwable e) {
         if (!ds.isOffline() || totalErrors++ > MAX_TOTAL_ERRORS) {
             return false;
-        }
-        if (e instanceof ServiceException) {
+        } else if (e instanceof ServiceException) {
             Throwable cause = e.getCause();
             return cause == null || canContinue(cause);
-        }
-        if (e instanceof SQLException) {
+        } else if (e instanceof SQLException) {
             return Db.errorMatches((SQLException) e, Db.Error.DUPLICATE_ROW);
+        } else {
+            return false;
         }
-        return e instanceof MailException;
     }
 }
 
