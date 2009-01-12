@@ -159,7 +159,8 @@ public class ContactAutoComplete {
 			if (emailKeys != null)
 				mEmailKeys = Arrays.asList(emailKeys.split(","));
 	        mIncludeGal = acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
-	                acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false);
+	                acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false) &&
+	                acct.getBooleanAttr(Provisioning.A_zimbraPrefGalAutoCompleteEnabled , false);
 		} catch (ServiceException se) {
 			ZimbraLog.gal.warn("error initializing ContactAutoComplete", se);
 		}
