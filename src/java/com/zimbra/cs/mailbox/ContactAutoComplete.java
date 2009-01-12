@@ -271,15 +271,16 @@ public class ContactAutoComplete {
     		if (folders == null) {
     			ArrayList<Integer> allFolders = new ArrayList<Integer>();
     			for (Folder f : mbox.getFolderList(octxt, DbSearch.SORT_NONE)) {
+    				boolean isMountpoint = false;
     				if (f.getDefaultView() != MailItem.TYPE_CONTACT)
     					continue;
-    				allFolders.add(f.getId());
         			if (f instanceof Mountpoint) {
         				Mountpoint mp = (Mountpoint) f;
         				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), f.getId());
-        				if (mIncludeSharedFolders)
-        					allFolders.add(f.getId());
+        				isMountpoint = true;
         			}
+    				if (!isMountpoint || mIncludeSharedFolders)
+    					allFolders.add(f.getId());
     			}
     			folders = allFolders;
     		} else {
