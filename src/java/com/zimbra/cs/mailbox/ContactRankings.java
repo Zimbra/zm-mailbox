@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -44,7 +45,12 @@ public class ContactRankings {
 	private TreeSet<ContactEntry> mEntrySet;
 	public ContactRankings(String accountId) throws ServiceException {
 		mAccountId = accountId;
-		mEntryMap = new MultiTreeMap<String,ContactEntry>();
+		mEntryMap = new MultiTreeMap<String,ContactEntry>(
+				new Comparator<String>() { 
+					public int compare(String left, String right) {
+						return left.compareToIgnoreCase(right);
+					}
+				});
 		mEntrySet = new TreeSet<ContactEntry>();
 		mTableSize = Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
 		readFromDatabase();
@@ -59,9 +65,11 @@ public class ContactRankings {
 		rankings.writeToDatabase();
 	}
 	public synchronized void increment(String email, String displayName) {
+		ZimbraLog.gal.debug("increment contact "+email);
 		long now = System.currentTimeMillis();
-		ContactEntry entry = mEntryMap.getFirst(email.toLowerCase());
+		ContactEntry entry = mEntryMap.getFirst(email);
 		if (entry == null) {
+			ZimbraLog.gal.debug("it's a new contact");
 			entry = new ContactEntry();
 			entry.mEmail = email;
 			entry.mRanking = 1;
@@ -70,31 +78,43 @@ public class ContactRankings {
 			entry.mLastAccessed = now;
 			updateContactInfo(entry);
 			
-			if (mEntrySet.size() < mTableSize)
+			if (mEntrySet.size() < mTableSize) {
+				ZimbraLog.gal.debug("ranking table is within the limit: "+mEntrySet.size()+"("+mTableSize+")");
 				add(entry);
+			}
 			else {
-				while (mEntrySet.size() > mTableSize)
-					remove(mEntrySet.first());
+				ZimbraLog.gal.debug("ranking table size: "+mEntrySet.size()+"("+mTableSize+")");
+				while (mEntrySet.size() > mTableSize) {
+					ContactEntry first = mEntrySet.first();
+					ZimbraLog.gal.debug("removing contact "+first.mEmail+" from ranking table");
+					remove(first);
+				}
+				ZimbraLog.gal.debug("ranking table size: "+mEntrySet.size()+"("+mTableSize+")");
 				ContactEntry firstEntry = mEntrySet.first();
-				if (firstEntry.mRanking <= 0) {
+				if (firstEntry.mRanking <= 1) {
+					ZimbraLog.gal.debug("removing contact "+firstEntry.mEmail+" from ranking table");
 					remove(firstEntry);
+					ZimbraLog.gal.debug("adding contact "+entry.mEmail+" to ranking table");
 					add(entry);
 				} else {
 					for (ContactEntry e : mEntrySet) {
 						int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
 						e.mRanking -= weeksOld;
+						ZimbraLog.gal.debug("decrementing ranking for "+e.mEmail+": "+e.mRanking);
 					}
 				}
 			}
 		} else {
 			entry.mRanking++;
 			entry.mLastAccessed = now;
+			ZimbraLog.gal.debug("incrementing ranking for contact "+entry.mEmail+" ("+entry.mRanking+")");
 			if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
 					entry.mDisplayName.length() == 0)
 				updateContactInfo(entry);
 		}
 	}
 	private void updateContactInfo(ContactEntry entry) {
+		ZimbraLog.gal.debug("updating contact info for "+entry.mEmail);
 		ContactAutoComplete auto = new ContactAutoComplete(mAccountId);
 		ContactEntry storedContact = null;
 		try {
@@ -121,9 +141,10 @@ public class ContactRankings {
 	public synchronized Collection<ContactEntry> query(String str, Collection<Integer> folders) {
 		ZimbraLog.gal.debug("querying ranking database");
 		TreeSet<ContactEntry> entries = new TreeSet<ContactEntry>(Collections.reverseOrder());
-		str = str.toLowerCase();
+		int len = str.length();
 		for (String k : mEntryMap.tailMap(str).keySet()) {
-			if (k.startsWith(str)) {
+			if (k.length() >= len &&
+					k.substring(0, len).equalsIgnoreCase(str)) {
 				for (ContactEntry entry : mEntryMap.get(k)) {
 					if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
 							folders == null ||
@@ -179,19 +200,19 @@ public class ContactRankings {
 		dump("writing");
 	}
 	private synchronized void add(ContactEntry entry) {
-		mEntryMap.add(entry.mEmail.toLowerCase(), entry);
+		mEntryMap.add(entry.mEmail, entry);
 		if (entry.mDisplayName.length() > 0)
-			mEntryMap.add(entry.mDisplayName.toLowerCase(), entry);
+			mEntryMap.add(entry.mDisplayName, entry);
 		if (entry.mLastName.length() > 0)
-			mEntryMap.add(entry.mLastName.toLowerCase(), entry);
+			mEntryMap.add(entry.mLastName, entry);
 		mEntrySet.add(entry);
 	}
 	private synchronized void remove(ContactEntry entry) {
-		mEntryMap.remove(entry.mEmail.toLowerCase(), entry);
+		mEntryMap.remove(entry.mEmail, entry);
 		if (entry.mDisplayName.length() > 0)
-			mEntryMap.remove(entry.mDisplayName.toLowerCase(), entry);
+			mEntryMap.remove(entry.mDisplayName, entry);
 		if (entry.mLastName.length() > 0)
-			mEntryMap.remove(entry.mLastName.toLowerCase(), entry);
+			mEntryMap.remove(entry.mLastName, entry);
 		mEntrySet.remove(entry);
 	}
 	private void dump(String action) {
