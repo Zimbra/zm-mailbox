@@ -18,6 +18,7 @@ package com.zimbra.common.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.TreeMap;
 
 /*
@@ -29,6 +30,10 @@ import org.apache.commons.collections.MultiMap;
 @SuppressWarnings("serial")
 public class MultiTreeMap<K,V> extends TreeMap<K,Collection<V>> /* implements MultiMap */ {
 
+	public MultiTreeMap(Comparator<? super K> c) {
+		super(c);
+	}
+	
 	public boolean containsValue(Object value) {
 		if (super.containsValue(value))
 			return true;
@@ -51,7 +56,7 @@ public class MultiTreeMap<K,V> extends TreeMap<K,Collection<V>> /* implements Mu
 	
 	public V getFirst(K key) {
 		Collection<V> v = get(key);
-		if (v != null)
+		if (v != null && v.size() > 0)
 			return v.iterator().next();
 		return null;
 	}
