@@ -39,6 +39,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -254,6 +255,7 @@ public class MailSender {
             }
 
             // actually send the message via SMTP
+            applyDomainSmtpSettings(acct, mm);
             Collection<Address> sentAddresses = sendMessage(mm, ignoreFailedAddresses, rollback);
 
             if (!sentAddresses.isEmpty()) {
@@ -340,6 +342,18 @@ public class MailSender {
         } catch (MessagingException me) {
             ZimbraLog.smtp.warn("exception occurred during SendMsg", me);
             throw ServiceException.FAILURE("MessagingException", me);
+        }
+    }
+    
+    /**
+     * Updates the JavaMail session on the given message with
+     * SMTP settings from the account's domain.
+     */
+    private void applyDomainSmtpSettings(Account account, MimeMessage msg)
+    throws ServiceException, MessagingException {
+        if (msg instanceof FixedMimeMessage) {
+            Domain domain = Provisioning.getInstance().getDomain(account);
+            ((FixedMimeMessage) msg).setSession(JMSession.getSession(domain));
         }
     }
     

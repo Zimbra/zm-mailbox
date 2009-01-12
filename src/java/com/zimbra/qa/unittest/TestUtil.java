@@ -54,6 +54,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -610,6 +611,21 @@ extends Assert {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, attrValue);
         prov.modifyAttrs(config, attrs);
+    }
+    
+    public static String getDomainAttr(String userName, String attrName)
+    throws ServiceException {
+        Account account = getAccount(userName);
+        return Provisioning.getInstance().getDomain(account).getAttr(attrName);
+    }
+    
+    public static void setDomainAttr(String userName, String attrName, Object attrValue)
+    throws ServiceException {
+        Account account = getAccount(userName);
+        Domain domain = Provisioning.getInstance().getDomain(account);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(attrName, attrValue);
+        Provisioning.getInstance().modifyAttrs(domain, attrs);
     }
     
     /**

@@ -24,8 +24,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
-
 
 public class TestSendAndReceive extends TestCase {
 
@@ -43,11 +42,13 @@ public class TestSendAndReceive extends TestCase {
     private static final Pattern PAT_RETURN_PATH = Pattern.compile("Return-Path: (.*)");
     
     private String mOriginalSmtpSendAddAuthenticatedUser;
+    private String mOriginalDomainSmtpPort;
     
     public void setUp()
     throws Exception {
         cleanUp();
         mOriginalSmtpSendAddAuthenticatedUser = TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
+        mOriginalDomainSmtpPort = TestUtil.getDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort);
     }
     
     /**
@@ -116,6 +117,10 @@ public class TestSendAndReceive extends TestCase {
         assertEquals(27, cal.get(Calendar.DAY_OF_MONTH));
     }
     
+    /**
+     * Confirms that <tt>X-Authenticated-User</tt> is set on outgoing messages when
+     * <tt>zimbraSmtpSendAddAuthenticatedUser</tt> is set to <tt>TRUE</tt>.
+     */
     public void testAuthenticatedUserHeader()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -135,10 +140,34 @@ public class TestSendAndReceive extends TestCase {
         assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
     }
     
+    /**
+     * Confirms that domain SMTP settings override server settings (bug 28442).
+     */
+    public void testDomainSmtpSettings()
+    throws Exception {
+        // Send a message using the user's default SMTP settings.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String subject = NAME_PREFIX + " testDomainSmtpSettings 1";
+        TestUtil.sendMessage(mbox, USER_NAME, subject);
+        TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        
+        // Set domain SMTP port to a bogus value and confirm that the send fails.
+        TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, "35");
+        subject = NAME_PREFIX + " testDomainSmtpSettings 2";
+        boolean sendFailed = false;
+        try {
+            TestUtil.sendMessage(mbox, USER_NAME, subject);
+        } catch (SoapFaultException e) {
+            sendFailed = true;
+        }
+        assertTrue("Message send should have failed", sendFailed);
+    }
+    
     public void tearDown()
     throws Exception {
         cleanUp();
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
+        TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, mOriginalDomainSmtpPort);
     }
     
     private void cleanUp()
