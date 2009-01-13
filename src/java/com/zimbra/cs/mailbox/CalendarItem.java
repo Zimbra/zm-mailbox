@@ -256,6 +256,10 @@ public abstract class CalendarItem extends MailItem {
                     }
                 }
                 doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+
+                // need to properly emulate an indexed Invite message here -- set the TOP partname
+                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
+                
                 toRet.add(doc);
             } else {
                 try {
