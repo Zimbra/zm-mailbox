@@ -192,6 +192,8 @@ public class Validators {
                         desiredFeatures.add(feature);
                 }
             }
+            if (ZimbraLog.account.isDebugEnabled())
+                ZimbraLog.account.debug("Desired features (incl. cos): %s + %s", desiredFeatures, cosFeatures);
             String originalCosId = null;
             if (account != null)
                 originalCosId = account.getAttr(Provisioning.A_zimbraCOSId);
@@ -209,22 +211,24 @@ public class Validators {
             if ((desiredCosId != null && !desiredCosId.equals(originalCosId)
                     && cosLimitMap.containsKey(desiredCosId)) || desiredFeatures.size() > 0) {
                 buildDomainCounts(prov, domainName, defaultCosId, cosCountMap, featureCountMap, cosFeatureMap);
+                if (ZimbraLog.account.isDebugEnabled())
+                    ZimbraLog.account.debug("COS/Feature limits: %s + %s", cosLimitMap, featureLimitMap);
                 if (desiredCosId != null && !desiredCosId.equals(originalCosId)
                         && cosLimitMap.containsKey(desiredCosId)) {
                     if (cosCountMap.containsKey(desiredCosId)
                             && cosCountMap.get(desiredCosId) >= cosLimitMap.get(desiredCosId)) {
                         throw AccountServiceException.TOO_MANY_ACCOUNTS(
-                                String.format("domain=%s[cos=%s,limit=%d]",
-                                        domainName, desiredCosId, cosCountMap.get(desiredCosId)));
+                                String.format("domain=%s[cos=%s,count=%d,limit=%d]",
+                                        domainName, desiredCosId, cosCountMap.get(desiredCosId), cosLimitMap.get(desiredCosId)));
                     }
                 }
                 if (desiredFeatures.size() > 0) {
                     for (String feature : desiredFeatures) {
                         if (featureCountMap.containsKey(feature)
-                                && featureCountMap.get(feature) > featureLimitMap.get(feature)) {
+                                && featureCountMap.get(feature) >= featureLimitMap.get(feature)) {
                             throw AccountServiceException.TOO_MANY_ACCOUNTS(
-                                    String.format("domain=%s[%s,limit=%d]",
-                                            domainName, feature, featureCountMap.get(feature)));
+                                    String.format("domain=%s[%s,count=%d,limit=%d]",
+                                            domainName, feature, featureCountMap.get(feature), featureLimitMap.get(feature)));
                         }
                     }
                 }
@@ -354,6 +358,8 @@ public class Validators {
             } finally {
                 ZimbraLdapContext.closeContext(zlc);
             }
+            if (ZimbraLog.account.isDebugEnabled())
+                ZimbraLog.account.debug("COS/Feature counts: %s + %s", cosCount, featureCount);
         }
         private static void incrementCount(Map<String,Integer> map, String key) {
             if (key == null || !map.containsKey(key))
