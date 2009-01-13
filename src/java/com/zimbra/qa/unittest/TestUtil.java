@@ -724,12 +724,17 @@ extends Assert {
         String type = dataSource.getType().toString();
         
         // Wait for import to complete
-        ZImportStatus status = null;
+        ZImportStatus status;
         while (true) {
             Thread.sleep(500);
-            List<ZImportStatus> statusList = localMbox.getImportStatus();
-            assertEquals("Unexpected number of imports running", 1, statusList.size());
-            status = statusList.get(0);
+
+            status = null;
+            for (ZImportStatus iter : localMbox.getImportStatus()) {
+                if (iter.getId().equals(dataSource.getId())) {
+                    status = iter;
+                }
+            }
+            assertNotNull("No import status returned for data source " + dataSource.getName(), status);
             assertEquals("Unexpected data source type", type, status.getType());
             if (!status.isRunning()) {
                 break;

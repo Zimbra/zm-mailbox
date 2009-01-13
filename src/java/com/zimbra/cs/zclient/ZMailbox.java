@@ -3492,15 +3492,18 @@ public class ZMailbox implements ToZJSONObject {
         private boolean mIsRunning;
         private boolean mSuccess;
         private String mError;
+        private String mId;
 
         ZImportStatus(Element e) throws ServiceException {
             mType = e.getName();
+            mId = e.getAttribute(MailConstants.A_ID);
             mIsRunning = e.getAttributeBool(MailConstants.A_DS_IS_RUNNING, false);
             mSuccess = e.getAttributeBool(MailConstants.A_DS_SUCCESS, true);
             mError = e.getAttribute(MailConstants.A_DS_ERROR, null);
         }
 
         public String getType() { return mType; }
+        public String getId() { return mId; }
         public boolean isRunning() { return mIsRunning; }
         public boolean getSuccess() { return mSuccess; }
         public String getError() { return mError; }

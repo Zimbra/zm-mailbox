@@ -26,7 +26,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.tar.TarEntry;
@@ -56,12 +55,20 @@ extends TestCase {
 
         byte[] tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz");
         verifyTarball(tarball, true, true);
+        tarball = null; // Drop reference to avoid OOME.
+
         tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&body=1");
         verifyTarball(tarball, true, true);
+        tarball = null; // Drop reference to avoid OOME.
+
         tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&body=0");
         verifyTarball(tarball, true, false);
+        tarball = null; // Drop reference to avoid OOME.
+
         tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&meta=1");
         verifyTarball(tarball, true, true);
+        tarball = null; // Drop reference to avoid OOME.
+
         tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&meta=0");
         verifyTarball(tarball, false, true);
     }
