@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -340,11 +341,14 @@ public class MailSender {
                 throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage(), sfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
-            ZimbraLog.smtp.warn("exception occured during send msg", ioe);
-            throw ServiceException.FAILURE("IOException", ioe);
+            throw ServiceException.FAILURE("Unable to send message", ioe);
         } catch (MessagingException me) {
-            ZimbraLog.smtp.warn("exception occurred during SendMsg", me);
-            throw ServiceException.FAILURE("MessagingException", me);
+            Exception chained = me.getNextException();
+            if (chained instanceof ConnectException) {
+                throw MailServiceException.TRY_AGAIN("Unable to connect to the MTA", chained);
+            } else {
+                throw ServiceException.FAILURE("Unable to send message", me);
+            }
         }
     }
     
@@ -525,10 +529,17 @@ public class MailSender {
             setStackTrace(mMex.getStackTrace());
         }
 
+        @Override
         public String getMessage() {
             return mMex.getMessage();
         }
+        
+        @Override
+        public Exception getNextException() {
+            return mMex.getNextException();
+        }
 
+        @Override
         public synchronized String toString() {
             StringBuffer sb = new StringBuffer();
             appendException(sb, this);

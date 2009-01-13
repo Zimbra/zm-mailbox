@@ -461,6 +461,10 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException TRY_AGAIN(String msg) {
         return new MailServiceException("try again: " + msg, TRY_AGAIN, RECEIVERS_FAULT);
     }
+    
+    public static MailServiceException TRY_AGAIN(String msg, Exception e) {
+        return new MailServiceException("try again: " + msg, TRY_AGAIN, RECEIVERS_FAULT, e);
+    }
 
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
         return new MailServiceException(msg, TOO_MANY_QUERY_TERMS_EXPANDED, SENDERS_FAULT, new Argument("TOKEN", token, Argument.Type.STR), new Argument("MAX", max, Argument.Type.NUM));

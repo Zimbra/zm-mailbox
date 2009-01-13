@@ -30,6 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
@@ -158,6 +159,7 @@ public class TestSendAndReceive extends TestCase {
         try {
             TestUtil.sendMessage(mbox, USER_NAME, subject);
         } catch (SoapFaultException e) {
+            assertEquals(MailServiceException.TRY_AGAIN, e.getCode());
             sendFailed = true;
         }
         assertTrue("Message send should have failed", sendFailed);
