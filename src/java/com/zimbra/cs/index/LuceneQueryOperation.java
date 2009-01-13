@@ -308,9 +308,12 @@ class LuceneQueryOperation extends TextQueryOperation
         try {
             if (mQuery != null) {
                 if (mSearcher != null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
-                    BooleanQuery outerQuery = new BooleanQuery();
+                	BooleanQuery outerQuery = new BooleanQuery();
                     outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), Occur.MUST));
                     outerQuery.add(new BooleanClause(mQuery, Occur.MUST));
+                    if (mLog.isDebugEnabled()) {
+                    	mLog.debug("Executing Lucene Query: "+outerQuery.toString());
+                    }
                     if (USE_TOPDOCS) {
                         if (mSort == null) 
                             mTopDocs = mSearcher.getSearcher().search(outerQuery, null, mTopDocsLen);
@@ -525,9 +528,15 @@ class LuceneQueryOperation extends TextQueryOperation
             // Anyway....that's the problem, and for right now we just fix it by constraining the NOT to the 
             // TOPLEVEL of the message....98% of the time that's going to be good enough.
             //
-            mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),Occur.MUST));
-//          mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
-            mQuery.add(new BooleanClause(q, Occur.MUST_NOT));
+        	
+        	// Parname:TOP now expanded to be (TOP or CONTACT or NOTE) to deal with extended partname assignemtns during indexing
+        	BooleanQuery top = new BooleanQuery();
+        	top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),Occur.SHOULD));
+        	top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),Occur.SHOULD));
+        	top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),Occur.SHOULD));
+        	mQuery.add(new BooleanClause(top, Occur.MUST));
+        	
+        	mQuery.add(new BooleanClause(q, Occur.MUST_NOT));
         }
     }
     

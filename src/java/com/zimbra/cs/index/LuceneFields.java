@@ -118,10 +118,14 @@ public class LuceneFields {
      * Partname identifier for multipart/mime messages
      * 
      *       For RFC/822 messages, should be dotted-number MIME part name or "top"
-     *       For all other mail_item types, should be "top"
+     *       For all other mail_item types, should be "top", or should be specific to the type
+     *       note that the partname is used in a weird way when constructing "NOT" queries --
+     *       bare 'not's are only checked against toplevel parts....see LuceneQueryOperation.java
+     *       AddClause()
+     *       
      */
     public static final String L_PARTNAME = "l.partname";
-    public static final String L_PARTNAME_CONTACT = "CONTACT";
+    public static final String L_PARTNAME_CONTACT = "CONTACT"; 
     public static final String L_PARTNAME_NOTE= "NOTE";
     public static final String L_PARTNAME_NONE= "none";
     public static final String L_PARTNAME_TOP= "top";
