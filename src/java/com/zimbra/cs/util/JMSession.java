@@ -27,6 +27,8 @@ import javax.mail.Session;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -82,7 +84,26 @@ public class JMSession {
         props.setProperty("mail.smtp.sendpartial", sendPartial.toString());
         
         Session session = Session.getInstance(props);
-        if (LC.javamail_smtp_debug.booleanValue()) {
+        return session;
+    }
+    
+    /**
+     * Returns the JavaMail SMTP session with settings from the given
+     * account and its domain.
+     */
+    public static Session getSmtpSession(Account account)
+    throws MessagingException {
+        Domain domain = null;
+        if (account != null) {
+            try {
+                domain = Provisioning.getInstance().getDomain(account);
+            } catch (ServiceException e) {
+                ZimbraLog.smtp.warn("Unable to look up domain for account %s.", account.getName(), e);
+            }
+        }
+        Session session = getSession(domain);
+        if (LC.javamail_smtp_debug.booleanValue() ||
+            (account != null && account.isSmtpEnableTrace())) {
             session.setDebug(true);
         }
         return session;
