@@ -2438,35 +2438,41 @@ zimbra_noop_max_timeout)
 Tests:
 
   <addressTest part="{all | local | domain}" stringComparison="{type}"
-    header="{header-name}" value="{value}" index="n"/>
-  <headerTest header="{header-name}" stringComparison="{type}" value="{value}" index="n" />
-  <headerExistsTest header="{header-name}" index="n" />
-  <sizeTest numberComparison="{type}" s="{size}" index="n" />
-  <dateTest dateComparison="{type}" d="{date}" index="n" />
-  <bodyTest value="{value}" index="n" />
-  <attachmentTest index="n" />
-  <addressBookTest header="{header-name}" folderPath="{folder-path}" index="n" />
+    header="{header-name}" value="{value}"/>
+  <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
+  <headerExistsTest header="{header-name}" />
+  <sizeTest numberComparison="{type}" s="{size}" />
+  <dateTest dateComparison="{type}" d="{date}" />
+  <bodyTest value="{value}" />
+  <attachmentTest />
+  <addressBookTest header="{header-name}" folderPath="{folder-path}" />
 
-    * Each test has an optional "negative" attribute, which specifies a "not" condition for that test. 
+Each test has the following optional attributes:
+    * "negative": specifies a "not" condition for that test
+    * "index": specifies a guaranteed order for the test elements 
 
 Actions:
 
-  <actionKeep index="n" />
-  <actionDiscard index="n" />
-  <actionFileInto folderPath="{folder-path}" index="n" />
-  <actionTag tagName="{tag-name}" index="n" />
-  <actionFlag flagName="{flag}" index="n" />
-  <actionRedirect a="{email-address}" index="n" />
-  <actionStop index="n" />
+  <actionKeep />
+  <actionDiscard />
+  <actionFileInto folderPath="{folder-path}" />
+  <actionTag tagName="{tag-name}" />
+  <actionFlag flagName="{flag}" />
+  <actionRedirect a="{email-address}" />
+  <actionStop />
+
+Each action has an optional "index" attribute which specifies a guaranteed order
+for the action elements.
 
 stringComparison values: is, contains, matches
 numberComparison values: over, under
 dateComparison values: before, after
 size values are in bytes (no suffix), kilobytes (50K), megabytes (50M) or gigabytes (2G)
 flag values: flagged, read
-date values are in seconds since epoch, and are truncated to the day. Hours, minutes, and seconds are ignored.
+date values are in seconds since epoch, and are truncated to the day. Hours, minutes,
+  and seconds are ignored.
 index is an integer, used to maintain the order of filter tests and actions. 
-
+ 
 ---------------------------
 
 <ApplyFilterRulesRequest>
