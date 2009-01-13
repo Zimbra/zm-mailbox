@@ -43,12 +43,12 @@ import java.util.Collections;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
-    private final Authenticator authenticator;
     private Folder localRootFolder;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private ImapFolderCollection trackedFolders;
     private Map<Integer, ImapFolderSync> syncedFolders;
     // Optional mail client authenticator (default is plaintext login)
+    private Authenticator authenticator;
 
     private static final boolean DEBUG =
         Boolean.getBoolean("ZimbraDataSourceImapDebug") ||
@@ -59,18 +59,17 @@ public class ImapSync extends MailItemImport {
         if (DEBUG) LOG.setLevel(Log.Level.debug);
     }
 
-    public ImapSync(DataSource ds, Authenticator auth) throws ServiceException {
+    public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
         connection = new ImapConnection(getImapConfig(ds));
-        authenticator = auth;
-    }
-
-    public ImapSync(DataSource ds) throws ServiceException {
-        this(ds, null);
     }
 
     public ImapConnection getConnection() { return connection; }
 
+    public void setAuthenticator(Authenticator auth) {
+        authenticator = auth;
+    }
+    
     public ImapFolderCollection getTrackedFolders() {
         return trackedFolders;
     }
@@ -125,7 +124,7 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private void connect() throws ServiceException {
+    protected void connect() throws ServiceException {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
