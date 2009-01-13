@@ -607,8 +607,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         BooleanQuery.setMaxClauseCount(10000); 
 
         synchronized(getLock()) {
-            flush();
-            
+        	sIndexWritersCache.flush(this); // flush writer if writing
+        	
             RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
             if (toRet != null)
                 return toRet;
