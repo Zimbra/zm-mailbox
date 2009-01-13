@@ -99,7 +99,7 @@ class IndexWritersCache {
         IDLE,
         FLUSHING;
     }
-    
+
     
     public IndexWritersCache() {
         Runnable sweeper = new Runnable() {
@@ -202,6 +202,8 @@ class IndexWritersCache {
                     l.await();
                 } catch (InterruptedException e) {}
             }
+            
+            ZimbraPerf.COUNTER_IDX_WRT.increment(mOpenWriters.size());
         } while (!done);
         try {
             // at this point we have a slot, and we're in the active list
@@ -216,6 +218,7 @@ class IndexWritersCache {
         w.setState(WriterState.CLOSED);
         mIdleWriters.remove(w);
         mOpenWriters.remove(w);
+        ZimbraPerf.COUNTER_IDX_WRT.increment(mOpenWriters.size());
         if (!mWaitingForSlot.isEmpty()) {
             CountDownLatch l = mWaitingForSlot.remove(0);
             l.countDown();
@@ -372,6 +375,7 @@ class IndexWritersCache {
             assert(mOpenWriters.contains(target));
             assert(!mIdleWriters.contains(target));
             mOpenWriters.remove(target);
+            ZimbraPerf.COUNTER_IDX_WRT.increment(mOpenWriters.size());
             target.setState(WriterState.CLOSED);
             mNumFlushing--;
             if (!mWaitingForSlot.isEmpty()) {

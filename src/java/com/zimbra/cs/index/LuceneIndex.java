@@ -695,7 +695,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     
     private void beginWriting() throws IOException
     {
-        ZimbraPerf.COUNTER_IDX_WRT_OPENED.increment();
         assert(Thread.holdsLock(getLock()));
         
         // uncache the IndexReader if it is cached
