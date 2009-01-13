@@ -240,11 +240,12 @@ class IndexWritersCache {
     public void shutdown() {
         synchronized(this) {
             mShutdown = true;
+            this.notifyAll();
             while (!mOpenWriters.isEmpty()) {
-                this.notifyAll();
-                try {
-                    this.wait(100);
-                } catch (InterruptedException e) {}
+            	this.notifyAll();
+            	try {
+            		this.wait(100);
+            	} catch (InterruptedException e) {}
             }
         }
         try {
