@@ -345,6 +345,14 @@ public final class ZimbraQuery {
 
             if (s.length() <= 0)
                 throw parseException("Invalid string in date query: \"\"", "INVALID_DATE", tok);
+            
+            // remove trailing comma, for date:(12312, 123123, 123132) format
+            if (s.charAt(s.length()-1) == ',')
+            	s = s.substring(0, s.length()-1);
+            
+            if (s.length() <= 0)
+                throw parseException("Invalid string in date query after trimming trailing comma: \"\"", "INVALID_DATE", tok);
+            
             char ch = s.charAt(0);
             if (ch == '<' || ch == '>') {
                 if (getQueryType() == ZimbraQueryParser.BEFORE || getQueryType() == ZimbraQueryParser.AFTER) 

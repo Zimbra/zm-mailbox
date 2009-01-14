@@ -118,20 +118,23 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             if (lowest>-1 && lowestEqual && highestEqual && lowest == highest) {
                 retVal.append(lowest);
             } else {
+                boolean hasLowest = false;
+                
                 if (lowest > -1) {
                     retVal.append(">");
                     if (lowestEqual)
                         retVal.append('=');
                     retVal.append(lowest);
-                    retVal.append(' ');
+                    hasLowest = true;
                 }
                 
                 if (highest > -1) {
-                    retVal.append("<");
-                    if (highestEqual)
-                        retVal.append('=');
-                    retVal.append(highest);
-                    retVal.append(' ');
+                	if (hasLowest)
+                		retVal.append(' ');
+                	retVal.append("<");
+                	if (highestEqual)
+                		retVal.append('=');
+                	retVal.append(highest);
                 }
             }
             
