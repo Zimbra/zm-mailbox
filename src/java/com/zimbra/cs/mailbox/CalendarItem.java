@@ -190,7 +190,7 @@ public abstract class CalendarItem extends MailItem {
     
     protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws TemporaryIndexingException{
         List<org.apache.lucene.document.Document> toRet = 
-            new ArrayList<org.apache.lucene.document.Document>();
+        	new ArrayList<org.apache.lucene.document.Document>();
 
         // Special case to prevent getDefaultInviteOrNull() from logging an error
         // when this method is called during commit of cancel operation.
@@ -207,104 +207,138 @@ public abstract class CalendarItem extends MailItem {
         if (defaultInvite != null && defaultInvite.getName() != null)
             defaultName = defaultInvite.getName();
         
+        String defaultOrganizer = "";
+        if (defaultInvite != null && defaultInvite.getOrganizer() != null)
+        	defaultOrganizer = defaultInvite.getOrganizer().getIndexString();
+        
         for (Invite inv : getInvites()) {
-            if (inv.getDontIndexMimeMessage()) {
-                // this invite has no MimeMessage part, so don't bother trying to fetch it...instead
-                // just build the Lucene document directly from the data we already have
-                org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
-                StringBuilder s = new StringBuilder();
-                for (ZAttendee at : inv.getAttendees()) {
-                    try {
-                        doc.add(new Field(LuceneFields.L_H_TO, at.getFriendlyAddress().toString(), Field.Store.NO, Field.Index.TOKENIZED));
-                        s.append(at.getIndexString()).append(' ');
-                    } catch (ServiceException e) {}
-                }
-                s.append(' ');
-                if (inv.getLocation() != null) {
-                    s.append(inv.getLocation()).append(' ');
-                }  else {
-                    s.append(defaultLocation).append(' ');
-                }
-                if (inv.getName() != null) {
-                    s.append(inv.getName()).append(' ');
-                } else {
-                    s.append(defaultName).append(' ');
-                }
-                try {
-                    s.append(inv.getDescription()).append(' ');
-                } catch (ServiceException ex) {
-                    if (ZimbraLog.index.isDebugEnabled()) {
-                        ZimbraLog.index.debug("Caught exception fetching description while indexing CalendarItem "+this.getId()+" skipping", ex); 
-                    }
-                }
-                List<String> comments = inv.getComments();
-                if (comments != null && !comments.isEmpty()) {
-                    for (String comm : comments) {
-                        s.append(comm).append(' ');
-                    }
-                }
-                List<String> contacts = inv.getContacts();
-                if (contacts != null && !contacts.isEmpty()) {
-                    for (String contact : contacts) {
-                        s.append(contact).append(' ');
-                    }
-                }
-                List<String> categories = inv.getCategories();
-                if (categories != null && !categories.isEmpty()) {
-                    for (String cat : categories) {
-                        s.append(cat).append(' ');
-                    }
-                }
-                doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+        	StringBuilder s = new StringBuilder();
+        	List<String> toAddrs = new ArrayList<String>();
 
-                // need to properly emulate an indexed Invite message here -- set the TOP partname
-                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
-                
-                toRet.add(doc);
-            } else {
-                try {
-                    MimeMessage mm = inv.getMimeMessage();
-                    
-                    if (mm == null)
-                        continue;
-                    
-                    StringBuilder s = new StringBuilder();
-                    for (ZAttendee at : inv.getAttendees()) {
-                        try {
-                            mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
-                            s.append(at.getIndexString()).append(' ');
-                        } catch (ServiceException ex) {}
-                    }
-                    
-                    if (inv.getLocation() != null) {
-                        s.append(inv.getLocation()).append(' ');
-                    }  else {
-                        s.append(defaultLocation).append(' ');
-                    }
-                    
-                    mm.saveChanges();
-                    
-                    ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
-                    pm.analyzeFully();
-                    if (pm.hasTemporaryAnalysisFailure()) {
-                        throw new MailItem.TemporaryIndexingException();
-                    }
-                    List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
-                    for (org.apache.lucene.document.Document doc : docs) {
-                        doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-                        toRet.add(doc);
-                    }
-                } catch(MessagingException e) {
+        	// NAME (subject)
+        	String nameToUse = "";
+        	if (inv.getName() != null) {
+        		s.append(inv.getName()).append(' ');
+        		nameToUse = inv.getName();
+        	} else {
+        		s.append(defaultName).append(' ');
+        		nameToUse = defaultName;
+        	}
+
+        	// ORGANIZER (from)
+        	String orgToUse = null;
+        	if (inv.getOrganizer() != null) {
+        		String thisInvOrg = inv.getOrganizer().getIndexString();
+        		if (thisInvOrg != null && thisInvOrg.length() > 0)
+        			orgToUse = thisInvOrg;
+        	}
+        	if (orgToUse == null)
+        		orgToUse = defaultOrganizer;
+
+        	// ATTENDIES (TO)
+        	for (ZAttendee at : inv.getAttendees()) {
+        		try {
+        			//                        doc.add(new Field(LuceneFields.L_H_TO, at.getFriendlyAddress().toString(), Field.Store.NO, Field.Index.TOKENIZED));
+        			toAddrs.add(at.getFriendlyAddress().toString());
+        			s.append(at.getIndexString()).append(' ');
+        		} catch (ServiceException e) {}
+        	}
+        	s.append(' ');
+
+        	// LOCATION
+        	if (inv.getLocation() != null) {
+        		s.append(inv.getLocation()).append(' ');
+        	}  else {
+        		s.append(defaultLocation).append(' ');
+        	}
+
+        	// DESCRIPTION
+        	try {
+        		s.append(inv.getDescription()).append(' ');
+        	} catch (ServiceException ex) {
+        		if (ZimbraLog.index.isDebugEnabled()) {
+        			ZimbraLog.index.debug("Caught exception fetching description while indexing CalendarItem "+this.getId()+" skipping", ex); 
+        		}
+        	}
+
+        	// COMMENTS
+        	List<String> comments = inv.getComments();
+        	if (comments != null && !comments.isEmpty()) {
+        		for (String comm : comments) {
+        			s.append(comm).append(' ');
+        		}
+        	}
+
+        	// CONTACTS
+        	List<String> contacts = inv.getContacts();
+        	if (contacts != null && !contacts.isEmpty()) {
+        		for (String contact : contacts) {
+        			s.append(contact).append(' ');
+        		}
+        	}
+
+        	// CATEGORIES
+        	List<String> categories = inv.getCategories();
+        	if (categories != null && !categories.isEmpty()) {
+        		for (String cat : categories) {
+        			s.append(cat).append(' ');
+        		}
+        	}
+
+        	MimeMessage mm = null;
+        	
+        	if (!inv.getDontIndexMimeMessage()) {
+        		try {
+        			mm = inv.getMimeMessage();
+        		} catch(ServiceException e) {
                     if (ZimbraLog.index.isDebugEnabled()) {
-                        ZimbraLog.index.debug("Caught MessagingException for Invite "+inv.toString()+" while indexing CalendarItem "+this.getId()+" skipping Invite", e); 
+                        ZimbraLog.index.debug("Caught MessagingException for Invite "+inv.toString()+" while fetching MM during indexing of CalendarItem "+this.getId()+" skipping Invite", e); 
                     }
-                    
-                } catch(ServiceException e) {
+                }
+        	}
+        	
+        	List<org.apache.lucene.document.Document> docList = new ArrayList<org.apache.lucene.document.Document>();
+        	
+        	if (mm == null) {
+        		org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
+        		
+        		// need to properly emulate an indexed Invite message here -- set the TOP partname
+        		doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
+        		
+        		docList.add(doc);
+        	} else {
+        		try {
+        			ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+        			pm.analyzeFully();
+        			
+        			if (pm.hasTemporaryAnalysisFailure())
+        				throw new MailItem.TemporaryIndexingException();
+        			
+        			docList = pm.getLuceneDocuments();
+        		} catch(ServiceException e) {
                     if (ZimbraLog.index.isDebugEnabled()) {
                         ZimbraLog.index.debug("Caught MessagingException for Invite "+inv.toString()+" while indexing CalendarItem "+this.getId()+" skipping Invite", e); 
                     }
                 }
-            }
+        	}
+        	
+        	for (org.apache.lucene.document.Document doc : docList) {
+                ////////////////////
+                // update the doc, overriding many of the fields with data from the appointment
+            	
+            	doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+            	
+            	doc.removeField(LuceneFields.L_H_TO);
+            	doc.removeField(LuceneFields.L_H_FROM);
+            	doc.removeField(LuceneFields.L_H_SUBJECT);
+            	
+                for (String to : toAddrs) {
+                	doc.add(new Field(LuceneFields.L_H_TO, to, Field.Store.NO, Field.Index.TOKENIZED));
+                }
+                doc.add(new Field(LuceneFields.L_H_FROM, orgToUse, Field.Store.NO, Field.Index.TOKENIZED));  
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, nameToUse, Field.Store.NO, Field.Index.TOKENIZED));
+                toRet.add(doc);
+        	}
         }
         
         // set the "public" flag in the index for this appointment
