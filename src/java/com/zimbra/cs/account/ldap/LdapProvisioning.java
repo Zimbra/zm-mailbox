@@ -2751,9 +2751,15 @@ public class LdapProvisioning extends Provisioning {
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
 
         String aliases[] = dl.getAliases();
-        if (aliases != null)
-            for (int i=0; i < aliases.length; i++)
+        if (aliases != null) {
+            String dlName = dl.getName();
+            for (int i=0; i < aliases.length; i++) {
+                // the DL name shows up in zimbraMailAlias on the DL entry, don't bother to remove 
+                // this "alias" if it is the DL name, the entire DL entry will be deleted anyway.
+                if (!dlName.equalsIgnoreCase(aliases[i]))
                 removeAlias(dl, aliases[i]); // this also removes each alias from any DLs
+            }
+        }
 
         ZimbraLdapContext zlc = null;
         try {
