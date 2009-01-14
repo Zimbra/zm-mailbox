@@ -477,7 +477,6 @@ public class MailSender {
     /*
      * returns a Collection of successfully sent recipient Addresses
      */
-    @SuppressWarnings("unused")
     protected Collection<Address> sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
@@ -492,8 +491,9 @@ public class MailSender {
                 } catch (SendFailedException sfe) {
                 	if (!ignoreFailedAddresses)
                 		throw sfe;
-                	rcptAddresses = sfe.getValidUnsentAddresses();
-                	sentAddresses.addAll(Arrays.asList(sfe.getValidSentAddresses()));
+                	rcptAddresses = sfe.getValidSentAddresses();
+                	sentAddresses.removeAll(Arrays.asList(sfe.getInvalidAddresses()));
+                	sentAddresses.removeAll(Arrays.asList(sfe.getValidUnsentAddresses()));
                 }
             }
         } catch (SendFailedException e) {
