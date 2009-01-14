@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-2001 */
+    /* build: 5.0 pshao 20090113-1600 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4969,6 +4969,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=730)
     public static final String A_zimbraReverseProxyCacheReconnectInterval = "zimbraReverseProxyCacheReconnectInterval";
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public static final String A_zimbraReverseProxyConnectTimeout = "zimbraReverseProxyConnectTimeout";
 
     /**
      * The default realm that will be used by NGINX mail proxy, when the

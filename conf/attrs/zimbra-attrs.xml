@@ -3984,5 +3984,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Value for postconf smtpd_sasl_auth_enable</desc>
 </attr>
 
+<attr id="797" name="zimbraReverseProxyConnectTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
+  <globalConfigValue>120000ms</globalConfigValue>
+  <desc>Time interval after which NGINX mail proxy will disconnect while establishing an upstream IMAP/POP connection</desc>
+</attr>
 
 </attrs>

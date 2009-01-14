@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090109-2001 */
+    /* build: 5.0 pshao 20090113-1600 */
 
     /**
      * Zimbra access control list
@@ -15291,6 +15291,100 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyCacheReconnectInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyCacheReconnectInterval, "");
+        return attrs;
+    }
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * <p>Use getReverseProxyConnectTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxyConnectTimeoutAsString()
+     *
+     * @return zimbraReverseProxyConnectTimeout in millseconds, or -1 (120000ms)  if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public long getReverseProxyConnectTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyConnectTimeout, -1L);
+    }
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * @return zimbraReverseProxyConnectTimeout, or "120000ms" if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public String getReverseProxyConnectTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyConnectTimeout, "120000ms");
+    }
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * @param zimbraReverseProxyConnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public void setReverseProxyConnectTimeout(String zimbraReverseProxyConnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyConnectTimeout, zimbraReverseProxyConnectTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * @param zimbraReverseProxyConnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public Map<String,Object> setReverseProxyConnectTimeout(String zimbraReverseProxyConnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyConnectTimeout, zimbraReverseProxyConnectTimeout);
+        return attrs;
+    }
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public void unsetReverseProxyConnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyConnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time interval after which NGINX mail proxy will disconnect while
+     * establishing an upstream IMAP/POP connection
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=797)
+    public Map<String,Object> unsetReverseProxyConnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyConnectTimeout, "");
         return attrs;
     }
 
