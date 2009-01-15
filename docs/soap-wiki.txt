@@ -49,7 +49,7 @@
 </SaveDocumentRequest>
 
 <SaveDocumentResponse>
-  <doc id="{item-id}" ver="{version}" rest="{rest-url}"/>
+  <doc id="{item-id}" ver="{version}" name="{item-name}"/>
 </SaveDocumentResponse>
 
 //

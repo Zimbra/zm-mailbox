@@ -119,6 +119,7 @@ public class SaveDocument extends WikiDocumentHandler {
             Element m = response.addElement(MailConstants.E_DOC);
             m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
             m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
+            m.addAttribute(MailConstants.A_NAME, docItem.getName());
             success = true;
         } finally {
             if (success && doc != null)
