@@ -36,7 +36,9 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.internet.AddressException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -55,6 +57,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -389,6 +392,106 @@ public class CalendarMailSender {
         }
     }
 
+    private static class CalendarPartReplacingVisitor extends MimeVisitor {
+
+        private String mUid;
+        private ZVCalendar mCal;
+        private boolean mReplaced;
+        private MimeBodyPart mCalendarPart;
+
+        public CalendarPartReplacingVisitor(String uid, ZVCalendar cal) {
+            mUid = uid;
+            mCal = cal;
+        }
+
+        private static boolean isCalendarPart(Part part) throws MessagingException {
+            String mmCtStr = part.getContentType();
+            if (mmCtStr != null) {
+                ContentType mmCt = new ContentType(mmCtStr);
+                return mmCt.match(Mime.CT_TEXT_CALENDAR);
+            }
+            return false;
+        }
+
+        @Override
+        protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
+            // Look for the first text/calendar part encountered.
+            if (mCalendarPart == null && isCalendarPart(bp))
+                mCalendarPart = bp;
+            return false;
+        }
+
+        @Override
+        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
+            if (VisitPhase.VISIT_END.equals(visitKind)) {
+                if (!mReplaced) {
+                    // This message either had text/calendar at top level or none at all.
+                    // In both cases, set the new calendar as top level content.
+                    setCalendarContent(mm, mUid, mCal);
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) throws MessagingException {
+            if (VisitPhase.VISIT_END.equals(visitKind)) {
+                if (!mReplaced && mCalendarPart != null) {
+                    // We have a calendar part and we haven't replaced yet.  The calendar part must be
+                    // a child of this multipart.
+                    if (mp.removeBodyPart(mCalendarPart)) {
+                        MimeBodyPart newCalendarPart = new MimeBodyPart();
+                        setCalendarContent(newCalendarPart, mUid, mCal);
+                        mp.addBodyPart(newCalendarPart);
+                        mReplaced = true;
+                        return true;
+                    } else {
+                        throw new MessagingException("Unable to remove old calendar part");
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    public static MimeMessage createCalendarMessage(
+            Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            MimeMessage srcMm, String uid, ZVCalendar cal)
+    throws ServiceException {
+        try {
+            MimeMessage mm = new MimeMessage(srcMm);  // Get a copy so we can modify it.
+            mm.setHeader("Message-ID", null);  // Don't reuse Message-ID header.
+            mm.setSentDate(new Date());
+
+            if (toAddrs != null) {
+                Address[] addrs = new Address[toAddrs.size()];
+                toAddrs.toArray(addrs);
+                mm.setRecipients(javax.mail.Message.RecipientType.TO, addrs);
+            }
+            mm.setRecipients(javax.mail.Message.RecipientType.CC, (Address[]) null);
+            mm.setRecipients(javax.mail.Message.RecipientType.BCC, (Address[]) null);
+
+            if (fromAddr != null)
+                mm.setFrom(fromAddr);
+            if (senderAddr != null) {
+                mm.setSender(senderAddr);
+                mm.setReplyTo(new Address[]{senderAddr});
+            }
+
+            // Find and replace the existing calendar part with the new calendar object.
+            CalendarPartReplacingVisitor visitor = new CalendarPartReplacingVisitor(uid, cal);
+            visitor.accept(mm);
+
+            mm.saveChanges();
+            return mm;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE(
+                    "Messaging Exception while building calendar message from source MimeMessage", e);
+        }
+    }
+
     private static MimeMessage createCalendarResourceInviteDeniedMessage(
             Locale lc, Address fromAddr, List<Address> toAddrs, Invite inv)
     throws ServiceException {
@@ -558,19 +661,18 @@ public class CalendarMailSender {
         return reply;
     }
 
-    public static MimeBodyPart makeICalIntoMimePart(String uid,
-            ZCalendar.ZVCalendar iCal) throws ServiceException {
+    private static void setCalendarContent(Part part, String uid, ZVCalendar cal) throws MessagingException {
+        String filename = "meeting.ics";
+        part.setDataHandler(new DataHandler(new CalendarDataSource(cal, uid, filename)));
+    }
+
+    public static MimeBodyPart makeICalIntoMimePart(String uid, ZVCalendar cal) throws ServiceException {
         try {
             MimeBodyPart mbp = new MimeBodyPart();
-
-            String filename = "meeting.ics";
-            mbp.setDataHandler(new DataHandler(new CalendarDataSource(iCal,
-                    uid, filename)));
-
+            setCalendarContent(mbp, uid, cal);
             return mbp;
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE(
-                    "Failure creating MimeBodyPart for InviteReply", e);
+            throw ServiceException.FAILURE("Failure creating MimeBodyPart from calendar", e);
         }
     }
 
@@ -660,6 +762,5 @@ public class CalendarMailSender {
         public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
-        
     }
 }

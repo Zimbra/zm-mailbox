@@ -360,7 +360,7 @@ public class Mailbox {
         public RedoableOp getPlayer() {
             return player;
         }
-        long getTimestamp() {
+        public long getTimestamp() {
             return (player == null ? System.currentTimeMillis() : player.getTimestamp());
         }
         int getChangeId() {

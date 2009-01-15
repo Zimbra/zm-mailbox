@@ -23,6 +23,8 @@ import java.util.Map;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Message.RecipientType;
+import javax.mail.internet.InternetAddress;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -42,27 +44,27 @@ public class ModifyCalendarItem extends CalendarRequest {
 
     // very simple: generate a new UID and send a REQUEST
     protected class ModifyCalendarItemParser extends ParseMimeMessage.InviteParser {
-        protected Mailbox mmbox;
-        protected Invite mInv;
-        protected Invite mSeriesInv;
+        private Invite mInv;
+        private Invite mSeriesInv;
+        private List<ZAttendee> mAttendeesAdded;
+        private List<ZAttendee> mAttendeesCanceled;
         
-        ModifyCalendarItemParser(Mailbox mbox, Invite inv, Invite seriesInv) {
-            mmbox = mbox;
+        ModifyCalendarItemParser(Invite inv, Invite seriesInv) {
             mInv = inv;
             mSeriesInv = seriesInv;
+            mAttendeesAdded = new ArrayList<ZAttendee>();
+            mAttendeesCanceled = new ArrayList<ZAttendee>();
         }
-        
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem)
+
+        public List<ZAttendee> getAttendeesAdded() { return mAttendeesAdded; }
+        public List<ZAttendee> getAttendeesCanceled() { return mAttendeesCanceled; }
+
+        public ParseMimeMessage.InviteParserResult parseInviteElement(
+                ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem)
         throws ServiceException {
-            List<ZAttendee> atsToCancel = new ArrayList<ZAttendee>();
-
-            ParseMimeMessage.InviteParserResult toRet =
-                CalendarUtils.parseInviteForModify(account, getItemType(), inviteElem, mInv, mSeriesInv, atsToCancel, !mInv.hasRecurId());
-
-            // send cancellations to any invitees who have been removed...
-            if (atsToCancel.size() > 0)
-                updateRemovedInvitees(lc, octxt, account, mmbox, mInv.getCalendarItem(), mInv, atsToCancel);
-            
+            ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(
+                    account, getItemType(), inviteElem, mInv, mSeriesInv,
+                    mAttendeesAdded, mAttendeesCanceled, !mInv.hasRecurId());
             return toRet;
         }
     };
@@ -135,7 +137,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
         
-        ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv, seriesInv);
+        ModifyCalendarItemParser parser = new ModifyCalendarItemParser(inv, seriesInv);
         
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
         dat.mDontNotifyAttendees = isInterMboxMove;
@@ -152,7 +154,58 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
         }
 
-        sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false);
+        // If updating recurrence series, remove newly added attendees from the email
+        // sent to existing attendees.  The new attendees are notified in a separate email.
+        List<ZAttendee> atsAdded = parser.getAttendeesAdded();
+        if (!atsAdded.isEmpty() && inv.isRecurrence() && inv.isOrganizer()) {
+            try {
+                RecipientType rcptTypes[] = { RecipientType.TO, RecipientType.CC, RecipientType.BCC };
+                for (RecipientType rcptType : rcptTypes) {
+                    Address[] rcpts = dat.mMm.getRecipients(rcptType);
+                    List<Address> filtered = new ArrayList<Address>();
+                    boolean foundDuplicate = false;
+                    if (rcpts != null && rcpts.length > 0) {
+                        for (Address rcpt : rcpts) {
+                            if (rcpt instanceof InternetAddress) {
+                                String email = ((InternetAddress) rcpt).getAddress();
+                                if (email != null) {
+                                    boolean keep = true;
+                                    for (ZAttendee at : atsAdded) {
+                                        if (email.equalsIgnoreCase(at.getAddress())) {
+                                            keep = false;
+                                            foundDuplicate = true;
+                                            break;
+                                        }
+                                    }
+                                    if (keep)
+                                        filtered.add(rcpt);
+                                }
+                            }
+                        }
+                    }
+                    if (foundDuplicate) {
+                        Address[] newRcpts = filtered.toArray(new Address[0]);
+                        dat.mMm.setRecipients(rcptType, newRcpts);
+                    }
+                }
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+            }
+        }
+
+        // Apply the change and notify existing attendees.
+        sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false, true);
+
+        // Notify removed attendees.
+        List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
+        if (!atsCanceled.isEmpty() && inv.isOrganizer()) {
+            updateRemovedInvitees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+        }
+
+        // Notify attendees added to recurrence series.
+        if (!atsAdded.isEmpty() && inv.isRecurrence() && inv.isOrganizer()) {
+            updateAddedInvitees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsAdded);
+        }
 
         return response;
     }
