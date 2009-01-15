@@ -408,6 +408,14 @@ public class LC {
     
     public static final KnownKey purge_initial_sleep_time;
     
+    public static final KnownKey httpclient_connmgr_max_host_connections;
+    public static final KnownKey httpclient_connmgr_max_total_connections;
+    public static final KnownKey httpclient_connmgr_connection_timeout;
+    public static final KnownKey httpclient_connmgr_so_timeout;
+    // public static final KnownKey httpclient_connmgr_idle_reaper_initial_sleep_time;  don't use this for now
+    public static final KnownKey httpclient_connmgr_idle_reaper_sleep_interval;
+    public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
+    
     public static final KnownKey xmpp_server_tls_enabled;
     public static final KnownKey xmpp_server_dialback_enabled;
     public static final KnownKey xmpp_server_session_allowmultiple;
@@ -1238,6 +1246,53 @@ public class LC {
         purge_initial_sleep_time = new KnownKey(
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
             "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
+        
+        
+        httpclient_connmgr_max_host_connections = new KnownKey(
+                "httpclient_connmgr_max_host_connections", 
+                "50",
+                "httpclient connection manager: " + 
+                "Defines the maximum number of connections allowed per host configuration");
+        
+        httpclient_connmgr_max_total_connections = new KnownKey(
+                "httpclient_connmgr_max_total_connections", 
+                "50",
+                "httpclient connection manager: " +
+                "Defines the maximum number of connections allowed overall");
+
+        httpclient_connmgr_connection_timeout = new KnownKey(
+                "httpclient_connmgr_connection_timeout", 
+                "0",
+                "httpclient connection manager: " +
+                "Determines the timeout until a connection is established. A value of zero means the timeout is not used");
+        
+        httpclient_connmgr_so_timeout = new KnownKey(
+                "httpclient_connmgr_so_timeout", 
+                "30000",
+                "httpclient connection manager: " +
+                "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
+
+
+        /*
+        httpclient_connmgr_idle_reaper_initial_sleep_time = new KnownKey(
+                "httpclient_connmgr_idle_reaper_initial_sleep_time", 
+                Long.toString(15 * Constants.MILLIS_PER_MINUTE),
+                "httpclient connection manager idle reaper: " +
+                "Amount of time (in milliseconds) that the http client connection manager idle connection reaper thread sleeps on startup before doing work");
+        */
+        
+        httpclient_connmgr_idle_reaper_sleep_interval = new KnownKey(
+                "httpclient_connmgr_idle_reaper_sleep_interval", 
+                Long.toString(15 * Constants.MILLIS_PER_MINUTE),
+                "httpclient connection manager idle reaper: " +
+                "Amount of time (in milliseconds) that the http client connection manager idle connection reaper thread sleeps between doing work. " +
+                "0 means that reaper thread is disabled");
+        
+        httpclient_connmgr_idle_reaper_connection_timeout = new KnownKey(
+                "httpclient_connmgr_idle_reaper_connection_timeout", 
+                Long.toString(5 * Constants.MILLIS_PER_MINUTE),
+                "httpclient connection manager idle reaper: " +
+                "the timeout value to use when testing for idle connections.");
         
         xmpp_server_tls_enabled = new KnownKey("xmpp_server_tls_enabled","true", "Allow TLS for S2S connections"); 
         xmpp_server_dialback_enabled = new KnownKey("xmpp_server_dialback_enabled", "true", "Allow S2S Server Dialback Protocol");
