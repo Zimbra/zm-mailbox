@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -231,6 +232,9 @@ public class Zimbra {
 
             if (app.supports(PurgeThread.class.getName()))
             	PurgeThread.startup();
+            
+            if (app.supports(ZimbraHttpConnectionManager.class.getName()))
+                ZimbraHttpConnectionManager.startReaperThread();
 
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName()))
