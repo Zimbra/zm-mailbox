@@ -47,7 +47,7 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
 
 	    DistributionList dl = null;
 	    if (id != null)
-	        prov.get(DistributionListBy.id, id);
+	        dl = prov.get(DistributionListBy.id, id);
             
         String dlName = "";
         if (dl != null) {

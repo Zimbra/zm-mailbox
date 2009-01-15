@@ -57,7 +57,7 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
 
 	    Account account = null;
 	    if (id != null)
-	        prov.get(AccountBy.id, id, zsc.getAuthToken());
+	        account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         
         String acctName = "";
         if (account != null) {
