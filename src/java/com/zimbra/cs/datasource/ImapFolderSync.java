@@ -896,7 +896,9 @@ class ImapFolderSync {
         try {
             connection.uidFetch(getSequence(uidSet), "BODY.PEEK[]", handler);
         } catch (CommandFailedException e) {
-            LOG.error("UID FETCH failed: " + e.toString(), e);
+            String msg = "UID FETCH failed: " + e.toString();
+            checkCanContinue(msg, e);
+            LOG.warn(msg, e);
         }
         if (uidSet.isEmpty()) return;
         LOG.info("Fetching remaining messages one at a time for UIDs: " + uidSet);
@@ -906,7 +908,9 @@ class ImapFolderSync {
                 MessageData md = connection.uidFetch(uid, "BODY.PEEK[]");
                 handler.handleFetchResponse(md);
             } catch (Exception e) {
-                LOG.error("Error while fetching message for UID %d", uid, e);
+                String msg = "Error while fetching message for UID " + uid;
+                checkCanContinue(msg, e);
+                LOG.warn(msg, e);
             }
         }
         if (!uidSet.isEmpty()) {
