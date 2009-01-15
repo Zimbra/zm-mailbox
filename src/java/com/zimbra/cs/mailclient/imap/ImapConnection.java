@@ -445,7 +445,7 @@ public final class ImapConnection extends MailConnection {
     synchronized ImapResponse sendRequest(ImapRequest req)
         throws IOException {
         if (isClosed()) {
-            throw new IllegalStateException("Connection is closed");
+            throw new IOException("Connection is closed");
         }
         if (request != null) {
             throw new IllegalStateException("Request already pending");

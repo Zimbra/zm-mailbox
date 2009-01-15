@@ -1153,6 +1153,8 @@ class ImapFolderSync {
             return cause == null || canContinue(cause);
         } else if (e instanceof SQLException) {
             return Db.errorMatches((SQLException) e, Db.Error.DUPLICATE_ROW);
+        } else if (e instanceof CommandFailedException) {
+            return ((CommandFailedException) e).canContinue();
         } else {
             return false;
         }
