@@ -29,6 +29,7 @@ import java.util.List;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -773,7 +774,7 @@ public class Invite {
      * @return null if notes is not found
      * @throws ServiceException
      */
-    public static String getDescription(MimeMessage mmInv) throws ServiceException {
+    public static String getDescription(Part mmInv) throws ServiceException {
         if (mmInv == null) return null;
         try {
             // If top-level is text/icalendar, parse the iCalendar object and return
@@ -817,11 +818,10 @@ public class Invite {
             Object mmInvContent = mmInv.getContent();
             if (!(mmInvContent instanceof MimeMultipart))
                 return null;
+            MimeMultipart mm = (MimeMultipart) mmInvContent;
 
             // If top-level is multipart, get description from text/plain part.
-            MimeMultipart mm = (MimeMultipart) mmInvContent;
             int numParts = mm.getCount();
-            BodyPart textPlain = null;
             String charset = null;
             for (int i  = 0; i < numParts; i++) {
                 BodyPart part = mm.getBodyPart(i);
@@ -829,24 +829,29 @@ public class Invite {
                 try {
                     ContentType ct = new ContentType(ctStr);
                     if (ct.match(Mime.CT_TEXT_PLAIN)) {
-                        textPlain = part;
                         charset = ct.getParameter(Mime.P_CHARSET);
                         if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
-                        break;
+                        byte[] descBytes = ByteUtil.getContent(part.getInputStream(), part.getSize());
+                        return new String(descBytes, charset);
                     }
                 } catch (javax.mail.internet.ParseException e) {
                     ZimbraLog.calendar.warn("Invalid Content-Type found: \"" + ctStr + "\"; skipping part", e);
                 }
-            }
-            if (textPlain == null) return null;
 
-            byte[] descBytes = ByteUtil.getContent(textPlain.getInputStream(), textPlain.getSize());
-            return new String(descBytes, charset);
+                // If part is a multipart, recurse.
+                Object mmObj = part.getContent();
+                if (mmObj instanceof MimeMultipart) {
+                    String str = getDescription(part);
+                    if (str != null)
+                        return str;
+                }
+            }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get calendar item notes MIME part", e);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Unable to get calendar item notes MIME part", e);
         }
+        return null;
     }
 
     /**

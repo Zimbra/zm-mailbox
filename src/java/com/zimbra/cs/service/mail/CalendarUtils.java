@@ -17,7 +17,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -204,7 +203,8 @@ public class CalendarUtils {
      */
     static ParseMimeMessage.InviteParserResult parseInviteForModify(
             Account account, byte itemType, Element inviteElem, Invite oldInv, Invite seriesInv,
-            List<ZAttendee> attendeesToCancel, boolean recurAllowed)
+            List<ZAttendee> attendeesAdded, List<ZAttendee> attendeesToCancel,
+            boolean recurAllowed)
             throws ServiceException {
         Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv.getTimeZoneMap(), false);
 
@@ -237,7 +237,8 @@ public class CalendarUtils {
             mod.setRecurId(oldInv.getRecurId());
         }
 
-        attendeesToCancel.addAll(getRemovedAttendees(oldInv, mod));
+        attendeesToCancel.addAll(getRemovedAttendees(oldInv, mod, true));
+        attendeesAdded.addAll(getRemovedAttendees(mod, oldInv, false));  // reverse of who's being canceled
 
         ZVCalendar iCal = mod.newToICalendar(true);
 
@@ -294,7 +295,8 @@ public class CalendarUtils {
 
     // Compare the attendee lists in old and new invites to figure out which attendees are being removed.
     // Distribution lists are taken into consideration.
-    public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv) throws ServiceException {
+    public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv, boolean applyDL)
+    throws ServiceException {
         List<ZAttendee> list = new ArrayList<ZAttendee>();
         // compare the new attendee list with the existing one...if attendees
         // have been removed, then
@@ -316,28 +318,30 @@ public class CalendarUtils {
             return list;
 
         // Find out which of the new attendees are distribution lists.
-        Provisioning prov = Provisioning.getInstance();
-        List<String /* zimbraId */> newAtsDL = new ArrayList<String>();
-        for (ZAttendee at : newAts) {
-            String addr = at.getAddress();
-            if (addr != null) {
-                DistributionList dl = prov.get(DistributionListBy.name, addr);
-                if (dl != null)
-                    newAtsDL.add(dl.getId());
+        if (applyDL) {
+            Provisioning prov = Provisioning.getInstance();
+            List<String /* zimbraId */> newAtsDL = new ArrayList<String>();
+            for (ZAttendee at : newAts) {
+                String addr = at.getAddress();
+                if (addr != null) {
+                    DistributionList dl = prov.get(DistributionListBy.name, addr);
+                    if (dl != null)
+                        newAtsDL.add(dl.getId());
+                }
             }
-        }
-        // Check to see if attendees to be removed are members of DLs.  Those that belong to a DL in new attendee
-        // list aren't considered removed.
-        for (Iterator<ZAttendee> removedIter = list.iterator(); removedIter.hasNext(); ) {
-            ZAttendee removedAt = removedIter.next();
-            String removedAddr = removedAt.getAddress();
-            if (removedAddr != null) {
-                Account removedAcct = prov.get(AccountBy.name, removedAddr);
-                if (removedAcct != null) {
-                    for (String dl : newAtsDL) {
-                        if (prov.inDistributionList(removedAcct, dl)) {
-                            removedIter.remove();
-                            break;
+            // Check to see if attendees to be removed are members of DLs.  Those that belong to a DL in new attendee
+            // list aren't considered removed.
+            for (Iterator<ZAttendee> removedIter = list.iterator(); removedIter.hasNext(); ) {
+                ZAttendee removedAt = removedIter.next();
+                String removedAddr = removedAt.getAddress();
+                if (removedAddr != null) {
+                    Account removedAcct = prov.get(AccountBy.name, removedAddr);
+                    if (removedAcct != null) {
+                        for (String dl : newAtsDL) {
+                            if (prov.inDistributionList(removedAcct, dl)) {
+                                removedIter.remove();
+                                break;
+                            }
                         }
                     }
                 }
@@ -1211,22 +1215,4 @@ public class CalendarUtils {
 
         return cancel;
     }
-
-    //    
-    // // ical4j helper
-    // public static String paramVal(Property prop, String paramName) {
-    // return CalendarUtils.paramVal(prop, paramName, "");
-    // }
-    //
-    //
-    // // ical4j helper
-    // public static String paramVal(Property prop, String paramName, String
-    // defaultValue) {
-    // ParameterList params = prop.getParameters();
-    // Parameter param = params.getParameter(paramName);
-    // if (param == null) {
-    // return defaultValue;
-    // }
-    // return param.getValue();
-    // }
 }

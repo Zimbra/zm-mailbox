@@ -1252,7 +1252,10 @@ public abstract class CalendarItem extends MailItem {
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
         if (!discardExistingInvites && !isCancel && newInvite.isRecurrence()) {
             Invite defInv = getDefaultInviteOrNull();
-            if (defInv != null) {
+            // Be careful.  If invites got delivered out of order, we may have defInv that's not
+            // a series.  Imagine 1st invite received was an exception and 2nd was the series.
+            // In that situation we simply skip the DTSTART shift calculation.
+            if (defInv != null && defInv.isRecurrence()) {
                 oldDtStart = defInv.getStartTime();
                 ParsedDateTime newDtStart = newInvite.getStartTime();
                 //if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
@@ -2135,7 +2138,8 @@ public abstract class CalendarItem extends MailItem {
                 ReplyInfo cur = iter.next();
                 
                 if (recurMatches(cur.mRecurId, recurId)) {
-                    if (cur.mSeqNo < seqNo || (cur.mSeqNo == seqNo && cur.mDtStamp < dtStamp)) {
+//                    if (cur.mSeqNo < seqNo || (cur.mSeqNo == seqNo && cur.mDtStamp < dtStamp)) {
+                    if (cur.mSeqNo < seqNo) {
                         iter.remove();
                     }
                 }
