@@ -195,8 +195,12 @@ public class Validators {
             if (ZimbraLog.account.isDebugEnabled())
                 ZimbraLog.account.debug("Desired features (incl. cos): %s + %s", desiredFeatures, cosFeatures);
             String originalCosId = null;
-            if (account != null)
+            if (account != null) {
                 originalCosId = account.getAttr(Provisioning.A_zimbraCOSId);
+                Set<String> features = getCosFeatures(prov, cosFeatureMap, originalCosId, defaultCosId);
+                if (features != null)
+                    desiredFeatures.removeAll(features);
+            }
             if (desiredFeatures.size() > 0) {
                 if (account != null) {
                     Map<String, Object> acctAttrs = account.getAttrs(false);
@@ -239,7 +243,9 @@ public class Validators {
                 String cosId, String defaultCosId)
         throws ServiceException {
             if (!cosFeatureMap.containsKey(cosId)) {
-                Cos cos = prov.get(CosBy.id, cosId);
+                Cos cos = null;
+                if (cosId != null)
+                    prov.get(CosBy.id, cosId);
                 if (cos == null) {
                     if (defaultCosId != null) {
                         ZimbraLog.account.info("COS id %s not found, reverting to %s", cosId, defaultCosId);
