@@ -196,8 +196,7 @@ class ImapFolderSync {
         syncState = getSyncState(fullSync);
         localFolder.debug("SyncState = " + syncState);
         long uidNext = mb.getUidNext();
-        // if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
-        if (mb.getName().equalsIgnoreCase("INBOX")) {
+        if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
             String msg = String.format(
                 "Inconsistent UIDNEXT value from server (got %d but last known uid %d)",
                 uidNext, syncState.getLastUid());
