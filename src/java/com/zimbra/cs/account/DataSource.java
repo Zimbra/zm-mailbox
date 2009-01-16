@@ -282,10 +282,6 @@ public class DataSource extends AccountProperty {
     	return true;
     }
 
-    public void disableSync(int folderId) throws ServiceException {
-        // Does nothing for online
-    }
-    
     // Overridden in OfflineDataSource
     public boolean isSaveToSent() {
         return true;

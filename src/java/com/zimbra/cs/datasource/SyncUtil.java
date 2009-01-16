@@ -20,6 +20,10 @@ import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.common.service.ServiceException;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
@@ -99,5 +103,12 @@ final class SyncUtil {
             // Fall through
         }
         return date != null ? date : new Date(msg.getDate());
+    }
+
+    public static void setSyncEnabled(Mailbox mbox, int folderId, boolean enabled)
+        throws ServiceException {
+        Folder folder = mbox.getFolderById(null, folderId);
+        mbox.alterTag(new Mailbox.OperationContext(mbox), folderId,
+                      MailItem.TYPE_FOLDER, Flag.ID_FLAG_SYNC, enabled);
     }
 }
