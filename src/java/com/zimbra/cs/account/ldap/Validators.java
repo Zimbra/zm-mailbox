@@ -245,10 +245,10 @@ public class Validators {
             if (!cosFeatureMap.containsKey(cosId)) {
                 Cos cos = null;
                 if (cosId != null)
-                    prov.get(CosBy.id, cosId);
+                    cos = prov.get(CosBy.id, cosId);
                 if (cos == null) {
                     if (defaultCosId != null) {
-                        ZimbraLog.account.info("COS id %s not found, reverting to %s", cosId, defaultCosId);
+                        ZimbraLog.account.debug("COS id %s not found, reverting to %s", cosId, defaultCosId);
                         return getCosFeatures(prov, cosFeatureMap, defaultCosId, null);
                     }
                     else {
