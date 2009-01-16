@@ -161,7 +161,6 @@ public class DbMailbox {
     public synchronized static NewMboxId createMailbox(Connection conn, int mailboxId, String accountId, String comment, int lastBackupAt)
     throws ServiceException {
         String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
-        boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
 
         // Get mailbox id.
         NewMboxId ret = getNextMailboxId(conn, mailboxId);
@@ -181,30 +180,18 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("INSERT INTO mailbox" +
                     "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment)" +
-                    " SELECT ?, ?, 0, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?" +
+                    " SELECT ?, ?, ?, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?" +
                     " FROM current_volumes" + limitClause);
             int attr = 1;
             stmt.setString(attr++, accountId);
             stmt.setInt(attr++, mailboxId);
+            stmt.setInt(attr++, groupId);
             if (lastBackupAt >= 0)
                 stmt.setInt(attr++, lastBackupAt);
             else
                 stmt.setNull(attr++, Types.INTEGER);
             stmt.setString(attr++, comment);
             stmt.executeUpdate();
-            stmt.close();
-            stmt = null;
-
-            if (explicitId)
-                return ret;
-
-            stmt = conn.prepareStatement("UPDATE mailbox SET group_id = ? WHERE id = ?");
-            stmt.setInt(1, ret.groupId);
-            stmt.setInt(2, ret.id);
-            stmt.executeUpdate();
-            stmt.close();
-            stmt = null;
-
             return ret;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing new mailbox row for account " + accountId, e);

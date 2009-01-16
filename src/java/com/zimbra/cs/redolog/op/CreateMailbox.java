@@ -25,7 +25,6 @@ import java.io.IOException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.MailboxIdConflictException;
@@ -81,9 +80,8 @@ public class CreateMailbox extends RedoableOp {
 	 */
 	public void redo() throws Exception {
 		int opMboxId = getMailboxId();
-		Mailbox mbox = null;
-		try {
-			mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId, false);
+		if (mbox != null) {
 			int mboxId = mbox.getId();
 			if (opMboxId == mboxId) {
 				mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
@@ -91,15 +89,12 @@ public class CreateMailbox extends RedoableOp {
 			} else {
 			    throw new MailboxIdConflictException(mAccountId, opMboxId, mboxId, this);
 			}
-		} catch (MailServiceException e) {
-			if (e.getCode() != MailServiceException.NO_SUCH_MBOX)
-				throw e;
+		} else {
+    		Account account = Provisioning.getInstance().get(AccountBy.id, mAccountId);
+    		if (account == null)
+    			throw new RedoException("Account " + mAccountId + " does not exist", this);
+    
+    		mbox = MailboxManager.getInstance().createMailbox(getOperationContext(), account);
 		}
-
-		Account account = Provisioning.getInstance().get(AccountBy.id, mAccountId);
-		if (account == null)
-			throw new RedoException("Account " + mAccountId + " does not exist", this);
-
-		mbox = MailboxManager.getInstance().createMailbox(getOperationContext(), account);
 	}
 }
