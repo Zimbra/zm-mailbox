@@ -25,6 +25,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.SSLSocketFactoryManager;
@@ -149,6 +150,10 @@ public class ImapSync extends MailItemImport {
         throws ServiceException, IOException {
         if (dataSource.isOffline()) {
             getMailbox().beginTrackingSync();
+        }
+        // For offline if full sync then automatically re-enable sync on Inbox
+        if (dataSource.isOffline() && fullSync) {
+            SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         trackedFolders = dataSource.getImapFolders();
         syncedFolders = new HashMap<Integer, ImapFolderSync>();

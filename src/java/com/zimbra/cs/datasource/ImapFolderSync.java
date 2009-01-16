@@ -196,10 +196,14 @@ class ImapFolderSync {
         syncState = getSyncState(fullSync);
         localFolder.debug("SyncState = " + syncState);
         long uidNext = mb.getUidNext();
-        if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
-            LOG.warn("Ignoring inconsistent UIDNEXT from server (UIDNEXT %d but last known uid was %d)",
-                     uidNext, syncState.getLastUid());
-            uidNext = 0;
+        // if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
+        if (mb.getName().equalsIgnoreCase("INBOX")) {
+            String msg = String.format(
+                "Inconsistent UIDNEXT value from server (got %d but last known uid %d)",
+                uidNext, syncState.getLastUid());
+            ServiceException e = ServiceException.FAILURE(msg, null);
+            syncFolderFailed(tracker.getItemId(), tracker.getLocalPath(), msg, e);
+            throw e;
         }
         newMsgIds = new ArrayList<Integer>();
         addedUids = new ArrayList<Long>();
@@ -1083,24 +1087,20 @@ class ImapFolderSync {
         if (count <= MAX_ITEM_ERRORS) {
             LOG.error(msg, e);
             if (count == MAX_ITEM_ERRORS) {
-                if (itemId == com.zimbra.cs.mailbox.Mailbox.ID_FOLDER_INBOX) {
-                    // Never disable sync for INBOX
-                    String error = String.format(
-                        "Synchronization of folder '%s' failed: %s", path, msg);
-                    ds.reportError(itemId, error, e);
-                } else {
-                    String error = String.format(
-                        "Synchronization of folder '%s' disabled due to error: %s",
-                         path, msg);
-                    ds.reportError(itemId, error, e);
-                    try {
-                        ds.disableSync(itemId);
-                    } catch (MailServiceException.NoSuchItemException ex) {
-                        // Ignore if local folder has been deleted
+                String error = String.format(
+                    "Synchronization of folder '%s' disabled due to error: %s",
+                    path, msg);
+                ds.reportError(itemId, error, e);
+                try {
+                    if (ds.isOffline()) {
+                        // Disable sync on folder
+                        SyncUtil.setSyncEnabled(ds.getMailbox(), itemId, false);
                     }
-                    // Clear error state in case folder sync reenabled
-                    clearError(itemId);
+                } catch (MailServiceException.NoSuchItemException ex) {
+                    // Ignore if local folder has been deleted
                 }
+                // Clear error state in case folder sync reenabled
+                clearError(itemId);
             }
         }
     }
