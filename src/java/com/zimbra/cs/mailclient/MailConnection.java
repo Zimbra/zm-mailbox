@@ -83,7 +83,7 @@ public abstract class MailConnection {
             socket = newSocket();
             int timeout = (int)
                 Math.min(config.getTimeout() * 1000L, Integer.MAX_VALUE);
-            socket.setSoTimeout(timeout > 0 ? timeout : 0);
+            socket.setSoTimeout(timeout > 0 ? timeout : Integer.MAX_VALUE);
             initStreams(new BufferedInputStream(socket.getInputStream()),
                         new BufferedOutputStream(socket.getOutputStream()));
             processGreeting();
