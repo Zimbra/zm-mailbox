@@ -88,6 +88,12 @@ public class ImapSync extends MailItemImport {
         if (DEBUG || ds.isDebugTraceEnabled()) {
             enableTrace(config);
         }
+        int timeout = LC.javamail_imap_timeout.intValue();
+        if (timeout > 0) {
+            LOG.info("IMAP response timeout is %d seconds", timeout);
+        } else {
+            LOG.info("IMAP response timeout is disabled");
+        }
         config.setTimeout(LC.javamail_imap_timeout.intValue());
         // config.setRawMode(true);
         config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
