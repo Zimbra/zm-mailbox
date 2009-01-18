@@ -84,6 +84,7 @@ public class ImapSync extends MailItemImport {
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
+        config.setSynchronousMode(true);
         if (DEBUG || ds.isDebugTraceEnabled()) {
             enableTrace(config);
         }
