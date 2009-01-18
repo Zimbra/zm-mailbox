@@ -545,6 +545,9 @@ public final class ImapConnection extends MailConnection {
                 throw (IOException)
                     new IOException("Error in response handler").initCause(error);
             }
+        } catch (SocketTimeoutException e) {
+            close();
+            throw e;
         } finally {
             response = null;
         }
