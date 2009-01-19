@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
@@ -245,7 +246,7 @@ public class TestDomainStatus extends TestCase {
         
         try {
             // mSoapProv.authAccount(acct, PASSWORD, TEST_NAME);
-            mProv.authAccount(acct, PASSWORD, TEST_NAME);
+            mProv.authAccount(acct, PASSWORD, AuthContext.Protocol.test);
             
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                 ok = true;
@@ -413,7 +414,7 @@ public class TestDomainStatus extends TestCase {
          * ================
          */
         public void AUTH_REQUEST() throws Exception {
-            mCtx.mSoapClient.authAccount(mCtx.mTargetAcct, PASSWORD, "suspended-domain-test-" + mCtx.mSuspended);
+            mCtx.mSoapClient.authAccount(mCtx.mTargetAcct, PASSWORD, AuthContext.Protocol.test);
         }
         
         public void CHANGE_PASSWORD_REQUEST() throws Exception {

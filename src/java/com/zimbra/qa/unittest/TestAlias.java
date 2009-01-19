@@ -49,6 +49,7 @@ import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestAlias extends TestCase {
@@ -128,7 +129,7 @@ public class TestAlias extends TestCase {
         Account acctGot = mProv.get(AccountBy.name, authAs);
         
         TestProvisioningUtil.verifySameEntry(acct, acctGot);
-        mProv.authAccount(acctGot, PASSWORD, "unittest");
+        mProv.authAccount(acctGot, PASSWORD, AuthContext.Protocol.test);
     }
 
     /*
@@ -156,7 +157,7 @@ public class TestAlias extends TestCase {
         authAs = getEmail(acctLocalPart, ALIAS_DOMAIN_NAME, testName);
         acctGot = mProv.get(AccountBy.name, authAs);
         TestProvisioningUtil.verifySameEntry(acct, acctGot);
-        mProv.authAccount(acctGot, PASSWORD, "unittest");
+        mProv.authAccount(acctGot, PASSWORD, AuthContext.Protocol.test);
     }
     
     /*

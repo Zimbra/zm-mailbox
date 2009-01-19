@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
@@ -577,7 +578,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             else if (MECHANISM_ZIMBRA.equals(mechanism))
                 acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
             else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "pop3", getOrigRemoteIpAddr());
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr());
             if (acct == null)
                 throw new Pop3CmdException(type + " failed");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
