@@ -59,7 +59,7 @@ SECTION mta
 	POSTCONF recipient_delimiter	VAR zimbraMtaRecipientDelimiter
 	POSTCONF smtpd_sasl_auth_enable VAR zimbraMtaAuthEnabled
 	POSTCONF smtpd_tls_auth_only	VAR zimbraMtaTlsAuthOnly
-	POSTCONF smtpd_tls_security_level			encrypt
+	POSTCONF smtpd_use_tls			yes
 	POSTCONF disable_dns_lookups	VAR !zimbraMtaDnsLookupsEnabled	
 	POSTCONF message_size_limit		VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit		0
