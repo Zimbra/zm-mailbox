@@ -25,7 +25,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
@@ -33,6 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.service.AuthProvider;
@@ -120,7 +120,7 @@ public class Auth extends AccountDocumentHandler {
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
 
             if (password != null) {
-                prov.authAccount(acct, password, "soap", authCtxt);
+                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
             } else if (preAuthEl != null) {
                 long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
                 expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);

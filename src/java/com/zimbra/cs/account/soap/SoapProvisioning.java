@@ -61,6 +61,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -424,7 +425,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password, String proto)
+    public void authAccount(Account acct, String password, AuthContext.Protocol proto)
             throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element a = req.addElement(AccountConstants.E_ACCOUNT);
@@ -435,7 +436,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password, String proto, Map<String, Object> context)
+    public void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> context)
             throws ServiceException {
 	authAccount(acct, password, proto);
     }

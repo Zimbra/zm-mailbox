@@ -45,6 +45,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
@@ -1133,7 +1134,7 @@ abstract class ImapHandler extends ProtocolHandler {
             else if (ZimbraAuthenticator.MECHANISM.equals(mechanism))
                 acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
             else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "imap", getOrigRemoteIpAddr());
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, getOrigRemoteIpAddr());
             if (acct == null) {
                 sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;

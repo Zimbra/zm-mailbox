@@ -161,7 +161,7 @@ public abstract class ZimbraCustomAuth {
      * @param password: Clear-text password.
      * 
      * @param context: Map containing context information.  
-     *                 A list of context data is defined in com.zimbra.cs.account.AuthContext
+     *                 A list of context data is defined in com.zimbra.cs.account.auth.AuthContext
      * 
      * @param args: Arguments specified in the zimbraAuthMech attribute
      * 

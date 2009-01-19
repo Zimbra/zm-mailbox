@@ -40,6 +40,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -390,6 +391,11 @@ public class TestProvisioning extends TestCase {
         }
         
         public void authenticate(Account acct, String password, Map<String, Object> context, List<String> args) throws Exception {
+            String acOrigClientIp = (String)context.get(AuthContext.AC_ORIGINATING_CLIENT_IP);
+            String acNamePassedIn = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+            AuthContext.Protocol acProto = (AuthContext.Protocol)context.get(AuthContext.AC_PROTOCOL);
+            
+            
             if (acct.getName().equals(mTheOnlyAcctThatCanAuth.getName()) && 
                 password.equals(mTheOnlyPasswordIKnowAbout) &&
                 verifyArgs(args))
@@ -564,14 +570,14 @@ public class TestProvisioning extends TestCase {
             attrsToMod.put(Provisioning.A_zimbraAuthLdapStartTlsEnabled, "TRUE");
         
         mProv.modifyAttrs(domain, attrsToMod, true);
-        mProv.authAccount(account, PASSWORD, "unittest");
+        mProv.authAccount(account, PASSWORD, AuthContext.Protocol.test);
     }
 
     private void authTest(Account account) throws Exception  {
         System.out.println("Testing auth");
         
         // zimbra auth
-        mProv.authAccount(account, PASSWORD, "unittest");
+        mProv.authAccount(account, PASSWORD, AuthContext.Protocol.test);
         
         // external ldap auth, test using our own ldap
         externalAuthTest(account, false);
@@ -620,11 +626,11 @@ public class TestProvisioning extends TestCase {
         attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_CUSTOM + customAuthHandlerName + " " + args);
         mProv.modifyAttrs(domain, attrsToMod, true);
         ZimbraCustomAuth.register(customAuthHandlerName, new TestCustomAuth(account, PASSWORD));
-        mProv.authAccount(account, PASSWORD, "unittest");
+        mProv.authAccount(account, PASSWORD, AuthContext.Protocol.test);
         
         // try an auth failure
         try {
-            mProv.authAccount(account, PASSWORD + "-not", "unittest");
+            mProv.authAccount(account, PASSWORD + "-not", AuthContext.Protocol.test);
             fail("AccountServiceException.AUTH_FAILED not thrown"); // should not come to here
         } catch (ServiceException e) {
             assertEquals(AccountServiceException.AUTH_FAILED, e.getCode());

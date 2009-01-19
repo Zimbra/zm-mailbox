@@ -28,6 +28,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -748,9 +749,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public abstract void modifyAccountStatus(Account acct, String newStatus) throws ServiceException;
 
-    public abstract void authAccount(Account acct, String password, String proto) throws ServiceException;
+    public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto) throws ServiceException;
     
-    public abstract void authAccount(Account acct, String password, String proto, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
 
     public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, 
                                         String preAuth,

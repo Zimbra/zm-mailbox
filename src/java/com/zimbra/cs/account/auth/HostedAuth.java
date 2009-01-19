@@ -28,8 +28,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.auth.AuthContext;
 
 public class HostedAuth extends ZimbraCustomAuth {
 	//public static String HEADER_AUTH_METHOD = "Auth-Method";

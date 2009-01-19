@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
+import com.zimbra.cs.account.auth.AuthContext;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class Account extends ZAttrAccount  {
         getProvisioning().removeAlias(this, alias);
     }
 
-    public void authAccount(String password, String proto) throws ServiceException {
+    public void authAccount(String password, AuthContext.Protocol proto) throws ServiceException {
         getProvisioning().authAccount(this, password, proto);
     }
 

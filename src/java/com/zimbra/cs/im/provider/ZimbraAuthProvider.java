@@ -24,6 +24,7 @@ import org.jivesoftware.wildfire.user.UserNotFoundException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext;
 
 public class ZimbraAuthProvider implements AuthProvider {
 
@@ -41,7 +42,7 @@ public class ZimbraAuthProvider implements AuthProvider {
             if (acct == null) {
                 throw new UnauthorizedException("Unknown user: "+username);
             }
-            Provisioning.getInstance().authAccount(acct, password, "im"); 
+            Provisioning.getInstance().authAccount(acct, password, AuthContext.Protocol.im); 
         } catch (ServiceException e) {
             throw new UnauthorizedException(e);
         }

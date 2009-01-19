@@ -19,12 +19,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -32,7 +32,7 @@ import com.zimbra.common.util.ZimbraLog;
  * Miscellaneous utility methods to support SASL authentication.
  */
 public final class AuthenticatorUtil {
-    public static Account authenticate(String username, String authenticateId, String password, String protocol, String origRemoteIp)
+    public static Account authenticate(String username, String authenticateId, String password, AuthContext.Protocol protocol, String origRemoteIp)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId);

@@ -25,7 +25,6 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
@@ -33,6 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
@@ -143,7 +143,7 @@ public class Auth extends AdminDocumentHandler {
                 Map<String, Object> authCtxt = new HashMap<String, Object>();
                 authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
                 authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
-                prov.authAccount(acct, password, "soap", authCtxt);
+                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 checkAdmin(acct);
                 at = AuthProvider.getAuthToken(acct, true);
                 

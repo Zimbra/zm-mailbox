@@ -71,6 +71,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -3030,28 +3031,32 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public void authAccount(Account acct, String password, String proto) throws ServiceException {
+    public void authAccount(Account acct, String password, AuthContext.Protocol proto) throws ServiceException {
         authAccount(acct, password, proto, null);
     }
     
     @Override    
-    public void authAccount(Account acct, String password, String proto, Map<String, Object> authCtxt) throws ServiceException {
+    public void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
         try {
             if (password == null || password.equals(""))
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "empty password");
             
             if (authCtxt == null)
                 authCtxt = new HashMap<String, Object>();
+            
+            // add proto to the auth context
+            authCtxt.put(AuthContext.AC_PROTOCOL, proto);
+            
             authAccount(acct, password, true, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString()}));
         } catch (AuthFailedServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage() + e.getReason(", %s")}));             
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage() + e.getReason(", %s")}));             
             throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage()}));             
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage()}));             
             throw e;
         }
     }
