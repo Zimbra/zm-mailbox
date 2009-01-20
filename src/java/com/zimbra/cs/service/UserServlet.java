@@ -352,6 +352,7 @@ public class UserServlet extends ZimbraServlet {
     throws ServletException, IOException {
         Context context = null;
         ZimbraLog.clearContext();
+        addRemoteIpToLoggingContext(req);
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
@@ -371,7 +372,6 @@ public class UserServlet extends ZimbraServlet {
                 	context.locale = context.authAccount.getLocale();
                 }
             }
-            addRemoteIpToLoggingContext(req);
 
             doAuthGet(req, resp, context);
 
@@ -487,6 +487,7 @@ public class UserServlet extends ZimbraServlet {
     throws ServletException, IOException {
         Context context = null;
         ZimbraLog.clearContext();
+        addRemoteIpToLoggingContext(req);
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
@@ -499,7 +500,6 @@ public class UserServlet extends ZimbraServlet {
 
             if (context.authAccount != null)
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
-            addRemoteIpToLoggingContext(req);
 
             Folder folder = null;
             String filename = null;
