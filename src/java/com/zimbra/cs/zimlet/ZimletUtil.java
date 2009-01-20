@@ -1018,9 +1018,13 @@ public class ZimletUtil {
 	}
 	
 	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL) throws ServiceException, IOException {
+	    deployZimletBySoap(zimletFile, adminURL, uploadURL, null, null);
+	}
+	
+	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL, String username, String password) throws ServiceException, IOException {
         File zf = new File(zimletFile);
         if (adminURL != null && uploadURL != null) {
-            ZimletSoapUtil soapUtil = new ZimletSoapUtil(adminURL, uploadURL);
+            ZimletSoapUtil soapUtil = new ZimletSoapUtil(adminURL, uploadURL, username, password);
             soapUtil.deployZimletOnServer(zf.getName(), ByteUtil.getContent(zf));
         } else {
             ZimletSoapUtil soapUtil = new ZimletSoapUtil();
@@ -1055,18 +1059,22 @@ public class ZimletUtil {
 		private Provisioning mProv;
 
         public ZimletSoapUtil() throws ServiceException {
-            initZimletSoapUtil();
+            initZimletSoapUtil(null, null);
         }
         
         public ZimletSoapUtil(String adminURL, String uploadURL) throws ServiceException {
-            mAdminURL = adminURL;
-            mUploadURL = uploadURL;
-            initZimletSoapUtil();
+            this(adminURL, uploadURL, null, null);
         }
         
-        private void initZimletSoapUtil() throws ServiceException {
-            mUsername = LC.zimbra_ldap_user.value();
-            mPassword = LC.zimbra_ldap_password.value();
+        public ZimletSoapUtil(String adminURL, String uploadURL, String username, String password) throws ServiceException {
+            mAdminURL = adminURL;
+            mUploadURL = uploadURL;
+            initZimletSoapUtil(username, password);
+        }
+        
+        private void initZimletSoapUtil(String username, String password) throws ServiceException {
+            mUsername = username != null ? username : LC.zimbra_ldap_user.value();
+            mPassword = password != null ? password : LC.zimbra_ldap_password.value();
             mAuth = null;
             mRunningInServer = false;
             
