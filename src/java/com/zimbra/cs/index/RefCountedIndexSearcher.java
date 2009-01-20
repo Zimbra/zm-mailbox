@@ -16,29 +16,43 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.IOException;
+
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.TopDocs;
 
 /**
- * Ref Counting Wrapper around Lucene IndexSearcher
+ * Primary Search Interface
  */
-public class RefCountedIndexSearcher {
+class RefCountedIndexSearcher {
     private Searcher mSearcher;
     private RefCountedIndexReader mReader;
     private int mCount = 1;
+    private Sort mSort = null;
     
     RefCountedIndexSearcher(RefCountedIndexReader reader) {
         mReader= reader;
         mSearcher = new IndexSearcher(mReader.getReader());
     }
-    public synchronized Searcher getSearcher() { return mSearcher; }
-    public synchronized IndexReader getReader() { return mReader.getReader(); }
-    public synchronized void forceClose() {
+    synchronized void setSort(Sort sort) {
+        mSort = sort;
+    }
+    synchronized Sort getSort() {
+        return mSort;
+    }
+    synchronized Searcher getSearcher() { return mSearcher; }
+    synchronized IndexReader getReader() { return mReader.getReader(); }
+    synchronized void forceClose() {
         mReader.forceClose();
         mReader = null;
     }
-    public synchronized void release() {
+    synchronized void release() {
+        mSort = null;
         mCount--;
         assert(mCount >= 0);
         if (0 == mCount) {
@@ -46,9 +60,17 @@ public class RefCountedIndexSearcher {
             mReader= null;
         }
     }
-    public synchronized RefCountedIndexSearcher addRef() {
+    synchronized RefCountedIndexSearcher addRef() {
         assert(mCount > 0);
         mCount++;
         return this;
+    }
+    
+    synchronized TopDocs search(Query query, Filter filter, int num) throws IOException {
+        if (mSort == null) {
+            return getSearcher().search(query, null, num);            
+        } else {
+            return getSearcher().search(query, null, num, mSort);
+        }
     }
 }

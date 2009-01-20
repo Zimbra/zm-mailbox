@@ -21,10 +21,11 @@ import com.zimbra.common.service.ServiceException;
 /**
  * 
  */
-public interface ILuceneFactory {
-    ILuceneIndex create(MailboxIndex idx, String idxParentDir, int mailboxId) throws ServiceException;
-     
-    void startup();
-    void shutdown();
-    void flushAllWriters();
+public interface IIndexFactory {
+    public ITextIndex create(MailboxIndex idx, String idxParentDir,
+                               int mailboxId) throws ServiceException;
+    public void flushAllWriters();
+    public void shutdown();
+    public void startup();
+    public TextQueryOperation createTextQueryOperation();
 }

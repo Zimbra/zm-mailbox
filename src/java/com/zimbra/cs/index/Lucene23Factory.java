@@ -18,7 +18,7 @@ package com.zimbra.cs.index;
 
 import com.zimbra.common.service.ServiceException;
 
-public class Lucene23Factory implements ILuceneFactory {
+public class Lucene23Factory implements IIndexFactory {
     
     public ILuceneIndex create(MailboxIndex idx, String idxParentDir, int mailboxId) throws ServiceException {
         return new Lucene23Index(idx, idxParentDir, mailboxId);
@@ -34,5 +34,9 @@ public class Lucene23Factory implements ILuceneFactory {
 
     public void startup() {
         Lucene23Index.startup();
+    }
+    
+    public TextQueryOperation createTextQueryOperation() {
+        return LuceneQueryOperation.doCreate();
     }
 }

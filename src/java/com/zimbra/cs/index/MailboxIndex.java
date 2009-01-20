@@ -174,11 +174,17 @@ public final class MailboxIndex
     }
     
     public long getBytesWritten() {
-        return mLucene.getBytesWritten();
+        if (mLucene != null)
+            return mLucene.getBytesWritten();
+        else
+            return 0;
     }
 
     public long getBytesRead() {
-        return mLucene.getBytesRead();
+        if (mLucene != null)
+            return mLucene.getBytesRead();
+        else
+            return 0;
     }
     
     public int getBatchedIndexingCount() {
@@ -289,8 +295,9 @@ public final class MailboxIndex
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
 
-        mLucene = sLuceneFactory.create(this, idxParentDir, mMailboxId);
-        mTextIndex = mLucene;
+        mTextIndex = sIndexFactory.create(this, idxParentDir, mMailboxId);
+        if (mTextIndex instanceof ILuceneIndex) 
+            mLucene = (ILuceneIndex)mTextIndex;
 
         String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
 
@@ -303,27 +310,41 @@ public final class MailboxIndex
     }
 
     TextQueryOperation createTextQueryOperation() {
-        return LuceneQueryOperation.doCreate();
+        return sIndexFactory.createTextQueryOperation();
+    }
+    
+    RefCountedIndexSearcher getCountedIndexSearcher() throws IOException {
+        return mLucene.getCountedIndexSearcher();
     }
 
+    RefCountedIndexSearcher getCountedIndexSearcher(SortBy sort) throws IOException {
+        RefCountedIndexSearcher toRet = mLucene.getCountedIndexSearcher();
+        toRet.setSort(mLucene.getSort(sort));
+        return toRet;
+    }
+    
     ILuceneIndex getLuceneIndex() {
         return mLucene;
     }
+    
+    ITextIndex getTextIndex() {
+        return mTextIndex;
+    }
 
-    private static ILuceneFactory sLuceneFactory = null;
+    private static IIndexFactory sIndexFactory = null;
 
     static {
         ZimbraLog.index.info("Using Lucene Jar version 2.3 or higher");
         String factClassname = LC.zimbra_index_factory_classname.value(); 
         if (factClassname != null && factClassname.length() > 0) {
             try {
-                sLuceneFactory = (ILuceneFactory)(Class.forName(factClassname).newInstance());
+                sIndexFactory = (IIndexFactory)(Class.forName(factClassname).newInstance());
             } catch (Exception e) {
                 ZimbraLog.index.fatal("Unable to instantiate Index Factory "+factClassname+" specified in LC.zimbra_index_factory_classname", e);
                 Zimbra.halt("Unable to instantiate Index Factory "+factClassname+" specified in LC.zimbra_index_factory_classname");
             }
         } else {
-            sLuceneFactory = new Lucene23Factory();
+            sIndexFactory = new Lucene23Factory();
         }
     }
 
@@ -338,21 +359,21 @@ public final class MailboxIndex
         if (DebugConfig.disableIndexing)
             return;
 
-        sLuceneFactory.startup();
+        sIndexFactory.startup();
     }
 
     public static void shutdown() {
         if (DebugConfig.disableIndexing)
             return;
 
-        sLuceneFactory.shutdown();
+        sIndexFactory.shutdown();
     }
 
     public static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
 
-        sLuceneFactory.flushAllWriters();
+        sIndexFactory.flushAllWriters();
     }
 
     private Analyzer mAnalyzer = null;

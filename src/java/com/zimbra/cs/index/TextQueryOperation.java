@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,8 +26,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -35,6 +40,52 @@ import com.zimbra.cs.mailbox.Mailbox;
  * 
  */
 abstract class TextQueryOperation extends QueryOperation {
+    protected int mCurHitNo = 0; // our offset into the hits
+    protected boolean mHaveRunSearch = false;
+    protected String mQueryString = "";
+    protected BooleanQuery mQuery;
+    
+    /**
+     * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
+     * in order to properly get our results.
+     */
+    protected DBQueryOperation mDBOp = null;
+    protected List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
+    private boolean mHasSpamTrashSetting = false;
+    
+    //////////////////////////////////////////////////////////////
+    //
+    // Called while running the search
+    //
+    /**
+     * @return TRUE if we think this query is best evaluated DB-FIRST
+     */
+    abstract protected boolean shouldExecuteDbFirst();
+    
+    /**
+     * Fetch the next chunk of results from the Text Index
+     * 
+     * @param maxChunkSize
+     * @return
+     * @throws ServiceException
+     */
+    abstract protected TextResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException;
+
+    /**
+     * Must be called AFTER the first results chunk is fetched
+     *  
+     * @return number of hits in this search
+     */
+    abstract protected int countHits();
+
+    
+    /**
+     * Reset our hit iterator back to the beginning of the result set.  
+     */
+    protected void resetDocNum() {
+        mCurHitNo = 0;
+    }
+    
     
     //////////////////////////////////////////////////////////////
     //
@@ -48,7 +99,39 @@ abstract class TextQueryOperation extends QueryOperation {
      *   @param Query - Lucene Query term
      *   @param truth - allows for negated query terms 
      */
-    abstract void addClause(String queryStr, Query q, boolean truth);
+    void addClause(String queryStr, Query q, boolean truth) {
+        mQueryString = mQueryString+" "+ (truth ? "" : "-") + queryStr;
+        assert(!mHaveRunSearch);
+
+        if (truth) {
+            mQuery.add(new BooleanClause(q, Occur.MUST));
+        } else {
+            // Why do we add this here?  Because lucene won't allow naked "NOT" queries.
+            // Why do we check against Partname=TOP instead of against "All"?  Well, it is a simple case
+            // of "do mostly what the user wants" --->
+            //
+            // Imagine a message with two parts.  The message is from "Ross" and the toplevel part contains 
+            // the word "roland" and the attachment doesn't.  
+            //           Now a query "from:ross and not roland" WOULD match this message: since the second part
+            //           of the message does indeed match these criteria!
+            //
+            // Basically the problem stems because we play games: sometimes treating the message like multiple
+            // separate parts, but also sometimes treating it like a single part.  
+            //
+            // Anyway....that's the problem, and for right now we just fix it by constraining the NOT to the 
+            // TOPLEVEL of the message....98% of the time that's going to be good enough.
+            //
+            
+            // Parname:TOP now expanded to be (TOP or CONTACT or NOTE) to deal with extended partname assignemtns during indexing
+            BooleanQuery top = new BooleanQuery();
+            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),Occur.SHOULD));
+            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),Occur.SHOULD));
+            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),Occur.SHOULD));
+            mQuery.add(new BooleanClause(top, Occur.MUST));
+            
+            mQuery.add(new BooleanClause(q, Occur.MUST_NOT));
+        }
+    }        
     
     /**
      * Add the specified text clause ANDED with the existing query
@@ -66,20 +149,38 @@ abstract class TextQueryOperation extends QueryOperation {
      * @param q
      * @param truth
      */
-    abstract void addAndedClause(Query q, boolean truth);
+    void addAndedClause(Query q, boolean truth) {
+        mHaveRunSearch = false; // will need to re-run the search with this new clause
+        mCurHitNo = 0;
+
+        BooleanQuery top = new BooleanQuery();
+        BooleanClause lhs = new BooleanClause(mQuery, Occur.MUST);
+        BooleanClause rhs = new BooleanClause(q, truth ? Occur.MUST : Occur.MUST_NOT);
+        top.add(lhs);
+        top.add(rhs);
+        mQuery = top;
+    }        
     
     /**
      * Set the text query *representation* manually -- the thing that is output if we have
      * to proxy this search somewhere else -- used when dealing with wildcard searches.  
      * @param queryStr
      */
-    abstract void setQueryString(String queryStr);
+    void setQueryString(String queryStr) {
+        assert(mQueryString.length() == 0);
+        mQueryString = queryStr;
+    }
+        
     
     /**
      * Used by a wrapping DBQueryOperation, when it is running a DB-First plan
      * @return The current query
      */
-    abstract protected BooleanQuery getCurrentQuery();
+    protected BooleanQuery getCurrentQuery() {
+        assert(!mHaveRunSearch);
+        return mQuery; 
+    }
+        
     
     /**
      * Re-set our query back to a previous state.  This may only be called AFTER query optimization
@@ -89,56 +190,23 @@ abstract class TextQueryOperation extends QueryOperation {
      * 
      * @param q
      */
-    abstract protected void resetQuery(BooleanQuery q);
+    protected void resetQuery(BooleanQuery q) {
+        mHaveRunSearch = false;
+        mQuery = q; 
+        mCurHitNo = 0;
+    }
 
-
-    
-    //////////////////////////////////////////////////////////////
-    //
-    //
-    //
-    /**
-     * @return TRUE if we think this query is best evaluated DB-FIRST
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#toQueryString()
      */
-    abstract protected boolean shouldExecuteDbFirst();
+    String toQueryString() {
+        StringBuilder ret = new StringBuilder("(");
 
-    
+        ret.append(this.mQueryString);
 
-    //////////////////////////////////////////////////////////////
-    //
-    // Hits fetching/counting
-    //
-    /**
-     * Reset our hit iterator back to the beginning of the result set.  
-     */
-    abstract protected void resetDocNum();
-    
-    /**
-     * Fetch the next chunk of results from the Text Index
-     * 
-     * @param maxChunkSize
-     * @return
-     * @throws ServiceException
-     */
-    abstract protected TextResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException;
+        return ret.append(")").toString();
+    }
 
-    /**
-     * @return number of hits in this search
-     */
-    abstract int countHits();
-
-
-    
-    //////////////////////////////////////////////////////////////
-    //
-    // Cloning
-    //
-    /**
-     * Just clone *this* object, don't clone the embedded DBOp
-     * @return
-     * @throws CloneNotSupportedException
-     */
-    abstract protected LuceneQueryOperation cloneInternal() throws CloneNotSupportedException;
     
     /**
      * Called from DBQueryOperation.clone()
@@ -149,17 +217,6 @@ abstract class TextQueryOperation extends QueryOperation {
      */
     abstract protected Object clone(DBQueryOperation caller) throws CloneNotSupportedException;
     
-    
-
-    /**
-     * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
-     * in order to properly get our results.
-     */
-    protected DBQueryOperation mDBOp = null;
-    
-    protected List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
-    
-    private boolean mHasSpamTrashSetting = false;
     
     void forceHasSpamTrashSetting() { mHasSpamTrashSetting = true; }
     
@@ -177,6 +234,81 @@ abstract class TextQueryOperation extends QueryOperation {
     void addQueryInfo(QueryInfo inf) {
         mQueryInfo.add(inf);
     }
+    
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)
+     */
+    protected QueryOperation combineOps(QueryOperation other, boolean union) {
+        assert(!mHaveRunSearch);
+
+        if (union) {
+            if (other.hasNoResults()) {
+                mQueryInfo.addAll(other.getResultInfo());
+                // a query for (other OR nothing) == other
+                return this;
+            }
+        } else {
+            if (other.hasAllResults()) {
+                if (other.hasSpamTrashSetting()) {
+                    forceHasSpamTrashSetting();
+                }
+                mQueryInfo.addAll(other.getResultInfo());
+                // we match all results.  (other AND anything) == other
+                return this;
+            }
+        }
+
+        if (other instanceof LuceneQueryOperation) {
+            LuceneQueryOperation otherLuc = (LuceneQueryOperation)other;
+            if (union) {
+                mQueryString = '('+mQueryString+") OR ("+otherLuc.mQueryString+')';
+            } else {
+                mQueryString = '('+mQueryString+") AND ("+otherLuc.mQueryString+')';
+            }
+
+            BooleanQuery top = new BooleanQuery();
+            BooleanClause lhs = new BooleanClause(mQuery, union ? Occur.SHOULD : Occur.MUST);
+            BooleanClause rhs = new BooleanClause(otherLuc.mQuery, union ? Occur.SHOULD : Occur.MUST);
+            top.add(lhs);
+            top.add(rhs);
+            mQuery = top;
+            mQueryInfo.addAll(other.getResultInfo());
+            return this;
+        }
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.ZimbraQueryResults#estimateResultSize()
+     */
+    public int estimateResultSize() throws ServiceException {
+        if (mDBOp == null)
+            return 0; // you need to run the query before this number is known
+        else
+            return mDBOp.estimateResultSize();
+    }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.ZimbraQueryResultsImpl, com.zimbra.cs.index.MailboxIndex, com.zimbra.cs.index.SearchParams, int)
+     */
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) throws ServiceException, IOException
+    {
+        mParams = params;
+        assert(!mHaveRunSearch);
+        if (mDBOp == null) {
+            // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
+            mDBOp = DBQueryOperation.Create();
+            mDBOp.addTextOp(this);
+            mDBOp.prepare(mbx, res, mbidx, params, chunkSize); // will call back into this function again!
+        } else {
+            this.setupResults(mbx, res);
+            
+            prepareThisOperation(res, mbidx);
+        }
+    }
+    
+    abstract protected void prepareThisOperation(ZimbraQueryResultsImpl res, MailboxIndex mbidx);
     
     boolean hasSpamTrashSetting() { return mHasSpamTrashSetting; }
     boolean hasNoResults() { return false; }

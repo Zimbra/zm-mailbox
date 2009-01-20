@@ -21,7 +21,7 @@ import com.zimbra.common.service.ServiceException;
 /**
  * 
  */
-public class LuceneFactory implements ILuceneFactory {
+public class LuceneFactory implements IIndexFactory {
 
     public ILuceneIndex create(MailboxIndex idx, String idxParentDir,
                                int mailboxId) throws ServiceException {
@@ -39,4 +39,9 @@ public class LuceneFactory implements ILuceneFactory {
     public void startup() {
         LuceneIndex.startup();
     }
+    
+    public TextQueryOperation createTextQueryOperation() {
+        return LuceneQueryOperation.doCreate();
+    }
+    
 }
