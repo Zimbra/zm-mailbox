@@ -1265,7 +1265,7 @@ public class ZMailbox implements ToZJSONObject {
         if (tags != null)
             cn.addAttribute(MailConstants.A_TAGS, tags);
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
+            cn.addKeyValuePair(entry.getKey(), entry.getValue().trim(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
         return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
@@ -1298,7 +1298,7 @@ public class ZMailbox implements ToZJSONObject {
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, id);
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
+            cn.addKeyValuePair(entry.getKey(), entry.getValue().trim(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
         return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
