@@ -298,9 +298,10 @@ public class FileUploadServlet extends ZimbraServlet {
     @Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
+        addRemoteIpToLoggingContext(req);
         
 	    String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
-	    addRemoteIpToLoggingContext(req);
+	    
 	    ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
 
         // file upload requires authentication

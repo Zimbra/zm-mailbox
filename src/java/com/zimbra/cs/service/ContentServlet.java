@@ -120,7 +120,6 @@ public class ContentServlet extends ZimbraServlet {
             AccountUtil.addAccountToLogContext(Provisioning.getInstance(), accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID, token);
             if (!accountId.equalsIgnoreCase(authId))
                 ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
-            addRemoteIpToLoggingContext(req);
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
             if (mbox == null) {
@@ -349,6 +348,8 @@ public class ContentServlet extends ZimbraServlet {
     
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
+        addRemoteIpToLoggingContext(req);
+
         mLog.debug("request url: %s, path info: ", req.getRequestURL(), req.getPathInfo());
         
         AuthToken authToken = getAuthTokenFromCookie(req, resp);
