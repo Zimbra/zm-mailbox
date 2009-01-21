@@ -133,7 +133,7 @@ public class MimeHeader {
             try {
                 if (charset != null && !charset.trim().equals(""))
                     return new String(content, start, length, charset);
-            } catch (Throwable t) {
+            } catch (Exception e) {
                 return new String(content, start, length);
             }
         }

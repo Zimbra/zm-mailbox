@@ -90,7 +90,7 @@ public class HeaderUtils {
             try {
                 if (mCharset != null && !mCharset.trim().equals(""))
                     return super.toString(mCharset);
-            } catch (Throwable t) { }
+            } catch (Exception e) { }
             return super.toString();
         }
     }
