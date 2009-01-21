@@ -1132,8 +1132,10 @@ public class SoapSession extends Session {
         if (ctxt == null || mbox == null)
             return null;
 
-        // if there are remote sessions that haven't been accessed in a while, ping them
-        pingRemoteSessions(zsc);
+        if (Provisioning.getInstance().allowsPingRemote()) {
+            // if there are remote sessions that haven't been accessed in a while, ping them
+            pingRemoteSessions(zsc);
+        }
 
         // because ToXML functions can now call back into the Mailbox, don't hold any locks when calling putQueuedNotifications
         LinkedList<QueuedNotifications> notifications;
