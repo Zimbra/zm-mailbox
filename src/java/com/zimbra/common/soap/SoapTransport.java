@@ -52,6 +52,9 @@ public abstract class SoapTransport {
     private String mUserAgentVersion;
     private DebugListener mDebugListener;
     
+    private static String sDefaultUserAgentName = "ZCS";
+    private static String sDefaultUserAgentVersion;
+    
     public interface DebugListener {
         public void sendSoapMessage(Element envelope);
         public void receiveSoapMessage(Element envelope);
@@ -145,7 +148,36 @@ public abstract class SoapTransport {
         mUserAgentName = name;
         mUserAgentVersion = version;
     }
-
+    
+    /**
+     * Sets the default SOAP client name and version.  These global value are
+     * used when the instance-level values are not specified.
+     */
+    public static void setDefaultUserAgent(String defaultName, String defaultVersion) {
+        sDefaultUserAgentName = defaultName;
+        if ("unknown".equals(defaultVersion)) {
+            sDefaultUserAgentVersion = null;
+        } else {
+            sDefaultUserAgentVersion = defaultVersion;
+        }
+    }
+    
+    public String getUserAgentName() {
+        if (mUserAgentName != null) {
+            return mUserAgentName;
+        } else {
+            return sDefaultUserAgentName;
+        }
+    }
+    
+    public String getUserAgentVersion() {
+        if (mUserAgentVersion != null) {
+            return mUserAgentVersion;
+        } else {
+            return sDefaultUserAgentVersion;
+        }
+    }
+    
     /** Sets the version of SOAP to use when generating requests. */
     public void setRequestProtocol(SoapProtocol proto) {
         if (proto != null)

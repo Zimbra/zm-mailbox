@@ -197,6 +197,7 @@ public class SoapTestHarness {
 	throws HarnessException, SoapFaultException, IOException, DocumentException {
 
         CliUtil.toolSetup();
+        SoapTransport.setDefaultUserAgent("SoapTestHarness", null);
 		
         CommandLineParser parser = new GnuParser();
         Options options = new Options();

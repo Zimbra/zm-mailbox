@@ -464,6 +464,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     
     public static void main(String[] args) {
         CliUtil.toolSetup();
+        SoapTransport.setDefaultUserAgent("zmsoap", null);
         SoapCommandUtil app = new SoapCommandUtil();
         app.parseCommandLine(args);
         
