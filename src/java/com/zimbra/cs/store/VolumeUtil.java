@@ -32,7 +32,9 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.common.soap.SoapFaultException;
 
@@ -66,6 +68,7 @@ public class VolumeUtil extends SoapCLI {
      */
     public static void main(String[] args) {
         CliUtil.toolSetup();
+        SoapTransport.setDefaultUserAgent("zmvolume", BuildInfo.VERSION);
         VolumeUtil util = null;
         try {
 	        util = new VolumeUtil();

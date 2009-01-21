@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.Versions;
 

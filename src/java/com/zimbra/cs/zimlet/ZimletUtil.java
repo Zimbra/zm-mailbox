@@ -59,6 +59,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
 import com.zimbra.common.soap.*;
@@ -1565,6 +1566,7 @@ public class ZimletUtil {
     	} else {
     		CliUtil.toolSetup();
     	}
+    	SoapTransport.setDefaultUserAgent("zmzimletctl", BuildInfo.VERSION);
         setup();
         dispatch(args);
     }

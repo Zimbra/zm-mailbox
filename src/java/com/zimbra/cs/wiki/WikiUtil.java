@@ -54,7 +54,9 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -515,6 +517,7 @@ public abstract class WikiUtil {
         String defaultUsername = "user1";
 
         CliUtil.toolSetup();
+        SoapTransport.setDefaultUserAgent("WikiUtil", BuildInfo.VERSION);
 
         CommandLineParser parser = new GnuParser();
         Options options = new Options();

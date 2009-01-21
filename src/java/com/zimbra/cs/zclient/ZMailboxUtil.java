@@ -80,6 +80,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
@@ -2473,6 +2474,7 @@ public class ZMailboxUtil implements DebugListener {
 
     public static void main(String args[]) throws IOException, ServiceException {
         CliUtil.toolSetup();
+        SoapTransport.setDefaultUserAgent("zmmailbox", BuildInfo.VERSION);
 
         ZMailboxUtil pu = new ZMailboxUtil();
         CommandLineParser parser = new GnuParser();

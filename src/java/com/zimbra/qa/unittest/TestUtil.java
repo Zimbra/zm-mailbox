@@ -77,6 +77,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZDataSource;
@@ -486,6 +487,7 @@ extends Assert {
             sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
             sp.soapZimbraAdminAuthenticate();
             Provisioning.setInstance(sp);
+            SoapTransport.setDefaultUserAgent("Zimbra Unit Tests", BuildInfo.VERSION);
             sIsCliInitialized = true;
         }
     }

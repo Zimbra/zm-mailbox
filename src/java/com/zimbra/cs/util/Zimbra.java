@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.pop3.Pop3Server;
@@ -158,6 +159,8 @@ public class Zimbra {
         setSystemProperties();
 
         logVersionAndSysInfo();
+        
+        SoapTransport.setDefaultUserAgent("ZCS", BuildInfo.VERSION);
 
         checkForClasses();
 

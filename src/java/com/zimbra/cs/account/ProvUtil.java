@@ -46,6 +46,7 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
@@ -87,6 +88,7 @@ import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZClientException;
@@ -2305,6 +2307,7 @@ public class ProvUtil implements DebugListener {
     
     public static void main(String args[]) throws IOException, ParseException, ServiceException {
         CliUtil.toolSetup();
+        SoapTransport.setDefaultUserAgent("zmprov", BuildInfo.VERSION);
         
         ProvUtil pu = new ProvUtil();
         CommandLineParser parser = new PosixParser();
