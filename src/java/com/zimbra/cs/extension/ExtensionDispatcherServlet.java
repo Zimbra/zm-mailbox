@@ -119,8 +119,8 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
                     ExtensionHttpHandler handler = (ExtensionHttpHandler) sHandlers.get(path);
                     try {
                         handler.destroy();
-                    } catch (Throwable t) {
-                        ZimbraLog.extensions.warn("Error in destroy for handler " + handler.getClass(), t);
+                    } catch (Exception e) {
+                        ZimbraLog.extensions.warn("Error in destroy for handler " + handler.getClass(), e);
                     } finally {
                         it.remove();
                     }

@@ -156,8 +156,8 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 mbox.recordImapSession(mFolderId);
         } catch (MailServiceException.NoSuchItemException nsie) {
             // don't log if the session expires because the folder was deleted out from under it
-        } catch (Throwable t) {
-            ZimbraLog.session.warn("exception recording unloaded session's RECENT limit", t);
+        } catch (Exception e) {
+            ZimbraLog.session.warn("exception recording unloaded session's RECENT limit", e);
         }
     }
 

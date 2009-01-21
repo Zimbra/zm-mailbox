@@ -3756,8 +3756,8 @@ public class Mailbox {
                 getMailboxIndex().indexMailItem(this, redo, deleteFirst, docList, item);
             }
             success = true;
-        } catch (Throwable t) {
-            ZimbraLog.index.info("Skipping indexing; Unable to parse message " + itemId + ": " + t.toString(), t);
+        } catch (Exception e) {
+            ZimbraLog.index.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
         } finally {
             if (!success)
                 redo.abort();
@@ -5328,8 +5328,8 @@ public class Mailbox {
                 try {
                     SpamHandler.getInstance().handle(this, candidate.getId(), candidate.getType(), toSpam);
                     ZimbraLog.mailop.info(MailItem.getMailopContext(candidate) + " sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam)");
-                } catch (Throwable t) {
-                    ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(candidate), t);
+                } catch (Exception e) {
+                    ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(candidate), e);
                 }
             }
         } catch (ServiceException e) {

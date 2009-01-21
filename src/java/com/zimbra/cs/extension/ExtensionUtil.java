@@ -114,8 +114,8 @@ public class ExtensionUtil {
                         String extName = ext.getName();
                         ZimbraLog.extensions.info("Initialized extension " + extName + ": " + name + "@" + zcl);
                         sInitializedExtensions.put(extName, ext);
-                    } catch (Throwable t) { 
-                        ZimbraLog.extensions.warn("exception in " + name + ".init()", t);
+                    } catch (Exception e) { 
+                        ZimbraLog.extensions.warn("exception in " + name + ".init()", e);
                     }
                 } catch (InstantiationException e) {
                     ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
@@ -155,8 +155,8 @@ public class ExtensionUtil {
                 RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
                 ext.destroy();
                 ZimbraLog.extensions.info("Destroyed extension " + extName + ": " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
-            } catch (Throwable t) {
-                ZimbraLog.extensions.warn("exception in " + ext.getClass().getName() + ".destroy()", t);
+            } catch (Exception e) {
+                ZimbraLog.extensions.warn("exception in " + ext.getClass().getName() + ".destroy()", e);
             }
         }
         sInitializedExtensions.clear();

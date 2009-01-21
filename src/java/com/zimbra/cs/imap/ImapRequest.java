@@ -412,8 +412,8 @@ abstract class ImapRequest {
             return raw;
         try {
             return ImapPath.FOLDER_ENCODING_CHARSET.decode(ByteBuffer.wrap(raw.getBytes("US-ASCII"))).toString();
-        } catch (Throwable t) {
-            ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, t);
+        } catch (Exception e) {
+            ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, e);
             return raw;
         }
     }
