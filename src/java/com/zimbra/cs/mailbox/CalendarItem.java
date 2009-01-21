@@ -2454,6 +2454,7 @@ public abstract class CalendarItem extends MailItem {
     void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String cutypeStr, String roleStr,
             String partStatStr, Boolean needsReply, int seqNo, long dtStamp) throws ServiceException {
         mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+        saveMetadata();
     }
     
     public boolean processNewInviteReply(Invite reply)
