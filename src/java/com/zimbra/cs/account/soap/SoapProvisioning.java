@@ -811,16 +811,16 @@ public class SoapProvisioning extends Provisioning {
         Map<String, List<AccountLogger>> result = new HashMap<String, List<AccountLogger>>();
         
         for (Element eAccountLogger : resp.listElements(AdminConstants.E_ACCOUNT_LOGGER)) {
-            Element eLogger = eAccountLogger.getElement(AdminConstants.E_LOGGER);
-            
-            String accountName = eAccountLogger.getAttribute(AdminConstants.A_NAME);
-            String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
-            Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
-            
-            if (!result.containsKey(accountName)) {
-                result.put(accountName, new ArrayList<AccountLogger>());
+            for (Element eLogger : eAccountLogger.listElements(AdminConstants.E_LOGGER)) {
+                String accountName = eAccountLogger.getAttribute(AdminConstants.A_NAME);
+                String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
+                Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
+
+                if (!result.containsKey(accountName)) {
+                    result.put(accountName, new ArrayList<AccountLogger>());
+                }
+                result.get(accountName).add(new AccountLogger(category, accountName, level));
             }
-            result.get(accountName).add(new AccountLogger(category, accountName, level));
         }
         return result;
     }

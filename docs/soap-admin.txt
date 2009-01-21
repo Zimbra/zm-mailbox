@@ -1977,7 +1977,7 @@ in soap-waitset.txt
 
 <GetAllAccountLoggersResponse>
   <accountLogger id="{account-id}" name="{account-name}">
-    <logger category="{category-name} level="debug|info|warn|error"/>
+    <logger category="{category-name} level="debug|info|warn|error"/>+
   </accountLogger>*
 </GetAllAccountLoggersResponse>
 
