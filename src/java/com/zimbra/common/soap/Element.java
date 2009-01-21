@@ -185,7 +185,7 @@ public abstract class Element implements Cloneable {
 
     /** Returns all an <tt>Element</tt>'s attributes. */
     public abstract Set<Attribute> listAttributes();
-    /** Returns all an <tt>Element</tt>'s sub-elements. */
+    /** Returns all an <tt>Element</tt>'s sub-elements, or an empty <tt>List</tt>. */
     public List<Element> listElements()  { return listElements(null); }
     /** Returns all the sub-elements with the given name.  If <tt>name></tt>
      *  is <tt>null</tt>, returns <u>all</u> sub-elements.  If no elements
