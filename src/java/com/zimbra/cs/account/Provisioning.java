@@ -2893,4 +2893,8 @@ public abstract class Provisioning {
     public boolean isOfflineProxyServer(Server server) {
         return false; 
     }
+    
+    public boolean allowsPingRemote() {
+        return true;
+    }
 }
