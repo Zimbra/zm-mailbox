@@ -6140,7 +6140,12 @@ public class Mailbox {
         }
 
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
-        OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
+        OperationContext octxtNoConflicts = null;
+        if (octxt != null) {
+            octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
+        } else {
+            octxtNoConflicts = new OperationContext(getAccountId()).unsetChangeConstraint();
+        }
 
         // add the newly-fetched items to the folder
         Set<String> calUidsSeen = new HashSet<String>();
