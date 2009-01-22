@@ -40,10 +40,11 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.dom4j.ElementHandler;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 
+import org.dom4j.ElementHandler;
 /**
  */
 
@@ -294,6 +295,10 @@ public class SoapHttpTransport extends SoapTransport {
             // Release the connection.
             if (method != null)
                 method.releaseConnection();        
+            
+            long idleTimeout = LC.httpclient_idle_connection_timeout.longValue();
+            if (idleTimeout != -1)
+                mClient.getHttpConnectionManager().closeIdleConnections(idleTimeout);
         }
     }
     

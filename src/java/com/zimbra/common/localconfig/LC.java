@@ -416,6 +416,8 @@ public class LC {
     public static final KnownKey httpclient_connmgr_idle_reaper_sleep_interval;
     public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
     
+    public static final KnownKey httpclient_idle_connection_timeout;
+    
     public static final KnownKey xmpp_server_tls_enabled;
     public static final KnownKey xmpp_server_dialback_enabled;
     public static final KnownKey xmpp_server_session_allowmultiple;
@@ -1293,6 +1295,14 @@ public class LC {
                 Long.toString(5 * Constants.MILLIS_PER_MINUTE),
                 "httpclient connection manager idle reaper: " +
                 "the timeout value to use when testing for idle connections.");
+        
+        httpclient_idle_connection_timeout = new KnownKey(
+                "httpclient_idle_connection_timeout", 
+                "0",
+                "the minimum idle time, in milliseconds, for the connection used by a SoapHttpTransport to be closed. " +
+                "if set to 0, the connection is always closed after each http method invocation, " + 
+                "if set to -1, the connection will not be explicit closed, it could be closed by finalizer, which should not be relied on.");
+        
         
         xmpp_server_tls_enabled = new KnownKey("xmpp_server_tls_enabled","true", "Allow TLS for S2S connections"); 
         xmpp_server_dialback_enabled = new KnownKey("xmpp_server_dialback_enabled", "true", "Allow S2S Server Dialback Protocol");
