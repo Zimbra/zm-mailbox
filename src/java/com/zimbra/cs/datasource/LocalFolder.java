@@ -5,7 +5,10 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
@@ -57,8 +60,31 @@ final class LocalFolder {
         folder = mbox.createFolder(null, path, (byte) 0, MailItem.TYPE_MESSAGE);
     }
 
-    public void alterTag(int flagId) throws ServiceException {
-        mbox.alterTag(null, getFolder().getId(), MailItem.TYPE_FOLDER, flagId, true);
+    public void checkFlags(ListData ld) throws ServiceException {
+        Folder folder = getFolder();
+        if (folder.getId() < 256) return; // Ignore system folder
+        // debug("Updating flags (remote = %s)", ld.getMailbox());
+        Flags flags = ld.getFlags();
+        boolean noinferiors = flags.isNoinferiors() || ld.getDelimiter() == 0;
+        int bits = folder.getFlagBitmask();
+        if (((bits & Flag.BITMASK_NO_INFERIORS) != 0) != noinferiors) {
+            debug("Setting NO_INFERIORS flag to " + noinferiors);
+            alterTag(Flag.ID_FLAG_NO_INFERIORS, noinferiors);
+        }
+        boolean sync = !flags.isNoselect();
+        if (((bits & Flag.BITMASK_SYNCFOLDER) != 0) != sync) {
+            debug("Setting sync flag to " + sync);
+            alterTag(Flag.ID_FLAG_SYNCFOLDER, sync);
+            alterTag(Flag.ID_FLAG_SYNC, sync);
+        }
+        if (folder.getDefaultView() != MailItem.TYPE_MESSAGE) {
+            debug("Setting default view to TYPE_MESSAGE");
+            mbox.setFolderDefaultView(null, folder.getId(), MailItem.TYPE_MESSAGE);
+        }
+    }
+
+    public void alterTag(int flagId, boolean value) throws ServiceException {
+        mbox.alterTag(null, getFolder().getId(), MailItem.TYPE_FOLDER, flagId, value);
     }
 
     public void setMessageFlags(int id, int flagMask) throws ServiceException {
