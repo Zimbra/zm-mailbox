@@ -707,14 +707,22 @@ public abstract class CalendarItem extends MailItem {
         if (mRecurrence != null) {
             long startTime = System.currentTimeMillis();
             instances = Recurrence.expandInstances(mRecurrence, this, start, endAdjusted);
-            long elapsed = System.currentTimeMillis() - startTime;
-            ZimbraLog.calendar.debug(
-                    "RECURRENCE EXPANSION for appt/task " + getId() +
-                    ": start=" + start + ", end=" + end +
-                    "; took " + elapsed + "ms");
+            if (ZimbraLog.calendar.isDebugEnabled()) {
+	            long elapsed = System.currentTimeMillis() - startTime;
+	            ZimbraLog.calendar.debug(
+	                    "RECURRENCE EXPANSION for appt/task " + getId() +
+	                    ": start=" + start + ", end=" + end +
+	                    "; took " + elapsed + "ms");
+            }
         } else {
+        	// Calendar item has no recurrence.  The basic case is a simple, non-recurring appointment
+        	// which has only one invite.  If there are multiple invites, it could be an attendee who
+        	// was invited to a few instances but not the series of a recurring appointment by the
+        	// organizer.
             if (mInvites != null) {
                 for (Invite inv : mInvites) {
+                	if (inv.isCancel())  // Skip canceled instances.
+                		continue;
                     ParsedDateTime dtStart = inv.getStartTime();
                     long invStart = dtStart != null ? dtStart.getUtcTime() : 0;
                     ParsedDateTime dtEnd = inv.getEffectiveEndTime();
