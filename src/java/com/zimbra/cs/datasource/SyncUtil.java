@@ -107,7 +107,6 @@ final class SyncUtil {
 
     public static void setSyncEnabled(Mailbox mbox, int folderId, boolean enabled)
         throws ServiceException {
-        Folder folder = mbox.getFolderById(null, folderId);
         mbox.alterTag(new Mailbox.OperationContext(mbox), folderId,
                       MailItem.TYPE_FOLDER, Flag.ID_FLAG_SYNC, enabled);
     }

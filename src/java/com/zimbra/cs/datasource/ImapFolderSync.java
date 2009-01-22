@@ -125,6 +125,10 @@ class ImapFolderSync {
         } else {
             createLocalFolder(ld);
         }
+        if (tracker != null) {
+            // Check local folder flags for consistency with remote folder
+            localFolder.checkFlags(ld);
+        }
         return tracker;
     }
 
@@ -487,12 +491,6 @@ class ImapFolderSync {
         localFolder = new LocalFolder(mailbox, localPath);
         if (!localFolder.exists()) {
             localFolder.create();
-        }
-        // Check if inferiors should be disabled for local folder
-        if (flags.isNoinferiors() || ld.getDelimiter() == 0) {
-            // Folder does not allow children
-            localFolder.debug("Setting NO_INFERIORS flag on local folder");
-            localFolder.alterTag(Flag.ID_FLAG_NO_INFERIORS);
         }
         // Handle possible case conversion of INBOX in path
         localPath = localFolder.getPath();
