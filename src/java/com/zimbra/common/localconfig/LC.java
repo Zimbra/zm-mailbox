@@ -380,6 +380,8 @@ public class LC {
     public static final KnownKey javamail_imap_enable_starttls;
     public static final KnownKey javamail_smtp_enable_starttls;
     
+    public static final KnownKey yauth_baseuri;
+    
     public static final KnownKey purge_initial_sleep_time;
     
     public static final KnownKey httpclient_idle_connection_timeout;
@@ -1150,6 +1152,10 @@ public class LC {
 
         javamail_smtp_enable_starttls = new KnownKey("javamail_smtp_enable_starttls");
         javamail_smtp_enable_starttls.setDefault("true");
+        
+	    yauth_baseuri = new KnownKey("yauth_baseuri");
+	    yauth_baseuri.setDefault("https://login.yahoo.com/WSLogin/V1");
+	    yauth_baseuri.setDoc("base uri for yauth");
         
         purge_initial_sleep_time = new KnownKey(
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
