@@ -29,6 +29,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
+import com.zimbra.common.localconfig.LC;
+
 /**
  * Implementation of Yahoo "Raw Auth" aka "Token Login v2"
  * See http://twiki.corp.yahoo.com/view/Membership/OpenTokenLogin
@@ -49,7 +51,6 @@ public class RawAuth implements Auth {
         }
     }
 
-    private static final String BASE_URI = "https://login.yahoo.com/WSLogin/V1";
     private static final String GET_AUTH_TOKEN = "get_auth_token";
     private static final String GET_AUTH = "get_auth";
 
@@ -131,7 +132,7 @@ public class RawAuth implements Auth {
 
     private static Response doGet(String action, NameValuePair... params)
         throws AuthenticationException, IOException {
-        String uri = BASE_URI + '/' + action;
+        String uri = LC.yauth_baseuri.value() + '/' + action;
         GetMethod method = new GetMethod(uri);
         method.setQueryString(params);
         int rc = new HttpClient().executeMethod(method);
