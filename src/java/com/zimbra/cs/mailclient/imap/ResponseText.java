@@ -77,6 +77,26 @@ public final class ResponseText {
             is.skipChar(' ');
             data = ImapCapabilities.read(is);
             break;
+        case APPENDUID:
+            // Supports UIDPLUS (RFC 2359):
+            // resp_code_apnd ::= "APPENDUID" SPACE nz_number SPACE uniqueid
+            AppendResult ares = new AppendResult();
+            is.skipChar(' ');
+            ares.uidValidity = is.readNZNumber();
+            is.skipChar(' ');
+            ares.uid = is.readNZNumber();
+            this.data = ares;
+            break;
+        case COPYUID:
+            CopyResult cres = new CopyResult();
+            is.skipChar(' ');
+            cres.uidValidity = is.readNZNumber();
+            is.skipChar(' ');
+            cres.msgIds = is.readText(' ');
+            is.skipChar(' ');
+            cres.uids = is.readText(']');
+            this.data = cres;
+            break;
         default:
             if (is.match(' ')) {
                 data = is.readText(']');

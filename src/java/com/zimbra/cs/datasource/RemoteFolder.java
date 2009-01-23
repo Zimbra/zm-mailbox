@@ -24,6 +24,7 @@ import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
+import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.common.util.Log;
@@ -89,7 +90,8 @@ public class RemoteFolder {
             os = new FileOutputStream(tmp);
             msg.writeTo(os);
             os.close();
-            return connection.append(path, flags, date, new Literal(tmp));
+            AppendResult res = connection.append(path, flags, date, new Literal(tmp));
+            return res != null ? res.getUid() : -1;
         } catch (MessagingException e) {
             throw new MailException("Error appending message", e);
         } finally {

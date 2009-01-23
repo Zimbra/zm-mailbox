@@ -30,6 +30,7 @@ import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -145,15 +146,15 @@ public class TestImapClient extends TestCase {
         long exists = mb.getExists();
         Date date = new Date((System.currentTimeMillis() / 1000) * 1000);
         Flags flags = Flags.fromSpec("fs");
-        long uid = connection.append("INBOX", Flags.fromSpec("fs"), date,
-                                     new Literal(Ascii.getBytes(MESSAGE)));
-        assertTrue(uid > 0);
+        AppendResult res = connection.append("INBOX", Flags.fromSpec("fs"), date,
+            new Literal(Ascii.getBytes(MESSAGE)));
+        assertNotNull(res);
         mb = connection.select("INBOX");
         assertEquals(1, mb.getExists() - exists);
-        MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[] INTERNALDATE)");
+        MessageData md = connection.uidFetch(res.getUid(), "(FLAGS BODY.PEEK[] INTERNALDATE)");
         assertNotNull(md);
         assertEquals(date, md.getInternalDate());
-        assertEquals(uid, md.getUid());
+        assertEquals(res.getUid(), md.getUid());
         assertEquals(flags, md.getFlags());
         Body[] parts = md.getBodySections();
         assertNotNull(parts);
@@ -164,12 +165,12 @@ public class TestImapClient extends TestCase {
         login();
         Mailbox mb = connection.select("INBOX");
         long exists = mb.getExists();
-        long uid = connection.append("INBOX", Flags.fromSpec("fs"),
+        AppendResult res = connection.append("INBOX", Flags.fromSpec("fs"),
             new Date(System.currentTimeMillis()), new Literal(Ascii.getBytes(MESSAGE)));
-        assertTrue(uid > 0);
+        assertNotNull(res);
         mb = connection.select("INBOX");
         assertEquals(exists, mb.getExists() - 1);
-        connection.uidStore(String.valueOf(uid), "+FLAGS.SILENT", Flags.fromSpec("d"));
+        connection.uidStore(String.valueOf(res.getUid()), "+FLAGS.SILENT", Flags.fromSpec("d"));
         mb = connection.select("INBOX");
         assertEquals(exists, mb.getExists() - 1);
         connection.expunge();
@@ -261,7 +262,8 @@ public class TestImapClient extends TestCase {
             os = new FileOutputStream(tmp);
             msg.writeTo(os);
             os.close();
-            return connection.append(name, flags, date, new Literal(tmp));
+            AppendResult res = connection.append(name, flags, date, new Literal(tmp));
+            return res != null ? res.getUid() : -1;
         } catch (MessagingException e) {
             throw new MailException("Error appending message", e);
         } finally {
