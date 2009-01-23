@@ -47,10 +47,9 @@ public class FullInstanceData extends InstanceData {
     private Integer mNumAttendees;
     private List<ZAttendee> mAttendees;
 
-    // summary/location/description
+    // summary/location/fragment
     private String mSummary;
     private String mLocation;
-    private String mDescription;
     private String mFragment;
 
     // time/recurrence
@@ -82,7 +81,6 @@ public class FullInstanceData extends InstanceData {
 
     public String getSummary()     { return mSummary; }
     public String getLocation()    { return mLocation; }
-    public String getDescription() { return mDescription; }
     public String getFragment()    { return mFragment; }
 
     public Boolean isAllDay() { return mIsAllDay; }
@@ -102,13 +100,13 @@ public class FullInstanceData extends InstanceData {
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
             ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
-            String summary, String location, String description, String fragment,
+            String summary, String location, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         super(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
         init(invId, compNum, recurrenceId, sequence, dtStamp,
-             organizer, isOrganizer, attendees, summary, location, description, fragment,
+             organizer, isOrganizer, attendees, summary, location, fragment,
              isAllDay, status, priority, classProp, freeBusyIntended, transparency, categories, geo);
     }
 
@@ -116,7 +114,7 @@ public class FullInstanceData extends InstanceData {
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
             ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
-            String summary, String location, String description, String fragment,
+            String summary, String location, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
@@ -126,7 +124,7 @@ public class FullInstanceData extends InstanceData {
         mOrganizer = organizer; mIsOrganizer = isOrganizer;
         mAttendees = attendees;
         mNumAttendees = attendees != null ? (Integer) attendees.size() : null;
-        mSummary = summary; mLocation = location; mDescription = description; mFragment = fragment;
+        mSummary = summary; mLocation = location; mFragment = fragment;
         mIsAllDay = isAllDay;
         mStatus = status; mPriority = priority; mClassProp = classProp;
         mFreeBusyIntended = freeBusyIntended; mTransparency = transparency;
@@ -160,7 +158,6 @@ public class FullInstanceData extends InstanceData {
         }
         mSummary = inv.getName();
         mLocation = inv.getLocation();
-        mDescription = inv.getDescription();
         mFragment = inv.getFragment();
         mIsAllDay = inv.isAllDayEvent();
         mStatus = inv.getStatus();
@@ -184,8 +181,6 @@ public class FullInstanceData extends InstanceData {
                  mSummary = null;
             if (Util.sameValues(mLocation, other.getLocation()))
                 mLocation = null;
-            if (Util.sameValues(mDescription, other.getDescription()))
-                mDescription = null;
             if (Util.sameValues(mFragment, other.getFragment()))
                 mFragment = null;
             if (Util.sameValues(mIsAllDay, other.isAllDay()))
@@ -219,7 +214,6 @@ public class FullInstanceData extends InstanceData {
     private static final String FN_ATTENDEE = "at";
     private static final String FN_SUMMARY = "summ";
     private static final String FN_LOCATION = "loc";
-    private static final String FN_DESCRIPTION = "desc";
     private static final String FN_FRAGMENT = "fr";
     private static final String FN_IS_ALLDAY = "allDay";
     private static final String FN_STATUS = "status";
@@ -262,7 +256,6 @@ public class FullInstanceData extends InstanceData {
 
         String summary = meta.get(FN_SUMMARY, null);
         String location = meta.get(FN_LOCATION, null);
-        String description = meta.get(FN_DESCRIPTION, null);
         String fragment = meta.get(FN_FRAGMENT, null);
 
         Boolean isAllDay = null;
@@ -291,7 +284,7 @@ public class FullInstanceData extends InstanceData {
             geo = Geo.decodeMetadata(metaGeo);
 
         init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees,
-             summary, location, description, fragment, isAllDay,
+             summary, location, fragment, isAllDay,
              status, priority, classProp, fb, transp, categories, geo);
     }
 
@@ -320,7 +313,6 @@ public class FullInstanceData extends InstanceData {
 
         meta.put(FN_SUMMARY, mSummary);
         meta.put(FN_LOCATION, mLocation);
-        meta.put(FN_DESCRIPTION, mDescription);
         meta.put(FN_FRAGMENT, mFragment);
 
         if (mIsAllDay != null)
