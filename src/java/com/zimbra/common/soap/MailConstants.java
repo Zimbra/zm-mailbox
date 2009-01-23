@@ -109,12 +109,20 @@ public class MailConstants {
     // sync for Outlook
     public static final QName SYNC_REQUEST = QName.get("SyncRequest", NAMESPACE);
     public static final QName SYNC_RESPONSE = QName.get("SyncResponse", NAMESPACE);
-    // filter rules
+    
+    // Filter rules - old format
     public static final QName GET_RULES_REQUEST = QName.get("GetRulesRequest", NAMESPACE);
     public static final QName GET_RULES_RESPONSE = QName.get("GetRulesResponse", NAMESPACE);
     public static final QName SAVE_RULES_REQUEST = QName.get("SaveRulesRequest", NAMESPACE);
     public static final QName SAVE_RULES_RESPONSE = QName.get("SaveRulesResponse", NAMESPACE);
-
+    
+    // Filter rules - new format
+    public static final QName GET_FILTER_RULES_REQUEST = QName.get("GetFilterRulesRequest", NAMESPACE);
+    public static final QName GET_FILTER_RULES_RESPONSE = QName.get("GetFilterRulesResponse", NAMESPACE);
+    public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get("ModifyFilterRulesRequest", NAMESPACE);
+    public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get("ModifyFilterRulesResponse", NAMESPACE);
+    public static final QName APPLY_FILTER_RULES_REQUEST = QName.get("ApplyFilterRulesRequest", NAMESPACE);
+    public static final QName APPLY_FILTER_RULES_RESPONSE = QName.get("ApplyFilterRulesResponse", NAMESPACE);
 
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
@@ -205,6 +213,16 @@ public class MailConstants {
     public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
     public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
     
+    // Yahoo Auth 
+    public static final QName GET_YAHOO_COOKIE_REQUEST = QName.get("GetYahooCookieRequest", NAMESPACE);
+    public static final QName GET_YAHOO_COOKIE_RESPONSE = QName.get("GetYahooCookieResponse", NAMESPACE);
+    public static final QName GET_YAHOO_AUTH_TOKEN_REQUEST = QName.get("GetYahooAuthTokenRequest", NAMESPACE);
+    public static final QName GET_YAHOO_AUTH_TOKEN_RESPONSE = QName.get("GetYahooAuthTokenResponse", NAMESPACE);
+    
+    // autocomplete
+    public static final QName AUTO_COMPLETE_REQUEST  = QName.get("AutoCompleteRequest", NAMESPACE);
+    public static final QName AUTO_COMPLETE_RESPONSE = QName.get("AutoCompleteResponse", NAMESPACE);
+    
     
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
@@ -229,12 +247,44 @@ public class MailConstants {
     public static final String E_VCARD = "vcard";
     public static final String E_SIGNATURE = "signature";
 
-    // filter rules
+    // Old filter rules constants
     public static final String E_RULE = "r";
     public static final String E_RULES = "rules";
     public static final String E_CONDITION_GROUP = "g";
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
+
+    // Filter rules constants
+    public static final String E_FILTER_RULES = "filterRules";
+    public static final String E_FILTER_RULE = "filterRule";
+    public static final String E_FILTER_TESTS = "filterTests";
+    
+    public static final String E_HEADER_TEST = "headerTest";
+    public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
+    public static final String E_SIZE_TEST = "sizeTest";
+    public static final String E_DATE_TEST = "dateTest";
+    public static final String E_BODY_TEST = "bodyTest";
+    public static final String E_ATTACHMENT_TEST = "attachmentTest";
+    public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
+    
+    public static final String E_FILTER_ACTIONS = "filterActions";
+    public static final String E_ACTION_KEEP = "actionKeep";
+    public static final String E_ACTION_DISCARD = "actionDiscard";
+    public static final String E_ACTION_FILE_INTO = "actionFileInto";
+    public static final String E_ACTION_TAG = "actionTag";
+    public static final String E_ACTION_FLAG = "actionFlag";
+    public static final String E_ACTION_REDIRECT = "actionRedirect";
+    public static final String E_ACTION_STOP = "actionStop";
+
+    public static final String A_STRING_COMPARISON = "stringComparison";
+    public static final String A_NUMBER_COMPARISON = "numberComparison";
+    public static final String A_DATE_COMPARISON = "dateComparison";
+    public static final String A_CONDITION = "condition";
+    public static final String A_NEGATIVE = "negative";
+    public static final String A_FOLDER_PATH = "folderPath";
+    public static final String A_FLAG_NAME = "flagName";
+    public static final String A_TAG_NAME = "tagName";
+    public static final String A_INDEX = "index";
 
     // grants
     public static final String E_ACL = "acl";
@@ -554,6 +604,8 @@ public class MailConstants {
 
     public static final String A_CAL_TZ_STDOFFSET = "stdoff";
     public static final String A_CAL_TZ_DAYOFFSET = "dayoff";
+    public static final String A_CAL_TZ_STDNAME = "stdname";
+    public static final String A_CAL_TZ_DAYNAME = "dayname";
     public static final String A_CAL_TZ_WEEK = "week";
     public static final String A_CAL_TZ_DAYOFWEEK = "wkday";
     public static final String A_CAL_TZ_MONTH = "mon";
@@ -586,6 +638,7 @@ public class MailConstants {
     public static final String E_DS_LIVE = "live";
     public static final String E_DS_CALDAV = "caldav";
     public static final String E_DS_YAB = "yab";
+    public static final String E_DS_RSS = "rss";
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
@@ -644,5 +697,14 @@ public class MailConstants {
     public static final String A_TYPES = "types";
     public static final String E_A = "a";
     
-    
+    // AutoComplete
+    public static final String E_MATCH = "match";
+    public static final String A_LIMIT = "limit";
+    public static final String A_FOLDERS = "folders";
+    public static final String A_INCLUDE_GAL = "includeGal";
+    public static final String A_EMAIL = "email";
+    public static final String A_RANKING = "ranking";
+    public static final String A_CANBECACHED = "canBeCached";
+    public static final String A_DISPLAYNAME = "display";
+    public static final String A_MATCH_TYPE = "type";
 }

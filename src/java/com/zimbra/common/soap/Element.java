@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -184,10 +185,11 @@ public abstract class Element implements Cloneable {
 
     /** Returns all an <tt>Element</tt>'s attributes. */
     public abstract Set<Attribute> listAttributes();
-    /** Returns all an <tt>Element</tt>'s sub-elements. */
+    /** Returns all an <tt>Element</tt>'s sub-elements, or an empty <tt>List</tt>. */
     public List<Element> listElements()  { return listElements(null); }
     /** Returns all the sub-elements with the given name.  If <tt>name></tt>
-     *  is <tt>null</tt>, returns <u>all</u> sub-elements. */
+     *  is <tt>null</tt>, returns <u>all</u> sub-elements.  If no elements
+     *  with the given name exist, returns an empty <tt>List</tt> */
     public abstract List<Element> listElements(String name);
 
     public List<KeyValuePair> listKeyValuePairs()  { return listKeyValuePairs(null, null); }
@@ -491,7 +493,7 @@ public abstract class Element implements Cloneable {
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        public JSONElement(String name)  { mName = name;  mAttributes = new HashMap<String, Object>(); }
+        public JSONElement(String name)  { mName = name;  mAttributes = new LinkedHashMap<String, Object>(); }
         public JSONElement(QName qname)  { this(qname.getName());  setNamespace("", qname.getNamespaceURI()); }
 
         private static final class JSONFactory implements ElementFactory {
@@ -1363,8 +1365,8 @@ public abstract class Element implements Cloneable {
 
         SoapProtocol proto = SoapProtocol.SoapJS;
         Element ctxt = new JSONElement(proto.getHeaderQName()).addUniqueElement(HeaderConstants.E_CONTEXT);
-        ctxt.addElement(HeaderConstants.E_SESSION_ID).setText("3").addAttribute(HeaderConstants.A_ID, 3);
-        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION_ID, null));
+        ctxt.addElement(HeaderConstants.E_SESSION).setText("3").addAttribute(HeaderConstants.A_ID, 3);
+        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION, null));
 
         Element env = testMessage(new JSONElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env);
