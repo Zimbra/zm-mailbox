@@ -20,12 +20,15 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -43,7 +46,13 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.index.ContactHit;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -57,7 +66,11 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.zclient.ZContactHit;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZSearchHit;
+import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZSearchResult;
 
 public class MailSender {
 
@@ -149,12 +162,119 @@ public class MailSender {
         }
     }
 
+    private List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
+    	if (contacts.isEmpty())
+    		return Collections.emptyList();
+
+    	TreeMap<String,InternetAddress> newContacts = new TreeMap<String,InternetAddress>();
+    	Collection<String> emailKeys = new ContactAutoComplete(authuser.getId()).getEmailKeys();
+		StringBuilder buf = new StringBuilder();
+		boolean first = true;
+		for (Address addr : contacts) {
+			if (addr instanceof InternetAddress) {
+				InternetAddress iaddr = (InternetAddress)addr;
+				String email = iaddr.getAddress();
+				newContacts.put(email, iaddr);
+				for (String emailKey : emailKeys) {
+					if (first)
+						first = false;
+					else
+						buf.append(" OR ");
+					buf.append("#").append(emailKey).append(":").append(email);
+				}
+			}
+		}
+		
+		byte[] types = { MailItem.TYPE_CONTACT };
+		String query = buf.toString();
+		try {
+			if (authmbox instanceof Mailbox) {
+				Mailbox mbox = (Mailbox) authmbox;
+				ZimbraQueryResults qres = null;
+				try {
+					qres = mbox.search(octxt, query, types, MailboxIndex.SortBy.NONE, contacts.size());
+		            while (qres.hasNext()) {
+		                ZimbraHit hit = qres.getNext();
+		                if (hit instanceof ContactHit) {
+		                    Contact c = ((ContactHit) hit).getContact();
+		        			for (String emailKey : emailKeys) {
+		        				String v = c.get(emailKey);
+		        				if (v != null)
+		        					newContacts.remove(v);
+		        			}
+		                }
+		            }
+				} finally {
+					if (qres != null)
+						try { qres.doneWithSearchResults(); } catch (Exception e) {}
+				}
+			} else if (authmbox instanceof ZMailbox) {
+				ZMailbox zmbox = (ZMailbox) authmbox;
+				ZSearchResult res = zmbox.search(new ZSearchParams(query));
+	            for (ZSearchHit hit: res.getHits()) {
+	            	if (hit instanceof ZContactHit) {
+	            		ZContactHit c = (ZContactHit)hit;
+	            		String v = c.getEmail();
+	            		if (v != null)
+	            			newContacts.remove(v);
+	            		v = c.getEmail2();
+	            		if (v != null)
+	            			newContacts.remove(v);
+	            		v = c.getEmail3();
+	            		if (v != null)
+	            			newContacts.remove(v);
+	            		v = c.getWorkEmail1();
+	            		if (v != null)
+	            			newContacts.remove(v);
+	            		v = c.getWorkEmail2();
+	            		if (v != null)
+	            			newContacts.remove(v);
+	            		v = c.getWorkEmail3();
+	            		if (v != null)
+	            			newContacts.remove(v);
+	            	}
+	            }
+			}
+		} catch (ServiceException e) {
+			ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+			newContacts.clear();
+		} catch (IOException e) {
+			ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+			newContacts.clear();
+        } catch (ParseException e) {
+			ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+			newContacts.clear();
+        }
+        
+    	ArrayList<InternetAddress> ret = new ArrayList<InternetAddress>();
+        if (!newContacts.isEmpty())
+        	ret.addAll(newContacts.values());
+    	return ret;
+    }
+    
+    private void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
+        for (InternetAddress inetaddr : newContacts) {
+        	ZimbraLog.smtp.debug("adding new contact "+inetaddr);
+            Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
+            try {
+                if (authMailbox instanceof Mailbox) {
+                    ParsedContact pc = new ParsedContact(fields);
+                    ((Mailbox) authMailbox).createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
+                } else if (authMailbox instanceof ZMailbox) {
+                    ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+            }
+        }
+    }
+    
     /**
      * Send MimeMessage out as an email.
      * @param octxt operation context
      * @param mbox mailbox
      * @param mm the outgoing message
-     * @param newContacts contacts to add, or <tt>null</tt>
+     * @param saveContacts contacts to save in Emailed Contacts folder, or <tt>null</tt>
      * @param uploads uploads to attach, or <tt>null</tt>
      * @param origMsgId if replying or forwarding, item ID of original message
      * @param replyType {@link #MSGTYPE_REPLY} if this is a reply, {@link #MSGTYPE_FORWARD}
@@ -171,7 +291,7 @@ public class MailSender {
      * @throws ServiceException
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
-                                  List<InternetAddress> newContacts, List<Upload> uploads,
+                                  List<InternetAddress> saveContacts, List<Upload> uploads,
                                   ItemId origMsgId, String replyType, Identity identity,
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
@@ -261,6 +381,7 @@ public class MailSender {
 
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mm, ignoreFailedAddresses, rollback);
+        	Collection<InternetAddress> newContacts = null;
 
             if (!sentAddresses.isEmpty()) {
             	try {
@@ -268,6 +389,9 @@ public class MailSender {
             	} catch (Throwable e) {
             		ZimbraLog.smtp.warn("unable to update contact rankings", e);
             	}
+            	newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
+            	if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false))
+            		saveNewContacts(newContacts, octxt, authMailbox);
             }
             
             // Send intercept if save-to-sent didn't do it already.
@@ -298,23 +422,11 @@ public class MailSender {
             if (uploads != null)
                 FileUploadServlet.deleteUploads(uploads);
 
-            // add any new contacts to the personal address book
-            if (newContacts != null && !newContacts.isEmpty()) {
+            // save contacts explicitly requested by the client to the personal address book
+            if (false && saveContacts != null && !saveContacts.isEmpty()) {
                 if (authMailbox == null)
                     authMailbox = getAuthenticatedMailbox(octxt, authuser, isAdminRequest);
-                for (InternetAddress inetaddr : newContacts) {
-                    Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
-                    try {
-                        if (authMailbox instanceof Mailbox) {
-                            ParsedContact pc = new ParsedContact(fields);
-                            ((Mailbox) authMailbox).createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
-                        } else if (authMailbox instanceof ZMailbox) {
-                            ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
-                        }
-                    } catch (ServiceException e) {
-                        ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-                    }
-                }
+                saveNewContacts(saveContacts, octxt, authMailbox);
             }
 
             return (rollback[0] != null ? rollback[0].msgId : null);

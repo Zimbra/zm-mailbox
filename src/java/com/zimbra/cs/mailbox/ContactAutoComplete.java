@@ -170,6 +170,9 @@ public class ContactAutoComplete {
 		mIncludeRankingResults = true;
 	}
 	
+	public Collection<String> getEmailKeys() {
+		return mEmailKeys;
+	}
 	public boolean includeGal() {
 		return mIncludeGal;
 	}
