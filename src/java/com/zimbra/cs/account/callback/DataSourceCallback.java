@@ -138,8 +138,6 @@ public class DataSourceCallback extends AttributeCallback {
     
     private void scheduleDataSource(DataSource ds)
     throws ServiceException {
-        ZimbraLog.datasource.info("Updating schedule for DataSource %s.", ds.getName());
-        
         Account account = ds.getAccount();
         if (account == null) {
             ZimbraLog.datasource.warn("Could not determine account for %s", ds);
