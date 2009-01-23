@@ -42,7 +42,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090122-2340 */
+    /* build: 5.0 pshao 20090123-1400 */
 
     /**
      * RFC2256: descriptive information
@@ -7465,6 +7465,78 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSkinBackgroundColor(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSkinBackgroundColor, "");
+        return attrs;
+    }
+
+    /**
+     * favicon for chameleon skin for the domain
+     *
+     * @return zimbraSkinFavicon, or null if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=800)
+    public String getSkinFavicon() {
+        return getAttr(Provisioning.A_zimbraSkinFavicon, null);
+    }
+
+    /**
+     * favicon for chameleon skin for the domain
+     *
+     * @param zimbraSkinFavicon new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=800)
+    public void setSkinFavicon(String zimbraSkinFavicon) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSkinFavicon, zimbraSkinFavicon);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * favicon for chameleon skin for the domain
+     *
+     * @param zimbraSkinFavicon new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=800)
+    public Map<String,Object> setSkinFavicon(String zimbraSkinFavicon, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSkinFavicon, zimbraSkinFavicon);
+        return attrs;
+    }
+
+    /**
+     * favicon for chameleon skin for the domain
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=800)
+    public void unsetSkinFavicon() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSkinFavicon, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * favicon for chameleon skin for the domain
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=800)
+    public Map<String,Object> unsetSkinFavicon(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSkinFavicon, "");
         return attrs;
     }
 

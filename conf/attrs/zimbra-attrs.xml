@@ -4007,4 +4007,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="800" name="zimbraSkinFavicon" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="6.0.0">
+  <desc>favicon for chameleon skin for the domain</desc>
+</attr>
+
 </attrs>

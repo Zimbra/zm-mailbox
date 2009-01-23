@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090122-2340 */
+    /* build: 5.0 pshao 20090123-1400 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5446,6 +5446,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=648)
     public static final String A_zimbraSkinBackgroundColor = "zimbraSkinBackgroundColor";
+
+    /**
+     * favicon for chameleon skin for the domain
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=800)
+    public static final String A_zimbraSkinFavicon = "zimbraSkinFavicon";
 
     /**
      * foreground color for chameleon skin for the domain
