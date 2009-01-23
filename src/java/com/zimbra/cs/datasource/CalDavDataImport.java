@@ -151,13 +151,17 @@ public class CalDavDataImport extends MailItemImport {
     	String etag;
     }
     
+    protected int getRootFolderId(DataSource ds) throws ServiceException {
+    	return ds.getFolderId();
+    }
+    
     private List<Integer> syncFolders() throws ServiceException, IOException, DavException {
     	ArrayList<Integer> ret = new ArrayList<Integer>();
     	DataSource ds = getDataSource();
 		CalDavClient client = getClient();
 		Map<String,String> calendars = client.getCalendars();
 		OperationContext octxt = new Mailbox.OperationContext(mbox);
-		Folder rootFolder = mbox.getFolderById(octxt, ds.getFolderId());
+		Folder rootFolder = mbox.getFolderById(octxt, getRootFolderId(ds));
 		for (String name : calendars.keySet()) {
 			String url = calendars.get(name);
 			DataSourceItem f = DbDataSource.getReverseMapping(ds, url);
