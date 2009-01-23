@@ -102,8 +102,9 @@ public class PreAuthServlet extends ZimbraServlet {
     {
         ZimbraLog.clearContext();
         try {
-            boolean revPxyMode = URLUtil.reverseProxiedMode(Provisioning.getInstance().getLocalServer());
             Provisioning prov = Provisioning.getInstance();
+            Server server = prov.getLocalServer();
+            String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
             
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
             String rawAuthToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);
@@ -117,7 +118,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 // see if we need a redirect to the correct server
                 boolean isAdmin = authToken != null && (authToken.isDomainAdmin() || authToken.isAdmin());
                 Account acct = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
-                if (isAdmin || Provisioning.onLocalServer(acct) || revPxyMode) {
+                if (isAdmin || !needReferral(acct, referMode)) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
                     redirectToCorrectServer(req, resp, acct, rawAuthToken);
@@ -160,7 +161,7 @@ public class PreAuthServlet extends ZimbraServlet {
 
                 try {
                     rawAuthToken = at.getEncoded();
-                    if (Provisioning.onLocalServer(acct) || revPxyMode || admin) {
+                    if (admin || !needReferral(acct, referMode)) {
                         setCookieAndRedirect(req, resp, at);
                     } else {
                         redirectToCorrectServer(req, resp, acct, rawAuthToken);
@@ -174,6 +175,11 @@ public class PreAuthServlet extends ZimbraServlet {
         } catch (AuthTokenException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
+    }
+    
+    private boolean needReferral(Account acct, String referMode) throws ServiceException {
+        return (Provisioning.MAIL_REFER_MODE_ALWAYS.equals(referMode) ||
+                (Provisioning.MAIL_REFER_MODE_WRONGHOST.equals(referMode) && !Provisioning.onLocalServer(acct)));
     }
 
     private void addNonPreAuthParams(HttpServletRequest req, StringBuilder sb, boolean first) {
