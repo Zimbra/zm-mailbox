@@ -228,12 +228,18 @@ public class ToXML {
             return eACL;
 
         for (ACL.Grant grant : acl.getGrants()) {
-            NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
+            String name = grant.getGranteeName();
+            if (name == null) {
+                NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
+                if (nentry != null)
+                    name = nentry.getName();
+            }
+            
             Element eGrant = eACL.addElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                   .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
                   .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                  .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName());
+                  .addAttribute(MailConstants.A_DISPLAY, name);
             
             if (grant.getGranteeType() == ACL.GRANTEE_KEY) {
                 if (exposeAclAccessKey)

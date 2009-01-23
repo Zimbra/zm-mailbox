@@ -141,6 +141,8 @@ public class ACL {
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
         private String mGrantee;
+        /** The display name of the grantee, which is often the email address of grantee. */
+        private String mName;         
         /** The type of object the grantee's ID refers to.
          *  For instance, {@link ACL#GRANTEE_USER}. */
         private byte mType;
@@ -176,6 +178,7 @@ public class ACL {
         Grant(Metadata meta) throws ServiceException {
             mType    = (byte) meta.getLong(FN_TYPE);
             mRights  = (short) (meta.getLong(FN_RIGHTS) & GRANTABLE_RIGHTS);
+            mName    = meta.get(FN_NAME, null);
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
             if (mType == ACL.GRANTEE_GUEST)
@@ -200,6 +203,11 @@ public class ACL {
             return matches(acct) ? mRights : 0;
         }
 
+        /** Returns the display name of grantee. */
+        public String getGranteeName() { return mName; }
+        /** Sets the display name of grantee. */
+        public void setGranteeName(String name) { mName = name; }
+        
         /** Returns whether this grant applies to the given {@link Account}.
          *  If <tt>acct</tt> is <tt>null</tt>, only return
          *  <tt>true</tt> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
@@ -279,6 +287,7 @@ public class ACL {
 
 
         private static final String FN_GRANTEE   = "g";
+        private static final String FN_NAME      = "n";
         private static final String FN_TYPE      = "t";
         private static final String FN_RIGHTS    = "r";
         private static final String FN_PASSWORD  = "a";
@@ -289,6 +298,7 @@ public class ACL {
         public Metadata encode() {
             Metadata meta = new Metadata();
             meta.put(FN_GRANTEE,  hasGrantee() ? mGrantee : null);
+            meta.put(FN_NAME,     mName);
             meta.put(FN_TYPE,     mType);
             // FIXME: use "rwidxsca" instead of numeric value
             meta.put(FN_RIGHTS,   mRights);
