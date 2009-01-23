@@ -21,7 +21,6 @@ import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
 
@@ -218,23 +217,16 @@ public final class ImapConnection extends MailConnection {
         newRequest(CAtom.UNSUBSCRIBE, new MailboxName(name)).sendCheckStatus();
     }
 
-    public long append(String mbox, Flags flags, Date date, Literal data)
-            throws IOException {
+    public AppendResult append(String mbox, Flags flags, Date date, Literal data)
+        throws IOException {
         ImapRequest req = newRequest(CAtom.APPEND, new MailboxName(mbox));
         if (flags != null) req.addParam(flags);
         if (date != null) req.addParam(date);
         req.addParam(data);
         ImapResponse res = req.sendCheckStatus();
         ResponseText rt = res.getResponseText();
-        if (rt.getCCode() == CAtom.APPENDUID) {
-            // Supports UIDPLUS (RFC 2359):
-            // resp_code_apnd ::= "APPENDUID" SPACE nz_number SPACE uniqueid
-            String[] s = ((String) rt.getData()).split(" ");
-            if (s.length == 2) {
-                return Chars.getNumber(s[1]); // message UID
-            }
-        }
-        return 0;
+        return rt.getCCode() == CAtom.APPENDUID ?
+            (AppendResult) rt.getData() : null;
     }
 
     public void expunge() throws IOException {
@@ -289,12 +281,16 @@ public final class ImapConnection extends MailConnection {
         return ld.isEmpty() ? 0 : ld.get(0).getDelimiter();
     }
 
-    public void copy(String seq, String mbox) throws IOException {
-        newRequest(CAtom.COPY, seq, new MailboxName(mbox)).sendCheckStatus();
+    public CopyResult copy(String seq, String mbox) throws IOException {
+        ImapRequest req = newRequest(CAtom.COPY, seq, new MailboxName(mbox));
+        ResponseText rt = req.sendCheckStatus().getResponseText();
+        return rt.getCCode() == CAtom.COPYUID ? (CopyResult) rt.getData() : null;
     }
 
-    public void uidCopy(String seq, String mbox) throws IOException {
-        newUidRequest(CAtom.COPY, seq, new MailboxName(mbox)).sendCheckStatus();
+    public CopyResult uidCopy(String seq, String mbox) throws IOException {
+        ImapRequest req = newUidRequest(CAtom.COPY, seq, new MailboxName(mbox));
+        ResponseText rt = req.sendCheckStatus().getResponseText();
+        return rt.getCCode() == CAtom.COPYUID ? (CopyResult) rt.getData() : null;
     }
 
     public void fetch(String seq, Object param, ResponseHandler handler)
