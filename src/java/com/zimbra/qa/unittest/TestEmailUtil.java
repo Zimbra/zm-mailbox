@@ -20,9 +20,12 @@ package com.zimbra.qa.unittest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import javax.mail.internet.InternetAddress;
+
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.cs.mime.Mime;
 
 /**
  * @author bburtin
@@ -56,7 +59,17 @@ public class TestEmailUtil extends TestCase
         }
         buf.append(": Y");
         assertFalse(isRfc822Message(buf.toString()));
-        
+    }
+    
+    /**
+     * Confirms that address parsing doesn't blow up when the
+     * header value is malformed (bug 32271). 
+     */
+    public void testParseAddressHeader()
+    throws Exception {
+        InternetAddress[] addresses =
+            Mime.parseAddressHeader("(Test) <djoe@zimbra.com>,djoe@zimbra.com (Test)");
+        assertEquals(0, addresses.length);
     }
     
     private boolean isRfc822Message(String content)

@@ -695,6 +695,10 @@ public class Mime {
             } catch (UnsupportedEncodingException e1) {
                 return NO_ADDRESSES;
             }
+        } catch (StringIndexOutOfBoundsException e) {
+            // Workaround for bug 32271, Sun bug 1440414.
+            ZimbraLog.mailbox.warn("Unable to parse header: %s", header, e);
+            return NO_ADDRESSES;
         }
 
         if (!expandGroups)
