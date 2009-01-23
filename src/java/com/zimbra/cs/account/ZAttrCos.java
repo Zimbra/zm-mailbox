@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090113-1600 */
+    /* build: 5.0 pshao 20090122-2340 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -7773,6 +7773,93 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum number of entries for per user black list. This restricts the
+     * number of values that can be set on the amavisBlacklistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @return zimbraMailBlacklistMaxNumEntries, or 100 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=799)
+    public int getMailBlacklistMaxNumEntries() {
+        return getIntAttr(Provisioning.A_zimbraMailBlacklistMaxNumEntries, 100);
+    }
+
+    /**
+     * Maximum number of entries for per user black list. This restricts the
+     * number of values that can be set on the amavisBlacklistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @param zimbraMailBlacklistMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=799)
+    public void setMailBlacklistMaxNumEntries(int zimbraMailBlacklistMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBlacklistMaxNumEntries, Integer.toString(zimbraMailBlacklistMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries for per user black list. This restricts the
+     * number of values that can be set on the amavisBlacklistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @param zimbraMailBlacklistMaxNumEntries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=799)
+    public Map<String,Object> setMailBlacklistMaxNumEntries(int zimbraMailBlacklistMaxNumEntries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBlacklistMaxNumEntries, Integer.toString(zimbraMailBlacklistMaxNumEntries));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries for per user black list. This restricts the
+     * number of values that can be set on the amavisBlacklistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=799)
+    public void unsetMailBlacklistMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBlacklistMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries for per user black list. This restricts the
+     * number of values that can be set on the amavisBlacklistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=799)
+    public Map<String,Object> unsetMailBlacklistMaxNumEntries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBlacklistMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
      * servers that an account can be initially provisioned on
      *
      * @return zimbraMailHostPool, or ampty array if unset
@@ -8512,6 +8599,93 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailTrashLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailTrashLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries for per user white list. This restricts the
+     * number of values that can be set on the amavisWhitelistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @return zimbraMailWhitelistMaxNumEntries, or 100 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=798)
+    public int getMailWhitelistMaxNumEntries() {
+        return getIntAttr(Provisioning.A_zimbraMailWhitelistMaxNumEntries, 100);
+    }
+
+    /**
+     * Maximum number of entries for per user white list. This restricts the
+     * number of values that can be set on the amavisWhitelistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @param zimbraMailWhitelistMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=798)
+    public void setMailWhitelistMaxNumEntries(int zimbraMailWhitelistMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailWhitelistMaxNumEntries, Integer.toString(zimbraMailWhitelistMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries for per user white list. This restricts the
+     * number of values that can be set on the amavisWhitelistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @param zimbraMailWhitelistMaxNumEntries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=798)
+    public Map<String,Object> setMailWhitelistMaxNumEntries(int zimbraMailWhitelistMaxNumEntries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailWhitelistMaxNumEntries, Integer.toString(zimbraMailWhitelistMaxNumEntries));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries for per user white list. This restricts the
+     * number of values that can be set on the amavisWhitelistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=798)
+    public void unsetMailWhitelistMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailWhitelistMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries for per user white list. This restricts the
+     * number of values that can be set on the amavisWhitelistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=798)
+    public Map<String,Object> unsetMailWhitelistMaxNumEntries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailWhitelistMaxNumEntries, "");
         return attrs;
     }
 

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090113-1600 */
+    /* build: 5.0 pshao 20090122-2340 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3089,6 +3089,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAlias = "zimbraMailAlias";
 
     /**
+     * Maximum number of entries for per user black list. This restricts the
+     * number of values that can be set on the amavisBlacklistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=799)
+    public static final String A_zimbraMailBlacklistMaxNumEntries = "zimbraMailBlacklistMaxNumEntries";
+
+    /**
      * serverId:mboxId of mailbox before being moved
      */
     @ZAttr(id=346)
@@ -3308,6 +3319,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=340)
     public static final String A_zimbraMailURL = "zimbraMailURL";
+
+    /**
+     * Maximum number of entries for per user white list. This restricts the
+     * number of values that can be set on the amavisWhitelistSender
+     * attribute of an account. If set to 0, the per user white list feature
+     * is disabled.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=798)
+    public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
 
     /**
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:

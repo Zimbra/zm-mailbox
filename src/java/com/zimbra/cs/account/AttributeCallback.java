@@ -188,6 +188,24 @@ public abstract class AttributeCallback {
         return list;
     }
     
+    protected Set<String> getMultiValueSet(Object value) throws ServiceException {
+        
+        Set<String> values = new HashSet<String>();
+        
+        if (value instanceof String) {
+            values.add((String)value);
+        } else if (value instanceof String[]) {
+            for (String s : (String[])value)
+                values.add(s);
+        } else if (value instanceof Collection) {
+            for (Object o : (Collection)value)
+                values.add(o.toString());
+        } else
+            throw ServiceException.INVALID_REQUEST("value not a String or String[] or a Collection", null);
+
+        return values;
+    }
+    
     protected Set<String> newValuesToBe(MultiValueMod mod, Entry entry, String attrName) {
         Set<String> newValues = null; 
         if (entry != null) {

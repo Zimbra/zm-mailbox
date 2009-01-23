@@ -22,9 +22,9 @@
 
 <attr name="amavisSpamModifiesSubj" type="boolean"/>
 
-<attr name="amavisWhitelistSender" type="astring" max="256"/>
+<attr name="amavisWhitelistSender" type="astring" max="256" callback="WhiteBlackList"/>
 
-<attr name="amavisBlacklistSender" type="astring" max="256"/>
+<attr name="amavisBlacklistSender" type="astring" max="256" callback="WhiteBlackList"/>
 
 <attr name="amavisSpamQuarantineTo" type="astring" max="256"/>
 

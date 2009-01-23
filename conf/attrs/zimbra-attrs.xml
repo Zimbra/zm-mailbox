@@ -3989,4 +3989,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Time interval after which NGINX mail proxy will disconnect while establishing an upstream IMAP/POP connection</desc>
 </attr>
 
+<attr id="798" name="zimbraMailWhitelistMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>
+    Maximum number of entries for per user white list.
+    This restricts the number of values that can be set on the amavisWhitelistSender attribute of an account.
+    If set to 0, the per user white list feature is disabled.
+  </desc>
+</attr>
+
+<attr id="799" name="zimbraMailBlacklistMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>
+    Maximum number of entries for per user black list.
+    This restricts the number of values that can be set on the amavisBlacklistSender attribute of an account.
+    If set to 0, the per user white list feature is disabled.
+  </desc>
+</attr>
+
 </attrs>

@@ -2868,3 +2868,66 @@ This request will return a SOAP fault if the zimbraSoapExposeVersion
 server/globalconfig attribute is set to FALSE.
 
 ---------------------------
+
+<GetWhiteBlackListRequest/>
+ 
+<GetWhiteBlackListResponse>
+    <whiteList>
+        <addr>...</addr>+
+    </whiteList>
+    <blackList>
+        <addr>...</addr>+
+    </blackList>    
+</GetWhiteBlackListResponse>
+ 
+----------------------------
+  
+<ModifyWhiteBlackListRequest>
+    [<whiteList>
+        <addr [op="{op}"]>...</addr>+
+    </whiteList>]
+    [<blackList>
+        <addr [op="{op}"]>...</addr>+
+    </blackList>]    
+</ModifyWhiteBlackListRequest>
+
+{op} = + | -
+       + : add, ignored if the value already exists
+       - : remove, ignored if the value does not exist
+       if not present, replace the entire list with provided values.
+       
+       Note, can't mix +/- with non-present op)
+       
+       e.g.
+       1. replace the entire white list with "foo", "bar".
+              <whiteList>
+                  <addr>foo</addr>
+                  <addr>bar</addr>
+              </whiteList> 
+       
+       2. add values "foo" and "bar" to white list
+              <whiteList>
+                  <addr op="+">foo</addr>
+                  <addr op="+">bar</addr>
+              </whiteList> 
+              
+       3. remove values "foo" and "bar" from white list
+              <whiteList>
+                  <addr op="-">foo</addr>
+                  <addr op="-">bar</addr>
+              </whiteList> 
+              
+       4. add "foo" and remove 'bar"
+              <whiteList>
+                  <addr op="+">foo</addr>
+                  <addr op="-">bar</addr>
+              </whiteList>
+ 
+       5. mix +/- and non-present op - now allowed, INVALID_REQUEST will be thrown
+              <whiteList>
+                  <addr op="+">foo</addr>
+                  <addr>bar</addr>
+              </whiteList>
+       
+<ModifyWhiteBlackListResponse/>
+

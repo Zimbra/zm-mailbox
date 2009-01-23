@@ -75,6 +75,10 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.DELETE_SIGNATURE_REQUEST, new DeleteSignature());
         dispatcher.registerHandler(AccountConstants.GET_SIGNATURES_REQUEST, new GetSignatures());
 
+        // white/black list
+        dispatcher.registerHandler(AccountConstants.GET_WHITE_BLACK_LIST_REQUEST, new GetWhiteBlackList());
+        dispatcher.registerHandler(AccountConstants.MODIFY_WHITE_BLACK_LIST_REQUEST, new ModifyWhiteBlackList());
+        
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
     }
 
