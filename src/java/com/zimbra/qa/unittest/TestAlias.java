@@ -164,7 +164,7 @@ public class TestAlias extends TestCase {
         Case 3:
             Alias1@aliasdomain.com points at account1@localdomain.com.  (there is no alias1@localdomain.com alias)
             Global config zimbra default domain is set to localdomain.com.
-            Auth is attempted with Òalias1Ó.  Does it work?  NO
+            Auth is attempted with "alias1".  Does it work?  NO
             
     */
     public void testAliasDomain_Case3() throws Exception {
