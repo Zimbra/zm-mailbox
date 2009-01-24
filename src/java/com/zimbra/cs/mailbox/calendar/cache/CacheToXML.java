@@ -149,7 +149,7 @@ public class CacheToXML {
                                            boolean isException, boolean isAppointment, boolean showAll,
                                            boolean legacyFormat)
     throws ServiceException {
-        if (instance.getDtStart() != null)
+        if (isException && instance.getDtStart() != null)
             parent.addAttribute(MailConstants.A_CAL_START_TIME, instance.getDtStart().longValue());
         if (instance.getDuration() != null) {
             String attribute = !legacyFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION;
@@ -183,7 +183,9 @@ public class CacheToXML {
         ZOrganizer organizer = fullInstance.getOrganizer();
         if (organizer != null) {
             Element orgElt = parent.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
-            orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(organizer.getAddress()));
+            String addr = IDNUtil.toUnicode(organizer.getAddress());
+            orgElt.addAttribute(MailConstants.A_ADDRESS, addr);
+            orgElt.addAttribute(MailConstants.A_URL, addr);
             orgElt.addAttribute(MailConstants.A_DISPLAY, organizer.getCn());
             orgElt.addAttribute(MailConstants.A_CAL_SENTBY, organizer.getSentBy());
         }
@@ -215,6 +217,9 @@ public class CacheToXML {
             Integer numAttendees = fullInstance.getNumAttendees();
             if (numAttendees != null)
                 parent.addAttribute(MailConstants.A_CAL_OTHER_ATTENDEES, numAttendees.intValue() > 0);
+
+            if (fullInstance.hasAlarm() != null)
+                parent.addAttribute(MailConstants.A_CAL_ALARM, fullInstance.hasAlarm().booleanValue());
         }
 
         if (fullInstance.isOrganizer() != null)
@@ -278,6 +283,12 @@ public class CacheToXML {
         calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItemData.getFolderId()));
         if (calItemData.isRecurring())
             calItemElem.addAttribute(MailConstants.A_CAL_RECUR, calItemData.isRecurring());
+
+        calItemElem.addAttribute(MailConstants.A_SIZE, calItemData.getSize());
+        calItemElem.addAttribute(MailConstants.A_DATE, calItemData.getDate());
+        calItemElem.addAttribute(MailConstants.A_CHANGE_DATE, calItemData.getChangeDate() / 1000);  // as seconds
+        calItemElem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, calItemData.getModMetadata());
+        calItemElem.addAttribute(MailConstants.A_REVISION, calItemData.getModContent());
 
         int calItemId = calItemData.getCalItemId();
         encodeInstanceData(calItemElem, ifmt, calItemId, defaultData,

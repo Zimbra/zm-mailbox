@@ -27,13 +27,17 @@ import com.zimbra.cs.mailbox.Metadata;
 // an appointment/task and expanded instances over a time range
 public class CalendarItemData {
     // ZCS-specific meta data
-    private int mLastModified;  // mod_metadata db column value of appointment/task item
     private byte mType;  // MailItem.TYPE_APPOINTMENT or MailItem.TYPE_TASK
     private int mFolderId;
     private int mCalItemId;
     private String mFlags;
     private String mTags;
     private boolean mIsPublic;
+	private int mModMetadata; // mod_metadata db column; this serves the function of last-modified-time
+	private int mModContent;  // mod_content db column
+	private long mDate;       // date db column; unix time in millis
+	private long mChangeDate; // change_date db column; unix time in millis
+	private long mSize;       // size db column
 
     // change management info
     private String mUid;
@@ -54,13 +58,17 @@ public class CalendarItemData {
     private long mActualRangeStart;
     private long mActualRangeEnd;
 
-    public int getLastModified() { return mLastModified; }
     public byte getType()     { return mType; }
     public int getFolderId()  { return mFolderId; }
     public int getCalItemId() { return mCalItemId; }
     public String getFlags()  { return mFlags; }
     public String getTags()   { return mTags; }
     public boolean isPublic() { return mIsPublic; }
+    public int getModMetadata()  { return mModMetadata; }
+    public int getModContent()   { return mModContent; }
+    public long getDate()         { return mDate; }
+    public long getChangeDate()   { return mChangeDate; }
+    public long getSize()         { return mSize; }
 
     public String getUid()   { return mUid; }
 
@@ -80,15 +88,16 @@ public class CalendarItemData {
     }
 
     public CalendarItemData(
-            int lastModified,
             byte type, int folderId, int calItemId, String flags, String tags,
+            int modMetadata, int modContent, long date, long changeDate, long size,
             String uid,
             boolean isRecurring, boolean isPublic,
             AlarmData alarm,
             FullInstanceData defaultData) {
-        mLastModified = lastModified;
         mType = type; mFolderId = folderId; mCalItemId = calItemId;
         mFlags = flags; mTags = tags;
+        mModMetadata = modMetadata; mModContent = modContent;
+        mDate = date; mChangeDate = changeDate; mSize = size;
         mUid = uid;
         mIsRecurring = isRecurring; mIsPublic = isPublic;
         mAlarm = alarm;
@@ -108,7 +117,8 @@ public class CalendarItemData {
         if (rangeStart <= mActualRangeStart && rangeEnd >= mActualRangeEnd)
             return this;
         CalendarItemData calItemData = new CalendarItemData(
-                mLastModified, mType, mFolderId, mCalItemId, mFlags, mTags,
+                mType, mFolderId, mCalItemId, mFlags, mTags,
+                mModMetadata, mModContent, mDate, mChangeDate, mSize,
                 mUid, mIsRecurring, mIsPublic, mAlarm,
                 mDefaultData);
         long defaultDuration =
@@ -139,13 +149,17 @@ public class CalendarItemData {
             return null;
     }
 
-    private static final String FN_LAST_MODIFIED = "lastMod";
     private static final String FN_TYPE = "type";
     private static final String FN_FOLDER_ID = "fid";
     private static final String FN_CALITEM_ID = "ciid";
     private static final String FN_FLAGS = "flag";
     private static final String FN_TAGS = "tag";
     private static final String FN_IS_PUBLIC = "isPub";
+    private static final String FN_MOD_METADATA = "modM";
+    private static final String FN_MOD_CONTENT = "modC";
+    private static final String FN_DATE = "d";
+    private static final String FN_CHANGE_DATE = "cd";
+    private static final String FN_SIZE = "sz";
     private static final String FN_UID = "uid";
     private static final String FN_IS_RECURRING = "isRecur";
     private static final String FN_ALARM = "alarm";
@@ -156,13 +170,17 @@ public class CalendarItemData {
     private static final String FN_RANGE_END = "rgEnd";
 
     CalendarItemData(Metadata meta) throws ServiceException {
-        mLastModified = (int) meta.getLong(FN_LAST_MODIFIED);
         mType = (byte) meta.getLong(FN_TYPE);
         mFolderId = (int) meta.getLong(FN_FOLDER_ID);
         mCalItemId = (int) meta.getLong(FN_CALITEM_ID);
         mFlags = meta.get(FN_FLAGS, null);
         mTags = meta.get(FN_TAGS, null);
         mIsPublic = meta.getBool(FN_IS_PUBLIC);
+        mModMetadata = (int) meta.getLong(FN_MOD_METADATA);
+        mModContent = (int) meta.getLong(FN_MOD_CONTENT);
+        mDate = meta.getLong(FN_DATE);
+        mChangeDate = meta.getLong(FN_CHANGE_DATE);
+        mSize = meta.getLong(FN_SIZE);
         mUid = meta.get(FN_UID, null);
         mIsRecurring = meta.getBool(FN_IS_RECURRING);
         Metadata metaAlarm = meta.getMap(FN_ALARM, true);
@@ -195,13 +213,17 @@ public class CalendarItemData {
 
     Metadata encodeMetadata() {
         Metadata meta = new Metadata();
-        meta.put(FN_LAST_MODIFIED, mLastModified);
         meta.put(FN_TYPE, mType);
         meta.put(FN_FOLDER_ID, mFolderId);
         meta.put(FN_CALITEM_ID, mCalItemId);
         meta.put(FN_FLAGS, mFlags);
         meta.put(FN_TAGS, mTags);
         meta.put(FN_IS_PUBLIC, mIsPublic);
+        meta.put(FN_MOD_METADATA, mModMetadata);
+        meta.put(FN_MOD_CONTENT, mModContent);
+        meta.put(FN_DATE, mDate);
+        meta.put(FN_CHANGE_DATE, mChangeDate);
+        meta.put(FN_SIZE, mSize);
         meta.put(FN_UID, mUid);
         meta.put(FN_IS_RECURRING, mIsRecurring);
         if (mAlarm != null)

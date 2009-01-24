@@ -46,6 +46,7 @@ public class FullInstanceData extends InstanceData {
     private Boolean mIsOrganizer;
     private Integer mNumAttendees;
     private List<ZAttendee> mAttendees;
+    private Boolean mHasAlarm;
 
     // summary/location/fragment
     private String mSummary;
@@ -78,6 +79,7 @@ public class FullInstanceData extends InstanceData {
     public Boolean isOrganizer()          { return mIsOrganizer; }
     public Integer getNumAttendees()      { return mNumAttendees; }
     public List<ZAttendee> getAttendees() { return mAttendees; }
+    public Boolean hasAlarm()             { return mHasAlarm; }
 
     public String getSummary()     { return mSummary; }
     public String getLocation()    { return mLocation; }
@@ -99,21 +101,21 @@ public class FullInstanceData extends InstanceData {
             String partStat, String freeBusyActual, String percentComplete,
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
-            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees, Boolean hasAlarm,
             String summary, String location, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         super(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
         init(invId, compNum, recurrenceId, sequence, dtStamp,
-             organizer, isOrganizer, attendees, summary, location, fragment,
+             organizer, isOrganizer, attendees, hasAlarm, summary, location, fragment,
              isAllDay, status, priority, classProp, freeBusyIntended, transparency, categories, geo);
     }
 
     private void init(
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
-            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees, Boolean hasAlarm,
             String summary, String location, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
@@ -124,6 +126,7 @@ public class FullInstanceData extends InstanceData {
         mOrganizer = organizer; mIsOrganizer = isOrganizer;
         mAttendees = attendees;
         mNumAttendees = attendees != null ? (Integer) attendees.size() : null;
+        mHasAlarm = hasAlarm;
         mSummary = summary; mLocation = location; mFragment = fragment;
         mIsAllDay = isAllDay;
         mStatus = status; mPriority = priority; mClassProp = classProp;
@@ -156,6 +159,7 @@ public class FullInstanceData extends InstanceData {
             mAttendees = inv.getAttendees();
             mNumAttendees = mAttendees.size();
         }
+        mHasAlarm = inv.hasAlarm();
         mSummary = inv.getName();
         mLocation = inv.getLocation();
         mFragment = inv.getFragment();
@@ -173,10 +177,14 @@ public class FullInstanceData extends InstanceData {
     protected void clearUnchangedFields(FullInstanceData other) {
         super.clearUnchangedFields(other);
         if (other != null) {
+        	if (Util.sameValues(mOrganizer, other.getOrganizer()))
+        		mOrganizer = null;
             if (Util.sameValues(mIsOrganizer, other.isOrganizer()))
                 mIsOrganizer = null;
             if (Util.sameValues(mNumAttendees, other.getNumAttendees()))
                 mNumAttendees = null;
+            if (Util.sameValues(mHasAlarm, other.hasAlarm()))
+            	mHasAlarm = null;
             if (Util.sameValues(mSummary, other.getSummary()))
                  mSummary = null;
             if (Util.sameValues(mLocation, other.getLocation()))
@@ -212,6 +220,7 @@ public class FullInstanceData extends InstanceData {
     private static final String FN_IS_ORGANIZER = "isOrg";
     private static final String FN_NUM_ATTENDEES = "numAt";
     private static final String FN_ATTENDEE = "at";
+    private static final String FN_HAS_ALARM = "ha";
     private static final String FN_SUMMARY = "summ";
     private static final String FN_LOCATION = "loc";
     private static final String FN_FRAGMENT = "fr";
@@ -254,6 +263,10 @@ public class FullInstanceData extends InstanceData {
             }
         }
 
+        Boolean hasAlarm = null;
+        if (meta.containsKey(FN_HAS_ALARM))
+        	hasAlarm = new Boolean(meta.getBool(FN_HAS_ALARM));
+
         String summary = meta.get(FN_SUMMARY, null);
         String location = meta.get(FN_LOCATION, null);
         String fragment = meta.get(FN_FRAGMENT, null);
@@ -283,7 +296,7 @@ public class FullInstanceData extends InstanceData {
         if (metaGeo != null)
             geo = Geo.decodeMetadata(metaGeo);
 
-        init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees,
+        init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees, hasAlarm,
              summary, location, fragment, isAllDay,
              status, priority, classProp, fb, transp, categories, geo);
     }
@@ -310,6 +323,8 @@ public class FullInstanceData extends InstanceData {
                 i++;
             }
         }
+        if (mHasAlarm != null)
+        	meta.put(FN_HAS_ALARM, mHasAlarm.booleanValue());
 
         meta.put(FN_SUMMARY, mSummary);
         meta.put(FN_LOCATION, mLocation);

@@ -299,4 +299,30 @@ public abstract class CalendarUser {
         sb.append("mailto:").append(getAddress());
         return sb;
     }
+
+    protected static <T> boolean sameValues(T val1, T val2) {
+        if (val1 != null)
+            return val1.equals(val2);
+        else
+            return val2 == null;
+    }
+
+    public boolean equals(Object o) {
+    	if (o == this) return true;
+    	if (!(o instanceof CalendarUser)) return false;
+    	CalendarUser other = (CalendarUser) o;
+        if (!sameValues(mAddress, other.mAddress))
+        	return false;
+        if (!sameValues(mCn, other.mCn))
+        	return false;
+        if (!sameValues(mSentBy, other.mSentBy))
+        	return false;
+        if (!sameValues(mDir, other.mDir))
+        	return false;
+        if (!sameValues(mLanguage, other.mLanguage))
+        	return false;
+        if (!sameValues(mXParams, other.mXParams))
+        	return false;
+        return true;
+    }
 }
