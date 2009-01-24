@@ -365,13 +365,13 @@ class ImapFolderSync {
         Pair<ImapMessage, Integer> pair =
             DbImapMessage.getImapMessage(mailbox, msgId);
         if (pair != null) {
-            ImapMessage localTracker = pair.getFirst();
+            ImapMessage tracker = pair.getFirst();
             int trackedFolderId = pair.getSecond();
             if (msgFolderId == trackedFolderId) {
                 if (trackedFolderId == folderId) {
                     // Case 1: Message flags changed. Update remote flags.
-                    int flags = localTracker.getTrackedFlags();
-                    updateFlags(localTracker, SyncUtil.zimbraToImapFlags(flags));
+                    int flags = tracker.getTrackedFlags();
+                    updateFlags(tracker, SyncUtil.zimbraToImapFlags(flags));
                 } else {
                     // Case 4: Message moved from another folder. Let this
                     // case be handled when the originating folder is processed.
