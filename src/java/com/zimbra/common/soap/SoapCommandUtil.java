@@ -55,7 +55,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 
-public class SoapCommandUtil implements SoapTransport.DebugListener {
+public class SoapCommandUtil {
 
     private static final Map<String, Namespace> sTypeToNamespace =
         new HashMap<String, Namespace>();
@@ -68,14 +68,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String TYPE_MAIL = "mail";
     private static final String TYPE_ADMIN = "admin";
     private static final String TYPE_ACCOUNT = "account";
-    private static final String TYPE_IM = "im";
     
     static {
         // Namespaces
         sTypeToNamespace.put(TYPE_MAIL, Namespace.get("urn:zimbraMail"));
         sTypeToNamespace.put(TYPE_ADMIN, Namespace.get("urn:zimbraAdmin"));
         sTypeToNamespace.put(TYPE_ACCOUNT, Namespace.get("urn:zimbraAccount"));
-        sTypeToNamespace.put(TYPE_IM, Namespace.get("urn:zimbraIM"));
     }
     
     private Group mOptions;
@@ -90,8 +88,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mRootElement;
     private List mPaths;
     private String mAuthToken;
-    private int mVerbose = 0;
-    private boolean mUseSession = false;
+    private boolean mVerbose = false;
     
     private void parseCommandLine(String[] args) {
         
@@ -133,21 +130,21 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             .withDescription("Authenticate with zimbra admin name/password from localconfig.").create();
         Option verbose = obuilder
             .withLongName("verbose").withShortName("v").withArgument(noArgs)
-            .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output").create();
+            .withDescription("Print the SOAP request and other status information.").create();
         Option paths = abuilder.withName("path").withMinimum(1)
             .withDescription("Element or attribute path and value.  Roughly follows XPath syntax: " +
                 "[/]element1[/element2][/@attr][=value].").create();
         
         // Types option
         Set<String> validTypes = new HashSet<String>();
-        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin"); validTypes.add("im");
+        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin");
         Argument typeArg = abuilder
             .withName("type").withValidator(new EnumValidator(validTypes))
             .withMinimum(1).withMaximum(1).create();
         Option type = obuilder
             .withLongName("type").withShortName("t")
             .withArgument(typeArg)
-            .withDescription("SOAP request type (mail, account, admin, im).  Default is admin.")
+            .withDescription("SOAP request type (mail, account, admin).  Default is admin.")
             .create();
         
         // Initialize option group
@@ -212,7 +209,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         if (cl.hasOption(type)) {
             mType = (String) cl.getValue(type);
-            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) && mMailboxName == null) {
+            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT)) && mMailboxName == null) {
                 usage("Mailbox must be specified for mail or account requests.");
             }
         } else {
@@ -243,19 +240,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mRootElement = (String) cl.getValue(element);
         
         mPaths = cl.getValues(paths);
-        mVerbose = cl.getOptionCount(verbose);
-    }
-    
-    public void sendSoapMessage(com.zimbra.common.soap.Element envelope) {
-        if (mVerbose > 1) {
-            System.out.println(DomUtil.toString(envelope.toXML(), true));
-        }
-    }
-    
-    public void receiveSoapMessage(com.zimbra.common.soap.Element envelope) {
-        if (mVerbose > 1) {
-            System.out.println(DomUtil.toString(envelope.toXML(), true));
-        }
+        mVerbose = cl.hasOption(verbose);
     }
     
     private void usage(String errorMsg) {
@@ -277,7 +262,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private void adminAuth()
     throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
-        transport.setDebugListener(this);
         
         // Create auth element
         Element auth = DocumentHelper.createElement(AdminConstants.AUTH_REQUEST);
@@ -288,13 +272,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         com.zimbra.common.soap.Element response = null;
         com.zimbra.common.soap.Element request = null;
         
-        if (mVerbose > 0) {
+        if (mVerbose) {
             System.out.println("Sending admin auth request to " + mUrl);
         }
         
         try {
             request = com.zimbra.common.soap.Element.convertDOM(auth);
-            response = transport.invoke(request, false, !mUseSession, null);
+            response = transport.invoke(request);
         } catch (SoapFaultException e) {
             System.err.format("Authentication error: %s\n", e.getMessage());
             System.exit(1);
@@ -303,13 +287,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         transport.setAuthToken(mAuthToken);
         
         // Do delegate auth if this is a mail or account service request
-        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) {
+        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT)) {
             Element getInfo = DocumentHelper.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
             Element account = DomUtil.add(getInfo, AccountConstants.E_ACCOUNT, mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
             try {
                 request = com.zimbra.common.soap.Element.convertDOM(getInfo);
-                response = transport.invoke(request, false, !mUseSession, null);
+                response = transport.invoke(request);
             } catch (SoapFaultException e) {
                 System.err.format("Cannot access account: %s\n", e.getMessage());
                 System.exit(1);
@@ -322,7 +306,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
             try {
                 request = com.zimbra.common.soap.Element.convertDOM(delegateAuth);
-                response = transport.invoke(request, false, !mUseSession, null);
+                response = transport.invoke(request);
             } catch (SoapFaultException e) {
                 System.err.format("Cannot do delegate auth: %s\n", e.getMessage());
             }
@@ -332,12 +316,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     
     private void mailboxAuth()
     throws Exception {
-        if (mVerbose > 0) {
+        if (mVerbose) {
             System.out.println("Sending auth request to " + mUrl);
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
-        transport.setDebugListener(this);
         
         // Create auth element
         Element auth = DocumentHelper.createElement(AccountConstants.AUTH_REQUEST);
@@ -350,7 +333,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         try {
             com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(auth);
-            response = transport.invoke(requestElt, false, !mUseSession, null);
+            response = transport.invoke(requestElt);
         } catch (SoapFaultException e) {
             System.err.println("Authentication error: " + e.getMessage());
             System.exit(1);
@@ -390,13 +373,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
         
         // Send request and print response
-        if (mVerbose == 1) {
+        if (mVerbose) {
             System.out.println(DomUtil.toString(request, true));
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
-        transport.setDebugListener(this);
-        
         transport.setAuthToken(mAuthToken);
         if (!mType.equals(TYPE_ADMIN) && mTargetAccountName != null) {
             transport.setTargetAcctName(mTargetAccountName);
@@ -404,14 +385,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         com.zimbra.common.soap.Element response = null;
         try {
             com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(request);
-            response = transport.invoke(requestElt, false, !mUseSession, null);
+            response = transport.invoke(requestElt);
         } catch (SoapFaultException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
         
-        if (mVerbose <= 1) 
-            System.out.println(DomUtil.toString(response.toXML(), true));
+        System.out.println(DomUtil.toString(response.toXML(), true));
     }
 
     /**
@@ -464,7 +444,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     
     public static void main(String[] args) {
         CliUtil.toolSetup();
-        SoapTransport.setDefaultUserAgent("zmsoap", null);
         SoapCommandUtil app = new SoapCommandUtil();
         app.parseCommandLine(args);
         

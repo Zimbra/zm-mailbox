@@ -192,7 +192,7 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 reader.start();
         }
 
-        public void shutdown() {
+        public void shutdown() throws IOException {
             for (ReaderThread reader : mReaders) {
                 try {
                     reader.join();
@@ -207,8 +207,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
             buf.flip();
             buf.mark();
             for (int i = 0; i < mWriters.length; i++) {
-                buf.reset();
-                sinkChannel.write(buf);
+                try {
+                    buf.reset();
+                    sinkChannel.write(buf);
+                } catch (IOException e) {
+                    e.printStackTrace(System.err);
+                }
             }
             sinkChannel.close();
 
@@ -370,7 +374,7 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 oldPath.renameTo(newPath);
             }
 
-            private void delete(File file) {
+            private void delete(File file) throws IOException {
                 file.delete();
             }
         }
