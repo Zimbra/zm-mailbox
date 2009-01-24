@@ -291,6 +291,45 @@ public class DbImapMessage {
         }
     }
 
+    public static List<ImapMessage> getMovedMessages(Mailbox mbox, int folderId)
+        throws ServiceException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<ImapMessage> msgs = new ArrayList<ImapMessage>();
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(String.format(
+                "SELECT imap.uid, imap.item_id, imap.flags as tflags, mi.unread, mi.flags " +
+                " FROM %s imap JOIN %s mi " +
+                " ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
+                " WHERE imap.mailbox_id = %d AND imap.imap_folder_id = %d AND mi.folder_id != %d",
+                getTableName(mbox),
+                DbMailItem.getMailItemTableName(mbox),
+                mbox.getId(),
+                folderId, folderId));
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                long uid = rs.getLong("uid");
+                int itemId = rs.getInt("item_id");
+                int flags = rs.getInt("flags");
+                int unread = rs.getInt("unread");
+                int tflags = rs.getInt("tflags");
+                flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
+                msgs.add(new ImapMessage(uid, itemId, flags, tflags));
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get IMAP message data", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return msgs;
+    }
+
     /**
      * Returns a collection of tracked IMAP messages for the given data source.
      */

@@ -26,6 +26,7 @@ import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.Envelope;
+import com.zimbra.cs.mailclient.imap.CopyResult;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailbox.Flag;
@@ -99,6 +100,7 @@ class ImapFolderSync {
         int msgsAddedRemotely;
         int msgsDeletedLocally;
         int msgsDeletedRemotely;
+        int msgsCopiedRemotely;
     }
 
     public ImapFolderSync(ImapSync imapSync) throws ServiceException {
@@ -213,7 +215,13 @@ class ImapFolderSync {
         long lastUid = syncState.getLastUid();
         int lastModSeq = syncState.getLastModSeq();
         if (fullSync) {
-            // Fetch flags if full sync requested
+            // If UIDPLUS supported, use COPY rather than APPEND to remotely
+            // move messages that have moved locally between folders.
+            if (hasUidPlus()) {
+                for (ImapMessage msg : DbImapMessage.getMovedMessages(mailbox, localFolder.getId())) {
+                    moveMessage(msg);
+                }
+            }
             syncFlags(lastUid);
         } else if (lastModSeq > 0) {
             // Push only changes for partial sync
@@ -369,10 +377,13 @@ class ImapFolderSync {
                     // case be handled when the originating folder is processed.
                 }
             } else if (trackedFolderId == folderId) {
-                // Case 3: Message moved to another folder. Delete remote
-                // message and tracker and let the new message be handled
-                // when the destination folder is processed.
-                deletedIds.add(msgId);
+                // Case 3: Message moved to another folder. Try to use COPY
+                // if UIDPLUS available, otherwise just delete the message
+                // remotely and let the new local message be appended when
+                // the destination folder is processed.
+                if (!moveMessage(tracker)) {
+                    deletedIds.add(msgId);
+                }
             }
         } else if (msgFolderId == folderId) {
             // Case 2: New message has been added to this folder
@@ -406,6 +417,9 @@ class ImapFolderSync {
             }
             if (stats.msgsDeletedRemotely > 0) {
                 remoteFolder.debug("Deleted %d messages", stats.msgsDeletedRemotely);
+            }
+            if (stats.msgsCopiedRemotely > 0) {
+                remoteFolder.debug("Copied %d messages", stats.msgsCopiedRemotely);
             }
             // localFolder.debug("Synchronization completed");
         }
@@ -1009,25 +1023,65 @@ class ImapFolderSync {
     // actually deleted.
     private List<Long> deleteMessages(List<Long> uids) throws ServiceException {
         List<Long> deleted = new ArrayList<Long>();
-        if (!uids.isEmpty()) {
-            for (long uid : uids) {
-                if (skipUid(uid)) {
-                    LOG.warn("Skipping remote delete of uid %d due to previous errors", uid);
-                } else {
-                    try {
-                        remoteFolder.deleteMessage(uid);
-                        stats.msgsDeletedRemotely += 1;
-                        deleted.add(uid);
-                        clearError(uid);
-                    } catch (IOException e) {
-                        syncFailed(uid, "Cannot delete message with uid " + uid, e);
-                    }
-                }
+        for (long uid : uids) {
+            if (deleteMessage(uid)) {
+                deleted.add(uid);
             }
         }
         return deleted;
     }
-        
+
+    private boolean deleteMessage(long uid) throws ServiceException {
+        if (skipUid(uid)) {
+            LOG.warn("Skipping remote delete of uid %d due to previous errors", uid);
+            return false;
+        }
+        try {
+            remoteFolder.deleteMessage(uid);
+            stats.msgsDeletedRemotely += 1;
+            clearError(uid);
+            return true;
+        } catch (IOException e) {
+            syncFailed(uid, "Cannot delete message with uid " + uid, e);
+            return false;
+        }
+    }
+
+    private boolean moveMessage(ImapMessage msgTracker) throws ServiceException {
+        if (!hasUidPlus()) return false;
+        Message msg;
+        Folder folder;
+        try {
+            msg = mailbox.getMessageById(null, msgTracker.getItemId());
+            folder = mailbox.getFolderById(null, msg.getFolderId());
+        } catch (MailServiceException.NoSuchItemException e) {
+            return false;
+        }
+        if (!ds.isSyncEnabled(folder)) return false;
+        ImapFolder folderTracker = imapSync.getTrackedFolders().getByItemId(folder.getId());
+        if (folderTracker == null) return false;
+        String seq = String.valueOf(msgTracker.getUid());
+        CopyResult cr;
+        try {
+            cr = connection.uidCopy(seq, folderTracker.getRemotePath());
+        } catch (IOException e) {
+            syncFailed(msgTracker.getUid(), "COPY failed", e);
+            return false;
+        }
+        if (cr == null) return false;
+        stats.msgsCopiedRemotely++;
+        if (!deleteMessage(msgTracker.getUid())) {
+            LOG.warn("Unable to delete message with uid " + msgTracker.getUid());
+            return false;
+        }
+        // Delete original message tracker and create new one
+        DbImapMessage.deleteImapMessage(mailbox, localFolder.getId(), msg.getId());
+        long uid = Long.parseLong(cr.getUids());
+        DbImapMessage.storeImapMessage(mailbox, folder.getId(), uid,
+            msg.getId(), msgTracker.getTrackedFlags());
+        return true;
+    }
+
     /*
      * Merges local flags, tracked flags, and remote flag and returns new
      * local flags bitmask.
