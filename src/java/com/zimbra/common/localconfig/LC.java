@@ -468,6 +468,9 @@ public class LC {
     
     public static final KnownKey xmpp_dns_override;
 
+    // zmailbox
+    public static final KnownKey zmailbox_message_cachesize;
+    
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1365,6 +1368,11 @@ public class LC {
         xmpp_offline_quota = new KnownKey("xmpp_offline_quota", Integer.toString(100 * 1024), "Maximum number of bytes of offline messages stored (if type is store_and_bounce or store_and_drop)");
         
         xmpp_dns_override = new KnownKey("xmpp_dns_override", "", "Override DNS for XMPP server, comma-separated list of entries of the form \"{domain:hostname:port}\"");         
+        
+        
+        zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
+              
+        
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
