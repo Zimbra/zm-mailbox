@@ -904,6 +904,8 @@ public class ChartUtil {
                                         "%s: unable to parse value '%s' for %s: %s",
                                         context, val, column, e));
                             }
+                        } else { // default an entry to 0 if string is empty
+                            series.AddEntry(ts, 0.0);
                         }
                     }
                 }
@@ -1152,20 +1154,26 @@ public class ChartUtil {
                 columnName = RATIO_PLOT_SYNTHETIC + ps.getRatioTop() +
                         "/" + ps.getRatioBottom();
                 String infile = ps.getInfile();
+                
                 String[] top = ps.getRatioTop().split("\\+");
                 String[] bottom = ps.getRatioBottom().split("\\+");
+                
                 DataColumn[] ratioTop = new DataColumn[top.length];
                 DataColumn[] ratioBottom = new DataColumn[bottom.length];
+                
                 for (int i = 0, j = top.length; i < j; i++)
                     ratioTop[i] = new DataColumn(infile, top[i]);
                 for (int i = 0, j = bottom.length; i < j; i++)
                     ratioBottom[i] = new DataColumn(infile, bottom[i]);
+                
                 DataSeries[] topData = new DataSeries[ratioTop.length];
                 DataSeries[] bottomData = new DataSeries[ratioBottom.length];
+                
                 for (int i = 0, j = ratioTop.length; i < j; i++)
                     topData[i] = mDataSeries.get(ratioTop[i]);
                 for (int i = 0, j = ratioBottom.length; i < j; i++)
                     bottomData[i] = mDataSeries.get(ratioBottom[i]);
+                
                 DataSeries ds = new DataSeries();
                 for (int i = 0, j = topData[0].size(); i < j; i++) {
                     double topValue = 0.0;
@@ -1174,11 +1182,11 @@ public class ChartUtil {
                     Entry lastEntry = null;
                     for (int m = 0, n = topData.length; m < n; m++) {
                         Entry e = topData[m].get(i);
-                        topValue += e.getVal();;
+                        topValue += e.getVal();
                     }
                     for (int m = 0, n = bottomData.length; m < n; m++) {
                         Entry e = bottomData[m].get(i);
-                        bottomValue += e.getVal();;
+                        bottomValue += e.getVal();
                         lastEntry = e;
                     }
                     if (bottomValue != 0.0) {
