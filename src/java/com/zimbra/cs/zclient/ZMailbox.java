@@ -127,7 +127,7 @@ public class ZMailbox implements ToZJSONObject {
 
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
-    public final static int MAX_NUM_CACHED_MESSAGES = 5;
+    public final static int MAX_NUM_CACHED_MESSAGES = LC.zmailbox_message_cachesize.intValue();
     public final static int MAX_NUM_CACHED_CONTACTS = 25;
 
     public final static String PATH_SEPARATOR = "/";
