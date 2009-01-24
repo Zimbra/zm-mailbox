@@ -4234,9 +4234,11 @@ public class LdapProvisioning extends Provisioning {
             }
             ne.close();            
         } catch (NameNotFoundException e) {
-            return null;
+            ZimbraLog.account.warn("caught NameNotFoundException", e);
+            return result;
         } catch (InvalidNameException e) {
-            return null;                        
+            ZimbraLog.account.warn("caught InvalidNameException", e);
+            return result;                     
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup identity via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
@@ -4472,9 +4474,11 @@ public class LdapProvisioning extends Provisioning {
             }
             ne.close();            
         } catch (NameNotFoundException e) {
-            return null;
+            ZimbraLog.account.warn("caught NameNotFoundException", e);
+            return result;
         } catch (InvalidNameException e) {
-            return null;                        
+            ZimbraLog.account.warn("caught InvalidNameException", e);
+            return result;                        
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup signature via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
@@ -4752,9 +4756,11 @@ public class LdapProvisioning extends Provisioning {
             }
             ne.close();            
         } catch (NameNotFoundException e) {
-            return null;
+            ZimbraLog.account.warn("caught NameNotFoundException", e);
+            return result;
         } catch (InvalidNameException e) {
-            return null;                        
+            ZimbraLog.account.warn("caught InvalidNameException", e);
+            return result;                        
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup data source via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
