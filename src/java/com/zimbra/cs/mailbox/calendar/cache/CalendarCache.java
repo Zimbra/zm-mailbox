@@ -163,9 +163,10 @@ public class CalendarCache {
                 new FullInstanceData(defaultInvite, null, defDtStartLong, defDurationLong,
                                      defaultEffectivePartStat, defaultFba, null, null);
             calItemData = new CalendarItemData(
-                    calItem.getModifiedSequence(),
                     calItem.getType(), calItem.getFolderId(), calItem.getId(),
                     calItem.getFlagString(), calItem.getTagString(),
+                    calItem.getModifiedSequence(), calItem.getSavedSequence(),
+                    calItem.getDate(), calItem.getChangeDate(), calItem.getSize(),
                     defaultInvite.getUid(), defaultInvite.isRecurrence(), calItem.isPublic(),
                     alarm, defaultData);
 
