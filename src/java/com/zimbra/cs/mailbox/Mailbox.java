@@ -3991,6 +3991,7 @@ public class Mailbox {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
             calItem.snapshotRevision();
             calItem.updateNextAlarm(dismissedAt + 1);
+            markItemModified(calItem, Change.MODIFIED_INVITE);
             success = true;
         } finally {
             endTransaction(success);
