@@ -158,33 +158,37 @@ class ImapFolderSync {
                 }
             }
         } else if (ds.isSyncEnabled(folder)) {
-            String remotePath = imapSync.getRemotePath(folder);
-            if (remotePath == null) {
-                return null; // not eligible for synchronization
-            }
-            int itemId = folder.getId();
-            remoteFolder = createRemoteFolder(remotePath, folder.getId());
-            if (remoteFolder == null) {
+            remoteFolder = createRemoteFolder(folder);
+            if (remoteFolder == null) return null;
+            try {
+                remoteFolder.select();
+            } catch (CommandFailedException e) {
+                syncFolderFailed(folder.getId(), remoteFolder.getPath(),
+                                 "Unable to select remote folder", e);
                 return null;
             }
             long uidValidity = connection.getMailbox().getUidValidity();
             tracker = ds.createImapFolder(
-                itemId, folder.getPath(), remotePath, uidValidity);
+                folder.getId(), folder.getPath(), remoteFolder.getPath(), uidValidity);
         }
         return tracker;
     }
 
-    private RemoteFolder createRemoteFolder(String path, int itemId)
+    private RemoteFolder createRemoteFolder(Folder folder)
         throws ServiceException, IOException {
-        RemoteFolder folder = new RemoteFolder(connection, path);
+        String remotePath = imapSync.getRemotePath(folder);
+        if (remotePath == null) {
+            return null; // not eligible for synchronization
+        }
+        RemoteFolder remoteFolder = new RemoteFolder(connection, remotePath);
         try {
-            folder.create();
-            folder.select();
+            remoteFolder.create();
         } catch (CommandFailedException e) {
-            syncFolderFailed(itemId, path, "Unable to create remote folder", e);
+            syncFolderFailed(folder.getId(), remotePath,
+                             "Unable to create remote folder", e);
             return null;
         }
-        return folder;
+        return remoteFolder;
     }
 
     /*
@@ -1047,7 +1051,8 @@ class ImapFolderSync {
         }
     }
 
-    private boolean moveMessage(ImapMessage msgTracker) throws ServiceException {
+    private boolean moveMessage(ImapMessage msgTracker)
+        throws ServiceException, IOException {
         if (!hasUidPlus()) return false;
         Message msg;
         Folder folder;
@@ -1058,18 +1063,33 @@ class ImapFolderSync {
             return false;
         }
         if (!ds.isSyncEnabled(folder)) return false;
-        ImapFolder folderTracker = imapSync.getTrackedFolders().getByItemId(folder.getId());
-        if (folderTracker == null) return false;
+        ImapFolderCollection trackedFolders = imapSync.getTrackedFolders();
+        ImapFolder folderTracker = trackedFolders.getByItemId(folder.getId());
+        String remotePath;
+        if (folderTracker != null) {
+            remotePath = folderTracker.getRemotePath();
+        } else {
+            // If remote folder does not exist, then create it on demand
+            RemoteFolder remoteFolder = createRemoteFolder(folder);
+            if (remoteFolder == null) return false;
+            remotePath = remoteFolder.getPath();
+        }
         String seq = String.valueOf(msgTracker.getUid());
         CopyResult cr;
         try {
-            cr = connection.uidCopy(seq, folderTracker.getRemotePath());
+            cr = connection.uidCopy(seq, remotePath);
         } catch (IOException e) {
             syncFailed(msgTracker.getUid(), "COPY failed", e);
             return false;
         }
         if (cr == null) return false;
         stats.msgsCopiedRemotely++;
+        // If remote folder created on demand, then create folder tracker
+        if (folderTracker == null) {
+            folderTracker = ds.createImapFolder(
+                folder.getId(), folder.getPath(), remotePath, cr.getUidValidity());
+            trackedFolders.add(folderTracker);
+        }
         if (!deleteMessage(msgTracker.getUid())) {
             LOG.warn("Unable to delete message with uid " + msgTracker.getUid());
             return false;
