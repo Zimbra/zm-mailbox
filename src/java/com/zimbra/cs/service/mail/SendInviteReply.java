@@ -94,7 +94,7 @@ public class SendInviteReply extends CalendarRequest {
         
         Element response = getResponseElement(zsc);
         
-        synchronized (mbox) {
+        //synchronized (mbox) {
             
             Invite oldInv = null;
             int calItemId; 
@@ -237,7 +237,7 @@ public class SendInviteReply extends CalendarRequest {
                     sLog.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
                 }
             }
-        }
+        //}  // synchronized (mbox)
         
         return response;
     }

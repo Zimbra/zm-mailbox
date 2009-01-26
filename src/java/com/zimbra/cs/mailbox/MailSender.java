@@ -386,8 +386,8 @@ public class MailSender {
             if (!sentAddresses.isEmpty()) {
             	try {
                 	ContactRankings.increment(octxt.getAuthenticatedUser().getId(), sentAddresses);
-            	} catch (Throwable e) {
-            		ZimbraLog.smtp.warn("unable to update contact rankings", e);
+            	} catch (Exception e) {
+            		ZimbraLog.smtp.error("unable to update contact rankings", e);
             	}
             	newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
             	if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false))

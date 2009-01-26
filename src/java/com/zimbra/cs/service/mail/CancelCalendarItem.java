@@ -67,7 +67,7 @@ public class CancelCalendarItem extends CalendarRequest {
         
         sLog.info("<CancelCalendarItem id=" + iid + " comp=" + compNum + ">");
         
-        synchronized (mbox) {
+        //synchronized (mbox) {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CancelCalendarItemRequest(" + iid + "," + compNum + ")");
@@ -96,7 +96,7 @@ public class CancelCalendarItem extends CalendarRequest {
                     octxt = new OperationContext(octxt).unsetChangeConstraint();
                 }
             }
-        } // synchronized on mailbox
+        //} // synchronized on mailbox
         
         Element response = getResponseElement(zsc);
         return response;

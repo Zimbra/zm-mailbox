@@ -131,10 +131,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
     protected static String getOrigHtml(MimeMessage mm, String defaultCharset) throws ServiceException {
         try {
-            List /*<MPartInfo>*/ parts = Mime.getParts(mm);
-            for (Iterator it = parts.iterator(); it.hasNext(); ) {
-                MPartInfo mpi = (MPartInfo) it.next();
-                
+            for (MPartInfo mpi : Mime.getParts(mm)) {
                 if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
                     return Mime.getStringContent(mpi.getMimePart(), defaultCharset);
             }
@@ -155,10 +152,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             String decline = buildUrl(localURL, orgAddress, uid, attendee, invId, "DECLINE");
             String tentative = buildUrl(localURL, orgAddress, uid, attendee, invId, "TENTATIVE");
             
-            List /*<MPartInfo>*/ parts = Mime.getParts(mm);
-            for (Iterator it = parts.iterator(); it.hasNext(); ) {
-                MPartInfo mpi = (MPartInfo) it.next();
-                
+            for (MPartInfo mpi : Mime.getParts(mm)) {
                 if (mpi.getContentType().equals(Mime.CT_TEXT_HTML)) {
                     String str = htmlStr;
                     
@@ -281,7 +275,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean ignoreFailedAddresses,
         boolean updateOwnAppointment)
     throws ServiceException {
-        synchronized (mbox) {
+        //synchronized (mbox) {
             boolean onBehalfOf = zsc.isDelegatedRequest();
             boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
             if (notifyOwner) {
@@ -396,7 +390,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (msgId != null)
                     response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
             }
-        }
+        //}  // synchronized (mbox)
         
         return response;
     }
