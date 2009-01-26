@@ -691,6 +691,12 @@ public class Recurrence
                 return ParsedDateTime.MAX_DATETIME;
             } else if (mRecur != null) {
                 long endMillis = mRecur.getEstimatedEndTime(mDtStart).getTime();
+                if (mRecur.getCount() > 0) {
+                    // If recurrence is limited by COUNT, run the expansion to figure out the true end time.
+                    List<Date> dates = mRecur.expandRecurrenceOverRange(mDtStart, mDtStart.getUtcTime(), endMillis);
+                    if (!dates.isEmpty())
+                        endMillis = dates.get(dates.size() - 1).getTime();
+                }
                 ParsedDateTime end = ParsedDateTime.fromUTCTime(endMillis, mDtStart.getTimeZone());
                 if (mDuration != null)
                     end = end.add(mDuration);
