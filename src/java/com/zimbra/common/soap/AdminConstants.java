@@ -320,7 +320,11 @@ public class AdminConstants {
     public static final QName GET_FREE_BUSY_QUEUE_INFO_RESPONSE = QName.get("GetFreeBusyQueueInfoResponse", NAMESPACE);
     public static final QName PUSH_FREE_BUSY_REQUEST = QName.get("PushFreeBusyRequest", NAMESPACE);
     public static final QName PUSH_FREE_BUSY_RESPONSE = QName.get("PushFreeBusyResponse", NAMESPACE);
-    
+
+    // calendar cache
+    public static final QName PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST = QName.get("PurgeAccountCalendarCacheRequest", NAMESPACE);
+    public static final QName PURGE_ACCOUNT_CALENDAR_CACHE_RESPONSE = QName.get("PurgeAccountCalendarCacheResponse", NAMESPACE);
+
     // permissions
     public static final QName CHECK_PERMISSION_REQUEST = QName.get("CheckPermissionRequest", NAMESPACE);
     public static final QName CHECK_PERMISSION_RESPONSE = QName.get("CheckPermissionResponse", NAMESPACE);
