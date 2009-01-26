@@ -183,7 +183,7 @@ public class ZimbraLog {
     public static final Log account = LogFactory.getLog("zimbra.account");
     
     /**
-     * the "zimbra.gal" logger. For account-related events.
+     * the "zimbra.gal" logger. For gal-related events.
      */
     public static final Log gal = LogFactory.getLog("zimbra.gal");
     
@@ -191,6 +191,11 @@ public class ZimbraLog {
      * the "zimbra.ldap" logger. For ldap-related events.
      */
     public static final Log ldap = LogFactory.getLog("zimbra.ldap");
+    
+    /**
+     * the "zimbra.acl" logger. For acl-related events.
+     */
+    public static final Log acl = LogFactory.getLog("zimbra.acl");
     
     /**
      * the "zimbra.security" logger. For security-related events
@@ -342,6 +347,7 @@ public class ZimbraLog {
      */
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
 
+    
     /**
      * Maps the log category name to its description.
      */
@@ -395,6 +401,7 @@ public class ZimbraLog {
         descriptions.put(account.getCategory(), "Account operations");
         descriptions.put(gal.getCategory(), "GAL operations");
         descriptions.put(ldap.getCategory(), "LDAP operations");
+        descriptions.put(acl.getCategory(), "ACL operations");
         descriptions.put(security.getCategory(), "Security events");
         descriptions.put(soap.getCategory(), "SOAP protocol");
         descriptions.put(sqltrace.getCategory(), "SQL tracing");
