@@ -28,7 +28,7 @@ public enum RightModifier {
             return null;
     }
     
-    char getModifier() {
+    public char getModifier() {
         return mModifier;
     }
     

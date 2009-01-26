@@ -154,11 +154,12 @@ public class RightChecker {
      * @param grantee
      * @param target
      * @param rightNeeded
+     * @param canDelegateNeeded if we are checking for "can delegate" the right
      * @param via if not null, will be populated with the grant info via which the result was decided.
      * @return Boolean.TRUE if allowed, Boolean.FALSE if denied, null if there is no grant applicable to the rightNeeded.
      * @throws ServiceException
      */
-    static Boolean canDo(Account grantee, Entry target, Right rightNeeded, ViaGrant via) throws ServiceException {
+    static Boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         if (!rightNeeded.isPresetRight())
             throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
                                                    rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
@@ -254,11 +255,14 @@ public class RightChecker {
         if (result != null) 
             return result;
        
+        // if right is an user right, check authed users and public
         if (rightNeeded.isUserRight()) {
+            // all authed zimbra user
             result = checkPresetRight(acl, targetType, grantee, rightNeeded, (short)(GranteeFlag.F_AUTHUSER), via, seenRight);
             if (result != null) 
                 return result;
             
+            // public
             result = checkPresetRight(acl, targetType, grantee, rightNeeded, (short)(GranteeFlag.F_PUBLIC), via, seenRight);
             if (result != null) 
                 return result;
@@ -359,7 +363,7 @@ public class RightChecker {
      * @throws ServiceException
      */
     // public only for unittest
-    public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded) throws ServiceException {
+    public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         if (rightNeeded != AdminRight.R_PSEUDO_GET_ATTRS && rightNeeded != AdminRight.R_PSEUDO_SET_ATTRS)
             throw ServiceException.FAILURE("internal error", null); 
         
@@ -378,7 +382,7 @@ public class RightChecker {
         // check the target entry itself
         List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         if (acl != null) {
-            car = checkTargetAttrsRight(acl, targetType, granteeIds, rightNeeded, relativity, allowSome, denySome);
+            car = checkTargetAttrsRight(acl, targetType, granteeIds, rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
             relativity += 2;
         }
         
@@ -408,7 +412,7 @@ public class RightChecker {
                     if (groupACLs != null) {
                         List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                         if (aclsOnGroupTargets != null) {
-                            car = checkTargetAttrsRight(aclsOnGroupTargets, targetType, granteeIds, rightNeeded, relativity, allowSome, denySome);
+                            car = checkTargetAttrsRight(aclsOnGroupTargets, targetType, granteeIds, rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                             relativity += 2;
                             if (car.isAll()) 
                                 break;
@@ -421,7 +425,7 @@ public class RightChecker {
                     
                     if (acl == null)
                         continue;
-                    car = checkTargetAttrsRight(acl, targetType, granteeIds, rightNeeded, relativity, allowSome, denySome);
+                    car = checkTargetAttrsRight(acl, targetType, granteeIds, rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                     relativity += 2;
                 }
             }
@@ -485,20 +489,20 @@ public class RightChecker {
     }
     
     private static CollectAttrsResult checkTargetAttrsRight(List<ZimbraACE> acl, TargetType targetType,
-                                                            Set<String> granteeIds, Right rightNeeded,
+                                                            Set<String> granteeIds, Right rightNeeded, boolean canDelegateNeeded,
                                                             Integer relativity,
                                                             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         CollectAttrsResult result = null;
         
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        result = checkAttrsRight(acl, targetType, granteeIds, rightNeeded.getRightType(), granteeFlags, relativity, allowSome, denySome);
+        result = checkAttrsRight(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity, allowSome, denySome);
         if (result.isAll()) 
             return result;
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP);
-        result = checkAttrsRight(acl, targetType, granteeIds, rightNeeded.getRightType(), granteeFlags, relativity+1, allowSome, denySome);
+        result = checkAttrsRight(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity+1, allowSome, denySome);
 
         return result;
     }
@@ -520,7 +524,9 @@ public class RightChecker {
     }
 
 
-    private static CollectAttrsResult processAttrsGrant(ZimbraACE ace, TargetType targetType, AttrRight attrRight, Right.RightType rightTypeNeeded, Integer relativity,
+    private static CollectAttrsResult processAttrsGrant(ZimbraACE ace, TargetType targetType, 
+                                                        AttrRight attrRight, Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
+                                                        Integer relativity,
                                                         Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         
         // note: do NOT call ace.getRight in this method, ace is passed in for deny() and getTargetType() calls only.  
@@ -564,8 +570,8 @@ public class RightChecker {
     }
     
     private static CollectAttrsResult checkAttrsRight(List<ZimbraACE> acl, TargetType targetType,
-                                                      Set<String> granteeIds, Right.RightType rightTypeNeeded, short granteeFlags, 
-                                                      Integer relativity,
+                                                      Set<String> granteeIds, Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
+                                                      short granteeFlags, Integer relativity,
                                                       Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
                                                 
         CollectAttrsResult result = null;
@@ -584,7 +590,7 @@ public class RightChecker {
             
             if (rightGranted.isAttrRight()) {
                 AttrRight attrRight = (AttrRight)rightGranted;
-                result = processAttrsGrant(ace, targetType, attrRight, rightTypeNeeded, relativity, allowSome, denySome);
+                result = processAttrsGrant(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                 
                 /*
                  * denied grants appear before allowed grants
@@ -598,7 +604,7 @@ public class RightChecker {
             } else if (rightGranted.isComboRight()) {
                 ComboRight comboRight = (ComboRight)rightGranted;
                 for (AttrRight attrRight : comboRight.getAttrRights()) {
-                    result = processAttrsGrant(ace, targetType, attrRight, rightTypeNeeded, relativity, allowSome, denySome);
+                    result = processAttrsGrant(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                     // return if we see an allow-all/deny-all, same reasom as above.
                     if (result != null && result.isAll())
                         return result;
@@ -627,10 +633,10 @@ public class RightChecker {
         Set<Right> presetRights = getEffectivePresetRights(grantee, target);
         
         // get effective setAttrs rights
-        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
         
         // get effective getAttrs rights
-        AllowedAttrs allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS);
+        AllowedAttrs allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, false);
         
         // finally, populate our result 
         
@@ -666,7 +672,7 @@ public class RightChecker {
                                                           RightCommand.EffectiveRights result) throws ServiceException {
         
         // get effective setAttrs rights 
-        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
         
         // setAttrs
         if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
@@ -917,7 +923,7 @@ public class RightChecker {
         if (hasConstraints) {
             // see if the grantee can set zimbraConstraint on the constraint entry
             // if so, the grantee can set attrs to any value (not restricted by the constraints)
-            AllowedAttrs allowedAttrsOnConstraintEntry = canAccessAttrs(grantee, constraintEntry, AdminRight.R_PSEUDO_SET_ATTRS);
+            AllowedAttrs allowedAttrsOnConstraintEntry = canAccessAttrs(grantee, constraintEntry, AdminRight.R_PSEUDO_SET_ATTRS, false);
             if (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_ALL ||
                 (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_SOME &&
                  allowedAttrsOnConstraintEntry.getAllowed().contains(Provisioning.A_zimbraConstraint)))
@@ -1012,6 +1018,7 @@ public class RightChecker {
         
         return targetEntry;
     }
+
 
     /**
      * @param args

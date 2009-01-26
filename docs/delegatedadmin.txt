@@ -1166,7 +1166,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 </GetGrantsRequest>
 
 <GetGrantsResponse>
-    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" right="{right-name}" deny="{deny}"/>+
+    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" right="{right-name}" deny="{deny}" canDelegate="{canDelegate}"/>+
 </GetGrantsResponse>  
    
          

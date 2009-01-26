@@ -114,42 +114,7 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
-        try {
-            if (grantee == null) {
-                if (rightNeeded.isUserRight())
-                    grantee = ACL.ANONYMOUS_ACCT;
-                else
-                    return false;
-            }
-
-            // 1. always allow self for user right
-            if (rightNeeded.isUserRight() && target instanceof Account) {
-                if (((Account)target).getId().equals(grantee.getId()))
-                    return true;
-            }
-            
-            // 2. check ACL
-            Boolean result = RightChecker.canDo(grantee, target, rightNeeded, via);
-            if (result != null)
-                return result.booleanValue();
-            else {
-                // no ACL, see if there is a configured default 
-                Boolean defaultValue = rightNeeded.getDefault();
-                if (defaultValue != null)
-                    return defaultValue.booleanValue();
-                
-                // no configured default, return default requested by the callsite
-                return defaultGrant;
-            }
-                
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " + 
-                                   "grantee=" + grantee.getName() + 
-                                   ", target=" + target.getLabel() + 
-                                   ", right=" + rightNeeded.getName() + 
-                                   " => denied", e);
-        }
-        return false;
+        return canPerform(grantee, target, rightNeeded, false, asAdmin, defaultGrant, via);
     }
     
     @Override
@@ -208,23 +173,78 @@ public class RoleAccessManager extends AccessManager {
         return false;
     }
     
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
+    private boolean canPerform(Account grantee, Entry target, 
+                               Right rightNeeded, boolean canDelegateNeeded, 
+                               boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+        try {
+            if (grantee == null) {
+                if (canDelegateNeeded)
+                    return false;
+                
+                if (rightNeeded.isUserRight())
+                    grantee = ACL.ANONYMOUS_ACCT;
+                else
+                    return false;
+            }
+
+            // 1. always allow self for user right, self can also delegate(i.e. grant) the right
+            if (rightNeeded.isUserRight() && target instanceof Account) {
+                if (((Account)target).getId().equals(grantee.getId()))
+                    return true;
+            }
+            
+            // 2. check ACL
+            Boolean result = RightChecker.canPerform(grantee, target, rightNeeded, canDelegateNeeded, via);
+            if (result != null)
+                return result.booleanValue();
+            else {
+                if (canDelegateNeeded)
+                    return false;
+                
+                // no ACL, see if there is a configured default 
+                Boolean defaultValue = rightNeeded.getDefault();
+                if (defaultValue != null)
+                    return defaultValue.booleanValue();
+                
+                // no configured default, return default requested by the callsite
+                return defaultGrant;
+            }
+                
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("ACL checking failed: " + 
+                                   "grantee=" + grantee.getName() + 
+                                   ", target=" + target.getLabel() + 
+                                   ", right=" + rightNeeded.getName() + 
+                                   " => denied", e);
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean canPerform(Account grantee, Entry target, 
+                       Right rightNeeded, boolean canDelegateNeeded, 
+                       Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
         boolean allowed = false;
         if (rightNeeded.isPresetRight()) {
-            allowed = canDo(grantee, target, rightNeeded, true, false, viaGrant);
+            allowed = canPerform(grantee, target, rightNeeded, canDelegateNeeded, true, false, viaGrant);
         
         } else if (rightNeeded.isAttrRight()) {
             AttrRight attrRight = (AttrRight)rightNeeded;
             if (rightNeeded.getRightType() == Right.RightType.getAttrs) {
                 Set<String> attrsToGet = attrRight.getAttrs();
-                allowed = canGetAttrs(grantee, target, attrsToGet);
+                allowed = canGetAttrsInternal(grantee, target, attrsToGet, canDelegateNeeded);
             } else {
                 if (attrs == null || attrs.isEmpty()) {
                     // no attr/value map, just check if all attrs in the right are covered (constraints are not checked)
                     Set<String> attrsToSet = attrRight.getAttrs();
-                    allowed = canSetAttrs(grantee, target, attrsToSet);
+                    allowed = canSetAttrsInternal(grantee, target, attrsToSet, canDelegateNeeded);
                 } else {
                     // attr/value map is provided, check it (constraints are checked)
+                    
+                    // sanity check, we should *not* be needing "can delegate"
+                    if (canDelegateNeeded)
+                        throw ServiceException.FAILURE("internal error", null);
+                    
                     allowed = canSetAttrs(grantee, target, attrs);
                 }
             }
@@ -235,7 +255,7 @@ public class RoleAccessManager extends AccessManager {
             ComboRight comboRight = (ComboRight)rightNeeded;
             // check all directly and indirectly contained rights
             for (Right right : comboRight.getAllRights()) {
-                if (!canDo(grantee, target, right, attrs, null)) // via is not set for combo right. maybe we should just get rid of via 
+                if (!canPerform(grantee, target, right, canDelegateNeeded, attrs, null)) // via is not set for combo right. maybe we should just get rid of via 
                     return false;
             }
 
@@ -244,18 +264,27 @@ public class RoleAccessManager extends AccessManager {
         return allowed;
     }
     
-    private RightChecker.AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded) throws ServiceException {
+    private RightChecker.AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         // Do NOT check for self.  If an admin auth as an admin and want to get/set  
         // his own attrs, he has to have the proper right to do so.
             
         // check ACL
-        return RightChecker.canAccessAttrs(grantee, target, rightNeeded);
+        return RightChecker.canAccessAttrs(grantee, target, rightNeeded, canDelegateNeeded);
+    }
+    
+    public boolean canGetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, canDelegateNeeded);
+        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
+    }
+    
+    public boolean canSetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, canDelegateNeeded);
+        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
     
     @Override
     public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS);
-        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
+        return canGetAttrsInternal(grantee, target, attrsNeeded, false);
     }
     
     @Override
@@ -271,8 +300,7 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
-        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
+        return canSetAttrsInternal(grantee, target, attrsNeeded, false);
     }
     
     @Override
@@ -287,7 +315,7 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canSetAttrs(Account grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
         return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
     }
     

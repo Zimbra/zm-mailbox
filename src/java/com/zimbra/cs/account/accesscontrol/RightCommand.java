@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -62,7 +63,7 @@ public class RightCommand {
         
         /*
          * ctor or parsing ACL from a SOAP response
-         * called from CLI
+         * called from SoapProvisioning/ProvUtil
          */
         public ACL(Element parent) throws ServiceException {
             for (Element eGrant : parent.listElements(AdminConstants.E_GRANT)) {
@@ -70,9 +71,21 @@ public class RightCommand {
                 String granteeId = eGrant.getAttribute(AdminConstants.A_ID);
                 String granteeName = eGrant.getAttribute(AdminConstants.A_NAME);
                 String right = eGrant.getAttribute(AdminConstants.A_RIGHT);
-                boolean deny = eGrant.getAttributeBool(AdminConstants.A_DENY, false);
                 
-                ACE ace = new ACE(granteeType, granteeId, granteeName, right, deny);
+                boolean deny = eGrant.getAttributeBool(AdminConstants.A_DENY, false);
+                boolean canDelegate = eGrant.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+                
+                RightModifier rightModifier = null;
+                
+                /*
+                 * only one of deny/canDelegate can be true
+                 */
+                if (deny)
+                    rightModifier = RightModifier.RM_DENY;
+                else if (canDelegate)
+                    rightModifier = RightModifier.RM_CAN_DELEGATE;
+                
+                ACE ace = new ACE(granteeType, granteeId, granteeName, right, rightModifier);
                 addACE(ace);
             }
         }
@@ -97,7 +110,12 @@ public class RightCommand {
                 eGrant.addAttribute(AdminConstants.A_ID, ace.granteeId());
                 eGrant.addAttribute(AdminConstants.A_NAME, ace.granteeName());
                 eGrant.addAttribute(AdminConstants.A_RIGHT, ace.right());
-                eGrant.addAttribute(AdminConstants.A_DENY, ace.deny());
+                
+                RightModifier rightModifier = ace.rightModifier();
+                boolean deny = (rightModifier == RightModifier.RM_DENY);
+                boolean canDelegate = (rightModifier == RightModifier.RM_CAN_DELEGATE);
+                eGrant.addAttribute(AdminConstants.A_DENY, deny);
+                eGrant.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
             }
         }
     }
@@ -107,7 +125,7 @@ public class RightCommand {
         String mGranteeId;
         String mGranteeName;
         String mRight;
-        boolean mDeny;
+        RightModifier mRightModifier;
     
         /*
          * called from CLI
@@ -116,13 +134,13 @@ public class RightCommand {
             String granteeId,
             String granteeName,
             String right,
-            boolean deny) {
+            RightModifier rightModifier) {
             
             mGranteeType = granteeType;
             mGranteeId = granteeId;
             mGranteeName = granteeName;
             mRight = right;
-            mDeny = deny;
+            mRightModifier = rightModifier;
         }
         
         /*
@@ -133,14 +151,14 @@ public class RightCommand {
             mGranteeId = ace.getGrantee();
             mGranteeName = ace.getGranteeDisplayName();
             mRight = ace.getRight().getName();
-            mDeny = ace.deny();
+            mRightModifier = ace.getRightModifier();
         }
         
         public String granteeType() { return mGranteeType; }
         public String granteeId()   { return mGranteeId; }
         public String granteeName() { return mGranteeName; }
         public String right()       { return mRight; }
-        public boolean deny()       { return mDeny; }
+        public RightModifier rightModifier()       { return mRightModifier; }
     }
     
     public static class EffectiveAttr {
@@ -399,6 +417,14 @@ public class RightCommand {
         return RightManager.getInstance().getRight(rightName);
     }
     
+    private static void verifyAccessManager() throws ServiceException {
+        // disable the check for now
+        /*
+        if (!(AccessManager.getInstance() instanceof RoleAccessManager))
+            throw ServiceException.FAILURE(LC.zimbra_class_accessmanager.key() + " must be RoleAccessManager", null);
+        */
+    }
+    
     /**
      * return rights that can be granted on target with the specified targetType
      *     e.g. renameAccount can be granted on a domain target
@@ -411,6 +437,8 @@ public class RightCommand {
      * @throws ServiceException
      */
     public static List<Right> getAllRights(String targetType) throws ServiceException {
+        verifyAccessManager();
+        
         Map<String, AdminRight> allRights = RightManager.getInstance().getAllAdminRights();
         
         List<Right> rights = new ArrayList<Right>();
@@ -430,6 +458,7 @@ public class RightCommand {
                                      GranteeBy granteeBy, String grantee,
                                      String right, Map<String, Object> attrs,
                                      AccessManager.ViaGrant via) throws ServiceException {
+        verifyAccessManager();
         
         // target
         TargetType tt = TargetType.fromString(targetType);
@@ -453,14 +482,15 @@ public class RightCommand {
         }
         
         AccessManager am = AccessManager.getInstance();
-        return am.canDo((Account)granteeEntry, targetEntry, r, attrs, via);
+        return am.canPerform((Account)granteeEntry, targetEntry, r, false, attrs, via);
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
                                                      String targetType, TargetBy targetBy, String target,
                                                      GranteeBy granteeBy, String grantee,
                                                      boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-
+        verifyAccessManager();
+        
         // target
         TargetType tt = TargetType.fromString(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
@@ -484,6 +514,8 @@ public class RightCommand {
                                                        CosBy cosBy, String cosStr,
                                                        GranteeBy granteeBy, String grantee) throws ServiceException {
         
+
+        
         TargetType tt = TargetType.fromString(targetType);
         Entry targetEntry = RightChecker.createPseudoTarget(prov, tt, domainBy, domainStr, cosBy, cosStr);
        
@@ -502,7 +534,6 @@ public class RightCommand {
     
     public static ACL getGrants(Provisioning prov,
                                 String targetType, TargetBy targetBy, String target) throws ServiceException {
-        
         // target
         TargetType tt = TargetType.fromString(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
@@ -526,6 +557,9 @@ public class RightCommand {
         
         // right
         Right r = RightManager.getInstance().getRight(right);
+        
+        if (!r.isUserRight())
+            verifyAccessManager();
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
@@ -554,6 +588,9 @@ public class RightCommand {
         
         // right
         Right r = RightManager.getInstance().getRight(right);
+        
+        if (!r.isUserRight())
+            verifyAccessManager();
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);

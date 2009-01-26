@@ -2830,11 +2830,13 @@ public class ProvUtil implements DebugListener {
         System.out.printf(format, "grantee", "grantee type", "right");
         System.out.printf(format, "--------------------", "--------------------", "--------------------");
         for (RightCommand.ACE ace : acl.getACEs()) {
-            String deny = ace.deny()?"-":"";
+            // String deny = ace.deny()?"-":"";
+            RightModifier rightModifier = ace.rightModifier();
+            String rm = (rightModifier==null)?"":String.valueOf(rightModifier.getModifier());
             System.out.printf(format, 
                               ace.granteeName(),
                               ace.granteeType(),
-                              deny + ace.right());
+                              rm + ace.right());
         }
         System.out.println();
     }

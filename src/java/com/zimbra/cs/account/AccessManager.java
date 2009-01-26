@@ -121,7 +121,8 @@ public abstract class AccessManager {
         return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
+    // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     

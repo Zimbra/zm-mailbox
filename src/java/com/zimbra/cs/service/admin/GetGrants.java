@@ -26,7 +26,7 @@ public class GetGrants extends RightDocumentHandler {
         }
             
         RightCommand.ACL acl = RightCommand.getGrants(Provisioning.getInstance(),
-                                                         targetType, targetBy, target);
+                                                      targetType, targetBy, target);
         
         Element resp = zsc.createElement(AdminConstants.GET_GRANTS_RESPONSE);
         acl.toXML(resp);

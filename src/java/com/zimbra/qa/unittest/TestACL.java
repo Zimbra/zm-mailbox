@@ -614,8 +614,8 @@ public abstract class TestACL extends TestCase {
         try {
             // call RightChecker directly instead of mAM, we want to verify the interim result.
             AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
-                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS) :
-                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS);
+                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, false):
+                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
             // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
             assertEquals(expected, allowedAttrs);
         } catch (ServiceException e) {
@@ -624,7 +624,7 @@ public abstract class TestACL extends TestCase {
     }
         
     protected void verify(Account grantee, Entry target, Right right, Map<String, Object> attrs, AllowOrDeny expected) throws ServiceException {
-        boolean actual = mAM.canDo(grantee, target, right, attrs, null);
+        boolean actual = mAM.canPerform(grantee, target, right, false, attrs, null);
         assertEquals(expected.allow(), actual);
     }
     
