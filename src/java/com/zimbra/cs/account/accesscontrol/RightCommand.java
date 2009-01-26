@@ -558,17 +558,16 @@ public class RightCommand {
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        if (!r.isUserRight())
+        if (!r.isUserRight()) {
             verifyAccessManager();
+            
+            if (!RightChecker.isValidGranteeForAdminRights(gt, granteeEntry))
+                throw ServiceException.INVALID_REQUEST("grantee must be an admin account or group", null);
+        }
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
         aces.add(ace);
-        
-        /*
-        if (!RightChecker.canGrant())
-            throw ServiceException.INVALID_REQUEST();
-        */
         
         RightUtil.grantRight(prov, targetEntry, aces);
     }
@@ -589,8 +588,11 @@ public class RightCommand {
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        if (!r.isUserRight())
+        if (!r.isUserRight()) {
             verifyAccessManager();
+            
+            // do not check for RightChecker.isValidGrantee, just let them revoke
+        }
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);

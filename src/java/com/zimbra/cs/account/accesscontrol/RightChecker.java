@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -164,11 +165,22 @@ public class RightChecker {
             throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
                                                    rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
         
+        boolean granteeMustBeAdmin = !rightNeeded.isUserRight();
+        
+        if (granteeMustBeAdmin) {
+            // if the grantee is no longer legitimate, e.g. not an admin any more, ignore all his grants
+            if (!isValidGranteeForAdminRights(GranteeType.GT_USER, grantee))
+                return null;
+        }
+        
         Boolean result = null;
         SeenRight seenRight = new SeenRight();
         
         Provisioning prov = Provisioning.getInstance();
-        AclGroups granteeGroups = prov.getAclGroups(grantee);
+        
+        // only get admin groups 
+        AclGroups granteeGroups = prov.getAclGroups(grantee, granteeMustBeAdmin);
+        
         TargetType targetType = TargetType.getTargetType(target);
             
         // This path is called from AccessManager.canDo, the target object can be a 
@@ -861,11 +873,16 @@ public class RightChecker {
     // util methods
     //
     private static Set<String> setupGranteeIds(Account grantee) throws ServiceException {
+        Set<String> granteeIds = new HashSet<String>();
         Provisioning prov = Provisioning.getInstance();
-        AclGroups granteeGroups = prov.getAclGroups(grantee);
+        
+        if (!isValidGranteeForAdminRights(GranteeType.GT_USER, grantee))
+            return granteeIds;  // return empty Set
+        
+        // get only admin groups
+        AclGroups granteeGroups = prov.getAclGroups(grantee, true);
         
         // setup grantees ids 
-        Set<String> granteeIds = new HashSet<String>();
         granteeIds.add(grantee.getId());
         granteeIds.addAll(granteeGroups.groupIds());
         
@@ -1019,6 +1036,21 @@ public class RightChecker {
         return targetEntry;
     }
 
+    /**
+     * returns if grantee is an admin account or admin group
+     * 
+     * @param gt
+     * @param grantee
+     * @return
+     */
+    static boolean isValidGranteeForAdminRights(GranteeType gt, NamedEntry grantee) {
+        if (gt == GranteeType.GT_USER) {
+            return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        } else if (gt == GranteeType.GT_GROUP) {
+            return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
+        } else
+            return false;
+    }
 
     /**
      * @param args

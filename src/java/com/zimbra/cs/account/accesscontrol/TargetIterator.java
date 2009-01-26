@@ -126,7 +126,7 @@ public abstract class TargetIterator{
                 
             } else if (mCurTargetType == TargetType.distributionlist) {
                 if (mGroups == null)
-                    mGroups =  mProv.getAclGroups((Account)mTarget);
+                    mGroups =  mProv.getAclGroups((Account)mTarget, false);
                 
                 if (mIdxInGroups < mGroups.groupIds().size()) {
                     grantedOn = mProv.getAclGroup(DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));

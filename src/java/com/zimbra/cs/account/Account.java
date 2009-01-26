@@ -74,8 +74,8 @@ public class Account extends ZAttrAccount  {
         getProvisioning().setPassword(this, password);
     }
 
-    public AclGroups getAclGroups() throws ServiceException {
-        return getProvisioning().getAclGroups(this);
+    public AclGroups getAclGroups(boolean adminGroupsOnly) throws ServiceException {
+        return getProvisioning().getAclGroups(this, adminGroupsOnly);
     }
 
     /**

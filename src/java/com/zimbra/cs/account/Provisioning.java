@@ -447,12 +447,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * directly or indirectly a member of
      */
     public static class MemberOf {
-        private int mDistance;  // distance to the perspective object(account, cr, dl)
-        private String mId;     // zimbraId of this group
+        private int mDistance;         // distance to the perspective object(account, cr, dl)
+        private String mId;            // zimbraId of this group
+        private boolean mIsAdminGroup; // is this group is an admin group (zimbraIsAdminGroup == TRUE)
         
-        public MemberOf(String id, int distance) {
+        public MemberOf(String id, int distance, boolean isAdminGroup) {
             mId = id;
             mDistance = distance;
+            mIsAdminGroup = isAdminGroup;
         }
         
         public String getId() {
@@ -461,6 +463,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         
         public int getDistance() {
             return mDistance;
+        }
+        
+        public boolean isAdminGroup() {
+            return mIsAdminGroup;
         }
     }
     
@@ -485,12 +491,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
     /**
      * 
      * @param acct
+     * @param adminGroupsOnly return admin groups only
      * @return List of all direct and indirect groups this account belongs to.
      *         The returned List is sorted by "shortest distance" to the account, 
      *         the sorter the distance is, the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public AclGroups getAclGroups(Account acct) throws ServiceException {
+    public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 

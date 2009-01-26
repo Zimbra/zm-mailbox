@@ -40,6 +40,7 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
@@ -2787,11 +2788,12 @@ public class LdapProvisioning extends Provisioning {
     // ACL group
     //
     static final String DATA_ACLGROUP_LIST = "AG_LIST";
+    static final String DATA_ACLGROUP_LIST_ADMINS_ONLY = "AG_LIST_ADMINS_ONLY";
 
     
     @Override
     /*
-     * - cached inLdapProvisioning
+     * - cached in LdapProvisioning
      * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
      * - returned entry is not a "general purpose" DistributionList, it should only be used for ACL purposes 
      *   to check upward membership.
@@ -2882,18 +2884,20 @@ public class LdapProvisioning extends Provisioning {
                 dist++;
             } while (viaName != null);
             
-            groups.add(new MemberOf(dl.getId(), dist));
+            boolean isAdminGroup = dl.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
+            
+            groups.add(new MemberOf(dl.getId(), dist, isAdminGroup));
             groupIds.add(dl.getId());
         }
         
         Collections.sort(groups, MEMBER_OF_COMPARATOR);
         groups = Collections.unmodifiableList(groups);
+        groupIds = Collections.unmodifiableList(groupIds);
         
         return new AclGroups(groups, groupIds);
     }
     
-    @Override
-    public AclGroups getAclGroups(Account acct) throws ServiceException {
+    private AclGroups getAclGroupsInternal(Account acct) throws ServiceException {
         AclGroups dls = (AclGroups)acct.getCachedData(DATA_ACLGROUP_LIST);
         if (dls != null) 
             return dls;
@@ -2904,6 +2908,46 @@ public class LdapProvisioning extends Provisioning {
         dls = computeUpwardMembership(lists, via);
         acct.setCachedData(DATA_ACLGROUP_LIST, dls);
         return dls;
+    }
+    
+    // filter out non-admin groups from an AclGroups instance
+    private AclGroups getAdminAclGroups(AclGroups aclGroups) {
+        List<MemberOf> groups = new ArrayList<MemberOf>();
+        List<String> groupIds = new ArrayList<String>();
+        
+        List<MemberOf> memberOf = aclGroups.memberOf();
+        for (MemberOf mo : memberOf) {
+            if (mo.isAdminGroup()) {
+                groups.add(mo);
+                groupIds.add(mo.getId());
+            }
+        }
+        
+        groups = Collections.unmodifiableList(groups);
+        groupIds = Collections.unmodifiableList(groupIds);
+        
+        return new AclGroups(groups, groupIds);
+    }
+    
+    @Override
+    public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
+        
+        if (adminGroupsOnly) {
+            AclGroups dls = (AclGroups)acct.getCachedData(DATA_ACLGROUP_LIST_ADMINS_ONLY);
+            if (dls != null) 
+                return dls;
+            
+            // get the one with all groups
+            AclGroups aclGroups = getAclGroupsInternal(acct);
+            
+            // filter out non-admin groups
+            AclGroups adminAclgroups = getAdminAclGroups(aclGroups);
+                
+            acct.setCachedData(DATA_ACLGROUP_LIST_ADMINS_ONLY, adminAclgroups);
+            return adminAclgroups;
+            
+        } else
+            return getAclGroupsInternal(acct);
     }
 
     @Override

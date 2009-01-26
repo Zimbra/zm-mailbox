@@ -45,7 +45,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -101,7 +101,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -160,7 +160,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -216,7 +216,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -253,7 +253,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -290,7 +290,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -327,7 +327,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -364,7 +364,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -402,7 +402,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.
@@ -449,7 +449,7 @@ public class TestACLTarget extends TestACL {
         /*
          * setup grantees
          */
-        Account grantee = mProv.createAccount(getEmailAddr(testName, "grantee"), PASSWORD, null);
+        Account grantee = createAdminAccount(getEmailAddr(testName, "grantee"));
         
         /*
          * setup grant, the grant will be granted/tested/revoked on the following targets in turn.

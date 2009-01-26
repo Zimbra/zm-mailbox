@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090123-1400 */
+    /* build: 5.0 pshao 20090126-0937 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2946,6 +2946,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsAdminAccount = "zimbraIsAdminAccount";
 
     /**
+     * set to true for admin groups
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=802)
+    public static final String A_zimbraIsAdminGroup = "zimbraIsAdminGroup";
+
+    /**
      * set to true for customer care accounts
      */
     @ZAttr(id=601)
@@ -2962,6 +2970,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=132)
     public static final String A_zimbraIsMonitorHost = "zimbraIsMonitorHost";
+
+    /**
+     * set to true for system admin accounts
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=801)
+    public static final String A_zimbraIsSystemAdminAccount = "zimbraIsSystemAdminAccount";
 
     /**
      * Indicates the account is a resource used by the system such as spam

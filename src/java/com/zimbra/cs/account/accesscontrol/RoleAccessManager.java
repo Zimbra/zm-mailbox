@@ -193,7 +193,11 @@ public class RoleAccessManager extends AccessManager {
                     return true;
             }
             
-            // 2. check ACL
+            // 2. check system admin access
+            if (grantee.getBooleanAttr(Provisioning.A_zimbraIsSystemAdminAccount, false))
+                return true;
+            
+            // 3. check ACL
             Boolean result = RightChecker.canPerform(grantee, target, rightNeeded, canDelegateNeeded, via);
             if (result != null)
                 return result.booleanValue();

@@ -86,15 +86,15 @@ public abstract class TestACL extends TestCase {
             Domain domain = mProv.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
             
             // setup rights
-            ADMIN_RIGHT_ACCOUNT           = AdminRight.R_renameAccount;
-            ADMIN_RIGHT_CALENDAR_RESOURCE = AdminRight.R_renameCalendarResource;
-            ADMIN_RIGHT_CONFIG            = RightManager.getInstance().getRight("testGlobalConfigRemoveMe");
-            ADMIN_RIGHT_COS               = AdminRight.R_renameCos;
-            ADMIN_RIGHT_DISTRIBUTION_LIST = AdminRight.R_renameDistributionList;
-            ADMIN_RIGHT_DOMAIN            = AdminRight.R_createAccount;
-            ADMIN_RIGHT_GLOBALGRANT       = RightManager.getInstance().getRight("testGlobalGrantRemoveMe");
-            ADMIN_RIGHT_SERVER            = AdminRight.R_renameServer;
-            ADMIN_RIGHT_ZIMLET            = AdminRight.R_deleteZimlet;
+            ADMIN_RIGHT_ACCOUNT           = getRight("test-preset-account");
+            ADMIN_RIGHT_CALENDAR_RESOURCE = getRight("test-preset-calendarresource");
+            ADMIN_RIGHT_CONFIG            = getRight("test-preset-globalconfig");
+            ADMIN_RIGHT_COS               = getRight("test-preset-cos");
+            ADMIN_RIGHT_DISTRIBUTION_LIST = getRight("test-preset-distributionlist");
+            ADMIN_RIGHT_DOMAIN            = getRight("test-preset-domain");
+            ADMIN_RIGHT_GLOBALGRANT       = getRight("test-preset-globalgrant");
+            ADMIN_RIGHT_SERVER            = getRight("test-preset-server");
+            ADMIN_RIGHT_ZIMLET            = getRight("test-preset-zimlet");
             
         } catch (ServiceException e) {
             e.printStackTrace();
@@ -265,6 +265,12 @@ public abstract class TestACL extends TestCase {
     
     protected Account anonAccount() {
         return ACL.ANONYMOUS_ACCT;
+    }
+    
+    protected Account createAdminAccount(String email)throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+        return mProv.createAccount(email, PASSWORD, attrs);
     }
     
     /*

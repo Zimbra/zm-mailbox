@@ -36,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090123-1400 */
+    /* build: 5.0 pshao 20090126-0937 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -763,6 +763,78 @@ public class ZAttrDistributionList extends MailTarget {
     public Map<String,Object> unsetId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "");
+        return attrs;
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @return zimbraIsAdminGroup, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=802)
+    public boolean isIsAdminGroup() {
+        return getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @param zimbraIsAdminGroup new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=802)
+    public void setIsAdminGroup(boolean zimbraIsAdminGroup) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @param zimbraIsAdminGroup new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=802)
+    public Map<String,Object> setIsAdminGroup(boolean zimbraIsAdminGroup, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=802)
+    public void unsetIsAdminGroup() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=802)
+    public Map<String,Object> unsetIsAdminGroup(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, "");
         return attrs;
     }
 
