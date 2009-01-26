@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -34,16 +35,9 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Entry;
-
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
-
-import com.zimbra.common.localconfig.KnownKey;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.localconfig.ConfigException;
-
 import com.zimbra.cs.util.BuildInfo;
 
 enum ProxyConfOverride {
@@ -393,7 +387,7 @@ class ProxyConfVar
         if (mOverride == ProxyConfOverride.CONFIG) {
             mValue = configSource.getAttr(mAttribute,(String)mDefault);
         } else if (mOverride == ProxyConfOverride.LOCALCONFIG) {
-            mValue = new KnownKey(mAttribute,(String)mDefault).value();
+            mValue = lcValue(mAttribute,(String)mDefault);
         } else if (mOverride == ProxyConfOverride.SERVER) {
             mValue = serverSource.getAttr(mAttribute,(String)mDefault);
         }
@@ -411,7 +405,7 @@ class ProxyConfVar
         if (mOverride == ProxyConfOverride.CONFIG) {
             mValue = configSource.getBooleanAttr(mAttribute,(Boolean)mDefault);
         } else if (mOverride == ProxyConfOverride.LOCALCONFIG) {
-            mValue = new KnownKey(mAttribute,((Boolean)mDefault).toString()).booleanValue();
+            mValue = Boolean.valueOf(lcValue(mAttribute,mDefault.toString()));
         } else if (mOverride == ProxyConfOverride.SERVER) {
             mValue = serverSource.getBooleanAttr(mAttribute,(Boolean)mDefault);
         }
@@ -441,8 +435,8 @@ class ProxyConfVar
         if (mOverride == ProxyConfOverride.CONFIG) {
             mValue = new Long(configSource.getTimeInterval(mAttribute,(Long)mDefault));
         } else if (mOverride == ProxyConfOverride.LOCALCONFIG) {
-            mValue = new Long(DateUtil.getTimeInterval(new KnownKey(mAttribute,
-                ((Long)mDefault).toString()).value(), ((Long)mDefault).longValue()));
+            mValue = new Long(DateUtil.getTimeInterval(lcValue(mAttribute,
+                mDefault.toString()), ((Long)mDefault).longValue()));
         } else if (mOverride == ProxyConfOverride.SERVER) {
             mValue = new Long(serverSource.getTimeInterval(mAttribute,(Long)mDefault));
         }
@@ -460,7 +454,7 @@ class ProxyConfVar
         if (mOverride == ProxyConfOverride.CONFIG) {
             mValue = new Integer(configSource.getIntAttr(mAttribute,(Integer)mDefault));
         } else if (mOverride == ProxyConfOverride.LOCALCONFIG) {
-            mValue = new Integer(new KnownKey(mAttribute,((Integer)mDefault).toString()).intValue());
+            mValue = Integer.valueOf(lcValue(mAttribute,mDefault.toString()));
         } else if (mOverride == ProxyConfOverride.SERVER) {
             mValue = new Integer(serverSource.getIntAttr(mAttribute,(Integer)mDefault));
         }
@@ -473,6 +467,11 @@ class ProxyConfVar
         return f.toString();
     }
 
+    private String lcValue(String key, String def) {
+        String val = LC.get(key);
+        
+        return val == null || val.length() == 0 ? def : val;
+    }
 }
 
 public class ProxyConfGen
