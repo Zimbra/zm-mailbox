@@ -58,6 +58,8 @@ public class CalendarItemData {
     private long mActualRangeStart;
     private long mActualRangeEnd;
 
+    private boolean mIsStale;
+
     public byte getType()     { return mType; }
     public int getFolderId()  { return mFolderId; }
     public int getCalItemId() { return mCalItemId; }
@@ -75,25 +77,29 @@ public class CalendarItemData {
     public boolean isRecurring() { return mIsRecurring; }
 
     public AlarmData getAlarm() { return mAlarm; }
-    public boolean hasAlarm()    { return mAlarm != null; }
+    public boolean hasAlarm()   { return mAlarm != null; }
 
     public FullInstanceData getDefaultData() { return mDefaultData; }
     public Iterator<InstanceData> instanceIterator() { return mInstances.iterator(); }
 
     public long getActualRangeStart() { return mActualRangeStart; }
     public long getActualRangeEnd()   { return mActualRangeEnd; }
-    public void setActualRange(long start, long end) {
+    void setActualRange(long start, long end) {
         mActualRangeStart = start;
         mActualRangeEnd = end;
     }
 
-    public CalendarItemData(
+    public boolean isStale() { return mIsStale; }
+    void markStale()  { mIsStale = true; }
+
+    CalendarItemData(
             byte type, int folderId, int calItemId, String flags, String tags,
             int modMetadata, int modContent, long date, long changeDate, long size,
             String uid,
             boolean isRecurring, boolean isPublic,
             AlarmData alarm,
-            FullInstanceData defaultData) {
+            FullInstanceData defaultData,
+            boolean isStale) {
         mType = type; mFolderId = folderId; mCalItemId = calItemId;
         mFlags = flags; mTags = tags;
         mModMetadata = modMetadata; mModContent = modContent;
@@ -103,9 +109,10 @@ public class CalendarItemData {
         mAlarm = alarm;
         mDefaultData = defaultData;
         mInstances = new ArrayList<InstanceData>();
+        mIsStale = isStale;
     }
 
-    public void addInstance(InstanceData instance) {
+    void addInstance(InstanceData instance) {
         mInstances.add(instance);
     }
 
@@ -120,7 +127,7 @@ public class CalendarItemData {
                 mType, mFolderId, mCalItemId, mFlags, mTags,
                 mModMetadata, mModContent, mDate, mChangeDate, mSize,
                 mUid, mIsRecurring, mIsPublic, mAlarm,
-                mDefaultData);
+                mDefaultData, mIsStale);
         long defaultDuration =
             mDefaultData.getDuration() != null ? mDefaultData.getDuration().longValue() : 0;
         for (InstanceData inst : mInstances) {
@@ -168,6 +175,7 @@ public class CalendarItemData {
     private static final String FN_INST = "inst";
     private static final String FN_RANGE_START = "rgStart";
     private static final String FN_RANGE_END = "rgEnd";
+    private static final String FN_STALE = "stale";
 
     CalendarItemData(Metadata meta) throws ServiceException {
         mType = (byte) meta.getLong(FN_TYPE);
@@ -209,6 +217,7 @@ public class CalendarItemData {
         }
         mActualRangeStart = meta.getLong(FN_RANGE_START);
         mActualRangeEnd = meta.getLong(FN_RANGE_END);
+        mIsStale = meta.getBool(FN_STALE, false);
     }
 
     Metadata encodeMetadata() {
@@ -240,6 +249,8 @@ public class CalendarItemData {
         }
         meta.put(FN_RANGE_START, mActualRangeStart);
         meta.put(FN_RANGE_END, mActualRangeEnd);
+        if (mIsStale)
+            meta.put(FN_STALE, true);
         return meta;
     }
 }

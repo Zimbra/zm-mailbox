@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
 public class CalendarData {
@@ -33,8 +34,9 @@ public class CalendarData {
     private long mRangeEnd;
     private List<CalendarItemData> mCalendarItems;
     private Map<Integer, CalendarItemData> mCalendarItemsMap;
+    private int mNumStaleItems;
 
-    public CalendarData(int folderId, int modSeq, long rangeStart, long rangeEnd) {
+    CalendarData(int folderId, int modSeq, long rangeStart, long rangeEnd) {
         mFolderId = folderId;
         mModSeq = modSeq;
         mRangeStart = rangeStart;
@@ -43,13 +45,18 @@ public class CalendarData {
         mCalendarItemsMap = new HashMap<Integer, CalendarItemData>();
     }
 
-    public void addCalendarItem(CalendarItemData calItemData) {
+    void addCalendarItem(CalendarItemData calItemData) {
         mCalendarItems.add(calItemData);
         mCalendarItemsMap.put(calItemData.getCalItemId(), calItemData);
+        if (calItemData.isStale())
+            ++mNumStaleItems;
     }
 
     public CalendarItemData getCalendarItemData(int calItemId) {
-        return mCalendarItemsMap.get(calItemId);
+        CalendarItemData calItemData = mCalendarItemsMap.get(calItemId);
+        if (calItemData != null && !calItemData.isStale())
+            return calItemData;
+        return null;
     }
 
     public int getFolderId()    { return mFolderId; }
@@ -59,6 +66,7 @@ public class CalendarData {
 
     public Iterator<CalendarItemData> calendarItemIterator() { return mCalendarItems.iterator(); }
     public int getNumItems() { return mCalendarItems.size(); }
+    public int getNumStaleItems() { return mNumStaleItems; }
 
     public CalendarData getSubRange(long rangeStart, long rangeEnd) {
         if (rangeStart <= mRangeStart && rangeEnd >= mRangeEnd)
@@ -70,6 +78,21 @@ public class CalendarData {
                 calData.addCalendarItem(itemSubRange);
         }
         return calData;
+    }
+
+    void markItemStale(int calItemId) {
+        CalendarItemData calItemData = mCalendarItemsMap.get(calItemId);
+        if (calItemData != null) {
+            if (!calItemData.isStale())
+                ++mNumStaleItems;
+            calItemData.markStale();
+        } else {
+            // We have a new item added to the folder.  Add a placeholder item.
+            boolean stale = true;
+            calItemData = new CalendarItemData(MailItem.TYPE_UNKNOWN, mFolderId, calItemId, null, null,
+                                               0, 0, 0, 0, 0, null, false, true, null, null, stale);
+            addCalendarItem(calItemData);  // mNumStaleItems is incremented inside addCalendarItem()
+        }
     }
 
     private static final String FN_FOLDER_ID = "fid";
