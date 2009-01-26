@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.MPartInfo;
@@ -503,6 +504,10 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     
                 // Save the modified invite.
                 if (addedAttendees) {  // No need to re-save the series that was already updated in this request.
+                    // If invite had no attendee before, its method is set to PUBLISH.  It must be changed to
+                    // REQUEST so that the recipient can handle it properly.
+                    if (!modify.isCancel())
+                        modify.setMethod(ICalTok.REQUEST.toString());
                     // DTSTAMP - Rev it.
                     modify.setDtStamp(now);
                     // Save the modified invite, using the existing MimeMessage.
