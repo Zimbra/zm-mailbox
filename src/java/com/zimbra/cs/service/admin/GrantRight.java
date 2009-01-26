@@ -15,6 +15,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -39,16 +40,32 @@ public class GrantRight extends RightDocumentHandler {
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
-        boolean deny = eRight.getAttributeBool(MailConstants.A_DENY, false);
+        
+        RightModifier rightModifier = getRightModifier(eRight);
         
         RightCommand.grantRight(Provisioning.getInstance(),
                                 targetType, targetBy, target,
                                 granteeType, granteeBy, grantee,
-                                right, deny);
+                                right, rightModifier);
         
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
         return response;
     }
 
+    static RightModifier getRightModifier(Element eRight) throws ServiceException {
+        boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
+        boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+        
+        if (deny && canDelegate)
+            throw ServiceException.INVALID_REQUEST("cannot have both deny and canDelegate right modifiers", null);
+        
+        RightModifier rightModifier = null;
+        if (deny)
+            rightModifier = RightModifier.RM_DENY;
+        else if (canDelegate)
+            rightModifier = RightModifier.RM_CAN_DELEGATE;
+        
+        return rightModifier;
+    }
 
 }

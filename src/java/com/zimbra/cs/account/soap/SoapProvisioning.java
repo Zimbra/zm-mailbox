@@ -60,6 +60,7 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -1916,10 +1917,11 @@ public class SoapProvisioning extends Provisioning {
     
     // right
     private void toXML(Element req,
-                       String right, boolean deny) {
+                       String right, RightModifier rightModifier) {
         Element eRight = req.addElement(AdminConstants.E_RIGHT);
-        if (deny)
-         eRight.addAttribute(AdminConstants.A_DENY, deny);
+        if (rightModifier != null) {
+            eRight.addAttribute(rightModifier.getSoapAttrMapping(), true);
+        }
         eRight.setText(right);
     }
     
@@ -1957,7 +1959,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.CHECK_RIGHT_REQUEST);
         toXML(req, targetType, targetBy, target);
         toXML(req, null, granteeBy, grantee);
-        toXML(req, right, false);
+        toXML(req, right, null);
         
         SoapProvisioning.addAttrElements(req, attrs);
         
@@ -2048,11 +2050,11 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void grantRight(String targetType, TargetBy targetBy, String target,
                            String granteeType, GranteeBy granteeBy, String grantee,
-                           String right, boolean deny) throws ServiceException {
+                           String right, RightModifier rightModifier) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GRANT_RIGHT_REQUEST);
         toXML(req, targetType, targetBy, target);
         toXML(req, granteeType, granteeBy, grantee);
-        toXML(req, right, deny);
+        toXML(req, right, rightModifier);
         
         Element resp = invoke(req);
     }
@@ -2060,11 +2062,11 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void revokeRight(String targetType, TargetBy targetBy, String target,
                             String granteeType, GranteeBy granteeBy, String grantee,
-                            String right, boolean deny)  throws ServiceException {
+                            String right, RightModifier rightModifier)  throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GRANT_RIGHT_REQUEST);
         toXML(req, targetType, targetBy, target);
         toXML(req, granteeType, granteeBy, grantee);
-        toXML(req, right, deny);
+        toXML(req, right, rightModifier);
         
         Element resp = invoke(req);
     }

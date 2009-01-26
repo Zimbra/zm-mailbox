@@ -58,12 +58,12 @@ public class TestACLAttrRight extends TestACL {
         
         Set<String> ALL_ACCOUNT_ATTRS = null;
         try {
-            ALL_ACCOUNT_ATTRS = AttributeManager.getInstance().getAttrsInClass(AttributeClass.account);
+            ALL_ACCOUNT_ATTRS = AttributeManager.getInstance().getAllAttrsInClass(AttributeClass.account);
             
-            ATTR_RIGHT_GET_ALL   = RightManager.getInstance().getRight("getAccount");
-            ATTR_RIGHT_GET_SOME  = RightManager.getInstance().getRight("viewDummy");
-            ATTR_RIGHT_SET_ALL  = RightManager.getInstance().getRight("modifyAccount");
-            ATTR_RIGHT_SET_SOME = RightManager.getInstance().getRight("configureQuota");
+            ATTR_RIGHT_GET_ALL   = TestACL.getRight("getAccount");
+            ATTR_RIGHT_GET_SOME  = TestACL.getRight("test-getAttrs-account-2");
+            ATTR_RIGHT_SET_ALL   = TestACL.getRight("modifyAccount");
+            ATTR_RIGHT_SET_SOME  = TestACL.getRight("test-setAttrs-account-2");
             
         } catch (ServiceException e) {
             System.exit(1);

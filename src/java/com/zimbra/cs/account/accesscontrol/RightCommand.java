@@ -514,7 +514,7 @@ public class RightCommand {
     public static void grantRight(Provisioning prov,
                                   String targetType, TargetBy targetBy, String target,
                                   String granteeType, GranteeBy granteeBy, String grantee,
-                                  String right, boolean deny) throws ServiceException {
+                                  String right, RightModifier rightModifier) throws ServiceException {
         
         // target
         TargetType tt = TargetType.fromString(targetType);
@@ -528,8 +528,13 @@ public class RightCommand {
         Right r = RightManager.getInstance().getRight(right);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, deny, null);
+        ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
         aces.add(ace);
+        
+        /*
+        if (!RightChecker.canGrant())
+            throw ServiceException.INVALID_REQUEST();
+        */
         
         RightUtil.grantRight(prov, targetEntry, aces);
     }
@@ -537,7 +542,7 @@ public class RightCommand {
     public static void revokeRight(Provisioning prov,
                                    String targetType, TargetBy targetBy, String target,
                                    String granteeType, GranteeBy granteeBy, String grantee,
-                                   String right, boolean deny) throws ServiceException {
+                                   String right, RightModifier rightModifier) throws ServiceException {
         
         // target
         TargetType tt = TargetType.fromString(targetType);
@@ -551,7 +556,7 @@ public class RightCommand {
         Right r = RightManager.getInstance().getRight(right);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, deny, null);
+        ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
         aces.add(ace);
         
         RightUtil.revokeRight(prov, targetEntry, aces);

@@ -1,8 +1,12 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.io.File;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.TreeMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,10 +27,12 @@ public class RightManager {
     private static final String E_DEFAULT      = "default";
     private static final String E_DESC         = "desc";
     private static final String E_DOC          = "doc";
+    private static final String E_INCLUDE      = "include";
     private static final String E_R            = "r";
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
     
+    private static final String A_FILE         = "file";
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
     private static final String A_NAME         = "name";
@@ -52,7 +58,7 @@ public class RightManager {
         try {
             Right.initKnownRights(mInstance);
         } catch (ServiceException e) {
-            ZimbraLog.account.error("failed to initialize known right from: " + dir, e);
+            ZimbraLog.acl.error("failed to initialize known right from: " + dir, e);
             throw e;
         }
         return mInstance;
@@ -66,18 +72,31 @@ public class RightManager {
         if (!fdir.isDirectory()) {
             throw ServiceException.FAILURE("rights directory is not a directory: " + dir, null);
         }
-        
+                
         File[] files = fdir.listFiles();
-        for (File file : files) { 
+        List<File> yetToProcess = new ArrayList<File>(Arrays.asList(files));
+        List<File> processed = new ArrayList<File>();
+        
+        while (!yetToProcess.isEmpty()) { 
+            File file = yetToProcess.get(0);
+            
             if (!file.getPath().endsWith(".xml")) {
-                ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
+                ZimbraLog.acl.warn("while loading attrs, ignoring not .xml file: " + file);
                 continue;
             }
             if (!file.isFile()) {
-                ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
+                ZimbraLog.acl.warn("while loading attrs, ignored non-file: " + file);
             }
             try {
-                loadSystemRights(file);
+                boolean done = loadSystemRights(file, processed);
+                if (done) {
+                    processed.add(file);
+                    yetToProcess.remove(file);
+                } else {
+                    // move this file to the end
+                    yetToProcess.remove(file);
+                    yetToProcess.add(file);
+                }
             } catch (DocumentException de) {
                 throw ServiceException.PARSE_ERROR("error loading rights file: " + file, de);
             }
@@ -235,18 +254,46 @@ public class RightManager {
         return right;
     }
     
-    private void loadSystemRights(File file) throws DocumentException, ServiceException {
+    private boolean loadSystemRights(File file, List<File> processedFiles) throws DocumentException, ServiceException {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
         Element root = doc.getRootElement();
         if (!root.getName().equals(E_RIGHTS))
             throw ServiceException.PARSE_ERROR("root tag is not " + E_RIGHTS, null);
 
+        boolean seenRight = false;
         for (Iterator iter = root.elementIterator(); iter.hasNext();) {
-            Element eRight = (Element) iter.next();
+            Element elem = (Element) iter.next();
+            
+            // see if all include files are processed already
+            if (elem.getName().equals(E_INCLUDE)) {
+                // all <include>'s have to appear <right>'s
+                if (seenRight)
+                    throw ServiceException.PARSE_ERROR(E_INCLUDE + " cannot appear after any right definition: " + elem.getName(), null);
+                
+                String includeFile = elem.attributeValue(A_FILE);
+                boolean processed = false;
+                for (File f : processedFiles) {
+                    if (f.getName().equals(includeFile)) {
+                        processed = true;
+                        break;
+                    }
+                }
+                if (!processed)
+                    return false;
+                else
+                    continue;
+            }
+            
+            Element eRight = elem;
             if (!eRight.getName().equals(E_RIGHT))
                 throw ServiceException.PARSE_ERROR("unknown element: " + eRight.getName(), null);
 
+            if (!seenRight) {
+                seenRight = true;
+                ZimbraLog.acl.info("Loading " + file.getName());
+            }
+            
             String name = eRight.attributeValue(A_NAME);
             if (name == null)
                 throw ServiceException.PARSE_ERROR("no name specified", null);
@@ -264,6 +311,8 @@ public class RightManager {
                 throw ServiceException.PARSE_ERROR("unable to parse right: [" + name + "]", e);
             }
         }
+        
+        return true;
     }
     
     //
@@ -353,6 +402,8 @@ public class RightManager {
      * @param args
      */
     public static void main(String[] args) throws ServiceException {
+        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        
         RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
         System.out.println(rm.dump(null));
         /*

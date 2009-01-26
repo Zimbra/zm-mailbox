@@ -120,11 +120,11 @@ public class ZimbraACL {
                 
                 boolean changed = false;
                 
-                // check if it's got a different allow/deny
-                if (ace.deny() != aceToGrant.deny()) {
-                    // the grantee had been granted the right, but was for a different allow/deny,
-                    // set it to the new allow/deny and return "added"
-                    ace.setDeny(aceToGrant.deny());
+                // check if it's got a different modifier (deny/canDelegate)
+                if (ace.getRightModifier() != aceToGrant.getRightModifier()) {
+                    // the grantee had been granted the right, but was for a different modifier,
+                    // set it to the new modifier and return "added"
+                    ace.setRightModifier(aceToGrant.getRightModifier());
                     changed = true;
                 }
                 
@@ -156,7 +156,7 @@ public class ZimbraACL {
         for (ZimbraACE ace : mAces) {
             if (ace.isGrantee(aceToRevoke.getGrantee()) &&
                 ace.getRight().getName().equals(aceToRevoke.getRight().getName()) &&
-                ace.deny() == aceToRevoke.deny()) {
+                ace.getRightModifier() == aceToRevoke.getRightModifier()) {
                 removeACE(ace);
                 return true;
             }

@@ -10,7 +10,10 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -43,15 +46,15 @@ public class TestACLRight extends TestACL {
     
     static {
         try {
-            GET_SOME_ATTRS_RIGHT = RightManager.getInstance().getRight("viewDummy");
-            SET_SOME_ATTRS_RIGHT = RightManager.getInstance().getRight("configureQuota");
-            GET_ALL_ATTRS_RIGHT = RightManager.getInstance().getRight("getAccount");
-            SET_ALL_ATTRS_RIGHT = RightManager.getInstance().getRight("modifyAccount");
+            GET_SOME_ATTRS_RIGHT = TestACL.getRight("test-getAttrs-account-2");
+            SET_SOME_ATTRS_RIGHT = TestACL.getRight("test-setAttrs-account-2");
+            GET_ALL_ATTRS_RIGHT = TestACL.getRight("getAccount");
+            SET_ALL_ATTRS_RIGHT = TestACL.getRight("modifyAccount");
             
             CONFIGURE_CONSTRAINT_RIGHT = RightManager.getInstance().getRight("configureCosConstraint");
             
-            PRESET_RIGHT = RightManager.getInstance().getRight("modifyAccount");
-            COMBO_RIGHT = RightManager.getInstance().getRight("domainAdmin");
+            PRESET_RIGHT = TestACL.getRight("modifyAccount");
+            COMBO_RIGHT = TestACL.getRight("test-combo-MultiTargetTypes-top");
             
             
             ATTRS_IN_SET_SOME_ATTRS_RIGHT = new HashMap<String, Object>();
@@ -239,7 +242,7 @@ public class TestACLRight extends TestACL {
         verify(GA, TA, GET_ALL_ATTRS_RIGHT, null, ALLOW);
     }
     
-    public void testComboRight() throws Exception {
+    public void testCheckComboRight() throws Exception {
         String testName = getTestName();
 
         /*
@@ -250,39 +253,119 @@ public class TestACLRight extends TestACL {
         /*
          * grants
          */
-        Right right = COMBO_RIGHT;
+        Right right = getRight("test-combo-MultiTargetTypes-top");
         Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
         
         /*
          * targets
          */
-        Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        String domainName = getSubDomainName(testName);
+        Domain TD = mProv.createDomain(domainName, new HashMap<String, Object>());
+        grantRight(TargetType.domain, TD, grants);
         
+        // create an account in the domain
+        Account TA = mProv.createAccount("user1@"+domainName, PASSWORD, null);
+        
+        boolean allowed;
         TestViaGrant via;
         
-        via = new TestViaGrant(TargetType.account, TA, GranteeType.GT_USER, GA.getName(), COMBO_RIGHT, POSITIVE);
+        via = new TestViaGrant(TargetType.account, TD, GranteeType.GT_USER, GA.getName(), right, POSITIVE);
         
-        // createAcount is not applicable on account, thus the grant will be ignored, which is 
-        // equivalent to no grant for the createAccount right, therefore default should be honored.
-        // note: default is not used for admin rights in the product, this is just to complete the test
-        verifyDefault(GA, TA, AdminRight.R_createAccount);
+        /*
+         * check preset right
+         */
+        // 1. account right
+        verify(GA, TD, AdminRight.R_renameAccount, null, DENY);
+        verify(GA, TA, AdminRight.R_renameAccount, null, ALLOW);
         
-        // renameAccount right is applicable on account
-        verify(GA, TA, AdminRight.R_renameAccount, ALLOW, via);
+        // 2. domain right
+        verify(GA, TD, AdminRight.R_createAccount, null, ALLOW);
+        verify(GA, TA, AdminRight.R_createAccount, null, DENY);
         
-        Set<String> expectedAttrs = new HashSet<String>();
+        // 3. not covered right
+        verify(GA, TD, AdminRight.R_renameCos, null, DENY);
+        
+        /*
+         * check setAttrs right
+         */
+        // 1. account right
+        verify(GA, TD, getRight("test-setAttrs-account-1"), null, DENY);
+        verify(GA, TA, getRight("test-setAttrs-account-1"), null, ALLOW);
+        verify(GA, TD, getRight("test-setAttrs-account-2"), null, DENY);
+        verify(GA, TA, getRight("test-setAttrs-account-2"), null, ALLOW);
+        
+        // 2. domain right
+        verify(GA, TD, getRight("test-setAttrs-domain"), null, ALLOW);
+        verify(GA, TA, getRight("test-setAttrs-domain"), null, DENY);
+        
+        // 3. account and domain right
+        verify(GA, TD, getRight("test-setAttrs-account-domain"), null, ALLOW);
+        verify(GA, TA, getRight("test-setAttrs-account-domain"), null, ALLOW);
+        
+        // 4. not covered right
+        verify(GA, TD, getRight("modifyServer"), null, DENY);
+
+        /*
+         * check setAttrs right on each attr
+         */
+        Set<String> expectedAttrs;
+        AllowedAttrs expected;
+        
+        // 1. account attrs
+        expectedAttrs = new HashSet<String>();
+        expectedAttrs.add(Provisioning.A_zimbraMailStatus);
         expectedAttrs.add(Provisioning.A_zimbraMailQuota);
         expectedAttrs.add(Provisioning.A_zimbraQuotaWarnPercent);
         expectedAttrs.add(Provisioning.A_zimbraQuotaWarnInterval);
         expectedAttrs.add(Provisioning.A_zimbraQuotaWarnMessage);
         expectedAttrs.add(Provisioning.A_displayName);
         expectedAttrs.add(Provisioning.A_description);
-        AllowedAttrs expected = RightChecker.ALLOW_SOME_ATTRS(expectedAttrs);
+        expected = RightChecker.ALLOW_SOME_ATTRS(expectedAttrs);
         verify(GA, TA, SET, expected);
-
+        
+        // 2. domain attrs
+        expectedAttrs = new HashSet<String>();
+        expectedAttrs.add(Provisioning.A_zimbraMailStatus);
+        expectedAttrs.add(Provisioning.A_zimbraGalMode);
+        expected = RightChecker.ALLOW_SOME_ATTRS(expectedAttrs);
+        verify(GA, TD, SET, expected);
     }
+    
+    
+    public void testCanGrant() throws Exception {
+        String testName = getTestName();
 
+        /*
+         * grantees
+         */
+        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        
+        /*
+         * grants
+         */
+        Right right = getRight("test-combo-MultiTargetTypes-top");
+        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
+        
+        /*
+         * targets
+         */
+        String domainName = getSubDomainName(testName);
+        Domain TD = mProv.createDomain(domainName, new HashMap<String, Object>());
+        grantRight(TargetType.domain, TD, grants);
+        
+        // create an account in the domain
+        Account TA = mProv.createAccount("user1@"+domainName, PASSWORD, null);
+        
+        // cannot be granted on an account target because some rights do not apply on account
+        boolean good = false;
+        try {
+            grantRight(TargetType.domain, TA, grants);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.INVALID_REQUEST))
+                good = true;
+        }
+        assertTrue(good);
+    }
     
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");

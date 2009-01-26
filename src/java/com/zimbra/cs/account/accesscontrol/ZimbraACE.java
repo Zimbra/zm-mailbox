@@ -19,9 +19,6 @@ public class ZimbraACE {
     // delimits {external email}:{password} for guest grantee and {external email/name}:{accesskey} for key grantee
     private static final String S_SECRET_DELIMITER = ":";
     
-    // delimits -{right}  (negative right)
-    private static final char S_DENY = '-';
-    
     /* 
      * usr: zimbraId of the entry being granted rights
      * grp: zimbraId of the entry being granted rights
@@ -37,8 +34,8 @@ public class ZimbraACE {
     // The right being granted.
     private Right mRight;
         
-    // if the right is specifically denied
-    private boolean mDeny;
+    // right modifier
+    private RightModifier mRightModifier;
     
     // password for guest grantee, accesskey for key grantee
     private String mSecret;
@@ -52,7 +49,7 @@ public class ZimbraACE {
      * 
     ACEs format:
     
-    {grantee} {grantee-type} [-]{right}
+    {grantee} {grantee-type} [-|+]{right}
 
         grantee: 
                 grantee type    stored 
@@ -140,23 +137,21 @@ public class ZimbraACE {
             break;
         }
         
-        if (right.charAt(0) == S_DENY) {
-            mDeny = true;
-            mRight = rm.getRight(right.substring(1));
-        } else {
-            mDeny = false;
+        mRightModifier = RightModifier.fromChar(right.charAt(0));
+        if (mRightModifier == null)
             mRight = rm.getRight(right);
-        }
+        else
+            mRight = rm.getRight(right.substring(1));
         
         mTargetType = targetType;
         mTargetName = targetName;
     }
     
     
-    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, boolean deny, String secret) throws ServiceException {
+    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, RightModifier rightModifier, String secret) throws ServiceException {
         mGrantee = granteeId;
         mGranteeType = granteeType;
-        mDeny = deny;
+        mRightModifier = rightModifier;
         mRight = right;
         mSecret = secret;
     }
@@ -170,7 +165,7 @@ public class ZimbraACE {
         mGrantee = new String(other.mGrantee);
         mGranteeType = other.mGranteeType;
         mRight = other.mRight;
-        mDeny = other.mDeny;
+        mRightModifier = other.mRightModifier;
         if (other.mSecret != null)
             mSecret = new String(other.mSecret);
         
@@ -235,7 +230,11 @@ public class ZimbraACE {
     }
     
     public boolean deny() {
-        return mDeny;
+        return mRightModifier == RightModifier.RM_DENY;
+    }
+    
+    public boolean canDelegate() {
+        return mRightModifier == RightModifier.RM_CAN_DELEGATE;
     }
     
     public String getSecret() {
@@ -246,8 +245,12 @@ public class ZimbraACE {
         mSecret = secret;
     }
     
-    void setDeny(boolean deny) {
-        mDeny = deny;
+    RightModifier getRightModifier() {
+        return mRightModifier;
+    }
+    
+    void setRightModifier(RightModifier rightModifier) {
+        mRightModifier = rightModifier;
     }
     
     // or setting right in pseudo ZimbraACE expaneded from a combo right for attr rights
@@ -344,8 +347,9 @@ public class ZimbraACE {
         sb.append(getGranteeType().getCode() + S_DELIMITER);
         
         // right
-        if (mDeny)
-            sb.append(S_DENY);
+        if (mRightModifier != null)
+            sb.append(mRightModifier.getModifier());
+            
         sb.append(getRight().getName());
         
         return sb.toString();

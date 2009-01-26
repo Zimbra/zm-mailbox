@@ -213,7 +213,7 @@ public enum TargetType {
 
     static Set<String> getAttrsInClass(Entry target) throws ServiceException {
         AttributeClass klass = TargetType.getAttributeClass(target);
-        return AttributeManager.getInstance().getAttrsInClass(klass);
+        return AttributeManager.getInstance().getAllAttrsInClass(klass);
     }
     
     static AttributeClass getAttributeClass(Entry target) throws ServiceException {

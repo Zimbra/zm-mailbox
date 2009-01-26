@@ -463,9 +463,6 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureLoginPolicy               : configure login/lockout policies
           - configureZimlet                    : configure available zimlets
           - configureTheme                     : configure available themes(skins)
-
-          - grantRight                         : can grant/revoke rights 
-                                                 (see 3.6 The grantRight Right and crossDomainAdmin Right)
           
 
 3.5.2 calendar resource:
@@ -559,7 +556,7 @@ Depending on the context, there are three aspects of targets that need to be dea
           - configureZimbraNotebookAccount    : setAttr zimbraNotebookAccount
           
           - crossDomainAdmin                  : the "cross domain admin" right
-                                                (see 3.6 The grantRight Right and crossDomainAdmin Right)
+                                                (see 3.6 The crossDomainAdmin Right)
     
 >>>>> OPEN-ISSUE-1          
           Should we consider domain hierarchy like we do for DLs? 
@@ -619,48 +616,10 @@ Depending on the context, there are three aspects of targets that need to be dea
 
 
 
-3.6 The grantRight Right and crossDomainAdmin Right
-     
-The grantRight right and crossDomainAdmin right are two special rights that play a role in our 
-ACL granting/revoking/checking infrastructure.  They are described in details in this section.  
+3.6 The crossDomainAdmin Right (a domain right)
 
- 
-3.6.1 The grantRight Right  (account right)
-
-An admin must have an effective grantRight right in order to grant and revoke rights.
-
-In addition to the privileges of being able to grant/revoke rights, the grantRight right, 
-is a "can do all", or "wildcard" right.  It works as follows:
-
-    1. Only a "system admin" can grant the grantRight right. (see 4.  Admin Accounts and Admin Groups)
-
-    2. Like a regular right, all the target/grantee/right rules apply.  
-          e.g. - if granted on a domain, is effective on all accounts in the domain.
-               - if granted to a group, all members in the group have the right
-               - if is explicitly denied on a more specific target/grantee, the right is negated.
-
-    3. It is a "wildcard" right.   The ACL checking code will always also check the grantRight 
-       right while checking any right.  As long as the authed admin has an effective grantRight right, 
-       the request will be allowed, even if the actual required right(e.g. createAccount) is explicitly denied.
-  
-    4. Can grant *any* right to *anyone* on *any* target entry that is in the target body covered by the target 
-       on which the grantRight right is granted.
-       e.g. If I have a grantRight right on a domain entry, I can grant any right to anyone on any entry in the domain.
-            If I have a grantRight right on a cos entry, I can grant any right to anyone on this cos.
-
-    5. ***important***: *Cannot* grant/revoke the grantRight right.
-
-    6. ***important***: Admins with grantRight rights must assume full responsibility of any security impact caused 
-                        by the grants they make.  
-                        e.g. if you grant someone right to change your password, that someone can change your password 
-                             and login as you and assume all your privileges.
-
-      
-
-3.6.2 The crossDomainAdmin Right  (domain right)
-
-The purpose of the crossDomainAdmin right is to close security holes that could be opened by adding users from an
-"unrelated management umbrella" to a distribution list that is under the administration of anotehr "management umbrella".
+The purpose of the crossDomainAdmin right is to close possible security holes that can happen by adding users from an
+"unrelated management umbrella" to a distribution list that is under the administration of another "management umbrella".
 
 An "management umbrella" is the concept of "one admin or a group of admins can manage several domains".  
 
@@ -668,26 +627,26 @@ e.g. - adminA@X.com can manage(e.g. CreateAccount, ModifyAccount, ...) users in 
      - adminB@P.com can manage users in domain P.com, Q.com, and R.com.
      - adminGroup@M.com can manage users in domains M.com and N.com
      
-In the above example, domain X.com, Y.com, and Z.com is under the same "management umbrella", domains 
+In the above example, domain X.com, Y.com, and Z.com are under the same "management umbrella", domains 
 P.com, Q.com, and R.com are under the same "management umbrella", and domains M.com and N.com are 
 under the same "management umbrella".   The three "management umbrella"s are "unrelated" to one another.
 
-This can be implemented by granting he grantRight right on the domains, as follows:
+This can be implemented by granting rights on the domains, e.g.:
 
-domain X.com (grant: {id-of-adminA@X.com} usr grantRight)
-domain Y.com (grant: {id-of-adminA@X.com} usr grantRight)
-domain Z.com (grant: {id-of-adminA@X.com} usr grantRight)
+domain X.com (grant: {id-of-adminA@X.com} usr {right})
+domain Y.com (grant: {id-of-adminA@X.com} usr {right})
+domain Z.com (grant: {id-of-adminA@X.com} usr {right})
 
-domain P.com (grant: {id-of-adminB@P.com} usr grantRight)
-domain Q.com (grant: {id-of-adminB@P.com} usr grantRight)
-domain R.com (grant: {id-of-adminB@P.com} usr grantRight)
+domain P.com (grant: {id-of-adminB@P.com} usr {right})
+domain Q.com (grant: {id-of-adminB@P.com} usr {right})
+domain R.com (grant: {id-of-adminB@P.com} usr {right})
 
-domain M.com (grant: {id-of-adminGroup@M.com} grp grantRight)
-domain N.com (grant: {id-of-adminGroup@M.com} grp grantRight)
+domain M.com (grant: {id-of-adminGroup@M.com} grp {right})
+domain N.com (grant: {id-of-adminGroup@M.com} grp {right})
 
 Note: by adding admin users to adminGroup@M.com, you are giving right that is allowed to the 
 adminGroup@M.com to the admin user.  Members of adminGroup@M.com can be in *any* domain. 
-e.g. admin@B.com, admin@C.com.  This, the behavior that admin@B.com, admin@C.com *can* manage 
+e.g. admin@B.com, admin@C.com.  The behavior that admin@B.com, admin@C.com *can* manage 
 users in M.com and N.com, is NOT a security hole.   Because they are added explicitly by the 
 admin who decides "who can manage domains M.com an N.com".    That is, adding out-of-domain 
 admins to a grantee group is fine, it is not a security concern.
@@ -702,10 +661,11 @@ Using the above example, consider this hierarchy:
             user user3@Z.com 
             user user4@P.com
             
-    Now, it is fine when adminA@X.com (remember he has the grantRight right, which is a "can do all" right) 
-    changes password on users user1@X.com, user2@Y.com, user3@Z.com, because adminA@X.com also has a grantRight 
-    grant on domains Y.com and Z.com, and remember the grantzRight is a "wildcard" right, which allows anythig.
-    
+    Let's take the changePassword right as an example, assuming {right} is changePassword.
+            
+    Now, it is fine when adminA@X.com changes password on users user1@X.com, user2@Y.com, user3@Z.com, 
+    because adminA@X.com is granted the changePassword right on domains X.com, Y.com and Z.com.
+
     But, if adminA@X.com is changing password on user4@P.com, this is a security hole and we should NOT allow
     it.  
     
@@ -714,7 +674,7 @@ Using the above example, consider this hierarchy:
     
     The mechanism is the "crossDomainAdmin" right.  It works as follows:  
     
-    - The crossDomainAdmin right is a domain right.  That is, it is only applicable only when granted 
+    - The crossDomainAdmin right is a domain right.  That is, it is only applicable when granted 
       on a domain.
        
     - The "grantee" of a crossDomainAdmin right is, and has to be a domain. This is the only case when 
@@ -736,16 +696,17 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 1. Go through the regular checking, if denied, stop
 
 2. Otherwise (i.e. allowed) check if the target is a "domain-ed" entry.
-   A domian-ed entry is a: domain, distribution list, account, alias, 
+   A domain-ed entry is a: domain, distribution list, account, alias, 
    or calendar resource.   If the target is not a domain-ed entry, allow 
    the right, stop.
    
 3. Otherwise (i.e. target is a domain-ed entry) check if the authed admin 
    is in the same domain of the target.  If it is, allow the right, stop.
    
-4. Otherwise (i.e. target is a domained-ed entry and is in a different domain),
-   check if the grant that allows the right is granted on a target that is in 
-   the same domain of the target. If it is, allow the right, stop.
+4. Otherwise (i.e. target is a domained-ed entry and is in a different domain 
+   than the domain of the authed admin), check if the grant that allows the right 
+   is granted on a target that is in the same domain of the target. If it is, 
+   allow the right, stop.
    
    this is the case:
         domain X.com (grant: allow admin@Y.com right)
@@ -753,11 +714,11 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
            
    Although user is in a different domain(X.com) than the authed admin's domain(Y.com),
    the grant is on X.com, which is the same domain of the target entry (user1@X.com).
-   For this case, it is natually allowed without having to check the crossDomainAdmin right. 
+   For this case, it is naturally allowed without having to check the crossDomainAdmin right. 
    
 5. Otherwise (i.e. the grant that allows it is *not* in the same domain of the target), 
-   check if the authed admin has the crossDomainAdmin right on the domain in which the
-   target entry is in,  If it is, allow the right, stop.
+   check if the authed admin has the crossDomainAdmin right on the domain of the 
+   target entry,  If it is, allow the right, stop.
    
    this is the case:
         domain X.com
@@ -766,7 +727,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
                
         then on domain P.com, if either:
         - domain X.com has the crossDomainAdmin right, or
-        - adminB@X.com also has rightFoo (or the grantRight right, remember it is a wildcard right) right
+        - adminB@X.com also has rightFoo right
         then it is allowed.
         
         that is: either     
@@ -774,7 +735,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
         or
         domain P.com (grant: {id-of-adminB@X.com} usr rightFoo)
         or
-        domain P.com (grant: {id-of-adminB@X.com} usr grantRight)
+        user user1@P.com (grant: {id-of-adminB@X.com} usr rightFoo)
         
         
 6. Otherwise, deny.               
@@ -807,12 +768,20 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
       e.g. an account with zimbraIsSystemAdminAccount=TRUE is allowed to CreateAccount *without* an explicit 
       createAccount right.
       
-    - The most important privilege of a system admin is being able to grant and revoke the grantRight right.
-      A "regular" admin (i.e. zimbraIsAdminAccount==TRUE) cannot grant the grantRight right.
-       
-    - A system admin can create other system admins, by setting their zimbraIsSystemAdminAccount to TRUE.  
+    - A system admin can create other system admins, by setting their zimbraIsSystemAdminAccount to TRUE.
     
-  
+    - Logically, a system admin should not be granted any right, because it already has all the rights.
+      Granting to a system admin is considered an operational error.  
+      However, server does *not* enforce that a system admin cannot have any grants.  All grants to a 
+      system admin are simply ignored.
+
+      When a right is checked, if the authed admin is a system admin, server does *not* check for any ACL, 
+      whether positive or negative.  That is, all right are always allowed to a system admin, even there is 
+      a negative grant.
+      
+      If, a system admin with grants are "downgraded" to a regular admin, the grants will start take effects.
+      If, a system admin with grants are "downgraded" to a regular non admin account, all grants will be ignored.
+      (see 4.4)
 
 4.4 Grants Are Valid only When the Grantee's Admin Flag is On 
     - When an account's zimbraIsAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
@@ -825,7 +794,6 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
       When zimbraIsAdminGroup is changed from FALSE to TRUE, all existing grants automatically become valid again.
 
     - The above let admins temporary disable things without having to blow away and later recreate the grants.
-
 
 
  
@@ -846,16 +814,21 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
             
     zimbraACE Format:
     -----------------   
-        {grantee-zimbraId} {grantee-type} [-]{right} 
+        {grantee-zimbraId} {grantee-type} [{right-modifier}]{right} 
         
             {grantee-zimbraId} = zimbraId of the grantee
             
             {grantee-type} = usr - grantee is an admin account
                              grp - grantee is a group of admin accounts
+                             dom - grantee is a domain (only for the crossDomainAdmin right)
                              
             {right} = the right.
-                      if a '-' (minus sign) is prepended to the right, it means the right is 
-                      specifically denied.              
+            
+            {right-modifier} = - | +
+                               '-': the right is specifically denied. 
+                               '+': the right is allowed, and the whole or part of the 
+                                    right can be delegated to others.
+                               missing (no modifier): the right is allowed.             
         
     
          e.g.
@@ -868,7 +841,11 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
                           set password for any accounts in this domain
                           
                   75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr -configureGAL
+                      ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can configure GAL on this domain
+                      
+                  75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr +configureGAL
                       ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can configure GAL on this domain 
+                          and can delegate the right to others.
         
             - On an account target:
                   3b00a6bd-12ca-417d-9312-c5664a8c26b3 grp -setPassword
@@ -918,10 +895,6 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 
 - zimbraIsSystemAdminAccount
       see 4.
-      
-      <attr id="31" name="zimbraIsAdminAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo">
-          <desc>set to true for admin accounts</desc>
-      </attr>
 
 - zimbraIsAdminGroup
       see 4.
@@ -1066,7 +1039,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"]>{right}</right>
+  <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
 </GrantRightRequest>    
 
 {target-type} = account | resource | distributionlist | domain | cos | server | xmppcomponent | zimlet | config | global 
@@ -1078,6 +1051,8 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 {grantee-bt}   = name | id
 
 {deny} = 1 | 0(default)
+
+{canDelegate}  = 1 | 0(default)
 
 {right} = {right-name} | {inline-right}
 
@@ -1100,7 +1075,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 <RevokeRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"]>{right-name}</right>
+  <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right-name}</right>
 </RevokeRightRequest>    
 
 <RevokeRightResponse/>

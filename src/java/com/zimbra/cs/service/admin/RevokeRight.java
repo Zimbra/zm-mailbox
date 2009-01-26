@@ -10,6 +10,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -34,12 +35,13 @@ public class RevokeRight extends RightDocumentHandler {
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
-        boolean deny = eRight.getAttributeBool(MailConstants.A_DENY, false);
+        
+        RightModifier rightModifier = GrantRight.getRightModifier(eRight);
         
         RightCommand.revokeRight(Provisioning.getInstance(),
                                  targetType, targetBy, target,
                                  granteeType, granteeBy, grantee,
-                                 right, deny);
+                                 right, rightModifier);
         
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
         return response;

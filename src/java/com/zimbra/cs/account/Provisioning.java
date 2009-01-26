@@ -27,6 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -1624,11 +1625,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
             
     public abstract void grantRight(String targetType, TargetBy targetBy, String target,
                                     String granteeType, GranteeBy granteeBy, String grantee,
-                                    String right, boolean deny) throws ServiceException;
+                                    String right, RightModifier rightModifier) throws ServiceException;
     
     public abstract void revokeRight(String targetType, TargetBy targetBy, String target,
                                      String granteeType, GranteeBy granteeBy, String grantee,
-                                     String right, boolean deny) throws ServiceException;
+                                     String right, RightModifier rightModifier) throws ServiceException;
     
 
 

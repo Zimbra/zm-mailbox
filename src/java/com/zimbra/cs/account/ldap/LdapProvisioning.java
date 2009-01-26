@@ -70,6 +70,7 @@ import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
@@ -5534,21 +5535,21 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void grantRight(String targetType, TargetBy targetBy, String target,
                            String granteeType, GranteeBy granteeBy, String grantee,
-                           String right, boolean deny) throws ServiceException {
+                           String right, RightModifier rightModifier) throws ServiceException {
         RightCommand.grantRight(this, 
                                 targetType, targetBy, target,
                                 granteeType, granteeBy, grantee,
-                                right, deny);          
+                                right, rightModifier);          
     }
 
     @Override
     public void revokeRight(String targetType, TargetBy targetBy, String target,
                             String granteeType, GranteeBy granteeBy, String grantee,
-                            String right, boolean deny) throws ServiceException {
+                            String right, RightModifier rightModifier) throws ServiceException {
          RightCommand.revokeRight(this, 
                                   targetType, targetBy, target,
                                   granteeType, granteeBy, grantee,
-                                  right, deny);               
+                                  right, rightModifier);               
     }
 
 

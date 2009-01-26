@@ -40,6 +40,7 @@ import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -48,12 +49,6 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
 
-
-/*
-  <key name="zimbra_class_accessmanager">
-    <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
-  </key>
-*/
 
 public abstract class TestACL extends TestCase {
     
@@ -255,6 +250,10 @@ public abstract class TestACL extends TestCase {
             return testCaseName + "-" + localPartPostfix + "@" + DOMAIN_NAME;
     }
     
+    protected static String getSubDomainName(String testCaseName) {
+        return testCaseName + "." + DOMAIN_NAME;
+    }
+    
     protected Account guestAccount(String email, String password) {
         return new ACL.GuestAccount(email, password);
     }
@@ -288,6 +287,14 @@ public abstract class TestACL extends TestCase {
         
         boolean allow() {
             return mAllow;
+        }
+        
+        // TODO add support for RM_CAN_DELEGATE
+        RightModifier toRightModifier() {
+            if (deny())
+                return RightModifier.RM_DENY;
+            else
+                return null;
         }
     }
     
@@ -360,27 +367,27 @@ public abstract class TestACL extends TestCase {
     
     // construct a ACE with "pub" grantee type
     protected ZimbraACE newPubACE(Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(ACL.GUID_PUBLIC, GranteeType.GT_PUBLIC, right, allowDeny.deny(), null);
+        return new ZimbraACE(ACL.GUID_PUBLIC, GranteeType.GT_PUBLIC, right, allowDeny.toRightModifier(), null);
     }
     
     // construct a ACE with "all" authuser grantee type
     protected ZimbraACE newAllACE(Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, right, allowDeny.deny(), null);
+        return new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, right, allowDeny.toRightModifier(), null);
     }
     
     // construct a ACE with "usr" grantee type
     protected ZimbraACE newUsrACE(Account acct, Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(acct.getId(), GranteeType.GT_USER, right, allowDeny.deny(), null);
+        return new ZimbraACE(acct.getId(), GranteeType.GT_USER, right, allowDeny.toRightModifier(), null);
     }
     
     // construct a ACE with "grp" grantee type
     protected ZimbraACE newGrpACE(DistributionList dl, Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(dl.getId(), GranteeType.GT_GROUP, right, allowDeny.deny(), null);
+        return new ZimbraACE(dl.getId(), GranteeType.GT_GROUP, right, allowDeny.toRightModifier(), null);
     }
     
     // construct a ACE with "key" grantee type
     protected ZimbraACE newKeyACE(String nameOrEmail, String accessKey, Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(nameOrEmail, GranteeType.GT_KEY, right, allowDeny.deny(), accessKey);
+        return new ZimbraACE(nameOrEmail, GranteeType.GT_KEY, right, allowDeny.toRightModifier(), accessKey);
     }
     
     Set<ZimbraACE> makeUsrGrant(Account grantee, Right right, AllowOrDeny alloworDeny) throws ServiceException {
@@ -614,8 +621,6 @@ public abstract class TestACL extends TestCase {
         } catch (ServiceException e) {
             fail();
         }
-        
-
     }
         
     protected void verify(Account grantee, Entry target, Right right, Map<String, Object> attrs, AllowOrDeny expected) throws ServiceException {
@@ -661,6 +666,16 @@ public abstract class TestACL extends TestCase {
         return RightUtil.revokeRight(mProv, targetEntry, aces);
     }
     
+    static Right getRight(String right) throws ServiceException {
+        return RightManager.getInstance().getRight(right);
+    }
+    
+    
+/*
+  <key name="zimbra_class_accessmanager">
+    <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
+  </key>
+*/
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");

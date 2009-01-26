@@ -131,7 +131,7 @@ public class RightChecker {
         /*
          * end of group targets, put all denied and allowed grants into one list, as if 
          * they are granted on the same entry.   We put denied in the front, so it is 
-         *  consistent with ZimbraACL.getAllACEs
+         * consistent with ZimbraACL.getAllACEs
          */
         List<ZimbraACE> getAllACLs() {
             if ((aclsOnGroupTargetsAllowed != null && !aclsOnGroupTargetsAllowed.isEmpty()) || 
@@ -475,7 +475,7 @@ public class RightChecker {
         } else {
             // get all attrs that can appear on the target entry
             Set<String> allowed = new HashSet<String>();
-            allowed.addAll(AttributeManager.getInstance().getAttrsInClass(klass));
+            allowed.addAll(AttributeManager.getInstance().getAllAttrsInClass(klass));
             
             // remove denied from all
             for (String d : denySome.keySet())

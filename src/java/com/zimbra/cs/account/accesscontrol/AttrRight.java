@@ -107,7 +107,7 @@ public class AttrRight extends AdminRight {
         
         // get the sole target type, 
         TargetType tt = mTargetTypes.get(0);
-        return AttributeManager.getInstance().getAttrsInClass(tt.getAttributeClass());
+        return AttributeManager.getInstance().getAllAttrsInClass(tt.getAttributeClass());
     }
     
     // setAttrs imply getAttrs on the same set of attrs
@@ -141,7 +141,7 @@ public class AttrRight extends AdminRight {
         AttributeManager am = AttributeManager.getInstance();
         for (TargetType tt : mTargetTypes) {
             AttributeClass klass = tt.getAttributeClass();
-            if (!am.getAttrsInClass(klass).contains(attrName))
+            if (!am.getAllAttrsInClass(klass).contains(attrName))
                 throw ServiceException.FAILURE("attribute " + attrName + " is not on " + tt.getCode(), null);
         }
     }

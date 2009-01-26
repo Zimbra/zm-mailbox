@@ -169,6 +169,7 @@ public class AttributeManager {
     		}
     	}
     	
+    	computeClassToAllAttrsMap();
     }
     
     private List<String> mErrors = new LinkedList<String>();
@@ -688,13 +689,68 @@ public class AttributeManager {
      * Support for lookup by class
      */
 
+    // only direct attrs
     private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
     private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
-
+    
+    // direct attrs and attrs from included objectClass's
+    private Map<AttributeClass, Set<String>> mClassToAllAttrsMap = new HashMap<AttributeClass, Set<String>>();
+    
     private void initClassToAttrsMap() {
         for (AttributeClass klass : AttributeClass.values()) {
             mClassToAttrsMap.put(klass, new HashSet<String>());
             mClassToLowerCaseAttrsMap.put(klass, new HashSet<String>());
+        }
+    }
+    
+    private void computeClassToAllAttrsMap() {
+        
+        Set<String> attrs;
+        
+        for (AttributeClass klass : mClassToAttrsMap.keySet()) {
+            
+            switch (klass) {
+            case account:
+                attrs = SetUtil.union(new HashSet<String>(),
+                                      mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                                      mClassToAttrsMap.get(AttributeClass.account));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case calendarResource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                        mClassToAttrsMap.get(AttributeClass.account));
+                attrs = SetUtil.union(attrs,
+                                      mClassToAttrsMap.get(AttributeClass.calendarResource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case distributionList:
+                attrs = SetUtil.union(new HashSet<String>(),
+                                      mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                                      mClassToAttrsMap.get(AttributeClass.distributionList));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case imapDataSource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.imapDataSource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case pop3DataSource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.pop3DataSource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case domain:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                        mClassToAttrsMap.get(AttributeClass.domain));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            default:
+                mClassToAllAttrsMap.put(klass, mClassToAttrsMap.get(klass));
+            }
         }
     }
 
@@ -726,7 +782,8 @@ public class AttributeManager {
     }
 
     public boolean isDomainAdminModifiable(String attr, AttributeClass klass) throws ServiceException {
-        if (!isAttrInClass(attr, klass))
+        // bug 32507
+        if (!mClassToAllAttrsMap.get(klass).contains(attr))    
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute on " + klass.name() + ": " + attr, null);
 
         return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
@@ -777,40 +834,9 @@ public class AttributeManager {
     public Set<String> getAttrsInClass(AttributeClass klass) {
         return mClassToAttrsMap.get(klass);
     }
-
-    /*
-     * Urg, for bug 32507 we need to know if an attribute is allowed in an entry
-     * and throw INVALID_ATTR_NAME instead of PERM_DENIED for domain admins.
-     *
-     * Without bug 32507, INVALID_ATTR_NAME will be naturally thrown by mapping LDAP
-     * Exception if we try to update an attribute that is not allowed on an entry.
-     *
-     */
-    private boolean isAttrInClass(String attr, AttributeClass klass) {
-
-        switch (klass) {
-        case account:
-            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.account).contains(attr);
-        case calendarResource:
-            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.account).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.calendarResource).contains(attr);
-        case distributionList:
-            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.distributionList).contains(attr);
-        case imapDataSource:
-            return mClassToAttrsMap.get(AttributeClass.dataSource).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.imapDataSource).contains(attr);
-        case pop3DataSource:
-            return mClassToAttrsMap.get(AttributeClass.dataSource).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.pop3DataSource).contains(attr);
-        case domain:
-            return mClassToAttrsMap.get(AttributeClass.mailRecipient).contains(attr) ||
-                   mClassToAttrsMap.get(AttributeClass.domain).contains(attr);
-        default:
-            return mClassToAttrsMap.get(klass).contains(attr);
-        }
+    
+    public Set<String> getAllAttrsInClass(AttributeClass klass) {
+        return mClassToAllAttrsMap.get(klass);
     }
 
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {

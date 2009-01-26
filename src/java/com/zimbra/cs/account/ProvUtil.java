@@ -74,6 +74,7 @@ import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveAttr;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
@@ -2622,7 +2623,7 @@ public class ProvUtil implements DebugListener {
         String mGranteeType;
         String mGranteeIdOrName;
         String mRight;
-        boolean mDeny;
+        RightModifier mRightModifier;
         
         String[] mArgs;
         int mCurPos = 1;
@@ -2660,11 +2661,9 @@ public class ProvUtil implements DebugListener {
         if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
         
         ra.mRight = ra.mArgs[ra.mCurPos++];
-        
-        if (ra.mRight.charAt(0) == '-') {
-            ra.mDeny = true;
+        ra.mRightModifier = RightModifier.fromChar(ra.mRight.charAt(0));
+        if (ra.mRightModifier != null)
             ra.mRight = ra.mRight.substring(1);
-        }
     }
     
     private void getRightArgs(RightArgs ra, boolean needGranteeType) throws ServiceException, ArgException {
@@ -2849,7 +2848,7 @@ public class ProvUtil implements DebugListener {
     
         mProv.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
                          ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
-                         ra.mRight, ra.mDeny);
+                         ra.mRight, ra.mRightModifier);
     }
     
     private void doRevokeRight(String[] args) throws ServiceException, ArgException {
@@ -2861,7 +2860,7 @@ public class ProvUtil implements DebugListener {
     
         mProv.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
                          ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
-                         ra.mRight, ra.mDeny);
+                         ra.mRight, ra.mRightModifier);
     }
     
     private void doHelp(String[] args) {

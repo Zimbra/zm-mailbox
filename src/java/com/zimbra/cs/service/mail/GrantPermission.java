@@ -19,6 +19,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -108,7 +109,10 @@ public class GrantPermission extends MailDocumentHandler {
                 gtype = GranteeType.GT_GROUP;
         }
         
-        return new ZimbraACE(zid, gtype, right, deny, secret);
+        RightModifier rightModifier = null;
+        if (deny)
+            rightModifier = RightModifier.RM_DENY;
+        return new ZimbraACE(zid, gtype, right, rightModifier, secret);
 
     }
     

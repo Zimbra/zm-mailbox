@@ -230,15 +230,15 @@ public class RoleAccessManager extends AccessManager {
             }
             
         } else if (rightNeeded.isComboRight()) {
-            throw ServiceException.FAILURE("checking right for combo right is not supported", null);
-            /*
+            // throw ServiceException.FAILURE("checking right for combo right is not supported", null);
+            
             ComboRight comboRight = (ComboRight)rightNeeded;
-            // check all directly.indirectly contained rights
-            for (Right presetRight : comboRight.getAllRights()) {
-                if (!canDo(grantee, target, presetRight, attrs, null))  // via is not set for combo right. maybe we should just get rid of via 
+            // check all directly and indirectly contained rights
+            for (Right right : comboRight.getAllRights()) {
+                if (!canDo(grantee, target, right, attrs, null)) // via is not set for combo right. maybe we should just get rid of via 
                     return false;
             }
-            */
+
         }
         
         return allowed;
