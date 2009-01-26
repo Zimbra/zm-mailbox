@@ -1368,7 +1368,6 @@
             ca wiki@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             zimbraMailQuota 0
-        	grr global usr admin@${defaultdomain.name} accountAdmin
         	grr global usr admin@${defaultdomain.name} createTopDomain
         	grr global usr admin@${defaultdomain.name} modifyAccount
         	grr global usr admin@${defaultdomain.name} deleteAccount
@@ -1395,8 +1394,6 @@
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} addAccountAlias
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} removeAccountAlias
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} viewEmail
-        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} modifyDomainAdminAttrs
-        	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} accountAdmin
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} setAccountPassword
         	
         </echo>
@@ -1770,5 +1767,22 @@
 
         <antcall target="server2-provision-ldap"/>
     </target>
-
+	
+	<target name="refresh-rights">
+		<antcall target="stop-webserver"/>
+		<sleep seconds="2"/>
+		
+		<!-- copy from source to dist -->
+        <copy todir="${dist.dir}/conf/rights" overwrite="true">
+            <fileset dir="${config.dir}/rights"/>
+        </copy>
+		
+		<!-- copy from dist to zimbra home -->
+        <copy todir="${zimbra.home.dir}/conf/rights" overwrite="true">
+            <fileset dir="${dist.dir}/conf/rights"/>
+        </copy>
+		
+		<antcall target="start-webserver"/>
+	</target>
+	
 </project>
