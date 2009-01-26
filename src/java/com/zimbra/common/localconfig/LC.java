@@ -295,11 +295,13 @@ public class LC {
     public static final KnownKey calendar_ics_export_buffer_size;
     public static final KnownKey calendar_canonical_tzid;
 
+    public static final KnownKey calendar_search_max_days;
     public static final KnownKey calendar_cache_enabled;
     public static final KnownKey calendar_cache_directory;
     public static final KnownKey calendar_cache_lru_size;
     public static final KnownKey calendar_cache_range_month_from;
     public static final KnownKey calendar_cache_range_months;
+    public static final KnownKey calendar_cache_max_stale_items;
 
     public static final KnownKey nio_enabled;
     public static final KnownKey nio_debug_enabled;
@@ -1000,6 +1002,9 @@ public class LC {
         calendar_canonical_tzid = new KnownKey("calendar_canonical_tzid");
         calendar_canonical_tzid.setDefault("windows");
 
+        calendar_search_max_days = new KnownKey("calendar_search_max_days");
+        calendar_search_max_days.setDefault("400");
+
         calendar_cache_enabled = new KnownKey("calendar_cache_enabled");
         calendar_cache_enabled.setDefault("false");
 
@@ -1014,6 +1019,9 @@ public class LC {
 
         calendar_cache_range_months = new KnownKey("calendar_cache_range_months");
         calendar_cache_range_months.setDefault("3");
+
+        calendar_cache_max_stale_items = new KnownKey("calendar_cache_max_stale_items");
+        calendar_cache_max_stale_items.setDefault("10");
 
         nio_imap_enabled = new KnownKey("nio_imap_enabled");
         nio_imap_enabled.setDefault("false");
