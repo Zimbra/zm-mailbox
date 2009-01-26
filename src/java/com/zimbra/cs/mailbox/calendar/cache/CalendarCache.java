@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -43,11 +44,11 @@ import com.zimbra.cs.stats.ZimbraPerf;
 // TODO: [done] search code change to use the calendar cache (remove my hack in Search.java)
 // TODO: [done] persistence - filesystem or database?  what's the IO impact?
 // TODO: [done] versioning
-// TODO: cache moving window of configurable size (e.g. 6 months beginning with last month)
+// TODO: [done] cache moving window of configurable size (e.g. 6 months beginning with last month)
+// TODO: [done] CLI or other mechanism to force invalidation of specific calendar/mailbox
 // TODO: caching remote calendars
 // TODO: TTL instead of last-modified time check, if folder configured that way or remote
 // TODO: high cache stickiness (or dedicated non-LRU cache) for heavily shared, almost read-only calendars
-// TODO: CLI or other mechanism to force invalidation of specific calendar/mailbox
 // TODO: is the cached data friendly to JSON2 serialization?
 //       currently missing: CATEGORY, CREATED, LAST-MODIFIED, DESCRIPTION, STREET, CSZ, PHONE,
 //       RECUR,
@@ -168,7 +169,7 @@ public class CalendarCache {
                     calItem.getModifiedSequence(), calItem.getSavedSequence(),
                     calItem.getDate(), calItem.getChangeDate(), calItem.getSize(),
                     defaultInvite.getUid(), defaultInvite.isRecurrence(), calItem.isPublic(),
-                    alarm, defaultData);
+                    alarm, defaultData, false);
 
             long actualRangeStart = 0;
             long actualRangeEnd = 0;
@@ -238,20 +239,85 @@ public class CalendarCache {
     }
 
     private static CalendarData reloadCalendarOverRange(OperationContext octxt, Mailbox mbox, int folderId,
-                                                        byte itemType, long rangeStart, long rangeEnd)
+                                                        byte itemType, long rangeStart, long rangeEnd,
+                                                        CalendarData staleCalData)
     throws ServiceException {
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
         long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
-        if (days > MAX_PERIOD_SIZE_IN_DAYS)
+        if (days > sMaxSearchDays)
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum " +
-                                                   MAX_PERIOD_SIZE_IN_DAYS + " days)", null);
+                    sMaxSearchDays + " days)", null);
+
+        if (staleCalData == null || (rangeStart < staleCalData.getRangeStart() || rangeEnd > staleCalData.getRangeEnd())) {
+            // Ignore existing stale data if its range doesn't include the entire requested range.
+            // We have to scan the calendar folder.
+            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
+        }
+        if (sMaxStaleItems <= 0 || staleCalData.getNumStaleItems() > sMaxStaleItems) {
+            // If there are too many stale items, do it with folder scan as that may be faster.
+            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData);
+        }
+
+        Folder folder = mbox.getFolderById(octxt, folderId);
+        CalendarData calData = new CalendarData(folderId, folder.getImapMODSEQ(), rangeStart, rangeEnd);
+        for (Iterator<CalendarItemData> iter = staleCalData.calendarItemIterator(); iter.hasNext(); ) {
+            CalendarItemData existing = iter.next();
+            if (!existing.isStale()) {
+                // Still good.  Reuse it.
+                calData.addCalendarItem(existing);
+            } else {
+                CalendarItem calItem = null;
+                try {
+                    calItem = mbox.getCalendarItemById(octxt, existing.getCalItemId());
+                } catch (MailServiceException e) {
+                    if (!e.getCode().equals(MailServiceException.NO_SUCH_APPT)
+                        && !e.getCode().equals(MailServiceException.NO_SUCH_TASK))
+                        throw e;
+                    // NO_SUCH_APPT/TASK exception is an expected condition.
+                }
+                if (calItem != null && calItem.getFolderId() == folderId) {
+                    CalendarItemData calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
+                    if (calItemData != null)
+                        calData.addCalendarItem(calItemData);
+                }
+            }
+        }
+        return calData;  // return a non-null object even if there are no items in the range
+    }
+
+    // Reload by first calling Mailbox.getCalendarItemsForRange(), which runs a query on appointment table.
+    private static CalendarData reloadCalendarOverRangeWithFolderScan(
+            OperationContext octxt, Mailbox mbox, int folderId,
+            byte itemType, long rangeStart, long rangeEnd,
+            CalendarData staleCalData)
+    throws ServiceException {
+        if (rangeEnd < rangeStart)
+            throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
+        long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
+        if (days > sMaxSearchDays)
+            throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum " +
+                    sMaxSearchDays + " days)", null);
+
+        // Ignore existing data if its range doesn't include the entire requested range.
+        if (staleCalData != null
+            && (rangeStart < staleCalData.getRangeStart() || rangeEnd > staleCalData.getRangeEnd()))
+            staleCalData = null;
 
         Folder folder = mbox.getFolderById(octxt, folderId);
         CalendarData calData = new CalendarData(folderId, folder.getImapMODSEQ(), rangeStart, rangeEnd);
         Collection<CalendarItem> calItems =
             mbox.getCalendarItemsForRange(octxt, itemType, rangeStart, rangeEnd, folderId, null);
         for (CalendarItem calItem : calItems) {
+            if (staleCalData != null) {
+                // Reuse the appointment if it didn't change.
+                CalendarItemData cur = staleCalData.getCalendarItemData(calItem.getId());
+                if (cur != null && cur.getModMetadata() == calItem.getModifiedSequence()) {
+                    calData.addCalendarItem(cur);
+                    continue;
+                }
+            }
+            // We couldn't reuse the existing data.  Get it the hard way.
             CalendarItemData calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
             if (calItemData != null)
                 calData.addCalendarItem(calItemData);
@@ -265,14 +331,19 @@ public class CalendarCache {
 
     private static final int sRangeMonthFrom;
     private static final int sRangeNumMonths;
+    private static final int sMaxStaleItems;
+    private static final int sMaxStaleItemsBeforeInvalidatingCalendar;
+    private static final int sMaxSearchDays;
     private static final int sLRUCapacity;
 
     private static final long MSEC_PER_DAY = 1000 * 60 * 60 * 24;
-    private static final long MAX_PERIOD_SIZE_IN_DAYS = 366;
 
     static {
         sRangeMonthFrom = LC.calendar_cache_range_month_from.intValue();
         sRangeNumMonths = LC.calendar_cache_range_months.intValue();
+        sMaxStaleItems = LC.calendar_cache_max_stale_items.intValue();
+        sMaxStaleItemsBeforeInvalidatingCalendar = 100;
+        sMaxSearchDays = LC.calendar_search_max_days.intValueWithinRange(0, 3660);
         if (LC.calendar_cache_enabled.booleanValue())
             sLRUCapacity = LC.calendar_cache_lru_size.intValue();
         else
@@ -304,11 +375,14 @@ public class CalendarCache {
         if (!LC.calendar_cache_enabled.booleanValue()) {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
-            return reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd);
+            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
         }
 
         int lruSize = 0;
         CacheLevel dataFrom = CacheLevel.Memory;
+
+        Folder folder = mbox.getFolderById(octxt, folderId);
+        int currentModSeq = folder.getImapMODSEQ();
 
         SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
         CalendarData calData = null;
@@ -318,31 +392,45 @@ public class CalendarCache {
                 lruSize = mSummaryCache.size();
             }
         }
-
-        Folder folder = mbox.getFolderById(octxt, folderId);
-        int currentModSeq = folder.getImapMODSEQ();
+        // Cache can't be newer than the actual calendar.
+        if (calData != null && calData.getModSeq() > currentModSeq)
+            calData = null;
 
         if (calData == null) {
             // Load from file.
             try {
                 calData = FileStore.loadCalendarData(mbox.getId(), folderId, currentModSeq);
-                if (calData != null && sLRUCapacity > 0) {
-                    synchronized (mSummaryCache) {
-                        mSummaryCache.put(key, calData);
-                        lruSize = mSummaryCache.size();
+                if (calData != null) {
+                    // Ignore data from file if it's stale.
+                    if (calData.getModSeq() == currentModSeq && calData.getNumStaleItems() == 0) {
+                        if (sLRUCapacity > 0) {
+                            synchronized (mSummaryCache) {
+                                mSummaryCache.put(key, calData);
+                                lruSize = mSummaryCache.size();
+                            }
+                        }
+                        dataFrom = CacheLevel.File;
+                    } else {
+                        calData = null;
                     }
                 }
-                dataFrom = CacheLevel.File;
             } catch (ServiceException e) {
                 ZimbraLog.calendar.warn("Error loading cached calendar summary", e);
             }
         }
 
+        CalendarData staleCalData = null;
+
         Pair<Long, Long> defaultRange = null;
         if (calData != null) {
-            if (calData.getModSeq() < currentModSeq) {
+            if (calData.getModSeq() != currentModSeq || calData.getNumStaleItems() > 0) {
                 // Cached data is stale.
-                calData = null;
+            	// Something changed on the calendar, but most of the data is probably still current.
+            	// Let's keep a reference to the current data and reuse what we can, but only if the
+            	// current data's range covers the requested range.
+                if (rangeStart >= calData.getRangeStart() && rangeEnd <= calData.getRangeEnd())
+                    staleCalData = calData;
+                calData = null;  // force recompute further down
             } else if (rangeStart < calData.getRangeStart() || rangeEnd > calData.getRangeEnd()) {
                 // Requested range is not within cached range.  Recompute cached range in the hope
                 // that the new range will cover the requested range.
@@ -361,7 +449,7 @@ public class CalendarCache {
                 defaultRange = Util.getMonthsRange(System.currentTimeMillis(),
                                                    sRangeMonthFrom, sRangeNumMonths);
             calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
-                                              defaultRange.getFirst(), defaultRange.getSecond());
+                                              defaultRange.getFirst(), defaultRange.getSecond(), staleCalData);
             synchronized (mSummaryCache) {
                 if (sLRUCapacity > 0) {
                     mSummaryCache.put(key, calData);
@@ -387,7 +475,7 @@ public class CalendarCache {
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd);
+            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData);
         }
 
         // hit/miss tracking
@@ -426,6 +514,25 @@ public class CalendarCache {
             FileStore.deleteCalendarData(mboxId, folderId);
         } catch (ServiceException e) {
             ZimbraLog.calendar.warn("Error deleting calendar summary cache", e);
+        }
+    }
+
+    public void invalidateItem(Mailbox mbox, int folderId, int calItemId) {
+        if (!LC.calendar_cache_enabled.booleanValue())
+            return;
+        SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
+        CalendarData calData = null;
+        synchronized (mSummaryCache) {
+            if (sLRUCapacity > 0) {
+                calData = mSummaryCache.get(key);
+            }
+        }
+        // Invalidate the item from the calendar.
+        if (calData != null) {
+            calData.markItemStale(calItemId);
+            if (calData.getNumStaleItems() > sMaxStaleItemsBeforeInvalidatingCalendar) {
+                invalidateSummary(mbox, folderId);
+            }
         }
     }
 }
