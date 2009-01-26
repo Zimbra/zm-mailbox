@@ -214,6 +214,7 @@ public class ZRecur {
         Date rangeEnd;
         
         GregorianCalendar cal = new GregorianCalendar();
+        cal.clear();
         cal.setTimeZone(tzUTC);
         
         cal.set(2005, 4, 15, 0, 0, 0);

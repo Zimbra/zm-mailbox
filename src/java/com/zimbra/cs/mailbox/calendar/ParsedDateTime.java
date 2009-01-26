@@ -134,6 +134,7 @@ public final class ParsedDateTime {
             }
             
             GregorianCalendar cal = new GregorianCalendar();
+            cal.clear();
             if (zulu || utcOnly) {
                 cal.setTimeZone(ICalTimeZone.getUTC());
             } else {
@@ -146,8 +147,6 @@ public final class ParsedDateTime {
 	                    tzmap.add(tz);
                 }
             }
-
-            cal.clear();
 
             boolean hasTime = false;
 
@@ -414,6 +413,7 @@ public final class ParsedDateTime {
              mCal.get(java.util.Calendar.MILLISECOND) == 0)) {
             // Extend to end of day in DTSTART's time zone.
             GregorianCalendar cal = new GregorianCalendar(dtStartTZ);
+            cal.clear();
             cal.set(mCal.get(java.util.Calendar.YEAR),
                     mCal.get(java.util.Calendar.MONTH),
                     mCal.get(java.util.Calendar.DAY_OF_MONTH),

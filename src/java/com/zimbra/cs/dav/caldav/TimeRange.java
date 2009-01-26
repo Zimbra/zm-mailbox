@@ -69,6 +69,7 @@ public class TimeRange {
     		sec = Integer.parseInt(time.substring(index, index+2)); index+=2;
     	}
     	GregorianCalendar calendar = new GregorianCalendar(tz);
+    	calendar.clear();
     	calendar.set(year, month, date, hour, min, sec);
     	return calendar.getTimeInMillis();
     }
