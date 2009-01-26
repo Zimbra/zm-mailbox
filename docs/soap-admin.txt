@@ -2159,4 +2159,15 @@ e.g.
     the authed user does not have privilege to run this SOAP command, 
     or the principal dose not have the specified right on the target object.
   
-                    
+-----------------------------
+
+<PurgeAccountCalendarCacheRequest id="{value-of-zimbraId}"/>
+
+<PurgeAccountCalendarCacheRequest/>
+
+Access: domain admin sufficient
+
+   Purge the calendar cache for an account.
+   note: this request is by default proxied to the account's home server
+
+-----------------------------

@@ -2897,4 +2897,8 @@ public abstract class Provisioning {
     public boolean allowsPingRemote() {
         return true;
     }
+
+    public void purgeAccountCalendarCache(String accountId) throws ServiceException {
+        // do nothing by default
+    }
 }
