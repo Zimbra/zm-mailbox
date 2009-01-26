@@ -74,6 +74,7 @@ public class DateUtil {
     	int min = Integer.parseInt(time.substring(10, 12));
     	int sec = Integer.parseInt(time.substring(12, 14));
     	Calendar calendar = new GregorianCalendar(tz);
+    	calendar.clear();
     	calendar.set(year, month, date, hour, min, sec);
     	return calendar.getTime();
     }
