@@ -198,7 +198,10 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ALL_FREE_BUSY_PROVIDERS_REQUEST, new GetAllFreeBusyProviders());
         dispatcher.registerHandler(AdminConstants.GET_FREE_BUSY_QUEUE_INFO_REQUEST, new GetFreeBusyQueueInfo());
         dispatcher.registerHandler(AdminConstants.PUSH_FREE_BUSY_REQUEST, new PushFreeBusy());
-        
+
+        // calendar cache
+        dispatcher.registerHandler(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST, new PurgeAccountCalendarCache());
+
         // rights
         dispatcher.registerHandler(AdminConstants.GET_RIGHT_REQUEST, new GetRight());
         dispatcher.registerHandler(AdminConstants.GET_ALL_RIGHTS_REQUEST, new GetAllRights());

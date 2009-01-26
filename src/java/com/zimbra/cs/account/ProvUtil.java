@@ -387,6 +387,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
+        PURGE_ACCOUNT_CALENDAR_CACHE("purgeAccountCalendarCache", "pacc", "{name@domain|id} [...]", Category.CALENDAR, 1, Integer.MAX_VALUE),
         RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
@@ -798,6 +799,9 @@ public class ProvUtil implements DebugListener {
 			fbcli.pushFreeBusyForAccounts(accounts);
         	break;
         }
+        case PURGE_ACCOUNT_CALENDAR_CACHE:
+            doPurgeAccountCalendarCache(args);
+            break;
         case REMOVE_ACCOUNT_ALIAS:
             Account acct = lookupAccount(args[1], false);
             mProv.removeAlias(acct, args[2]);
@@ -2599,7 +2603,18 @@ public class ProvUtil implements DebugListener {
         }
         dumpServer(lookupServer(args[i], applyDefault), applyDefault, getArgNameSet(args, i+1));
     }
-    
+
+    private void doPurgeAccountCalendarCache(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        if (args.length > 1) {
+            for (int i = 1; i < args.length; i++) {
+                Account acct = lookupAccount(args[i], true);
+                mProv.purgeAccountCalendarCache(acct.getId());
+            }
+        }
+    }
+
     private void doCreateXMPPComponent(String[] args) throws ServiceException, ArgException {
         //4 = class
         //5 = category

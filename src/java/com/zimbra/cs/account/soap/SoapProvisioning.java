@@ -2107,7 +2107,14 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
-    
+
+    @Override
+    public void purgeAccountCalendarCache(String accountId) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST);
+        req.addAttribute(AdminConstants.A_ID, accountId);
+        invoke(req);
+    }
+
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         
@@ -2120,5 +2127,4 @@ public class SoapProvisioning extends Provisioning {
         Account acct = prov.get(AccountBy.name, "user1");
         prov.modifyAttrs(acct, acctAttrs);
     }
-    
 }

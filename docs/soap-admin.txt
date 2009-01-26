@@ -2138,4 +2138,15 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 
   
-                    
+-----------------------------
+
+<PurgeAccountCalendarCacheRequest id="{value-of-zimbraId}"/>
+
+<PurgeAccountCalendarCacheRequest/>
+
+Access: domain admin sufficient
+
+   Purge the calendar cache for an account.
+   note: this request is by default proxied to the account's home server
+
+-----------------------------

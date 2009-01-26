@@ -1773,4 +1773,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean allowsPingRemote() {
         return true;
     }
+
+    public void purgeAccountCalendarCache(String accountId) throws ServiceException {
+        // do nothing by default
+    }
 }
