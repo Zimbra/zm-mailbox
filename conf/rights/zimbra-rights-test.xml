@@ -10,13 +10,42 @@
 ========================================================
 -->
 
-<right name="testGlobalConfigRemoveMe" type="preset" targetType="config">
-  <desc>test global config target for now, delete after test is done</desc>
+<right name="test-preset-account" type="preset" targetType="account">
+  <desc>a preset account right</desc>
 </right>
 
-<right name="testGlobalGrantRemoveMe" type="preset" targetType="global">
-  <desc>test global grant target for now, delete after test is done</desc>
+<right name="test-preset-calendarresource" type="preset" targetType="resource">
+  <desc>a preset calendar resource right</desc>
 </right>
+
+<right name="test-preset-globalconfig" type="preset" targetType="config">
+  <desc>a preset global config right</desc>
+</right>
+
+<right name="test-preset-cos" type="preset" targetType="cos">
+  <desc>a preset cos right</desc>
+</right>
+
+<right name="test-preset-distributionlist" type="preset" targetType="distributionlist">
+  <desc>a preset distribution list right</desc>
+</right>
+
+<right name="test-preset-domain" type="preset" targetType="domain">
+  <desc>a preset domain right</desc>
+</right>
+
+<right name="test-preset-globalgrant" type="preset" targetType="global">
+  <desc>a preset global grant right</desc>
+</right>
+
+<right name="test-preset-server" type="preset" targetType="server">
+  <desc>a preset server right</desc>
+</right>
+
+<right name="test-preset-zimlet" type="preset" targetType="zimlet">
+  <desc>a preset zimlet right</desc>
+</right>
+
 
 <right name="test-getAttrs-account-2" type="getAttrs" targetType="account,cos">
   <desc>for unittest only, do we have a use case for this?</desc>
