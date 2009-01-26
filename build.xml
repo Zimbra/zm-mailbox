@@ -1388,6 +1388,7 @@
         	grr global usr admin@${defaultdomain.name} renameCos
         	grr global usr admin@${defaultdomain.name} modifyServer
         	grr global usr admin@${defaultdomain.name} deleteServer
+        	grr global usr admin@${defaultdomain.name} modifyGlobalConfig
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} renameAccount
         	grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} deleteAccount
