@@ -432,7 +432,6 @@ public class MailSender {
             return (rollback[0] != null ? rollback[0].msgId : null);
 
         } catch (SafeSendFailedException sfe) {
-            ZimbraLog.smtp.warn("Exception occurred during SendMsg: ", sfe);
             Address[] invalidAddrs = sfe.getInvalidAddresses();
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
@@ -444,6 +443,7 @@ public class MailSender {
                         msg.append(invalidAddrs[i]);
                     }
                 }
+                msg.append(".  ").append(sfe.toString());
 
                 if (Provisioning.getInstance().getLocalServer().isSmtpSendPartial())
                     throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
@@ -590,7 +590,7 @@ public class MailSender {
      * returns a Collection of successfully sent recipient Addresses
      */
     protected Collection<Address> sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
-    throws SafeMessagingException, IOException {
+    throws SafeMessagingException {
         // send the message via SMTP
     	HashSet<Address> sentAddresses = new HashSet<Address>();
         try {
