@@ -23,6 +23,7 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.Geo;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -95,6 +96,14 @@ public class FullInstanceData extends InstanceData {
 
     public String getFreeBusyIntended() { return mFreeBusyIntended; }
     public String getTransparency() { return mTransparency; }
+
+    public boolean isPublic(FullInstanceData defaultInstance) {
+        if (mClassProp != null)
+            return IcalXmlStrMap.CLASS_PUBLIC.equals(mClassProp);
+        if (defaultInstance != null)
+            return defaultInstance.isPublic(null);
+        return true;
+    }
 
     public FullInstanceData(
             String recurIdZ, long dtStart, long duration, long alarmAt, long tzOffset,
