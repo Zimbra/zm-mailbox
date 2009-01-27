@@ -755,7 +755,8 @@ public class TarFormatter extends Formatter {
                             r == Resolve.Modify ? oldItem.getFolderId() :
                             fldr.getId(), ci.getFlagBitmask(),
                             ci.getTagBitmask(), defScid, exceptionScids,
-                            ci.getAllReplies(), ad == null ? 0 : ad.getNextAt());
+                            ci.getAllReplies(),
+                            ad == null ? CalendarItem.NEXT_ALARM_KEEP_CURRENT : ad.getNextAt());
                     }
                 }
                 break;

@@ -427,7 +427,7 @@ public class CalDavDataImport extends MailItemImport {
     			}
     		}
     		mi = mbox.setCalendarItem(octxt, where.getId(), 0, 0,
-    				main, exceptions, null, 0);
+    				main, exceptions, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
     		dsItem.itemId = mi.getId();
     		DbDataSource.addMapping(ds, dsItem);
     	} else {

@@ -250,7 +250,11 @@ public class SetCalendarItem extends CalendarRequest {
 
         result.isTodo = defInv != null && defInv.isTodo();
 
-        result.nextAlarm = request.getAttributeLong(MailConstants.A_CAL_NEXT_ALARM, 0);
+        boolean noNextAlarm = request.getAttributeBool(MailConstants.A_CAL_NO_NEXT_ALARM, false);
+        if (noNextAlarm)
+            result.nextAlarm = CalendarItem.NEXT_ALARM_ALL_DISMISSED;
+        else
+            result.nextAlarm = request.getAttributeLong(MailConstants.A_CAL_NEXT_ALARM, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
 
         return result;
     }

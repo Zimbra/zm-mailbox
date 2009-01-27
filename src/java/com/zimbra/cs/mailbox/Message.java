@@ -522,7 +522,7 @@ public class Message extends MailItem {
                             int flags = Flag.BITMASK_INDEXING_DEFERRED;
                             mMailbox.incrementIndexDeferredCount(1);
                             int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur, 0);
+                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur);
                             calItemIsNew = true;
                         } else {
                             sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");

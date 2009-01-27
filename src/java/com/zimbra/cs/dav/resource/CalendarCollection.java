@@ -300,7 +300,7 @@ public class CalendarCollection extends Collection {
                 }
 			}
             calItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
-                                           scidDefault, scidExceptions, replies, 0);
+                                           scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
 			return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);

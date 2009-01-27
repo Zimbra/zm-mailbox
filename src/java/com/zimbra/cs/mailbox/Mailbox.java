@@ -4009,14 +4009,6 @@ public class Mailbox {
         }
     }
 
-    public synchronized CalendarItem setCalendarItem(OperationContext octxt, int folderId,
-                                            SetCalendarItemData defaultInv,
-                                            SetCalendarItemData exceptions[],
-                                            List<ReplyInfo> replies)
-    throws ServiceException {
-        return setCalendarItem(octxt, folderId, 0, 0, defaultInv, exceptions, replies, 0);
-    }
-
     /**
      * @param octxt
      * @param exceptions can be NULL
@@ -4106,7 +4098,7 @@ public class Mailbox {
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
                             calItem = createCalendarItem(
                                     folderId, volumeId, flags, tags,
-                                    scid.mInv.getUid(), scid.mPm, scid.mInv, 0);
+                                    scid.mInv.getUid(), scid.mPm, scid.mInv);
                         } else {
                             return null; // for now, just ignore this Invitation
                         }
@@ -4130,7 +4122,7 @@ public class Mailbox {
             }
 
             // Recompute alarm time after processing all Invites.
-            if (nextAlarm == 0)
+            if (nextAlarm == CalendarItem.NEXT_ALARM_KEEP_CURRENT)
                 nextAlarm = oldNextAlarm;
             calItem.updateNextAlarm(nextAlarm);
 
@@ -4359,7 +4351,7 @@ public class Mailbox {
                     if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
                         int flags = Flag.BITMASK_INDEXING_DEFERRED;
                         incrementIndexDeferredCount(1);
-                        calItem = createCalendarItem(folderId, volumeId, flags, 0, inv.getUid(), pm, inv, 0);
+                        calItem = createCalendarItem(folderId, volumeId, flags, 0, inv.getUid(), pm, inv);
                         calItemIsNew = true;
                     } else {
 //                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
@@ -4376,7 +4368,7 @@ public class Mailbox {
                     }
                     if (addRevision)
                         calItem.snapshotRevision();
-                    calItem.processNewInvite(pm, inv, folderId, volumeId, 0,
+                    calItem.processNewInvite(pm, inv, folderId, volumeId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
                                              preserveExistingAlarms, discardExistingInvites);
                 }
                 
@@ -5742,7 +5734,7 @@ public class Mailbox {
     }
 
     CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid,
-                                    ParsedMessage pm, Invite invite, long nextAlarm)
+                                    ParsedMessage pm, Invite invite)
     throws ServiceException {
         // FIXME: assuming that we're in the middle of a AddInvite op
         CreateCalendarItemPlayer redoPlayer = (CreateCalendarItemPlayer) mCurrentChange.getRedoPlayer();
@@ -5752,7 +5744,7 @@ public class Mailbox {
         int createId = getNextItemId(newCalItemId);
 
         CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), volumeId, flags, tags,
-                                                   uid, pm, invite, nextAlarm);
+                                                   uid, pm, invite, CalendarItem.NEXT_ALARM_FROM_NOW);
 
         if (redoRecorder != null)
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), calItem.getVolumeId());

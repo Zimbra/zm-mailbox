@@ -101,7 +101,12 @@ public abstract class CalendarItem extends MailItem {
     // manually build a query to search for them w/o using our custom FieldTokenStream 
     public static final String INDEX_FIELD_ITEM_CLASS_PUBLIC = "_calendaritemclass:public"; 
     public static final String INDEX_FIELD_ITEM_CLASS_PRIVATE = "_calendaritemclass:private"; 
-    
+
+    // special values for next alarm trigger time
+    public static final long NEXT_ALARM_KEEP_CURRENT  = 0;   // keep current value
+    public static final long NEXT_ALARM_ALL_DISMISSED = -1;  // all alarms have been shown and dismissed
+    public static final long NEXT_ALARM_FROM_NOW = -2;       // compute next trigger time from current time
+
     static Log sLog = LogFactory.getLog(CalendarItem.class);
 
     private String mUid;
@@ -1115,7 +1120,7 @@ public abstract class CalendarItem extends MailItem {
     boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, short volumeId, boolean replaceExistingInvites)
     throws ServiceException {
-        return processNewInvite(pm, invite, folderId, volumeId, 0, true, replaceExistingInvites);
+        return processNewInvite(pm, invite, folderId, volumeId, CalendarItem.NEXT_ALARM_KEEP_CURRENT, true, replaceExistingInvites);
     }
 
     /**
@@ -2751,7 +2756,7 @@ public abstract class CalendarItem extends MailItem {
 
     private static final long MILLIS_IN_YEAR = 365L * 24L * 60L * 60L * 1000L;
 
-    private long getNextAlarmRecurrenceExpansionEndTime() {
+    private long getNextAlarmRecurrenceExpansionLimit() {
         long fromTime = Math.max(getStartTime(), System.currentTimeMillis());        
         long endTime = fromTime + MILLIS_IN_YEAR;  // 1-year window to search for next alarm
         long itemEndTime = getEndTime();
@@ -2763,40 +2768,52 @@ public abstract class CalendarItem extends MailItem {
     /**
      * Recompute the next alarm trigger time that is at or later than "nextAlarm".
      * @param nextAlarm next alarm should go off at or after this time
+     *                  special values:
+     *                  CalendarItem.NEXT_ALARM_KEEP_CURRENT - keep current value
+     *                  CalendarItem.NEXT_ALARM_ALL_DISMISSED - all alarms have been shown and dismissed
+     *                  CalendarItem.NEXT_ALARM_FROM_NOW - compute next trigger time from current time
+     * @param skipAlarmDefChangeCheck
      */
     private void recomputeNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck)
     throws ServiceException {
-        if (!hasAlarm()) {
+        if (nextAlarm == NEXT_ALARM_ALL_DISMISSED || !hasAlarm()) {
             mAlarmData = null;
             return;
         }
 
-        // Special case nextAlarm == 0, which means to preserve last dismissed alarm time.
-        if (nextAlarm <= 0) {
-            if (mAlarmData != null)
-                nextAlarm = mAlarmData.getNextAt();
+        long now = getMailbox().getOperationTimestampMillis();
+        long atOrAfter;  // Chosen alarm must be at or after this time.
+        if (nextAlarm == NEXT_ALARM_KEEP_CURRENT) {
+            // special case to preserve current next alarm trigger time
+            if (mAlarmData != null) {
+                atOrAfter = mAlarmData.getNextAt();
+            } else {
+                atOrAfter = now;  // no existing alarm; pick the first alarm in the future
+            }
+        } else if (nextAlarm == NEXT_ALARM_FROM_NOW) {
+            // another special case to mean starting from "now"; pick the first alarm in the future
+            atOrAfter = now;
+        } else {
+            // else we just use the nextAlarm value that was passed in
+            atOrAfter = nextAlarm;
         }
+        if (atOrAfter <= 0)  // sanity check
+            atOrAfter = now;
 
-        long triggerAt = Long.MAX_VALUE;
-        Instance alarmInstance = null;
-        Alarm theAlarm = null;
-
-        long opTime = getMailbox().getOperationTimestampMillis();
-        long startTime = nextAlarm;
-        if (startTime > opTime) {
+        // startTime and endTime limit the time range for meeting instances to be examined.
+        // All instances before startTime are ignored, and by extension the alarms for them.
+        // endTime limit is set to avoid examining too many instances, for performance reason.
+        long startTime = atOrAfter;
+        if (startTime > now) {
             // Handle the case when appointment is brought back in time such that the new start time
             // is earlier than previously set alarm trigger time.
-            startTime = opTime;
+            startTime = now;
         }
-        if (startTime == 0) {
-            // startTime == 0 means we're computing next alarm time for the first time.  Ignore alarms
-            // in the past.  Only consider those at or after opTime.
-            startTime = opTime;
-        }
-        long endTime = getNextAlarmRecurrenceExpansionEndTime();
+        long endTime = getNextAlarmRecurrenceExpansionLimit();
         Collection<Instance> instances = expandInstances(startTime, endTime, false);
 
-        if (nextAlarm > 0 && !skipAlarmDefChangeCheck) {
+        // Special handling for modified alarm definition
+        if (atOrAfter > 0 && !skipAlarmDefChangeCheck) {
             // Let's see if alarm definition has changed.  It changed if there is no alarm to go off at
             // previously saved nextAlarm time.
             boolean alarmDefChanged = true;
@@ -2817,8 +2834,8 @@ public abstract class CalendarItem extends MailItem {
                 for (; alarmsIter.hasNext(); ) {
                     Alarm alarm = alarmsIter.next();
                     long currTrigger = alarm.getTriggerTime(instStart, instEnd);
-                    if (currTrigger == nextAlarm) {
-                        // Detected alarm definition change.  Reset nextAlarm to 0 to force the next loop
+                    if (currTrigger == atOrAfter) {
+                        // Detected alarm definition change.  Reset atOrAfter to 0 to force the next loop
                         // to choose the earliest alarm from an earliest instance at or after old nextAlarm time.
                         alarmDefChanged = false;
                         break;
@@ -2827,13 +2844,16 @@ public abstract class CalendarItem extends MailItem {
                 break;  // no need to look at later instances
             }
             if (alarmDefChanged) {
-                // Reset nextAlarm to 0 to force the next loop to choose the earliest alarm
-                // on the earliest instance at or after old nextAlarm time.  This is needed
-                // for bug 28630.  Without this, we can't change alarm definition to an
-                // earlier trigger time, e.g. from 5 minutes before to 10 minutes before.
-                nextAlarm = 0;
+                // If alarm definition changed, just pick the earliest alarm from now.  Without this,
+                // we can't change alarm definition to an earlier trigger time, e.g. from 5 minutes before
+                // to 10 minutes before. (bug 28630)
+                atOrAfter = now;
             }
         }
+
+        long triggerAt = Long.MAX_VALUE;
+        Instance alarmInstance = null;
+        Alarm theAlarm = null;
 
         for (Instance inst : instances) {
             long instStart = inst.getStart();
@@ -2842,10 +2862,10 @@ public abstract class CalendarItem extends MailItem {
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
             Pair<Long, Alarm> curr =
-                getAlarmTriggerTime(nextAlarm, inv.alarmsIterator(), instStart, inst.getEnd());
+                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, inst.getEnd());
             if (curr != null) {
                 long currAt = curr.getFirst();
-                if (nextAlarm <= currAt && currAt < triggerAt) {
+                if (atOrAfter <= currAt && currAt < triggerAt) {
                     triggerAt = currAt;
                     theAlarm = curr.getSecond();
                     alarmInstance = inst;
@@ -2969,7 +2989,7 @@ public abstract class CalendarItem extends MailItem {
             for (long lastAt : lastAlarmsAt.values()) {
                 oldest = Math.min(oldest, lastAt);
             }
-            long endTime = getNextAlarmRecurrenceExpansionEndTime();
+            long endTime = getNextAlarmRecurrenceExpansionLimit();
             Collection<Instance> instances = expandInstances(oldest, endTime, false);
 
             List<Alarm> alarms = inv.getAlarms();

@@ -440,7 +440,12 @@ RECURRENCE SPECIFIERS!
 //
 <SetAppointmentRequest
     [l="folder_to_create_in"] [f="flags"] [t="tags"]
-    [nextAlarm="next alarm will go off at"]
+    [noNextAlarm="1"]  // means all alarms have been dismissed; if this is set, nextAlarm should not be set
+    [nextAlarm="next alarm will go off at"]  // if specified, time when next alarm should go off
+                                             // if missing, two possibilities:
+                                             // 1) if noNextAlarm isn't set, keep current next alarm time
+                                             //    (this is backward compatibility case)
+                                             // 2) if noNextAlarm=1, indicates all alarms have been dismissed
 >
   <default
       ptst="NE|AC|TE|DE|DG|CO|IN"  // my participation status
