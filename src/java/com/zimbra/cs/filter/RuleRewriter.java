@@ -415,14 +415,14 @@ public class RuleRewriter {
                     if (currentFolder != null) {
                         parent = currentFolder;
                     } else {
-                        parent = remoteMbox.createFolder(parent.getId(), folderName, null, null, null, null);
+                        parent = remoteMbox.createFolder(parent.getId(), folderName, ZFolder.View.message, null, null, null);
                     }
                 }
             }
         } else if (remotePath != null) {
             // Create local folder path
             ZimbraLog.filter.info("Creating folder %s for rule %s.", path, ruleName);
-            mMailbox.createFolder(null, path, (byte) 0, MailItem.TYPE_UNKNOWN);
+            mMailbox.createFolder(null, path, (byte) 0, MailItem.TYPE_MESSAGE);
         }
     }
 }
