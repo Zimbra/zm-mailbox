@@ -590,7 +590,7 @@ public class MailSender {
      * returns a Collection of successfully sent recipient Addresses
      */
     protected Collection<Address> sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
-    throws SafeMessagingException {
+    throws SafeMessagingException, IOException {
         // send the message via SMTP
     	HashSet<Address> sentAddresses = new HashSet<Address>();
         try {
