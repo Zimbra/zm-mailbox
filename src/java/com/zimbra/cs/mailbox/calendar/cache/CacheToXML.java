@@ -145,8 +145,8 @@ public class CacheToXML {
     //
 
     private static void encodeInstanceData(Element parent, ItemIdFormatter ifmt, int calItemId,
-                                           InstanceData instance,
-                                           boolean isException, boolean isAppointment, boolean showAll,
+                                           InstanceData instance, FullInstanceData defaultInstance,
+                                           boolean isException, boolean isAppointment, boolean allowPrivateAccess,
                                            boolean legacyFormat)
     throws ServiceException {
         if (isException && instance.getDtStart() != null)
@@ -172,6 +172,7 @@ public class CacheToXML {
             return;
 
         FullInstanceData fullInstance = (FullInstanceData) instance;
+        boolean showAll = allowPrivateAccess || fullInstance.isPublic(defaultInstance);
 
         if (isException) {
             parent.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
@@ -291,14 +292,14 @@ public class CacheToXML {
         calItemElem.addAttribute(MailConstants.A_REVISION, calItemData.getModContent());
 
         int calItemId = calItemData.getCalItemId();
-        encodeInstanceData(calItemElem, ifmt, calItemId, defaultData,
-                           false, isAppointment, showAll, legacyFormat);
+        encodeInstanceData(calItemElem, ifmt, calItemId, defaultData, null,
+                           false, isAppointment, allowPrivateAccess, legacyFormat);
 
         for (Iterator<InstanceData> iter = calItemData.instanceIterator(); iter.hasNext(); ) {
             InstanceData instance = iter.next();
             Element instElem = calItemElem.addElement(MailConstants.E_INSTANCE);
-            encodeInstanceData(instElem, ifmt, calItemId, instance,
-                               true, isAppointment, showAll, legacyFormat);
+            encodeInstanceData(instElem, ifmt, calItemId, instance, defaultData,
+                               true, isAppointment, allowPrivateAccess, legacyFormat);
         }
 
         AlarmData alarmData = calItemData.getAlarm();
