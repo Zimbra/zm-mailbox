@@ -790,8 +790,6 @@ public class Folder extends MailItem {
     }
 
     void setSyncDate(long date) throws ServiceException {
-        if (!isMutable())
-            throw MailServiceException.IMMUTABLE_OBJECT(mId);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
