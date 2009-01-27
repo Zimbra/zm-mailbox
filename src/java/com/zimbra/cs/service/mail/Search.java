@@ -444,6 +444,7 @@ public class Search extends MailDocumentHandler  {
             if (!term.startsWith("inid:"))
                 return null;
             String folderId = term.substring(5);  // everything after "inid:"
+            folderId = unquote(folderId);  // e.g. if query is: inid:"account-id:num", we want just account-id:num
             if (folderId.length() > 0)
                 folderIdStrs.add(folderId);
         }
@@ -453,6 +454,16 @@ public class Search extends MailDocumentHandler  {
     private static String removeOuterParens(String str) {
         int len = str.length();
         if (len > 2 && str.charAt(0) == '(' && str.charAt(len - 1) == ')')
+            str = str.substring(1, len - 1);
+        return str;
+    }
+
+    private static String unquote(String str) {
+        int len = str.length();
+        if (len > 2 && str.charAt(0) == '\'' && str.charAt(len - 1) == '\'')
+            str = str.substring(1, len - 1);
+        len = str.length();
+        if (len > 2 && str.charAt(0) == '"' && str.charAt(len - 1) == '"')
             str = str.substring(1, len - 1);
         return str;
     }
