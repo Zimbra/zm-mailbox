@@ -516,6 +516,7 @@ public class MailConstants {
 
     public static final String A_CAL_ALARM_DISMISSED_AT = "dismissedAt";
     public static final String A_CAL_NEXT_ALARM = "nextAlarm";
+    public static final String A_CAL_NO_NEXT_ALARM = "noNextAlarm";
     public static final String A_CAL_ALARM_INSTANCE_START = "alarmInstStart";
     public static final String A_CAL_INCLUDE_CONTENT = "includeContent";
     public static final String A_NEED_CALENDAR_SENTBY_FIXUP = "needCalendarSentByFixup";
