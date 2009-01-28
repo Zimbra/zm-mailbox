@@ -379,7 +379,7 @@ public abstract class AuthProvider {
         for (AuthProvider ap : providers) {
             try {
                 AuthToken at = ap.authToken(acct);
-                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                // sanity check, should not be null, if a provider returns null we throw AuthProviderException here
                 if (at == null)
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 else

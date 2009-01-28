@@ -28,11 +28,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Header;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
@@ -81,13 +81,13 @@ public class RemoteCalendarCollection extends CalendarCollection {
             return mChildren;
         
         mAppointments = new HashMap<String,DavResource>();
-        String authToken = null;
+        ZAuthToken zat = null;
         try {
-            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
-        } catch (AuthTokenException e) {
+            zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+        } catch (AuthProviderException e) {
             ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
             return Collections.emptyList();
-        } catch (AuthProviderException e) {
+        } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
             return Collections.emptyList();
         }
@@ -95,7 +95,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         List<ZApptSummaryResult> results;
         
         try {
-            ZMailbox zmbx = getRemoteMailbox(authToken);
+            ZMailbox zmbx = getRemoteMailbox(zat);
             if (zmbx == null) {
                 ZimbraLog.dav.warn("remote account not found: "+mRemoteId);
                 return Collections.emptyList();
@@ -128,7 +128,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             if (target == null)
                 throw new DavException("can't create resource", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            ZMailbox zmbx = getRemoteMailbox(authToken.getEncoded());
+            ZMailbox zmbx = getRemoteMailbox(authToken.toZAuthToken());
             ZFolder f = zmbx.getFolderById(new ItemId(mRemoteId, mItemId).toString());
             
             @SuppressWarnings("unchecked")
@@ -142,7 +142,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             String url = URLUtil.urlEscape(f.getPath() + "/" + ctxt.getItem());
             url = DavServlet.getDavUrl(target.getName()) + url;
             respHeaders = UserServlet.putRemoteResource(authToken, url, target, ctxt.getUpload().getInputStream(), headerList.toArray(new Header[0])).getFirst();
-        } catch (AuthTokenException e) {
+        } catch (AuthProviderException e) {
             ZimbraLog.dav.warn("can't proxy the request for "+ctxt.getAuthAccount().getName(), e);
             throw new DavException("can't create resource", HttpServletResponse.SC_FORBIDDEN);
         } catch (ServiceException e) {
@@ -174,21 +174,21 @@ public class RemoteCalendarCollection extends CalendarCollection {
     
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
         try {
-            String authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
-            ZMailbox zmbx = getRemoteMailbox(authToken);
+            ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+            ZMailbox zmbx = getRemoteMailbox(zat);
             zmbx.deleteItem(Integer.toString(id), null);
-        } catch (AuthTokenException e) {
+        } catch (AuthProviderException e) {
             throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
         } catch (ServiceException e) {
             throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
         }
     }
     
-    private ZMailbox getRemoteMailbox(String authToken) throws ServiceException {
+    private ZMailbox getRemoteMailbox(ZAuthToken zat) throws ServiceException {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
         if (target == null)
         	return null;
-        ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+        ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(mRemoteId);
         zoptions.setTargetAccountBy(Provisioning.AccountBy.id);

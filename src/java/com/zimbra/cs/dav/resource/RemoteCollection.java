@@ -23,6 +23,7 @@ import java.util.Collections;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -64,12 +65,12 @@ public class RemoteCollection extends Collection {
         if (mChildren != null)
             return mChildren;
         
-        String authToken = null;
+        ZAuthToken authToken = null;
         try {
-            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
-        } catch (AuthTokenException e) {
-            return Collections.emptyList();
+            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
         } catch (AuthProviderException e) {
+            return Collections.emptyList();
+        } catch (ServiceException e) {
             return Collections.emptyList();
         }
 
