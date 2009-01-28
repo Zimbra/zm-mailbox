@@ -258,11 +258,10 @@ public class CacheToXML {
         }
     }
 
-    public static Element encodeCalendarItemData(ZimbraSoapContext zsc,
+    public static Element encodeCalendarItemData(ZimbraSoapContext zsc, ItemIdFormatter ifmt,
                                                  CalendarItemData calItemData,
                                                  boolean allowPrivateAccess, boolean legacyFormat)
     throws ServiceException {
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         boolean isAppointment = calItemData.getType() == MailItem.TYPE_APPOINTMENT;
 
         Element calItemElem = zsc.createElement(
@@ -309,13 +308,13 @@ public class CacheToXML {
         return calItemElem;
     }
 
-    public static void encodeCalendarData(ZimbraSoapContext zsc, Element parent, CalendarData calData,
+    public static void encodeCalendarData(ZimbraSoapContext zsc, ItemIdFormatter ifmt, Element parent, CalendarData calData,
                                           boolean allowPrivateAccess, boolean legacyFormat)
     throws ServiceException {
         for (Iterator<CalendarItemData> iter = calData.calendarItemIterator(); iter.hasNext(); ) {
             CalendarItemData calItemData = iter.next();
             if (calItemData.getNumInstances() > 0) {
-                Element calItemElem = encodeCalendarItemData(zsc, calItemData, allowPrivateAccess, legacyFormat);
+                Element calItemElem = encodeCalendarItemData(zsc, ifmt, calItemData, allowPrivateAccess, legacyFormat);
                 parent.addElement(calItemElem);
             }
         }

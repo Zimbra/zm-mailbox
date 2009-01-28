@@ -450,6 +450,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
 
         if (LC.calendar_cache_enabled.booleanValue()) {
+            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
             boolean asAdmin = octxt.isUsingAdminPrivileges();
             int folderId = iidFolder.getId();
             if (folderId != Mailbox.ID_AUTO_INCREMENT) {
@@ -463,7 +464,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         int numInstances = calItemData.getNumInstances();
                         if (numInstances > 0) {
                             Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                    zsc, calItemData, allowPrivateAccess, true);
+                                    zsc, ifmt, calItemData, allowPrivateAccess, true);
                             response.addElement(calItemElem);
                         }
     	            }
@@ -479,7 +480,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         int numInstances = calItemData.getNumInstances();
                         if (numInstances > 0) {
                             Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                    zsc, calItemData, allowPrivateAccess, true);
+                                    zsc, ifmt, calItemData, allowPrivateAccess, true);
                             response.addElement(calItemElem);
                         }
                     }

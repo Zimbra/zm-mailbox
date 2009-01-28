@@ -22,6 +22,7 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
 import com.zimbra.cs.index.*;
@@ -53,6 +55,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -97,7 +100,7 @@ public class Search extends MailDocumentHandler  {
         	if (apptFolderIds != null) {
         		Account authAcct = getAuthenticatedAccount(zsc);
 	        	Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
-	        	runSimpleAppointmentQuery(response, params, octxt, zsc, authAcct, acct, mbox, apptFolderIds);
+	        	runSimpleAppointmentQuery(response, params, octxt, zsc, authAcct, mbox, apptFolderIds);
 	        	return response;
 	        }
         }
@@ -470,7 +473,7 @@ public class Search extends MailDocumentHandler  {
 
     private static void runSimpleAppointmentQuery(Element parent, SearchParams params,
                                                   OperationContext octxt, ZimbraSoapContext zsc,
-                                                  Account authAcct, Account acct, Mailbox mbox,
+                                                  Account authAcct, Mailbox mbox,
                                                   List<String> folderIdStrs)
     throws ServiceException {
         byte itemType = MailItem.TYPE_APPOINTMENT;
@@ -486,60 +489,131 @@ public class Search extends MailDocumentHandler  {
         for (String folderIdStr : folderIdStrs) {
             folderIids.add(new ItemId(folderIdStr, zsc));
         }
-        Map<String, List<Integer>> groupedByAcct = ItemId.groupFoldersByAccount(octxt, mbox, folderIids);
-        for (Map.Entry<String, List<Integer>> entry : groupedByAcct.entrySet()) {
-            String acctId = entry.getKey();
-            List<Integer> folderIds = entry.getValue();
-            if (acctId == null) {  // local account
-                for (int folderId : folderIds) {
-                    CalendarData calData = mbox.getCalendarSummaryForRange(
-                            octxt, folderId, itemType, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
-                    if (calData != null) {
-                        Folder folder = mbox.getFolderById(octxt, folderId);
-                        boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, octxt.isUsingAdminPrivileges());
-                        for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
-                            CalendarItemData calItemData = itemIter.next();
-                            int numInstances = calItemData.getNumInstances();
-                            if (numInstances > 0) {
-                                Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                        zsc, calItemData, allowPrivateAccess, false);
-                                parent.addElement(calItemElem);
-                            }
-                        }
+
+        Provisioning prov = Provisioning.getInstance();
+        MailboxManager mboxMgr = MailboxManager.getInstance();
+        Server localServer = prov.getLocalServer();
+
+        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+            groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
+
+        // for each server
+        for (Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
+            Server server = serverMapEntry.getKey();
+            Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
+            if (server.equals(localServer)) {  // local server
+                for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
+                    String acctId = entry.getKey();
+                    List<Integer> folderIds = entry.getValue();
+                    Account targetAcct = prov.get(AccountBy.id, acctId);
+                    if (targetAcct == null) {
+                        ZimbraLog.calendar.warn("Skipping unknown account " + acctId + " during calendar search");
+                        continue;
                     }
+                    Mailbox targetMbox = mboxMgr.getMailboxByAccount(targetAcct);
+                    searchLocalAccountCalendars(parent, params, octxt, zsc, authAcct, targetMbox, folderIds, itemType);
                 }
-            } else {  // remote account
-                StringBuilder queryStr = new StringBuilder();
-                for (int folderId : folderIds) {
-                    if (queryStr.length() > 0)
-                        queryStr.append(" OR ");
-                    queryStr.append("inid:").append(folderId);
-                }
-                Element req = new JSONElement(MailConstants.SEARCH_REQUEST);
-                req.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
-                req.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
-                req.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
-                if (params.getLimit() != 0)
-                    req.addAttribute(MailConstants.A_QUERY_LIMIT, params.getLimit());
-                req.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, params.getCalItemExpandStart());
-                req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalItemExpandEnd());
-                req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
+            } else {  // remote server
+                searchRemoteAccountCalendars(parent, params, zsc, authAcct, accountFolders);
+            }
+        }
+    }
 
-                Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
-                ZMailbox.Options zoptions = new ZMailbox.Options(zsc.getRawAuthToken(), AccountUtil.getSoapUri(target));
-                zoptions.setTargetAccount(acctId);
-                zoptions.setTargetAccountBy(AccountBy.id);
-                zoptions.setNoSession(true);
-                zoptions.setRequestProtocol(SoapProtocol.SoapJS);
-                zoptions.setResponseProtocol(SoapProtocol.SoapJS);
-                ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-
-                Element resp = zmbx.invoke(req);
-                for (Element hit : resp.listElements()) {
-                    hit.detach();
-                    parent.addElement(hit);
+    private static void searchLocalAccountCalendars(
+            Element parent, SearchParams params, OperationContext octxt, ZimbraSoapContext zsc,
+            Account authAcct, Mailbox targetMbox, List<Integer> folderIds, byte itemType)
+    throws ServiceException {
+        ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), targetMbox.getAccountId(), false);
+        for (int folderId : folderIds) {
+            CalendarData calData = targetMbox.getCalendarSummaryForRange(
+                    octxt, folderId, itemType, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
+            if (calData != null) {
+                Folder folder = targetMbox.getFolderById(octxt, folderId);
+                boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, octxt.isUsingAdminPrivileges());
+                for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+                    CalendarItemData calItemData = itemIter.next();
+                    int numInstances = calItemData.getNumInstances();
+                    if (numInstances > 0) {
+                        Element calItemElem = CacheToXML.encodeCalendarItemData(
+                                zsc, ifmt, calItemData, allowPrivateAccess, false);
+                        parent.addElement(calItemElem);
+                    }
                 }
             }
         }
+    }
+
+    private static void searchRemoteAccountCalendars(
+            Element parent, SearchParams params, ZimbraSoapContext zsc,
+            Account authAcct, Map<String, List<Integer>> accountFolders)
+    throws ServiceException {
+        String nominalTargetAcctId = null;  // mail service soap requests want to see a target account
+        StringBuilder queryStr = new StringBuilder();
+        for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
+            String acctId = entry.getKey();
+            if (nominalTargetAcctId == null)
+                nominalTargetAcctId = acctId;
+            ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+            List<Integer> folderIds = entry.getValue();
+            for (int folderId : folderIds) {
+                if (queryStr.length() > 0)
+                    queryStr.append(" OR ");
+                // must quote the qualified folder id
+                queryStr.append("inid:\"").append(ifmt.formatItemId(folderId)).append("\"");
+            }
+        }
+        Element req = new JSONElement(MailConstants.SEARCH_REQUEST);
+        req.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
+        req.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
+        req.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+        if (params.getLimit() != 0)
+            req.addAttribute(MailConstants.A_QUERY_LIMIT, params.getLimit());
+        req.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, params.getCalItemExpandStart());
+        req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalItemExpandEnd());
+        req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
+
+        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, nominalTargetAcctId);
+        ZMailbox.Options zoptions = new ZMailbox.Options(zsc.getRawAuthToken(), AccountUtil.getSoapUri(target));
+        zoptions.setTargetAccount(nominalTargetAcctId);
+        zoptions.setTargetAccountBy(AccountBy.id);
+        zoptions.setNoSession(true);
+        zoptions.setRequestProtocol(SoapProtocol.SoapJS);
+        zoptions.setResponseProtocol(SoapProtocol.SoapJS);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+
+        Element resp = zmbx.invoke(req);
+        for (Element hit : resp.listElements()) {
+            hit.detach();
+            parent.addElement(hit);
+        }
+    }
+
+    static Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupByServer(
+            Map<String /* account id */, List<Integer> /* folder ids */> acctFolders)
+    throws ServiceException {
+        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+            new HashMap<Server, Map<String, List<Integer>>>();
+        Provisioning prov = Provisioning.getInstance();
+        for (Map.Entry<String, List<Integer>> entry : acctFolders.entrySet()) {
+            String acctId = entry.getKey();
+            List<Integer> folderIds = entry.getValue();
+            Account acct = prov.get(AccountBy.id, acctId);
+            if (acct == null) {
+                ZimbraLog.calendar.warn("Skipping unknown account " + acctId + " during calendar search");
+                continue;
+            }
+            Server server = prov.getServer(acct);
+            if (server == null) {
+                ZimbraLog.calendar.warn("Skipping account " + acctId + " during calendar search because its home server is unknown");
+                continue;
+            }
+            Map<String, List<Integer>> map = groupedByServer.get(server);
+            if (map == null) {
+                map = new HashMap<String, List<Integer>>();
+                groupedByServer.put(server, map);
+            }
+            map.put(acctId, folderIds);
+        }
+        return groupedByServer;
     }
 }

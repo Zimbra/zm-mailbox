@@ -30,19 +30,23 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -77,23 +81,50 @@ public class GetMiniCal extends CalendarRequest {
             ItemId iidFolder = new ItemId(fElem.getAttribute(MailConstants.A_ID), zsc);
             folderIids.add(iidFolder);
         }
-        Map<String, List<Integer>> groupedByAcct = ItemId.groupFoldersByAccount(octxt, mbox, folderIids);
 
         ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(authAcct);  // requestor's time zone, not mailbox owner's
         TreeSet<String> busyDates = new TreeSet<String>();
 
-        List<Integer> localFolders = groupedByAcct.get(null);
-        if (localFolders != null) {
-            for (int folderId : localFolders) {
-            	doLocalFolder(octxt, tz, mbox, folderId, rangeStart, rangeEnd, busyDates);
+        Provisioning prov = Provisioning.getInstance();
+        MailboxManager mboxMgr = MailboxManager.getInstance();
+        Server localServer = prov.getLocalServer();
+
+        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+            Search.groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
+
+        // for each server
+        for (Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
+            Server server = serverMapEntry.getKey();
+            Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
+            if (server.equals(localServer)) {  // local server
+                for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
+                    String acctId = entry.getKey();
+                    List<Integer> folderIds = entry.getValue();
+                    Account targetAcct = prov.get(AccountBy.id, acctId);
+                    if (targetAcct == null) {
+                        ZimbraLog.calendar.warn("Skipping unknown account " + acctId + " during minical search");
+                        continue;
+                    }
+                    Mailbox targetMbox = mboxMgr.getMailboxByAccount(targetAcct);
+                    for (int folderId : folderIds) {
+                        doLocalFolder(octxt, tz, targetMbox, folderId, rangeStart, rangeEnd, busyDates);
+                    }
+                }
+            } else {  // remote server
+                String nominalTargetAcctId = null;  // mail service soap requests want to see a target account
+                List<String> folderList = new ArrayList<String>();
+                for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
+                    String acctId = entry.getKey();
+                    if (nominalTargetAcctId == null)
+                        nominalTargetAcctId = acctId;
+                    ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+                    List<Integer> folderIds = entry.getValue();
+                    for (int folderId : folderIds) {
+                        folderList.add(ifmt.formatItemId(folderId));
+                    }
+                }
+                doRemoteFolders(authToken, nominalTargetAcctId, tz, folderList, rangeStart, rangeEnd, busyDates);
             }
-        }
-        for (Map.Entry<String, List<Integer>> entry : groupedByAcct.entrySet()) {
-        	String acctId = entry.getKey();
-        	if (acctId != null) {
-            	List<Integer> remoteFolders = entry.getValue();
-            	doRemoteAccount(authToken, acctId, tz, remoteFolders, rangeStart, rangeEnd, busyDates);
-        	}
         }
 
         Element response = getResponseElement(zsc);
@@ -132,7 +163,7 @@ public class GetMiniCal extends CalendarRequest {
         }
 	}
 
-    private static void doRemoteAccount(AuthToken authToken, String remoteAccountId, ICalTimeZone tz, List<Integer> remoteFolders,
+    private static void doRemoteFolders(AuthToken authToken, String remoteAccountId, ICalTimeZone tz, List<String> remoteFolders,
     								    long rangeStart, long rangeEnd, Set<String> busyDates)
     throws ServiceException {
 
@@ -160,6 +191,6 @@ public class GetMiniCal extends CalendarRequest {
 		int year = cal.get(Calendar.YEAR);
 		int month = cal.get(Calendar.MONTH) + 1;
 		int day = cal.get(Calendar.DAY_OF_MONTH);
-		return String.format("%04d%02d%02d", year, month, day);
+		return Integer.toString(year * 10000 + month * 100 + day);
 	}
 }
