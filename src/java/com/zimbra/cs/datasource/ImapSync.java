@@ -75,6 +75,10 @@ public class ImapSync extends MailItemImport {
         return trackedFolders;
     }
 
+    public ImapFolderSync getSyncedFolder(int folderId) {
+        return syncedFolders.get(folderId);
+    }
+
     private static ImapConfig getImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
         config.setHost(ds.getHost());
