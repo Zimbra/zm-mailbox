@@ -141,6 +141,9 @@ class ImapFolderSync {
      */
     public ImapFolder syncFolder(Folder folder)
         throws ServiceException, IOException {
+        if (!ds.isSyncEnabled(folder)) {
+            return null;
+        }
         localFolder = new LocalFolder(mailbox, folder);
         tracker = imapSync.getTrackedFolders().getByItemId(folder.getId());
         if (tracker != null) { //was in sync
