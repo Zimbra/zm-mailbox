@@ -28,12 +28,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Header;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
@@ -83,12 +83,12 @@ public class RemoteCalendarCollection extends CalendarCollection {
             return mChildren;
         
         mAppointments = new HashMap<String,DavResource>();
-        String authToken = null;
+        ZAuthToken zat = null;
         try {
-            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
-        } catch (AuthTokenException e) {
-            return Collections.emptyList();
+            zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
         } catch (AuthProviderException e) {
+            return Collections.emptyList();
+        } catch (ServiceException e) {
             return Collections.emptyList();
         }
 
@@ -98,7 +98,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             if (target == null)
             	return Collections.emptyList();
-            ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+            ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(mRemoteId);
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
@@ -127,9 +127,10 @@ public class RemoteCalendarCollection extends CalendarCollection {
         AuthToken authToken;
         try {
             authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
+            ZAuthToken zat = authToken.toZAuthToken();
             
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
-            ZMailbox.Options zoptions = new ZMailbox.Options(authToken.getEncoded(), AccountUtil.getSoapUri(target));
+            ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(mRemoteId);
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
@@ -161,7 +162,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             
             UrlNamespace.invalidateApptSummariesCache(mRemoteId, mItemId);
             return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), etag, this, status.equals("" + HttpServletResponse.SC_CREATED));
-        } catch (AuthTokenException e) {
+        } catch (AuthProviderException e) {
             ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
         } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't create resource "+name, e);
@@ -178,16 +179,15 @@ public class RemoteCalendarCollection extends CalendarCollection {
     
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
         try {
-            String authToken = null;
-            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
+            ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
-            ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+            ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(mRemoteId);
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
             zmbx.deleteItem(Integer.toString(id), null);
-        } catch (AuthTokenException e) {
+        } catch (AuthProviderException e) {
             throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
         } catch (ServiceException e) {
             throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
