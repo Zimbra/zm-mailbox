@@ -5722,10 +5722,6 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
             Config config = getConfig();
             reload(config);
-            synchronized (LdapProvisioning.class) {
-                // otherwise getConfig will return old cached values
-                sConfig = null;
-            }
             return;
         case cos:
             if (entries != null) {
