@@ -551,7 +551,7 @@ class ImapFolderSync {
                 storeImapMessage(uid, id, msg.getFlagBitmask());
                 clearError(id);
             } catch (Exception e) {
-                syncFailed(id, "Append message failed", e);
+                syncMessageFailed(id, "Append message failed", e);
             }
         }
     }
@@ -602,7 +602,7 @@ class ImapFolderSync {
                     appended.put(appendKey(mm.getSentDate(), ai.messageId), ai);
                 }
             } catch (IOException e) {
-                syncFailed(id, "Append message failed", e);
+                syncMessageFailed(id, "Append message failed", e);
             }
         }
         // Find UIDs for messages just appended
@@ -620,7 +620,7 @@ class ImapFolderSync {
                         try {
                             storeImapMessage(md.getUid(), ai.itemId, ai.zflags);
                         } catch (ServiceException e) {
-                            syncFailed(ai.itemId,
+                            syncMessageFailed(ai.itemId,
                                 "Couldn't store message tracker for uid " + md.getUid(), e);
                         }
                     }
@@ -653,7 +653,7 @@ class ImapFolderSync {
                         "message with item id " + ai.itemId, null);
                 }
             } catch (Exception e) {
-                syncFailed(ai.itemId, "Find message failed", e);
+                syncMessageFailed(ai.itemId, "Find message failed", e);
             }
         }
     }
@@ -776,7 +776,7 @@ class ImapFolderSync {
                         uidsToDelete.add(uid);
                         clearError(msgId);
                     } catch (Exception e) {
-                        syncFailed(msgId, "Unable to update message flags", e);
+                        syncMessageFailed(msgId, "Unable to update message flags", e);
                     }
                 } else {
                     uidsToDelete.add(uid);
@@ -1046,7 +1046,7 @@ class ImapFolderSync {
             clearError(uid);
             return true;
         } catch (IOException e) {
-            syncFailed(uid, "Cannot delete message with uid " + uid, e);
+            syncMessageFailed(uid, "Cannot delete message with uid " + uid, e);
             return false;
         }
     }
@@ -1079,7 +1079,7 @@ class ImapFolderSync {
         try {
             cr = connection.uidCopy(seq, remotePath);
         } catch (IOException e) {
-            syncFailed(msgTracker.getUid(), "COPY failed", e);
+            syncMessageFailed(msgTracker.getUid(), "COPY failed", e);
             return false;
         }
         if (cr == null) return false;
@@ -1176,7 +1176,7 @@ class ImapFolderSync {
         }
     }
 
-    private void syncFailed(int itemId, String msg, Exception e)
+    private void syncMessageFailed(int itemId, String msg, Exception e)
         throws ServiceException {
         // For command failures, increment error count before checking if
         // we can continue with other requests
@@ -1190,13 +1190,14 @@ class ImapFolderSync {
                 ds.reportError(itemId, msg, e);
             }
         }
+        incrementTotalErrors();
         if (e instanceof CommandFailedException &&
             !((CommandFailedException) e).canContinue()) {
             throw ServiceException.FAILURE(msg, e);
         }
     }
 
-    private void syncFailed(long uid, String msg, Exception e)
+    private void syncMessageFailed(long uid, String msg, Exception e)
         throws ServiceException {
         checkCanContinue(msg, e);
         int count = SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
@@ -1206,8 +1207,25 @@ class ImapFolderSync {
                 ds.reportError(-1, msg, e);
             }
         }
+        incrementTotalErrors();
     }
 
+    private void incrementTotalErrors() throws ServiceException {
+        totalErrors++;
+        if (totalErrors > MAX_TOTAL_ERRORS) {
+            String error = String.format(
+                "Synchronization of folder '%s' disabled due to maximum number of per-item errors exceeded",
+                localFolder.getPath());
+            ds.reportError(localFolder.getId(), error, ServiceException.FAILURE(error, null));
+            try {
+                // Disable sync on folder
+                SyncUtil.setSyncEnabled(ds.getMailbox(), localFolder.getId(), false);
+            } catch (MailServiceException.NoSuchItemException e) {
+                // Ignore if local folder has been deleted
+            }
+        }
+    }
+    
     // Log error and abort sync if we can't continue
     private void checkCanContinue(String msg, Exception e) throws ServiceException {
         if (!canContinue(e)) {
@@ -1221,7 +1239,7 @@ class ImapFolderSync {
     }
 
     private boolean canContinue(Throwable e) {
-        if (!ds.isOffline() || totalErrors++ > MAX_TOTAL_ERRORS) {
+        if (!ds.isOffline()) {
             return false;
         } else if (e instanceof ServiceException) {
             Throwable cause = e.getCause();
