@@ -41,6 +41,8 @@ public class FileStore {
     private static final String FN_CALDATA = "calData";
     private static final String FN_MODSEQ = "modSeq";
 
+    private static final long MAX_CACHE_FILE_LEN = 100 * 1024 * 1024;  // 100MB
+
     private static File getCalFolderFile(int mboxId, int folderId) {
         long mdir = mboxId >> MBOX_BITS;
         mdir &= MBOX_GROUP_BITS;
@@ -93,17 +95,16 @@ public class FileStore {
         if (ver < CURRENT_VERSION) {
             if (ZimbraLog.calendar.isDebugEnabled())
                 ZimbraLog.calendar.debug(
-                        "Cached data's version too old: cached=" + ver + ", expected=" + CURRENT_VERSION +
+                        "Cached data's version is too old: cached=" + ver + ", expected=" + CURRENT_VERSION +
                         ", path=" + file.getAbsolutePath());
             return null;
         }
 
         int modSeqSaved = (int) meta.getLong(FN_MODSEQ);
-        if (modSeqSaved < modSeq) {
-            if (ZimbraLog.calendar.isDebugEnabled())
-                ZimbraLog.calendar.debug(
-                        "Cached data stale: saved modseq=" + modSeqSaved + ", needed modseq=" + modSeq +
-                        ", path=" + file.getAbsolutePath());
+        if (modSeqSaved > modSeq) {
+            ZimbraLog.calendar.warn(
+                    "Ignoring cached data in the future: saved modseq=" + modSeqSaved + ", needed modseq=" + modSeq +
+                    ", path=" + file.getAbsolutePath());
             return null;
         }
 
@@ -137,6 +138,11 @@ public class FileStore {
         if (file.exists()) {
             try {
                 long length = file.length();
+                if (length > MAX_CACHE_FILE_LEN) {
+                    ZimbraLog.calendar.warn("Cache file too big: %d bytes (%d max): path=%s",
+                            length, MAX_CACHE_FILE_LEN, file.getAbsolutePath());
+                    return null;
+                }
                 char[] buf = new char[(int) length];
                 FileReader fr = null;
                 try {

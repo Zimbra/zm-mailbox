@@ -107,7 +107,17 @@ public class GetMiniCal extends CalendarRequest {
                     }
                     Mailbox targetMbox = mboxMgr.getMailboxByAccount(targetAcct);
                     for (int folderId : folderIds) {
-                        doLocalFolder(octxt, tz, targetMbox, folderId, rangeStart, rangeEnd, busyDates);
+                        try {
+                            doLocalFolder(octxt, tz, targetMbox, folderId, rangeStart, rangeEnd, busyDates);
+                        } catch (ServiceException e) {
+                            if (e.getCode().equals(ServiceException.PERM_DENIED)) {
+                                ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), targetMbox.getAccountId(), false);
+                                ZimbraLog.calendar.warn(
+                                        "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                            } else {
+                                throw e;
+                            }
+                        }
                     }
                 }
             } else {  // remote server

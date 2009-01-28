@@ -240,7 +240,7 @@ public class CalendarCache {
 
     private static CalendarData reloadCalendarOverRange(OperationContext octxt, Mailbox mbox, int folderId,
                                                         byte itemType, long rangeStart, long rangeEnd,
-                                                        CalendarData staleCalData)
+                                                        CalendarData staleCalData, boolean incrementalUpdate)
     throws ServiceException {
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
@@ -254,7 +254,8 @@ public class CalendarCache {
             // We have to scan the calendar folder.
             return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
         }
-        if (sMaxStaleItems <= 0 || staleCalData.getNumStaleItems() > sMaxStaleItems) {
+        if (!incrementalUpdate || staleCalData.getNumStaleItems() > sMaxStaleItems) {
+            // If incremental update of stale items is disabled, do it with folder scan.
             // If there are too many stale items, do it with folder scan as that may be faster.
             return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData);
         }
@@ -355,7 +356,7 @@ public class CalendarCache {
     private Map<SummaryCacheKey, CalendarData> mSummaryCache;
 
     private CalendarCache(final int capacity) {
-        mSummaryCache = new LinkedHashMap<SummaryCacheKey, CalendarData>(capacity, 1.0f, true) {
+        mSummaryCache = new LinkedHashMap<SummaryCacheKey, CalendarData>(capacity + 1, 1.0f, true) {
             protected boolean removeEldestEntry(Map.Entry<SummaryCacheKey, CalendarData> eldest) {
                 return size() > capacity;
             }
@@ -380,6 +381,7 @@ public class CalendarCache {
 
         int lruSize = 0;
         CacheLevel dataFrom = CacheLevel.Memory;
+        boolean incrementalUpdate = sMaxStaleItems > 0;
 
         Folder folder = mbox.getFolderById(octxt, folderId);
         int currentModSeq = folder.getImapMODSEQ();
@@ -401,18 +403,21 @@ public class CalendarCache {
             try {
                 calData = FileStore.loadCalendarData(mbox.getId(), folderId, currentModSeq);
                 if (calData != null) {
-                    // Ignore data from file if it's stale.
-                    if (calData.getModSeq() == currentModSeq && calData.getNumStaleItems() == 0) {
+                    // If data is up to date, add to cache.
+                    if (calData.getModSeq() == currentModSeq) {
                         if (sLRUCapacity > 0) {
                             synchronized (mSummaryCache) {
                                 mSummaryCache.put(key, calData);
                                 lruSize = mSummaryCache.size();
                             }
                         }
-                        dataFrom = CacheLevel.File;
                     } else {
-                        calData = null;
+                        // Outdated cached data from file may not have complete stale item list.
+                        // We can't update it incrementally, but instead must force appointment
+                        // table scan.
+                        incrementalUpdate = false;
                     }
+                    dataFrom = CacheLevel.File;
                 }
             } catch (ServiceException e) {
                 ZimbraLog.calendar.warn("Error loading cached calendar summary", e);
@@ -449,7 +454,7 @@ public class CalendarCache {
                 defaultRange = Util.getMonthsRange(System.currentTimeMillis(),
                                                    sRangeMonthFrom, sRangeNumMonths);
             calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
-                                              defaultRange.getFirst(), defaultRange.getSecond(), staleCalData);
+                                              defaultRange.getFirst(), defaultRange.getSecond(), staleCalData, incrementalUpdate);
             synchronized (mSummaryCache) {
                 if (sLRUCapacity > 0) {
                     mSummaryCache.put(key, calData);
@@ -475,7 +480,7 @@ public class CalendarCache {
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData);
+            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData, incrementalUpdate);
         }
 
         // hit/miss tracking

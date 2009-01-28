@@ -525,19 +525,28 @@ public class Search extends MailDocumentHandler  {
     throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), targetMbox.getAccountId(), false);
         for (int folderId : folderIds) {
-            CalendarData calData = targetMbox.getCalendarSummaryForRange(
-                    octxt, folderId, itemType, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
-            if (calData != null) {
-                Folder folder = targetMbox.getFolderById(octxt, folderId);
-                boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, octxt.isUsingAdminPrivileges());
-                for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
-                    CalendarItemData calItemData = itemIter.next();
-                    int numInstances = calItemData.getNumInstances();
-                    if (numInstances > 0) {
-                        Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                zsc, ifmt, calItemData, allowPrivateAccess, false);
-                        parent.addElement(calItemElem);
+            try {
+                CalendarData calData = targetMbox.getCalendarSummaryForRange(
+                        octxt, folderId, itemType, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
+                if (calData != null) {
+                    Folder folder = targetMbox.getFolderById(octxt, folderId);
+                    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, octxt.isUsingAdminPrivileges());
+                    for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+                        CalendarItemData calItemData = itemIter.next();
+                        int numInstances = calItemData.getNumInstances();
+                        if (numInstances > 0) {
+                            Element calItemElem = CacheToXML.encodeCalendarItemData(
+                                    zsc, ifmt, calItemData, allowPrivateAccess, false);
+                            parent.addElement(calItemElem);
+                        }
                     }
+                }
+            } catch (ServiceException e) {
+                if (e.getCode().equals(ServiceException.PERM_DENIED)) {
+                    ZimbraLog.calendar.warn(
+                            "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                } else {
+                    throw e;
                 }
             }
         }
