@@ -1089,6 +1089,13 @@ class ImapFolderSync {
             folderTracker = ds.createImapFolder(
                 folder.getId(), folder.getPath(), remotePath, cr.getUidValidity());
             trackedFolders.add(folderTracker);
+        } else {
+            // If target folder was already sync'd, then make sure we remove
+            // msg id from folder's list of new messages to be appended
+            ImapFolderSync syncedFolder = imapSync.getSyncedFolder(folder.getId());
+            if (syncedFolder != null && syncedFolder.newMsgIds != null) {
+                syncedFolder.newMsgIds.remove(Integer.valueOf(msg.getId()));
+            }
         }
         if (!deleteMessage(msgTracker.getUid())) {
             LOG.warn("Unable to delete message with uid " + msgTracker.getUid());
