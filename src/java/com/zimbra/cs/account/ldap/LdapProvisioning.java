@@ -397,6 +397,7 @@ public class LdapProvisioning extends Provisioning {
     public Config getConfig() throws ServiceException
     {
         // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
+        // double-checked-locking is broken
         if (sConfig == null) {
             synchronized(LdapProvisioning.class) {
                 if (sConfig == null) {
@@ -5721,6 +5722,10 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
             Config config = getConfig();
             reload(config);
+            synchronized (LdapProvisioning.class) {
+                // otherwise getConfig will return old cached values
+                sConfig = null;
+            }
             return;
         case cos:
             if (entries != null) {
