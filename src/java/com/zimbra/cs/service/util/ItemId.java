@@ -180,9 +180,8 @@ public class ItemId {
     }
 
     // groups folders by account id
-    // local account has key == null
     // value is list of folder id integers
-    // mountpoints are fully resolved to real folder ids for local account
+    // mountpoints in local account are fully resolved to real folder in target account
     public static Map<String, List<Integer>> groupFoldersByAccount(
             OperationContext octxt, Mailbox mbox, List<ItemId> folderIids)
     throws ServiceException {
@@ -190,9 +189,7 @@ public class ItemId {
         for (ItemId iidFolder : folderIids) {
             int folderId = iidFolder.getId();
             String targetAccountId = iidFolder.getAccountId();
-            if (mbox.getAccountId().equals(targetAccountId))
-                targetAccountId = null;
-            if (targetAccountId == null) {
+            if (mbox.getAccountId().equals(targetAccountId)) {
                 boolean isMountpoint = true;
                 int hopCount = 0;
                 // resolve local mountpoint to a real folder; deal with possible mountpoint chain
