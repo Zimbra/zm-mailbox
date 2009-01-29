@@ -271,6 +271,10 @@ public class MessageCache {
                 throw ServiceException.FAILURE("IOException while retrieving content for item " + item.getId(), e);
             } catch (MessagingException e) {
                 throw ServiceException.FAILURE("MessagingException while creating MimeMessage for item " + item.getId(), e);
+            } finally {
+                if (!(is instanceof BlobInputStream)) {
+                    ByteUtil.closeStream(is);
+                }
             }
         } else {
             if (ZimbraLog.cache.isDebugEnabled())
@@ -305,7 +309,7 @@ public class MessageCache {
     private static void cacheItem(String key, CacheNode cnode) {
         if (cnode.mSize >= mMaxCacheSize)
             return;
-
+        
         synchronized (mCache) {
             if (ZimbraLog.cache.isDebugEnabled())
                 ZimbraLog.cache.debug("msgcache: caching " + (cnode.mContent != null ? "raw" : "mime") + " message: " + key);
