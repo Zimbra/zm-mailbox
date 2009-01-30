@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090130-1133 */
+    /* build: 5.0 pshao 20090130-1441 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -564,6 +564,22 @@ public class ZAttrProvisioning {
         }
         public boolean isOutlook() { return this == outlook;}
         public boolean isInternet() { return this == internet;}
+    }
+
+    public static enum PrefReadingPaneLocation {
+        right("right"),
+        bottom("bottom");
+        private String mValue;
+        private PrefReadingPaneLocation(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefReadingPaneLocation fromString(String s) throws ServiceException {
+            for (PrefReadingPaneLocation value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isRight() { return this == right;}
+        public boolean isBottom() { return this == bottom;}
     }
 
     public static enum PrefReplyIncludeOriginalText {
@@ -4640,6 +4656,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=394)
     public static final String A_zimbraPrefReadingPaneEnabled = "zimbraPrefReadingPaneEnabled";
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public static final String A_zimbraPrefReadingPaneLocation = "zimbraPrefReadingPaneLocation";
 
     /**
      * what part of the original message to include during replies

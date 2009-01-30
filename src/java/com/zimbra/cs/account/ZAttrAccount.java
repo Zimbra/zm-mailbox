@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090130-1133 */
+    /* build: 5.0 pshao 20090130-1441 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -23025,6 +23025,137 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefReadingPaneEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefReadingPaneEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @return zimbraPrefReadingPaneLocation, or ZAttrProvisioning.PrefReadingPaneLocation.bottom if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public ZAttrProvisioning.PrefReadingPaneLocation getPrefReadingPaneLocation() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefReadingPaneLocation.bottom : ZAttrProvisioning.PrefReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReadingPaneLocation.bottom; }
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @return zimbraPrefReadingPaneLocation, or "bottom" if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public String getPrefReadingPaneLocationAsString() {
+        return getAttr(Provisioning.A_zimbraPrefReadingPaneLocation, "bottom");
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @param zimbraPrefReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public void setPrefReadingPaneLocation(ZAttrProvisioning.PrefReadingPaneLocation zimbraPrefReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneLocation, zimbraPrefReadingPaneLocation.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @param zimbraPrefReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public Map<String,Object> setPrefReadingPaneLocation(ZAttrProvisioning.PrefReadingPaneLocation zimbraPrefReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneLocation, zimbraPrefReadingPaneLocation.toString());
+        return attrs;
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @param zimbraPrefReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public void setPrefReadingPaneLocationAsString(String zimbraPrefReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneLocation, zimbraPrefReadingPaneLocation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @param zimbraPrefReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public Map<String,Object> setPrefReadingPaneLocationAsString(String zimbraPrefReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneLocation, zimbraPrefReadingPaneLocation);
+        return attrs;
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public void unsetPrefReadingPaneLocation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneLocation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the message reading pane is displayed
+     *
+     * <p>Valid values: [bottom, right]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=804)
+    public Map<String,Object> unsetPrefReadingPaneLocation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReadingPaneLocation, "");
         return attrs;
     }
 

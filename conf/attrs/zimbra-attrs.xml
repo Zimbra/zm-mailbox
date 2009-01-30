@@ -4027,4 +4027,5 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>bottom</defaultCOSValue>
   <desc>where the message reading pane is displayed</desc>
 </attr>
+
 </attrs>
