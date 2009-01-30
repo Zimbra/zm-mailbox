@@ -42,7 +42,123 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090126-0937 */
+    /* build: 5.0 pshao 20090130-1133 */
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @return description, or ampty array if unset
+     */
+    @ZAttr(id=-1)
+    public String[] getDescription() {
+        return getMultiAttr(Provisioning.A_description);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param description new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setDescription(String[] description) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, description);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param description new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setDescription(String[] description, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, description);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param description new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void addDescription(String description) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_description, description);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param description new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> addDescription(String description, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_description, description);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param description existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void removeDescription(String description) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_description, description);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param description existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> removeDescription(String description, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_description, description);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetDescription() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: descriptive information
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetDescription(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_description, "");
+        return attrs;
+    }
 
     /**
      * Zimbra access control list
