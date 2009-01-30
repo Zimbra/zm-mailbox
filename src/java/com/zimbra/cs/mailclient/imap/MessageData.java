@@ -45,6 +45,7 @@ import java.io.IOException;
  *                   ; MUST NOT change for a message
  */
 public final class MessageData {
+    private long msgno;
     private Flags flags;
     private Envelope envelope;
     private Date internalDate;
@@ -68,11 +69,14 @@ public final class MessageData {
     private static final SimpleDateFormat INTERNALDATE_FORMAT =
         new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
 
-    public static MessageData read(ImapInputStream is) throws IOException {
+    public static MessageData read(long msgno, ImapInputStream is) throws IOException {
         MessageData md = new MessageData();
+        md.msgno = msgno;
         md.readResponse(is);
         return md;
     }
+
+    private MessageData() {}
     
     private void readResponse(ImapInputStream is) throws IOException {
         is.skipChar('(');
@@ -148,6 +152,7 @@ public final class MessageData {
         }
     }
 
+    public long getMsgno() { return msgno; }
     public Flags getFlags() { return flags; }
     public Envelope getEnvelope() { return envelope; }
     public Date getInternalDate() { return internalDate; }
