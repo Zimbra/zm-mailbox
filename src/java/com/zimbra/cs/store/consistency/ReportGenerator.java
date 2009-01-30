@@ -48,6 +48,7 @@ public class ReportGenerator implements Runnable {
     private final File reportFile;
     private final int mailboxId;
     private final int mboxGroupId;
+    private final boolean doQuotas;
     final static String JDBC_URL;
     
     static {
@@ -83,9 +84,17 @@ public class ReportGenerator implements Runnable {
             " AND (i.volume_id is not null or r.volume_id is not null)";
     
     private final static String MBOX_ITEM_QUERY = ITEM_QUERY + " AND i.mailbox_id = ?";
+    private final static String ITEM_SIZE_QUERY = "SELECT sum(size), mailbox_id FROM mail_item" +
+    		" WHERE TYPE IN (5,6,8,9,11,14,15,16) GROUP BY mailbox_id";
+    private final static String REVISION_SIZE_QUERY = "SELECT sum(size), mailbox_id FROM revision" +
+    		" GROUP BY mailbox_id";
+    private final static String MBOX_ITEM_SIZE_QUERY = "SELECT sum(size) FROM mail_item" +
+    		" WHERE TYPE IN (5,6,8,9,11,14,15,16) AND mailbox_id = ?";
+    private final static String MBOX_REVISION_SIZE_QUERY = "SELECT sum(size) FROM revision" +
+    		" WHERE mailbox_id = ?";
 
     public ReportGenerator(String mysqlPasswd, File reportFile,
-            boolean checkCompressed, boolean skipBlobStore,
+            boolean checkCompressed, boolean doQuotas, boolean skipBlobStore,
             int mailboxId, int mboxGroupId) {
         this.mysqlPasswd = mysqlPasswd;
         this.reportFile = reportFile;
@@ -93,6 +102,7 @@ public class ReportGenerator implements Runnable {
         this.skipBlobStore = skipBlobStore;
         this.mailboxId = mailboxId;
         this.mboxGroupId = mboxGroupId;
+        this.doQuotas = doQuotas;
     }
     private Map<Byte,Volume> volumes;
 
@@ -129,6 +139,19 @@ public class ReportGenerator implements Runnable {
                             BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
                     e = new StatementExecutor(c);
                     items += getMailItems(mailboxId, mboxGroupId, e, out);
+                    final long[] size = new long[1];
+                    StatementExecutor.ObjectMapper om = new StatementExecutor.ObjectMapper() {
+
+                        public void mapRow(ResultSet rs) throws SQLException {
+                            size[0] = rs.getLong(1);
+                        }
+                        
+                    };
+                    e.query(MBOX_ITEM_SIZE_QUERY, new Object[] { mailboxId }, om);
+                    long itemSizes = size[0];
+                    e.query(MBOX_REVISION_SIZE_QUERY, new Object[] { mailboxId }, om);
+                    long revisionSizes = size[0];
+                    System.out.printf("Quota usage: %d bytes\n", itemSizes + revisionSizes);
                     c.close();
                 } else if (mailboxId != -1 && mboxGroupId == -1) {
                     System.out.println("ERROR: mailbox " + mailboxId + " not found!");
@@ -141,6 +164,25 @@ public class ReportGenerator implements Runnable {
                                 BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
                         e = new StatementExecutor(c);
                         items += getMailItems(group, e, out);
+                        if (doQuotas) {
+                            final HashMap<Integer,Long> sizeMap = new HashMap<Integer,Long>();
+                            StatementExecutor.ObjectMapper om = new StatementExecutor.ObjectMapper() {
+                                public void mapRow(ResultSet rs)
+                                        throws SQLException {
+                                    long size = rs.getLong(1);
+                                    int mailboxId = rs.getInt(2);
+                                    if (!sizeMap.containsKey(mailboxId)) {
+                                        sizeMap.put(mailboxId, size);
+                                    } else {
+                                        sizeMap.put(mailboxId, size + sizeMap.get(mailboxId));
+                                    }
+                                }
+                            };
+                            e.query(ITEM_SIZE_QUERY, om);
+                            System.out.println("Quota usage (mbox: usage)");
+                            for (Map.Entry<Integer,Long> entry : sizeMap.entrySet())
+                                System.out.printf("    %d: %d\n", entry.getKey(), entry.getValue());
+                        }
                         c.close();
                     }
                 }

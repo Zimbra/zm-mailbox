@@ -57,6 +57,7 @@ public class BlobConsistencyCheck {
         { "k", "skip-fs",  "skip blob store reverse check", false, false },
         { "l", "load",     "load/display report from file", true,  false },
         { "u", "user",     "check only the user/mbox-id",   true,  false },
+        { "q", "quotas",   "print out quota usage per mbox",false, false },
         //{ "r", "repair",   "repair/delete missing blobs",   false, false },
         //{ "c", "force",    "required when repairing",       false, false },
     };
@@ -152,6 +153,7 @@ public class BlobConsistencyCheck {
                                 mboxGroupId[0] = rs.getInt(2);
                             }
                         });
+                        System.out.printf("mailbox: %d, group: %d\n", mailboxId[0], mboxGroupId[0]);
                     } else {
                         System.out.println(
                                 "Validating mailbox id: " + mailboxId[0]);
@@ -170,7 +172,7 @@ public class BlobConsistencyCheck {
             }
             // generate report
             new ReportGenerator(mysqlPasswd, reportFile,
-                    cmdLine.hasOption("z"), cmdLine.hasOption("k"),
+                    cmdLine.hasOption("z"), cmdLine.hasOption("q"), cmdLine.hasOption("k"),
                     mailboxId[0], mboxGroupId[0]).run();
         }
     }
