@@ -2395,19 +2395,30 @@ public final class ZimbraQuery {
         else 
             mChunkSize = (int)chunkSize;
         
-        //
-        // Step 1: parse the text using the JavaCC parser
-        ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(mParams.getQueryStr()));
         Analyzer analyzer = null;
         MailboxIndex mi = mbox.getMailboxIndex();
-        if (mi != null) {
-            mi.initAnalyzer(mbox);
-            analyzer = mi.getAnalyzer();
-        } else {
-            analyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+        
+        //
+        // Step 1: parse the text using the JavaCC parser
+        try {
+            ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(mParams.getQueryStr()));
+            if (mi != null) {
+                mi.initAnalyzer(mbox);
+                analyzer = mi.getAnalyzer();
+            } else {
+                analyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+            }
+            parser.init(analyzer, mMbox, params.getTimeZone(), params.getLocale(), lookupQueryTypeFromString(params.getDefaultField()));
+            mClauses = parser.Parse();
+        
+            String sortByStr = parser.getSortByStr();
+            if (sortByStr != null)
+                handleSortByOverride(sortByStr);
+        } catch (OutOfMemoryError oome) {
+            throw oome;
+        } catch (Error error) {
+            throw ServiceException.FAILURE("ZimbraQueryParser threw Error: "+error, error);
         }
-        parser.init(analyzer, mMbox, params.getTimeZone(), params.getLocale(), lookupQueryTypeFromString(params.getDefaultField()));
-        mClauses = parser.Parse();
         
         if (ZimbraLog.index.isDebugEnabled()) {
             String str = this.toString() +" search([";
@@ -2420,10 +2431,6 @@ public final class ZimbraQuery {
             str += "]," + mParams.getSortBy()+ ")";
             ZimbraLog.index.debug(str);
         }
-
-        String sortByStr = parser.getSortByStr();
-        if (sortByStr != null)
-            handleSortByOverride(sortByStr);
 
         //
         // Step 2: build a parse tree and push all the "NOT's" down to the
