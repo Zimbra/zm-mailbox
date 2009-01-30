@@ -41,7 +41,6 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
@@ -209,34 +208,18 @@ public class Appointment extends CalendarItem {
         Collection<Instance> instances = expandInstances(st, et, false);
         List<Availability> list = new ArrayList<Availability>(instances.size());
         int numConflicts = 0;
-        try {
-            for (Instance inst : instances) {
-                if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
-                    break;
-                long start = inst.getStart();
-                long end = inst.getEnd();
-                FreeBusy fb =
-                    getMailbox().getFreeBusy(octxt, start, end, this);
-                String status = fb.getBusiest();
-                if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
-                    list.add(new Availability(start, end, status, fb));
-                    numConflicts++;
-                }
+        for (Instance inst : instances) {
+            if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
+                break;
+            long start = inst.getStart();
+            long end = inst.getEnd();
+            FreeBusy fb =
+                getMailbox().getFreeBusy(octxt, start, end, this);
+            String status = fb.getBusiest();
+            if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
+                list.add(new Availability(start, end, status, fb));
+                numConflicts++;
             }
-        } finally {
-            // Ugly hack because availability check during appointment update
-            // ends up updating calendar cache with not-yet-committed modseq.
-            // If we don't clear the cache here, the next read from the cache
-            // won't show the current appointment being created/updated.
-            //
-            // We'll cheat and only invalidate the cache for the folder containing
-            // the current appointment.  The other calendar folders' modseq are
-            // being advanced unnecessarily, but that shouldn't cause harm because
-            // we're doing the present update with the entire mailbox locked.
-            //
-            // The proper fix for all of this is to do auto-accept check outside
-            // and prior to the appointment create/update transaction.
-            CalendarCache.getInstance().invalidateSummary(getMailbox(), getFolderId());
         }
         return list;
     }

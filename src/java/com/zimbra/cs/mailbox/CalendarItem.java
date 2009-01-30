@@ -65,7 +65,6 @@ import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -170,8 +169,6 @@ public abstract class CalendarItem extends MailItem {
     public void saveMetadata() throws ServiceException {
 //        super.saveMetadata();
         reanalyze(null);
-        // Notify the calendar summary cache.
-        CalendarCache.getInstance().invalidateItem(getMailbox(), getFolderId(), mId);
     }
 
     public void markItemModified(int reason) {
@@ -456,9 +453,6 @@ public abstract class CalendarItem extends MailItem {
         }
 
         DbMailItem.addToCalendarItemTable(item);
-
-        // Notify the calendar summary cache.
-        CalendarCache.getInstance().invalidateItem(mbox, folder.getId(), id);
 
         Callback cb = getCallback();
         if (cb != null)
@@ -1590,9 +1584,6 @@ public abstract class CalendarItem extends MailItem {
                     // TIM: modifyBlob will save the metadata for us as a side-effect
 //                    saveMetadata();
 
-                    // Notify the calendar summary cache.
-                    CalendarCache.getInstance().invalidateItem(getMailbox(), getFolderId(), mId);
-
                     Callback cb = getCallback();
                     if (cb != null)
                         cb.modified(this);
@@ -1607,8 +1598,6 @@ public abstract class CalendarItem extends MailItem {
 
     void delete() throws ServiceException {
         super.delete();
-        // Notify the calendar summary cache.
-        CalendarCache.getInstance().invalidateItem(getMailbox(), getFolderId(), mId);
         Callback cb = getCallback();
         if (cb != null)
             cb.deleted(this);
@@ -3036,12 +3025,6 @@ public abstract class CalendarItem extends MailItem {
                         "you do not have permission to move private calendar item to the target folder");
         }
 
-        // Notify the calendar summary cache.
-        Mailbox mbox = getMailbox();
-        CalendarCache calCache = CalendarCache.getInstance();
-        calCache.invalidateItem(mbox, target.getId(), mId);
-        calCache.invalidateItem(mbox, getFolderId(), mId);
-
         addRevision(true);
         return super.move(target);
     }
@@ -3052,8 +3035,6 @@ public abstract class CalendarItem extends MailItem {
             throw ServiceException.PERM_DENIED(
                     "you do not have permission to delete private calendar item from the current folder");
         super.delete(scope, writeTombstones);
-        // Notify the calendar summary cache.
-        CalendarCache.getInstance().invalidateItem(getMailbox(), getFolderId(), mId);
     }
 
     @Override

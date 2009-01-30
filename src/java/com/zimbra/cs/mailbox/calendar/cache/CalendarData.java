@@ -19,12 +19,13 @@ package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
 public class CalendarData {
@@ -34,7 +35,7 @@ public class CalendarData {
     private long mRangeEnd;
     private List<CalendarItemData> mCalendarItems;
     private Map<Integer, CalendarItemData> mCalendarItemsMap;
-    private int mNumStaleItems;
+    private Set<Integer> mStaleItemIds;
 
     CalendarData(int folderId, int modSeq, long rangeStart, long rangeEnd) {
         mFolderId = folderId;
@@ -43,20 +44,16 @@ public class CalendarData {
         mRangeEnd = rangeEnd;
         mCalendarItems = new ArrayList<CalendarItemData>();
         mCalendarItemsMap = new HashMap<Integer, CalendarItemData>();
+        mStaleItemIds = new HashSet<Integer>();
     }
 
     void addCalendarItem(CalendarItemData calItemData) {
         mCalendarItems.add(calItemData);
         mCalendarItemsMap.put(calItemData.getCalItemId(), calItemData);
-        if (calItemData.isStale())
-            ++mNumStaleItems;
     }
 
     public CalendarItemData getCalendarItemData(int calItemId) {
-        CalendarItemData calItemData = mCalendarItemsMap.get(calItemId);
-        if (calItemData != null && !calItemData.isStale())
-            return calItemData;
-        return null;
+        return mCalendarItemsMap.get(calItemId);
     }
 
     public int getFolderId()    { return mFolderId; }
@@ -66,7 +63,6 @@ public class CalendarData {
 
     public Iterator<CalendarItemData> calendarItemIterator() { return mCalendarItems.iterator(); }
     public int getNumItems() { return mCalendarItems.size(); }
-    public int getNumStaleItems() { return mNumStaleItems; }
 
     public CalendarData getSubRange(long rangeStart, long rangeEnd) {
         if (rangeStart <= mRangeStart && rangeEnd >= mRangeEnd)
@@ -74,25 +70,31 @@ public class CalendarData {
         CalendarData calData = new CalendarData(mFolderId, mModSeq, rangeStart, rangeEnd);
         for (CalendarItemData calItemData : mCalendarItems) {
             CalendarItemData itemSubRange = calItemData.getSubRange(rangeStart, rangeEnd);
-            if (itemSubRange != null)
+            if (itemSubRange != null) {
                 calData.addCalendarItem(itemSubRange);
+                int itemId = itemSubRange.getCalItemId();
+                if (isItemStale(itemId))
+                    calData.markItemStale(itemId);
+            }
         }
         return calData;
     }
 
-    void markItemStale(int calItemId) {
-        CalendarItemData calItemData = mCalendarItemsMap.get(calItemId);
-        if (calItemData != null) {
-            if (!calItemData.isStale())
-                ++mNumStaleItems;
-            calItemData.markStale();
-        } else {
-            // We have a new item added to the folder.  Add a placeholder item.
-            boolean stale = true;
-            calItemData = new CalendarItemData(MailItem.TYPE_UNKNOWN, mFolderId, calItemId, null, null,
-                                               0, 0, 0, 0, 0, null, false, true, null, null, stale);
-            addCalendarItem(calItemData);  // mNumStaleItems is incremented inside addCalendarItem()
-        }
+    synchronized int getNumStaleItems() {
+        return mStaleItemIds.size();
+    }
+
+    synchronized int markItemStale(int calItemId) {
+        mStaleItemIds.add(calItemId);
+        return mStaleItemIds.size();
+    }
+
+    synchronized boolean isItemStale(int calItemId) {
+        return mStaleItemIds.contains(calItemId);
+    }
+
+    synchronized void copyStaleItemIdsTo(Set<Integer> copyTo) {
+        copyTo.addAll(mStaleItemIds);
     }
 
     private static final String FN_FOLDER_ID = "fid";
@@ -122,6 +124,7 @@ public class CalendarData {
             mCalendarItems = new ArrayList<CalendarItemData>(0);
             mCalendarItemsMap = new HashMap<Integer, CalendarItemData>(0);
         }
+        mStaleItemIds = new HashSet<Integer>();
     }
 
     Metadata encodeMetadata() {

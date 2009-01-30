@@ -18,9 +18,12 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -29,23 +32,20 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.stats.ZimbraPerf;
 
-// TODO: [done] cache hit/miss stat
-// TODO: [done] last-modified time update/check at calendar folder level
-// TODO: [done] reasonable handling/caching/merging of requests outside current time range
-// TODO: [done] alarm attributes
-// TODO: [done] search code change to use the calendar cache (remove my hack in Search.java)
-// TODO: [done] persistence - filesystem or database?  what's the IO impact?
-// TODO: [done] versioning
-// TODO: [done] cache moving window of configurable size (e.g. 6 months beginning with last month)
-// TODO: [done] CLI or other mechanism to force invalidation of specific calendar/mailbox
 // TODO: caching remote calendars
 // TODO: TTL instead of last-modified time check, if folder configured that way or remote
 // TODO: high cache stickiness (or dedicated non-LRU cache) for heavily shared, almost read-only calendars
@@ -57,6 +57,7 @@ import com.zimbra.cs.stats.ZimbraPerf;
 // TODO: caching free/busy responses
 // TODO: DUE property of tasks
 // TODO: review other TODOs throughout code (in calendar.cache package)
+
 public class CalendarCache {
 
     // mSummaryCache
@@ -81,34 +82,6 @@ public class CalendarCache {
     //     },
     //     CalendarItemData, ...
     //   ]
-
-    // map entry key is "mailboxId:folderId" (local mailbox) or "accountId:folderId" (remote mailbox)
-    public static class SummaryCacheKey {
-        private String mKeyVal;
-        public SummaryCacheKey(int mboxId, int folderId) {
-            mKeyVal = mboxId + ":" + folderId;
-        }
-        public SummaryCacheKey(String accountId, int folderId) {
-            mKeyVal = accountId + ":" + folderId;
-        }
-        public SummaryCacheKey(String fullyQualifiedItemId) {
-            mKeyVal = fullyQualifiedItemId;
-        }
-
-        public String getKey() { return mKeyVal; }
-
-        public boolean equals(Object other) {
-            if (other instanceof SummaryCacheKey) {
-                SummaryCacheKey otherKey = (SummaryCacheKey) other;
-                return mKeyVal.equals(otherKey.getKey());
-            }
-            return false;
-        }
-
-        public int hashCode() {
-            return mKeyVal.hashCode();
-        }
-    }
 
     private static CalendarItemData reloadCalendarItemOverRange(
             Mailbox mbox, CalendarItem calItem, long rangeStart, long rangeEnd)
@@ -169,7 +142,7 @@ public class CalendarCache {
                     calItem.getModifiedSequence(), calItem.getSavedSequence(),
                     calItem.getDate(), calItem.getChangeDate(), calItem.getSize(),
                     defaultInvite.getUid(), defaultInvite.isRecurrence(), calItem.isPublic(),
-                    alarm, defaultData, false);
+                    alarm, defaultData);
 
             long actualRangeStart = 0;
             long actualRangeEnd = 0;
@@ -240,7 +213,7 @@ public class CalendarCache {
 
     private static CalendarData reloadCalendarOverRange(OperationContext octxt, Mailbox mbox, int folderId,
                                                         byte itemType, long rangeStart, long rangeEnd,
-                                                        CalendarData staleCalData, boolean incrementalUpdate)
+                                                        CalendarData prevCalData, boolean incrementalUpdate)
     throws ServiceException {
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
@@ -249,49 +222,73 @@ public class CalendarCache {
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum " +
                     sMaxSearchDays + " days)", null);
 
-        if (staleCalData == null || (rangeStart < staleCalData.getRangeStart() || rangeEnd > staleCalData.getRangeEnd())) {
-            // Ignore existing stale data if its range doesn't include the entire requested range.
+        if (prevCalData == null || (rangeStart < prevCalData.getRangeStart() || rangeEnd > prevCalData.getRangeEnd())) {
+            // Ignore existing data if its range doesn't include the entire requested range.
             // We have to scan the calendar folder.
             return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
         }
-        if (!incrementalUpdate || staleCalData.getNumStaleItems() > sMaxStaleItems) {
+        if (!incrementalUpdate || prevCalData.getNumStaleItems() > sMaxStaleItems) {
             // If incremental update of stale items is disabled, do it with folder scan.
             // If there are too many stale items, do it with folder scan as that may be faster.
-            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData);
+            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, prevCalData);
         }
 
+        Set<Integer> staleItemIds = new HashSet<Integer>();
+        prevCalData.copyStaleItemIdsTo(staleItemIds);
         Folder folder = mbox.getFolderById(octxt, folderId);
         CalendarData calData = new CalendarData(folderId, folder.getImapMODSEQ(), rangeStart, rangeEnd);
-        for (Iterator<CalendarItemData> iter = staleCalData.calendarItemIterator(); iter.hasNext(); ) {
+        for (Iterator<CalendarItemData> iter = prevCalData.calendarItemIterator(); iter.hasNext(); ) {
             CalendarItemData existing = iter.next();
-            if (!existing.isStale()) {
+            int calItemId = existing.getCalItemId();
+            if (!staleItemIds.contains(calItemId)) {
                 // Still good.  Reuse it.
                 calData.addCalendarItem(existing);
             } else {
-                CalendarItem calItem = null;
-                try {
-                    calItem = mbox.getCalendarItemById(octxt, existing.getCalItemId());
-                } catch (MailServiceException e) {
-                    if (!e.getCode().equals(MailServiceException.NO_SUCH_APPT)
-                        && !e.getCode().equals(MailServiceException.NO_SUCH_TASK))
-                        throw e;
-                    // NO_SUCH_APPT/TASK exception is an expected condition.
-                }
-                if (calItem != null && calItem.getFolderId() == folderId) {
-                    CalendarItemData calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
-                    if (calItemData != null)
-                        calData.addCalendarItem(calItemData);
-                }
+                CalendarItemData calItemData =
+                    fetchCalendarItemData(octxt, mbox, folderId, existing.getCalItemId(), rangeStart, rangeEnd);
+                if (calItemData != null)
+                    calData.addCalendarItem(calItemData);
+                staleItemIds.remove(calItemId);
             }
         }
+        // Any stale items left in staleItemIds set are newly added items.
+        for (int calItemId : staleItemIds) {
+            CalendarItemData calItemData =
+                fetchCalendarItemData(octxt, mbox, folderId, calItemId, rangeStart, rangeEnd);
+            if (calItemData != null)
+                calData.addCalendarItem(calItemData);
+        }
         return calData;  // return a non-null object even if there are no items in the range
+    }
+
+    private static CalendarItemData fetchCalendarItemData(OperationContext octxt, Mailbox mbox,
+                                                          int folderId, int calItemId,
+                                                          long rangeStart, long rangeEnd)
+    throws ServiceException {
+        CalendarItem calItem = null;
+        try {
+            calItem = mbox.getCalendarItemById(octxt, calItemId);
+        } catch (MailServiceException e) {
+            if (!e.getCode().equals(MailServiceException.NO_SUCH_ITEM)
+                && !e.getCode().equals(MailServiceException.NO_SUCH_APPT)
+                && !e.getCode().equals(MailServiceException.NO_SUCH_TASK))
+                throw e;
+            // NO_SUCH_ITEM/APPT/TASK exception is an expected condition.  This happens when a calendar item
+            // was hard deleted from a sync client.  Calendar cache doesn't process the delete notification
+            // because the notification doesn't indicate which folder the item is getting deleted from.
+        }
+        CalendarItemData calItemData = null;
+        // If folder is different, this item must have been moved out of our folder.  Ignore it.
+        if (calItem != null && calItem.getFolderId() == folderId)
+            calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
+        return calItemData;
     }
 
     // Reload by first calling Mailbox.getCalendarItemsForRange(), which runs a query on appointment table.
     private static CalendarData reloadCalendarOverRangeWithFolderScan(
             OperationContext octxt, Mailbox mbox, int folderId,
             byte itemType, long rangeStart, long rangeEnd,
-            CalendarData staleCalData)
+            CalendarData prevCalData)
     throws ServiceException {
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
@@ -301,18 +298,18 @@ public class CalendarCache {
                     sMaxSearchDays + " days)", null);
 
         // Ignore existing data if its range doesn't include the entire requested range.
-        if (staleCalData != null
-            && (rangeStart < staleCalData.getRangeStart() || rangeEnd > staleCalData.getRangeEnd()))
-            staleCalData = null;
+        if (prevCalData != null
+            && (rangeStart < prevCalData.getRangeStart() || rangeEnd > prevCalData.getRangeEnd()))
+            prevCalData = null;
 
         Folder folder = mbox.getFolderById(octxt, folderId);
         CalendarData calData = new CalendarData(folderId, folder.getImapMODSEQ(), rangeStart, rangeEnd);
         Collection<CalendarItem> calItems =
             mbox.getCalendarItemsForRange(octxt, itemType, rangeStart, rangeEnd, folderId, null);
         for (CalendarItem calItem : calItems) {
-            if (staleCalData != null) {
+            if (prevCalData != null) {
                 // Reuse the appointment if it didn't change.
-                CalendarItemData cur = staleCalData.getCalendarItemData(calItem.getId());
+                CalendarItemData cur = prevCalData.getCalendarItemData(calItem.getId());
                 if (cur != null && cur.getModMetadata() == calItem.getModifiedSequence()) {
                     calData.addCalendarItem(cur);
                     continue;
@@ -352,15 +349,147 @@ public class CalendarCache {
         sInstance = new CalendarCache(sLRUCapacity);
     }
 
+    public static class SummaryCacheKey {
+//      private String mKeyVal;
+        private int mMboxId;
+        private int mFolderId;
+
+        public SummaryCacheKey(int mboxId, int folderId) {
+//          mKeyVal = mboxId + ":" + folderId;
+            mMboxId = mboxId;
+            mFolderId = folderId;
+        }
+//      public SummaryCacheKey(String accountId, int folderId) {
+//          mKeyVal = accountId + ":" + folderId;
+//      }
+//      public SummaryCacheKey(String fullyQualifiedItemId) {
+//          mKeyVal = fullyQualifiedItemId;
+//      }
+
+//      public String getKey() { return mKeyVal; }
+        public int getMboxId() { return mMboxId; }
+        public int getFolderId() { return mFolderId; }
+
+        public boolean equals(Object other) {
+            if (other instanceof SummaryCacheKey) {
+                SummaryCacheKey otherKey = (SummaryCacheKey) other;
+//              return mKeyVal.equals(otherKey.getKey());
+                return mMboxId == otherKey.mMboxId && mFolderId == otherKey.mFolderId;
+            }
+            return false;
+        }
+
+        public int hashCode() {
+//          return mKeyVal.hashCode();
+            return mMboxId << 16 | mFolderId;
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private static class SummaryLRU extends LinkedHashMap<SummaryCacheKey, CalendarData> {
+        private int mMaxAllowed;
+
+        // map that keeps track of which calendar folders are cached for each mailbox
+        // This map is updated every time a calendar folder is added, removed, or aged out
+        // of the LRU.
+        private Map<Integer /* mailbox id */, Set<Integer> /* folder ids */> mMboxFolders;
+
+       private SummaryLRU(int capacity) {
+            super(capacity + 1, 1.0f, true);
+            mMaxAllowed = Math.max(capacity, 1);
+            mMboxFolders = new HashMap<Integer, Set<Integer>>();
+        }
+
+        @Override
+        public void clear() {
+            super.clear();
+            mMboxFolders.clear();
+        }
+
+        @Override
+        public CalendarData put(SummaryCacheKey key, CalendarData value) {
+            CalendarData prevVal = super.put(key, value);
+            if (prevVal == null)
+                registerWithMbox(key);
+            return prevVal;
+        }
+
+        @Override
+        public void putAll(Map<? extends SummaryCacheKey, ? extends CalendarData> t) {
+            super.putAll(t);
+            for (SummaryCacheKey key : t.keySet()) {
+                registerWithMbox(key);
+            }
+        }
+
+        @Override
+        public CalendarData remove(Object key) {
+            CalendarData prevVal = super.remove(key);
+            if (prevVal != null && key instanceof SummaryCacheKey) {
+                SummaryCacheKey k = (SummaryCacheKey) key;
+                deregisterFromMbox(k);
+            }
+            return null;
+        }        
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<SummaryCacheKey, CalendarData> eldest) {
+            boolean remove = size() > mMaxAllowed;
+            if (remove)
+                deregisterFromMbox(eldest.getKey());
+            return remove;
+        }
+
+        private void registerWithMbox(SummaryCacheKey key) {
+            int mboxId = key.getMboxId();
+            int folderId = key.getFolderId();
+            Set<Integer> folders = mMboxFolders.get(mboxId);
+            if (folders == null) {
+                folders = new HashSet<Integer>();
+                mMboxFolders.put(mboxId, folders);
+            }
+            folders.add(folderId);
+        }
+
+        private void deregisterFromMbox(SummaryCacheKey key) {
+            int mboxId = key.getMboxId();
+            int folderId = key.getFolderId();
+            Set<Integer> folders = mMboxFolders.get(mboxId);
+            if (folders != null) {
+                folders.remove(folderId);
+                // If no folders are cached for the mailbox, drop the mailbox entry from the map to save memory.
+                if (folders.isEmpty())
+                    mMboxFolders.remove(mboxId);
+            }
+        }
+
+        public static final int FOLDER_NOT_FOUND = -1;
+
+        public int getFolderForItem(int mboxId, int itemId) {
+            int retval = FOLDER_NOT_FOUND;
+            Set<Integer> folders = mMboxFolders.get(mboxId);
+            if (folders != null) {
+                for (int folderId : folders) {
+                    SummaryCacheKey key = new SummaryCacheKey(mboxId, folderId);
+                    CalendarData calData = get(key);
+                    if (calData != null) {
+                        CalendarItemData ci = calData.getCalendarItemData(itemId);
+                        if (ci != null) {
+                            retval = folderId;
+                            break;
+                        }
+                    }
+                }
+            }
+            return retval;
+        }
+    }
+
     // LRU cache containing range-limited calendar summary by calendar folder
-    private Map<SummaryCacheKey, CalendarData> mSummaryCache;
+    private SummaryLRU mSummaryCache;
 
     private CalendarCache(final int capacity) {
-        mSummaryCache = new LinkedHashMap<SummaryCacheKey, CalendarData>(capacity + 1, 1.0f, true) {
-            protected boolean removeEldestEntry(Map.Entry<SummaryCacheKey, CalendarData> eldest) {
-                return size() > capacity;
-            }
-        };
+        mSummaryCache = new SummaryLRU(capacity);
     }
 
     private static enum CacheLevel { Memory, File, Miss }
@@ -412,9 +541,7 @@ public class CalendarCache {
                             }
                         }
                     } else {
-                        // Outdated cached data from file may not have complete stale item list.
-                        // We can't update it incrementally, but instead must force appointment
-                        // table scan.
+                        // Data loaded from file doesn't have stale items list.  It can't be refreshed incrementally.
                         incrementalUpdate = false;
                     }
                     dataFrom = CacheLevel.File;
@@ -424,7 +551,7 @@ public class CalendarCache {
             }
         }
 
-        CalendarData staleCalData = null;
+        CalendarData reusableCalData = null;
 
         Pair<Long, Long> defaultRange = null;
         if (calData != null) {
@@ -434,7 +561,7 @@ public class CalendarCache {
             	// Let's keep a reference to the current data and reuse what we can, but only if the
             	// current data's range covers the requested range.
                 if (rangeStart >= calData.getRangeStart() && rangeEnd <= calData.getRangeEnd())
-                    staleCalData = calData;
+                    reusableCalData = calData;
                 calData = null;  // force recompute further down
             } else if (rangeStart < calData.getRangeStart() || rangeEnd > calData.getRangeEnd()) {
                 // Requested range is not within cached range.  Recompute cached range in the hope
@@ -454,7 +581,7 @@ public class CalendarCache {
                 defaultRange = Util.getMonthsRange(System.currentTimeMillis(),
                                                    sRangeMonthFrom, sRangeNumMonths);
             calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
-                                              defaultRange.getFirst(), defaultRange.getSecond(), staleCalData, incrementalUpdate);
+                                              defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
             synchronized (mSummaryCache) {
                 if (sLRUCapacity > 0) {
                     mSummaryCache.put(key, calData);
@@ -480,7 +607,7 @@ public class CalendarCache {
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, staleCalData, incrementalUpdate);
+            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
         }
 
         // hit/miss tracking
@@ -522,7 +649,7 @@ public class CalendarCache {
         }
     }
 
-    public void invalidateItem(Mailbox mbox, int folderId, int calItemId) {
+    private void invalidateItem(Mailbox mbox, int folderId, int calItemId) {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
         SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
@@ -534,9 +661,96 @@ public class CalendarCache {
         }
         // Invalidate the item from the calendar.
         if (calData != null) {
-            calData.markItemStale(calItemId);
-            if (calData.getNumStaleItems() > sMaxStaleItemsBeforeInvalidatingCalendar) {
+            int numStaleItems = calData.markItemStale(calItemId);
+            // If there are too many stale items, purge the calendar from cache to avoid accumulating
+            // too many stale item ids.
+            if (numStaleItems > sMaxStaleItemsBeforeInvalidatingCalendar)
                 invalidateSummary(mbox, folderId);
+        }
+    }
+
+    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+        if (!LC.calendar_cache_enabled.booleanValue())
+            return;
+        if (mods == null)
+            return;
+        if (mods.created != null) {
+            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
+                MailItem item = entry.getValue();
+                if (item instanceof CalendarItem) {
+                    int folderId = item.getFolderId();
+                    invalidateItem(item.getMailbox(), folderId, item.getId());
+                }
+            }
+        }
+        if (mods.modified != null) {
+            for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
+                Change change = entry.getValue();
+                Object whatChanged = change.what;
+                if (whatChanged instanceof CalendarItem) {
+                    CalendarItem item = (CalendarItem) whatChanged;
+                    Mailbox mbox = item.getMailbox();
+                    int folderId = item.getFolderId();
+                    int itemId = item.getId();
+                    invalidateItem(mbox, folderId, itemId);
+
+                    // If this is a folder move, invalidate the item from the old folder too.
+                    if ((change.why & Change.MODIFIED_FOLDER) != 0) {
+                        int mboxId = mbox.getId();
+                        int prevFolderId;
+                        synchronized (mSummaryCache) {
+                            prevFolderId = mSummaryCache.getFolderForItem(mboxId, itemId);
+                        }
+                        if (prevFolderId != folderId && prevFolderId != SummaryLRU.FOLDER_NOT_FOUND)
+                            invalidateItem(mbox, prevFolderId, itemId);
+                    }
+                }
+            }
+        }
+        if (mods.deleted != null) {
+            // This code gets called even for non-calendar items, for example it's called for every email
+            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
+            // notification doesn't tell us the item type of what's being deleted.  Oh well.
+            String lastAcctId = null;
+            Mailbox lastMbox = null;
+            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
+                Object deletedObj = entry.getValue();
+                if (deletedObj instanceof CalendarItem) {
+                    CalendarItem item = (CalendarItem) deletedObj;
+                    Mailbox mbox = item.getMailbox();
+                    invalidateItem(mbox, item.getFolderId(), item.getId());
+                    lastAcctId = mbox.getAccountId();
+                    lastMbox = mbox;
+                } else if (deletedObj instanceof Integer) {
+                    // We only have item id.  Look up the folder id of the item in the cache.
+                    Mailbox mbox = null;
+                    String acctId = entry.getKey().getAccountId();
+                    if (acctId == null) continue;  // just to be safe
+                    if (acctId.equals(lastAcctId)) {
+                        // Deletion by id list usually happens because of a folder getting emptied.
+                        // It's highly likely the items all belong to the same mailbox, let alone folder.
+                        mbox = lastMbox;
+                    } else {
+                        try {
+                            mbox = MailboxManager.getInstance().getMailboxByAccountId(acctId, FetchMode.DO_NOT_AUTOCREATE);
+                        } catch (ServiceException e) {
+                            ZimbraLog.calendar.error("Error looking up the mailbox of account in delete notification: account=" + acctId, e);
+                            continue;
+                        }
+                    }
+                    if (mbox != null) {
+                        lastAcctId = acctId;
+                        lastMbox = mbox;
+                        int itemId = ((Integer) deletedObj).intValue();
+                        int mboxId = mbox.getId();
+                        int folderId;
+                        synchronized (mSummaryCache) {
+                            folderId = mSummaryCache.getFolderForItem(mboxId, itemId);
+                        }
+                        if (folderId != SummaryLRU.FOLDER_NOT_FOUND)
+                            invalidateItem(mbox, folderId, itemId);
+                    }
+                }
             }
         }
     }

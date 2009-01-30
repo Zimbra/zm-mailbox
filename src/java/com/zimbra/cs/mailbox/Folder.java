@@ -34,7 +34,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.imap.ImapFolder;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
@@ -1025,7 +1024,6 @@ public class Folder extends MailItem {
 
     /** Deletes this folder and all its subfolders. */
     @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
-        CalendarCache.getInstance().invalidateSummary(getMailbox(), mId);
         if (scope == DeleteScope.CONTENTS_ONLY) {
             deleteSingleFolder(writeTombstones);
         } else {
@@ -1038,7 +1036,6 @@ public class Folder extends MailItem {
     }
 
     void empty(boolean includeSubfolders) throws ServiceException {
-        CalendarCache.getInstance().invalidateSummary(getMailbox(), mId);
         // kill all subfolders, if so requested
         if (includeSubfolders) {
             List<Folder> subfolders = getSubfolderHierarchy();
@@ -1055,7 +1052,6 @@ public class Folder extends MailItem {
 
     /** Deletes just this folder without affecting its subfolders. */
     void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
-        CalendarCache.getInstance().invalidateSummary(getMailbox(), mId);
         ZimbraLog.mailbox.info("deleting folder " + getPath() + ", id=" + getId());
         super.delete(hasSubfolders() ? DeleteScope.CONTENTS_ONLY : DeleteScope.ENTIRE_ITEM, writeTombstones);
     }
