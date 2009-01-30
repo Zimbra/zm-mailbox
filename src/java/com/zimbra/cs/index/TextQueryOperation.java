@@ -235,50 +235,7 @@ abstract class TextQueryOperation extends QueryOperation {
         mQueryInfo.add(inf);
     }
     
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)
-     */
-    protected QueryOperation combineOps(QueryOperation other, boolean union) {
-        assert(!mHaveRunSearch);
-
-        if (union) {
-            if (other.hasNoResults()) {
-                mQueryInfo.addAll(other.getResultInfo());
-                // a query for (other OR nothing) == other
-                return this;
-            }
-        } else {
-            if (other.hasAllResults()) {
-                if (other.hasSpamTrashSetting()) {
-                    forceHasSpamTrashSetting();
-                }
-                mQueryInfo.addAll(other.getResultInfo());
-                // we match all results.  (other AND anything) == other
-                return this;
-            }
-        }
-
-        if (other instanceof LuceneQueryOperation) {
-            LuceneQueryOperation otherLuc = (LuceneQueryOperation)other;
-            if (union) {
-                mQueryString = '('+mQueryString+") OR ("+otherLuc.mQueryString+')';
-            } else {
-                mQueryString = '('+mQueryString+") AND ("+otherLuc.mQueryString+')';
-            }
-
-            BooleanQuery top = new BooleanQuery();
-            BooleanClause lhs = new BooleanClause(mQuery, union ? Occur.SHOULD : Occur.MUST);
-            BooleanClause rhs = new BooleanClause(otherLuc.mQuery, union ? Occur.SHOULD : Occur.MUST);
-            top.add(lhs);
-            top.add(rhs);
-            mQuery = top;
-            mQueryInfo.addAll(other.getResultInfo());
-            return this;
-        }
-        return null;
-    }
-
+   
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraQueryResults#estimateResultSize()
      */
