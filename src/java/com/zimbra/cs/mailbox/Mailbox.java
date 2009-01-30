@@ -7214,6 +7214,7 @@ public class Mailbox {
                 }
             }
         }
+        CalendarCache.getInstance().notifyCommittedChanges(dirty, mData.lastChangeId);
     }
 
     private void rollbackCache(MailboxChange change) {
