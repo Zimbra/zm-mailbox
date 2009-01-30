@@ -322,13 +322,36 @@ public final class ImapConnection extends MailConnection {
         return uids;
     }
 
+    public Map<Long, MessageData> fetch(String seq, Object param)
+        throws IOException {
+        final Map<Long, MessageData> results = new HashMap<Long, MessageData>();
+        fetch(seq, param, new FetchResponseHandler(false) {
+            public void handleFetchResponse(MessageData md) {
+                long msgno = md.getMsgno();
+                if (msgno > 0) {
+                    MessageData omd = results.get(msgno);
+                    if (omd != null) {
+                        omd.addFields(md);
+                    } else {
+                        results.put(msgno, md);
+                    }
+                }
+            }
+        });
+        return results;
+    }
+
+    public MessageData fetch(long msgno, Object param) throws IOException {
+        return fetch(String.valueOf(msgno), param).get(msgno);
+    }
+    
     public Map<Long, MessageData> uidFetch(String seq, Object param)
         throws IOException {
         final Map<Long, MessageData> results = new HashMap<Long, MessageData>();
         uidFetch(seq, param, new FetchResponseHandler(false) {
             public void handleFetchResponse(MessageData md) {
                 long uid = md.getUid();
-                if (uid != -1) {
+                if (uid > 0) {
                     MessageData omd = results.get(uid);
                     if (omd != null) {
                         omd.addFields(md);

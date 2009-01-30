@@ -101,7 +101,7 @@ public final class ImapResponse {
             // msg-att         = "(" (msg-att-dynamic / msg-att-static)
             //                    *(SP (msg-att-dynamic / msg-att-static)) ")"
             is.skipChar(' ');
-            data = MessageData.read(is);
+            data = MessageData.read(number, is);
             break;
         case EXISTS: case RECENT: case EXPUNGE:
             break;
