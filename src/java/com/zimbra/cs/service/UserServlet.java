@@ -728,15 +728,16 @@ public class UserServlet extends ZimbraServlet {
     	if (context.format != null && context.format.equals("html"))
     		return false;
     	Mountpoint mpt = (Mountpoint) item;
-        String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
+
+        String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + URLUtil.urlEscape(mpt.getOwnerId()) + "%3A" + mpt.getRemoteId();
         if (context.format != null)
-            uri += '&' + QP_FMT + '=' + URLEncoder.encode(context.format, "UTF-8");
+            uri += '&' + QP_FMT + '=' + URLUtil.urlEscape(context.format);
         if (context.extraPath != null)
-            uri += '&' + QP_NAME + '=' + URLEncoder.encode(context.extraPath, "UTF-8");
+            uri += '&' + QP_NAME + '=' + URLUtil.urlEscape(context.extraPath);
         for (Map.Entry<String, String> entry : HttpUtil.getURIParams(req).entrySet()) {
             String qp = entry.getKey();
             if (!qp.equals(QP_ID) && !qp.equals(QP_FMT))
-                uri += '&' + URLEncoder.encode(qp, "UTF-8") + '=' + URLEncoder.encode(entry.getValue(), "UTF-8");
+                uri += '&' + URLUtil.urlEscape(qp) + '=' + URLUtil.urlEscape(entry.getValue());
         }
 
         Provisioning prov = Provisioning.getInstance();
@@ -1262,7 +1263,7 @@ public class UserServlet extends ZimbraServlet {
         url.append("/?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
         if (params != null) {
             for (Map.Entry<String, String> param : params.entrySet())
-                url.append('&').append(param.getKey()).append('=').append(param.getValue());
+                url.append('&').append(URLUtil.urlEscape(param.getKey())).append('=').append(URLUtil.urlEscape(param.getValue()));
         }
         return url.toString();
     }
