@@ -38,6 +38,7 @@ public class ZimletDescription extends ZimletMeta {
 	private String mKeyword;
 	private String mRegexString;
 	private List<String> mTargets;
+	private String mDisableUIUndeploy;
 	
 	public ZimletDescription(File desc) throws ZimletException {
 		super(desc);
@@ -63,6 +64,8 @@ public class ZimletDescription extends ZimletMeta {
 			parseResource(elem);
 		} else if (elem.getName().equals(ZIMLET_TAG_TARGET)) {
 			mTargets.add(elem.getText());
+		} else if (elem.getName().equals(ZIMLET_DISABLE_UI_UNDEPLOY)) {
+			mDisableUIUndeploy = elem.getText();
 		}
 	}
 
@@ -136,5 +139,9 @@ public class ZimletDescription extends ZimletMeta {
 	
 	public List<String> getTargets() {
 		return mTargets;
+	}
+	
+	public String getDisableUIUndeploy() {
+		return mDisableUIUndeploy;
 	}
 }

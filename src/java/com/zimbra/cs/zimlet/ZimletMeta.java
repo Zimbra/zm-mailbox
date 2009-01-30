@@ -62,6 +62,7 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_PROPERTY         = "property";
 
 	public static final String ZIMLET_TAG_TARGET		   = "target";
+	public static final String ZIMLET_DISABLE_UI_UNDEPLOY   = "disableUIUndeploy";
 	protected Element mTopElement;
 	
 	protected String mName;

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090126-0937 */
+    /* build: 5.0 solovyev 20090129-1555 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1085,6 +1085,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=761)
     public static final String A_zimbraAdminConsoleUIComponents = "zimbraAdminConsoleUIComponents";
+
+    /**
+     * Zimlet Util will set this attribute based on the value in zimlet
+     * definition XML file
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=803)
+    public static final String A_zimbraAdminExtDisableUIUndeploy = "zimbraAdminExtDisableUIUndeploy";
 
     /**
      * SSL port for admin UI

@@ -4019,4 +4019,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for admin groups</desc>
 </attr>
 
+<attr id="803" name="zimbraAdminExtDisableUIUndeploy" type="boolean" cardinality="single" optionalIn="zimletEntry" since="6.0.0">
+  <desc>Zimlet Util will set this attribute based on the value in zimlet definition XML file</desc>
+</attr>
 </attrs>
