@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
@@ -167,7 +168,7 @@ public class ImapSync extends MailItemImport {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         trackedFolders = dataSource.getImapFolders();
-        syncedFolders = new HashMap<Integer, ImapFolderSync>();
+        syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
         syncLocalFolders(getLocalFolders());
         syncMessages(folderIds, fullSync);
