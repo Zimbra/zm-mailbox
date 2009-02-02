@@ -67,13 +67,13 @@ public class RightChecker {
         
         public String dump() {
             StringBuilder sb = new StringBuilder();
-            sb.append("result = " + mResult + "\n");
+            sb.append("result = " + mResult + " ");
             
             if (mResult == Result.ALLOW_SOME) {
                 sb.append("allowed = (");
                 for (String a : mAllowSome)
                     sb.append(a + " ");
-                sb.append(")\n");
+                sb.append(")");
             }
             
             return sb.toString();
@@ -110,37 +110,47 @@ public class RightChecker {
      * is a direct/indirect member of. 
      */
     private static class GroupACLs {
-        private Set<ZimbraACE> aclsOnGroupTargetsAllowed = null;
+        private Set<ZimbraACE> aclsOnGroupTargetsAllowedNotDelegable = null;
+        private Set<ZimbraACE> aclsOnGroupTargetsAllowedDelegable = null;
         private Set<ZimbraACE> aclsOnGroupTargetsDenied = null;
         
         void collectACL(Entry grantedOn) throws ServiceException {
-            if (aclsOnGroupTargetsAllowed == null)
-                aclsOnGroupTargetsAllowed = new HashSet<ZimbraACE>();
+            if (aclsOnGroupTargetsAllowedNotDelegable == null)
+                aclsOnGroupTargetsAllowedNotDelegable = new HashSet<ZimbraACE>();
+            if (aclsOnGroupTargetsAllowedDelegable == null)
+                aclsOnGroupTargetsAllowedDelegable = new HashSet<ZimbraACE>();
             if (aclsOnGroupTargetsDenied == null)
                 aclsOnGroupTargetsDenied = new HashSet<ZimbraACE>();
             
-            Set<ZimbraACE> allowed = RightUtil.getAllowedACEs(grantedOn);
+            Set<ZimbraACE> allowedNotDelegable = RightUtil.getAllowedNotDelegableACEs(grantedOn);
+            Set<ZimbraACE> allowedDelegable = RightUtil.getAllowedDelegableACEs(grantedOn);
             Set<ZimbraACE> denied = RightUtil.getDeniedACEs(grantedOn);
             
-            if (allowed != null)
-                aclsOnGroupTargetsAllowed.addAll(allowed);
+            if (allowedNotDelegable != null)
+                aclsOnGroupTargetsAllowedNotDelegable.addAll(allowedNotDelegable);
+            
+            if (allowedDelegable != null)
+                aclsOnGroupTargetsAllowedDelegable.addAll(allowedDelegable);
             
             if (denied != null)
                 aclsOnGroupTargetsDenied.addAll(denied);
         }
         
         /*
-         * end of group targets, put all denied and allowed grants into one list, as if 
-         * they are granted on the same entry.   We put denied in the front, so it is 
-         * consistent with ZimbraACL.getAllACEs
+         * put all denied and allowed grants into one list, as if they are granted 
+         * on the same entry.   We put denied in the front, followed by allowed but 
+         * not delegable, followed by allowed and delegable, so it is consistent with 
+         * ZimbraACL.getAllACEs
          */
         List<ZimbraACE> getAllACLs() {
-            if ((aclsOnGroupTargetsAllowed != null && !aclsOnGroupTargetsAllowed.isEmpty()) || 
+            if ((aclsOnGroupTargetsAllowedNotDelegable != null && !aclsOnGroupTargetsAllowedNotDelegable.isEmpty()) ||
+                (aclsOnGroupTargetsAllowedDelegable != null && !aclsOnGroupTargetsAllowedDelegable.isEmpty()) ||   
                 (aclsOnGroupTargetsDenied != null && !aclsOnGroupTargetsDenied.isEmpty())) {
                     
                 List<ZimbraACE> aclsOnGroupTargets = new ArrayList<ZimbraACE>();
                 aclsOnGroupTargets.addAll(aclsOnGroupTargetsDenied);
-                aclsOnGroupTargets.addAll(aclsOnGroupTargetsAllowed);
+                aclsOnGroupTargets.addAll(aclsOnGroupTargetsAllowedNotDelegable);
+                aclsOnGroupTargets.addAll(aclsOnGroupTargetsAllowedDelegable);
                     
                 return aclsOnGroupTargets;
             } else
@@ -160,7 +170,9 @@ public class RightChecker {
      * @return Boolean.TRUE if allowed, Boolean.FALSE if denied, null if there is no grant applicable to the rightNeeded.
      * @throws ServiceException
      */
-    static Boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
+    static Boolean checkPresetRight(Account grantee, Entry target, 
+                                    Right rightNeeded, boolean canDelegateNeeded, 
+                                    ViaGrant via) throws ServiceException {
         if (!rightNeeded.isPresetRight())
             throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
                                                    rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
@@ -196,7 +208,7 @@ public class RightChecker {
         // the actual target separately
         List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         if (acl != null) {
-            result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, rightNeeded, via, seenRight);
+            result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, rightNeeded, canDelegateNeeded, via, seenRight);
             if (result != null) 
                 return result;
         }
@@ -226,7 +238,7 @@ public class RightChecker {
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null)
-                        result = checkTargetPresetRight(aclsOnGroupTargets, targetType, grantee, granteeGroups, rightNeeded, via, seenRight);
+                        result = checkTargetPresetRight(aclsOnGroupTargets, targetType, grantee, granteeGroups, rightNeeded, canDelegateNeeded, via, seenRight);
                     if (result != null) 
                         return result;
                     
@@ -237,7 +249,7 @@ public class RightChecker {
                 // didn't encounter any group grantedOn, or none of them matches, just check this grantedOn entry
                 if (acl == null)
                     continue;
-                result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, rightNeeded, via, seenRight);
+                result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, rightNeeded, canDelegateNeeded, via, seenRight);
                 if (result != null) 
                     return result;
             }
@@ -249,7 +261,12 @@ public class RightChecker {
             return null;
     }
     
-    private static Boolean checkTargetPresetRight(List<ZimbraACE> acl, TargetType targetType, Account grantee, AclGroups granteeGroups, Right rightNeeded, ViaGrant via, SeenRight seenRight) throws ServiceException {
+    private static Boolean checkTargetPresetRight(List<ZimbraACE> acl, 
+                                                  TargetType targetType, 
+                                                  Account grantee, AclGroups granteeGroups, 
+                                                  Right rightNeeded, boolean canDelegateNeeded,
+                                                  ViaGrant via, SeenRight seenRight) 
+        throws ServiceException {
         Boolean result = null;
         
         // if the right is user right, checking for individual match will
@@ -258,24 +275,24 @@ public class RightChecker {
         short adminFlag = (rightNeeded.isUserRight()? 0 : GranteeFlag.F_ADMIN);
         
         // as an individual: user, guest, key
-        result = checkPresetRight(acl, targetType, grantee, rightNeeded, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag), via, seenRight);
+        result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag), via, seenRight);
         if (result != null) 
             return result;
         
         // as a group member
-        result = checkGroupPresetRight(acl, targetType, granteeGroups, grantee, rightNeeded, (short)(GranteeFlag.F_GROUP), via, seenRight);
+        result = checkGroupPresetRight(acl, targetType, granteeGroups, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_GROUP), via, seenRight);
         if (result != null) 
             return result;
        
         // if right is an user right, check authed users and public
         if (rightNeeded.isUserRight()) {
             // all authed zimbra user
-            result = checkPresetRight(acl, targetType, grantee, rightNeeded, (short)(GranteeFlag.F_AUTHUSER), via, seenRight);
+            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_AUTHUSER), via, seenRight);
             if (result != null) 
                 return result;
             
             // public
-            result = checkPresetRight(acl, targetType, grantee, rightNeeded, (short)(GranteeFlag.F_PUBLIC), via, seenRight);
+            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_PUBLIC), via, seenRight);
             if (result != null) 
                 return result;
         }
@@ -284,61 +301,105 @@ public class RightChecker {
     }
     
     /*
+     * check if rightNeeded is applicable on target type 
+     */
+    static boolean rightApplicableOnTargetType(TargetType targetType, 
+                                               Right rightNeeded, 
+                                               boolean canDelegateNeeded) {
+        if (canDelegateNeeded) {
+            // check if the right is grantable on the target
+            if (!rightNeeded.isGrantableOnTargetType(targetType))
+                return false;
+        } else {
+            // check if the right is applicable(executable) on the target
+            if (!rightNeeded.executableOnTargetType(targetType))
+                return false;
+        }
+        return true;
+    }
+    
+    /*
      * checks 
      *     - if the grant matches required granteeFlags
      *     - if the granted right is applicable to the entry on which it is granted
      *     - if the granted right matches the requested right
+     *       Note: ace.canDelegate() is not checked in this method, even if 
+     *             canDelegateNeeded is true.   We return matched as long as the 
+     *             right is seen.  If canDelegateNeeded is true but the ace is not
+     *             delegable, it will be denied in getResult.  
+     *             
+     *             Doing so will deny the case when a "super right" is delegable 
+     *             but a "sub-right" of the "super-right" is only executable:
+     *                 {id} usr +superRight
+     *                 {id} usr subRight
+     *             For such grants:
+     *                 delegating superRight is denied
+     *                 delegating subRight is denied
+     *                 delegating another sub right of the super right is allowed
+     *                 
      */
-    private static boolean matchesPresetRight(ZimbraACE ace, TargetType targetType, Right right, short granteeFlags) throws ServiceException {
+    private static boolean matchesPresetRight(ZimbraACE ace, TargetType targetType, 
+                                              Right rightNeeded, boolean canDelegateNeeded,
+                                              short granteeFlags) throws ServiceException {
         GranteeType granteeType = ace.getGranteeType();
         if (!granteeType.hasFlags(granteeFlags))
             return false;
             
-        if (!right.applicableOnTargetType(targetType))
+        if (!rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded))
             return false;
-        
             
         Right rightGranted = ace.getRight();
-        if ((rightGranted.isPresetRight() && rightGranted == right) ||
-             rightGranted.isComboRight() && ((ComboRight)rightGranted).containsPresetRight(right))
+        if ((rightGranted.isPresetRight() && rightGranted == rightNeeded) ||
+             rightGranted.isComboRight() && ((ComboRight)rightGranted).containsPresetRight(rightNeeded)) {
             return true;
+        }
         
         return false;
     }
     
-    private static Boolean checkPresetRight(List<ZimbraACE> acl, TargetType targetType, Account grantee, Right right, short granteeFlags, ViaGrant via, SeenRight seenRight) throws ServiceException {
+    private static Boolean checkPresetRight(List<ZimbraACE> acl, TargetType targetType, 
+                                            Account grantee, 
+                                            Right rightNeeded, boolean canDelegateNeeded,
+                                            short granteeFlags, ViaGrant via, SeenRight seenRight) 
+        throws ServiceException {
         Boolean result = null;
         for (ZimbraACE ace : acl) {
-            if (!matchesPresetRight(ace, targetType, right, granteeFlags))
+            if (!matchesPresetRight(ace, targetType, rightNeeded, canDelegateNeeded, granteeFlags))
                 continue;
             
-            // if we get here, the right matched, mark it in seenRight.  This is so callsite default will not be honored.
+            // if we get here, the right matched, mark it in seenRight.  
+            // This is so callsite default will not be honored.
             seenRight.setSeenRight();
                 
             if (ace.matchesGrantee(grantee))
-                return gotResult(ace, grantee, right, via);
+                return gotResult(ace, grantee, rightNeeded, canDelegateNeeded, via);
         }
        
         return result;
     }
     
-    private static Boolean checkGroupPresetRight(List<ZimbraACE> acl, TargetType targetType, AclGroups granteeGroups, Account grantee, Right right, short granteeFlags, ViaGrant via, SeenRight seenRight) throws ServiceException {
+    private static Boolean checkGroupPresetRight(List<ZimbraACE> acl, TargetType targetType, 
+                                                 AclGroups granteeGroups, Account grantee, 
+                                                 Right rightNeeded, boolean canDelegateNeeded,
+                                                 short granteeFlags, ViaGrant via, SeenRight seenRight) 
+        throws ServiceException {
         Boolean result = null;
         for (ZimbraACE ace : acl) {
-            if (!matchesPresetRight(ace, targetType, right, granteeFlags))
+            if (!matchesPresetRight(ace, targetType, rightNeeded, canDelegateNeeded, granteeFlags))
                 continue;
             
-            // if we get here, the right matched, mark it in seenRight.  This is so callsite default will not be honored.
+            // if we get here, the right matched, mark it in seenRight.  
+            // This is so callsite default will not be honored.
             seenRight.setSeenRight();
             
             if (granteeGroups.groupIds().contains(ace.getGrantee()))   
-                return gotResult(ace, grantee, right, via);
+                return gotResult(ace, grantee, rightNeeded, canDelegateNeeded, via);
         }
         return result;
     }
     
-    private static Boolean gotResult(ZimbraACE ace, Account grantee, Right right, ViaGrant via) throws ServiceException {
-        if (ace.deny()) {
+    private static Boolean gotResult(ZimbraACE ace, Account grantee, Right right, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
+        if (shouldDeny(ace, canDelegateNeeded)) {
             if (sLog.isDebugEnabled())
                 sLog.debug("Right " + "[" + right.getName() + "]" + " DENIED to " + grantee.getName() + 
                            " via grant: " + ace.dump() + " on: " + ace.getTargetType().getCode() + ace.getTargetName());
@@ -500,21 +561,37 @@ public class RightChecker {
         }
     }
     
-    private static CollectAttrsResult checkTargetAttrsRight(List<ZimbraACE> acl, TargetType targetType,
-                                                            Set<String> granteeIds, Right rightNeeded, boolean canDelegateNeeded,
-                                                            Integer relativity,
-                                                            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+    /**
+     * 
+     * @param acl
+     * @param targetType
+     * @param granteeIds
+     * @param rightNeeded
+     * @param canDelegateNeeded
+     * @param relativity
+     * @param allowSome
+     * @param denySome
+     * @return
+     * @throws ServiceException
+     */
+    private static CollectAttrsResult checkTargetAttrsRight(
+            List<ZimbraACE> acl, TargetType targetType,
+            Set<String> granteeIds, 
+            Right rightNeeded, boolean canDelegateNeeded,
+            Integer relativity,
+            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+        
         CollectAttrsResult result = null;
         
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        result = checkAttrsRight(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity, allowSome, denySome);
+        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity, allowSome, denySome);
         if (result.isAll()) 
             return result;
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP);
-        result = checkAttrsRight(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity+1, allowSome, denySome);
+        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity+1, allowSome, denySome);
 
         return result;
     }
@@ -534,57 +611,117 @@ public class RightChecker {
             return mIsAll;
         }
     }
-
-
-    private static CollectAttrsResult processAttrsGrant(ZimbraACE ace, TargetType targetType, 
-                                                        AttrRight attrRight, Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
-                                                        Integer relativity,
-                                                        Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+    
+    private static CollectAttrsResult expandAttrsGrantToAttrs(
+            ZimbraACE ace, TargetType targetType, 
+            AttrRight attrRightGranted, 
+            Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
+            Integer relativity,
+            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         
-        // note: do NOT call ace.getRight in this method, ace is passed in for deny() and getTargetType() calls only.  
         //
-        // Because if the granted right is a combo right, ace.getRight will 
-        // return the combo right, not the attr rights in the combo right.  If the grant contains a combo right, attr rights 
-        // of the combo right will be passed in as the attrRight arg, or each attr right in the combo right.
-        // ace is passed in for deny() and getTargetType() calls only.   
+        // note: do NOT call ace.getRight in this method, ace is passed in for deny() and getTargetType() 
+        // calls only.  
+        //
+        // Because if the granted right is a combo right, ace.getRight will return the combo right, 
+        // not the attr rights in the combo right.  If the grant contains a combo right, each attr 
+        // rights of the combo right will be passed in as the attrRight arg.
+        //
         
-        if (!attrRight.applicableToRightType(rightTypeNeeded))
+        // check if get/set matches
+        if (!attrRightGranted.suitableFor(rightTypeNeeded))
             return null;
         
-        if (!attrRight.applicableOnTargetType(targetType))
+        //
+        // check if the granted attrs right is indeed applicable on the target type
+        // this is a sanity check mainly for the case when checking for execution
+        // permission (i.e. canDelegateNeeded == false), in case someone somehow 
+        // sneak in a zimbraACE on the wrong target.  e.g. put a setAttrs server
+        // right on a cos entry.  This should not happen if the grant is done via
+        // RightCommand.grantRight.
+        //
+        if (!rightApplicableOnTargetType(targetType, attrRightGranted, canDelegateNeeded))
             return null;
         
-        if (attrRight.allAttrs()) {
+        if (attrRightGranted.allAttrs()) {
             // all attrs, return if we hit a grant with all attrs
-            if (ace.deny()) {
+            if (shouldDeny(ace, canDelegateNeeded)) {
                 /*
                  * if the grant is setAttrs and the needed right is getAttrs:
                  *    - negative setAttrs grant does *not* negate any attrs explicitly allowed for getAttrs grants
                  *    - positive setAttrs grant *does* automatically give getAttrs right
                  */
-                if (attrRight.getRightType() == rightTypeNeeded)
+                if (attrRightGranted.getRightType() == rightTypeNeeded)
                     return CollectAttrsResult.DENY_ALL;  // right type granted === right type needed
                 // else just ignore the grant
-            } else
+            } else {
                 return CollectAttrsResult.ALLOW_ALL;
+            }
         } else {
             // some attrs
-            for (String attrName : attrRight.getAttrs()) {
-                if (ace.deny()) {
-                    if (attrRight.getRightType() == rightTypeNeeded)
+            for (String attrName : attrRightGranted.getAttrs()) {
+                if (shouldDeny(ace, canDelegateNeeded)) {
+                    if (attrRightGranted.getRightType() == rightTypeNeeded)
                         denySome.put(attrName, relativity);  // right type granted === right type needed
                     // else just ignore the grant
-                } else
+                } else {
                     allowSome.put(attrName, relativity);
+                }
             }
         }
         return CollectAttrsResult.SOME;
     }
     
-    private static CollectAttrsResult checkAttrsRight(List<ZimbraACE> acl, TargetType targetType,
-                                                      Set<String> granteeIds, Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
-                                                      short granteeFlags, Integer relativity,
-                                                      Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+    /**
+     * expand attr rights on this collection of ACEs into attributes.
+     * for each grant(ACE):
+     *     - checks if grantee matches 
+     *     - if preset right - ignore
+     *       if attrs right - expand into attributes
+     *       if combo right - go through all attr rights of the combo right
+     *                        and expand them into attributes 
+     * 
+     * @param acl                the collection of grants
+     * @param targetType         target type of interest
+     * @param granteeIds         set of zimbraIds the grantee in question can assume: including 
+     *                               - zimbraId of the grantee
+     *                               - all admin groups the grantee is in 
+     * @param rightTypeNeeded    getAttrs or setAttrs
+     * @param canDelegateNeeded  if this check is for checking if a right can be delegated to others
+     * @param granteeFlags       which kinds of grantees to look for 
+     * @param relativity         how relevant this set of grant is to the perspective target entry
+     *                           e.g. On the target side, if the perspective target is an account, 
+     *                                then grants on the account entry is more relevant than grants 
+     *                                on groups the account is a member of, and which is more relevant 
+     *                                than the domain the account is in.
+     *                                On the grantee side, it is more relevant if the grantee matches 
+     *                                the grant because of the grant is directly granted to the grantee;
+     *                                it is less relevant if the grantee is a member of a group to which 
+     *                                the grant is granted.  
+     *                           This is needed for computing the net set of attributes that should 
+     *                           be allowed/denied after all attr rights are expanded.  If an attribute 
+     *                           is denied by a more relevant grant and allowed by a less relevant grant,
+     *                           it will be denied.
+     * @param allowSome          output param for allowed attributes, set when CollectAttrsResult.SOME is returned
+     * @param denySome           output param for denied attributes, set when CollectAttrsResult.SOME is returned
+     * @return if the acl:
+     *             allow all(CollectAttrsResult.ALLOW_ALL), or
+     *             deny all(CollectAttrsResult.DENY_ALL), or 
+     *             allow/deny some(CollectAttrsResult.SOME) attributes
+     *         to be get/set on the target.
+     *         
+     *         If CollectAttrsResult.SOME is returned, attributes allowed
+     *         are put in the allowSome param, attributes specifically denied 
+     *         are put in the denySome param.
+     *         
+     * @throws ServiceException
+     */
+    private static CollectAttrsResult expandACLToAttrs(
+            List<ZimbraACE> acl, TargetType targetType,
+            Set<String> granteeIds, 
+            Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
+            short granteeFlags, Integer relativity,
+            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
                                                 
         CollectAttrsResult result = null;
         
@@ -602,7 +739,7 @@ public class RightChecker {
             
             if (rightGranted.isAttrRight()) {
                 AttrRight attrRight = (AttrRight)rightGranted;
-                result = processAttrsGrant(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                result = expandAttrsGrantToAttrs(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                 
                 /*
                  * denied grants appear before allowed grants
@@ -616,7 +753,7 @@ public class RightChecker {
             } else if (rightGranted.isComboRight()) {
                 ComboRight comboRight = (ComboRight)rightGranted;
                 for (AttrRight attrRight : comboRight.getAttrRights()) {
-                    result = processAttrsGrant(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                    result = expandAttrsGrantToAttrs(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                     // return if we see an allow-all/deny-all, same reasom as above.
                     if (result != null && result.isAll())
                         return result;
@@ -637,9 +774,10 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    static RightCommand.EffectiveRights getEffectiveRights(Account grantee, Entry target,
-                                                           boolean expandSetAttrs, boolean expandGetAttrs,
-                                                           RightCommand.EffectiveRights result) throws ServiceException {
+    static RightCommand.EffectiveRights getEffectiveRights(
+            Account grantee, Entry target,
+            boolean expandSetAttrs, boolean expandGetAttrs,
+            RightCommand.EffectiveRights result) throws ServiceException {
 
         // get effective preset rights
         Set<Right> presetRights = getEffectivePresetRights(grantee, target);
@@ -851,7 +989,7 @@ public class RightChecker {
             if (right.isComboRight()) {
                 ComboRight comboRight = (ComboRight)right;
                 for (Right r : comboRight.getPresetRights()) {
-                    if (r.applicableOnTargetType(targetType)) {
+                    if (r.executableOnTargetType(targetType)) {
                         if (ace.deny())
                             denied.put(r, relativity);
                         else
@@ -859,7 +997,7 @@ public class RightChecker {
                     }
                 }
             } else if (right.isPresetRight()) {
-                if (right.applicableOnTargetType(targetType)) {
+                if (right.executableOnTargetType(targetType)) {
                     if (ace.deny())
                         denied.put(right, relativity);
                     else
@@ -891,6 +1029,19 @@ public class RightChecker {
     
     
     static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded) throws ServiceException {
+        
+        if (sLog.isDebugEnabled()) {
+            sLog.debug("canAccessAttrs attrsAllowed: " + attrsAllowed.dump());
+            
+            StringBuilder sb = new StringBuilder();
+            if (attrsNeeded == null)
+                sb.append("<all attributes>");
+            else {
+                for (String a : attrsNeeded)
+                    sb.append(a + " ");
+            }
+            sLog.debug("canAccessAttrs attrsNeeded: " + sb.toString());
+        }
         
         // regardless what attrs say, allow all attrs
         if (attrsAllowed.getResult() == AllowedAttrs.Result.ALLOW_ALL)
@@ -1050,6 +1201,15 @@ public class RightChecker {
             return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
         } else
             return false;
+    }
+
+    static boolean isSystemAdmin(Account acct, boolean asAdmin) {
+        return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsSystemAdminAccount, false));
+    }
+    
+    private static boolean shouldDeny(ZimbraACE ace, boolean canDelegateNeeded) {
+        return (ace.deny() ||
+                (canDelegateNeeded && !ace.canDelegate()));
     }
 
     /**

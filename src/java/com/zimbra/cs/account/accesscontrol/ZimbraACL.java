@@ -16,16 +16,19 @@ public class ZimbraACL {
     private static final Log sLog = LogFactory.getLog(ZimbraACL.class);
 
     // all aces
-    List<ZimbraACE> mAces = new ArrayList<ZimbraACE>();
+    private List<ZimbraACE> mAces = new ArrayList<ZimbraACE>();
     
-    // positive  grants
-    Set<ZimbraACE> mAllowed = new HashSet<ZimbraACE>();
+    // positive grants, but not delegable
+    private Set<ZimbraACE> mAllowedNotDelegable = new HashSet<ZimbraACE>();
+    
+    // positive grants, and delegable
+    private Set<ZimbraACE> mAllowedDelegable = new HashSet<ZimbraACE>();
     
     // negative grants
-    Set<ZimbraACE> mDenied = new HashSet<ZimbraACE>();
+    private Set<ZimbraACE> mDenied = new HashSet<ZimbraACE>();
 
     // for the containsRight call, can probably remove now
-    Set<Right> mContainsRight = new HashSet<Right>();
+    private Set<Right> mContainsRight = new HashSet<Right>();
     
     /**
      * ctor for loading from LDAP
@@ -77,25 +80,47 @@ public class ZimbraACL {
     }
     
     /**
-     * Negative grants are inserted in the front, positive grants are inserted in the rear. 
-     * Rights granted with SOAP/zmprov should not have conflicts (the granting code 
-     * verifies that).  But people can do direct LDAP modify.  The arrangement in 
-     * order (put negative ones in the front) is a safety net for those situations.
-     * The ACL checking code in RightChecker relies on this order to deny conflict grants.
+     * Negative grants are inserted in the front, followed by positive non-delegable grants,
+     * followed by positive delegable grants.
      * 
-     * e.g.
-     *      ba512b78-6f5b-4192-a160-77ae28896c68 usr invite
-     *      ba512b78-6f5b-4192-a160-77ae28896c68 usr -invite
+     * The ACL checking code in RightChecker relies on this order to work correctly.
+     * 
+     * 1. Grant on the same right/grantee should not have "conflicting" grants, like:
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr createAccount
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +createAccount
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +createAccount
+     *    because ZimbraACL code will not allow it.   But they can appear by direct 
+     *    LdapModify.  Sorting grants in this order is a safety net for that.
+     * 
+     * 2. For "partial" rights, like
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +domainAdmin (a combo right)
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr createAccount
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr -modifyAccount
+     *        
+     *        It is a bad practice to do the above grant(grant big and reduce some rights)
+     *        By sorting the grants in the order of:
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr -modifyAccount
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr createAccount
+     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +domainAdmin
+     * 
+     *        we will get behaviors:
+     *        - cannot modify any account attribute
+     *        - can create account, but cannot delegate the createAccount right
+     *        - can execute and delegate any right contained by the domainAdmin combo
+     *          right, except for modifyAccount and createAccount, to other admins.
      * 
      * @param aceToGrant
      */
     private void addACE(ZimbraACE aceToGrant) {
         if (aceToGrant.deny()) {
-            mAces.add(0, aceToGrant);
+            mAces.add(0, aceToGrant);  // add in the front
             mDenied.add(aceToGrant);
+        } else if (aceToGrant.canDelegate()) {
+            mAces.add(aceToGrant);     // add in the rear
+            mAllowedDelegable.add(aceToGrant);
         } else {
-            mAces.add(aceToGrant);
-            mAllowed.add(aceToGrant);
+            mAces.add(mDenied.size(), aceToGrant);     // add in the middle, between denied and delegable
+            mAllowedNotDelegable.add(aceToGrant);
         }
         mContainsRight.add(aceToGrant.getRight());
     }
@@ -104,8 +129,10 @@ public class ZimbraACL {
         mAces.remove(aceToRevoke);
         if (aceToRevoke.deny())
             mDenied.remove(aceToRevoke);
+        else if (aceToRevoke.canDelegate())
+            mAllowedDelegable.remove(aceToRevoke);
         else
-            mAllowed.remove(aceToRevoke);
+            mAllowedNotDelegable.remove(aceToRevoke);
         mContainsRight.remove(aceToRevoke.getRight());
     }
     
@@ -205,10 +232,17 @@ public class ZimbraACL {
         return mAces;
     }
     
-    Set<ZimbraACE> getAllowedACEs() {
-        return mAllowed;
+    // for collecting group ACLs
+    Set<ZimbraACE> getAllowedNotDelegableACEs() {
+        return mAllowedNotDelegable;
     }
     
+    // for collecting group ACLs
+    Set<ZimbraACE> getAllowedDelegableACEs() {
+        return mAllowedDelegable;
+    }
+    
+    // for collecting group ACLs
     Set<ZimbraACE> getDeniedACEs() {
         return mDenied;
     }

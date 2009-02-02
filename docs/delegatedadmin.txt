@@ -743,59 +743,118 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 
 
 ==================================
-4. Admin Accounts and Admin Groups
+4. Granting and Revoking
 ================================== 
 
-4.1 How to Provision Admin Accounts and Admin Groups
-    - A "system admin account" is an account with the account attribute zimbraIsSystemAdminAccount set to TRUE.
-    
-    - An "admin account" is an account with the account attribute zimbraIsAdminAccount set to TRUE.
-    
-    - An "admin group" is a distribution list with the DL attribute zimbraIsAdminGroup set to TRUE.
-    
-    - Only admin accounts and admin groups can be added as members of admin groups. 
+4.1 Admin Accounts and Admin Groups
 
+4.1.1 System Admin Account
+      A "system admin account" is an account with the account attribute zimbraIsSystemAdminAccount set to TRUE.
 
-4.2 For Granting/Revoking
-    - Only admin accounts can grant/revoke admin rights.  
-    
-    - Only admin accounts/groups can received any grants, i.e. being the grantee of an admin grant.
-    
-
-4.3 System Admin
-    - A "system admin" is a "can do all" admin.  It is allowed for all admin SOAP commands, including 
-      granting/revoking *any* right on *any* target to *any* admin/group.   
-      e.g. an account with zimbraIsSystemAdminAccount=TRUE is allowed to CreateAccount *without* an explicit 
-      createAccount right.
+      - A "system admin" is a "can do all" admin.  It is allowed for all admin SOAP commands, including 
+        granting/revoking *any* right on *any* target to *any* admin/group.   
+        
+      - When a right is checked, if the authed admin is a system admin, it is always allowed.  Server does *not* 
+        check any ACL, whether positive or negative.  
       
-    - A system admin can create other system admins, by setting their zimbraIsSystemAdminAccount to TRUE.
+      - A system admin can create other system admins, by setting their zimbraIsSystemAdminAccount to TRUE.
     
-    - Logically, a system admin should not be granted any right, because it already has all the rights.
-      Granting to a system admin is considered an operational error.  
-      However, server does *not* enforce that a system admin cannot have any grants.  All grants to a 
-      system admin are simply ignored.
-
-      When a right is checked, if the authed admin is a system admin, server does *not* check for any ACL, 
-      whether positive or negative.  That is, all right are always allowed to a system admin, even there is 
-      a negative grant.
+      - Logically, a system admin should not received any grant(i.e. be the grantee of grants), because it is 
+        already allowed for everything.  Granting to a system admin is considered an operational error.  
+        However, server does *not* enforce that a system admin cannot have any grants.  All grants to a 
+        system admin are simply ignored.
       
-      If, a system admin with grants are "downgraded" to a regular admin, the grants will start take effects.
-      If, a system admin with grants are "downgraded" to a regular non admin account, all grants will be ignored.
-      (see 4.4)
+      - If a system admin with grants are "downgraded" to a regular admin, the grants will start take effects.
+        If a system admin with grants are "downgraded" to a regular non admin account, all grants will be ignored.
+        
+        
+4.1.2 (Regular) Admin Account and Admin Group
+      An "admin account" is an account with the account attribute zimbraIsAdminAccount set to TRUE.
+      An "admin group" is a distribution list with the DL attribute zimbraIsAdminGroup set to TRUE.
+      
+      - Only admin accounts and admin groups can be granted admin rights.
+        (i.e. be the grantee of an admin grant.)
+        
+      
+4.1.3 Grants Are Valid only When the Grantee's Admin Flag is On 
+      - When an account's zimbraIsAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
+        the admin account become invalid.  
+        When zimbraIsAdminAccount is changed from FALSE to TRUE, all existing grants automatically become 
+        valid again.
 
-4.4 Grants Are Valid only When the Grantee's Admin Flag is On 
-    - When an account's zimbraIsAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
-      the admin account become invalid.  
-      When zimbraIsAdminAccount is changed from FALSE to TRUE, all existing grants automatically become 
-      valid again.
+      - When a group's zimbraIsAdminGroup is is changed from TRUE to FALSE, all existing grants to the admin 
+        group become invalid.    
+        When zimbraIsAdminGroup is changed from FALSE to TRUE, all existing grants automatically become valid again.
 
-    - When a group's zimbraIsAdminGroup is is changed from TRUE to FALSE, all existing grants to the admin 
-      group become invalid.    
-      When zimbraIsAdminGroup is changed from FALSE to TRUE, all existing grants automatically become valid again.
-
-    - The above let admins temporary disable things without having to blow away and later recreate the grants.
+      - The above let admins temporary disable things without having to blow away and later recreate the grants.
 
 
+4.2 Granting/Revoking
+
+4.2.1 Who can grant (executing grant/revoke commands)
+      Authed admin accounts and system admin accounts can grant/revoke admin rights.  
+    
+4.2.2 Who can be Granted to (being the grantee)  
+      Rights can only be granted to admin accounts/groups, i.e. being the grantee of an admin grant.
+    
+4.2.3 Which Rights and Target Entries can be Granted
+      When a right is granted with the "can grant" modifier, the grantee of the grant can further 
+      grant the right or part of the right to others, on the same target on which his own grants 
+      are on, or on targets that can inherit the grants.
+      
+      e.g. if adminA has grants on a distribution list dl@test.com:
+                 {id-of-adminA} usr changePassword
+                 {id-of-adminA} usr +modifyAccount
+                 {id-of-adminA} usr +manageDistributionList
+                 
+           and suppose manageDistributionList is a combo right that includes two rights:
+           addDistributionMember and removeDistributionMember.
+           
+           Then, 
+           - adminA cannot grant changePassword (he can only execute the right himself)
+           - adminA can grant the modifyAccount right on dl@test.com
+           - adminA can grant inline rights setAttrs:zimbraMailStatus or getAttrs:zimbraMailStatus,
+             because zimbraMailStatus is "part of" the modifyAccount right.
+           - adminA can grant the addDistributionMember right
+           - Rights can be granted on dl@test.com or any dl/account members of dl@test.com.
+
+      TODO: find and grant the same negative grants to sub targets, ... 
+      
+      
+4.2.4 Which Target Type can a Right be Granted on
+      A right can only be granted on target types the right is applicable or on targets from 
+      which the right can be inherited from.
+      
+      e.g. an "account right" (e.g. renameAccount) can be granted on:
+              - accounts
+              - distribution lists
+              - domains
+              - global grant  
+              
+      e.g. a "account and cos" right (e.g. configureQuota) can be granted on:        
+              - accounts
+              - distribution lists
+              - domains
+              - cos's
+              - global grant  
+              
+              
+      For combo right, if any right in the combo right is not applicable on the target, the 
+      right cannot be granted on the target.
+      
+      e.g. if a combo right contains:
+                modifyAccount  (an account right)
+                configureQuota (a cos and account right)
+                modifyCos      (a cos right)
+           
+           then:
+           - the combo right *cannot* be granted on account targets, because modifyCos 
+             is only applicable on cos targets.
+           - the combo right *cannot* be granted on cos targets, because modifyAccount 
+             is only applicable on account targets.
+           - the combo right *can* be granted on the global grant target, because both 
+             account and cos can inherit from global grant.   
+ 
  
 =================
 5. Storage - LDAP

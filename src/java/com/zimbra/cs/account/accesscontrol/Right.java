@@ -37,7 +37,6 @@ public abstract class Right {
         AdminRight.initKnownAdminRights(rm);
     }
     
-    
     Right(String name, RightType rightType) {
         mRightType = rightType;
         mName = name;
@@ -58,19 +57,19 @@ public abstract class Right {
     }
     
     public boolean isUserRight() {
-        return (this instanceof UserRight);
+        return false;
     }
     
     public boolean isPresetRight() {
-        return mRightType==RightType.preset;
+        return false;
     }
     
     public boolean isAttrRight() {
-        return mRightType==RightType.getAttrs || mRightType==RightType.setAttrs;
+        return false;
     }
     
     public boolean isComboRight() {
-        return mRightType==RightType.combo;
+        return false;
     }
     
     public RightType getRightType() {
@@ -113,8 +112,27 @@ public abstract class Right {
         mDefault = defaultValue;
     }
     
-    boolean applicableOnTargetType(TargetType targetType) {
+    boolean executableOnTargetType(TargetType targetType) {
         return (mTargetType == targetType);
+    }
+    
+    boolean isGrantableOnTargetType(TargetType targetType) {
+        return targetType.isInheritedBy(mTargetType);
+    }
+    
+    /*
+     * for reporting granting error
+     */
+    final String reportGrantableTargetTypes() {
+        Set<TargetType> targetTypes = getGrantableTargetTypes();
+        StringBuilder sb = new StringBuilder();
+        for (TargetType tt : targetTypes)
+            sb.append(tt.getCode() + " ");
+        return sb.toString();
+    }
+    
+    protected Set<TargetType> getGrantableTargetTypes() {
+        return mTargetType.inheritFrom();
     }
 
     void setTargetType(TargetType targetType) throws ServiceException {

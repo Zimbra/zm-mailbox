@@ -1642,6 +1642,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static enum CacheEntryType {
         account,
+        group,
         config,
         cos,
         domain,

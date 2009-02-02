@@ -114,7 +114,12 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
-        return canPerform(grantee, target, rightNeeded, false, asAdmin, defaultGrant, via);
+        
+        // always allow system admin access
+        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+            return true;
+        
+        return checkPresetRight(grantee, target, rightNeeded, false, asAdmin, defaultGrant, via);
     }
     
     @Override
@@ -173,9 +178,100 @@ public class RoleAccessManager extends AccessManager {
         return false;
     }
     
-    private boolean canPerform(Account grantee, Entry target, 
-                               Right rightNeeded, boolean canDelegateNeeded, 
-                               boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    @Override
+    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) throws ServiceException {
+        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+            return true;
+        
+        return canGetAttrsInternal(grantee, target, attrsNeeded, false);
+    }
+    
+    @Override
+    public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
+        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
+        if (granteeAcct == null)
+            throw ServiceException.PERM_DENIED("cannot access attr");
+        
+        return canGetAttrs(granteeAcct, target, attrs, asAdmin);
+    }
+    
+    
+    @Override
+    // this API does not check constraints
+    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) throws ServiceException {
+        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+            return true;
+        
+        return canSetAttrsInternal(grantee, target, attrsNeeded, false);
+    }
+    
+    @Override
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
+        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
+        if (granteeAcct == null)
+            throw ServiceException.PERM_DENIED("cannot access attr");
+        
+        return canSetAttrs(granteeAcct, target, attrs, asAdmin);
+    }
+    
+    @Override
+    // this API does check constraints
+    public boolean canSetAttrs(Account grantee, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) throws ServiceException {
+        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+            return true;
+        
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
+        return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
+    }
+    
+    @Override
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
+        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
+        if (granteeAcct == null)
+            throw ServiceException.PERM_DENIED("cannot access attr");
+        
+        return canSetAttrs(granteeAcct, target, attrs, asAdmin);
+    }
+    
+    @Override
+    public boolean canPerform(Account grantee, Entry target, 
+                              Right rightNeeded, boolean canDelegateNeeded, 
+                              Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+        
+        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+            return true;
+        
+        boolean allowed = false;
+        if (rightNeeded.isPresetRight()) {
+            allowed = checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, asAdmin, false, viaGrant);
+        
+        } else if (rightNeeded.isAttrRight()) {
+            AttrRight attrRight = (AttrRight)rightNeeded;
+            allowed = checkAttrRight(grantee, target, (AttrRight)rightNeeded, canDelegateNeeded, attrs, asAdmin);
+            
+        } else if (rightNeeded.isComboRight()) {
+            // throw ServiceException.FAILURE("checking right for combo right is not supported", null);
+            
+            ComboRight comboRight = (ComboRight)rightNeeded;
+            // check all directly and indirectly contained rights
+            for (Right right : comboRight.getAllRights()) {
+                // via is not set for combo right. maybe we should just get rid of via 
+                if (!canPerform(grantee, target, right, canDelegateNeeded, attrs, asAdmin, null)) 
+                    return false;
+            }
+            allowed = true;
+        }
+        
+        return allowed;
+    }
+    
+    // all user and admin preset rights go through here 
+    private boolean checkPresetRight(Account grantee, Entry target, 
+                                     Right rightNeeded, boolean canDelegateNeeded, 
+                                     boolean asAdmin, boolean defaultGrant, ViaGrant via) {
         try {
             if (grantee == null) {
                 if (canDelegateNeeded)
@@ -193,12 +289,8 @@ public class RoleAccessManager extends AccessManager {
                     return true;
             }
             
-            // 2. check system admin access
-            if (grantee.getBooleanAttr(Provisioning.A_zimbraIsSystemAdminAccount, false))
-                return true;
-            
             // 3. check ACL
-            Boolean result = RightChecker.canPerform(grantee, target, rightNeeded, canDelegateNeeded, via);
+            Boolean result = RightChecker.checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
             if (result != null)
                 return result.booleanValue();
             else {
@@ -224,45 +316,33 @@ public class RoleAccessManager extends AccessManager {
         return false;
     }
     
-    @Override
-    public boolean canPerform(Account grantee, Entry target, 
-                       Right rightNeeded, boolean canDelegateNeeded, 
-                       Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
-        boolean allowed = false;
-        if (rightNeeded.isPresetRight()) {
-            allowed = canPerform(grantee, target, rightNeeded, canDelegateNeeded, true, false, viaGrant);
+    private boolean checkAttrRight(Account grantee, Entry target, 
+                                   AttrRight rightNeeded, boolean canDelegateNeeded, 
+                                   Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         
-        } else if (rightNeeded.isAttrRight()) {
-            AttrRight attrRight = (AttrRight)rightNeeded;
-            if (rightNeeded.getRightType() == Right.RightType.getAttrs) {
-                Set<String> attrsToGet = attrRight.getAttrs();
-                allowed = canGetAttrsInternal(grantee, target, attrsToGet, canDelegateNeeded);
+        TargetType targetType = TargetType.getTargetType(target);
+        if (!RightChecker.rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded))
+            return false;
+        
+        boolean allowed = false;
+        
+        if (rightNeeded.getRightType() == Right.RightType.getAttrs) {
+            Set<String> attrsToGet = rightNeeded.getAttrs();
+            allowed = canGetAttrsInternal(grantee, target, attrsToGet, canDelegateNeeded);
+        } else {
+            if (attrs == null || attrs.isEmpty()) {
+                // no attr/value map, just check if all attrs in the right are covered (constraints are not checked)
+                Set<String> attrsToSet = rightNeeded.getAttrs();
+                allowed = canSetAttrsInternal(grantee, target, attrsToSet, canDelegateNeeded);
             } else {
-                if (attrs == null || attrs.isEmpty()) {
-                    // no attr/value map, just check if all attrs in the right are covered (constraints are not checked)
-                    Set<String> attrsToSet = attrRight.getAttrs();
-                    allowed = canSetAttrsInternal(grantee, target, attrsToSet, canDelegateNeeded);
-                } else {
-                    // attr/value map is provided, check it (constraints are checked)
-                    
-                    // sanity check, we should *not* be needing "can delegate"
-                    if (canDelegateNeeded)
-                        throw ServiceException.FAILURE("internal error", null);
-                    
-                    allowed = canSetAttrs(grantee, target, attrs);
-                }
+                // attr/value map is provided, check it (constraints are checked)
+                
+                // sanity check, we should *not* be needing "can delegate"
+                if (canDelegateNeeded)
+                    throw ServiceException.FAILURE("internal error", null);
+                
+                allowed = canSetAttrs(grantee, target, attrs, asAdmin);
             }
-            
-        } else if (rightNeeded.isComboRight()) {
-            // throw ServiceException.FAILURE("checking right for combo right is not supported", null);
-            
-            ComboRight comboRight = (ComboRight)rightNeeded;
-            // check all directly and indirectly contained rights
-            for (Right right : comboRight.getAllRights()) {
-                if (!canPerform(grantee, target, right, canDelegateNeeded, attrs, null)) // via is not set for combo right. maybe we should just get rid of via 
-                    return false;
-            }
-
         }
         
         return allowed;
@@ -276,61 +356,14 @@ public class RoleAccessManager extends AccessManager {
         return RightChecker.canAccessAttrs(grantee, target, rightNeeded, canDelegateNeeded);
     }
     
-    public boolean canGetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
+    private boolean canGetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
     
-    public boolean canSetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
+    private boolean canSetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
-    }
-    
-    @Override
-    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded) throws ServiceException {
-        return canGetAttrsInternal(grantee, target, attrsNeeded, false);
-    }
-    
-    @Override
-    public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
-        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
-        if (granteeAcct == null)
-            throw ServiceException.PERM_DENIED("cannot access attr");
-        
-        return canGetAttrs(granteeAcct, target, attrs);
-    }
-    
-    
-    @Override
-    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded) throws ServiceException {
-        return canSetAttrsInternal(grantee, target, attrsNeeded, false);
-    }
-    
-    @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
-        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
-        if (granteeAcct == null)
-            throw ServiceException.PERM_DENIED("cannot access attr");
-        
-        return canSetAttrs(granteeAcct, target, attrs);
-    }
-    
-    @Override
-    public boolean canSetAttrs(Account grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
-        return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
-    }
-    
-    @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
-        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
-        if (granteeAcct == null)
-            throw ServiceException.PERM_DENIED("cannot access attr");
-        
-        return canSetAttrs(granteeAcct, target, attrs);
     }
 
     

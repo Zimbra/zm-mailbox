@@ -26,10 +26,18 @@ public class RightUtil {
             return null;
     }
     
-    public static Set<ZimbraACE> getAllowedACEs(Entry entry) throws ServiceException {
+    public static Set<ZimbraACE> getAllowedNotDelegableACEs(Entry entry) throws ServiceException {
         ZimbraACL acl = getACL(entry); 
         if (acl != null)
-            return acl.getAllowedACEs();
+            return acl.getAllowedNotDelegableACEs();
+        else
+            return null;
+    }
+    
+    public static Set<ZimbraACE> getAllowedDelegableACEs(Entry entry) throws ServiceException {
+        ZimbraACL acl = getACL(entry); 
+        if (acl != null)
+            return acl.getAllowedDelegableACEs();
         else
             return null;
     }

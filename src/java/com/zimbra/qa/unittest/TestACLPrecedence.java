@@ -387,7 +387,7 @@ public class TestACLPrecedence extends TestACL {
     
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        // TestACL.logToConsole("DEBUG");
         
         TestUtil.runTest(TestACLPrecedence.class);
     }

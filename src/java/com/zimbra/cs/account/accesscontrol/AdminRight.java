@@ -7,7 +7,7 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 
-public class AdminRight extends Right {
+public abstract class AdminRight extends Right {
     // pseudo rights, should never actually be granted on any entry 
     public static AdminRight R_PSEUDO_GET_ATTRS;
     public static AdminRight R_PSEUDO_SET_ATTRS;
@@ -36,32 +36,23 @@ public class AdminRight extends Right {
         R_deleteZimlet = rm.getAdminRight("deleteZimlet");
     }
     
-    private String  mRightId;  // for custom right
-    
     protected AdminRight(String name, RightType rightType) {
         super(name, rightType);
-    }
-    
-    private void setId(String rightId) {
-        mRightId = rightId;
     }
     
     static AdminRight newAdminSystemRight(String name, RightType rightType) {
         return newAdminRight(name, rightType);
     }
-
     
     private static AdminRight newAdminRight(String name, RightType rightType) {
         if (rightType == RightType.getAttrs || rightType == RightType.setAttrs)
             return new AttrRight(name, rightType);
         else if (rightType == RightType.combo)
-            return new ComboRight(name, rightType);
+            return new ComboRight(name);
         else
-            return new AdminRight(name, rightType);
+            return new PresetRight(name);
     }
     
-
-
     /*
     String dump(StringBuilder sb) {
         // nothing in user right to dump

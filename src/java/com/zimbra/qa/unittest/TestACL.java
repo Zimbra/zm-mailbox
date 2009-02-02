@@ -19,6 +19,7 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
@@ -30,6 +31,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Zimlet;
@@ -75,6 +79,8 @@ public abstract class TestACL extends TestCase {
     protected static Right ADMIN_RIGHT_SERVER;
     protected static Right ADMIN_RIGHT_ZIMLET;
     
+    protected static Account mSysAdminAcct;
+    
     static {
         
         System.out.println();
@@ -85,6 +91,12 @@ public abstract class TestACL extends TestCase {
             // create a domain
             Domain domain = mProv.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
             
+            // create a system admin account
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraIsSystemAdminAccount, Provisioning.TRUE);
+            String sysAdminEmail = getEmailAddr("sysadmin");
+            mSysAdminAcct = mProv.createAccount(sysAdminEmail, PASSWORD, attrs);
+                
             // setup rights
             ADMIN_RIGHT_ACCOUNT           = getRight("test-preset-account");
             ADMIN_RIGHT_CALENDAR_RESOURCE = getRight("test-preset-calendarresource");
@@ -103,7 +115,18 @@ public abstract class TestACL extends TestCase {
     }
     
     String getTestName() {
-        return getName().substring(4);
+        // if not run in the test framework(when we selectively run a test by new a test and 
+        // invoke a method directly), testName will be null, just use some name, we should not 
+        // run into name clash because only that test is run
+        String testName = getName();
+        if (testName == null)
+            return "unknownTest";
+        else
+            return getName().substring(4);
+    }
+    
+    static void logToConsole(String level) {
+        ZimbraLog.toolSetupLog4j(level, "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
     }
     
     /*
@@ -267,24 +290,79 @@ public abstract class TestACL extends TestCase {
         return ACL.ANONYMOUS_ACCT;
     }
     
-    protected Account createAdminAccount(String email)throws ServiceException {
+    protected Account createAccount(String email) throws ServiceException {
+        return mProv.createAccount(email, PASSWORD, null);
+    }
+    
+    protected DistributionList createGroup(String email) throws ServiceException {
+        return mProv.createDistributionList(email, new HashMap<String, Object>());
+    }
+    
+    protected Account createAdminAccount(String email) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
         return mProv.createAccount(email, PASSWORD, attrs);
     }
+    
+    protected DistributionList createAdminGroup(String email) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+        return mProv.createDistributionList(email, attrs);
+    }
+    
+    protected void flushAccountCache(Account acct) throws ServiceException {
+        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct.getId())});
+    }
+    
+    protected void makeAccountAdmin(Account acct) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+        mProv.modifyAttrs(acct, attrs);
+        flushAccountCache(acct);
+    }
+    
+    protected void makeGroupAdmin(DistributionList group) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+        mProv.modifyAttrs(group, attrs);
+        mProv.flushCache(CacheEntryType.group, null);
+    }
+    
+    protected void makeGroupNonAdmin(DistributionList group) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.FALSE);
+        mProv.modifyAttrs(group, attrs);
+        mProv.flushCache(CacheEntryType.group, null);
+    }
+    
+    /*
+     * for now, just return the singleton mSysAdminAcct
+     * if it becomes necessary then create a new one with email name for each callsite
+     */
+    protected Account getSystemAdminAccount(String email) throws ServiceException {
+        return getSystemAdminAccount();
+    }
+
+    protected Account getSystemAdminAccount() throws ServiceException {
+        return mSysAdminAcct;
+    }
+
     
     /*
      * convenient notions so callsites don't have to deal with many various boolean values 
      * when passing args to the utility methods, also callsites code are more readable.
      */
     protected static enum AllowOrDeny {
-        ALLOW(true),
-        DENY(false);
+        ALLOW(true, false),
+        DELEGABLE(true, true),
+        DENY(false, false);
         
         boolean mAllow;
+        boolean mDelegable;
         
-        AllowOrDeny(boolean allow) {
+        AllowOrDeny(boolean allow, boolean delegable) {
             mAllow = allow;
+            mDelegable = delegable;
         }
         
         boolean deny() {
@@ -295,10 +373,15 @@ public abstract class TestACL extends TestCase {
             return mAllow;
         }
         
-        // TODO add support for RM_CAN_DELEGATE
+        boolean delegable() {
+            return mDelegable;
+        }
+        
         RightModifier toRightModifier() {
             if (deny())
                 return RightModifier.RM_DENY;
+            else if (delegable())
+                return RightModifier.RM_CAN_DELEGATE;
             else
                 return null;
         }
@@ -306,6 +389,7 @@ public abstract class TestACL extends TestCase {
     
     // shorthand notion so we don't have to refer to AllowOrDeny from callsites
     protected static final AllowOrDeny ALLOW = AllowOrDeny.ALLOW;
+    protected static final AllowOrDeny DELEGABLE = AllowOrDeny.DELEGABLE;
     protected static final AllowOrDeny DENY = AllowOrDeny.DENY;
     
     protected static enum AsAdmin {
@@ -630,7 +714,7 @@ public abstract class TestACL extends TestCase {
     }
         
     protected void verify(Account grantee, Entry target, Right right, Map<String, Object> attrs, AllowOrDeny expected) throws ServiceException {
-        boolean actual = mAM.canPerform(grantee, target, right, false, attrs, null);
+        boolean actual = mAM.canPerform(grantee, target, right, false, attrs, true, null);
         assertEquals(expected.allow(), actual);
     }
     
@@ -642,8 +726,18 @@ public abstract class TestACL extends TestCase {
      * "look for" the taret, then use the returned entry instead of giving the target entry passed in 
      * directly to RightUtil.
      * 
+     * This is for testing user rights, which goes to RightUtil directly (i.e. not through RightCommand)
+     * 
      */
     protected List<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+        /*
+         * make sure all rights are sure right, tests written earlier could still be using 
+         * this to grant
+         */
+        for (ZimbraACE ace : aces) {
+            assertTrue(ace.getRight().isUserRight());
+        }
+        
         Entry targetEntry;
         if (target instanceof Zimlet) {
             // must be by name
@@ -654,6 +748,31 @@ public abstract class TestACL extends TestCase {
             targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
         }
         return RightUtil.grantRight(mProv, targetEntry, aces);
+    }
+    
+    /*
+     * for testing admin rights
+     */
+    protected void grantRight(Account authedAcct,
+                              TargetType targetType, NamedEntry target,
+                              GranteeType granteeType, NamedEntry grantee,
+                              Right right, AllowOrDeny grant) throws ServiceException {
+        
+        RightCommand.grantRight(mProv, authedAcct,
+                                targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
+                                granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                                right.getName(), grant.toRightModifier());
+    }
+    
+    protected void grantDelegableRight(Account authedAcct,
+                                       TargetType targetType, NamedEntry target,
+                                       GranteeType granteeType, NamedEntry grantee,
+                                       Right right) throws ServiceException {
+
+        RightCommand.grantRight(mProv, authedAcct,
+                      targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
+                      granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                      right.getName(), RightModifier.RM_CAN_DELEGATE);
     }
         
     protected List<ZimbraACE> revokeRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
@@ -672,10 +791,46 @@ public abstract class TestACL extends TestCase {
         return RightUtil.revokeRight(mProv, targetEntry, aces);
     }
     
+    protected void revokeRight(Account authedAcct,
+                               TargetType targetType, NamedEntry target,
+                               GranteeType granteeType, NamedEntry grantee,
+                               Right right, AllowOrDeny grant) throws ServiceException {
+        
+        RightCommand.revokeRight(mProv, authedAcct,
+                                 targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
+                                 granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                                 right.getName(), grant.toRightModifier());
+    }
+    
+    protected void revokeDelegableRight(Account authedAcct,
+            TargetType targetType, NamedEntry target,
+            GranteeType granteeType, NamedEntry grantee,
+            Right right) throws ServiceException {
+
+        RightCommand.revokeRight(mProv, authedAcct,
+                      targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
+                      granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                      right.getName(), RightModifier.RM_CAN_DELEGATE);
+    }
+    
     static Right getRight(String right) throws ServiceException {
         return RightManager.getInstance().getRight(right);
     }
     
+    static String inlineRightGet(TargetType targetType, String attrName) {
+        return "get." + targetType.getCode() + "." + attrName;
+    }
+    
+    static String inlineRightSet(TargetType targetType, String attrName) {
+        return "set." + targetType.getCode() + "." + attrName;
+    }
+    
+    /*
+     * cleanup all "test-..." grants on global config and globalgrant entries
+     */
+    protected void cleanupGrants() throws ServiceException {
+        Account sysAdmin = getSystemAdminAccount();
+    }
     
 /*
   <key name="zimbra_class_accessmanager">
@@ -687,13 +842,14 @@ public abstract class TestACL extends TestCase {
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
         
         // run all ACL tests
-        TestUtil.runTest(TestACLGrantee.class);
-        TestUtil.runTest(TestACLTarget.class);
-        TestUtil.runTest(TestACLPrecedence.class);
+        TestUtil.runTest(TestACLGrantee.class);    // all user rights for now
+        TestUtil.runTest(TestACLPrecedence.class); // all user rights for now
         
         if (mAM instanceof RoleAccessManager) {
+            TestUtil.runTest(TestACLTarget.class);
             TestUtil.runTest(TestACLAttrRight.class);
             TestUtil.runTest(TestACLRight.class);
+            TestUtil.runTest(TestACLGrant.class);
         }
     }
 

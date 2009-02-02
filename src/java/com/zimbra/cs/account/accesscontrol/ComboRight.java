@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SetUtil;
 
 public class ComboRight extends AdminRight {
     // directly contained rights
@@ -18,8 +19,13 @@ public class ComboRight extends AdminRight {
     // all attr rights contained in this combo right
     private Set<AttrRight> mAttrRights = new HashSet<AttrRight>();
     
-    ComboRight(String name, RightType rightType) {
-        super(name, rightType);
+    ComboRight(String name) {
+        super(name, RightType.combo);
+    }
+    
+    @Override
+    public boolean isComboRight() {
+        return true;
     }
     
     public String dump(StringBuilder sb) {
@@ -41,10 +47,37 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
-    boolean applicableOnTargetType(TargetType targetType) {
+    boolean executableOnTargetType(TargetType targetType) {
         return true;
     }
 
+    @Override
+    boolean isGrantableOnTargetType(TargetType targetType) {
+        // true if *all* of the rights in the combo right are 
+        // grantable on targetType
+        for (Right r : getAllRights()) {
+            if (!r.isGrantableOnTargetType(targetType))
+                return false;
+        }
+        return true;
+    }
+    
+    @Override
+    protected Set<TargetType> getGrantableTargetTypes() {
+        // return *intersect* of target types from which *all* of the target types
+        // for the right can inherit from
+        Set<TargetType> targetTypes = null;
+        for (Right r : getAllRights()) {
+            Set<TargetType> tts = r.getGrantableTargetTypes();
+            if (targetTypes == null)
+                targetTypes = tts;
+            else
+                targetTypes = SetUtil.intersect(targetTypes, tts);
+        }
+        
+        return targetTypes;
+    }
+    
     @Override
     void setTargetType(TargetType targetType) throws ServiceException {
         throw ServiceException.FAILURE("target type is now allowed for combo right", null);

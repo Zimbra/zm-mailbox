@@ -85,21 +85,25 @@ public class TestACLRight extends TestACL {
         String testName = getTestName();
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
          */
         Right right = GET_SOME_ATTRS_RIGHT;
-        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, right, ALLOW);
         
         verify(GA, TA, GET_SOME_ATTRS_RIGHT, null, ALLOW);
         verify(GA, TA, GET_ALL_ATTRS_RIGHT, null, DENY);
@@ -112,21 +116,25 @@ public class TestACLRight extends TestACL {
         String testName = getTestName();
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
          */
         Right right = SET_SOME_ATTRS_RIGHT;
-        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, right, ALLOW);
         
         verify(GA, TA, GET_SOME_ATTRS_RIGHT, null, ALLOW);
         verify(GA, TA, GET_ALL_ATTRS_RIGHT, null, DENY);
@@ -139,21 +147,25 @@ public class TestACLRight extends TestACL {
         String testName = getTestName();
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
          */
         Right right = SET_SOME_ATTRS_RIGHT;
-        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, right, ALLOW);
         
         // set constraint
         Cos cos = mProv.getCOS(TA);
@@ -184,8 +196,7 @@ public class TestACLRight extends TestACL {
         //
         // grant the configure constraint right on cos to the grantee
         //
-        grants = makeUsrGrant(GA, CONFIGURE_CONSTRAINT_RIGHT, ALLOW);
-        grantRight(TargetType.cos, cos, grants);
+        grantRight(authedAcct, TargetType.cos, cos, GranteeType.GT_USER, GA, CONFIGURE_CONSTRAINT_RIGHT, ALLOW);
         
         // now can set attrs beyond constraint
         verify(GA, TA, SET_SOME_ATTRS_RIGHT, ATTRS_IN_SET_SOME_ATTRS_RIGHT_VIOLATE_CONSTRAINT, ALLOW);
@@ -199,21 +210,25 @@ public class TestACLRight extends TestACL {
         String testName = getTestName();
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
          */
         Right right = SET_ALL_ATTRS_RIGHT;
-        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, right, ALLOW);
         
         // set constraint
         Cos cos = mProv.getCOS(TA);
@@ -246,22 +261,26 @@ public class TestACLRight extends TestACL {
         String testName = getTestName();
 
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
          */
-        Right right = getRight("test-combo-MultiTargetTypes-top");
-        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
+        Right right = getRight("test-combo-account-domain");
         
         /*
          * targets
          */
         String domainName = getSubDomainName(testName);
         Domain TD = mProv.createDomain(domainName, new HashMap<String, Object>());
-        grantRight(TargetType.domain, TD, grants);
+        grantRight(authedAcct, TargetType.domain, TD, GranteeType.GT_USER, GA, right, ALLOW);
         
         // create an account in the domain
         Account TA = mProv.createAccount("user1@"+domainName, PASSWORD, null);
@@ -275,32 +294,32 @@ public class TestACLRight extends TestACL {
          * check preset right
          */
         // 1. account right
-        verify(GA, TD, AdminRight.R_renameAccount, null, DENY);
-        verify(GA, TA, AdminRight.R_renameAccount, null, ALLOW);
+        verify(GA, TD, getRight("test-preset-account"), null, DENY);
+        verify(GA, TA, getRight("test-preset-account"), null, ALLOW);
         
         // 2. domain right
-        verify(GA, TD, AdminRight.R_createAccount, null, ALLOW);
-        verify(GA, TA, AdminRight.R_createAccount, null, DENY);
+        verify(GA, TD, getRight("test-preset-domain"), null, ALLOW);
+        verify(GA, TA, getRight("test-preset-domain"), null, DENY);
         
         // 3. not covered right
-        verify(GA, TD, AdminRight.R_renameCos, null, DENY);
+        verify(GA, TD, getRight("test-preset-cos"), null, DENY);
         
         /*
          * check setAttrs right
          */
         // 1. account right
-        verify(GA, TD, getRight("test-setAttrs-account-1"), null, DENY);
-        verify(GA, TA, getRight("test-setAttrs-account-1"), null, ALLOW);
-        verify(GA, TD, getRight("test-setAttrs-account-2"), null, DENY);
-        verify(GA, TA, getRight("test-setAttrs-account-2"), null, ALLOW);
+        verify(GA, TD, getRight("test-setAttrs-account"), null, DENY);
+        verify(GA, TA, getRight("test-setAttrs-account"), null, ALLOW);
+        verify(GA, TD, getRight("test-setAttrs-distributionlist"), null, DENY);
+        verify(GA, TA, getRight("test-setAttrs-distributionlist"), null, DENY);
         
         // 2. domain right
         verify(GA, TD, getRight("test-setAttrs-domain"), null, ALLOW);
         verify(GA, TA, getRight("test-setAttrs-domain"), null, DENY);
         
         // 3. account and domain right
-        verify(GA, TD, getRight("test-setAttrs-account-domain"), null, ALLOW);
-        verify(GA, TA, getRight("test-setAttrs-account-domain"), null, ALLOW);
+        verify(GA, TD, getRight("test-setAttrs-accountDomain"), null, ALLOW);
+        verify(GA, TA, getRight("test-setAttrs-accountDomain"), null, ALLOW);
         
         // 4. not covered right
         verify(GA, TD, getRight("modifyServer"), null, DENY);
@@ -325,53 +344,23 @@ public class TestACLRight extends TestACL {
         
         // 2. domain attrs
         expectedAttrs = new HashSet<String>();
+        expectedAttrs.add(Provisioning.A_description);
         expectedAttrs.add(Provisioning.A_zimbraMailStatus);
         expectedAttrs.add(Provisioning.A_zimbraGalMode);
         expected = RightChecker.ALLOW_SOME_ATTRS(expectedAttrs);
         verify(GA, TD, SET, expected);
     }
     
-    
-    public void testCanGrant() throws Exception {
-        String testName = getTestName();
-
-        /*
-         * grantees
-         */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
-        
-        /*
-         * grants
-         */
-        Right right = getRight("test-combo-MultiTargetTypes-top");
-        Set<ZimbraACE> grants = makeUsrGrant(GA, right, ALLOW);
-        
-        /*
-         * targets
-         */
-        String domainName = getSubDomainName(testName);
-        Domain TD = mProv.createDomain(domainName, new HashMap<String, Object>());
-        grantRight(TargetType.domain, TD, grants);
-        
-        // create an account in the domain
-        Account TA = mProv.createAccount("user1@"+domainName, PASSWORD, null);
-        
-        // cannot be granted on an account target because some rights do not apply on account
-        boolean good = false;
-        try {
-            grantRight(TargetType.domain, TA, grants);
-        } catch (ServiceException e) {
-            if (e.getCode().equals(ServiceException.INVALID_REQUEST))
-                good = true;
-        }
-        assertTrue(good);
-    }
-    
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        // TestACL.logToConsole("DEBUG");
         
         TestUtil.runTest(TestACLRight.class);
+        
+        /*
+        TestACLRight test = new TestACLRight();
+        test.testCanGrant();
+        */
     }
     
 }

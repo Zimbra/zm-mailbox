@@ -17,6 +17,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -83,9 +84,14 @@ public class TestACLAttrRight extends TestACL {
         System.out.println("Testing " + testName);
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
@@ -95,13 +101,12 @@ public class TestACLAttrRight extends TestACL {
             someRight = ATTR_RIGHT_GET_SOME;
         else
             someRight = ATTR_RIGHT_SET_SOME;
-        Set<ZimbraACE> grants = makeUsrGrant(GA, someRight, grant);
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, someRight, grant);
         
         verify(GA, TA, getOrSet, expected);
     }
@@ -113,9 +118,14 @@ public class TestACLAttrRight extends TestACL {
         System.out.println("Testing " + testName);
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
@@ -125,13 +135,12 @@ public class TestACLAttrRight extends TestACL {
             allRight = ATTR_RIGHT_GET_ALL;
         else
             allRight = ATTR_RIGHT_SET_ALL;
-        Set<ZimbraACE> grants = makeUsrGrant(GA, allRight, grant);
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, allRight, grant);
         
         verify(GA, TA, getOrSet, expected);
     }
@@ -144,9 +153,14 @@ public class TestACLAttrRight extends TestACL {
         System.out.println("Testing " + testName);
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
@@ -160,14 +174,13 @@ public class TestACLAttrRight extends TestACL {
             someRight = ATTR_RIGHT_SET_SOME;
             allRight = ATTR_RIGHT_SET_ALL;
         }
-        Set<ZimbraACE> grants = makeUsrGrant(GA, someRight, some);
-        grants.add(newUsrACE(GA, allRight, all));
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, grants);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, someRight, some);
+        grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, allRight, all);
         
         verify(GA, TA, getOrSet, expected);
     }
@@ -189,10 +202,15 @@ public class TestACLAttrRight extends TestACL {
         System.out.println("Testing " + testName);
         
         /*
+         * setup authed account
+         */
+        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        
+        /*
          * grantees
          */
-        Account GA = mProv.createAccount(getEmailAddr(testName, "GA"), PASSWORD, null);
-        DistributionList GG = mProv.createDistributionList(getEmailAddr(testName, "GG"), new HashMap<String, Object>());
+        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        DistributionList GG = createAdminGroup(getEmailAddr(testName, "GG"));
         mProv.addMembers(GG, new String[] {GA.getName()});
         
         /*
@@ -207,19 +225,20 @@ public class TestACLAttrRight extends TestACL {
             someRight = ATTR_RIGHT_SET_SOME;
             allRight = ATTR_RIGHT_SET_ALL;
         }
-        Set<ZimbraACE> grants = makeUsrGrant(GA, someRight, some);
-        grants.add(newUsrACE(GA, allRight, all));
-        
-        Set<ZimbraACE> closerGrant = someIsCloser? makeUsrGrant(GA, someRight, some) : makeUsrGrant(GA, allRight, all);
-        Set<ZimbraACE> fartherGrant = someIsCloser? makeGrpGrant(GG, allRight, all) : makeGrpGrant(GG, someRight, some);
-       
         
         /*
          * targets
          */
         Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
-        grantRight(TargetType.account, TA, closerGrant);
-        grantRight(TargetType.account, TA, fartherGrant);
+        
+        if (someIsCloser) {
+            grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, someRight, some);
+            grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_GROUP, GG, allRight, all);
+        } else {
+            grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, allRight, all);
+            grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_GROUP, GG, someRight, some);
+        }
+
         
         verify(GA, TA, getOrSet, expected);
     }
@@ -249,7 +268,6 @@ public class TestACLAttrRight extends TestACL {
         someAllSameLevel(DENY,  ALLOW, GET, EXPECTED_ALL_MINUS_SOME);
         someAllSameLevel(ALLOW, DENY,  GET, RightChecker.DENY_ALL_ATTRS());
         someAllSameLevel(DENY,  DENY,  GET, RightChecker.DENY_ALL_ATTRS());
-        
     }
 
     public void testTwoGrantsDiffLevel() throws Exception {
@@ -279,7 +297,7 @@ public class TestACLAttrRight extends TestACL {
     
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        // TestACL.logToConsole("DEBUG");
         
         TestUtil.runTest(TestACLAttrRight.class);
     }

@@ -5,18 +5,13 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GrantRight extends RightDocumentHandler {
@@ -44,6 +39,7 @@ public class GrantRight extends RightDocumentHandler {
         RightModifier rightModifier = getRightModifier(eRight);
         
         RightCommand.grantRight(Provisioning.getInstance(),
+                                getAuthenticatedAccount(zsc),
                                 targetType, targetBy, target,
                                 granteeType, granteeBy, grantee,
                                 right, rightModifier);

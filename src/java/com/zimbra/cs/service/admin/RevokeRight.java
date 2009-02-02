@@ -39,6 +39,7 @@ public class RevokeRight extends RightDocumentHandler {
         RightModifier rightModifier = GrantRight.getRightModifier(eRight);
         
         RightCommand.revokeRight(Provisioning.getInstance(),
+                                 getAuthenticatedAccount(zsc),
                                  targetType, targetBy, target,
                                  granteeType, granteeBy, grantee,
                                  right, rightModifier);

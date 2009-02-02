@@ -15,7 +15,10 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -55,6 +58,7 @@ public class TestACLGrantee extends TestACL {
          * setup targets
          */
         Account target = mProv.createAccount(getEmailAddr(testName, "target"), PASSWORD, null);
+        
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newUsrACE(goodguy, UserRight.R_viewFreeBusy, ALLOW));
         aces.add(newUsrACE(goodguy, UserRight.R_invite, ALLOW));
@@ -623,7 +627,7 @@ public class TestACLGrantee extends TestACL {
     
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        // TestACL.logToConsole("DEBUG");
         
         TestUtil.runTest(TestACLGrantee.class);
     }

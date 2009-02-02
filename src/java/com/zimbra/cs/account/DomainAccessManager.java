@@ -250,32 +250,32 @@ public class DomainAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException {
+    public boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
     
     @Override
-    public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
+    public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
     
     @Override
-    public boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException {
+    public boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
     
     @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
     
     @Override
-    public boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException {
+    public boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
     
     @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
 

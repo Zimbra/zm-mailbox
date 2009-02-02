@@ -21,6 +21,16 @@ public class UserRight extends Right {
         super(name, RightType.preset);
     }
     
+    @Override
+    public boolean isUserRight() {
+        return true;
+    }
+    
+    @Override
+    public boolean isPresetRight() {
+        return true;
+    }
+    
     /*
     String dump(StringBuilder sb) {
         // nothing in user right to dump

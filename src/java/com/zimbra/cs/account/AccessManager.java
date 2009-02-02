@@ -121,29 +121,30 @@ public abstract class AccessManager {
         return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, Map<String, Object> attrs, ViaGrant viaGrant) throws ServiceException {
-        throw ServiceException.FAILURE("not supported", null);
-    }
-    
     /*
      * returns if grantee can get attrs on target
      */
-    public abstract boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException;
-    public abstract boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException;
+    public abstract boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
     /*
      * returns if grantee can set attrs on target, constraints are NOT checked
      */
-    public abstract boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs) throws ServiceException;
+    public abstract boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
     /*
      * returns if grantee can set attrs to desired values on target, constraints DOES get checked.
      */
-    public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs) throws ServiceException;
+    public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
     
+    
+    // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+                              Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
 
 
     /**

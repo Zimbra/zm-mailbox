@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 
@@ -17,6 +18,11 @@ public class AttrRight extends AdminRight {
     
     AttrRight(String name, RightType rightType) {
         super(name, rightType);
+    }
+    
+    @Override
+    public boolean isAttrRight() {
+        return true;
     }
     
     public String dump(StringBuilder sb) {
@@ -41,8 +47,32 @@ public class AttrRight extends AdminRight {
     }
     
     @Override
-    boolean applicableOnTargetType(TargetType targetType) {
+    boolean executableOnTargetType(TargetType targetType) {
         return mTargetTypes.contains(targetType);
+    }
+    
+    @Override
+    boolean isGrantableOnTargetType(TargetType targetType) {
+        // return true if *any* of the applicable target types for the right 
+        // can inherit from targetType
+        for (TargetType tt : getTargetTypes()) {
+            if (targetType.isInheritedBy(tt))
+                return true;
+        }
+
+        return false;
+    }
+    
+    @Override
+    protected Set<TargetType> getGrantableTargetTypes() {
+        // return *union* of target types from which *any* of the target types
+        // for the right can inherit from
+        Set<TargetType> targetTypes = new HashSet<TargetType>();
+        for (TargetType tt : getTargetTypes()) {
+            SetUtil.union(targetTypes, tt.inheritFrom());
+        }
+        
+        return targetTypes;
     }
 
     @Override
@@ -110,8 +140,19 @@ public class AttrRight extends AdminRight {
         return AttributeManager.getInstance().getAllAttrsInClass(tt.getAttributeClass());
     }
     
-    // setAttrs imply getAttrs on the same set of attrs
-    boolean applicableToRightType(RightType needed) {
+    
+    /**
+     * returns if this right is suitable or the needed right
+     * 
+     * it is suitable if:
+     *     - this right and the needed right type is the same get/set
+     *     or
+     *     - this right is set and the needed right is get
+     * 
+     * @param needed
+     * @return
+     */
+    boolean suitableFor(RightType needed) {
         if (needed == mRightType ||
             needed == RightType.getAttrs && mRightType == RightType.setAttrs)
             return true;

@@ -50,7 +50,20 @@ public enum TargetType {
     
     private boolean mNeedsTargetIdentity;
     private AttributeClass mAttrClass;
-    private Set<TargetType> mApplicableTargetTypes;
+    
+    
+    //
+    // mInheritedByTargetTypes and mInheritFromTargetTypes represents 
+    // the same fact from two opposite directions
+    //
+    
+    // set of designated target types for a right that can be 
+    // inherited from this target type
+    private Set<TargetType> mInheritedByTargetTypes;
+    
+    // set of target type from which the designated target type
+    // for a right can inherit from
+    private Set<TargetType> mInheritFromTargetTypes;
     
     static {
         init();
@@ -68,20 +81,53 @@ public enum TargetType {
         mAttrClass = attrClass;
     }
     
-    void setApplicableTargetTypes(TargetType[] applicableTargetTypes) {
-        mApplicableTargetTypes = (applicableTargetTypes==null)? null : new HashSet<TargetType>(Arrays.asList(applicableTargetTypes));
+    private void setInheritedByTargetTypes(TargetType[] targetTypes) {
+        mInheritedByTargetTypes = (targetTypes==null)? null : new HashSet<TargetType>(Arrays.asList(targetTypes));
     }
     
     static void init() {
-        TargetType.account.setApplicableTargetTypes(new TargetType[]{TargetType.account});
-        TargetType.resource.setApplicableTargetTypes(new TargetType[]{TargetType.account, TargetType.resource});
-        TargetType.distributionlist.setApplicableTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist});
-        TargetType.domain.setApplicableTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist, TargetType.domain});
-        TargetType.cos.setApplicableTargetTypes(new TargetType[]{TargetType.cos});
-        TargetType.server.setApplicableTargetTypes(new TargetType[]{TargetType.server});
-        TargetType.xmppcomponent.setApplicableTargetTypes(new TargetType[]{TargetType.xmppcomponent});
-        TargetType.config.setApplicableTargetTypes(new TargetType[]{TargetType.config});
-        TargetType.global.setApplicableTargetTypes(null);
+        TargetType.account.setInheritedByTargetTypes(new TargetType[]{TargetType.account});
+        TargetType.resource.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.resource});
+        TargetType.distributionlist.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist});
+        TargetType.domain.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist, TargetType.domain});
+        TargetType.cos.setInheritedByTargetTypes(new TargetType[]{TargetType.cos});
+        TargetType.server.setInheritedByTargetTypes(new TargetType[]{TargetType.server});
+        TargetType.xmppcomponent.setInheritedByTargetTypes(new TargetType[]{TargetType.xmppcomponent});
+        TargetType.zimlet.setInheritedByTargetTypes(new TargetType[]{TargetType.zimlet});
+        TargetType.config.setInheritedByTargetTypes(new TargetType[]{TargetType.config});
+        TargetType.global.setInheritedByTargetTypes(null);  // inherited by all
+        
+        // compute mInheritFromTargetTypes from mInheritedByTargetTypes
+        for (TargetType inheritFrom : TargetType.values()) {
+            inheritFrom.mInheritFromTargetTypes = new HashSet<TargetType>();
+            
+            for (TargetType inheritedBy : TargetType.values()) {
+                if (inheritedBy.mInheritedByTargetTypes == null ||
+                    inheritedBy.mInheritedByTargetTypes.contains(inheritFrom))
+                    inheritFrom.mInheritFromTargetTypes.add(inheritedBy);
+            }
+        }
+    }
+    
+    /**
+     * returns if targetType can inherit from this targetType
+     * 
+     * @param targetType the targetType of question
+     * @return
+     */
+    boolean isInheritedBy(TargetType targetType) {
+        if (mInheritedByTargetTypes == null)
+            return true;
+        else
+            return mInheritedByTargetTypes.contains(targetType);
+    }
+    
+    /**
+     * returns the set of target types this target type can inherit from
+     * @return
+     */
+    Set<TargetType> inheritFrom() {
+        return mInheritFromTargetTypes;
     }
     
     public static TargetType fromString(String s) throws ServiceException {
@@ -102,43 +148,6 @@ public enum TargetType {
     
     AttributeClass getAttributeClass() {
         return mAttrClass;
-    }
-    
-    /**
-     * returns if a right is grantable on this target type(right granted on) entry
-     * 
-     * @param right
-     * @return
-     */
-    boolean isRightGrantableOnTargetType(Right right) throws ServiceException {
-        
-        if (mApplicableTargetTypes == null)
-            return true;
-        
-        if (right.isPresetRight()) {
-            return mApplicableTargetTypes.contains(right.getTargetType());
-            
-        } else if (right.isAttrRight()) {
-            AttrRight attrRight = (AttrRight)right;
-            List<TargetType> tts = attrRight.getTargetTypes();
-            
-            // true if any of the target types of the attr right is grantable on this target type
-            for (TargetType tt : attrRight.getTargetTypes()) {
-                if (mApplicableTargetTypes.contains(tt))
-                    return true;
-            }
-
-                
-        } else if (right.isComboRight()) {
-            // true if any of the rights in the combo right is grantable on this target type
-            ComboRight comboRight = (ComboRight)right;
-            for (Right r : comboRight.getAllRights())
-                if (isRightGrantableOnTargetType(r))
-                    return true;
-        } else
-            throw ServiceException.FAILURE("internal error", null);
-        
-        return false;
     }
     
     /**

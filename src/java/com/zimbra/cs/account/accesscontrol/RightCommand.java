@@ -417,17 +417,29 @@ public class RightCommand {
         return RightManager.getInstance().getRight(rightName);
     }
     
+    /*
+     * master switch to disable non-stable code
+     * return false before check into p4
+     * 
+     * remove when all is well
+     */
+    private static boolean READY() {
+        return true;
+    }
+    
     private static void verifyAccessManager() throws ServiceException {
-        // disable the check for now
-        /*
+        if (!READY())
+            return;
+        
         if (!(AccessManager.getInstance() instanceof RoleAccessManager))
-            throw ServiceException.FAILURE(LC.zimbra_class_accessmanager.key() + " must be RoleAccessManager", null);
-        */
+            throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + AccessManager.getInstance().getClass().getCanonicalName() +
+                                           ", check localonfig key " + LC.zimbra_class_accessmanager.key() + 
+                                           ", it should be set to " +  RoleAccessManager.class.getCanonicalName(), null);
     }
     
     /**
      * return rights that can be granted on target with the specified targetType
-     *     e.g. renameAccount can be granted on a domain target
+     *     e.g. renameAccount can be granted on a domain, a distribution list, or an account target
      *     
      * Note: this is not the same as "rights applicable on targetType"
      *     e.g. renameAccount is applicable on account entries. 
@@ -446,7 +458,7 @@ public class RightCommand {
         TargetType tt = (targetType==null)? null : TargetType.fromString(targetType);
         for (Map.Entry<String, AdminRight> right : allRights.entrySet()) {
             Right r = right.getValue();
-            if (tt == null || tt.isRightGrantableOnTargetType(r)) {
+            if (tt == null || r.isGrantableOnTargetType(tt)) {
                 rights.add(r);
             }
         }
@@ -482,7 +494,7 @@ public class RightCommand {
         }
         
         AccessManager am = AccessManager.getInstance();
-        return am.canPerform((Account)granteeEntry, targetEntry, r, false, attrs, via);
+        return am.canPerform((Account)granteeEntry, targetEntry, r, false, attrs, true, via);
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
@@ -541,8 +553,61 @@ public class RightCommand {
         ZimbraACL zimbraAcl = RightUtil.getACL(targetEntry);
         return new ACL(zimbraAcl);
     }
+    
+    private static void verifyGrant(Account authedAcct,
+                                    TargetType targetType, Entry targetEntry,
+                                    GranteeType granteeType, NamedEntry granteeEntry,
+                                    Right right, 
+                                    boolean revoking) throws ServiceException {
+        
+        // TODO: currently user right does not go through RightCommand, it goes 
+        //       directly to RightUtil, need to fix for the target type check.
+        //       should change the mail GrantPermission to call RightCommand or provisioning
+        //       method after we switch to the new access manager(the canPerform method is 
+        //       not supported in the current access manager).   or should we?
+        if (!right.isUserRight()) {
+            verifyAccessManager();
+            
+            /*
+             * check if the grantee is an admin account or admin group
+             * 
+             * If we are revoking, skip this check, just let the revoke through.  
+             * The grantee could have been taken away the admin privilege.
+             */ 
+            if (!revoking) {
+                if (!RightChecker.isValidGranteeForAdminRights(granteeType, granteeEntry))
+                    throw ServiceException.INVALID_REQUEST("grantee must be an admin account or group", null);
+            }
+        }
+        
+        /*
+         * check if the right can be granted on the target type
+         */
+        if (!right.isGrantableOnTargetType(targetType))
+            throw ServiceException.INVALID_REQUEST(
+                    "right " + right.getName() + 
+                    " cannot be granted on a " + targetType.getCode() + " entry. " +
+                    "It can only be granted on target types: " + right.reportGrantableTargetTypes(), null);
+        
+        /*
+         * check if the authed account can grant this right on this target
+         * 
+         * a grantor can olly the whole of part of his rights on the same target
+         * or a subset of target on which the grantors rights were granted.
+         * 
+         * if authedAcct==null, the call site is LdapProvisioning, treat it as a 
+         * system admin and skip this check.
+         */
+        if (authedAcct != null) {
+            AccessManager am = AccessManager.getInstance();
+            boolean canGrant = am.canPerform((Account)authedAcct, targetEntry, right, true, null, true, null);
+            if (!canGrant)
+                throw ServiceException.PERM_DENIED("insuffcient right to grant");
+        }
+    }
             
     public static void grantRight(Provisioning prov,
+                                  Account authedAcct,
                                   String targetType, TargetBy targetBy, String target,
                                   String granteeType, GranteeBy granteeBy, String grantee,
                                   String right, RightModifier rightModifier) throws ServiceException {
@@ -558,12 +623,11 @@ public class RightCommand {
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        if (!r.isUserRight()) {
-            verifyAccessManager();
-            
-            if (!RightChecker.isValidGranteeForAdminRights(gt, granteeEntry))
-                throw ServiceException.INVALID_REQUEST("grantee must be an admin account or group", null);
-        }
+        verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, false);
+        
+        /*
+         * TODO: grant the same negative right on sub targets!!!
+         */
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
@@ -573,6 +637,7 @@ public class RightCommand {
     }
 
     public static void revokeRight(Provisioning prov,
+                                   Account authedAcct,
                                    String targetType, TargetBy targetBy, String target,
                                    String granteeType, GranteeBy granteeBy, String grantee,
                                    String right, RightModifier rightModifier) throws ServiceException {
@@ -588,11 +653,7 @@ public class RightCommand {
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        if (!r.isUserRight()) {
-            verifyAccessManager();
-            
-            // do not check for RightChecker.isValidGrantee, just let them revoke
-        }
+        verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, true);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);

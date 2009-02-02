@@ -162,7 +162,8 @@ public class LdapProvisioning extends Provisioning {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraId,
             Provisioning.A_uid,
-            Provisioning.A_zimbraACE
+            Provisioning.A_zimbraACE,
+            Provisioning.A_zimbraIsAdminGroup
     };
 
 
@@ -5581,7 +5582,8 @@ public class LdapProvisioning extends Provisioning {
     public void grantRight(String targetType, TargetBy targetBy, String target,
                            String granteeType, GranteeBy granteeBy, String grantee,
                            String right, RightModifier rightModifier) throws ServiceException {
-        RightCommand.grantRight(this, 
+        RightCommand.grantRight(this,
+                                null,
                                 targetType, targetBy, target,
                                 granteeType, granteeBy, grantee,
                                 right, rightModifier);          
@@ -5591,7 +5593,8 @@ public class LdapProvisioning extends Provisioning {
     public void revokeRight(String targetType, TargetBy targetBy, String target,
                             String granteeType, GranteeBy granteeBy, String grantee,
                             String right, RightModifier rightModifier) throws ServiceException {
-         RightCommand.revokeRight(this, 
+         RightCommand.revokeRight(this,
+                                  null,
                                   targetType, targetBy, target,
                                   granteeType, granteeBy, grantee,
                                   right, rightModifier);               
@@ -5717,6 +5720,10 @@ public class LdapProvisioning extends Provisioning {
             } else
                 sAccountCache.clear();
             return;
+        case group:
+            // TODO: support clening cache for one group entry 
+            sGroupCache.clear();
+            return; 
         case config:
             if (entries != null)
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
