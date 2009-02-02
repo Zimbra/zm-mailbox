@@ -1116,7 +1116,7 @@
         </exec>
     </target>
 
-    <target name="ldap-load" depends="zmprov-commands">
+    <target name="ldap-load">
         <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
             <socket server="${ldap.host}" port="${ldap.port}"/>
         </waitfor>
@@ -1141,11 +1141,15 @@
             <arg line="-e zimbra_user=${zimbra.user}"/>
         </java>
         <echo>Running zmprov commands</echo>
-        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-l -f ${build.zmprov} -v"/>
-        </java>
+    	<antcall target="run-zmprov-commands"/>
     </target>
 
+	<target name="run-zmprov-commands" depends="zmprov-commands">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		    <arg line="-l -f ${build.zmprov} -v"/>
+		</java>
+	</target>
+	
     <target name="zmprov-commands" depends="build-init">
         <antcall target="generate-zmprov-commands"/>
     </target>
