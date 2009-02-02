@@ -61,6 +61,7 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
@@ -1314,6 +1315,30 @@ public abstract class CalendarItem extends MailItem {
         if (xzDiscardExcepts != null)
             zcoSeriesUpdate = xzDiscardExcepts.getBoolValue();
 
+        // Is this an update to the series with UNTIL in the rule?  If so, we need to remove exceptions
+        // whose RECURRENCE-ID come later than UNTIL. (bug 11870)
+        long seriesUntil = Long.MAX_VALUE;
+        if (!isCancel && !newInvite.hasRecurId()) {
+            ParsedDateTime dtStart = newInvite.getStartTime();
+            IRecurrence recur = newInvite.getRecurrence();
+            if (recur != null && dtStart != null) {
+                ICalTimeZone tz = dtStart.getTimeZone();
+                // Find the repeating rule.
+                Iterator iter = recur.addRulesIterator();
+                if (iter != null) {
+                    for (; iter.hasNext();) {
+                        IRecurrence cur = (IRecurrence) iter.next();
+                        if (cur.getType() == Recurrence.TYPE_REPEATING) {
+                            ZRecur rrule = ((Recurrence.SimpleRepeatingRule) cur).getRule();
+                            ParsedDateTime until = rrule.getUntil();
+                            if (until != null)
+                                seriesUntil = Math.min(until.getDateForRecurUntil(tz).getTime(), seriesUntil);
+                        }
+                    }
+                }
+            }
+        }
+
         boolean addNewOne = true;
         boolean replaceExceptionBodyWithSeriesBody = false;
         boolean modifiedCalItem = false;
@@ -1331,6 +1356,17 @@ public abstract class CalendarItem extends MailItem {
                 toRemove.add(cur);
                 idxsToRemove.add(0, i);
                 continue;
+            }
+            // Remove exceptions beyond the UNTIL date. (bug 11870)
+            // Use DTSTART for comparison rather than RECURRENCE-ID.
+            if (!isCancel && cur.hasRecurId()) {
+                ParsedDateTime instDtStart = cur.getStartTime();
+                if (instDtStart != null && instDtStart.getUtcTime() > seriesUntil) {
+                    modifiedCalItem = true;
+                    toRemove.add(cur);
+                    idxsToRemove.add(0, i);
+                    continue;
+                }
             }
 
             boolean matchingRecurId = recurrenceIdsMatch(cur, newInvite);
