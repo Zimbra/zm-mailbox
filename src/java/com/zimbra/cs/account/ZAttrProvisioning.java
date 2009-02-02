@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090130-1441 */
+    /* build: 5.0 pshao 20090202-1404 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1901,6 +1901,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=172)
     public static final String A_zimbraDefaultDomainName = "zimbraDefaultDomainName";
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=805)
+    public static final String A_zimbraDistributionListSendShareMessageToNewMembers = "zimbraDistributionListSendShareMessageToNewMembers";
 
     /**
      * This attribute is used for DNS check by customers that configure their
@@ -5460,7 +5470,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServiceInstalled = "zimbraServiceInstalled";
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      */
     @ZAttr(id=357)
     public static final String A_zimbraShareInfo = "zimbraShareInfo";

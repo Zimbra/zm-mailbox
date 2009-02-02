@@ -36,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090130-1441 */
+    /* build: 5.0 pshao 20090202-1404 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -638,6 +638,88 @@ public class ZAttrDistributionList extends MailTarget {
     }
 
     /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @return zimbraDistributionListSendShareMessageToNewMembers, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=805)
+    public boolean isDistributionListSendShareMessageToNewMembers() {
+        return getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, false);
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @param zimbraDistributionListSendShareMessageToNewMembers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=805)
+    public void setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @param zimbraDistributionListSendShareMessageToNewMembers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=805)
+    public Map<String,Object> setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=805)
+    public void unsetDistributionListSendShareMessageToNewMembers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=805)
+    public Map<String,Object> unsetDistributionListSendShareMessageToNewMembers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
      * Zimbra Systems Unique Group ID
      *
@@ -959,6 +1041,122 @@ public class ZAttrDistributionList extends MailTarget {
     public Map<String,Object> unsetNotes(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNotes, "");
+        return attrs;
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @return zimbraShareInfo, or ampty array if unset
+     */
+    @ZAttr(id=357)
+    public String[] getShareInfo() {
+        return getMultiAttr(Provisioning.A_zimbraShareInfo);
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param zimbraShareInfo new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=357)
+    public void setShareInfo(String[] zimbraShareInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareInfo, zimbraShareInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param zimbraShareInfo new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=357)
+    public Map<String,Object> setShareInfo(String[] zimbraShareInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareInfo, zimbraShareInfo);
+        return attrs;
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param zimbraShareInfo new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=357)
+    public void addShareInfo(String zimbraShareInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraShareInfo, zimbraShareInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param zimbraShareInfo new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=357)
+    public Map<String,Object> addShareInfo(String zimbraShareInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraShareInfo, zimbraShareInfo);
+        return attrs;
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param zimbraShareInfo existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=357)
+    public void removeShareInfo(String zimbraShareInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraShareInfo, zimbraShareInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param zimbraShareInfo existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=357)
+    public Map<String,Object> removeShareInfo(String zimbraShareInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraShareInfo, zimbraShareInfo);
+        return attrs;
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=357)
+    public void unsetShareInfo() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareInfo, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * items an account or group has shared
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=357)
+    public Map<String,Object> unsetShareInfo(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareInfo, "");
         return attrs;
     }
 

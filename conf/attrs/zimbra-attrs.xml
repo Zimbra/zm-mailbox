@@ -1725,8 +1725,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether notebook feature should be allowed for this account or in this cos</desc>
 </attr>
 
-<attr id="357" name="zimbraShareInfo" type="string" max="1024" cardinality="multi" optionalIn="account">
-  <desc>items an account has shared</desc>
+<attr id="357" name="zimbraShareInfo" type="string" max="1024" cardinality="multi" optionalIn="account,distributionList">
+  <desc>items an account or group has shared</desc>
 </attr>
 
 <attr id="358" name="zimbraGalInternalSearchBase"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
@@ -4026,6 +4026,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="804" name="zimbraPrefReadingPaneLocation" type="enum" value="bottom,right" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
   <defaultCOSValue>bottom</defaultCOSValue>
   <desc>where the message reading pane is displayed</desc>
+</attr>
+
+<attr id="805" name="zimbraDistributionListSendShareMessageToNewMembers" type="boolean" cardinality="single" optionalIn="distributionList" since="6.0.0">
+  <desc>
+    Whether to send an email with all the shares of the group when a new member is added to the group.
+    If not set, default is to send the email.
+  </desc>
 </attr>
 
 </attrs>

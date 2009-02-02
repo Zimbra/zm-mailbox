@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090130-1441 */
+    /* build: 5.0 pshao 20090202-1404 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -25974,7 +25974,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @return zimbraShareInfo, or ampty array if unset
      */
@@ -25984,7 +25984,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param zimbraShareInfo new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25997,7 +25997,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param zimbraShareInfo new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26011,7 +26011,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param zimbraShareInfo new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26024,7 +26024,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param zimbraShareInfo new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -26038,7 +26038,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param zimbraShareInfo existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26051,7 +26051,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param zimbraShareInfo existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -26065,7 +26065,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -26077,7 +26077,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account has shared
+     * items an account or group has shared
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
