@@ -46,6 +46,7 @@ public class ZAuthToken {
     private static final String YAHOO_Y_COOKIE = "Y"; 
     private static final String YAHOO_T_COOKIE = "T";
     private static final String YAHOO_ADMIN_COOKIE = "ADMIN_AUTH_KEY";
+    private static final String YAHOO_DELEGATED_COOKIE = "DELEGATED_AUTH_KEY";
 
     private static final String YAHOO_K_ATTR = "K";
     private static final String YAHOO_H_ATTR = "H";
@@ -297,6 +298,7 @@ public class ZAuthToken {
     static class YahooAuthData {
         static final String YAHOO_Y_ATTR = "Y"; 
         static final String YAHOO_T_ATTR = "T";
+        static final String YAHOO_DELEGATED_ATTR = "DELEGATED_AUTH_KEY";
         
         static String cookieNameToAttrName(String cookieName) {
             return cookieName;  // cookie name and attr name are identical for now
@@ -320,6 +322,10 @@ public class ZAuthToken {
             if (tCookie != null)
                 cookieMap.put(YahooAuthData.attrNameToCookieName(YahooAuthData.YAHOO_T_ATTR), tCookie);
             
+            String dCookie = mAttrs.get(YahooAuthData.YAHOO_DELEGATED_ATTR);
+            if (dCookie != null)
+            	cookieMap.put(YahooAuthData.attrNameToCookieName(YahooAuthData.YAHOO_DELEGATED_ATTR), dCookie);
+            
             if (cookieMap.size() == 0)
                 cookieMap = null;
         }
@@ -330,11 +336,12 @@ public class ZAuthToken {
         String yCookie = cookieMap.get(YAHOO_Y_COOKIE);
         String tCookie = cookieMap.get(YAHOO_T_COOKIE);
         String aCookie = cookieMap.get(YAHOO_ADMIN_COOKIE);
+        String dCookie = cookieMap.get(YAHOO_DELEGATED_COOKIE);
         
         String accessKey = getYahooAccessKey(request);
         String hostAccountId = getYahooHostAccountId(request);
         
-        if (yCookie != null || tCookie != null || aCookie != null || accessKey != null || hostAccountId != null) {
+        if (yCookie != null || tCookie != null || aCookie != null || dCookie != null || accessKey != null || hostAccountId != null) {
             Map<String, String> attrs = new HashMap<String, String>();
             
             if (yCookie != null)
@@ -343,6 +350,8 @@ public class ZAuthToken {
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_T_COOKIE), tCookie);
             if (aCookie != null)
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_ADMIN_COOKIE), aCookie);
+            if (dCookie != null)
+                attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_DELEGATED_COOKIE), dCookie);
             
             if (accessKey != null) 
                 attrs.put(YAHOO_K_ATTR, accessKey);
