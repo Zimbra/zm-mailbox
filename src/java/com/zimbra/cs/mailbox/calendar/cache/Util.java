@@ -75,6 +75,8 @@ public class Util {
         int moreDays = calStart.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY;
         // go back one more day, for GMT+nnnn timezones (those ahead of GMT)
         ++moreDays;
+        // go back 7 more days, because ZWC looks back up to a week to catch over due reminders
+        moreDays += 7;
         calStart.add(Calendar.DAY_OF_YEAR, -1 * moreDays);
         long start = calStart.getTimeInMillis();
 
