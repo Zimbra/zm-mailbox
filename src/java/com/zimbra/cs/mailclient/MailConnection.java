@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.Socket;
+import java.net.InetSocketAddress;
 
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
@@ -81,9 +82,6 @@ public abstract class MailConnection {
         if (!isClosed()) return;
         try {
             socket = newSocket();
-            int timeout = (int)
-                Math.min(config.getTimeout() * 1000L, Integer.MAX_VALUE);
-            socket.setSoTimeout(timeout > 0 ? timeout : Integer.MAX_VALUE);
             initStreams(new BufferedInputStream(socket.getInputStream()),
                         new BufferedOutputStream(socket.getOutputStream()));
             processGreeting();
@@ -425,7 +423,15 @@ public abstract class MailConnection {
     private Socket newSocket() throws IOException {
         SocketFactory sf = config.isSslEnabled() ?
             getSSLSocketFactory() : SocketFactory.getDefault();
-        return sf.createSocket(config.getHost(), config.getPort());
+        Socket sock = sf.createSocket();
+        int connectTimeout = (int)
+            Math.min(config.getConnectTimeout() * 1000L, Integer.MAX_VALUE);
+        sock.connect(new InetSocketAddress(config.getHost(), config.getPort()),
+            connectTimeout > 0 ? connectTimeout : Integer.MAX_VALUE);
+        int readTimeout = (int)
+            Math.min(config.getReadTimeout() * 1000L, Integer.MAX_VALUE);
+        sock.setSoTimeout(readTimeout > 0 ? readTimeout : Integer.MAX_VALUE);
+        return sock;
     }
 
     private SSLSocket newSSLSocket(Socket sock) throws IOException {

@@ -39,7 +39,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 
@@ -89,17 +88,17 @@ public class ImapSync extends MailItemImport {
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
-        config.setSynchronousMode(true);
         if (DEBUG || ds.isDebugTraceEnabled()) {
             enableTrace(config);
         }
         int timeout = LC.javamail_imap_timeout.intValue();
         if (timeout > 0) {
-            LOG.info("IMAP response timeout is %d seconds", timeout);
+            LOG.info("IMAP read timeout is %d seconds", timeout);
         } else {
-            LOG.info("IMAP response timeout is disabled");
+            LOG.info("IMAP read timeout is disabled");
         }
-        config.setTimeout(LC.javamail_imap_timeout.intValue());
+        config.setReadTimeout(LC.javamail_imap_timeout.intValue());
+        config.setConnectTimeout(config.getReadTimeout());
         // config.setRawMode(true);
         config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;

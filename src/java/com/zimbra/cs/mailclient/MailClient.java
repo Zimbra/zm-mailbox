@@ -56,7 +56,6 @@ public abstract class MailClient {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.INFO);
         config.setTrace(true);
-        config.setSynchronousMode(true);
         parseArguments(args);
         connect();
         authenticate();
@@ -66,6 +65,7 @@ public abstract class MailClient {
     protected abstract void printUsage(PrintStream ps);
     
     protected void connect() throws IOException {
+        config.setConnectTimeout(30);
         config.setTraceStream(System.out);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         connection = newConnection(config);

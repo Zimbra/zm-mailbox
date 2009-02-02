@@ -44,8 +44,8 @@ public abstract class MailConfig {
     private PrintStream traceOut;
     private SSLSocketFactory sslSocketFactory;
     private AuthenticatorFactory authenticatorFactory;
-    private int timeout;
-    private boolean synchronousMode;
+    private int readTimeout;
+    private int connectTimeout;
 
     /**                                                                 
      * Creates a new <tt>MailConfig</tt> instance.
@@ -294,21 +294,41 @@ public abstract class MailConfig {
     }
 
     /**
-     * Returns the socket I/O timeout value in seconds. 
+     * Returns the current socket read timeout value in seconds. This is the
+     * maximum number of seconds to wait for data when reading from the connection.
      *
-     * @return the socket I/O timeout in seconds, or <tt>0</tt> if infinite
+     * @return the read timeout in seconds, or <tt>0</tt> if infinite
      */
-    public int getTimeout() {
-        return timeout;
+    public int getReadTimeout() {
+        return readTimeout;
     }
 
     /**
-     * Sets the socket I/O timeout value in seconds.
+     * Sets the socket read timeout value in seconds.
      *
-     * @param secs the new socket I/O timeout in seconds
+     * @param secs the new read timeout in seconds
      */
-    public void setTimeout(int secs) {
-        timeout = secs;
+    public void setReadTimeout(int secs) {
+        readTimeout = secs;
+    }
+
+    /**
+     * Returns the socket connect timeout value in seconds. This is the maximum
+     * number of seconds to a new connection to get established.
+     *
+     * @return the socket connect timeout in seconds, or <tt>0</tt> if infinite
+     */
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    /**
+     * Sets the socket connect timeout value in seconds.
+     *
+     * @param secs the new socket connect timeout in seconds
+     */
+    public void setConnectTimeout(int secs) {
+        connectTimeout = secs;
     }
     
     /**
@@ -367,26 +387,6 @@ public abstract class MailConfig {
      */
     public void setTraceStream(PrintStream ps) {
         traceOut = ps;
-    }
-
-    /**
-     * Optionally disables asynchronous reader thread. This is useful when
-     * debugging IMAP connection problems.
-     * 
-     * @param enabled if true then disable asynchronous reader
-     */
-    public void setSynchronousMode(boolean enabled) {
-        synchronousMode = enabled;
-    }
-
-    /**
-     * Returns true if asynchronous reader thread should be disabled.
-     * The default is to enable the asynchronous reader.
-     * 
-     * @return true if asynchronous reader disabled, false if not
-     */
-    public boolean isSynchronousMode() {
-        return synchronousMode;
     }
 
     /**

@@ -69,7 +69,6 @@ class ImapProxy {
         config.setAuthenticationId(acct.getName());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
         config.setAuthenticatorFactory(sAuthenticatorFactory);
-        config.setSynchronousMode(true);
         config.setHost(host);
         if (server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, true)) {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapBindPort, ImapConfig.DEFAULT_PORT));

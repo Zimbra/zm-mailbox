@@ -83,7 +83,8 @@ public class Pop3Sync extends MailItemImport {
         if (DEBUG || ds.isDebugTraceEnabled()) {
             enableTrace(config);
         }
-        config.setTimeout(LC.javamail_pop3_timeout.intValue());
+        config.setReadTimeout(LC.javamail_pop3_timeout.intValue());
+        config.setConnectTimeout(config.getReadTimeout());
         // config.setRawMode(true);
         config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;

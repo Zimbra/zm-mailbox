@@ -73,14 +73,6 @@ public final class ImapConnection extends MailConnection {
     }
 
     @Override
-    public synchronized void connect() throws IOException {
-        super.connect();
-        if (!config.isSynchronousMode()) {
-            startReader();
-        }
-    }
-
-    @Override
     protected boolean isTlsEnabled() {
         return super.isTlsEnabled() && hasCapability(ImapCapabilities.STARTTLS);
     }
@@ -584,6 +576,9 @@ public final class ImapConnection extends MailConnection {
         notifyAll();
     }
 
+    //
+    // NOTE: Currently unused until read timeout implementation can be resolved.
+    //
     private void startReader() {
         if (reader != null) return;
         reader = new Runnable() {
