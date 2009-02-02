@@ -10,6 +10,11 @@
 ========================================================
 -->
 
+<!--  
+      =============
+      preset rights 
+      =============
+-->
 <right name="test-preset-account" type="preset" targetType="account">
   <desc>a preset account right</desc>
 </right>
@@ -47,6 +52,246 @@
 </right>
 
 
+<!--  
+      ==================
+      getAttrs rights 
+      
+      single target type
+      ==================
+-->
+<right name="test-getAttrs-account" type="getAttrs" targetType="account">
+  <desc>a getAttrs account right</desc>
+  <attrs>
+      <a n="description"/>
+      <a n="zimbraMailStatus"/>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
+      <a n="displayName"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-calendarresource" type="getAttrs" targetType="resource">
+  <desc>a getAttrs calendar resource right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-globalconfig" type="getAttrs" targetType="config">
+  <desc>a getAttrs global config right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-cos" type="getAttrs" targetType="cos">
+  <desc>a getAttrs cos right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-distributionlist" type="getAttrs" targetType="distributionlist">
+  <desc>a getAttrs distribution list right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-domain" type="getAttrs" targetType="domain">
+  <desc>a getAttrs domain right</desc>
+  <attrs>
+      <a n="description"/>
+      <a n="zimbraMailStatus"/>
+      <a n="zimbraGalMode"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-globalgrant" type="getAttrs" targetType="global">
+  <desc>a getAttrs global grant right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-server" type="getAttrs" targetType="server">
+  <desc>a getAttrs server right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-zimlet" type="getAttrs" targetType="zimlet">
+  <desc>a getAttrs zimlet right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+
+<!--  
+      ====================
+      getAttrs rights 
+      
+      multiple target type
+      ====================
+-->
+<right name="test-getAttrs-accountCos" type="getAttrs" targetType="account,cos">
+  <desc>a getAttrs account right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-accountDomain" type="getAttrs" targetType="account,domain">
+  <desc>a getAttrs account right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<!--  
+      ==================
+      setAttrs rights 
+      
+      single target type
+      ==================
+-->
+<right name="test-setAttrs-account" type="setAttrs" targetType="account">
+  <desc>a setAttrs account right</desc>
+  <attrs>
+      <a n="description"/>
+      <a n="zimbraMailStatus"/>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
+      <a n="displayName"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-calendarresource" type="setAttrs" targetType="resource">
+  <desc>a setAttrs calendar resource right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-globalconfig" type="setAttrs" targetType="config">
+  <desc>a setAttrs global config right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-cos" type="setAttrs" targetType="cos">
+  <desc>a setAttrs cos right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-distributionlist" type="setAttrs" targetType="distributionlist">
+  <desc>a setAttrs distribution list right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-domain" type="setAttrs" targetType="domain">
+  <desc>a setAttrs domain right</desc>
+  <attrs>
+      <a n="description"/>
+      <a n="zimbraGalMode"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-globalgrant" type="setAttrs" targetType="global">
+  <desc>a setAttrs global grant right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-server" type="setAttrs" targetType="server">
+  <desc>a setAttrs server right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-zimlet" type="setAttrs" targetType="zimlet">
+  <desc>a setAttrs zimlet right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<!--  
+      ====================
+      setAttrs rights 
+      
+      multiple target type
+      ====================
+-->
+<right name="test-setAttrs-accountCos" type="setAttrs" targetType="account,cos">
+  <desc>a setAttrs account right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-accountDomain" type="setAttrs" targetType="account,domain">
+  <desc>a setAttrs account right</desc>
+  <attrs>
+      <a n="description"/>
+      <a n="zimbraMailStatus"/>
+  </attrs>
+</right>
+
+<!--  
+      ==================
+      combo rights
+      ==================
+-->
+<right name="test-combo-account" type="combo">
+  <desc>a combo right that has only account rights</desc>
+  <rights>
+    <r n="test-preset-account"/>
+    <r n="test-getAttrs-account"/>
+    <r n="test-setAttrs-account"/>
+  </rights>
+</right>
+
+<right name="test-combo-account-cos-accountCos" type="combo">
+  <desc>a combo right that has account, cos, account/cos rights</desc>
+  <rights>
+    <r n="test-preset-account"/>
+    <r n="test-preset-cos"/>
+    <r n="test-getAttrs-accountCos"/>
+    <r n="test-setAttrs-accountCos"/>
+  </rights>
+</right>
+
+<right name="test-combo-account-domain" type="combo">
+  <desc>a combo right that has account, domain rights</desc>
+  <rights>
+    <r n="test-combo-account"/>
+    <r n="test-preset-domain"/>
+    <r n="test-setAttrs-distributionlist"/>
+    <r n="test-setAttrs-accountDomain"/>
+    <r n="test-setAttrs-domain"/>
+  </rights>
+</right>
+
+<!--  
+      ==================
+      combo rights (to clean up)
+      ==================
+-->
+
 <right name="test-getAttrs-account-2" type="getAttrs" targetType="account,cos">
   <desc>for unittest only, do we have a use case for this?</desc>
   <attrs>
@@ -75,25 +320,11 @@
   </attrs>
 </right>
 
-<right name="test-setAttrs-domain" type="setAttrs" targetType="domain">
-  <desc>modify some domain attrs</desc>
-  <attrs>
-      <a n="zimbraGalMode"/>
-  </attrs>
-</right>
-
-<right name="test-setAttrs-account-domain" type="setAttrs" targetType="account,domain">
-  <desc>modify some account and domain attrs</desc>
-  <attrs>
-      <a n="zimbraMailStatus"/>
-  </attrs>
-</right>
-
 <right name="test-combo-MultiTargetTypes-sub" type="combo">
   <desc>a combo right that spans multiple target types</desc>
   <rights>
-    <r n="createAccount"/>
-    <r n="renameAccount"/>
+    <r n="test-preset-domain"/>
+    <r n="test-preset-account"/>
     <r n="test-setAttrs-account-2"/>
     <r n="test-setAttrs-domain"/>
   </rights>
@@ -104,7 +335,7 @@
   <rights>
     <r n="test-combo-MultiTargetTypes-sub"/>
     <r n="test-setAttrs-account-1"/>
-    <r n="test-setAttrs-account-domain"/>
+    <r n="test-setAttrs-accountDomain"/>
   </rights>
 </right>
 
