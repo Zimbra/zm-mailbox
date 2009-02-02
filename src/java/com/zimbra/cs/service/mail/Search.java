@@ -542,9 +542,15 @@ public class Search extends MailDocumentHandler  {
                     }
                 }
             } catch (ServiceException e) {
-                if (e.getCode().equals(ServiceException.PERM_DENIED)) {
+                String ecode = e.getCode();
+                if (ecode.equals(ServiceException.PERM_DENIED)) {
+                    // share permission was revoked
                     ZimbraLog.calendar.warn(
                             "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
+                    // shared calendar folder was deleted by the owner
+                    ZimbraLog.calendar.warn(
+                            "Ignoring deleted calendar folder " + ifmt.formatItemId(folderId));
                 } else {
                     throw e;
                 }
