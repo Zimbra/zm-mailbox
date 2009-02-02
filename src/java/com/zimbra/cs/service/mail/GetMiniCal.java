@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -110,10 +111,17 @@ public class GetMiniCal extends CalendarRequest {
                         try {
                             doLocalFolder(octxt, tz, targetMbox, folderId, rangeStart, rangeEnd, busyDates);
                         } catch (ServiceException e) {
-                            if (e.getCode().equals(ServiceException.PERM_DENIED)) {
+                            String ecode = e.getCode();
+                            if (ecode.equals(ServiceException.PERM_DENIED)) {
+                                // share permission was revoked
                                 ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), targetMbox.getAccountId(), false);
                                 ZimbraLog.calendar.warn(
                                         "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                            } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
+                                // shared calendar folder was deleted by the owner
+                                ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), targetMbox.getAccountId(), false);
+                                ZimbraLog.calendar.warn(
+                                        "Ignoring deleted calendar folder " + ifmt.formatItemId(folderId));
                             } else {
                                 throw e;
                             }
