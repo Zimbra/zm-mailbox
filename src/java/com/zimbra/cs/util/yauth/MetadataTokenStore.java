@@ -52,6 +52,7 @@ public class MetadataTokenStore extends TokenStore {
     }
     
     public String getToken(String appId, String user) {
+        LOG.debug("Getting token for user '%s'", user);
         synchronized (this) {
             return tokens.get(key(appId, user));
         }
@@ -89,7 +90,7 @@ public class MetadataTokenStore extends TokenStore {
 
     private void loadTokens(MetadataList ml) throws ServiceException {
         int size = ml.size();
-        LOG.debug("Loading %d yauth token(s) for user '%s'", size, getAccountName());
+        LOG.debug("Loading %d yauth token(s) for mailbox '%s'", size, mbox.getId());
         for (int i = 0; i < size; i++) {
             String[] parts = ml.get(i).split(" ");
             if (parts.length == 3) {
@@ -103,7 +104,7 @@ public class MetadataTokenStore extends TokenStore {
     }
 
     private void saveTokens() {
-        LOG.debug("Saving %d yauth token(s) for user '%s'", tokens.size(), getAccountName());
+        LOG.debug("Saving %d yauth token(s) for mailbox '%s'", tokens.size(), mbox.getId());
         try {
             Metadata md = new Metadata();
             md.put(VERSION_KEY, VERSION);
@@ -129,14 +130,6 @@ public class MetadataTokenStore extends TokenStore {
         return ml;
     }
 
-    private String getAccountName() {
-        try {
-            return mbox.getAccount().getName();
-        } catch (ServiceException e) {
-            return mbox.getAccountId();
-        }
-    }
-    
     private static String key(String appId, String user) {
         return appId + " " + user;
     }

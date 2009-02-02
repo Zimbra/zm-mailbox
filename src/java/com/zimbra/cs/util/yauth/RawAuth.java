@@ -48,6 +48,10 @@ public class RawAuth implements Auth {
     static {
         if (DEBUG) {
             LOG.setLevel(Level.DEBUG);
+            System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+            System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
+            System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire.header", "debug");
+            System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "debug");
         }
     }
 
