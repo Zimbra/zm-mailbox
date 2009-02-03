@@ -18,6 +18,7 @@ package com.zimbra.cs.dav;
 
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,30 @@ import com.zimbra.cs.service.FileUploadServlet;
  *
  */
 public class DavContext {
+	
+	// extension that gets called at the end of every requests.
+	public interface Extension {
+		public void callback(DavContext ctxt);
+	}
+	
+	private static HashSet<Extension> sExtensions;
+	static {
+		synchronized (DavContext.class) {
+			if (sExtensions == null)
+				sExtensions = new HashSet<Extension>();
+		}
+	}
+	public static void addExtension(Extension ex) {
+		synchronized (sExtensions) {
+			sExtensions.add(ex);
+		}
+	}
+	public static void removeExtension(Extension ex) {
+		synchronized (sExtensions) {
+			sExtensions.remove(ex);
+		}
+	}
+	
 	private HttpServletRequest  mReq;
 	private HttpServletResponse mResp;
 	private OperationContext mOpCtxt;
@@ -221,6 +246,9 @@ public class DavContext {
 	}
 	
 	public void cleanup() {
+		if (sExtensions.size() > 0)
+			for (Extension ex : sExtensions)
+				ex.callback(this);
 		if (mUpload != null)
 			FileUploadServlet.deleteUpload(mUpload);
 		mUpload = null;
