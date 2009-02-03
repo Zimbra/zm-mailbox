@@ -341,28 +341,14 @@ public class RightManager {
     }
     
     private Right getRight(String right, boolean mustFind) throws ServiceException {
-        Right r = getSystemRight(right);
+        Right r = sUserRights.get(right);
+        if (r == null)
+            r = sAdminRights.get(right);
         
         if (mustFind && r == null)
             throw ServiceException.FAILURE("invalid right " + right, null);
         
         return r;
-    }
-    
-    public boolean rightExists(String right) throws ServiceException{
-        return (getRight(right, false) != null);
-    }
-    
-    public Right getSystemRight(String right) {
-        Right r = sUserRights.get(right);
-        if (r == null)
-            r = sAdminRights.get(right);
-        
-        return r;
-    }
-    
-    public boolean isSystemRight(String rightName) {
-        return getSystemRight(rightName) != null;
     }
     
     public Map<String, UserRight> getAllUserRights() {

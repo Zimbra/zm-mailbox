@@ -52,7 +52,7 @@ public class AttrRight extends AdminRight {
     }
     
     @Override
-    boolean isGrantableOnTargetType(TargetType targetType) {
+    boolean grantableOnTargetType(TargetType targetType) {
         // return true if *any* of the applicable target types for the right 
         // can inherit from targetType
         for (TargetType tt : getTargetTypes()) {

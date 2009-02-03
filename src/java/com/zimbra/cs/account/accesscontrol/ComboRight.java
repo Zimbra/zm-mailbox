@@ -52,11 +52,11 @@ public class ComboRight extends AdminRight {
     }
 
     @Override
-    boolean isGrantableOnTargetType(TargetType targetType) {
+    boolean grantableOnTargetType(TargetType targetType) {
         // true if *all* of the rights in the combo right are 
         // grantable on targetType
         for (Right r : getAllRights()) {
-            if (!r.isGrantableOnTargetType(targetType))
+            if (!r.grantableOnTargetType(targetType))
                 return false;
         }
         return true;

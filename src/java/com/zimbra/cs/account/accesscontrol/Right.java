@@ -116,7 +116,7 @@ public abstract class Right {
         return (mTargetType == targetType);
     }
     
-    boolean isGrantableOnTargetType(TargetType targetType) {
+    boolean grantableOnTargetType(TargetType targetType) {
         return targetType.isInheritedBy(mTargetType);
     }
     

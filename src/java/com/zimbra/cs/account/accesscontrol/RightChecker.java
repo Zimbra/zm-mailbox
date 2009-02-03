@@ -308,7 +308,7 @@ public class RightChecker {
                                                boolean canDelegateNeeded) {
         if (canDelegateNeeded) {
             // check if the right is grantable on the target
-            if (!rightNeeded.isGrantableOnTargetType(targetType))
+            if (!rightNeeded.grantableOnTargetType(targetType))
                 return false;
         } else {
             // check if the right is applicable(executable) on the target
@@ -779,14 +779,31 @@ public class RightChecker {
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
 
-        // get effective preset rights
-        Set<Right> presetRights = getEffectivePresetRights(grantee, target);
+        Set<Right> presetRights;
+        AllowedAttrs allowSetAttrs;
+        AllowedAttrs allowGetAttrs;
         
-        // get effective setAttrs rights
-        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
-        
-        // get effective getAttrs rights
-        AllowedAttrs allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, false);
+        if (isSystemAdmin(grantee, true)) {
+            // all preset rights on the target type
+            TargetType targetType = TargetType.getTargetType(target);
+            presetRights = getAllExecutablePresetRights(targetType);
+            
+            // all attrs on the target type
+            allowSetAttrs = ALLOW_ALL_ATTRS();
+            
+            // all attrs on the target type
+            allowGetAttrs = ALLOW_ALL_ATTRS();
+            
+        } else {    
+            // get effective preset rights
+            presetRights = getEffectivePresetRights(grantee, target);
+            
+            // get effective setAttrs rights
+            allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
+            
+            // get effective getAttrs rights
+            allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, false);
+        }
         
         // finally, populate our result 
         
@@ -1005,6 +1022,33 @@ public class RightChecker {
                 }
             } 
         }
+    }
+    
+    /*
+     * get all executable preset rights on a target type
+     * combo rights are expanded
+     */
+    private static Set<Right> getAllExecutablePresetRights(TargetType targetType) throws ServiceException {
+        Map<String, AdminRight> allRights = RightManager.getInstance().getAllAdminRights();
+        
+        Set<Right> rights = new HashSet<Right>();
+        
+        for (Map.Entry<String, AdminRight> right : allRights.entrySet()) {
+            Right r = right.getValue();
+            if (r.isPresetRight()) {
+                if (r.executableOnTargetType(targetType))
+                    rights.add(r);
+                
+            } else if (r.isComboRight()) {
+                ComboRight comboRight = (ComboRight)r;
+                for (Right rt : comboRight.getPresetRights()) {
+                    if (rt.executableOnTargetType(targetType))
+                        rights.add(rt);
+                }
+                
+            }
+        }
+        return rights;
     }
     
     //

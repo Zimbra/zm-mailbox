@@ -441,8 +441,8 @@ public class RightCommand {
      * return rights that can be granted on target with the specified targetType
      *     e.g. renameAccount can be granted on a domain, a distribution list, or an account target
      *     
-     * Note: this is not the same as "rights applicable on targetType"
-     *     e.g. renameAccount is applicable on account entries. 
+     * Note: this is *not* the same as "rights executable on targetType"
+     *     e.g. renameAccount is executable on account entries. 
      * 
      * @param targetType
      * @return
@@ -458,7 +458,7 @@ public class RightCommand {
         TargetType tt = (targetType==null)? null : TargetType.fromString(targetType);
         for (Map.Entry<String, AdminRight> right : allRights.entrySet()) {
             Right r = right.getValue();
-            if (tt == null || r.isGrantableOnTargetType(tt)) {
+            if (tt == null || r.grantableOnTargetType(tt)) {
                 rights.add(r);
             }
         }
@@ -583,7 +583,7 @@ public class RightCommand {
         /*
          * check if the right can be granted on the target type
          */
-        if (!right.isGrantableOnTargetType(targetType))
+        if (!right.grantableOnTargetType(targetType))
             throw ServiceException.INVALID_REQUEST(
                     "right " + right.getName() + 
                     " cannot be granted on a " + targetType.getCode() + " entry. " +
@@ -592,12 +592,16 @@ public class RightCommand {
         /*
          * check if the authed account can grant this right on this target
          * 
-         * a grantor can olly the whole of part of his rights on the same target
-         * or a subset of target on which the grantors rights were granted.
+         * a grantor can only delegate the whole or part of his rights on the 
+         * same target or a subset of target on which the grantors own rights 
+         * were granted.
          * 
          * if authedAcct==null, the call site is LdapProvisioning, treat it as a 
          * system admin and skip this check.
          */
+        if (!READY())
+            return;
+        
         if (authedAcct != null) {
             AccessManager am = AccessManager.getInstance();
             boolean canGrant = am.canPerform((Account)authedAcct, targetEntry, right, true, null, true, null);
