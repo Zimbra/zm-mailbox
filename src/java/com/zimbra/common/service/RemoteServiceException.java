@@ -34,6 +34,9 @@ public class RemoteServiceException extends ServiceException {
     public static final String SMTP_AUTH_FAILURE    = "remote.SMTP_AUTH_FAILURE";
     public static final String SMTP_AUTH_REQUIRED   = "remote.SMTP_AUTH_REQUIRED";
 
+    public static final String POP3_UIDL_REQUIRED   = "remote.POP3_UIDL_REQUIRED";
+    public static final String YMAIL_INCONSISTENT_STATE = "remote.YMAIL_INCONSISTENT_STATE";
+
     private RemoteServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
     }
@@ -92,6 +95,14 @@ public class RemoteServiceException extends ServiceException {
     
     public static RemoteServiceException SMTP_AUTH_REQUIRED(String msg, Throwable cause) {
         return new RemoteServiceException(msg, SMTP_AUTH_REQUIRED, SENDERS_FAULT, cause);
+    }
+
+    public static RemoteServiceException POP3_UIDL_REQUIRED() {
+        return new RemoteServiceException("leaving messages on server requires support for UIDL", POP3_UIDL_REQUIRED, RECEIVERS_FAULT);
+    }
+
+    public static RemoteServiceException YMAIL_INCONSISTENT_STATE() {
+        return new RemoteServiceException("Yahoo! mailbox inconsistent and is being rebuilt", YMAIL_INCONSISTENT_STATE, RECEIVERS_FAULT);
     }
     
     public static String getErrorCode(Throwable t) {
