@@ -35,7 +35,6 @@ import java.util.Set;
 import javax.servlet.http.*;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 
 public class L10nUtil {
 
@@ -56,7 +55,6 @@ public class L10nUtil {
         calendarReplySubjectAccept,
         calendarReplySubjectTentative,
         calendarReplySubjectDecline,
-        calendarReplySubjectPermissionDenied,
 
         calendarDefaultReplyAccept,
         calendarDefaultReplyTentativelyAccept,
@@ -75,6 +73,8 @@ public class L10nUtil {
         calendarResourceDeclineReasonRecurring,
         calendarResourceDeclineReasonConflict,
         calendarResourceConflictScheduledBy,
+
+        calendarUserReplyPermissionDenied,
 
         // caldav messages
         caldavCalendarDescription,
