@@ -4035,4 +4035,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="806" name="zimbraFeatureConfirmationPageEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether a confirmation page should be display after an operation is done in the UI</desc>
+</attr>
+
+
 </attrs>

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090202-1404 */
+    /* build: 5.0 pshao 20090204-1138 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2151,6 +2151,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=584)
     public static final String A_zimbraFeatureComposeInNewWindowEnabled = "zimbraFeatureComposeInNewWindowEnabled";
+
+    /**
+     * whether a confirmation page should be display after an operation is
+     * done in the UI
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
      * contact features

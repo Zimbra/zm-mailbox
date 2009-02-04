@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090202-1404 */
+    /* build: 5.0 pshao 20090204-1138 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3251,6 +3251,83 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureComposeInNewWindowEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureComposeInNewWindowEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether a confirmation page should be display after an operation is
+     * done in the UI
+     *
+     * @return zimbraFeatureConfirmationPageEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public boolean isFeatureConfirmationPageEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureConfirmationPageEnabled, false);
+    }
+
+    /**
+     * whether a confirmation page should be display after an operation is
+     * done in the UI
+     *
+     * @param zimbraFeatureConfirmationPageEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public void setFeatureConfirmationPageEnabled(boolean zimbraFeatureConfirmationPageEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, zimbraFeatureConfirmationPageEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether a confirmation page should be display after an operation is
+     * done in the UI
+     *
+     * @param zimbraFeatureConfirmationPageEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public Map<String,Object> setFeatureConfirmationPageEnabled(boolean zimbraFeatureConfirmationPageEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, zimbraFeatureConfirmationPageEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether a confirmation page should be display after an operation is
+     * done in the UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public void unsetFeatureConfirmationPageEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether a confirmation page should be display after an operation is
+     * done in the UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public Map<String,Object> unsetFeatureConfirmationPageEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, "");
         return attrs;
     }
 
