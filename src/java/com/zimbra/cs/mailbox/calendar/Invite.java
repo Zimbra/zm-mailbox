@@ -1366,11 +1366,11 @@ public class Invite {
      * because the attendee has sent us a reply to change his status.  This function writes the MetaData 
      * through to SQL and also sends a notification of MailItem change.
      * 
-     * @param other
+     * @param reply
      * @return
      * @throws ServiceException
      */
-    public boolean updateMatchingAttendees(Invite other) throws ServiceException {
+    public boolean updateMatchingAttendeesFromReply(Invite reply) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
         List<ZAttendee> attendees = getAttendees();
         
@@ -1379,27 +1379,26 @@ public class Invite {
         boolean modified = false;
         
         OUTER: 
-            for (ZAttendee otherAt : other.getAttendees()) {
+            for (ZAttendee replyAt : reply.getAttendees()) {
                 // Look up internal account for the attendee.  For internal users we want to match
                 // on all email addresses of the account.
-                Account otherAcct = null;
-                String otherAddress = otherAt.getAddress();
-                if (otherAddress != null)
-                    otherAcct = Provisioning.getInstance().get(AccountBy.name, otherAddress);
+                Account replyAcct = null;
+                String replyAddress = replyAt.getAddress();
+                if (replyAddress != null)
+                    replyAcct = Provisioning.getInstance().get(AccountBy.name, replyAddress);
                 for (ZAttendee at : attendees) {
-                    if (otherAt.addressesMatch(at) ||
-                        (otherAcct != null && CalendarItem.accountMatchesCalendarUser(otherAcct, at))) {
-                    	
+                    if (replyAt.addressesMatch(at) ||
+                        (replyAcct != null && CalendarItem.accountMatchesCalendarUser(replyAcct, at))) {
                     	// BUG:4911  When an invitee responds they include an ATTENDEE record, but
                     	// it doesn't have to have all fields.  In particular, we don't want to let them
                     	// change their ROLE...
-//                        if (otherAt.hasRole() && !otherAt.getRole().equals(at.getRole())) {
-//                            at.setRole(otherAt.getRole());
+//                        if (replyAt.hasRole() && !replyAt.getRole().equals(at.getRole())) {
+//                            at.setRole(replyAt.getRole());
 //                            modified = true;
 //                        }
                         
-                        if (otherAt.hasPartStat() && !otherAt.getPartStat().equals(at.getPartStat())) {
-                            at.setPartStat(otherAt.getPartStat());
+                        if (replyAt.hasPartStat() && !replyAt.getPartStat().equals(at.getPartStat())) {
+                            at.setPartStat(replyAt.getPartStat());
                             modified = true;
                         }
 
@@ -1407,16 +1406,19 @@ public class Invite {
                         // update the RSVP.  It seems most CUAs will send ATTENDEE record without setting
                         // RSVP.  Because RSVP=FALSE by default, transferring the RSVP value to the invite
                         // would end up inadvertently clearing the original RSVP value.
-//                        if (otherAt.hasRsvp() && !otherAt.getRsvp().equals(at.getRsvp())) {
-//                            at.setRsvp(otherAt.getRsvp());
+//                        if (replyAt.hasRsvp() && !replyAt.getRsvp().equals(at.getRsvp())) {
+//                            at.setRsvp(replyAt.getRsvp());
 //                            modified = true;
 //                        }
 
                         continue OUTER;
                     }
                 }
-                
-                toAdd.add(otherAt);
+
+                // Attendee in the reply was not in the appointment's invite.  Add the new attendee if not
+                // a decline reply.
+                if (!IcalXmlStrMap.PARTSTAT_DECLINED.equalsIgnoreCase(replyAt.getPartStat()))
+                    toAdd.add(replyAt);
             }
         
         if (toAdd.size() > 0) {
