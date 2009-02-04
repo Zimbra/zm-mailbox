@@ -18,9 +18,14 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,13 +43,15 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.util.tar.TarOutputStream;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Appointment;
@@ -66,20 +73,29 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
+import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.util.ItemData;
+import com.zimbra.cs.wiki.Wiki;
 
 public class TarFormatter extends Formatter {
     private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
     private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|]");
+    private static String UTF8 = "UTF-8";
     private static enum Resolve { Modify, Replace, Reset, Skip }
 
     private static final class SortPath implements Comparator<MailItem> {
@@ -123,9 +139,9 @@ public class TarFormatter extends Formatter {
         };
         byte[] searchTypes = {
             MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT,
-            MailItem.TYPE_DOCUMENT, MailItem.TYPE_NOTE,
-            MailItem.TYPE_APPOINTMENT, MailItem.TYPE_WIKI, MailItem.TYPE_TASK,
-            MailItem.TYPE_CHAT
+            MailItem.TYPE_DOCUMENT, MailItem.TYPE_WIKI,
+            MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK, MailItem.TYPE_CHAT,
+            MailItem.TYPE_NOTE
         };
         TarOutputStream tos = null;
         String types = context.getTypesString();
@@ -246,12 +262,15 @@ public class TarFormatter extends Formatter {
     
     private TarOutputStream saveItem(Context context, MailItem mi, 
         HashMap<Integer, String> fldrs, HashMap<Integer, Integer> cnts,
-        Set<String> names, boolean version, TarOutputStream tos)
-    throws ServiceException {
+        Set<String> names, boolean version, TarOutputStream tos) throws
+        ServiceException {
+        String charset = context.params.get("charset");
         String ext = null, name = null;
         Integer fid = mi.getFolderId();
-        InputStream is = null;
         String fldr;
+        InputStream is = null;
+        String metaParam = context.params.get(UserServlet.QP_META);
+        boolean meta = metaParam == null || !metaParam.equals("0");
         
         if (!version && mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
@@ -267,7 +286,12 @@ public class TarFormatter extends Formatter {
             if (!appt.isPublic() && !appt.allowPrivateAccess(context.authAccount,
                 context.isUsingAdminPrivileges()))
                 return tos;
-            ext = "appt";
+            if (meta) {
+                name = appt.getSubject();
+                ext = "appt";
+            } else {
+                ext = "ics";
+            }
             break;
         case MailItem.TYPE_CHAT:
             ext = "chat";
@@ -275,21 +299,9 @@ public class TarFormatter extends Formatter {
         case MailItem.TYPE_CONTACT:
             Contact ct = (Contact)mi;
             
-            if ((name = ct.get(Contact.A_fullName)) == null) {
-                String last = ct.get(Contact.A_lastName);
-
-                if ((name = ct.get(Contact.A_firstName)) == null) {
-                    if ((name = ct.get(Contact.A_nickname)) == null)
-                        if ((name = last) == null)
-                            name = ct.get(Contact.A_email);
-                } else if ((name = ct.get(Contact.A_middleName)) == null) {
-                    name = ct.get(Contact.A_firstName) + (last == null ? "" :
-                        ' ' + ct.get(Contact.A_lastName));
-                } else {
-                    name = ct.get(Contact.A_firstName) + ' ' + name +
-                        (last == null ? "" : ' ' + ct.get(Contact.A_lastName));
-                }
-            }
+            name = ct.getFileAsString();
+            if (!meta)
+                ext = "vcf";
             break;
         case MailItem.TYPE_FLAG:
             return tos;
@@ -344,8 +356,8 @@ public class TarFormatter extends Formatter {
         }
         try {
             String path = getEntryName(mi, fldr, name, ext, names);
+            byte data[] = null;
             TarEntry entry = new TarEntry(path + ".meta");
-            byte[] meta = new ItemData(mi).encode();
             long miSize = mi.getSize();
 
             if (miSize == 0 && mi.getDigest() != null) {
@@ -362,22 +374,50 @@ public class TarFormatter extends Formatter {
             entry.setGroupName(MailItem.getNameForType(mi));
             entry.setMajorDeviceId(mi.getType());
             entry.setModTime(mi.getChangeDate());
-            entry.setSize(meta.length);
-            if (tos == null) {
-                String charset = context.params.get("charset");
-                
+            if (charset == null)
+                charset = UTF8;
+            if (tos == null)
                 tos = new TarOutputStream(new GZIPOutputStream(
-                    context.resp.getOutputStream()), charset == null ? "UTF-8" :
-                    charset);
-            }
+                    context.resp.getOutputStream()), charset);
             tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
-            if (shouldReturnMeta(context)) {
+            if (meta) {
+                byte[] metaData = new ItemData(mi).encode();
+                
+                entry.setSize(metaData.length);
                 tos.putNextEntry(entry);
-                tos.write(meta);
+                tos.write(metaData);
                 tos.closeEntry();
+            } else if (mi instanceof CalendarItem) {
+                Browser browser = HttpUtil.guessBrowser(context.req);
+                CalendarItem ci = (CalendarItem)mi;
+                List<CalendarItem> calItems = new ArrayList<CalendarItem>();
+                Collection<Instance> instances = ci.expandInstances(
+                    context.getStartTime(), context.getEndTime(), false);
+                boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);
+                boolean useOutlookCompatMode = Browser.IE.equals(browser);
+                OperationContext octxt = new OperationContext(context.authAccount,
+                    context.isUsingAdminPrivileges());
+                StringWriter writer = new StringWriter();
+                
+                if (!instances.isEmpty()) {
+                    calItems.add(ci);
+                    context.targetMailbox.writeICalendarForCalendarItems(
+                        writer, octxt, calItems, useOutlookCompatMode, true,
+                        forceOlsonTZID, true);
+                    data = writer.toString().getBytes(charset);
+                }
+            } else if (mi instanceof Contact) {
+                VCard vcf = VCard.formatContact((Contact)mi);
+                
+                data = vcf.formatted.getBytes(charset);
             }
-            if (is != null) {
-                entry.setName(path);
+            entry.setName(path);
+            if (data != null) {
+                entry.setSize(data.length);
+                tos.putNextEntry(entry);
+                tos.write(data);
+                tos.closeEntry();
+            } else if (is != null) {
                 if (context.shouldReturnBody()) {
                     byte buf[] = new byte[tos.getRecordSize() * 20];
                     int in;
@@ -402,7 +442,8 @@ public class TarFormatter extends Formatter {
                     }
                 } else {
                     // Read headers into memory, since we need to write the size first.
-                    byte[] headerData = HeadersOnlyInputStream.getHeaders(is);
+                    byte headerData[] = HeadersOnlyInputStream.getHeaders(is);
+                    
                     entry.setSize(headerData.length);
                     tos.putNextEntry(entry);
                     tos.write(headerData);
@@ -415,18 +456,6 @@ public class TarFormatter extends Formatter {
             ByteUtil.closeStream(is);
         }
         return tos;
-    }
-    
-    /**
-     * Returns <tt>true</tt> if {@link UserServlet#QP_META} is not
-     * specified or set to a non-zero value.
-     */
-    static boolean shouldReturnMeta(Context context) {
-        String bodyVal = context.params.get(UserServlet.QP_META);
-        if (bodyVal != null && bodyVal.equals("0")) {
-            return false;
-        }
-        return true;
     }
     
     private String getEntryName(MailItem mi, String fldr, String name,
@@ -464,7 +493,6 @@ public class TarFormatter extends Formatter {
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         long last = System.currentTimeMillis();
-
         String types = context.getTypesString();
         String charset = context.params.get("charset");
         String resolve = context.params.get("resolve");
@@ -504,14 +532,15 @@ public class TarFormatter extends Formatter {
             }
 
             TarInputStream tis = new TarInputStream(new GZIPInputStream(
-                context.getRequestInputStream(-1)), charset == null ? "UTF-8" : charset);
+                context.getRequestInputStream(-1)), charset == null ? UTF8 :
+                charset);
 
             List<Folder> flist = fldr.getSubfolderHierarchy();
+            
             if (subfolder != null && !subfolder.equals("")) {
                 fldr = createPath(context, fmap, fldr.getPath() + subfolder, Folder.TYPE_UNKNOWN);
                 flist = fldr.getSubfolderHierarchy();
             }
-
             if (r == Resolve.Reset) {
                 for (Folder f : flist) {
                     try {
@@ -571,33 +600,41 @@ public class TarFormatter extends Formatter {
             }
             try {
                 TarEntry te;
+                Boolean meta = false;
+                
                 while ((te = tis.getNextEntry()) != null) {
                     if (System.currentTimeMillis() - last > interval) {
                         updateClient(context, true);
                         last = System.currentTimeMillis();
                     }
                     if (te.getName().endsWith(".meta")) {
+                        meta = true;
                         if (id != null)
-                            recoverItem(context, fldr, fmap, digestMap, idMap,
+                            addItem(context, fldr, fmap, digestMap, idMap,
                                 ids, searchTypes, r, id, tis, null, errs);
                         id = new ItemData(readTarEntry(tis, te));
                         continue;
                     }
                     if (id == null) {
-                        addError(errs, te.getName(), "item content missing meta");
+                        if (meta)
+                            addError(errs, te.getName(),
+                                "item content missing meta information");
+                        else
+                            addData(context, fldr, fmap, searchTypes, r, tis,
+                                te, errs);
                     } else if (id.ud.type != te.getMajorDeviceId() ||
                         (id.ud.getBlobDigest() != null && id.ud.size !=
                         te.getSize())) {
                         addError(errs, te.getName(),
                             "mismatched item content and meta");
                     } else {
-                        recoverItem(context, fldr, fmap, digestMap, idMap, ids,
+                        addItem(context, fldr, fmap, digestMap, idMap, ids,
                             searchTypes, r, id, tis, te, errs);
                     }
                     id = null;
                 }
                 if (id != null)
-                    recoverItem(context, fldr, fmap, digestMap, idMap, ids,
+                    addItem(context, fldr, fmap, digestMap, idMap, ids,
                         searchTypes, r, id, tis, null, errs);
             } catch (Exception e) {
                 addError(errs, id == null ? null : id.path,
@@ -674,14 +711,14 @@ public class TarFormatter extends Formatter {
 
     private String string(String s) { return s == null ? new String() : s; }
 
-    private void recoverItem(Context context, Folder fldr,
+    private void addItem(Context context, Folder fldr,
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
         Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
         ItemData id, TarInputStream tis, TarEntry te, StringBuffer errs) throws
         MessagingException, ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
-            MailItem mi = MailItem.constructItem(mbox,id.ud);
+            MailItem mi = MailItem.constructItem(mbox, id.ud);
             MailItem newItem = null, oldItem = null;
             OperationContext oc = context.opContext;
             String path;
@@ -1028,13 +1065,14 @@ public class TarFormatter extends Formatter {
                         oldItem = oldNote;
                         if (r == Resolve.Modify)
                             mbox.editNote(oc, oldItem.getId(), new
-                                String(readTarEntry(tis, te), "UTF-8"));
+                                String(readTarEntry(tis, te), UTF8));
                     }
                     break;
                 }
                 if (oldItem == null) {
                     newItem = mbox.createNote(oc, new String(readTarEntry(tis, te),
-                        "UTF-8"), note.getBounds(), note.getColor(), fldr.getId());
+                        UTF8), note.getBounds(), note.getColor(),
+                        fldr.getId());
                 }
                 break;
             case MailItem.TYPE_SEARCHFOLDER:
@@ -1104,6 +1142,153 @@ public class TarFormatter extends Formatter {
             }
         } catch (Exception e) {
             addError(errs, id.path, e.getMessage());
+        }
+    }
+
+    private void addData(Context context, Folder fldr,
+        Map<Object, Folder> fmap, byte[] searchTypes, Resolve r,
+        TarInputStream tis, TarEntry te, StringBuffer errs) throws
+        MessagingException, ServiceException {
+        try {
+            int defaultFldr;
+            Mailbox mbox = fldr.getMailbox();
+            String dir, file;
+            String name = te.getName();
+            int idx = name.lastIndexOf('/');
+            MailItem newItem = null, oldItem;
+            OperationContext oc = context.opContext;
+            byte type, view;
+
+            if (idx == -1) {
+                file = name;
+                dir = "/";
+            } else {
+                file = name.substring(idx + 1);
+                dir = name.substring(0, idx + 1);
+            }
+            if (file.endsWith(".eml")) {
+                defaultFldr = Mailbox.ID_FOLDER_INBOX;
+                type = MailItem.TYPE_MESSAGE;
+                view = Folder.TYPE_MESSAGE;
+            } else if (file.endsWith(".ics")) {
+                if (dir.startsWith("Tasks/")) {
+                    defaultFldr = Mailbox.ID_FOLDER_TASKS;
+                    type = MailItem.TYPE_TASK;
+                    view = Folder.TYPE_TASK;
+                } else {
+                    defaultFldr = Mailbox.ID_FOLDER_CALENDAR;
+                    type = MailItem.TYPE_APPOINTMENT;
+                    view = Folder.TYPE_APPOINTMENT;
+                }
+            } else if (file.endsWith(".vcf")) {
+                defaultFldr = Mailbox.ID_FOLDER_CONTACTS;
+                type = MailItem.TYPE_CONTACT;
+                view = Folder.TYPE_CONTACT;
+            } else if (file.endsWith(".wiki")) {
+                defaultFldr = Mailbox.ID_FOLDER_NOTEBOOK;
+                type = MailItem.TYPE_WIKI;
+                view = Folder.TYPE_WIKI;
+            } else {
+                defaultFldr = Mailbox.ID_FOLDER_BRIEFCASE;
+                type = MailItem.TYPE_DOCUMENT;
+                view = Folder.TYPE_DOCUMENT;
+            }
+            if (searchTypes != null && Arrays.binarySearch(searchTypes, type) < 0)
+                return;
+            if (fldr.getPath().equals("/"))
+                fldr = mbox.getFolderById(oc, defaultFldr);
+            if (!dir.equals("/")) {
+                String s = fldr.getPath().substring(1) + '/';
+                
+                if (dir.startsWith(s))
+                    dir = dir.substring(s.length());
+                fldr = createPath(context, fmap, fldr.getPath() +
+                    (dir.length() == 0 ? "" : '/' + dir), view);
+            }
+            switch (type) {
+            case MailItem.TYPE_APPOINTMENT:
+            case MailItem.TYPE_TASK:
+                boolean continueOnError = context.ignoreAndContinueOnError();
+                boolean preserveExistingAlarms = context.preserveAlarms();
+                Reader reader = new InputStreamReader(tis, UTF8);
+                
+                try {
+                    if (te.getSize() <=
+                        LC.calendar_ics_import_full_parse_max_size.intValue()) {
+                        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+                        ImportInviteVisitor visitor = new ImportInviteVisitor(oc,
+                            fldr, preserveExistingAlarms);
+                        
+                        Invite.createFromCalendar(context.targetAccount, null,
+                            icals, true, continueOnError, visitor);
+                    } else {
+                        ZICalendarParseHandler handler =
+                            new IcsImportParseHandler(oc, context.targetAccount,
+                                fldr, continueOnError, preserveExistingAlarms);
+                        ZCalendarBuilder.parse(reader, handler);
+                    }
+                } finally {
+                    reader.close();
+                }
+                break;
+            case MailItem.TYPE_CONTACT:
+                List<VCard> cards = VCard.parseVCard(new String(
+                    readTarEntry(tis, te), UTF8));
+                
+                if (cards == null || cards.size() == 0 ||
+                    (cards.size() == 1 && cards.get(0).fields.isEmpty())) {
+                    addError(errs, name, "no contact fields found in vcard");
+                    return;
+                }
+                for (VCard vcf : cards) {
+                    if (vcf.fields.isEmpty())
+                        continue;
+                    mbox.createContact(oc, vcf.asParsedContact(), fldr.getId(),
+                        null);
+                }
+                break;
+            case MailItem.TYPE_DOCUMENT:
+            case MailItem.TYPE_WIKI:
+                String creator = (context.authAccount == null ? null :
+                    context.authAccount.getName());
+                
+                try {
+                    oldItem = mbox.getItemByPath(oc, file, fldr.getId());
+                    if (oldItem.getType() != type) {
+                        addError(errs, name, "cannot overwrite non matching data");
+                    } else if (r == Resolve.Replace) {
+                        mbox.delete(oc, oldItem.getId(), type);
+                        throw MailServiceException.NO_SUCH_ITEM(oldItem.getId());
+                    } else if (r != Resolve.Skip) {
+                        newItem = mbox.addDocumentRevision(oc, oldItem.getId(),
+                            type, tis, creator, oldItem.getName());
+                    }
+                } catch (NoSuchItemException e) {
+                    if (type == MailItem.TYPE_WIKI) {
+                        newItem = mbox.createWiki(oc, fldr.getId(), file,
+                            creator, tis);
+                    } else {
+                        newItem = mbox.createDocument(oc, fldr.getId(),
+                            file, null, creator, tis);
+                    }
+                }
+                if (newItem != null) {
+                    mbox.setDate(oc, newItem.getId(), type,
+                        te.getModTime().getTime());
+                    if (type == MailItem.TYPE_WIKI)
+                        Wiki.expireNotebook(fldr);
+                }
+                break;
+            case MailItem.TYPE_MESSAGE:
+                ParsedMessage pm = new ParsedMessage(tis, (int)te.getSize(),
+                    te.getModTime().getTime(), mbox.attachmentsIndexingEnabled());
+                
+                mbox.addMessage(oc, pm, fldr.getId(), true, Flag.ID_FLAG_UNREAD,
+                    null);
+                break;
+            }
+        } catch (Exception e) {
+            addError(errs, te.getName(), e.getMessage());
         }
     }
 }
