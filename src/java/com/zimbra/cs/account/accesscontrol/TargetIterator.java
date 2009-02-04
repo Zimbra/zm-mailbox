@@ -76,8 +76,10 @@ public abstract class TargetIterator{
         else if (target instanceof DistributionList) {
             // This path is called from AccessManager.canDo, the target object can be a 
             // DistributionList obtained from prov.get(DistributionListBy).  
-            // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
-            target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
+            // We require one from prov.getAclGroup(DistributionListBy) here, 
+            // call getAclGroup if it is not yet an ACL group.
+            if (!((DistributionList)target).isAclGroup())
+                target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
             iter =  new TargetIterator.DistributionListTargetIterator(prov, target);
         } else if (target instanceof Server)
             iter =  new TargetIterator.ServerTargetIterator(prov, target);
@@ -125,8 +127,17 @@ public abstract class TargetIterator{
                 grantedOn = mTarget;
                 
             } else if (mCurTargetType == TargetType.distributionlist) {
-                if (mGroups == null)
-                    mGroups =  mProv.getAclGroups((Account)mTarget, false);
+                if (mGroups == null) {
+                    // LdapProvisioning.getAclGroups will do a LDAP search
+                    // if the AclGroups is not computed/cached yet.  
+                    // Do not even go there if we are a pseudo object,
+                    // just create an empty AclGroups and all our TargetIterator
+                    // flow will be the same.
+                    if (RightChecker.PseudoZimbraId.isPseudoZimrbaId(((Account)mTarget).getId()))
+                        mGroups = new AclGroups();
+                    else        
+                        mGroups =  mProv.getAclGroups((Account)mTarget, false);
+                }
                 
                 if (mIdxInGroups < mGroups.groupIds().size()) {
                     grantedOn = mProv.getAclGroup(DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));
@@ -170,8 +181,17 @@ public abstract class TargetIterator{
                 grantedOn = mTarget;
                 
             } else if (mCurTargetType == TargetType.distributionlist) {
-                if (mGroups == null)
-                    mGroups =  mProv.getAclGroups((DistributionList)mTarget);
+                if (mGroups == null) {
+                    // LdapProvisioning.getAclGroups will do a LDAP search
+                    // if the AclGroups is not computed/cached yet.  
+                    // Do not even go there if we are a pseudo object,
+                    // just create an empty AclGroups and all our TargetIterator
+                    // flow will be the same.
+                    if (RightChecker.PseudoZimbraId.isPseudoZimrbaId(((DistributionList)mTarget).getId()))
+                        mGroups = new AclGroups();
+                    else        
+                        mGroups =  mProv.getAclGroups((DistributionList)mTarget);
+                }
                 
                 if (mIdxInGroups < mGroups.groupIds().size()) {
                     grantedOn = mProv.getAclGroup(DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));

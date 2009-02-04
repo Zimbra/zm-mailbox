@@ -1166,9 +1166,11 @@ public class RightChecker {
                                     CosBy cosBy, String cosStr) throws ServiceException {
         
         Entry targetEntry = null;
-        String zimbraId = LdapUtil.generateUUID();
-        Map<String, Object> attrMap = new HashMap<String, Object>();
         Config config = prov.getConfig();
+        
+        String zimbraId = PseudoZimbraId.getPseudoZimbraId();
+        Map<String, Object> attrMap = new HashMap<String, Object>();
+        attrMap.put(Provisioning.A_zimbraId, zimbraId);
         
         Domain domain = null;
         if (targetType == TargetType.account ||
@@ -1209,9 +1211,10 @@ public class RightChecker {
             targetEntry = new Cos("pseudocos", zimbraId, attrMap, prov);
             break;
         case distributionlist:
-            throw ServiceException.INVALID_REQUEST("unsupported target for createPseudoTarget", null);
-            // targetEntry = new DistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov);  TODO
-            // break;
+            targetEntry = new DistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov);
+            DistributionList dl = (DistributionList)targetEntry;
+            dl.turnToAclGroup();
+            break;
         case domain:
             targetEntry = new Domain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
             break;
@@ -1255,6 +1258,19 @@ public class RightChecker {
         return (ace.deny() ||
                 (canDelegateNeeded && !ace.canDelegate()));
     }
+    
+    static class PseudoZimbraId {
+        private static final String PSEUDO_ZIMBRA_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+        
+        static String getPseudoZimbraId() {
+            return PSEUDO_ZIMBRA_ID;
+        }
+        
+        static boolean isPseudoZimrbaId(String zid) {
+            return (PSEUDO_ZIMBRA_ID.equals(zid));
+        }
+    }
+
 
     /**
      * @param args
