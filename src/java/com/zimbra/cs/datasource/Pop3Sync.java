@@ -30,6 +30,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.localconfig.LC;
 
 import javax.mail.MessagingException;
@@ -141,8 +142,17 @@ public class Pop3Sync extends MailItemImport {
             throw ServiceException.FAILURE(
                 "Unable to connect to IMAP server: " + dataSource, e);
         }
+        if (dataSource.leaveOnServer()) {
+            checkHasUIDL();
+        }
     }
 
+    private void checkHasUIDL() throws ServiceException {
+        if (!connection.hasCapability(Pop3Capabilities.UIDL)) {
+            throw RemoteServiceException.POP3_UIDL_REQUIRED();
+        }
+    }
+    
     private void fetchAndDeleteMessages()
         throws ServiceException, MessagingException, IOException {
         int count = connection.getMessageCount();
@@ -156,10 +166,6 @@ public class Pop3Sync extends MailItemImport {
 
     private void fetchAndRetainMessages()
         throws ServiceException, MessagingException, IOException {
-        if (!connection.hasCapability(Pop3Capabilities.UIDL)) {
-            throw ServiceException.FAILURE(
-                "POP3 server must support UIDL extension", null);
-        }
         List<String> uids = connection.getMessageUids();
         Set<String> existingUids =
             DbPop3Message.getMatchingUids(mbox, dataSource, uids);
