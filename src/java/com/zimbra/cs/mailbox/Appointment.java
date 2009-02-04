@@ -272,7 +272,7 @@ public class Appointment extends CalendarItem {
                         String reason =
                             L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonRecurring, lc);
                         CalendarMailSender.sendReply(
-                                octxt, mbox, false,
+                                octxt, mbox, true,
                                 CalendarMailSender.VERB_DECLINE,
                                 reason + "\r\n",
                                 this, invite, mmInv);
@@ -315,7 +315,7 @@ public class Appointment extends CalendarItem {
                                 "\r\n\r\n" +
                                 Availability.getBusyTimesString(octxt, mbox, avail, tz, lc);
                             CalendarMailSender.sendReply(
-                                    octxt, mbox, false,
+                                    octxt, mbox, true,
                                     CalendarMailSender.VERB_DECLINE,
                                     msg,
                                     this, invite, mmInv);
@@ -325,7 +325,7 @@ public class Appointment extends CalendarItem {
                 if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
                     if (invite.hasOrganizer() && needReplyEmail) {
                         CalendarMailSender.sendReply(
-                                octxt, mbox, false,
+                                octxt, mbox, true,
                                 CalendarMailSender.VERB_ACCEPT,
                                 null,
                                 this, invite, mmInv);

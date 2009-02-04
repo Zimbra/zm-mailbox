@@ -95,7 +95,10 @@ public class DebugConfig {
     // unaffected by this switch.
     public static boolean calendarForceUTC;
 
-    public static boolean disableCalendarResourcePermissionDeniedReply;
+    // Whether to send permission denied auto reply when organizer is not permitted to invite user and
+    // user is an indirect attendee through a mailing list rather than a directly named attendee.
+    // Default is to suppress auto reply to reduce noise.
+    public static boolean calendarEnableInviteDeniedReplyForUnlistedAttendee;
 
     // If true, every item marked as "modified" in the Mailbox's cache is
     // checked against the database at the end of the transaction in order
@@ -137,7 +140,9 @@ public class DebugConfig {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
         calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
-        validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
+        validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);
+        calendarEnableInviteDeniedReplyForUnlistedAttendee = booleanValue("debug_calendar_enable_invite_denied_reply_for_unlisted_attendee", false);
+
         disableConversation = booleanValue("debug_disable_conversation", false);
         disableFilter = booleanValue("debug_disable_filter", false);
         disableMessageAnalysis = booleanValue("debug_disable_message_analysis", false);
@@ -158,8 +163,6 @@ public class DebugConfig {
 
         disableRedoLogFsync = booleanValue("debug_disable_redolog_fsync", false);
         disableMessageStoreFsync = booleanValue("debug_disable_message_store_fsync", false);
-
-        disableCalendarResourcePermissionDeniedReply = booleanValue("debug_disable_calendar_resource_permission_denied_reply", false);
 
         checkMailboxCacheConsistency = booleanValue("debug_check_mailbox_cache_consistency", false);
 

@@ -2543,7 +2543,7 @@ public abstract class CalendarItem extends MailItem {
                 }
 
                 // update the ATTENDEE record in the invite
-                cur.updateMatchingAttendees(reply);
+                cur.updateMatchingAttendeesFromReply(reply);
                 dirty = true;
                 
                 break; // found a match, fall through to below and process it!

@@ -62,6 +62,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
 public class CalendarMailSender {
@@ -492,68 +493,61 @@ public class CalendarMailSender {
         }
     }
 
-    private static MimeMessage createCalendarResourceInviteDeniedMessage(
-            Locale lc, Address fromAddr, List<Address> toAddrs, Invite inv)
+    private static MimeMessage createCalendarInviteDeniedMessage(
+            Account fromAccount, Account senderAccount, boolean onBehalfOf, boolean allowPrivateAccess,
+            Address toAddr, Invite inv, MsgKey bodyTextKey)
     throws ServiceException {
-        String subject = L10nUtil.getMessage(MsgKey.calendarReplySubjectPermissionDenied, lc) + ": " + inv.getName();
-        String text = L10nUtil.getMessage(MsgKey.calendarResourceDefaultReplyPermissionDenied, lc);
-        try {
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-
-            MimeMultipart mmp = new MimeMultipart("alternative");
-            mm.setContent(mmp);
-
-            // ///////
-            // TEXT part (add me first!)
-            MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(text, Mime.P_CHARSET_UTF8);
-            mmp.addBodyPart(textPart);
-
-            // HTML part is needed to keep Outlook happy as it doesn't know
-            // how to deal with a message with only text/plain but no HTML.
-            MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(text)));
-            mmp.addBodyPart(htmlPart);
-
-            // ///////
-            // MESSAGE HEADERS
-            if (subject != null)
-                mm.setSubject(subject, Mime.P_CHARSET_UTF8);
-
-            if (toAddrs != null) {
-                Address[] addrs = new Address[toAddrs.size()];
-                toAddrs.toArray(addrs);
-                mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            }
-            if (fromAddr != null)
-                mm.setFrom(fromAddr);
-            mm.setSentDate(new Date());
-            mm.saveChanges();
-
-            return mm;
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE(
-                    "Messaging Exception while building MimeMessage", e);
-        }
-    }
-
-    public static void sendCalendarResourceInviteDeniedMessage(
-            OperationContext octxt, Mailbox mbox, ItemId origMsgId, String toEmail, Invite inv)
-    throws ServiceException {
-        Address fromAddr;
-        Address toAddr;
-        try {
-            fromAddr = new InternetAddress(mbox.getAccount().getName());
-            toAddr = new InternetAddress(toEmail);
-        } catch (AddressException e) {
-            throw ServiceException.FAILURE("Bad address: " + mbox.getAccount().getName(), e);
-        }
+        Locale locale = !onBehalfOf ? fromAccount.getLocale() : senderAccount.getLocale();
+        String subject = L10nUtil.getMessage(MsgKey.calendarReplySubjectDecline, locale) + ": " + inv.getName();
+        String text = L10nUtil.getMessage(bodyTextKey, locale);
+        String uid = inv.getUid();
+        ParsedDateTime exceptDt = null;
+        if (inv.hasRecurId())
+            exceptDt = inv.getRecurId().getDt();
+        Invite replyInv = replyToInvite(fromAccount, senderAccount, onBehalfOf, allowPrivateAccess, inv, VERB_DECLINE, subject, exceptDt);
+        ZVCalendar iCal = replyInv.newToICalendar(true);
+        Address fromAddr = AccountUtil.getFriendlyEmailAddress(fromAccount);
+        Address senderAddr = null;
+        if (onBehalfOf)
+            senderAddr = AccountUtil.getFriendlyEmailAddress(senderAccount);
         List<Address> toAddrs = new ArrayList<Address>(1);
         toAddrs.add(toAddr);
-        Locale lc = mbox.getAccount().getLocale();
-        MimeMessage mm = createCalendarResourceInviteDeniedMessage(lc, fromAddr, toAddrs, inv);
-        mbox.getMailSender().sendMimeMessage(octxt, mbox, false, mm, null, null,
-                origMsgId, MailSender.MSGTYPE_REPLY, null, true, true);
+        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, text, uid, iCal);
+    }
+
+    public static void sendInviteDeniedMessage(
+            final OperationContext octxt, Account fromAccount, Account senderAccount,
+            boolean onBehalfOf, boolean allowPrivateAccess,
+            final Mailbox mbox, final ItemId origMsgId, String toEmail, Invite inv)
+    throws ServiceException {
+        Address toAddr;
+        try {
+            toAddr = new InternetAddress(toEmail);
+        } catch (AddressException e) {
+            throw ServiceException.FAILURE("Bad address: " + toEmail, e);
+        }
+        MsgKey bodyTextKey;
+        if (fromAccount instanceof CalendarResource)
+            bodyTextKey = MsgKey.calendarResourceDefaultReplyPermissionDenied;
+        else
+            bodyTextKey = MsgKey.calendarUserReplyPermissionDenied;
+        final MimeMessage mm = createCalendarInviteDeniedMessage(
+                fromAccount, senderAccount, onBehalfOf, allowPrivateAccess, toAddr, inv, bodyTextKey);
+
+        // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
+        Runnable r = new Runnable() {
+            public void run() {
+                try {
+                    mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null,
+                            origMsgId, MailSender.MSGTYPE_REPLY, null, true, true);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Ignoring error while sending permission-denied message", e);
+                }
+            }
+        };
+        Thread senderThread = new Thread(r, "CalendarPermDeniedReplySender");
+        senderThread.setDaemon(true);
+        senderThread.start();
     }
 
     /**
@@ -574,9 +568,9 @@ public class CalendarMailSender {
      * @return
      * @throws ServiceException
      */
-    public static Invite replyToInvite(Account acct, Account authAcct, boolean asAdmin,
-                                       boolean onBehalfOf,
-                                       CalendarItem calItem, Invite oldInv,
+    public static Invite replyToInvite(Account acct, Account authAcct,
+                                       boolean onBehalfOf, boolean allowPrivateAccess,
+                                       Invite oldInv,
                                        Verb verb, String replySubject,
                                        ParsedDateTime exceptDt)
     throws ServiceException {
@@ -585,6 +579,7 @@ public class CalendarMailSender {
                        new TimeZoneMap(
                                ICalTimeZone.getAccountTimeZone(onBehalfOf ? authAcct : acct)),
                        oldInv.isOrganizer());
+        reply.setLocalOnly(false);  // suppress X-ZIMBRA-LOCAL-ONLY property
 
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
 //        reply.setIsAllDayEvent(oldInv.isAllDayEvent());
@@ -613,7 +608,7 @@ public class CalendarMailSender {
             reply.addAttendee(meReply);
         }
 
-        boolean hidePrivate = !oldInv.isPublic() && !calItem.allowPrivateAccess(authAcct, asAdmin);
+        boolean hidePrivate = !oldInv.isPublic() && !allowPrivateAccess;
         reply.setClassProp(oldInv.getClassProp());
 
         // DTSTART, DTEND, LOCATION (outlook seems to require these,
@@ -676,9 +671,9 @@ public class CalendarMailSender {
         }
     }
 
-    public static ItemId sendReply(OperationContext octxt, Mailbox mbox, boolean saveToSent,
-                                   Verb verb, String additionalMsgBody, CalendarItem calItem,
-                                   Invite inv, MimeMessage mmInv)
+    public static void sendReply(final OperationContext octxt, final Mailbox mbox, final boolean saveToSent,
+                                 Verb verb, String additionalMsgBody, CalendarItem calItem,
+                                 final Invite inv, MimeMessage mmInv)
     throws ServiceException {
         boolean onBehalfOf = false;
         Account acct = mbox.getAccount();
@@ -704,16 +699,31 @@ public class CalendarMailSender {
             subject = inv.getName();
         String replySubject = getReplySubject(verb, subject, lc);
 
-        String replyType = MailSender.MSGTYPE_REPLY;
-        // TODO: Handle Exception ID. (last arg of replyToInvite)
-        Invite replyInv = replyToInvite(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, verb, replySubject, null);
+        final String replyType = MailSender.MSGTYPE_REPLY;
+        ParsedDateTime exceptDt = null;
+        if (inv.hasRecurId())
+            exceptDt = inv.getRecurId().getDt();
+        boolean allowPrivateAccess = calItem.allowPrivateAccess(authAcct, asAdmin);
+        Invite replyInv = replyToInvite(acct, authAcct, onBehalfOf, allowPrivateAccess, inv, verb, replySubject, exceptDt);
 
         ZVCalendar iCal = replyInv.newToICalendar(true);
-        MimeMessage mm = createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
-                                            replySubject, verb, additionalMsgBody, iCal);
+        final MimeMessage mm = createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
+                                                  replySubject, verb, additionalMsgBody, iCal);
 
-        return mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
-                                                    new ItemId(mbox, inv.getMailItemId()), replyType, null, false, true);
+        // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
+        Runnable r = new Runnable() {
+            public void run() {
+                try {
+                    mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
+                            new ItemId(mbox, inv.getMailItemId()), replyType, null, false, true);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline message", e);
+                }
+            }
+        };
+        Thread senderThread = new Thread(r, "CalendarAutoAcceptDeclineReplySender");
+        senderThread.setDaemon(true);
+        senderThread.start();
     }
 
     private static class HtmlPartDataSource implements DataSource {

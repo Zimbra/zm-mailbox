@@ -32,8 +32,8 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -334,12 +334,12 @@ public class Message extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         Mailbox mbox = folder.getMailbox();
+        Account acct = mbox.getAccount();
 
         List<Invite> components = null;
         String methodStr = null;
         // Skip calendar processing if message is being filed as spam or trash.
         if (cal != null && folder.getId() != Mailbox.ID_FOLDER_SPAM && folder.getId() != Mailbox.ID_FOLDER_TRASH) {
-            Account acct = mbox.getAccount();
 
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
@@ -372,7 +372,7 @@ public class Message extends MailItem {
         if (conv != null)
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+        if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = id;
         data.volumeId    = volumeId;
         data.imapId      = id;
@@ -418,6 +418,68 @@ public class Message extends MailItem {
      * @param invites */
     private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createCalItem, ParsedMessage pm, List<Invite> invites) 
     throws ServiceException {
+        Account acct = getAccount();
+
+        if (!invites.isEmpty()) {
+            // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
+            // namely REQUEST/PUBLISH/CANCEL/ADD/DECLINECOUNTER.  REPLY/REFRESH/COUNTER don't undergo
+            // the check because they are not organizer-to-attendee methods.
+            if (ICalTok.REQUEST.toString().equals(method) ||
+                ICalTok.PUBLISH.toString().equals(method) ||
+                ICalTok.CANCEL.toString().equals(method) ||
+                ICalTok.ADD.toString().equals(method) ||
+                ICalTok.DECLINECOUNTER.toString().equals(method)) {
+
+                String senderEmail;
+                Account senderAcct = null;
+                boolean onBehalfOf = false;
+                boolean allowInviteIfNoAceDefined = true;
+                boolean canInvite;
+                AccessManager accessMgr = AccessManager.getInstance();
+                OperationContext octxt = getMailbox().getOperationContext();
+                if (octxt != null && octxt.getAuthenticatedUser() != null) {
+                    onBehalfOf = octxt.isDelegatedRequest(getMailbox());
+                    senderAcct = octxt.getAuthenticatedUser();
+                    senderEmail = senderAcct.getName();
+                    canInvite = accessMgr.canDo(senderAcct, acct, UserRight.R_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
+                } else {
+                    senderEmail = pm != null ? pm.getSenderEmail(false) : null;
+                    if (senderEmail != null)
+                        senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
+                    canInvite = accessMgr.canDo(senderEmail, acct, UserRight.R_invite, false, allowInviteIfNoAceDefined);
+                }
+                if (!canInvite) {
+                    Invite invite = invites.get(0);
+                    boolean sameDomain = false;
+                    if (senderAcct != null) {
+                        String senderDomain = senderAcct.getDomainName();
+                        sameDomain = senderDomain != null && senderDomain.equalsIgnoreCase(acct.getDomainName());
+                    }
+                    boolean directAttendee =
+                        DebugConfig.calendarEnableInviteDeniedReplyForUnlistedAttendee
+                        || invite.getMatchingAttendee(acct) != null;
+                    // Send auto replies only to users in the same domain and if addressed directly as an attendee,
+                    // not indirectly via a mailing list.
+                    if (senderEmail != null && sameDomain && directAttendee) {
+                        RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
+                        RedoLogProvider redoProvider = RedoLogProvider.getInstance();
+                        // Don't generate auto-reply email during redo playback.
+                        boolean needAutoReply =
+                            redoProvider.isMaster() &&
+                            (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery());
+                        if (needAutoReply) {
+                            ItemId origMsgId = new ItemId(getMailbox(), getId());
+                            CalendarMailSender.sendInviteDeniedMessage(
+                                    octxt, acct, senderAcct, onBehalfOf, true, getMailbox(), origMsgId, senderEmail, invite);
+                        }
+                    }
+                    String sender = senderEmail != null ? senderEmail : "unkonwn sender";
+                    ZimbraLog.calendar.info("Calendar invite from " + sender + " to " + acct.getName() + " is not allowed");
+                    return;
+                }
+            }
+        }
+
         // since this is the first time we've seen this Invite Message, we need to process it
         // and see if it updates an existing CalendarItem in the database table, or whatever...
         boolean updatedMetadata = false;
@@ -437,52 +499,11 @@ public class Message extends MailItem {
                 addRevision = false;
             }
 
-            // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
-            // namely REQUEST/PUBLISH/CANCEL/ADD/DECLINECOUNTER.  REPLY/REFRESH/COUNTER don't undergo
-            // the check because they are not organizer-to-attendee methods.
-            if (ICalTok.REQUEST.toString().equals(method) ||
-                ICalTok.PUBLISH.toString().equals(method) ||
-                ICalTok.CANCEL.toString().equals(method) ||
-                ICalTok.ADD.toString().equals(method) ||
-                ICalTok.DECLINECOUNTER.toString().equals(method)) {
-
-                String senderEmail;
-                boolean allowInviteIfNoAceDefined = true;
-                boolean canInvite;
-                AccessManager accessMgr = AccessManager.getInstance();
-                OperationContext octxt = getMailbox().getOperationContext();
-                if (octxt != null && octxt.getAuthenticatedUser() != null) {
-                    Account authAcct = octxt.getAuthenticatedUser();
-                    senderEmail = authAcct.getName();
-                    canInvite = accessMgr.canDo(authAcct, getAccount(), UserRight.R_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
-                } else {
-                    senderEmail = pm != null ? pm.getSenderEmail(false) : null;
-                    canInvite = accessMgr.canDo(senderEmail, getAccount(), UserRight.R_invite, false, allowInviteIfNoAceDefined);
-                }
-                if (!canInvite) {
-                    if ((getAccount() instanceof CalendarResource) && senderEmail != null &&
-                        !DebugConfig.disableCalendarResourcePermissionDeniedReply) {
-                        RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
-                        RedoLogProvider redoProvider = RedoLogProvider.getInstance();
-                        boolean needAutoReply =
-                            redoProvider.isMaster() &&
-                            (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery());
-                        if (needAutoReply) {
-                            ItemId origMsgId = new ItemId(getMailbox(), getId());
-                            CalendarMailSender.sendCalendarResourceInviteDeniedMessage(
-                                    octxt, getMailbox(), origMsgId, senderEmail, cur);
-                        }
-                    }
-                    String sender = senderEmail != null ? senderEmail : "unkonwn sender";
-                    throw ServiceException.PERM_DENIED("calendar invite not allowed from " + sender);
-                }
-            }
-
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
             if (!allowOrganizerAlarm) {
                 cur.clearAlarms();
                 if (cur.isEvent()) {  // only for VEVENTs
-                    int prefNonAllDayMinutesBefore = (int) getAccount().getLongAttr(
+                    int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
                             Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
                     int hoursBefore = 0;
                     int minutesBefore = 0;
@@ -542,9 +563,8 @@ public class Message extends MailItem {
                         boolean ignore = false;
                         Invite defInv = calItem.getDefaultInviteOrNull();
                         if (defInv != null && defInv.isOrganizer())
-                            ignore = getAccount().equals(cur.getOrganizerAccount());
+                            ignore = acct.equals(cur.getOrganizerAccount());
                         if (defInv != null && defInv.isOrganizer()) {
-                            Account acct = getAccount();
                             if (acct.equals(cur.getOrganizerAccount()))
                                 ignore = !acct.getBooleanAttr(
                                         Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, false);
