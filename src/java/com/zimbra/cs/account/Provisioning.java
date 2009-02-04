@@ -479,6 +479,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
             mGroupIds = groupIds;
         }
         
+        // create an empty AclGroups
+        public AclGroups() {
+            this(new ArrayList<MemberOf>(), new ArrayList<String>());
+        }
+        
         public List<MemberOf> memberOf() {
             return mMemberOf;
         }
@@ -1785,4 +1790,5 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void purgeAccountCalendarCache(String accountId) throws ServiceException {
         // do nothing by default
     }
+
 }
