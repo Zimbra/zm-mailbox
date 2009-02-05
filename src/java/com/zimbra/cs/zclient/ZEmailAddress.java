@@ -167,7 +167,7 @@ public class ZEmailAddress implements ToZJSONObject {
             InternetAddress[] inetAddrs = InternetAddress.parseHeader(line, false);
             List<ZEmailAddress> result = new ArrayList<ZEmailAddress>(inetAddrs.length);
             for (InternetAddress ia : inetAddrs) {
-                result.add(new ZEmailAddress(ia.getAddress(), null, ia.getPersonal(), type));
+                result.add(new ZEmailAddress(ia.getAddress().replaceAll("\"",""), null, ia.getPersonal(), type));
             }
             return result;
         } catch (AddressException e) {
