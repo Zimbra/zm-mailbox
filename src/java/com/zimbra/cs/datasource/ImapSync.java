@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.rmi.RemoteException;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
@@ -282,12 +284,16 @@ public class ImapSync extends MailItemImport {
      * the specified sync error.
      */
     private boolean canContinue(Throwable e) {
-        if (!dataSource.isOffline()) return false;
-        if (e instanceof ServiceException) {
+        if (!dataSource.isOffline()) {
+            return false;
+        } else if (e instanceof RemoteServiceException) {
+            return false;
+        } else if (e instanceof ServiceException) {
             Throwable cause = e.getCause();
             return cause == null || canContinue(cause);
+        } else {
+            return e instanceof CommandFailedException;
         }
-        return e instanceof CommandFailedException;
     }
     
     /*

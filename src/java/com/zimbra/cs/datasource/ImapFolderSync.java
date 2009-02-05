@@ -39,6 +39,7 @@ import com.zimbra.cs.db.Db;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.Pair;
@@ -213,6 +214,13 @@ class ImapFolderSync {
             String msg = String.format(
                 "Inconsistent UIDNEXT value from server (got %d but last known uid %d)",
                 uidNext, syncState.getLastUid());
+            if (isYahoo()) {
+                // Bug 31443: Invalid UIDNEXT from Yahoo! IMAP server indicates
+                // that the user's mailbox is corrupt. Abort sync and display
+                // error message to user indicating that they should try again
+                // later (mailbox corruption will be repaired within 24 hours).
+                throw RemoteServiceException.YMAIL_INCONSISTENT_STATE();
+            }
             ServiceException e = ServiceException.FAILURE(msg, null);
             syncFolderFailed(tracker.getItemId(), tracker.getLocalPath(), msg, e);
             throw e;
