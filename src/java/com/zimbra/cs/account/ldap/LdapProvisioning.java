@@ -1241,6 +1241,21 @@ public class LdapProvisioning extends Provisioning {
         removeAliasInternal(dl, alias);
     }
     
+    private boolean isEntryAlias(Attributes attrs) throws NamingException {
+        
+        Map<String, Object> entryAttrs = LdapUtil.getAttrs(attrs);
+        Object ocs = entryAttrs.get(Provisioning.A_objectClass);
+        if (ocs instanceof String)
+            return ((String)ocs).equalsIgnoreCase(C_zimbraAlias);
+        else if (ocs instanceof String[]) {
+            for (String oc : (String[])ocs) {
+                if (oc.equalsIgnoreCase(C_zimbraAlias))
+                    return true;
+            }
+        }
+        return false;
+    }
+    
     private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
     	
         validEmailAddress(alias);
@@ -1285,6 +1300,11 @@ public class LdapProvisioning extends Provisioning {
                  * and create a new one.
                  */
                 Attributes attrs = zlc.getAttributes(aliasDn);
+                
+                // see if the entry is an alias
+                if (!isEntryAlias(attrs))
+                    throw e;
+                
                 Alias aliasEntry = makeAlias(aliasDn, attrs, this);
                 NamedEntry targetEntry = searchAliasTarget(aliasEntry, false);
                 if (targetEntry == null) {

@@ -772,11 +772,11 @@ public class TestAlias extends TestCase {
      * 
      * The dangling alias should be removed then recreated and then added to the account
      */
-    public void testCreateAlias_aliasExistAnddDangling() throws Exception {
+    public void testCreateAlias_aliasExistAndDangling() throws Exception {
         String testName = getName().toLowerCase();  
         
         // create the domain
-        String domainName = "CreateAlias-aliasExistAnddDangling" + "." + BASE_DOMAIN_NAME;
+        String domainName = "CreateAlias-aliasExistAndDangling" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -845,7 +845,46 @@ public class TestAlias extends TestCase {
         aliases = searchAliasesInDomain(domain);
         assertEquals(aliases.size(), 1);
         assertFalse(aliases.get(0).getId().equals(origZimbraIdOfAlias));
+    }
+    
+    public void testCreateAlias_aliasNameExistsButIsNotAnAlias() throws Exception {
+        String testName = getName().toLowerCase();  
         
+        // create the domain
+        String domainName = "CreateAlias-aliasNameExistsButIsNotAnAlias" + "." + BASE_DOMAIN_NAME;
+        domainName = domainName.toLowerCase();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        Domain domain  = mProv.createDomain(domainName, attrs);
+        
+        // create the account
+        String acctName = getEmail("acct-1", domainName);
+        Account acct = mProv.createAccount(acctName, PASSWORD, new HashMap<String, Object>());
+        
+        // create another account
+        String acct2Name = getEmail("acct-2", domainName);
+        Account acct2 = mProv.createAccount(acct2Name, PASSWORD, new HashMap<String, Object>());
+        
+        // create a distribution list
+        String dlName = getEmail("dl", domainName);
+        DistributionList dl = mProv.createDistributionList(dlName, new HashMap<String, Object>());
+        
+        boolean good = false;
+        try {
+            mProv.addAlias(acct, acct2Name);
+        } catch (ServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+        
+        try {
+            mProv.addAlias(acct, dlName);
+        } catch (ServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
     }
     
     public static void main(String[] args) throws Exception {
