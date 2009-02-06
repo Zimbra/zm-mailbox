@@ -191,11 +191,13 @@ public class LC {
     public static final KnownKey ldap_db_checkpoint;
     public static final KnownKey ldap_db_dncachesize;
     public static final KnownKey ldap_db_idlcachesize;
+    public static final KnownKey ldap_db_shmkey;
     public static final KnownKey ldap_accesslog_cachefree;
     public static final KnownKey ldap_accesslog_cachesize;
     public static final KnownKey ldap_accesslog_checkpoint;
     public static final KnownKey ldap_accesslog_dncachesize;
     public static final KnownKey ldap_accesslog_idlcachesize;
+    public static final KnownKey ldap_accesslog_shmkey;
     public static final KnownKey ldap_overlay_syncprov_checkpoint;
     public static final KnownKey ldap_overlay_syncprov_sessionlog;
     public static final KnownKey ldap_overlay_accesslog_logpurge;
@@ -703,6 +705,9 @@ public class LC {
         ldap_db_dncachesize = new KnownKey("ldap_db_dncachesize");
         ldap_db_dncachesize.setDefault("20000");
 
+        ldap_db_shmkey = new KnownKey("ldap_db_shmkey");
+        ldap_db_shmkey.setDefault("0");
+
         ldap_db_checkpoint = new KnownKey("ldap_db_checkpoint");
         ldap_db_checkpoint.setDefault("64 5");
 
@@ -714,6 +719,9 @@ public class LC {
 
         ldap_accesslog_idlcachesize = new KnownKey("ldap_accesslog_idlcachesize");
         ldap_accesslog_idlcachesize.setDefault("10000");
+
+        ldap_accesslog_shmkey = new KnownKey("ldap_accesslog_shmkey");
+        ldap_accesslog_shmkey.setDefault("0");
 
         ldap_accesslog_dncachesize = new KnownKey("ldap_accesslog_dncachesize");
         ldap_accesslog_dncachesize.setDefault("20000");
