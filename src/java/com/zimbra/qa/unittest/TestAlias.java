@@ -259,8 +259,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // remove the alias
         mProv.removeAlias(acct, aliasName);
@@ -318,8 +318,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // create another account
         String otherAcctName = getEmail("acct-other", domainName);
@@ -420,8 +420,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it so the alias points to a non-existing entry
         ZimbraLdapContext zlc = null;
@@ -503,8 +503,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the alias entry
         ZimbraLdapContext zlc = null;
@@ -585,8 +585,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // non-existing entry account
         Account nonExistingAcct = null;
@@ -649,8 +649,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it so the alias points to a non-existing entry
         ZimbraLdapContext zlc = null;
@@ -729,8 +729,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the alias entry
         ZimbraLdapContext zlc = null;
@@ -868,8 +868,8 @@ public class TestAlias extends TestCase {
         DistributionList dl2 = mProv.createDistributionList(dl2Name, new HashMap<String, Object>());
         
         // add the alias to the two DLs
-        dl1.addMembers(new String[]{aliasName});
-        dl2.addMembers(new String[]{aliasName});
+        mProv.addMembers(dl1, new String[]{aliasName});
+        mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the orig account entry
         ZimbraLdapContext zlc = null;
