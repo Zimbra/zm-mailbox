@@ -239,11 +239,13 @@ SECTION ldap
 	LDAP ldap_db_checkpoint LOCAL ldap_db_checkpoint
 	LDAP ldap_db_dncachesize LOCAL ldap_db_dncachesize
 	LDAP ldap_db_idlcachesize LOCAL ldap_db_idlcachesize
+	LDAP ldap_db_shmkey LOCAL ldap_db_shmkey
 	LDAP ldap_accesslog_cachefree LOCAL ldap_accesslog_cachefree
 	LDAP ldap_accesslog_cachesize LOCAL ldap_accesslog_cachesize
 	LDAP ldap_accesslog_checkpoint LOCAL ldap_accesslog_checkpoint
 	LDAP ldap_accesslog_dncachesize LOCAL ldap_accesslog_dncachesize
 	LDAP ldap_accesslog_idlcachesize LOCAL ldap_accesslog_idlcachesize
+	LDAP ldap_accesslog_shmkey LOCAL ldap_accesslog_shmkey
 	LDAP ldap_overlay_syncprov_checkpoint LOCAL ldap_overlay_syncprov_checkpoint
 	LDAP ldap_overlay_syncprov_sessionlog LOCAL ldap_overlay_syncprov_sessionlog
 	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
