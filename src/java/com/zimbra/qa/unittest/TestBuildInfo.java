@@ -23,6 +23,7 @@ public class TestBuildInfo extends TestCase {
     public void testInvalid() throws Exception {
         invalid("a.0.0");
         invalid("6.0.0_GB");
+        invalid("5.0.12.1");
     }
     
     

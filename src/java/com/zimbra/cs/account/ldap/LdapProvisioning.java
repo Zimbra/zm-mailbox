@@ -1459,7 +1459,7 @@ public class LdapProvisioning extends Provisioning {
                 else if (entry instanceof DistributionList)
                     targetDomainName = ((DistributionList)entry).getDomainName();
                 else
-                    assert(false);
+                    throw ServiceException.INVALID_REQUEST("invalid entry type for alias", null);
             }
             String aliasDn = mDIT.aliasDN(targetDn, targetDomainName, aliasName, aliasDomain);
             
@@ -1467,6 +1467,11 @@ public class LdapProvisioning extends Provisioning {
             Alias aliasEntry = null;
             try {
                 aliasAttrs = zlc.getAttributes(aliasDn);
+                
+                // see if the entry is an alias
+                if (!isEntryAlias(aliasAttrs))
+                    throw AccountServiceException.NO_SUCH_ALIAS(alias);
+                
                 aliasEntry = makeAlias(aliasDn, aliasAttrs, this);
             } catch (NamingException e) {
                 ZimbraLog.account.warn("alias " + alias + " does not exist");

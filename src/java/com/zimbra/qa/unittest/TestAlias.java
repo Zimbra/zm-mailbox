@@ -43,6 +43,9 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapEntry;
@@ -63,6 +66,12 @@ public class TestAlias extends TestCase {
     private static String LOCAL_DOMAIN_NAME;
     private static String ALIAS_DOMAIN_NAME;
     
+    /*
+     * convert underscores in inStr to hyphens
+     */
+    private String underscoreToHyphen(String inStr) {
+        return inStr.replaceAll("_", "-");
+    }
     
     public void testInit() throws Exception {
         mProv = Provisioning.getInstance();
@@ -766,6 +775,62 @@ public class TestAlias extends TestCase {
         assertEquals(aliases.size(), 0);
     }
     
+    public void testRemoveAlias_aliasNameExistsButIsNotAnAlias() throws Exception {
+        String testName = getName().toLowerCase();  
+        
+        // create the domain
+        String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
+        domainName = domainName.toLowerCase();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        Domain domain  = mProv.createDomain(domainName, attrs);
+        
+        // create the account
+        String acctName = getEmail("acct-1", domainName);
+        Account acct = mProv.createAccount(acctName, PASSWORD, new HashMap<String, Object>());
+        
+        // create another account
+        String acct2Name = getEmail("acct-2", domainName);
+        Account acct2 = mProv.createAccount(acct2Name, PASSWORD, new HashMap<String, Object>());
+        String acct2Id = acct2.getId();
+        
+        // create a distribution list
+        String dlName = getEmail("dl", domainName);
+        DistributionList dl = mProv.createDistributionList(dlName, new HashMap<String, Object>());
+        String dlId = dl.getId();
+        
+        boolean good = false;
+        try {
+            mProv.removeAlias(acct, acct2Name);
+        } catch (ServiceException e) {
+            if (AccountServiceException.NO_SUCH_ALIAS.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+        
+        // make sure the account is not touched
+        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct2Id)});
+        acct2 = mProv.get(AccountBy.id, acct2Id);
+        assertNotNull(acct2);
+        assertEquals(acct2Id, acct2.getId());
+        assertEquals(acct2Name, acct2.getName());
+        
+        try {
+            mProv.removeAlias(acct, dlName);
+        } catch (ServiceException e) {
+            if (AccountServiceException.NO_SUCH_ALIAS.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+        
+        // make sure the dl is not touched
+        // mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct2Id)});
+        dl = mProv.get(DistributionListBy.id, dlId);
+        assertNotNull(dl);
+        assertEquals(dlId, dl.getId());
+        assertEquals(dlName, dl.getName());
+    }
+    
     /*
      * test adding an alias to account but the alias is "dangling"
      * i.e. the alias entry exists but points to a non-existing entry
@@ -776,7 +841,7 @@ public class TestAlias extends TestCase {
         String testName = getName().toLowerCase();  
         
         // create the domain
-        String domainName = "CreateAlias-aliasExistAndDangling" + "." + BASE_DOMAIN_NAME;
+        String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -851,7 +916,7 @@ public class TestAlias extends TestCase {
         String testName = getName().toLowerCase();  
         
         // create the domain
-        String domainName = "CreateAlias-aliasNameExistsButIsNotAnAlias" + "." + BASE_DOMAIN_NAME;
+        String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -887,10 +952,49 @@ public class TestAlias extends TestCase {
         assertTrue(good);
     }
     
+    public void testCreateAlias_aliasExists() throws Exception {
+        String testName = getName().toLowerCase();  
+        
+        // create the domain
+        String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
+        domainName = domainName.toLowerCase();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        Domain domain  = mProv.createDomain(domainName, attrs);
+        
+        // create the account
+        String acct1Name = getEmail("acct-1", domainName);
+        Account acct1 = mProv.createAccount(acct1Name, PASSWORD, new HashMap<String, Object>());
+        
+        // create another account
+        String acct2Name = getEmail("acct-2", domainName);
+        Account acct2 = mProv.createAccount(acct2Name, PASSWORD, new HashMap<String, Object>());
+        
+        // add an alias to acct1
+        String aliasName = getEmail("alias", domainName);
+        mProv.addAlias(acct1, aliasName);
+        
+        // add the same alias to acct2, should get error
+        boolean good = false;
+        try {
+            mProv.addAlias(acct2, aliasName);
+        } catch (ServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+    }
+    
     public static void main(String[] args) throws Exception {
         // TestUtil.cliSetup();
         CliUtil.toolSetup();
         TestUtil.runTest(TestAlias.class);
+        
+        /*
+        TestAlias test = new TestAlias();
+        test.testInit();
+        test.testCreateAlias_aliasExists();
+        */
     }
 
 }
