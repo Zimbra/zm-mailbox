@@ -160,6 +160,10 @@ public class ByteUtil {
      * Reads a <tt>String</tt> from the given <tt>Reader</tt>.  Reads
      * until the either end of the stream is hit or until <tt>length</tt> characters
      * are read.
+     * 
+     * @param reader the content source
+     * @param length number of characters to read, or <tt>-1</tt> for no limit
+     * @param close <tt>true</tt> to close the <tt>Reader</tt> when done
      * @return the content or an empty <tt>String</tt> if no content is available
      */
     public static String getContent(Reader reader, int length, boolean close)
@@ -256,6 +260,21 @@ public class ByteUtil {
             os.close();
         } catch (Exception e) {
             ZimbraLog.misc.debug("ignoring exception while closing output stream", e);
+        }
+    }
+    
+    /**
+     * Closes the given reader and ignores any exceptions.
+     * @param r the <tt>Reader</tt>, may be <tt>null</tt>
+     */
+    public static void closeReader(Reader r) {
+        if (r == null) {
+            return;
+        }
+        try {
+            r.close();
+        } catch (IOException e) {
+            ZimbraLog.misc.debug("ignoring exception while closing reader", e);
         }
     }
 
@@ -597,7 +616,7 @@ public class ByteUtil {
                 closeStream(out);
         }
     }
-
+    
     /**
      * Reads up to <tt>limit</tt> bytes from the <tt>InputStream</tt>.
      * @param in the data stream
