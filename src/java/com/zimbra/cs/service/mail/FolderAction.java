@@ -151,7 +151,7 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_GRANT)) {
             Element grant = action.getElement(MailConstants.E_GRANT);
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
-            byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
+            byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID, null);
             String secret = null;
             NamedEntry nentry = null;
@@ -248,7 +248,7 @@ public class FolderAction extends ItemAction {
         ACL acl = new ACL();
         for (Element grant : eAcl.listElements(MailConstants.E_GRANT)) {
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
-            byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
+            byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             
             String secret = null;
@@ -263,30 +263,6 @@ public class FolderAction extends ItemAction {
             acl.grantAccess(zid, gtype, rights, secret);
         }
         return acl;
-    }
-
-    public static byte stringToType(String typeStr) throws ServiceException {
-        if (typeStr.equalsIgnoreCase("usr"))  return ACL.GRANTEE_USER;
-        if (typeStr.equalsIgnoreCase("grp"))  return ACL.GRANTEE_GROUP;
-        if (typeStr.equalsIgnoreCase("cos"))  return ACL.GRANTEE_COS;
-        if (typeStr.equalsIgnoreCase("dom"))  return ACL.GRANTEE_DOMAIN;
-        if (typeStr.equalsIgnoreCase("all"))  return ACL.GRANTEE_AUTHUSER;
-        if (typeStr.equalsIgnoreCase("pub"))  return ACL.GRANTEE_PUBLIC;
-        if (typeStr.equalsIgnoreCase("guest")) return ACL.GRANTEE_GUEST;
-        if (typeStr.equalsIgnoreCase("key"))  return ACL.GRANTEE_KEY;
-        throw ServiceException.INVALID_REQUEST("unknown grantee type: " + typeStr, null);
-    }
-
-    static String typeToString(byte type) {
-        if (type == ACL.GRANTEE_USER)      return "usr";
-        if (type == ACL.GRANTEE_GROUP)     return "grp";
-        if (type == ACL.GRANTEE_PUBLIC)    return "pub";
-        if (type == ACL.GRANTEE_AUTHUSER)  return "all";
-        if (type == ACL.GRANTEE_COS)       return "cos";
-        if (type == ACL.GRANTEE_DOMAIN)    return "dom";
-        if (type == ACL.GRANTEE_GUEST)     return "guest";
-        if (type == ACL.GRANTEE_KEY)       return "key";
-        return null;
     }
 
     public static NamedEntry lookupEmailAddress(String name) throws ServiceException {

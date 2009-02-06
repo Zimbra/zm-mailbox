@@ -478,6 +478,30 @@ public class ACL {
         return sb.toString();
     }
     
+    public static byte stringToType(String typeStr) throws ServiceException {
+        if (typeStr.equalsIgnoreCase("usr"))  return ACL.GRANTEE_USER;
+        if (typeStr.equalsIgnoreCase("grp"))  return ACL.GRANTEE_GROUP;
+        if (typeStr.equalsIgnoreCase("cos"))  return ACL.GRANTEE_COS;
+        if (typeStr.equalsIgnoreCase("dom"))  return ACL.GRANTEE_DOMAIN;
+        if (typeStr.equalsIgnoreCase("all"))  return ACL.GRANTEE_AUTHUSER;
+        if (typeStr.equalsIgnoreCase("pub"))  return ACL.GRANTEE_PUBLIC;
+        if (typeStr.equalsIgnoreCase("guest")) return ACL.GRANTEE_GUEST;
+        if (typeStr.equalsIgnoreCase("key"))  return ACL.GRANTEE_KEY;
+        throw ServiceException.INVALID_REQUEST("unknown grantee type: " + typeStr, null);
+    }
+
+    public static String typeToString(byte type) {
+        if (type == ACL.GRANTEE_USER)      return "usr";
+        if (type == ACL.GRANTEE_GROUP)     return "grp";
+        if (type == ACL.GRANTEE_PUBLIC)    return "pub";
+        if (type == ACL.GRANTEE_AUTHUSER)  return "all";
+        if (type == ACL.GRANTEE_COS)       return "cos";
+        if (type == ACL.GRANTEE_DOMAIN)    return "dom";
+        if (type == ACL.GRANTEE_GUEST)     return "guest";
+        if (type == ACL.GRANTEE_KEY)       return "key";
+        return null;
+    }
+    
     public static String generateAccessKey() {
         SecureRandom random = new SecureRandom();
         byte[] key = new byte[ACCESSKEY_SIZE_BYTES];

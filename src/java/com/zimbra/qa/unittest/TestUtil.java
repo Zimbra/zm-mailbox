@@ -136,7 +136,10 @@ extends Assert {
 
     public static String getAddress(String userName)
     throws ServiceException {
-        return userName + "@" + getDomain();
+        if (userName.contains("@"))
+            return userName;
+        else
+            return userName + "@" + getDomain();
     }
 
     public static String getSoapUrl() {

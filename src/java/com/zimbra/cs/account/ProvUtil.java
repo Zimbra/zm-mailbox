@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +53,7 @@ import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
@@ -201,7 +203,9 @@ public class ProvUtil implements DebugListener {
         NOTEBOOK("help on notebook-related commands"), 
         RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"), 
-        SERVER("help on server-related commands");
+        SERVER("help on server-related commands"),
+        SHARE("help on share related commands");
+        
         
         String mDesc;
 
@@ -296,11 +300,12 @@ public class ProvUtil implements DebugListener {
     }
     
     public enum Command {
-        
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
+        ADD_ACCOUNT_SHARE_INFO("addAccountShareInfo", "aasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id} desc", Category.SHARE, 4, 4),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
+        ADD_DISTRIBUTION_LIST_SHARE_INFO("addDistribtionListShareInfo", "adlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id} desc", Category.SHARE, 4, 4),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
@@ -391,12 +396,14 @@ public class ProvUtil implements DebugListener {
         RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
+        REMOVE_ACCOUNT_SHARE_INFO("removeAccountShareInfo", "rasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
         RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
+        REMOVE_DISTRIBUTION_LIST_SHARE_INFO("removeDistribtionListShareInfo", "rdlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
@@ -755,7 +762,7 @@ public class ProvUtil implements DebugListener {
             break; 
         case MODIFY_SERVER:
             mProv.modifyAttrs(lookupServer(args[1]), getMap(args, 2), true);            
-            break;            
+            break;
         case DELETE_ACCOUNT:
             doDeleteAccount(args);
             break;
@@ -914,6 +921,18 @@ public class ProvUtil implements DebugListener {
             break;
         case SEARCH_CALENDAR_RESOURCES:
             doSearchCalendarResources(args);
+            break;
+        case ADD_ACCOUNT_SHARE_INFO:
+            doModifyAccountShareInfo(true, args);
+            break;
+        case ADD_DISTRIBUTION_LIST_SHARE_INFO:
+            doModifyDistributionListShareInfo(true, args);
+            break;
+        case REMOVE_ACCOUNT_SHARE_INFO:
+            doModifyAccountShareInfo(false, args);
+            break;
+        case REMOVE_DISTRIBUTION_LIST_SHARE_INFO:
+            doModifyDistributionListShareInfo(false, args);
             break;
         case INIT_NOTEBOOK:
             initNotebook(args);
@@ -1219,6 +1238,57 @@ public class ProvUtil implements DebugListener {
         }
     }
 
+    
+    private void doModifyAccountShareInfo(boolean isAdd, String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        
+        String key = args[1];
+        Account acct = lookupAccount(key);
+        
+        List<ShareInfo> shareInfo = parseShareInfo(isAdd, args);
+        mProv.modifyShareInfo(acct, shareInfo); 
+    }
+    
+    private void doModifyDistributionListShareInfo(boolean isAdd, String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        
+        String key = args[1];
+        DistributionList dl = lookupDistributionList(key);
+        
+        List<ShareInfo> shareInfo = parseShareInfo(isAdd, args);
+        mProv.modifyShareInfo(dl, shareInfo); 
+    }
+    
+    private List<ShareInfo> parseShareInfo(boolean isAdd, String[] args) throws ServiceException {
+        // only support one owner/folder/desc spec per invocation in the CLI, 
+        // return a list becasue SOAP can take multiple in one request
+        
+        int idx = 2;
+        String owner = args[idx++];
+        String ownerAcctId = lookupAccount(owner).getId();
+        
+        String folderPathOrId = args[idx++];
+        
+        ShareInfo.Action action;
+        String desc;
+        
+        if (isAdd) {
+            action = ShareInfo.Action.add;
+            desc = args[idx++];
+        } else {
+            action = ShareInfo.Action.remove;
+            desc = null;
+        }
+        
+        ShareInfo si = new ShareInfo(action, ownerAcctId, folderPathOrId, null, desc);
+        List<ShareInfo> shareInfo = new ArrayList<ShareInfo>();
+        shareInfo.add(si);
+        
+        return shareInfo;
+    }
+    
     private void doDeleteAccount(String[] args) throws ServiceException {
         String key = args[1];
         Account acct = lookupAccount(key);

@@ -47,6 +47,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -2112,6 +2113,44 @@ public class SoapProvisioning extends Provisioning {
     public void purgeAccountCalendarCache(String accountId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST);
         req.addAttribute(AdminConstants.A_ID, accountId);
+        invoke(req);
+    }
+    
+    
+    private void toXML(Element req, List<ShareInfo> shareInfo) {
+        for (ShareInfo si : shareInfo) {
+            Element eShare = req.addElement(AdminConstants.E_SHARE);
+            eShare.addAttribute(AdminConstants.A_ACTION, si.getAction().name());
+        
+            eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(si.getOwnerAcctId());
+            eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, si.getFolderIdOrPath());
+            
+            if (si.getDesc() != null)
+                eShare.addElement(AdminConstants.E_DESC).setText(si.getDesc());
+        }
+    }
+    
+    @Override
+    public void modifyShareInfo(Account acct, List<ShareInfo> shareInfo) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
+        
+        Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
+        eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        eAcct.setText(acct.getId());
+        
+        toXML(req, shareInfo);
+        invoke(req);
+    }
+    
+    @Override
+    public void modifyShareInfo(DistributionList dl, List<ShareInfo> shareInfo) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
+        
+        Element eAcct = req.addElement(AdminConstants.E_DL);
+        eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        eAcct.setText(dl.getId());
+        
+        toXML(req, shareInfo);
         invoke(req);
     }
 

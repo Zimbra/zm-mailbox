@@ -192,6 +192,9 @@ public class AdminService implements DocumentService {
         
         dispatcher.registerHandler(AdminConstants.COUNT_ACCOUNT_REQUEST, new CountAccount());
         
+        dispatcher.registerHandler(AdminConstants.MODIFY_SHARE_INFO_REQUEST, new ModifyShareInfo());
+        
+        
         dispatcher.registerHandler(AdminConstants.GET_SERVER_NIFS_REQUEST, new GetServerNIFs());
         
         // f/b mgmt

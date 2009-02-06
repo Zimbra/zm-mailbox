@@ -408,6 +408,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
     
     /**
+     * @param zimbraId the zimbraId of the dl we are checking for
+     * @return true if this distribution list (or one of the dl it belongs to) is a member of the specified dl.
+     * @throws ServiceException
+     */
+    public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    /**
      * @return set of all the zimbraId's of lists this account belongs to, including any list in other list.
      * @throws ServiceException
      */
@@ -1791,4 +1800,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // do nothing by default
     }
 
+    public void modifyShareInfo(Account acct, List<ShareInfo> shareInfo) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void modifyShareInfo(DistributionList dl, List<ShareInfo> shareInfo) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
 }

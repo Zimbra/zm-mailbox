@@ -4031,6 +4031,20 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionLists(acct).contains(zimbraId);        
     }
     
+    
+    @Override
+    public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
+        DistributionList group = list;
+        
+        // if the dl is not an AclGroup, get one because AclGroup are cached in LdapProvisioning and 
+        // upward membership are for the group is cached on the AclGroup object
+        if (!list.isAclGroup())
+            group = getAclGroup(DistributionListBy.id, list.getId());
+        
+        AclGroups aclGroups = getAclGroups(group);
+        return aclGroups.groupIds().contains(zimbraId);
+    }
+    
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
         return getDistributionLists(acct, directOnly, via, false);
     }

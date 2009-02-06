@@ -237,7 +237,7 @@ public class ToXML {
             
             Element eGrant = eACL.addElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
-                  .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                  .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(grant.getGranteeType()))
                   .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
                   .addAttribute(MailConstants.A_DISPLAY, name);
             
