@@ -27,6 +27,7 @@ public class ZGetMessageParams {
     private boolean mNeuterImages;
     private boolean mRawContent;
     private String mPart;
+    private Integer mMax;
 
     public ZGetMessageParams() { }
 
@@ -78,6 +79,14 @@ public class ZGetMessageParams {
     public void setPart(String part) {
         mPart = part;
     }
+    
+    public Integer getMax() {
+        return mMax;
+    }
+    
+    public void setMax(Integer max) {
+        mMax = max;
+    }
 
     public int hashCode() {
         if (mPart != null)
@@ -101,7 +110,8 @@ public class ZGetMessageParams {
                 this.mWantHtml == that.mWantHtml &&
                 this.mMarkRead == that.mMarkRead &&
                 StringUtil.equal(this.mId, that.mId) &&
-                StringUtil.equal(this.mPart, that.mPart);
+                StringUtil.equal(this.mPart, that.mPart) &&
+                this.mMax == that.mMax;
     }
 
     public ZGetMessageParams(ZGetMessageParams that) {

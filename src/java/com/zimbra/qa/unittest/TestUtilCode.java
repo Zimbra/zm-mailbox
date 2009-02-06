@@ -21,15 +21,24 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
-import com.zimbra.common.util.*;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.TimeoutMap;
+import com.zimbra.common.util.TruncatingWriter;
+import com.zimbra.common.util.ValueCounter;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -273,6 +282,28 @@ public class TestUtilCode extends TestCase
         assertTrue(ByteUtil.isGzipped(compressed));
         assertFalse(ByteUtil.isGzipped(uncompressed));
         assertEquals(s, new String(uncompressed));
+    }
+    
+    /**
+     * Tests {@link TruncatingWriter}
+     */
+    public void testTruncatingWriter()
+    throws Exception {
+        doTruncatingWriterTest(0);
+        doTruncatingWriterTest(5);
+        doTruncatingWriterTest(100);
+    }
+    
+    private void doTruncatingWriterTest(int maxChars)
+    throws Exception {
+        String original = "Come talk to me";
+        StringWriter sw = new StringWriter();
+        Writer w = new TruncatingWriter(sw, maxChars);
+        w.append(original);
+        String s = sw.toString();
+        int actualChars = Math.min(maxChars, original.length());
+        assertEquals(actualChars, s.length());
+        assertEquals(original.substring(0, actualChars), s);
     }
     
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {

@@ -17,18 +17,16 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
-import org.json.JSONException;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.Function;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ZMessage implements ZItem, ToZJSONObject {
 
@@ -333,6 +331,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         private List<ZMimePart> mChildren;
         private long mSize;
         private ZMimePart mParent;
+        private boolean mTruncated;
         
         public ZMimePart(ZMimePart parent, Element e) throws ServiceException {
             mParent = parent;
@@ -351,6 +350,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
             for (Element mpEl: e.listElements(MailConstants.E_MIMEPART)) {
                 mChildren.add(new ZMimePart(this, mpEl));
             }
+            mTruncated = e.getAttributeBool(MailConstants.A_TRUNCATED_CONTENT, false);
         }
 
         public ZJSONObject toZJSONObject() throws JSONException {
@@ -439,6 +439,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
         
         public long getSize() {
             return mSize;
+        }
+        
+        public boolean wasTruncated() {
+            return mTruncated;
         }
     }
 

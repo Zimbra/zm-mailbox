@@ -1,0 +1,117 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.qa.unittest;
+
+import junit.framework.TestCase;
+
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.handler.TextEnrichedHandler;
+import com.zimbra.cs.zclient.ZGetMessageParams;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+
+public class TestGetMsg
+extends TestCase {
+
+    private static final String USER_NAME = "user1";
+    private static final String NAME_PREFIX = TestGetMsg.class.getSimpleName();
+    
+    public void setUp()
+    throws Exception {
+        cleanUp();
+    }
+    
+    public void testPlainMessageContent()
+    throws Exception {
+        doTestMessageContent(Mime.CT_TEXT_PLAIN, "This is the body of a plain message.");
+    }
+    
+    public void testHtmlMessageContent()
+    throws Exception {
+        doTestMessageContent(Mime.CT_TEXT_HTML, "<html><head></head><body>HTML message</body></html>");
+    }
+    
+    public void testEnrichedMessageContent()
+    throws Exception {
+        doTestMessageContent(Mime.CT_TEXT_ENRICHED,
+            "<color><param>red</param>Blood</color> is <bold>thicker</bold> than<color><param>blue</param>water</color>.");
+    }
+    
+    private void doTestMessageContent(String contentType, String body)
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        MessageBuilder mb = new MessageBuilder();
+        
+        String subject = NAME_PREFIX + " testMessageContent " + contentType;
+        String raw = mb.withSubject(subject).withBody(body).withContentType(contentType).create();
+        String msgId = TestUtil.addRawMessage(mbox, raw);
+        if (contentType.equals(Mime.CT_TEXT_ENRICHED)) {
+            body = TextEnrichedHandler.convertToHTML(body);
+        }
+        
+        verifyMessageContent(mbox, msgId, false, null, body, contentType);
+        verifyMessageContent(mbox, msgId, false, 24, body, contentType);
+    }
+    
+    private void verifyMessageContent(ZMailbox mbox, String msgId, boolean wantHtml,
+                                      Integer maxLength, String body, String contentType)
+    throws Exception {
+        ZGetMessageParams params = new ZGetMessageParams();
+        params.setId(msgId);
+        params.setWantHtml(wantHtml);
+        params.setMax(maxLength);
+        ZMessage msg = mbox.getMessage(params);
+        ZMimePart mp = msg.getMimeStructure();
+        
+        int expectedLength = body.length();
+        String expected = body;
+        if (maxLength != null) {
+            expectedLength = Math.min(maxLength, body.length());
+            expected = body.substring(0, expectedLength);
+            assertEquals(maxLength < body.length(), mp.wasTruncated());
+        } else {
+            assertFalse(mp.wasTruncated());
+        }
+
+        if (contentType.equals(Mime.CT_TEXT_ENRICHED)) {
+            // HTML conversion in TextEnrichedHandler will drop trailing
+            // characters when the enriched data is malformed (tags not
+            // closed, etc.).
+            assertTrue(mp.getContent().length() > 0);
+            assertTrue(expected.startsWith(mp.getContent()));
+        } else {
+            assertEquals(expected, mp.getContent());
+        }
+    }
+    
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
+    
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+    }
+
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestGetMsg.class);
+    }
+}

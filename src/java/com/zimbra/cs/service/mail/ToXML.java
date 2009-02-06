@@ -29,6 +29,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -1684,7 +1685,7 @@ public class ToXML {
      * 
      * @param elt     The element to add the <tt>&lt;content></tt> to.
      * @param mpi     The message part to extract the content from.
-     * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
+     * @param maxSize The maximum number of characters to inline (<=0 is unlimited).
      * @param neuter  Whether to "neuter" image <tt>src</tt> attributes.
      * @parame defaultCharset  The user's default charset preference.
      * @throws MessagingException when message parsing or CTE-decoding fails
@@ -1701,35 +1702,63 @@ public class ToXML {
         Mime.repairTransferEncoding(mp);
 
         String data = null;
+
         if (ctype.equals(Mime.CT_TEXT_HTML)) {
             String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
             InputStream stream = null;
+            StringWriter sw = new StringWriter();
+            TruncatingWriter tw = null;
+            Writer out = sw;
+            if (maxSize > 0) {
+                tw = new TruncatingWriter(sw, maxSize + 1);
+                out = tw;
+            }
+            Reader reader = null;
+            
             try {
                 if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
                     // make sure to feed getTextReader() a full Content-Type header, not just the primary/subtype portion
-                    Reader reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
-                    data = HtmlDefang.defang(reader, neuter);
+                    reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                    HtmlDefang.defang(reader, neuter, out);
+                    data = sw.toString();
                 } else {
                     String cte = mp.getEncoding();
                     if (cte != null && !cte.trim().toLowerCase().equals(Mime.ET_7BIT)) {
                         try {
                             stream = mp.getInputStream();
-                            data = HtmlDefang.defang(stream, neuter);
+                            HtmlDefang.defang(stream, neuter, out);
+                            data = sw.toString();
                         } catch (IOException ioe) { }
                     }
                     if (data == null) {
-                        data = Mime.getStringContent(mp, defaultCharset);
-                        data = HtmlDefang.defang(data, neuter);
+                        reader = Mime.getContentAsReader(mp, defaultCharset);
+                        HtmlDefang.defang(reader, neuter, out);
+                        data = sw.toString();
                     }
                 }
             } finally {
                 ByteUtil.closeStream(stream);
+                ByteUtil.closeReader(reader);
             }
         } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
-            data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp, defaultCharset));
+            // Enriched text handling is a little funky because TextEnrichedHandler
+            // doesn't use Reader and Writer.  As a result, we truncate
+            // the source before converting to HTML.
+            Reader reader = Mime.getContentAsReader(mp, defaultCharset);
+            int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
+            String enriched = ByteUtil.getContent(reader, maxChars, true);
+            if (enriched.length() == maxChars) {
+                // The normal check for truncated data won't work because
+                // the length of the converted text is different than the length
+                // of the source, so set the attr here.
+                elt.addAttribute(MailConstants.A_TRUNCATED_CONTENT, true);
+            }
+            data = TextEnrichedHandler.convertToHTML(enriched);
         } else {
-            data = Mime.getStringContent(mp, defaultCharset);
+            Reader reader = Mime.getContentAsReader(mp, defaultCharset);
+            int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
+            data = ByteUtil.getContent(reader, maxChars, true);
         }
 
         if (data != null) {

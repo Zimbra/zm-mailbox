@@ -2006,6 +2006,9 @@ public class ZMailbox implements ToZJSONObject {
             msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
             msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
             msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
+            if (params.getMax() != null) {
+                msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, params.getMax());
+            }
             ZMessage zm = new ZMessage(invoke(req).getElement(MailConstants.E_MSG), this);
             cm = new CachedMessage();
             cm.zm = zm;

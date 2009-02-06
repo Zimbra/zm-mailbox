@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
 
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -37,34 +38,45 @@ import org.cyberneko.html.HTMLConfiguration;
 
 import com.zimbra.common.util.ByteUtil;
 
-/**
- * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
-public class HtmlDefang {
-
-    public static String defang(String html, boolean neuterImages) throws IOException
-    {
+public class HtmlDefang
+{
+    public static String defang(String html, boolean neuterImages) throws IOException {
         return defang(new StringReader(html), neuterImages);
     }
     
-    public static String defang(InputStream html, boolean neuterImages) throws IOException
-    {
+    public static String defang(InputStream html, boolean neuterImages)
+    throws IOException {
+        StringWriter writer = new StringWriter();
+        defang(html, neuterImages, writer);
+        return writer.toString(); 
+    }
+    
+    public static void defang(InputStream html, boolean neuterImages, Writer out)
+    throws IOException {
         XMLInputSource source = new XMLInputSource(null, null, null, html, null);
-        return defang(source, neuterImages);        
+        defang(source, neuterImages, out);        
     }
     
-    public static String defang(Reader htmlReader, boolean neuterImages) throws IOException
-    {
+    public static String defang(Reader htmlReader, boolean neuterImages)
+    throws IOException {
+        StringWriter writer = new StringWriter();
+        defang(htmlReader, neuterImages, writer);
+        return writer.toString();
+    }
+    
+    public static void defang(Reader htmlReader, boolean neuterImages, Writer out)
+    throws IOException {
         XMLInputSource source = new XMLInputSource(null, null, null, htmlReader, null);
-        return defang(source, neuterImages);        
+        defang(source, neuterImages, out);
     }
     
-    public static String defang(XMLInputSource source, boolean neuterImages) throws IOException
-    {
-        StringWriter out = new StringWriter();
+    /**
+     * @param source HTML source
+     * @param neuterImages <tt>true</tt> to remove images
+     * @param maxChars maximum number of characters to return, or <tt><=0</tt> for no limit
+     */
+    public static void defang(XMLInputSource source, boolean neuterImages, Writer out)
+    throws IOException {
         // create writer filter
         // TODO: uft-8 right?
         /*
@@ -91,7 +103,6 @@ public class HtmlDefang {
         // parse document
     
         parser.parse(source);
-        return out.toString();
     }
 
     public static void main(String[] args) throws IOException {

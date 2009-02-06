@@ -75,6 +75,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
@@ -193,20 +194,6 @@ extends Assert {
         return authResp.getSession();
     }
 
-    private static String[] MESSAGE_TEMPLATE_LINES = {
-        "From: Jeff Spiccoli <${SENDER}>",
-        "To: Test User 1 <${RECIPIENT}>",
-        "Subject: ${SUBJECT}",
-        "Date: ${DATE}",
-        "Content-Type: text/plain",
-        "",
-        "${MESSAGE_BODY}"
-    };
-
-    private static String MESSAGE_TEMPLATE = StringUtil.join("\r\n", MESSAGE_TEMPLATE_LINES);
-    private static String DEFAULT_MESSAGE_BODY =
-        "Dude,\r\n\r\nAll I need are some tasty waves, a cool buzz, and I'm fine.\r\n\r\nJeff";
-
     public static Message addMessage(Mailbox mbox, String subject)
     throws Exception {
         return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis());
@@ -219,47 +206,18 @@ extends Assert {
         return mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
     }
     
-    private static String getDateHeaderValue(Date date) {
-        return String.format("%1$ta, %1$td %1$tb %1$tY %1$tH:%1$tM:%1$tS %1$tz (%1$tZ)", date);
-    }
-
     private static String getTestMessage(String subject)
     throws ServiceException {
-        return getTestMessage(subject, null, null, null);
+        return new MessageBuilder().withSubject(subject).create();
     }
 
     public static String getTestMessage(String subject, String recipient, String sender, Date date)
     throws ServiceException {
-        return getTestMessage(subject, DEFAULT_MESSAGE_BODY, recipient, sender, date);
+        return new MessageBuilder().withSubject(subject).withRecipient(recipient)
+            .withSender(sender).withDate(date).create();
     }
 
-    public static String getTestMessage(String subject, String body, String recipient, String sender, Date date)
-    throws ServiceException {
-        if (recipient == null) {
-            recipient = "user1";
-        }
-        if (sender == null) {
-            sender = "jspiccoli";
-        }
-        if (date == null) {
-            date = new Date();
-        }
-        if (body == null) {
-            body = DEFAULT_MESSAGE_BODY;
-        }
-        sender = addDomainIfNecessary(sender);
-        recipient = addDomainIfNecessary(recipient);
-        
-        Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("SUBJECT", subject);
-        vars.put("SENDER", sender);
-        vars.put("RECIPIENT", recipient);
-        vars.put("DATE", getDateHeaderValue(date));
-        vars.put("MESSAGE_BODY", body);
-        return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
-    }
-    
-    private static String addDomainIfNecessary(String user)
+    static String addDomainIfNecessary(String user)
     throws ServiceException {
         if (user == null || user.contains("@")) {
             return user;
@@ -306,6 +264,11 @@ extends Assert {
     throws ServiceException {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, flags, null, 0, message, true);
+    }
+    
+    public static String addRawMessage(ZMailbox mbox, String rawMessage)
+    throws ServiceException {
+        return mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_INBOX), null, null, 0, rawMessage, true);
     }
     
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject)
