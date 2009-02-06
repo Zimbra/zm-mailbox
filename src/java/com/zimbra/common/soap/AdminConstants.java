@@ -305,6 +305,9 @@ public class AdminConstants {
     public static final QName COUNT_ACCOUNT_REQUEST = QName.get("CountAccountRequest", NAMESPACE);
     public static final QName COUNT_ACCOUNT_RESPONSE = QName.get("CountAccountResponse", NAMESPACE);
     
+    public static final QName MODIFY_SHARE_INFO_REQUEST = QName.get("ModifyShareInfoRequest", NAMESPACE);
+    public static final QName MODIFY_SHARE_INFO_RESPONSE = QName.get("ModifyShareInfoResponse", NAMESPACE);
+    
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
@@ -439,7 +442,9 @@ public class AdminConstants {
     public static final String E_DIRECTORY = "directory";
     public static final String E_PROVIDER = "provider";
     public static final String E_STATS = "stats";
-
+    public static final String E_FOLDER = "folder";
+    public static final String E_OWNER = "owner";
+    public static final String E_SHARE = "share";
     
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
@@ -475,7 +480,9 @@ public class AdminConstants {
     public static final String A_EXCLUDE = "exclude";
     public static final String A_REFRESH = "refresh";
     public static final String A_TARGETNAME = "targetName";
+    public static final String A_FOLDER = "l";  // to be consistant with MailConstants.A_FOLDER
     public static final String A_PATH = "path";
+    public static final String A_PATH_OR_ID = "pathOrId";
     public static final String A_CREATE = "create";
     public static final String A_EXISTS = "exists";
     public static final String A_IS_DIRECTORY = "isDirectory";
