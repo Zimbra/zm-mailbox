@@ -43,6 +43,12 @@ public class ModifyWhiteBlackList extends AccountDocumentHandler {
         if (eList == null)
             return;
         
+        // empty list, means delete all
+        if (eList.getOptionalElement(AccountConstants.E_ADDR) == null) {
+            StringUtil.addToMultiMap(addrs, attrName, "");
+            return;
+        }
+        
         for (Element eAddr : eList.listElements(AccountConstants.E_ADDR)) {
             String attr = eAddr.getAttribute(AccountConstants.A_OP, "") + attrName;
             String value = eAddr.getText();

@@ -2891,6 +2891,16 @@ server/globalconfig attribute is set to FALSE.
     </blackList>]    
 </ModifyWhiteBlackListRequest>
 
+Note:
+    If no <addr> is present in a list, it means to remove all addresses 
+    in the list.
+    
+    e.g. remove all addresses in the white list
+         <ModifyWhiteBlackListRequest>
+             <whiteList/>
+         </ModifyWhiteBlackListRequest>
+    
+
 {op} = + | -
        + : add, ignored if the value already exists
        - : remove, ignored if the value does not exist
@@ -2928,6 +2938,8 @@ server/globalconfig attribute is set to FALSE.
                   <addr op="+">foo</addr>
                   <addr>bar</addr>
               </whiteList>
-       
+   
+
+    
 <ModifyWhiteBlackListResponse/>
 
