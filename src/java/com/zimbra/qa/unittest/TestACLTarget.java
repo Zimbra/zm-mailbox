@@ -78,10 +78,10 @@ public class TestACLTarget extends TestACL {
         DistributionList group2 = mProv.createDistributionList(getEmailAddr(testName, "group2"), new HashMap<String, Object>());
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
-        grantRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
-        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        grantRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        via = new TestViaGrant(TargetType.dl, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
-        revokeRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        revokeRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
         
         // grant on the domain the target account is in
         Domain domain = mProv.getDomain(target);
@@ -130,20 +130,20 @@ public class TestACLTarget extends TestACL {
         attrs.put(Provisioning.A_displayName, "foo");
         attrs.put(Provisioning.A_zimbraCalResType, "Equipment");
         CalendarResource target = mProv.createCalendarResource(getEmailAddr(testName, "target"), PASSWORD, attrs);
-        grantRight(authedAcct, TargetType.resource, target, GranteeType.GT_USER, grantee, right, ALLOW);
-        via = new TestViaGrant(TargetType.resource, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        grantRight(authedAcct, TargetType.calresource, target, GranteeType.GT_USER, grantee, right, ALLOW);
+        via = new TestViaGrant(TargetType.calresource, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
-        revokeRight(authedAcct, TargetType.resource, target, GranteeType.GT_USER, grantee, right, ALLOW);
+        revokeRight(authedAcct, TargetType.calresource, target, GranteeType.GT_USER, grantee, right, ALLOW);
         
         // grant on a group the target account is in
         DistributionList group1 = mProv.createDistributionList(getEmailAddr(testName, "group1"), new HashMap<String, Object>());
         DistributionList group2 = mProv.createDistributionList(getEmailAddr(testName, "group2"), new HashMap<String, Object>());
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
-        grantRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
-        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        grantRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        via = new TestViaGrant(TargetType.dl, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
-        revokeRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        revokeRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
         
         // grant on the domain the target account is in
         Domain domain = mProv.getDomain(target);
@@ -189,20 +189,20 @@ public class TestACLTarget extends TestACL {
         
         // grant on target group itself 
         DistributionList target = mProv.createDistributionList(getEmailAddr(testName, "target"), new HashMap<String, Object>());
-        grantRight(authedAcct, TargetType.distributionlist, target, GranteeType.GT_USER, grantee, right, ALLOW);
-        via = new TestViaGrant(TargetType.distributionlist, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        grantRight(authedAcct, TargetType.dl, target, GranteeType.GT_USER, grantee, right, ALLOW);
+        via = new TestViaGrant(TargetType.dl, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
-        revokeRight(authedAcct, TargetType.distributionlist, target, GranteeType.GT_USER, grantee, right, ALLOW);
+        revokeRight(authedAcct, TargetType.dl, target, GranteeType.GT_USER, grantee, right, ALLOW);
         
         // grant on a group the target group is in
         DistributionList group1 = mProv.createDistributionList(getEmailAddr(testName, "group1"), new HashMap<String, Object>());
         DistributionList group2 = mProv.createDistributionList(getEmailAddr(testName, "group2"), new HashMap<String, Object>());
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
-        grantRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
-        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        grantRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        via = new TestViaGrant(TargetType.dl, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
-        revokeRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        revokeRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
         
         // grant on the domain the target account is in
         Domain domain = mProv.getDomain(target);
@@ -510,8 +510,8 @@ public class TestACLTarget extends TestACL {
         DistributionList group2 = mProv.createDistributionList(getEmailAddr(testName, "group2"), new HashMap<String, Object>());
         mProv.addMembers(group1, new String[] {group2.getName()});
         mProv.addMembers(group2, new String[] {target.getName()});
-        grantRight(authedAcct, TargetType.distributionlist, group2, GranteeType.GT_USER, grantee, right, DENY);
-        grantRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        grantRight(authedAcct, TargetType.dl, group2, GranteeType.GT_USER, grantee, right, DENY);
+        grantRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
         
         // 3. domain the target account is in
         Domain domain = mProv.getDomain(target);
@@ -531,16 +531,16 @@ public class TestACLTarget extends TestACL {
         
         // revoke the grant on target account, then grant on group2 should take effect
         revokeRight(authedAcct, TargetType.account, target, GranteeType.GT_USER, grantee, right, ALLOW);
-        via = new TestViaGrant(TargetType.distributionlist, group2, GranteeType.GT_USER, grantee.getName(), right, NEGATIVE);
+        via = new TestViaGrant(TargetType.dl, group2, GranteeType.GT_USER, grantee.getName(), right, NEGATIVE);
         verify(grantee, target, right, DENY, via);
         
         // revoke the grant on group2, then grant on group1 should take effect
-        revokeRight(authedAcct, TargetType.distributionlist, group2, GranteeType.GT_USER, grantee, right, DENY);
-        via = new TestViaGrant(TargetType.distributionlist, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
+        revokeRight(authedAcct, TargetType.dl, group2, GranteeType.GT_USER, grantee, right, DENY);
+        via = new TestViaGrant(TargetType.dl, group1, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
         
         // revoke the grant on group1, then grant on domain should take effect
-        revokeRight(authedAcct, TargetType.distributionlist, group1, GranteeType.GT_USER, grantee, right, ALLOW);
+        revokeRight(authedAcct, TargetType.dl, group1, GranteeType.GT_USER, grantee, right, ALLOW);
         via = new TestViaGrant(TargetType.domain, domain, GranteeType.GT_USER, grantee.getName(), right, NEGATIVE);
         verify(grantee, target, right, DENY, via);
         

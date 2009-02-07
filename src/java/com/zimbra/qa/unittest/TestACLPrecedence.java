@@ -363,15 +363,15 @@ public class TestACLPrecedence extends TestACL {
         Right right = UserRight.R_viewFreeBusy;
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(newGrpACE(GC, right, ALLOW));
-        grantRight(TargetType.distributionlist, G1, aces);
+        grantRight(TargetType.dl, G1, aces);
         
         aces.clear();
         aces.add(newGrpACE(GB, right, DENY));
-        grantRight(TargetType.distributionlist, G2, aces);
+        grantRight(TargetType.dl, G2, aces);
         
         aces.clear();
         aces.add(newGrpACE(GA, right, DENY));
-        grantRight(TargetType.distributionlist, G3, aces);
+        grantRight(TargetType.dl, G3, aces);
         
         // the right should be allowed via the grant on G1, granted to group GC 
         /*
@@ -379,8 +379,8 @@ public class TestACLPrecedence extends TestACL {
         verify(grantee, target, right, ALLOW, via);
         */
         
-        via = new TestViaGrant(TargetType.distributionlist, G2, GranteeType.GT_GROUP, GB.getName(), right, NEGATIVE);
-        via.addCanAlsoVia(new TestViaGrant(TargetType.distributionlist, G3, GranteeType.GT_GROUP, GA.getName(), right, NEGATIVE));
+        via = new TestViaGrant(TargetType.dl, G2, GranteeType.GT_GROUP, GB.getName(), right, NEGATIVE);
+        via.addCanAlsoVia(new TestViaGrant(TargetType.dl, G3, GranteeType.GT_GROUP, GA.getName(), right, NEGATIVE));
         verify(grantee, target, right, DENY, via);
         
     }

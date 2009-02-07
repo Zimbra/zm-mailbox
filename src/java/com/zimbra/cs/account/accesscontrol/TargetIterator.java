@@ -122,11 +122,11 @@ public abstract class TargetIterator{
             Entry grantedOn = null;
             
             if (!mCheckedSelf) {
-                mCurTargetType = TargetType.distributionlist;
+                mCurTargetType = TargetType.dl;
                 mCheckedSelf = true;
                 grantedOn = mTarget;
                 
-            } else if (mCurTargetType == TargetType.distributionlist) {
+            } else if (mCurTargetType == TargetType.dl) {
                 if (mGroups == null) {
                     // LdapProvisioning.getAclGroups will do a LDAP search
                     // if the AclGroups is not computed/cached yet.  
@@ -165,7 +165,7 @@ public abstract class TargetIterator{
         private int mIdxInGroups = 0;
         
         DistributionListTargetIterator(Provisioning prov, Entry target) {
-            super(prov, TargetType.distributionlist, target);
+            super(prov, TargetType.dl, target);
         }
         
         @Override
@@ -176,11 +176,11 @@ public abstract class TargetIterator{
             Entry grantedOn = null;
             
             if (!mCheckedSelf) {
-                mCurTargetType = TargetType.distributionlist;
+                mCurTargetType = TargetType.dl;
                 mCheckedSelf = true;
                 grantedOn = mTarget;
                 
-            } else if (mCurTargetType == TargetType.distributionlist) {
+            } else if (mCurTargetType == TargetType.dl) {
                 if (mGroups == null) {
                     // LdapProvisioning.getAclGroups will do a LDAP search
                     // if the AclGroups is not computed/cached yet.  

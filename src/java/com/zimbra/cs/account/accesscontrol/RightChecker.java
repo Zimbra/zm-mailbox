@@ -1174,8 +1174,8 @@ public class RightChecker {
         
         Domain domain = null;
         if (targetType == TargetType.account ||
-            targetType == TargetType.resource ||
-            targetType == TargetType.distributionlist) {
+            targetType == TargetType.calresource ||
+            targetType == TargetType.dl) {
             
             // need a domain
             
@@ -1189,7 +1189,7 @@ public class RightChecker {
         
         switch (targetType) {
         case account:
-        case resource:
+        case calresource:
             Cos cos = null;
             if (cosBy != null && cosStr != null) {
                 cos = prov.get(cosBy, cosStr);
@@ -1210,7 +1210,7 @@ public class RightChecker {
         case cos:  
             targetEntry = new Cos("pseudocos", zimbraId, attrMap, prov);
             break;
-        case distributionlist:
+        case dl:
             targetEntry = new DistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov);
             DistributionList dl = (DistributionList)targetEntry;
             dl.turnToAclGroup();

@@ -45,6 +45,9 @@ public class CheckPermission extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
+        
+        if (true)
+            throw ServiceException.INVALID_REQUEST("disabled for now, ome back soon", null);
 
         Element eTarget = request.getElement(MailConstants.E_TARGET);
         String targetType = eTarget.getAttribute(MailConstants.A_TARGET_TYPE);

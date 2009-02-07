@@ -136,9 +136,9 @@ public class TestACLGrant extends TestACL {
                         Set<TargetType> expected) throws ServiceException {
         
         doTargetTest(authedAcct, grantee, TargetType.account, getAccount(), right, expected);
-        doTargetTest(authedAcct, grantee, TargetType.resource, getCalendarResource(), right, expected);
+        doTargetTest(authedAcct, grantee, TargetType.calresource, getCalendarResource(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.cos, getCos(), right, expected);
-        doTargetTest(authedAcct, grantee, TargetType.distributionlist, getDistributionList(), right, expected);
+        doTargetTest(authedAcct, grantee, TargetType.dl, getDistributionList(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.domain, getDomain(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.server, getServer(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.xmppcomponent, getXMPPComponent(), right, expected);
@@ -170,8 +170,8 @@ public class TestACLGrant extends TestACL {
          * single target rights
          */
         expected.add(TargetType.account);
-        expected.add(TargetType.resource);
-        expected.add(TargetType.distributionlist);
+        expected.add(TargetType.calresource);
+        expected.add(TargetType.dl);
         expected.add(TargetType.domain);
         expected.add(TargetType.global);
         
@@ -195,8 +195,8 @@ public class TestACLGrant extends TestACL {
         expected.clear();
         expected.add(TargetType.account);
         expected.add(TargetType.cos);
-        expected.add(TargetType.resource);
-        expected.add(TargetType.distributionlist);
+        expected.add(TargetType.calresource);
+        expected.add(TargetType.dl);
         expected.add(TargetType.domain);
         expected.add(TargetType.global);
 
@@ -372,8 +372,8 @@ public class TestACLGrant extends TestACL {
         doTestDelegate(GA_DELEGATOR, TargetType.domain, TD, GranteeType.GT_GROUP, GG_DELEGATEE, right, Result.GOOD);
         
         // on sub target
-        doTestDelegate(GA_DELEGATOR, TargetType.distributionlist, subTargetDl, GranteeType.GT_USER, GA_DELEGATEE, right, Result.INVALID_REQUEST);
-        doTestDelegate(GA_DELEGATOR, TargetType.distributionlist, subTargetDl, GranteeType.GT_GROUP, GG_DELEGATEE, right, Result.INVALID_REQUEST);
+        doTestDelegate(GA_DELEGATOR, TargetType.dl, subTargetDl, GranteeType.GT_USER, GA_DELEGATEE, right, Result.INVALID_REQUEST);
+        doTestDelegate(GA_DELEGATOR, TargetType.dl, subTargetDl, GranteeType.GT_GROUP, GG_DELEGATEE, right, Result.INVALID_REQUEST);
         doTestDelegate(GA_DELEGATOR, TargetType.account, subTargetAcct, GranteeType.GT_USER, GA_DELEGATEE, right, Result.INVALID_REQUEST);
         doTestDelegate(GA_DELEGATOR, TargetType.account, subTargetAcct, GranteeType.GT_GROUP, GG_DELEGATEE, right, Result.INVALID_REQUEST);
         
@@ -393,8 +393,8 @@ public class TestACLGrant extends TestACL {
         doDelegatePartialRight(GA_DELEGATOR, TargetType.domain, TD, GranteeType.GT_GROUP, GG_DELEGATEE, Result.GOOD);
         
         // on sub target
-        doDelegatePartialRight(GA_DELEGATOR, TargetType.distributionlist, subTargetDl, GranteeType.GT_USER, GA_DELEGATEE, Result.GOOD);
-        doDelegatePartialRight(GA_DELEGATOR, TargetType.distributionlist, subTargetDl, GranteeType.GT_GROUP, GG_DELEGATEE, Result.GOOD);
+        doDelegatePartialRight(GA_DELEGATOR, TargetType.dl, subTargetDl, GranteeType.GT_USER, GA_DELEGATEE, Result.GOOD);
+        doDelegatePartialRight(GA_DELEGATOR, TargetType.dl, subTargetDl, GranteeType.GT_GROUP, GG_DELEGATEE, Result.GOOD);
         doDelegatePartialRight(GA_DELEGATOR, TargetType.account, subTargetAcct, GranteeType.GT_USER, GA_DELEGATEE, Result.GOOD);
         doDelegatePartialRight(GA_DELEGATOR, TargetType.account, subTargetAcct, GranteeType.GT_GROUP, GG_DELEGATEE, Result.GOOD);
         

@@ -38,8 +38,8 @@ import com.zimbra.cs.account.Zimlet;
 
 public enum TargetType {
     account(true,           AttributeClass.account),
-    resource(true,          AttributeClass.calendarResource),
-    distributionlist(true,  AttributeClass.distributionList),
+    calresource(true,       AttributeClass.calendarResource),
+    dl(true,                AttributeClass.distributionList),
     domain(true,            AttributeClass.domain),
     cos(true,               AttributeClass.cos),
     server(true,            AttributeClass.server),
@@ -87,9 +87,9 @@ public enum TargetType {
     
     static void init() {
         TargetType.account.setInheritedByTargetTypes(new TargetType[]{TargetType.account});
-        TargetType.resource.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.resource});
-        TargetType.distributionlist.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist});
-        TargetType.domain.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.resource, TargetType.distributionlist, TargetType.domain});
+        TargetType.calresource.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.calresource});
+        TargetType.dl.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.calresource, TargetType.dl});
+        TargetType.domain.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.calresource, TargetType.dl, TargetType.domain});
         TargetType.cos.setInheritedByTargetTypes(new TargetType[]{TargetType.cos});
         TargetType.server.setInheritedByTargetTypes(new TargetType[]{TargetType.server});
         TargetType.xmppcomponent.setInheritedByTargetTypes(new TargetType[]{TargetType.xmppcomponent});
@@ -169,12 +169,12 @@ public enum TargetType {
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(target); 
             break;
-        case resource:
+        case calresource:
             targetEntry = prov.get(CalendarResourceBy.fromString(targetBy.name()), target);
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
             break;
-        case distributionlist:
+        case dl:
             targetEntry = prov.getAclGroup(DistributionListBy.fromString(targetBy.name()), target);
             if (targetEntry == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
@@ -254,7 +254,7 @@ public enum TargetType {
     static TargetType getTargetType(Entry target) throws ServiceException{
         
         if (target instanceof CalendarResource)
-            return TargetType.resource;
+            return TargetType.calresource;
         else if (target instanceof Account)
             return TargetType.account;
         else if (target instanceof Domain)
@@ -262,7 +262,7 @@ public enum TargetType {
         else if (target instanceof Cos)
             return TargetType.cos;
         else if (target instanceof DistributionList)
-            return TargetType.distributionlist;
+            return TargetType.dl;
         else if (target instanceof Server)
             return TargetType.server;
         else if (target instanceof Config)
