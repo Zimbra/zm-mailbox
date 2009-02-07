@@ -277,31 +277,31 @@
 ========================================================
 -->
 
-<right name="getCalendarResource" type="getAttrs" targetType="resource">
+<right name="getCalendarResource" type="getAttrs" targetType="calresource">
   <desc>get all calendar resource attributes</desc>
 </right>
 
-<right name="modifyCalendarResource" type="setAttrs" targetType="resource">
+<right name="modifyCalendarResource" type="setAttrs" targetType="calresource">
   <desc>modify all calendar resource attributes</desc>
 </right>
 
-<right name="listCalendarResource" type="preset" targetType="resource">
+<right name="listCalendarResource" type="preset" targetType="calresource">
   <desc>see calendar resource in GetAllCalendarResources/SearchDirectoryResponse</desc>
 </right>
 
-<right name="renameCalendarResource" type="preset" targetType="resource">
+<right name="renameCalendarResource" type="preset" targetType="calresource">
   <desc>rename calendar resource</desc>
 </right>
 
-<right name="deleteCalendarResource" type="preset" targetType="resource">
+<right name="deleteCalendarResource" type="preset" targetType="calresource">
   <desc>delete calendar resource</desc>
 </right>
 
-<right name="addCalendarResourceAlias" type="preset" targetType="resource">
+<right name="addCalendarResourceAlias" type="preset" targetType="calresource">
   <desc>add calendar resource alias</desc>
 </right>
 
-<right name="removeCalendarResourceAlias" type="preset" targetType="resource">
+<right name="removeCalendarResourceAlias" type="preset" targetType="calresource">
   <desc>remove calendar resource alias</desc>
 </right>
 
@@ -397,39 +397,39 @@
 ========================================================
 -->
 
-<right name="getDistributionList" type="getAttrs" targetType="distributionlist">
+<right name="getDistributionList" type="getAttrs" targetType="dl">
   <desc>get all distribution list attributes</desc>
 </right>
 
-<right name="modifyDistributionList" type="setAttrs" targetType="distributionlist">
+<right name="modifyDistributionList" type="setAttrs" targetType="dl">
   <desc>set all distribution list attributes</desc>
 </right>
 
-<right name="listDistributionList" type="preset" targetType="distributionlist">
+<right name="listDistributionList" type="preset" targetType="dl">
   <desc>see distribution list in GetAllCos/SearchDirectoryResponse</desc>
 </right>
 
-<right name="renameDistributionList" type="preset" targetType="distributionlist">
+<right name="renameDistributionList" type="preset" targetType="dl">
   <desc>rename distribution list</desc>
 </right>
 
-<right name="deleteDistributionList" type="preset" targetType="distributionlist">
+<right name="deleteDistributionList" type="preset" targetType="dl">
   <desc>delete distribution list</desc>
 </right>
 
-<right name="addDistributionListAlias" type="preset" targetType="distributionlist">
+<right name="addDistributionListAlias" type="preset" targetType="dl">
   <desc>add distribution list alias</desc>
 </right>
 
-<right name="removeDistributionListAlias" type="preset" targetType="distributionlist">
+<right name="removeDistributionListAlias" type="preset" targetType="dl">
   <desc>remove distribution list alias</desc>
 </right>
 
-<right name="addDistributionListMember" type="preset" targetType="distributionlist">
+<right name="addDistributionListMember" type="preset" targetType="dl">
   <desc>add member to distribution list</desc>
 </right>
 
-<right name="removeDistributionListMember" type="preset" targetType="distributionlist">
+<right name="removeDistributionListMember" type="preset" targetType="dl">
   <desc>remove member from distribution list</desc>
 </right>
 

@@ -19,7 +19,7 @@
   <desc>a preset account right</desc>
 </right>
 
-<right name="test-preset-calendarresource" type="preset" targetType="resource">
+<right name="test-preset-calendarresource" type="preset" targetType="calresource">
   <desc>a preset calendar resource right</desc>
 </right>
 
@@ -31,7 +31,7 @@
   <desc>a preset cos right</desc>
 </right>
 
-<right name="test-preset-distributionlist" type="preset" targetType="distributionlist">
+<right name="test-preset-distributionlist" type="preset" targetType="dl">
   <desc>a preset distribution list right</desc>
 </right>
 
@@ -72,7 +72,7 @@
   </attrs>
 </right>
 
-<right name="test-getAttrs-calendarresource" type="getAttrs" targetType="resource">
+<right name="test-getAttrs-calendarresource" type="getAttrs" targetType="calresource">
   <desc>a getAttrs calendar resource right</desc>
   <attrs>
       <a n="description"/>
@@ -93,7 +93,7 @@
   </attrs>
 </right>
 
-<right name="test-getAttrs-distributionlist" type="getAttrs" targetType="distributionlist">
+<right name="test-getAttrs-distributionlist" type="getAttrs" targetType="dl">
   <desc>a getAttrs distribution list right</desc>
   <attrs>
       <a n="description"/>
@@ -172,7 +172,7 @@
   </attrs>
 </right>
 
-<right name="test-setAttrs-calendarresource" type="setAttrs" targetType="resource">
+<right name="test-setAttrs-calendarresource" type="setAttrs" targetType="calresource">
   <desc>a setAttrs calendar resource right</desc>
   <attrs>
       <a n="description"/>
@@ -193,7 +193,7 @@
   </attrs>
 </right>
 
-<right name="test-setAttrs-distributionlist" type="setAttrs" targetType="distributionlist">
+<right name="test-setAttrs-distributionlist" type="setAttrs" targetType="dl">
   <desc>a setAttrs distribution list right</desc>
   <attrs>
       <a n="description"/>
