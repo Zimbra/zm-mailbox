@@ -131,6 +131,7 @@ public class RemoteFolder {
         if (connection.hasUidPlus()) {
             connection.uidExpunge(seq);
         }
+        deleted++;
     }
 
     /**
