@@ -175,7 +175,7 @@ public class ACL {
          * 
          * @param meta  The Metadata object containing ACL data.
          * @throws ServiceException if any required fields are missing. */
-        Grant(Metadata meta) throws ServiceException {
+        public Grant(Metadata meta) throws ServiceException {
             mType    = (byte) meta.getLong(FN_TYPE);
             mRights  = (short) (meta.getLong(FN_RIGHTS) & GRANTABLE_RIGHTS);
             mName    = meta.get(FN_NAME, null);

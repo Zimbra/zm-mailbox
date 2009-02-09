@@ -2175,3 +2175,26 @@ Access: domain admin sufficient.
 note: if the target is an account, this request is by default proxied to the account's home server
    
 ----------------------------------------
+
+<GetShareInfoRequest>
+    [<account by="id|name|foreignPrincipal">...</account>]
+    [<dl by="id|name">...</dl>]
+    [<grantee directOnly="{direct-only}">]
+    [<owner by="{owner-by}">...</owner>]
+</GetShareInfoRequest>
+
+Notes:
+    - only one of <account> or <dl> can be present
+    - {direct-only} = 0 | 1 
+                      whether to return only shares directly published on this entry or also shares published on all groups this entry belongs to
+                      0 - return shares directly published on this entry and shares published on all groups this entry belongs to
+                      1 - return only shares directly published on this entry
+                      
+    - if <owner> is specified, returns only shares owned by the owner
+    
+<GetShareInfoResponse>
+    [<share ownerId="{owner-id}" ownerName="{owner-name}" 
+            folderId="{folder-id}" folderPath="{folder-path}" 
+            rights="{rights}"
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
+</GetShareInfoResponse>

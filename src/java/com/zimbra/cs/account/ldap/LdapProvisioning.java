@@ -63,6 +63,7 @@ import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
@@ -5889,6 +5890,18 @@ public class LdapProvisioning extends Provisioning {
                       0);
 
         return visitor.getResult();
+    }
+    
+    @Override
+    public void getShareInfo(Account acct, boolean directOnly, Account owner, 
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
+        ShareInfo.Published.get(acct, directOnly, owner, visitor);
+    }
+    
+    @Override
+    public void getShareInfo(DistributionList dl, boolean directOnly, Account owner,
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
+        ShareInfo.Published.get(dl, directOnly, owner, visitor);
     }
     
     public static void testAuthDN(String args[]) {

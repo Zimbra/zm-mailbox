@@ -2940,6 +2940,63 @@ Note:
               </whiteList>
    
 
-    
 <ModifyWhiteBlackListResponse/>
 
+
+----------------------------
+<GetShareInfoRequest>
+    [<grantee type="{grantee_type}">]
+    [<owner by="{owner-by}">...</owner>]
+</GetShareInfoRequest>
+
+{grantee_type} = usr | grp
+
+{owner-by} = name | id
+             Note: In order to defend against harvest attacks this SOAP call will
+                   return "no shares" instead of error when an invalid user name/id is used.
+
+- If both <grantee> and <owner> are specified, the conditions are ANDed together.
+
+- If neither <grantee> nor <owner> is specified, all published sharesapplicable to the 
+  authed user: including those shared with any of the groups the authed user is belongs to, 
+  and those shared directly with the authed user, from any owner, are returned.
+
+    e.g. 
+    1. What folders are shared with any of the groups I belong to?
+    
+        1a. folders of any user
+                <GetShareInfoRequest>
+                    <grantee type="grp">
+                </GetShareInfoRequest>
+        
+        1b. folders of a particular user
+                <GetShareInfoRequest>
+                    <grantee type="grp">
+                    <owner by="name">user1@example.com</owner> 
+                </GetShareInfoRequest>
+
+    2. What folders does a particular user share with me?
+        2a. include both folders directly shared with me and folders  
+            shared with any of the groups I belong to.
+                <GetShareInfoRequest>
+                    <owner by="name">user1@example.com</owner> 
+                </GetShareInfoRequest>
+
+        2b. include only folders directly shared with me.
+                <GetShareInfoRequest>
+                    <grantee type="usr">
+                    <owner by="name">user1@example.com</owner> 
+                </GetShareInfoRequest>
+
+    3. Show me all folders shared directly with me by any one.
+           <GetShareInfoRequest>
+               <grantee type="usr">
+           </GetShareInfoRequest>
+    
+    
+<GetShareInfoResponse>
+    [<share ownerId="{owner-id}" ownerName="{owner-name}" 
+            folderId="{folder-id}" folderPath="{folder-path}" 
+            rights="{rights}"
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
+</GetShareInfoResponse>

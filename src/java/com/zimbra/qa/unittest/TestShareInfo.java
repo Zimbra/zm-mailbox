@@ -15,7 +15,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.ShareInfo.Publishing;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -50,12 +50,6 @@ public class TestShareInfo extends TestCase {
         return localPart + "-" + testName + "@" + domainName;
     }
     
-    // TODO delete, no longer needed
-    private String makeDesc(String someThing) {
-        // return a string that has special chars
-        return someThing + " " + "test";  // todo, put in more special chars
-    }
-    
     /*
      * create a folder and grant the rights to an account
      */
@@ -88,15 +82,15 @@ public class TestShareInfo extends TestCase {
     }
     
     // TODO, get the getShareInfo SOAP is implemented
-    private void verify(Account entry, List<ShareInfo> shareInfo) {
+    private void verify(Account entry, List<Publishing> shareInfo) {
         
     }
     
     private void doTestPublishShareInfo(Account publishingEntry, Account owner, String folderPath, Expected expected) 
         throws ServiceException {
         
-        List<ShareInfo> shareInfo = new ArrayList<ShareInfo>();
-        ShareInfo si = new ShareInfo(ShareInfo.Action.add, owner.getId(), folderPath, null, null);
+        List<Publishing> shareInfo = new ArrayList<Publishing>();
+        Publishing si = new Publishing(Publishing.Action.add, owner.getId(), folderPath, null);
         shareInfo.add(si);
         mProv.modifyShareInfo(publishingEntry, shareInfo);
         
@@ -106,8 +100,8 @@ public class TestShareInfo extends TestCase {
     private void doTestPublishShareInfo(DistributionList publishingEntry, Account owner, String folderPath, Expected expected) 
         throws ServiceException {
         
-        List<ShareInfo> shareInfo = new ArrayList<ShareInfo>();
-        ShareInfo si = new ShareInfo(ShareInfo.Action.add, owner.getId(), folderPath, null, null);
+        List<Publishing> shareInfo = new ArrayList<Publishing>();
+        Publishing si = new Publishing(Publishing.Action.add, owner.getId(), folderPath, null);
         shareInfo.add(si);
         mProv.modifyShareInfo(publishingEntry, shareInfo);
         

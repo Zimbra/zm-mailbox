@@ -1800,11 +1800,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // do nothing by default
     }
 
-    public void modifyShareInfo(Account acct, List<ShareInfo> shareInfo) throws ServiceException {
+    public void modifyShareInfo(Account acct, List<ShareInfo.Publishing> shareInfo) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public void modifyShareInfo(DistributionList dl, List<ShareInfo> shareInfo) throws ServiceException {
+    public void modifyShareInfo(DistributionList dl, List<ShareInfo.Publishing> shareInfo) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void getShareInfo(Account acct, boolean directOnly, Account owner, 
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void getShareInfo(DistributionList dl, boolean directOnly, Account owner,
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     

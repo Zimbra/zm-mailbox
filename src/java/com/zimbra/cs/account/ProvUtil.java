@@ -46,6 +46,7 @@ import org.apache.commons.cli.PosixParser;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
@@ -70,6 +71,7 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
+import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.ComboRight;
@@ -302,10 +304,10 @@ public class ProvUtil implements DebugListener {
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
-        ADD_ACCOUNT_SHARE_INFO("addAccountShareInfo", "aasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id} desc", Category.SHARE, 4, 4),
+        ADD_ACCOUNT_SHARE_INFO("addAccountShareInfo", "aasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
-        ADD_DISTRIBUTION_LIST_SHARE_INFO("addDistribtionListShareInfo", "adlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id} desc", Category.SHARE, 4, 4),
+        ADD_DISTRIBUTION_LIST_SHARE_INFO("addDistribtionListShareInfo", "adlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
@@ -338,6 +340,7 @@ public class ProvUtil implements DebugListener {
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
+        GET_ACCOUNT_SHARE_INFO("getAccountShareInfo", "gasi", "{account-name@domain|id} {0|1 (direct only - whether to return only shares directly published on this account entry or also shares published on all groups this account belongs to)} [{owner-name|owner-id}]", Category.SHARE, 2, 3),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -360,6 +363,7 @@ public class ProvUtil implements DebugListener {
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
+        GET_DISTRIBUTION_LIST_SHARE_INFO("getDistributionListShareInfo", "gdlsi", "{dl-name@domain|id} {0|1 (direct only - whether to return only shares directly published on this dl entry or also shares published on all groups this dl belongs to)} [{owner-name|owner-id}]", Category.SHARE, 2, 3),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
         GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5),
@@ -928,6 +932,12 @@ public class ProvUtil implements DebugListener {
         case ADD_DISTRIBUTION_LIST_SHARE_INFO:
             doModifyDistributionListShareInfo(true, args);
             break;
+        case GET_ACCOUNT_SHARE_INFO:
+            doGetAccountShareInfo(args);
+            break;
+        case GET_DISTRIBUTION_LIST_SHARE_INFO:
+            doGetDistributionListShareInfo(args);
+            break;
         case REMOVE_ACCOUNT_SHARE_INFO:
             doModifyAccountShareInfo(false, args);
             break;
@@ -1246,7 +1256,7 @@ public class ProvUtil implements DebugListener {
         String key = args[1];
         Account acct = lookupAccount(key);
         
-        List<ShareInfo> shareInfo = parseShareInfo(isAdd, args);
+        List<ShareInfo.Publishing> shareInfo = parseModifyShareInfo(isAdd, args);
         mProv.modifyShareInfo(acct, shareInfo); 
     }
     
@@ -1257,11 +1267,11 @@ public class ProvUtil implements DebugListener {
         String key = args[1];
         DistributionList dl = lookupDistributionList(key);
         
-        List<ShareInfo> shareInfo = parseShareInfo(isAdd, args);
+        List<ShareInfo.Publishing> shareInfo = parseModifyShareInfo(isAdd, args);
         mProv.modifyShareInfo(dl, shareInfo); 
     }
     
-    private List<ShareInfo> parseShareInfo(boolean isAdd, String[] args) throws ServiceException {
+    private List<ShareInfo.Publishing> parseModifyShareInfo(boolean isAdd, String[] args) throws ServiceException {
         // only support one owner/folder/desc spec per invocation in the CLI, 
         // return a list becasue SOAP can take multiple in one request
         
@@ -1271,23 +1281,104 @@ public class ProvUtil implements DebugListener {
         
         String folderPathOrId = args[idx++];
         
-        ShareInfo.Action action;
-        String desc;
+        ShareInfo.Publishing.Action action;
+        // String desc;  not supported for now
         
         if (isAdd) {
-            action = ShareInfo.Action.add;
-            desc = args[idx++];
+            action = ShareInfo.Publishing.Action.add;
+            // desc = args[idx++];
         } else {
-            action = ShareInfo.Action.remove;
-            desc = null;
+            action = ShareInfo.Publishing.Action.remove;
+            // desc = null;
         }
         
-        ShareInfo si = new ShareInfo(action, ownerAcctId, folderPathOrId, null, desc);
-        List<ShareInfo> shareInfo = new ArrayList<ShareInfo>();
+        ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcctId, folderPathOrId, null);
+        List<ShareInfo.Publishing> shareInfo = new ArrayList<ShareInfo.Publishing>();
         shareInfo.add(si);
         
         return shareInfo;
     }
+    
+    private static class ShareInfoVisitor implements ShareInfo.Published.Visitor {
+        
+        private static final String mFormat = "%-36.36s %-20.20s %-5.5s %-20.20s %-10.10s %-5.5s %-36.36s %-20.20s\n";
+        
+        private static void printHeadings() {
+            System.out.printf(mFormat, 
+                              "owner id",
+                              "owner name",
+                              "fid",
+                              "folder path",
+                              "rights",
+                              "gt",
+                              "grantee id",
+                              "grantee name");
+            
+            System.out.printf(mFormat,
+                              "------------------------------------",
+                              "--------------------",
+                              "-----",
+                              "--------------------",
+                              "----------",
+                              "-----",
+                              "------------------------------------",
+                              "--------------------");
+        }
+        
+        public void visit(ShareInfo.Published shareInfo) throws ServiceException {
+            System.out.printf(mFormat, 
+                    shareInfo.getOwnerAcctId(),
+                    shareInfo.getOwnerAcctName(),
+                    String.valueOf(shareInfo.getFolderId()),
+                    shareInfo.getFolderPath(),
+                    shareInfo.getRights(),
+                    shareInfo.getGranteeType(),
+                    shareInfo.getGranteeId(),
+                    shareInfo.getGranteeName());                        
+        }
+    };
+    
+    /*
+     * "0" -> false
+     * "1" -> true
+     */
+    private boolean parseZeroOne(String zeroOne) throws ServiceException {
+        if (zeroOne.equals("0"))
+            return false;
+        else if (zeroOne.equals("1"))
+            return true;
+        else
+            throw ServiceException.INVALID_REQUEST("invalid arg for the directOnly flag", null);
+    }
+    
+    private void doGetAccountShareInfo(String[] args) throws ServiceException {
+        String key = args[1];
+        Account acct = lookupAccount(key);
+        
+        boolean directOnly = parseZeroOne(args[2]);
+        
+        Account owner = null;
+        if (args.length == 4)
+            owner = lookupAccount(args[3]);
+        
+        ShareInfoVisitor.printHeadings();
+        mProv.getShareInfo(acct, directOnly, owner, new ShareInfoVisitor()); 
+    }
+    
+    private void doGetDistributionListShareInfo(String[] args) throws ServiceException {
+        String key = args[1];
+        DistributionList dl = lookupDistributionList(key);
+        
+        boolean directOnly = parseZeroOne(args[2]);
+        
+        Account owner = null;
+        if (args.length == 4)
+            owner = lookupAccount(args[3]);
+        
+        ShareInfoVisitor.printHeadings();
+        mProv.getShareInfo(dl, directOnly, owner, new ShareInfoVisitor()); 
+    }
+    
     
     private void doDeleteAccount(String[] args) throws ServiceException {
         String key = args[1];
@@ -1368,7 +1459,7 @@ public class ProvUtil implements DebugListener {
                     System.out.println(entry.getName());                        
             }
         };
-         prov.getAllAccounts(domain, server, visitor);
+        prov.getAllAccounts(domain, server, visitor);
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {

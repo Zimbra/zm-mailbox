@@ -2117,21 +2117,18 @@ public class SoapProvisioning extends Provisioning {
     }
     
     
-    private void toXML(Element req, List<ShareInfo> shareInfo) {
-        for (ShareInfo si : shareInfo) {
+    private void toXML(Element req, List<ShareInfo.Publishing> shareInfo) {
+        for (ShareInfo.Publishing si : shareInfo) {
             Element eShare = req.addElement(AdminConstants.E_SHARE);
             eShare.addAttribute(AdminConstants.A_ACTION, si.getAction().name());
         
             eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(si.getOwnerAcctId());
             eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, si.getFolderIdOrPath());
-            
-            if (si.getDesc() != null)
-                eShare.addElement(AdminConstants.E_DESC).setText(si.getDesc());
         }
     }
     
     @Override
-    public void modifyShareInfo(Account acct, List<ShareInfo> shareInfo) throws ServiceException {
+    public void modifyShareInfo(Account acct, List<ShareInfo.Publishing> shareInfo) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
         
         Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
@@ -2143,16 +2140,61 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void modifyShareInfo(DistributionList dl, List<ShareInfo> shareInfo) throws ServiceException {
+    public void modifyShareInfo(DistributionList dl, List<ShareInfo.Publishing> shareInfo) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
         
-        Element eAcct = req.addElement(AdminConstants.E_DL);
-        eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
-        eAcct.setText(dl.getId());
+        Element eDL = req.addElement(AdminConstants.E_DL);
+        eDL.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        eDL.setText(dl.getId());
         
         toXML(req, shareInfo);
         invoke(req);
     }
+    
+    @Override
+    public void getShareInfo(Account acct, boolean directOnly, Account owner, 
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
+        
+        Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
+        eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        eAcct.setText(acct.getId());
+        
+        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
+        eGrantee.addAttribute(AdminConstants.A_DIRECT_ONLY, directOnly ? "1" : "0");
+        
+        if (owner != null)
+            req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(owner.getId());
+
+        Element resp = invoke(req);
+        for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
+            ShareInfo.Published si = ShareInfo.Published.fromXML(eShare);
+            visitor.visit(si);
+        }
+    }
+    
+    @Override
+    public void getShareInfo(DistributionList dl, boolean directOnly, Account owner,
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
+        
+        Element eDL = req.addElement(AdminConstants.E_DL);
+        eDL.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        eDL.setText(dl.getId());
+        
+        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
+        eGrantee.addAttribute(AdminConstants.A_DIRECT_ONLY, directOnly ? "1" : "0");
+        
+        if (owner != null)
+            req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(owner.getId());
+
+        Element resp = invoke(req);
+        for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
+            ShareInfo.Published si = ShareInfo.Published.fromXML(eShare);
+            visitor.visit(si);
+        }
+    }
+    
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
