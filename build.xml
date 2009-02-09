@@ -1190,6 +1190,7 @@
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Administrator' displayName 'Administrator' \
             zimbraIsAdminAccount TRUE \
+            zimbraIsSystemAdminAccount TRUE \
         	zimbraAdminConsoleUIComponents cartBlancheUI \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
@@ -1200,25 +1201,7 @@
             zimbraIsAdminAccount TRUE \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-            telephoneNumber '+1 650 555 0000'   \
-        	zimbraAdminConsoleUIComponents accountListView \
-        	zimbraAdminConsoleUIComponents aliasListView \
-        	zimbraAdminConsoleUIComponents DLListView \
-        	zimbraAdminConsoleUIComponents resourceListView \
-        	zimbraAdminConsoleUIComponents accountsGeneralTab \
-        	zimbraAdminConsoleUIComponents accountsFeaturesTab \
-        	zimbraAdminConsoleUIComponents accountsForwardingTab \
-        	zimbraAdminConsoleUIComponents accountsAliasesTab \
-        	zimbraAdminConsoleUIComponents saveSearch \
-        	zimbraAdminConsoleUIComponents accountsChangePassword \
-        	zimbraAdminConsoleUIComponents moveAlias \
-        	zimbraAdminConsoleUIComponents accountsCreate 
-        	zimbraAdminConsoleUIComponents dlNotesTab
-        	zimbraAdminConsoleUIComponents dlMemberOfTab
-        	zimbraAdminConsoleUIComponents dlAliasesTab
-        	zimbraAdminConsoleUIComponents createDL
-        	zimbraAdminConsoleUIComponents createAlias
-        	zimbraAdminConsoleUIComponents createResource
+            telephoneNumber '+1 650 555 0000'   
             ca user1@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Demo User One' \
