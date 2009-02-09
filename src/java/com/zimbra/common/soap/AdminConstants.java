@@ -305,6 +305,8 @@ public class AdminConstants {
     public static final QName COUNT_ACCOUNT_REQUEST = QName.get("CountAccountRequest", NAMESPACE);
     public static final QName COUNT_ACCOUNT_RESPONSE = QName.get("CountAccountResponse", NAMESPACE);
     
+    public static final QName GET_SHARE_INFO_REQUEST = QName.get("GetShareInfoRequest", NAMESPACE);
+    public static final QName GET_SHARE_INFO_RESPONSE = QName.get("GetShareInfoResponse", NAMESPACE);
     public static final QName MODIFY_SHARE_INFO_REQUEST = QName.get("ModifyShareInfoRequest", NAMESPACE);
     public static final QName MODIFY_SHARE_INFO_RESPONSE = QName.get("ModifyShareInfoResponse", NAMESPACE);
     
@@ -456,6 +458,7 @@ public class AdminConstants {
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
+    public static final String A_DIRECT_ONLY = "directOnly";
     public static final String A_ID = "id";
     public static final String A_MAX_RESULTS = "maxResults";
     public static final String A_LIMIT = "limit";

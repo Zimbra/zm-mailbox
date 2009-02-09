@@ -60,6 +60,8 @@ public class AccountConstants {
     public static final QName GET_AVAILABLE_SKINS_RESPONSE = QName.get("GetAvailableSkinsResponse", NAMESPACE);
     public static final QName GET_AVAILABLE_CSV_FORMATS_REQUEST = QName.get("GetAvailableCsvFormatsRequest", NAMESPACE);
     public static final QName GET_AVAILABLE_CSV_FORMATS_RESPONSE = QName.get("GetAvailableCsvFormatsResponse", NAMESPACE);
+    public static final QName GET_SHARE_INFO_REQUEST = QName.get("GetShareInfoRequest", NAMESPACE);
+    public static final QName GET_SHARE_INFO_RESPONSE = QName.get("GetShareInfoResponse", NAMESPACE);
     public static final QName GET_WHITE_BLACK_LIST_REQUEST = QName.get("GetWhiteBlackListRequest", NAMESPACE);
     public static final QName GET_WHITE_BLACK_LIST_RESPONSE = QName.get("GetWhiteBlackListResponse", NAMESPACE);
     public static final QName MODIFY_WHITE_BLACK_LIST_REQUEST = QName.get("ModifyWhiteBlackListRequest", NAMESPACE);
@@ -143,6 +145,9 @@ public class AccountConstants {
     public static final String E_COS = "cos";
     public static final String E_WHITE_LIST = "whiteList";
     public static final String E_BLACK_LIST = "blackList";
+    public static final String E_GRANTEE = "grantee";
+    public static final String E_OWNER = "owner";
+    public static final String E_SHARE = "share";
     
     public static final String A_ATTRS = "attrs";
     public static final String A_N = "n";
@@ -164,6 +169,16 @@ public class AccountConstants {
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_UTF8 = "utf8";
     public static final String A_VISIBLE = "visible";
+    
+    // share info
+    public static final String A_FOLDER_ID = "folderId";
+    public static final String A_FOLDER_PATH = "folderPath";
+    public static final String A_GRANTEE_ID = "ganteeId";
+    public static final String A_GRANTEE_NAME = "granteeName";
+    public static final String A_GRANTEE_TYPE = "granteeType";
+    public static final String A_OWNER_ID = "ownerId";
+    public static final String A_OWNER_NAME = "ownerName";
+    public static final String A_RIGHTS = "rights";
 
     // calendar resource search
     public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
