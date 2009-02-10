@@ -153,12 +153,12 @@ class ImapFolderSync {
                 remoteFolder.info("folder was deleted");
                 if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
                 	localFolder.delete();
-                ds.deleteImapFolder(tracker);
+                imapSync.deleteFolderTracker(tracker);
                 tracker = null;
             } else if (!ds.isSyncCapable(folder) && !localFolder.getPath().equals(tracker.getLocalPath())) {
             	//we moved local into archive, so delete remote
                 if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
-                	ds.deleteImapFolder(tracker);
+                    imapSync.deleteFolderTracker(tracker);
                 }
             }
         } else if (ds.isSyncEnabled(folder)) {
@@ -172,7 +172,7 @@ class ImapFolderSync {
                 return null;
             }
             long uidValidity = connection.getMailbox().getUidValidity();
-            tracker = ds.createImapFolder(
+            tracker = imapSync.createFolderTracker(
                 folder.getId(), folder.getPath(), remoteFolder.getPath(), uidValidity);
         }
         return tracker;
@@ -452,7 +452,7 @@ class ImapFolderSync {
         		                    !localFolder.getPath().equals(tracker.getLocalPath()))) {
             LOG.debug("Local folder '%s' was deleted", tracker.getLocalPath());
             if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
-                imapSync.getDataSource().deleteImapFolder(tracker);
+                imapSync.deleteFolderTracker(tracker);
             }
             tracker = null;
             return;
@@ -495,7 +495,7 @@ class ImapFolderSync {
             // Folder was moved outside of the data source root, or
             // folder should no longer be synchronized
             localFolder.info("folder was moved outside data source root");
-            ds.deleteImapFolder(tracker);
+            imapSync.deleteFolderTracker(tracker);
             // Create new local folder for remote path
             createLocalFolder(ld);
         }
@@ -523,7 +523,7 @@ class ImapFolderSync {
         }
         // Handle possible case conversion of INBOX in path
         localPath = localFolder.getPath();
-        tracker = ds.createImapFolder(
+        tracker = imapSync.createFolderTracker(
             localFolder.getId(), localPath, remotePath, uidValidity);
     }                                                        
 
@@ -1097,9 +1097,8 @@ class ImapFolderSync {
         stats.msgsCopiedRemotely++;
         // If remote folder created on demand, then create folder tracker
         if (folderTracker == null) {
-            folderTracker = ds.createImapFolder(
+            imapSync.createFolderTracker(
                 folder.getId(), folder.getPath(), remotePath, cr.getUidValidity());
-            trackedFolders.add(folderTracker);
         } else {
             // If target folder was already sync'd, then make sure we remove
             // msg id from folder's list of new messages to be appended
