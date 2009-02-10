@@ -1083,6 +1083,8 @@ public class ChartUtil {
             }
             for (Map.Entry<String,List<Integer>> g : groups.entrySet()) {
                 String groupByValue = g.getKey();
+                if (gps.getIgnoreSet().contains(groupByValue))
+                    continue;
                 List<Integer> indices = g.getValue();
                 DataSeries syntheticDS = new DataSeries();
                 DataColumn c = new DataColumn(gps.getInfile(),
