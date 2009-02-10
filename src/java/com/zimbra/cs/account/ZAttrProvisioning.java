@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090204-1138 */
+    /* build: 5.0 pshao 20090210-1027 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3200,6 +3200,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=791)
     public static final String A_zimbraMailClearTextPasswordEnabled = "zimbraMailClearTextPasswordEnabled";
+
+    /**
+     * Maximum size in bytes for the &lt;content &gt; element in SOAP. Mail
+     * content larger than this limit will be truncated.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=807)
+    public static final String A_zimbraMailContentMaxSize = "zimbraMailContentMaxSize";
 
     /**
      * RFC822 email address of this recipient for local delivery

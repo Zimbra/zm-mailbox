@@ -4040,5 +4040,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether a confirmation page should be display after an operation is done in the UI</desc>
 </attr>
 
+<attr id="807" name="zimbraMailContentMaxSize" type="long" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
+  <globalConfigValue>10240000</globalConfigValue>
+  <desc>Maximum size in bytes for the &lt;content &gt; element in SOAP.  Mail content larger than this limit will be truncated.</desc>
+</attr>
+
 
 </attrs>
