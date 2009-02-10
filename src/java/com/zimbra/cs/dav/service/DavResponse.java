@@ -141,15 +141,15 @@ public class DavResponse {
 		Map<QName,DavException> errPropMap = props.getErrProps();
 		for (QName name : propNames) {
 			ResourceProperty prop = rs.getProperty(name);
-			if (prop == null)
-				findProp(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
-			else if (!errPropMap.containsKey(prop))
-				prop.toElement(ctxt, findProp(resp, propstatMap, HttpServletResponse.SC_OK), props.nameOnly);
-			else {
-				DavException ex = errPropMap.get(prop);
+			if (errPropMap.containsKey(name)) {
+				DavException ex = errPropMap.get(name);
 				Element propstat = findPropstat(resp, propstatMap, ex.getStatus());
 				propstat.element(DavElements.E_PROP).addElement(name);
 				propstat.addElement(DavElements.E_RESPONSEDESCRIPTION).add(ex.getErrorMessage());
+			} else if (prop == null) {
+				findProp(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
+			} else {
+				prop.toElement(ctxt, findProp(resp, propstatMap, HttpServletResponse.SC_OK), props.nameOnly);
 			}
 		}
 		
