@@ -731,7 +731,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
 //          sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
         } catch (IOException e1) {
-            sLog.debug("Caught exception trying to open index: "+e, e);
+            sLog.debug("Caught exception trying to open index: "+e1, e1);
             File indexDir  = mIdxDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
 //              sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
