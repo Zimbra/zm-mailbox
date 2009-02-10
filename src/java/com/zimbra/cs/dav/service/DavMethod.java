@@ -175,12 +175,15 @@ public abstract class DavMethod {
 			return allProp;
 		}
 		public void addProp(QName p) {
+			allProp = false;
 			props.add(p);
 		}
 		public Collection<QName> getProps() {
 			return props;
 		}
 		public void addPropError(QName prop, DavException ex) {
+			allProp = false;
+			props.add(prop);
 			errProps.put(prop, ex);
 		}
 		public Map<QName, DavException> getErrProps() {

@@ -26,7 +26,6 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -51,13 +50,13 @@ public class PropPatch extends DavMethod {
 		if (!top.getName().equals(DavElements.P_PROPERTYUPDATE))
 			throw new DavException("msg "+top.getName()+" not allowed in PROPPATCH", HttpServletResponse.SC_BAD_REQUEST, null);
 		DavResource resource = ctxt.getRequestedResource();
-		Pair<HashSet<Element>,HashSet<QName>> props = handlePropertyUpdate(ctxt, top, resource);
+		RequestProp rp = handlePropertyUpdate(ctxt, top, resource);
 		DavResponse resp = ctxt.getDavResponse();
 		
-		resp.addResource(ctxt, resource, getRequestProp(props.getFirst(), props.getSecond()), false);
+		resp.addResource(ctxt, resource, rp, false);
 		sendResponse(ctxt);
 	}
-	public static Pair<HashSet<Element>,HashSet<QName>> handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource) throws DavException, IOException {
+	public static RequestProp handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource) throws DavException, IOException {
 		HashSet<Element> set = new HashSet<Element>();
 		HashSet<QName> remove = new HashSet<QName>();
 		RequestProp rp = new RequestProp();
@@ -86,6 +85,6 @@ public class PropPatch extends DavMethod {
 		}
 		
 		resource.patchProperties(ctxt, set, remove);
-		return new Pair<HashSet<Element>,HashSet<QName>>(set, remove);
+		return rp;
 	}
 }
