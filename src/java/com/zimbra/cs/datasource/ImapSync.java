@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -75,6 +76,19 @@ public class ImapSync extends MailItemImport {
     
     public ImapFolderCollection getTrackedFolders() {
         return trackedFolders;
+    }
+
+    public ImapFolder createFolderTracker(int itemId, String localPath,
+                                          String remotePath, long uidValidity)
+        throws ServiceException {
+        ImapFolder tracker = dataSource.createImapFolder(itemId, localPath, remotePath, uidValidity);
+        trackedFolders.add(tracker);
+        return tracker;
+    }
+
+    public void deleteFolderTracker(ImapFolder tracker) throws ServiceException {
+        DbImapFolder.deleteImapFolder(mbox, dataSource, tracker);
+        trackedFolders.remove(tracker);
     }
 
     public ImapFolderSync getSyncedFolder(int folderId) {
