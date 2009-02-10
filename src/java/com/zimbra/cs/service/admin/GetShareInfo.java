@@ -34,7 +34,7 @@ public class GetShareInfo extends ShareInfoHandler {
         
         // TODO, check permission
         
-        Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_SHARE_INFO_RESPONSE);
         ShareInfoVisitor visitor = new com.zimbra.cs.service.account.GetShareInfo.ShareInfoVisitor(prov, response);
         
         if (taregtEntry instanceof Account)

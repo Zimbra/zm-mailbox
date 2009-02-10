@@ -1,6 +1,7 @@
 package com.zimbra.cs.account;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -241,7 +242,12 @@ public class ShareInfo {
                          */
                         Metadata md = new Metadata();
                         md.put(MD_OWNER_NAME, ownerAcctName);
-                        md.put(MD_FOLDER_PATH, folder.getName());
+                        
+                        // We record the folder path of the folder we are discovering shars for.
+                        // It would be nice if we can know the folder id/path on the folder of 
+                        // the grant (matters when the folder arg came to this method is a sub folder
+                        // of the folder of the grant), but there is no convenient way to get it.
+                        md.put(MD_FOLDER_PATH, folder.getPath());
                         
                         // yuck, ACL.Grant does *never* set the grantee name even there is an API.
                         // we do our own here
@@ -499,6 +505,8 @@ public class ShareInfo {
         public static void get(Account acct, String granteeType, Account owner, Visitor visitor) 
             throws ServiceException {
             
+            Set<String> visited = new HashSet<String>();
+            
             byte gt;
             if (granteeType == null)
                 gt = 0;
@@ -514,19 +522,19 @@ public class ShareInfo {
             if (gt == 0) {
                 // no grantee type specified, return both folders shared with the 
                 // account and all groups this account belongs to.
-                getShares(visitor, acct, owner);
+                getShares(visitor, acct, owner, visited);
                 
                 // call prov.getAclGroups instead of prov.getDistributionLists to be 
                 // consistant with get() for DL
                 AclGroups aclGroups = prov.getAclGroups(acct, false); 
-                getSharesGrantedToGroups(prov, visitor, aclGroups, owner);
+                getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
                 
             } else if (gt == ACL.GRANTEE_USER) {
-                getShares(visitor, acct, owner);
+                getShares(visitor, acct, owner, visited);
                 
             } else if (gt == ACL.GRANTEE_GROUP) {
                 AclGroups aclGroups = prov.getAclGroups(acct, false); 
-                getSharesGrantedToGroups(prov, visitor, aclGroups, owner);
+                getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
                 
             } else {
                 throw ServiceException.INVALID_REQUEST("unsupported grantee type", null);
@@ -536,7 +544,7 @@ public class ShareInfo {
         // for admin only
         public static void get(Account acct, boolean directOnly, Account owner, Visitor visitor) 
             throws ServiceException {
-            String granteeType = directOnly?"usr":"grp";
+            String granteeType = directOnly?"usr":null;
             get(acct, granteeType, owner, visitor);
         }
         
@@ -544,25 +552,30 @@ public class ShareInfo {
         public static void get(DistributionList dl, boolean directOnly, Account owner, Visitor visitor) 
             throws ServiceException {
             
+            Set<String> visited = new HashSet<String>();
+            
             Provisioning prov = Provisioning.getInstance();
 
             if (directOnly) {
-                getShares(visitor, dl, owner);
+                getShares(visitor, dl, owner, visited);
                 
             } else {
-                getShares(visitor, dl, owner);
+                getShares(visitor, dl, owner,visited);
                 
                 // call prov.getAclGroups instead of prov.getDistributionLists
                 // because getAclGroups returns cached data, while getDistributionLists
-                // does LDAP searches earch time
+                // does LDAP searches each time
                 
+                if (!dl.isAclGroup())
+                    dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
                 AclGroups aclGroups = prov.getAclGroups(dl); 
-                getSharesGrantedToGroups(prov, visitor, aclGroups, owner);
+                getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
                 
             } 
         }
     
-        private static void getSharesGrantedToGroups(Provisioning prov, Visitor visitor, AclGroups aclGroups, Account owner) 
+        private static void getSharesGrantedToGroups(Provisioning prov, Visitor visitor, AclGroups aclGroups, Account owner,
+                Set<String> visited) 
             throws ServiceException {
             
             /*
@@ -583,7 +596,7 @@ public class ShareInfo {
              */
             for (String groupId : aclGroups.groupIds()) {
                 DistributionList group = prov.get(DistributionListBy.id, groupId);
-                getShares(visitor, group, owner);
+                getShares(visitor, group, owner, visited);
             }
         }
     
@@ -595,7 +608,7 @@ public class ShareInfo {
          * @param owner if not null, include only shares owned by the owner
          *              if null, include all shares published on the entry 
          */
-        private static void getShares(Visitor visitor, NamedEntry entry, Account owner) {
+        private static void getShares(Visitor visitor, NamedEntry entry, Account owner, Set<String> visited) {
             Set<String> publishedShareInfo = entry.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
             
             for (String psi : publishedShareInfo) {
@@ -605,7 +618,20 @@ public class ShareInfo {
                         if (!owner.getId().equals(si.getOwnerAcctId()))
                             continue;
                     }
+                    
+                    /*
+                     * dedup
+                     * 
+                     * It is possible that the same share is published on a group, and 
+                     * again on a sub group, and again on an account.  We return only 
+                     * one instance of all the identical published shares.
+                     */
+                    if (visited.contains(psi))
+                        continue;
+                    
                     visitor.visit(si);
+                    visited.add(psi);
+                    
                 } catch (ServiceException e) {
                     // probably encountered malformed share info, log and ignore
                     // should remove the value from LDAP?
