@@ -46,6 +46,10 @@ public class DavRequest {
 		return mDoc;
 	}
 	
+	public void setRedirectUrl(String url) {
+		mRedirectUrl = url;
+	}
+	
 	public void setRequestMessage(Element root) {
 		if (mDoc == null)
 			mDoc = DocumentHelper.createDocument();
@@ -134,14 +138,18 @@ public class DavRequest {
 	}
 	
 	public HttpMethod getHttpMethod(String baseUrl) {
+		String url = mRedirectUrl;
+		if (url == null)
+			url = baseUrl + mUri;
+		
 		if (mDoc == null)
-			return new GetMethod(baseUrl + mUri) {
+			return new GetMethod(url) {
 	    		public String getName() {
 	    			return mMethod;
 	    		}
 			};
 		
-    	PutMethod m = new PutMethod(baseUrl + mUri) {
+    	PutMethod m = new PutMethod(url) {
     		RequestEntity re;
     		public String getName() {
     			return mMethod;
@@ -161,6 +169,7 @@ public class DavRequest {
 	
 	private Document mDoc;
 	private String mUri;
+	private String mRedirectUrl;
 	private String mMethod;
 	private Depth mDepth;
 	

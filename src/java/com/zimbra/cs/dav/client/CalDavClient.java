@@ -45,29 +45,48 @@ public class CalDavClient extends WebDavClient {
 			this(h, e);
 			data = d;
 		}
+		public Appointment(String h, String e, String d, Collection<String> r) {
+			this(h, e, d);
+			recipients = r;
+		}
 		public String href;
 		public String etag;
 		public String data;
+		public Collection<String> recipients;
 	}
 	
 	public CalDavClient(String baseUrl) {
 		super(baseUrl, "CalDAV client");
+		mSchedulingEnabled = false;
+	}
+	
+	public void enableScheduling(boolean enable) {
+		mSchedulingEnabled = enable;
 	}
 	
 	public void login(String principalUrl) throws IOException, DavException {
 		DavRequest propfind = DavRequest.PROPFIND(principalUrl);
 		propfind.addRequestProp(DavElements.E_DISPLAYNAME);
 		propfind.addRequestProp(DavElements.E_CALENDAR_HOME_SET);
+		propfind.addRequestProp(DavElements.E_SCHEDULE_INBOX_URL);
+		propfind.addRequestProp(DavElements.E_SCHEDULE_OUTBOX_URL);
 		Collection<DavObject> response = sendMultiResponseRequest(propfind);
 		if (response.size() != 1)
 			throw new DavException("invalid response to propfind on principal url", null);
 		DavObject resp = response.iterator().next();
 		mCalendarHomeSet = new HashSet<String>();
 		Element homeSet = resp.getProperty(DavElements.E_CALENDAR_HOME_SET);
-		for (Object href : homeSet.elements(DavElements.E_HREF))
-			mCalendarHomeSet.add(((Element)href).getText());
+		if (homeSet != null)
+			for (Object href : homeSet.elements(DavElements.E_HREF))
+				mCalendarHomeSet.add(((Element)href).getText());
 		if (mCalendarHomeSet.isEmpty())
 			throw new DavException("dav response from principal url does not contain calendar-home-set", null);
+		Element elem = resp.getProperty(DavElements.E_SCHEDULE_INBOX_URL);
+		if (elem != null && elem.element(DavElements.E_HREF) != null)
+			mScheduleInbox = elem.element(DavElements.E_HREF).getText();
+		elem = resp.getProperty(DavElements.E_SCHEDULE_OUTBOX_URL);
+		if (elem != null && elem.element(DavElements.E_HREF) != null)
+			mScheduleOutbox = elem.element(DavElements.E_HREF).getText();
 	}
 
 	public Collection<String> getCalendarHomeSet() {
@@ -111,14 +130,19 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public String sendCalendarData(Appointment appt) throws IOException, DavException {
-		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes(), Mime.CT_TEXT_CALENDAR, appt.etag);
+		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes(), Mime.CT_TEXT_CALENDAR, appt.etag, null);
 		String etag = resp.getHeader(DavProtocol.HEADER_ETAG);
 		ZimbraLog.dav.debug("ETags: "+appt.etag+", "+etag);
 		int status = resp.getStatusCode();
 		if (status != HttpStatus.SC_OK && status != HttpStatus.SC_CREATED && status != HttpStatus.SC_NO_CONTENT) {
 			throw new DavException("Can't send calendar data (status="+status+")", status);
 		}
+		if (mSchedulingEnabled)
+			sendSchedulingMessage(appt);
 		return etag;
+	}
+	
+	private void sendSchedulingMessage(Appointment appt) throws IOException, DavException {
 	}
 	
 	public Collection<Appointment> getCalendarData(String url, Collection<Appointment> hrefs) throws IOException, DavException {
@@ -158,4 +182,7 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	private HashSet<String> mCalendarHomeSet;
+	private boolean mSchedulingEnabled;
+	private String mScheduleInbox;
+	private String mScheduleOutbox;
 }

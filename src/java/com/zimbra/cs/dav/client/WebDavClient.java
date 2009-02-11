@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -36,6 +38,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -83,7 +86,7 @@ public class WebDavClient {
 		
 		HttpMethod m = null;
 		try {
-			m = execute(req);
+			m = executeFollowRedirect(req);
 			int status = m.getStatusCode();
 			if (status >= 400)
 				throw new DavException("DAV server returned an error: "+status, status);
@@ -105,7 +108,7 @@ public class WebDavClient {
 	}
 	
 	public HttpInputStream sendRequest(DavRequest req) throws IOException, DavException {
-		HttpMethod m = execute(req);
+		HttpMethod m = executeFollowRedirect(req);
 		return new HttpInputStream(m);
 	}
 	
@@ -115,15 +118,54 @@ public class WebDavClient {
 		return new HttpInputStream(get);
 	}
 	
-	public HttpInputStream sendPut(String href, byte[] buf, String contentType, String etag) throws IOException {
-		PutMethod put = new PutMethod(mBaseUrl + href);
-		put.setRequestEntity(new ByteArrayRequestEntity(buf, contentType));
-		if (mDebugEnabled && contentType.startsWith("text"))
-			ZimbraLog.dav.debug("PUT payload: \n"+new String(buf, "UTF-8"));
-		if (etag != null)
-			put.setRequestHeader(DavProtocol.HEADER_IF_MATCH, etag);
-		executeMethod(put, Depth.zero);
+	public HttpInputStream sendPut(String href, byte[] buf, String contentType, String etag, Collection<Pair<String,String>> headers) throws IOException {
+		boolean done = false;
+		PutMethod put = null;
+		while (!done) {
+			put = new PutMethod(mBaseUrl + href);
+			put.setRequestEntity(new ByteArrayRequestEntity(buf, contentType));
+			if (mDebugEnabled && contentType.startsWith("text"))
+				ZimbraLog.dav.debug("PUT payload: \n"+new String(buf, "UTF-8"));
+			if (etag != null)
+				put.setRequestHeader(DavProtocol.HEADER_IF_MATCH, etag);
+			if (headers != null)
+				for (Pair<String,String> h : headers)
+					put.addRequestHeader(h.getFirst(), h.getSecond());
+			executeMethod(put, Depth.zero);
+			int ret = put.getStatusCode();
+			if (ret == HttpStatus.SC_MOVED_PERMANENTLY || ret == HttpStatus.SC_MOVED_TEMPORARILY) {
+				Header newLocation = put.getResponseHeader("Location");
+				if (newLocation != null) {
+					href = newLocation.getValue();
+					ZimbraLog.dav.debug("redirect to new url = "+href);
+					put.releaseConnection();
+					continue;
+				}
+			}
+			done = true;
+		}
 		return new HttpInputStream(put);
+	}
+	
+	protected HttpMethod executeFollowRedirect(DavRequest req) throws IOException {
+		HttpMethod method = null;
+		boolean done = false;
+		while (!done) {
+			method = execute(req);
+			int ret = method.getStatusCode();
+			if (ret == HttpStatus.SC_MOVED_PERMANENTLY || ret == HttpStatus.SC_MOVED_TEMPORARILY) {
+				Header newLocation = method.getResponseHeader("Location");
+				if (newLocation != null) {
+					String uri = newLocation.getValue();
+					ZimbraLog.dav.debug("redirect to new url = "+uri);
+					method.releaseConnection();
+					req.setRedirectUrl(uri);
+					continue;
+				}
+			}
+			done = true;
+		}
+		return method;
 	}
 	
 	protected HttpMethod execute(DavRequest req) throws IOException {
