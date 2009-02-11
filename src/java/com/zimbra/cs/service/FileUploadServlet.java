@@ -121,7 +121,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         void purge()  { if (file != null)  file.delete(); }
 
-        public String toString() {
+        @Override public String toString() {
             return "Upload: { accountId=" + accountId + ", time=" + new Date(time) +
                    ", uploadId=" + uuid + ", " + (file == null ? "no file" : name) + "}";
         }
@@ -265,6 +265,8 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static class TempFileFilter implements FileFilter {
         private long mNow = System.currentTimeMillis();
+
+        TempFileFilter()  { }
         
         /** Returns <code>true</code> if the specified <code>File</code>
          *  follows the {@link DefaultFileItem} naming convention
@@ -322,31 +324,27 @@ public class FileUploadServlet extends ZimbraServlet {
 
         try {
         	if (!isAdminRequest) {
-        		// make sure we're on the right host; proxy if we're not...
         		Provisioning prov = Provisioning.getInstance();
+        		// make sure the authenticated account exists and is active
         		Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
         		if (acct == null)
         			throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
         		ZimbraLog.addAccountNameToContext(acct.getName());
-        		if (!Provisioning.onLocalServer(acct)) {
-        			proxyServletRequest(req, resp, prov.getServer(acct), null);
-        			return;
-        		}
-        		
         		String acctStatus = acct.getAccountStatus(prov);
-        		// make sure the authenticated account is active
         		if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
         			throw AccountServiceException.MAINTENANCE_MODE();
         		else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
         			throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
         		// fetching the mailbox will except if it's in maintenance mode
-        		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
-        		if (mbox != null)
-        			ZimbraLog.addMboxToContext(mbox.getId());
+                if (Provisioning.onLocalServer(acct)) {
+            		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+            		if (mbox != null)
+            			ZimbraLog.addMboxToContext(mbox.getId());
+                }
         	}
 
         	boolean limitByFileUploadMaxSize = (req.getParameter(FileUploadServlet.PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null);
-        	
+
         	// file upload requires multipart enctype
         	if (ServletFileUpload.isMultipartContent(req))
         		handleMultipartUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
@@ -360,7 +358,8 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     @SuppressWarnings("unchecked")
-    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize) throws IOException, ServiceException {
+    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize)
+    throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;
 
@@ -617,6 +616,8 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     private final class MapReaperTask extends TimerTask {
+        MapReaperTask()  { }
+
         public void run() {
             try {
                 ArrayList<Upload> reaped = new ArrayList<Upload>();
