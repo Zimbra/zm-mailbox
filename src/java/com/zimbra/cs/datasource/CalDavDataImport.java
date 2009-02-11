@@ -194,6 +194,7 @@ public class CalDavDataImport extends MailItemImport {
 				f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
 				f.remoteId = url;
+		    	mbox.setSyncDate(octxt, folder.getId(), mbox.getLastChangeID());
 				DbDataSource.addMapping(ds, f);
 			} else if (f.md == null) {
 	    		ZimbraLog.datasource.warn("syncFolders: empty metadata for item %d", f.itemId);
@@ -305,6 +306,7 @@ public class CalDavDataImport extends MailItemImport {
     }
     private String putAppointment(CalendarItem calItem, DataSourceItem dsItem) throws ServiceException, IOException, DavException {
         StringBuilder buf = new StringBuilder();
+        ArrayList<String> recipients = new ArrayList<String>();
 
         buf.append("BEGIN:VCALENDAR\r\n");
         buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
@@ -323,15 +325,21 @@ public class CalDavDataImport extends MailItemImport {
             ZCalendar.ZComponent vcomp = inv.newToVComponent(false, true);
             ZCalendar.ZProperty organizer = vcomp.getProperty(ZCalendar.ICalTok.ORGANIZER);
             if (organizer != null)
-                organizer.setValue("mailto:" + getUsername());
+            	organizer.setValue(getUsername());
+                //organizer.setValue("mailto:" + getUsername());
+            // XXX
+            //vcomp.addProperty(new ZCalendar.ZProperty(ZCalendar.ICalTok.ATTENDEE, "urn:resource:resource01"));
             vcomp.toICalendar(wr, true);
             wr.flush();
             buf.append(wr.toCharArray());
             wr.close();
+            
         }
         buf.append("END:VCALENDAR\r\n");
     	String etag = dsItem.md.get(METADATA_KEY_ETAG, null);
-        Appointment appt = new Appointment(dsItem.remoteId, etag, buf.toString());
+    	if (recipients.isEmpty())
+    		recipients = null;
+        Appointment appt = new Appointment(dsItem.remoteId, etag, buf.toString(), recipients);
         return getClient().sendCalendarData(appt);
     }
     private List<RemoteItem> getRemoteItems(Folder folder) throws ServiceException, IOException, DavException {
