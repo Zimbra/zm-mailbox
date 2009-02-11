@@ -156,6 +156,9 @@ public class NativeFormatter extends Formatter {
             String contentType = mp.getContentType();
             if (contentType == null)
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            // CR or LF in Content-Type causes Chrome to barf, unfortunately
+            contentType = contentType.replace('\r', ' ').replace('\n', ' ');
+
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
                             (context.hasView() && context.getView().equals(HTML_VIEW));
             if (!html) {
