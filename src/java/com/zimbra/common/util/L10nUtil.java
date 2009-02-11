@@ -61,6 +61,8 @@ public class L10nUtil {
         calendarDefaultReplyDecline,
         calendarDefaultReplyOther,
         calendarResourceDefaultReplyAccept,
+        calendarResourceDefaultReplyPartiallyAccept,
+        calendarResourceDefaultReplyPartiallyDecline,
         calendarResourceDefaultReplyTentativelyAccept,
         calendarResourceDefaultReplyDecline,
         calendarResourceDefaultReplyPermissionDenied,
@@ -69,7 +71,9 @@ public class L10nUtil {
 
         calendarResourceConflictDateTimeFormat,
         calendarResourceConflictTimeOnlyFormat,
+        calendarResourceConflictDateOnlyFormat,
 
+        calendarResourceDeclinedInstances,
         calendarResourceDeclineReasonRecurring,
         calendarResourceDeclineReasonConflict,
         calendarResourceConflictScheduledBy,
