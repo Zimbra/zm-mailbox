@@ -39,8 +39,12 @@ import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.InviteInfo;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
@@ -98,130 +102,192 @@ public class Appointment extends CalendarItem {
         }
     }
 
-    // code related to calendar resources
-    // TODO: move this stuff to its own class(es)
-
-    public static class Availability {
-        private long mStart;
-        private long mEnd;
+    public static class Conflict {
+        private Instance mInstance;
         private FreeBusy mFreeBusy;
         private String mFreeBusyStatus;
 
-        public Availability(long start, long end, String fbStatus, FreeBusy fb) {
-            mStart = start;
-            mEnd = end;
+        public Conflict(Instance inst, String fbStatus, FreeBusy fb) {
+            mInstance = inst;
             mFreeBusyStatus = fbStatus;
             mFreeBusy = fb;
         }
 
-        public long getStartTime() { return mStart; }
-        public long getEndTime() { return mEnd; }
+        public Instance getInstance() { return mInstance; }
         public FreeBusy getFreeBusy() { return mFreeBusy; }
-        public boolean isBusy() {
-            return
-                IcalXmlStrMap.FBTYPE_BUSY.equals(mFreeBusyStatus) ||
-                IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE.equals(mFreeBusyStatus);                
-        }
+        public boolean isBusy() { return isBusy(mFreeBusyStatus); }
 
-        public static boolean isAvailable(List<Availability> list) {
-            for (Availability avail : list) {
-                if (avail.isBusy()) return false;
-            }
-            return true;
-        }
-
-        public static final int MAX_CONFLICT_LIST_SIZE = 5;
-
-        public static String getBusyTimesString(
-                OperationContext octxt, Mailbox mbox, List<Availability> list, TimeZone tz, Locale lc)
-        throws ServiceException {
-            StringBuilder sb = new StringBuilder();
-            boolean hasMoreConflicts = false;
-            int conflictCount = 0;
-            for (Availability avail : list) {
-                if (conflictCount >= MAX_CONFLICT_LIST_SIZE) {
-                    hasMoreConflicts = true;
-                    break;
-                }
-                if (!avail.isBusy()) continue;
-
-                // List conflicting appointments and their organizers.
-                FreeBusy fb = avail.getFreeBusy();
-                LinkedHashSet<FBInstance> instances = fb.getAllInstances();
-                for (FBInstance instance : instances) {
-                    if (conflictCount >= MAX_CONFLICT_LIST_SIZE) {
-                        hasMoreConflicts = true;
-                        break;
-                    }
-
-                    Date startDate = new Date(instance.getStartTime());
-                    Date endDate = new Date(instance.getEndTime());
-                    String start = CalendarMailSender.formatDateTime(startDate, tz, lc);
-                    sb.append(" * ").append(start);
-                    String end;
-                    if (DateTimeUtil.sameDay(startDate, endDate, tz)) {
-                        end = CalendarMailSender.formatTime(endDate, tz, lc);
-                        sb.append(" - ").append(end);
-                    } else {
-                        end = CalendarMailSender.formatDateTime(endDate, tz, lc);
-                        sb.append("\r\n   - ").append(end);
-                    }
-
-                    int apptId = instance.getApptId();
-                    long recurIdDt = instance.getRecurIdDt();
-                    CalendarItem appt = mbox.getCalendarItemById(octxt, apptId);
-                    Invite inv = appt.getInviteForRecurId(recurIdDt);
-                    if (inv != null && inv.hasOrganizer()) {
-                        ZOrganizer organizer = inv.getOrganizer();
-                        String orgDispName;
-                        if (organizer.hasCn())
-                            orgDispName = organizer.getCn() + " <" + organizer.getAddress() + ">";
-                        else
-                            orgDispName = organizer.getAddress();
-                        sb.append(L10nUtil.getMessage(MsgKey.calendarResourceConflictScheduledBy, lc, orgDispName));
-                    }
-                    sb.append("\r\n");
-                    conflictCount++;
-                }
-            }
-            if (hasMoreConflicts)
-                sb.append(" * ...\r\n");
-            return sb.toString();
+        public static boolean isBusy(String fbStatus) {
+            return IcalXmlStrMap.FBTYPE_BUSY.equals(fbStatus)
+                   || IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE.equals(fbStatus);
         }
     }
 
-    // TODO: Running free/busy search over many recurring instances is
-    // very expensive...  Recurrence expansion itself is expensive, and
-    // each F/B call is expensive as well.  Need a more efficient way.
-    private List<Availability> checkAvailability()
+    private static String getBusyTimesString(
+            OperationContext octxt, Mailbox mbox, List<Conflict> list, TimeZone tz, Locale lc,
+            boolean hasMoreConflicts)
+    throws ServiceException {
+        StringBuilder sb = new StringBuilder();
+        int conflictCount = 0;
+        for (Conflict avail : list) {
+            if (!avail.isBusy()) continue;
+
+            // List conflicting appointments and their organizers.
+            FreeBusy fb = avail.getFreeBusy();
+            LinkedHashSet<FBInstance> instances = fb.getAllInstances();
+            for (FBInstance instance : instances) {
+                Date startDate = new Date(instance.getStartTime());
+                Date endDate = new Date(instance.getEndTime());
+                String start = CalendarMailSender.formatDateTime(startDate, tz, lc);
+                sb.append(" * ").append(start);
+                String end;
+                if (DateTimeUtil.sameDay(startDate, endDate, tz)) {
+                    end = CalendarMailSender.formatTime(endDate, tz, lc);
+                    sb.append(" - ").append(end);
+                } else {
+                    end = CalendarMailSender.formatDateTime(endDate, tz, lc);
+                    sb.append("\r\n   - ").append(end);
+                }
+
+                int apptId = instance.getApptId();
+                long recurIdDt = instance.getRecurIdDt();
+                CalendarItem appt = mbox.getCalendarItemById(octxt, apptId);
+                Invite inv = appt.getInviteForRecurId(recurIdDt);
+                if (inv != null && inv.hasOrganizer()) {
+                    ZOrganizer organizer = inv.getOrganizer();
+                    String orgDispName;
+                    if (organizer.hasCn())
+                        orgDispName = organizer.getCn() + " <" + organizer.getAddress() + ">";
+                    else
+                        orgDispName = organizer.getAddress();
+                    sb.append(L10nUtil.getMessage(MsgKey.calendarResourceConflictScheduledBy, lc, orgDispName));
+                }
+                sb.append("\r\n");
+                conflictCount++;
+            }
+        }
+        if (hasMoreConflicts)
+            sb.append(" * ...\r\n");
+        return sb.toString();
+    }
+
+    private static final int TWENTY_FIVE_HOURS = 25 * 60 * 60 * 1000;
+    private static final int TWO_HOURS = 2 * 60 * 60 * 1000;
+
+    private static String getDeclinedTimesString(
+            OperationContext octxt, Mailbox mbox, List<Conflict> conflicts, boolean allDay,
+            TimeZone tz, Locale lc)
+    throws ServiceException {
+        StringBuilder sb = new StringBuilder();
+        int conflictCount = 0;
+        for (Conflict conflict : conflicts) {
+            // List declined instances' start times.
+            Instance instance = conflict.getInstance();
+            Date startDate = new Date(instance.getStart());
+            Date endDate = new Date(instance.getEnd());
+            if (!allDay) {
+                String start = CalendarMailSender.formatDateTime(startDate, tz, lc);
+                sb.append(" * ").append(start);
+                if (DateTimeUtil.sameDay(startDate, endDate, tz)) {
+                    String end = CalendarMailSender.formatTime(endDate, tz, lc);
+                    sb.append(" - ").append(end);
+                } else {
+                    String end = CalendarMailSender.formatDateTime(endDate, tz, lc);
+                    sb.append("\r\n   - ").append(end);
+                }
+            } else {
+                // all-day appointments
+                String start = CalendarMailSender.formatDate(startDate, tz, lc);
+                sb.append(" * ").append(start);
+                // If each instance is two days or longer, show the end date.
+                long duration = endDate.getTime() - startDate.getTime();
+                if (duration > TWENTY_FIVE_HOURS) {  // longest 1-day = 25 hours on DST "fall back" day
+                    // Bring back end date by 2 hours so the displayed date is inclusive end date,
+                    // not exclusive.  Without DST, we can bring it back by just 1 millisecond, but
+                    // if the instance spans the DST "fall back" date we have a 25-hour day.  Negating
+                    // that requires pulling back end date by at least 1 hour and 1 millisecond.
+                    // Pulling back by 2 hours should work in all cases.
+                    endDate = new Date(instance.getEnd() - TWO_HOURS);
+                    String end = CalendarMailSender.formatDate(endDate, tz, lc);
+                    sb.append(" - ").append(end);
+                }
+            }
+            sb.append("\r\n");
+            conflictCount++;
+        }
+        return sb.toString();
+    }
+
+    private static class ConflictCheckResult {
+        private List<Conflict> mConflicts;
+        private boolean mTooManyConflicts;
+
+        public ConflictCheckResult(List<Conflict> conflicts, boolean tooManyConflicts) {
+            mConflicts = conflicts;
+            mTooManyConflicts = tooManyConflicts;
+        }
+
+        public List<Conflict> getConflicts() { return mConflicts; }
+        public boolean tooManyConflicts() { return mTooManyConflicts; }
+    }
+
+    private static final int MIN_CONFLICT_LIST_SIZE = 5;
+
+    private ConflictCheckResult checkAvailability(long now, Invite invite, int maxNumConflicts, int maxPctConflicts)
     throws ServiceException {
 
-        // Only look between now and appointment end time.  Resource is
-        // available if end time is in the past.
-        long now = System.currentTimeMillis();
-        long st = Math.max(getStartTime(), now);
-        long et = getEndTime();
-        if (et < now)
+        long st, et;
+        if (invite.isRecurrence()) {
+            // Resource is getting invited to a recurring appointment.
+            st = getStartTime();
+            et = getEndTime();
+        } else {
+            // Resource is getting invited to a single instance.
+            ParsedDateTime dtStart = invite.getStartTime();
+            ParsedDateTime dtEnd = invite.getEffectiveEndTime();
+            if (dtStart != null && dtEnd != null) {
+                st = dtStart.getUtcTime();
+                et = dtEnd.getUtcTime();
+            } else {
+                // Start time and/or end time can't be determined.  Give up.
+                return null;
+            }
+        }
+        // Ignore conflicts in the past.
+        st = Math.max(st, now);
+        if (et <= st)
             return null;
 
         OperationContext octxt = new OperationContext(getAccount());
-        Collection<Instance> instances = expandInstances(st, et, false);
-        List<Availability> list = new ArrayList<Availability>(instances.size());
+        Collection<Instance> instances;
+        if (invite.isRecurrence()) {
+            instances = expandInstances(st, et, false);
+        } else {
+            instances = new ArrayList<Instance>(1);
+            instances.add(Instance.fromInvite(this, invite));
+        }
+        if (instances == null || instances.isEmpty())
+            return null;
+
+        int maxByPct = maxPctConflicts * instances.size() / 100;
+        int maxConflicts = Math.min(maxNumConflicts, maxByPct);
+
+        List<Conflict> list = new ArrayList<Conflict>();
         int numConflicts = 0;
         for (Instance inst : instances) {
-            if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
+            if (numConflicts > Math.max(maxConflicts, MIN_CONFLICT_LIST_SIZE - 1))
                 break;
             long start = inst.getStart();
             long end = inst.getEnd();
-            FreeBusy fb =
-                getMailbox().getFreeBusy(octxt, start, end, this);
+            // Run free/busy search of this user between instance start/end times.
+            FreeBusy fb = getMailbox().getFreeBusy(octxt, start, end, this);
             String status = fb.getBusiest();
-            if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
-                list.add(new Availability(start, end, status, fb));
+            if (Conflict.isBusy(status)) {
+                list.add(new Conflict(inst, status, fb));
                 numConflicts++;
             }
         }
-        return list;
+        return new ConflictCheckResult(list, numConflicts > maxConflicts);
     }
 
     protected String processPartStat(Invite invite,
@@ -233,8 +299,19 @@ public class Appointment extends CalendarItem {
         OperationContext octxt = mbox.getOperationContext();
         CreateCalendarItemPlayer player =
             octxt != null ? (CreateCalendarItemPlayer) octxt.getPlayer() : null;
+        long opTime = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
 
         Account account = getMailbox().getAccount();
+        boolean onBehalfOf = false;
+        Account authAcct = account;
+        if (octxt != null) {
+            Account authuser = octxt.getAuthenticatedUser();
+            onBehalfOf = !account.getId().equalsIgnoreCase(authuser.getId());
+            if (onBehalfOf)
+                authAcct = authuser;
+        }
+        boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+        boolean allowPrivateAccess = allowPrivateAccess(authAcct, asAdmin);
 
         String partStat = defaultPartStat;
         if (player != null) {
@@ -243,94 +320,162 @@ public class Appointment extends CalendarItem {
         }
 
         RedoLogProvider redoProvider = RedoLogProvider.getInstance();
-        boolean needResourceAutoReply =
+        // Don't send reply emails if we're not on master (in redo-driven master/replica setup).
+        // Don't send reply emails if we're replaying redo for reasons other than crash recovery.
+        // In other words, we DO want to send emails during crash recovery, because we're completing
+        // an interrupted transaction.  But we don't send emails during redo reply phase of restore.
+        // Also don't send emails for cancel invites.  (Organizer doesn't expect reply for cancels.)
+        // And don't send emails for task requests.
+        boolean needReplyEmail =
             redoProvider.isMaster() &&
             (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
+            invite.hasOrganizer() &&
             !invite.isCancel() &&
             !invite.isTodo();
 
         if (invite.isOrganizer()) {
             // Organizer always accepts.
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
-        } else if (account instanceof CalendarResource && needResourceAutoReply) {
-            // Reply emails should be sent only during delivery of incoming emails.  We're in
-            // email delivery if octxt == null.  (There needs to be a better way to determine that...)
-            boolean needReplyEmail = octxt == null;
+        } else if (account instanceof CalendarResource && octxt == null) {
+            // Auto accept/decline processing should only occur during email delivery.  In particular,
+            // don't do it if we're here during ics import.  We're in email delivery if octxt == null.
+            // (There needs to be a better way to determine that...)
 
+            boolean replySent = false;
             CalendarResource resource = (CalendarResource) account;
             Locale lc;
             Account organizer = invite.getOrganizerAccount();
             if (organizer != null)
                 lc = organizer.getLocale();
             else
-                lc = account.getLocale();
+                lc = resource.getLocale();
             if (resource.autoAcceptDecline()) {
+                boolean replyListUpdated = false;
+                // We'll accept unless one of the checks below fails.
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
+                    // Decline because resource is configured to decline all recurring appointments.
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                    if (invite.hasOrganizer() && needReplyEmail) {
+                    if (needReplyEmail) {
                         String reason =
                             L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonRecurring, lc);
-                        CalendarMailSender.sendReply(
+                        Invite replyInv = makeReplyInvite(
+                                account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
+                                CalendarMailSender.VERB_DECLINE);
+                        CalendarMailSender.sendResourceAutoReply(
                                 octxt, mbox, true,
-                                CalendarMailSender.VERB_DECLINE,
+                                CalendarMailSender.VERB_DECLINE, false,
                                 reason + "\r\n",
-                                this, invite, mmInv);
+                                this, invite, new Invite[] { replyInv }, mmInv);
+                        replySent = true;
                     }
                 } else if (resource.autoDeclineIfBusy()) {
-                    List<Availability> avail = checkAvailability();
-                    if (avail != null && !Availability.isAvailable(avail)) {
-                        partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                        if (invite.hasOrganizer() && needReplyEmail) {
-                            // Figure out the timezone to use for expressing start/end times for
-                            // conflicting meetings.  Do our best to use a timezone familiar to the
-                            // organizer.
-                            ICalTimeZone tz = invite.getStartTime().getTimeZone();
-                            if (tz == null && invite.isAllDayEvent()) {
-                                // floating time: use resource's timezone
-                                tz = ICalTimeZone.getAccountTimeZone(account);
-                                if (tz == null)
-                                    ICalTimeZone.getUTC();
+                    // Auto accept/decline is enabled.  Let's check for conflicts.
+                    int maxNumConflicts = resource.getMaxNumConflictsAllowed();
+                    int maxPctConflicts = resource.getMaxPercentConflictsAllowed();
+                    ConflictCheckResult checkResult = checkAvailability(opTime, invite, maxNumConflicts, maxPctConflicts);
+                    if (checkResult != null) {
+                        List<Conflict> conflicts = checkResult.getConflicts();
+                        if (conflicts.size() > 0) {
+                            if (invite.isRecurrence() && !checkResult.tooManyConflicts()) {
+                                // There are some conflicts, but within resource's allowed limit.
+                                // Let's accept partially.  (Accept the series and decline conflicting instances.)
+                                List<Invite> replyInvites = new ArrayList<Invite>();
+                                // the REPLY for the ACCEPT of recurrence series
+                                Invite acceptInv = makeReplyInvite(
+                                        account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
+                                        CalendarMailSender.VERB_ACCEPT);
+
+                                for (Conflict conflict : conflicts) {
+                                    Instance inst = conflict.getInstance();
+                                    InviteInfo invInfo = inst.getInviteInfo();
+                                    Invite inv = getInvite(invInfo.getMsgId(), invInfo.getComponentId());
+                                    RecurId rid = inst.makeRecurId(inv);
+
+                                    // Record the decline status in reply list.
+                                    getReplyList().modifyPartStat(
+                                            resource, rid, null, resource.getName(), null, null,
+                                            IcalXmlStrMap.PARTSTAT_DECLINED, false, invite.getSeqNo(), opTime);
+                                    replyListUpdated = true;
+
+                                    // Make REPLY VEVENT for the declined instance.
+                                    Invite replyInv = makeReplyInvite(
+                                            account, authAcct, lc, onBehalfOf, allowPrivateAccess, inv, rid,
+                                            CalendarMailSender.VERB_DECLINE);
+                                    replyInvites.add(replyInv);
+                                }
+
+                                if (needReplyEmail) {
+                                    ICalTimeZone tz = chooseReplyTZ(invite);
+                                    // Send one email to accept the series.
+                                    String declinedInstances = getDeclinedTimesString(
+                                            octxt, mbox, conflicts, invite.isAllDayEvent(), tz, lc);
+                                    String msg =
+                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclinedInstances, lc) +
+                                        "\r\n\r\n" + declinedInstances;
+                                    CalendarMailSender.sendResourceAutoReply(
+                                            octxt, mbox, true,
+                                            CalendarMailSender.VERB_ACCEPT, true,
+                                            msg,
+                                            this, invite, new Invite[] { acceptInv }, mmInv);
+                                    // Send another email to decline instances, all in one email.
+                                    String conflictingTimes = getBusyTimesString(octxt, mbox, conflicts, tz, lc, false);
+                                    msg =
+                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclinedInstances, lc) +
+                                        "\r\n\r\n" + declinedInstances + "\r\n" +
+                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
+                                        "\r\n\r\n" + conflictingTimes;
+                                    CalendarMailSender.sendResourceAutoReply(
+                                            octxt, mbox, true,
+                                            CalendarMailSender.VERB_DECLINE, true,
+                                            msg,
+                                            this, invite, replyInvites.toArray(new Invite[0]), mmInv);
+                                    replySent = true;
+                                }
                             } else {
-                                // tz != null || !allday
-                                if (tz == null || tz.sameAsUTC()) {
-                                    if (organizer != null) {
-                                        // For this case, let's assume the sender didn't really mean UTC.
-                                        // This happens with Outlook and possibly more clients.
-                                        tz = ICalTimeZone.getAccountTimeZone(organizer);
-                                    } else {
-                                        // If organizer is not a local user, use resource's timezone.
-                                        tz = ICalTimeZone.getAccountTimeZone(account);
-                                        if (tz == null)
-                                            ICalTimeZone.getUTC();
-                                    }
-                                } else {
-                                    // Timezone is not UTC.  We can safely assume the client sent the
-                                    // correct local timezone.
+                                // Too many conflicts.  Decline outright.
+                                partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
+                                if (needReplyEmail) {
+                                    ICalTimeZone tz = chooseReplyTZ(invite);
+                                    String msg =
+                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
+                                        "\r\n\r\n" +
+                                        getBusyTimesString(octxt, mbox, conflicts, tz, lc, true);
+                                    Invite replyInv = makeReplyInvite(
+                                            account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
+                                            CalendarMailSender.VERB_DECLINE);
+                                    CalendarMailSender.sendResourceAutoReply(
+                                            octxt, mbox, true,
+                                            CalendarMailSender.VERB_DECLINE, false,
+                                            msg,
+                                            this, invite, new Invite[] { replyInv }, mmInv);
+                                    replySent = true;
                                 }
                             }
-
-                            String msg =
-                                L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
-                                "\r\n\r\n" +
-                                Availability.getBusyTimesString(octxt, mbox, avail, tz, lc);
-                            CalendarMailSender.sendReply(
-                                    octxt, mbox, true,
-                                    CalendarMailSender.VERB_DECLINE,
-                                    msg,
-                                    this, invite, mmInv);
                         }
                     }
                 }
-                if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
-                    if (invite.hasOrganizer() && needReplyEmail) {
-                        CalendarMailSender.sendReply(
+                if (!replySent && IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
+                    if (needReplyEmail) {
+                        Invite replyInv = makeReplyInvite(
+                                account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
+                                CalendarMailSender.VERB_ACCEPT);
+                        CalendarMailSender.sendResourceAutoReply(
                                 octxt, mbox, true,
-                                CalendarMailSender.VERB_ACCEPT,
+                                CalendarMailSender.VERB_ACCEPT, false,
                                 null,
-                                this, invite, mmInv);
+                                this, invite, new Invite[] { replyInv }, mmInv);
                     }
                 }
+                // Record the final outcome in the replies list.
+                if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(partStat)) {
+                    getReplyList().modifyPartStat(
+                            resource, invite.getRecurId(), null, resource.getName(), null, null,
+                            partStat, false, invite.getSeqNo(), opTime);
+                    replyListUpdated = true;
+                }
+                if (forCreate && replyListUpdated)
+                    saveMetadata();
             }
         }
 
@@ -349,5 +494,55 @@ public class Appointment extends CalendarItem {
         }
 
         return partStat;
+    }
+
+    // Figure out the timezone to use for expressing start/end times for
+    // conflicting meetings.  Do our best to use a timezone familiar to the
+    // organizer.
+    private ICalTimeZone chooseReplyTZ(Invite invite) throws ServiceException {
+        Account account = getMailbox().getAccount();
+        Account organizer = invite.getOrganizerAccount();
+        ICalTimeZone tz = invite.getStartTime().getTimeZone();
+        if (tz == null && invite.isAllDayEvent()) {
+            // floating time: use resource's timezone
+            tz = ICalTimeZone.getAccountTimeZone(account);
+            if (tz == null)
+                ICalTimeZone.getUTC();
+        } else {
+            // tz != null || !allday
+            if (tz == null || tz.sameAsUTC()) {
+                if (organizer != null) {
+                    // For this case, let's assume the sender didn't really mean UTC.
+                    // This happens with Outlook and possibly more clients.
+                    tz = ICalTimeZone.getAccountTimeZone(organizer);
+                } else {
+                    // If organizer is not a local user, use resource's timezone.
+                    tz = ICalTimeZone.getAccountTimeZone(account);
+                    if (tz == null)
+                        ICalTimeZone.getUTC();
+                }
+            } else {
+                // Timezone is not UTC.  We can safely assume the client sent the
+                // correct local timezone.
+            }
+        }
+        return tz;
+    }
+
+    private Invite makeReplyInvite(Account account, Account authAccount, Locale lc,
+                                   boolean onBehalfOf, boolean allowPrivateAccess,
+                                   Invite inv, RecurId rid, Verb verb)
+    throws ServiceException {
+        boolean hidePrivate = !inv.isPublic() && !allowPrivateAccess;
+        String subject;
+        if (hidePrivate)
+            subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, lc);
+        else
+            subject = inv.getName();
+        String replySubject = CalendarMailSender.getReplySubject(verb, subject, lc);
+        ParsedDateTime ridDt = rid != null ? rid.getDt() : null;
+        Invite replyInv = CalendarMailSender.replyToInvite(
+                account, authAccount, onBehalfOf, allowPrivateAccess, inv, verb, replySubject, ridDt);
+        return replyInv;
     }
 }

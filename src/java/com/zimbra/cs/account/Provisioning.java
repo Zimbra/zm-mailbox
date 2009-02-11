@@ -1314,6 +1314,8 @@ public abstract class Provisioning {
     public static final String A_zimbraCalResAutoAcceptDecline    = "zimbraCalResAutoAcceptDecline";
     public static final String A_zimbraCalResAutoDeclineIfBusy    = "zimbraCalResAutoDeclineIfBusy";
     public static final String A_zimbraCalResAutoDeclineRecurring = "zimbraCalResAutoDeclineRecurring";
+    public static final String A_zimbraCalResMaxNumConflictsAllowed = "zimbraCalResMaxNumConflictsAllowed";
+    public static final String A_zimbraCalResMaxPercentConflictsAllowed = "zimbraCalResMaxPercentConflictsAllowed";
     public static final String A_zimbraCalResLocationDisplayName  = "zimbraCalResLocationDisplayName";
     public static final String A_zimbraCalResSite                 = "zimbraCalResSite";
     public static final String A_zimbraCalResBuilding             = "zimbraCalResBuilding";

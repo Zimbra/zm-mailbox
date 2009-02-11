@@ -47,6 +47,14 @@ public class CalendarResource extends Account {
                 Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
     }
 
+    public int getMaxNumConflictsAllowed() {
+        return getIntAttr(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, 0);
+    }
+
+    public int getMaxPercentConflictsAllowed() {
+        return getIntAttr(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, 0);
+    }
+
     public String getDisplayName() {
         return getAttr(Provisioning.A_displayName);
     }
