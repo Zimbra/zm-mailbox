@@ -3083,12 +3083,10 @@ public abstract class CalendarItem extends MailItem {
     @Override
     boolean move(Folder target) throws ServiceException {
         if (!isPublic()) {
-            boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
-            boolean privateAccessDest = target.canAccess(ACL.RIGHT_PRIVATE);
-            if (!privateAccessSrc)
+            if (!canAccess(ACL.RIGHT_PRIVATE))
                 throw ServiceException.PERM_DENIED(
                         "you do not have permission to move private calendar item from the current folder");
-            if (!privateAccessDest)
+            if (target.getId() != Mailbox.ID_FOLDER_TRASH && !target.canAccess(ACL.RIGHT_PRIVATE))
                 throw ServiceException.PERM_DENIED(
                         "you do not have permission to move private calendar item to the target folder");
         }
