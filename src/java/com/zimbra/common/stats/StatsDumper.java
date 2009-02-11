@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.TaskScheduler;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Writes data to a file at a scheduled interval.  Data and headers are retrieved
@@ -43,9 +44,8 @@ public class StatsDumper
 implements Callable<Void> {
     
     private static final File STATS_DIR = new File(LC.zmstat_log_directory.value());
+    private static final ThreadGroup statsGroup = new ThreadGroup("ZimbraPerf Stats");
 
-    private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("StatsDumper", 1, 3);
-    
     private StatsDumperDataSource mDataSource;
     private Calendar mLastRollover = Calendar.getInstance();
     private StatsDumper(StatsDumperDataSource dataSource) {
@@ -76,9 +76,30 @@ implements Callable<Void> {
      * @param intervalMillis interval between writes.  The first write is delayed by
      * this interval.
      */
-    public static void schedule(StatsDumperDataSource dataSource, long intervalMillis) {
-        StatsDumper dumper = new StatsDumper(dataSource);
-        sTaskScheduler.schedule(dataSource.getFilename(), dumper, true, intervalMillis, intervalMillis);
+    public static void schedule(final StatsDumperDataSource dataSource, final long intervalMillis) {
+        // Stop using TaskScheduler (bug 22978)
+        final StatsDumper dumper = new StatsDumper(dataSource);
+        Runnable r = new Runnable() {
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(intervalMillis);
+                        try {
+                            dumper.call();
+                        }
+                        catch (Exception e) {
+                            ZimbraLog.perf.warn("Exception in stats thread: %s", dataSource.getFilename(), e);
+                        }
+                    }
+                    catch (InterruptedException e) {
+                        ZimbraLog.perf.info("Stats thread interrupted: %s", dataSource.getFilename(), e);
+                    }
+                    if (Thread.currentThread().isInterrupted())
+                        ZimbraLog.perf.info("Stats thread was interrupted: %s", dataSource.getFilename());
+                }
+            }
+        };
+        new Thread(statsGroup, r, dataSource.getFilename()).start();
     }
     
     private void rollover()
