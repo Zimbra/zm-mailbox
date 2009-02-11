@@ -55,12 +55,14 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -165,6 +167,17 @@ public class CalendarMailSender {
                                                  MimeMessage mmInv, String replySubject, Verb verb,
                                                  String additionalMsgBody, ZVCalendar iCal)
     throws ServiceException {
+        return createDefaultReply(fromAccount, authAccount, asAdmin, onBehalfOf, calItem, inv, mmInv,
+                                  replySubject, verb, false, additionalMsgBody, iCal);
+    }
+
+    public static MimeMessage createDefaultReply(Account fromAccount, Account authAccount, boolean asAdmin,
+                                                 boolean onBehalfOf,
+                                                 CalendarItem calItem, Invite inv,
+                                                 MimeMessage mmInv, String replySubject, Verb verb,
+                                                 boolean partialAccept,
+                                                 String additionalMsgBody, ZVCalendar iCal)
+    throws ServiceException {
         Locale lc;
         InternetAddress organizerAddress;
         if (inv.hasOrganizer()) {
@@ -183,15 +196,23 @@ public class CalendarMailSender {
 
         MsgKey statusMsgKey;
         if (VERB_ACCEPT.equals(verb)) {
-            if (isResourceAccount)
-                statusMsgKey = MsgKey.calendarResourceDefaultReplyAccept;
-            else
+            if (isResourceAccount) {
+                if (partialAccept)
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyPartiallyAccept;
+                else
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyAccept;
+            } else {
                 statusMsgKey = MsgKey.calendarDefaultReplyAccept;
+            }
         } else if (VERB_DECLINE.equals(verb)) {
-            if (isResourceAccount)
-                statusMsgKey = MsgKey.calendarResourceDefaultReplyDecline;
-            else
+            if (isResourceAccount) {
+                if (partialAccept)
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyPartiallyDecline;
+                else
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyDecline;
+            } else {
                 statusMsgKey = MsgKey.calendarDefaultReplyDecline;
+            }
         } else if (VERB_TENTATIVE.equals(verb)) {
             if (isResourceAccount)
                 statusMsgKey = MsgKey.calendarResourceDefaultReplyTentativelyAccept;
@@ -240,7 +261,7 @@ public class CalendarMailSender {
             sb.append("\r\n-----");
             sb.append(L10nUtil.getMessage(
                     MsgKey.calendarResourceReplyOriginalInviteSeparatorLabel, lc));
-            sb.append("-----\r\n");
+            sb.append("-----\r\n\r\n");
             sb.append(notes);
         }
     }
@@ -257,6 +278,14 @@ public class CalendarMailSender {
         String timeOnlyFmt =
             L10nUtil.getMessage(MsgKey.calendarResourceConflictTimeOnlyFormat, lc);
         SimpleDateFormat timeFormat = new SimpleDateFormat(timeOnlyFmt, lc);
+        timeFormat.setTimeZone(tz);
+        return timeFormat.format(t);
+    }
+
+    public static String formatDate(Date t, TimeZone tz, Locale lc) {
+        String dateOnlyFmt =
+            L10nUtil.getMessage(MsgKey.calendarResourceConflictDateOnlyFormat, lc);
+        SimpleDateFormat timeFormat = new SimpleDateFormat(dateOnlyFmt, lc);
         timeFormat.setTimeZone(tz);
         return timeFormat.format(t);
     }
@@ -541,7 +570,9 @@ public class CalendarMailSender {
                     mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null,
                             origMsgId, MailSender.MSGTYPE_REPLY, null, true, true);
                 } catch (ServiceException e) {
-                    ZimbraLog.calendar.warn("Ignoring error while sending permission-denied message", e);
+                    ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("OutOfMemoryError while sending permission-denied auto reply", e);
                 }
             }
         };
@@ -671,9 +702,11 @@ public class CalendarMailSender {
         }
     }
 
-    public static void sendReply(final OperationContext octxt, final Mailbox mbox, final boolean saveToSent,
-                                 Verb verb, String additionalMsgBody, CalendarItem calItem,
-                                 final Invite inv, MimeMessage mmInv)
+    public static void sendResourceAutoReply(final OperationContext octxt, final Mailbox mbox,
+                                             final boolean saveToSent,
+                                             Verb verb, boolean partialAccept,
+                                             String additionalMsgBody, CalendarItem calItem,
+                                             Invite inv, Invite[] replies, MimeMessage mmInv)
     throws ServiceException {
         boolean onBehalfOf = false;
         Account acct = mbox.getAccount();
@@ -691,7 +724,8 @@ public class CalendarMailSender {
         else
             lc = authAcct.getLocale();
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
-        boolean hidePrivate = !inv.isPublic() && !calItem.allowPrivateAccess(authAcct, asAdmin);
+        boolean allowPrivateAccess = calItem.allowPrivateAccess(authAcct, asAdmin);
+        boolean hidePrivate = !inv.isPublic() && !allowPrivateAccess;
         String subject;
         if (hidePrivate)
             subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, lc);
@@ -700,24 +734,31 @@ public class CalendarMailSender {
         String replySubject = getReplySubject(verb, subject, lc);
 
         final String replyType = MailSender.MSGTYPE_REPLY;
-        ParsedDateTime exceptDt = null;
-        if (inv.hasRecurId())
-            exceptDt = inv.getRecurId().getDt();
-        boolean allowPrivateAccess = calItem.allowPrivateAccess(authAcct, asAdmin);
-        Invite replyInv = replyToInvite(acct, authAcct, onBehalfOf, allowPrivateAccess, inv, verb, replySubject, exceptDt);
 
-        ZVCalendar iCal = replyInv.newToICalendar(true);
+        // Put all REPLY VEVENTs into a single VCALENDAR object.
+        ZVCalendar iCal = null;
+        for (Invite replyInv : replies) {
+            if (iCal == null) {
+                iCal = replyInv.newToICalendar(!hidePrivate);
+            } else {
+                ZComponent cancelComp = replyInv.newToVComponent(true, !hidePrivate);
+                iCal.addComponent(cancelComp);
+            }
+        }
         final MimeMessage mm = createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
-                                                  replySubject, verb, additionalMsgBody, iCal);
+                                                  replySubject, verb, partialAccept, additionalMsgBody, iCal);
+        final int invId = inv.getMailItemId();
 
         // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
         Runnable r = new Runnable() {
             public void run() {
                 try {
                     mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
-                            new ItemId(mbox, inv.getMailItemId()), replyType, null, false, true);
+                            new ItemId(mbox, invId), replyType, null, false, true);
                 } catch (ServiceException e) {
-                    ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline message", e);
+                    ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline reply", e);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("OutOfMemoryError while sending calendar resource auto accept/decline reply", e);
                 }
             }
         };

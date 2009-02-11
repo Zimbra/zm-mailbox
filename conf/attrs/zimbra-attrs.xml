@@ -4045,5 +4045,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum size in bytes for the &lt;content &gt; element in SOAP.  Mail content larger than this limit will be truncated.</desc>
 </attr>
 
+<attr id="808" name="zimbraCalResMaxNumConflictsAllowed" type="integer" min="0" cardinality="single" optionalIn="calendarResource" flags="domainAdminModifiable" since="5.0.14">
+  <desc>Maximum number of conflicting instances allowed before declining schedule request for a recurring appointments; default 0 (means decline on any conflict)</desc>
+</attr>
+
+<attr id="809" name="zimbraCalResMaxPercentConflictsAllowed" type="integer" min="0" max="100" cardinality="single" optionalIn="calendarResource" flags="domainAdminModifiable" since="5.0.14">
+  <desc>Maximum percent of conflicting instances allowed before declining schedule request for a recurring appointment; default 0 (means decline on any conflict)</desc>
+</attr>
 
 </attrs>

@@ -1262,6 +1262,8 @@
             zimbraCalResAutoAcceptDecline TRUE \
             zimbraCalResAutoDeclineIfBusy TRUE \
             zimbraCalResAutoDeclineRecurring FALSE \
+        	zimbraCalResMaxNumConflictsAllowed 3 \
+        	zimbraCalResMaxPercentConflictsAllowed 10 \
             zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
             zimbraCalResSite HQ \
             zimbraCalResBuilding A \

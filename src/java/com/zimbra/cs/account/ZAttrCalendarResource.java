@@ -35,7 +35,7 @@ public class ZAttrCalendarResource extends Account {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090210-1027 */
+    /* build: 5.0 jhahm 20090211-1224 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
@@ -846,6 +846,170 @@ public class ZAttrCalendarResource extends Account {
     public Map<String,Object> unsetCalResLocationDisplayName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResLocationDisplayName, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of conflicting instances allowed before declining
+     * schedule request for a recurring appointments; default 0 (means
+     * decline on any conflict)
+     *
+     * @return zimbraCalResMaxNumConflictsAllowed, or -1 if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=808)
+    public int getCalResMaxNumConflictsAllowed() {
+        return getIntAttr(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, -1);
+    }
+
+    /**
+     * Maximum number of conflicting instances allowed before declining
+     * schedule request for a recurring appointments; default 0 (means
+     * decline on any conflict)
+     *
+     * @param zimbraCalResMaxNumConflictsAllowed new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=808)
+    public void setCalResMaxNumConflictsAllowed(int zimbraCalResMaxNumConflictsAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, Integer.toString(zimbraCalResMaxNumConflictsAllowed));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of conflicting instances allowed before declining
+     * schedule request for a recurring appointments; default 0 (means
+     * decline on any conflict)
+     *
+     * @param zimbraCalResMaxNumConflictsAllowed new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=808)
+    public Map<String,Object> setCalResMaxNumConflictsAllowed(int zimbraCalResMaxNumConflictsAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, Integer.toString(zimbraCalResMaxNumConflictsAllowed));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of conflicting instances allowed before declining
+     * schedule request for a recurring appointments; default 0 (means
+     * decline on any conflict)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=808)
+    public void unsetCalResMaxNumConflictsAllowed() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of conflicting instances allowed before declining
+     * schedule request for a recurring appointments; default 0 (means
+     * decline on any conflict)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=808)
+    public Map<String,Object> unsetCalResMaxNumConflictsAllowed(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum percent of conflicting instances allowed before declining
+     * schedule request for a recurring appointment; default 0 (means decline
+     * on any conflict)
+     *
+     * @return zimbraCalResMaxPercentConflictsAllowed, or -1 if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=809)
+    public int getCalResMaxPercentConflictsAllowed() {
+        return getIntAttr(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, -1);
+    }
+
+    /**
+     * Maximum percent of conflicting instances allowed before declining
+     * schedule request for a recurring appointment; default 0 (means decline
+     * on any conflict)
+     *
+     * @param zimbraCalResMaxPercentConflictsAllowed new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=809)
+    public void setCalResMaxPercentConflictsAllowed(int zimbraCalResMaxPercentConflictsAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, Integer.toString(zimbraCalResMaxPercentConflictsAllowed));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum percent of conflicting instances allowed before declining
+     * schedule request for a recurring appointment; default 0 (means decline
+     * on any conflict)
+     *
+     * @param zimbraCalResMaxPercentConflictsAllowed new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=809)
+    public Map<String,Object> setCalResMaxPercentConflictsAllowed(int zimbraCalResMaxPercentConflictsAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, Integer.toString(zimbraCalResMaxPercentConflictsAllowed));
+        return attrs;
+    }
+
+    /**
+     * Maximum percent of conflicting instances allowed before declining
+     * schedule request for a recurring appointment; default 0 (means decline
+     * on any conflict)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=809)
+    public void unsetCalResMaxPercentConflictsAllowed() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum percent of conflicting instances allowed before declining
+     * schedule request for a recurring appointment; default 0 (means decline
+     * on any conflict)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=809)
+    public Map<String,Object> unsetCalResMaxPercentConflictsAllowed(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, "");
         return attrs;
     }
 

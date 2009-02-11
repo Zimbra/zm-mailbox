@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090210-1027 */
+    /* build: 5.0 jhahm 20090211-1224 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1538,6 +1538,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=324)
     public static final String A_zimbraCalResLocationDisplayName = "zimbraCalResLocationDisplayName";
+
+    /**
+     * Maximum number of conflicting instances allowed before declining
+     * schedule request for a recurring appointments; default 0 (means
+     * decline on any conflict)
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=808)
+    public static final String A_zimbraCalResMaxNumConflictsAllowed = "zimbraCalResMaxNumConflictsAllowed";
+
+    /**
+     * Maximum percent of conflicting instances allowed before declining
+     * schedule request for a recurring appointment; default 0 (means decline
+     * on any conflict)
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=809)
+    public static final String A_zimbraCalResMaxPercentConflictsAllowed = "zimbraCalResMaxPercentConflictsAllowed";
 
     /**
      * room number or name

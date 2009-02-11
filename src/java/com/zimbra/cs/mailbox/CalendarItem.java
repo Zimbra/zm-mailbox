@@ -907,6 +907,37 @@ public abstract class CalendarItem extends MailItem {
             }
             return dt.getDateTimePartString(false);
         }
+
+        public RecurId makeRecurId(Invite refInv) {
+            // Get it from InviteInfo if we can.
+            RecurId rid = mInvId.getRecurrenceId();
+            if (rid != null)
+                return rid;
+
+            // InviteInfo didn't have anything, meaning this instance wasn't an exception instance.
+            // Generate a recurrence id using the data from the reference invite.
+            if (refInv == null) {
+                if (!mTimeless) {
+                    return new RecurId(ParsedDateTime.fromUTCTime(mStart), RecurId.RANGE_NONE);
+                } else {
+                    // We can't handle all-day appointments if reference invite wasn't given.
+                    return null;
+                }
+            }
+            ParsedDateTime dtStart = refInv.getStartTime();
+            if (dtStart == null)
+                return null;
+            ICalTimeZone tz = dtStart.getTimeZone();
+            long startTime = mStart;
+            ParsedDateTime dt;
+            if (tz != null)
+                dt = ParsedDateTime.fromUTCTime(startTime, tz);
+            else
+                dt = ParsedDateTime.fromUTCTime(startTime);
+            if (refInv.isAllDayEvent())
+                dt.setHasTime(false);
+            return new RecurId(dt, RecurId.RANGE_NONE);
+        }
     }
 
     public String getUid() {
