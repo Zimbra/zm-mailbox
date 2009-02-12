@@ -219,10 +219,8 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        List<ShareInfo.Publishing> shareInfo = new ArrayList<ShareInfo.Publishing>();
         ShareInfo.Publishing si = new ShareInfo.Publishing(ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath, null);
-        shareInfo.add(si);
-        mProv.modifyShareInfo(publishingEntry, shareInfo);
+        mProv.modifyShareInfo(publishingEntry, si);
         
         VerifyPublishedVisitor visitor;
         
@@ -239,10 +237,8 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        List<ShareInfo.Publishing> shareInfo = new ArrayList<ShareInfo.Publishing>();
         ShareInfo.Publishing si = new ShareInfo.Publishing(ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath, null);
-        shareInfo.add(si);
-        mProv.modifyShareInfo(publishingEntry, shareInfo);
+        mProv.modifyShareInfo(publishingEntry, si);
         
         VerifyPublishedVisitor visitor;
         

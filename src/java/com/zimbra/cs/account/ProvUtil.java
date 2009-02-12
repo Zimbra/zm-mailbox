@@ -304,10 +304,8 @@ public class ProvUtil implements DebugListener {
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
-        ADD_ACCOUNT_SHARE_INFO("addAccountShareInfo", "aasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
-        ADD_DISTRIBUTION_LIST_SHARE_INFO("addDistribtionListShareInfo", "adlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
@@ -385,11 +383,13 @@ public class ProvUtil implements DebugListener {
         INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{domain} [{name@domain}]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"), 
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
+        MODIFY_ACCOUNT_SHARE_INFO("modifyAccountShareInfo", "masi", "{+|-} {account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
         MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
         MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
+        MODIFY_DISTRIBUTION_LIST_SHARE_INFO("modifyDistribtionListShareInfo", "mdlsi", "{+|-} {dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
@@ -400,14 +400,12 @@ public class ProvUtil implements DebugListener {
         RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
-        REMOVE_ACCOUNT_SHARE_INFO("removeAccountShareInfo", "rasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
         RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
-        REMOVE_DISTRIBUTION_LIST_SHARE_INFO("removeDistribtionListShareInfo", "rdlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
@@ -926,23 +924,17 @@ public class ProvUtil implements DebugListener {
         case SEARCH_CALENDAR_RESOURCES:
             doSearchCalendarResources(args);
             break;
-        case ADD_ACCOUNT_SHARE_INFO:
-            doModifyAccountShareInfo(true, args);
+        case MODIFY_ACCOUNT_SHARE_INFO:
+            doModifyAccountShareInfo(args);
             break;
-        case ADD_DISTRIBUTION_LIST_SHARE_INFO:
-            doModifyDistributionListShareInfo(true, args);
+        case MODIFY_DISTRIBUTION_LIST_SHARE_INFO:
+            doModifyDistributionListShareInfo(args);
             break;
         case GET_ACCOUNT_SHARE_INFO:
             doGetAccountShareInfo(args);
             break;
         case GET_DISTRIBUTION_LIST_SHARE_INFO:
             doGetDistributionListShareInfo(args);
-            break;
-        case REMOVE_ACCOUNT_SHARE_INFO:
-            doModifyAccountShareInfo(false, args);
-            break;
-        case REMOVE_DISTRIBUTION_LIST_SHARE_INFO:
-            doModifyDistributionListShareInfo(false, args);
             break;
         case INIT_NOTEBOOK:
             initNotebook(args);
@@ -1248,34 +1240,45 @@ public class ProvUtil implements DebugListener {
         }
     }
 
+    /*
+     * + => true
+     * - => false
+     */
+    private boolean parsePlusMinus(String s) throws ServiceException {
+        if (s.equals("-"))
+            return false;
+        else if (s.equals("+"))
+            return true;
+        else
+            throw ServiceException.INVALID_REQUEST("invalid arg for the add/remove", null);
+    }
     
-    private void doModifyAccountShareInfo(boolean isAdd, String[] args) throws ServiceException {
+    private void doModifyAccountShareInfo(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         
-        String key = args[1];
+        boolean isAdd = parsePlusMinus(args[1]);
+        String key = args[2];
         Account acct = lookupAccount(key);
         
-        List<ShareInfo.Publishing> shareInfo = parseModifyShareInfo(isAdd, args);
-        mProv.modifyShareInfo(acct, shareInfo); 
+        ShareInfo.Publishing si = parseModifyShareInfo(isAdd, args);
+        mProv.modifyShareInfo(acct, si); 
     }
     
-    private void doModifyDistributionListShareInfo(boolean isAdd, String[] args) throws ServiceException {
+    private void doModifyDistributionListShareInfo(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         
-        String key = args[1];
+        boolean isAdd = parsePlusMinus(args[1]);
+        String key = args[2];
         DistributionList dl = lookupDistributionList(key);
         
-        List<ShareInfo.Publishing> shareInfo = parseModifyShareInfo(isAdd, args);
-        mProv.modifyShareInfo(dl, shareInfo); 
+        ShareInfo.Publishing si = parseModifyShareInfo(isAdd, args);
+        mProv.modifyShareInfo(dl, si); 
     }
     
-    private List<ShareInfo.Publishing> parseModifyShareInfo(boolean isAdd, String[] args) throws ServiceException {
-        // only support one owner/folder/desc spec per invocation in the CLI, 
-        // return a list becasue SOAP can take multiple in one request
-        
-        int idx = 2;
+    private ShareInfo.Publishing parseModifyShareInfo(boolean isAdd, String[] args) throws ServiceException {
+        int idx = 3;
         String owner = args[idx++];
         String ownerAcctId = lookupAccount(owner).getId();
         
@@ -1294,9 +1297,8 @@ public class ProvUtil implements DebugListener {
         
         ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcctId, folderPathOrId, null);
         List<ShareInfo.Publishing> shareInfo = new ArrayList<ShareInfo.Publishing>();
-        shareInfo.add(si);
         
-        return shareInfo;
+        return si;
     }
     
     private static class ShareInfoVisitor implements ShareInfo.Published.Visitor {

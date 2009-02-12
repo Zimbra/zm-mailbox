@@ -864,6 +864,49 @@ public class ShareInfo {
             }
         }
         
+        /*
+           <shares xmlns="urn:zimbraShare">
+               <share version="0.1" action="new" >
+                   <grantee id="569e4a9d-752f-4083-a43b-469e89e468bd" email="engineering@example.com" name="engineering" />
+                   <grantor id="16e4f67c-fc2f-405b-bba5-929f9964a62c" email="user1@example.com" name="Demo User One" />
+                   <link id="2" name="Inbox" view="message" perm="r" />
+                   <notes></notes>
+               </share>
+               
+               <share version="0.1" action="new" >
+                   <grantee id="bf9cd40c-5165-433c-a553-85ca8f74f91d" email="server-team@example.com" name="server-team" />
+                   <grantor id="d9e31b06-9396-42bb-8b3d-fc1b75d61bdf" email="user2@example.com" name="Demo User Two" />
+                   <link id="3" name="Calendar" view="appointment" perm="r" />
+                   <notes></notes>
+               </share>
+               
+               ... 
+               
+           </shares>    
+         */
+        /*
+        private String renderXml(String dlName, Locale locale) {
+            StringBuilder sb = new StringBuilder();
+            
+            sb.append("<shares xmlns\"urn:zimbraShare\">\n");
+
+            
+            for (Published si : mShares) {
+                sb.append("  <share version=\"0.1\" action=\"new\" >\n");
+                sb.append("    <grantee id=\" + si.getGranteeId() + "\" email=\"" + si.getGranteeName() +"\" name=\" + si.getGranteeName() + "\" />\n");
+                sb.append(formatShareInfoXml(MsgKey.shareInfoBodySharedItem, si.getFolderPath(), locale));
+                sb.append(formatShareInfoXml(MsgKey.shareInfoBodyOwner, si.getOwnerAcctName(), locale));
+                sb.append(formatShareInfoXml(MsgKey.shareInfoBodyGrantee, si.getGranteeName(), locale));
+                sb.append(formatShareInfoXml(MsgKey.shareInfoBodyAllowedActions, getRightsText(si, locale), locale));
+                sb.append("</table>\n");
+                sb.append("</p>\n");
+            }
+            sb.append("</shares>");
+            
+            return sb.toString();
+        }
+        */
+
         public static void sendShareInfoMessage(OperationContext octxt, DistributionList dl, String[] members) {
             
             Provisioning prov = Provisioning.getInstance();
@@ -971,6 +1014,16 @@ public class ShareInfo {
                 String subject = L10nUtil.getMessage(MsgKey.shareInfoSubject, locale);
                 String shareInfoText = visitor.renderText(dl.getName(), locale);
                 String shareInfoHtml = visitor.renderHtml(dl.getName(), locale);
+                // String shareInfoXml = visitor.renderXml(dl.getName(), locale);
+                /*
+                String shareInfoXml = 
+                    "<share xmlns=\"urn:zimbraShare\" version=\"0.1\" action=\"new\" >" +
+                "<grantee id=\"569e4a9d-752f-4083-a43b-469e89e468bd\" email=\"user2@phoebe.mac\" name=\"user2@phoebe.mac\" />" +
+                "<grantor id=\"16e4f67c-fc2f-405b-bba5-929f9964a62c\" email=\"user1@phoebe.mac\" name=\"Demo User One\" />" +
+                "<link id=\"2\" name=\"Inbox\" view=\"message\" perm=\"r\" />" +
+                "<notes></notes>" + 
+                "</share>";
+                */
                 
                 // Subject 
                 out.setSubject(subject);
@@ -990,6 +1043,26 @@ public class ShareInfo {
                 MimeBodyPart htmlPart = new MimeBodyPart();
                 htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
                 mmp.addBodyPart(htmlPart);
+                
+                /*
+                // ///////
+                // XML part 
+                MimeBodyPart xmlPart = new MimeBodyPart();
+                xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(shareInfoXml)));
+                mmp.addBodyPart(xmlPart);
+                */
+                
+                // 
+                /*Content-Type: xml/x-zimbra-share; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<share xmlns="urn:zimbraShare" version="0.1" action="new" >
+  <grantee id="569e4a9d-752f-4083-a43b-469e89e468bd" email="user2@phoebe.mac" name="user2@phoebe.mac" />
+  <grantor id="16e4f67c-fc2f-405b-bba5-929f9964a62c" email="user1@phoebe.mac" name="Demo User One" />
+  <link id="2" name="Inbox" view="message" perm="r" />
+  <notes></notes>
+</share>
+*/
 
                 // send the thing
                 Transport.send(out);
@@ -1000,20 +1073,13 @@ public class ShareInfo {
             }
         }
          
-        private static class HtmlPartDataSource implements DataSource {
-            private static final String CONTENT_TYPE =
-                Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
-            private static final String NAME = "HtmlDataSource";
-
+        private static abstract class MimePartDataSource implements DataSource {
+            
             private String mText;
             private byte[] mBuf = null;
 
-            public HtmlPartDataSource(String text) {
+            public MimePartDataSource(String text) {
                 mText = text;
-            }
-
-            public String getContentType() {
-                return CONTENT_TYPE;
             }
 
             public InputStream getInputStream() throws IOException {
@@ -1032,12 +1098,44 @@ public class ShareInfo {
                 return in;
             }
 
+            public OutputStream getOutputStream() {
+                throw new UnsupportedOperationException();
+            }
+        }
+        
+        private static class HtmlPartDataSource extends MimePartDataSource {
+            private static final String CONTENT_TYPE =
+                Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
+            private static final String NAME = "HtmlDataSource";
+
+            HtmlPartDataSource(String text) {
+                super(text);
+            }
+            
+            public String getContentType() {
+                return CONTENT_TYPE;
+            }
+
             public String getName() {
                 return NAME;
             }
+        }
+        
+        private static class XmlPartDataSource extends MimePartDataSource {
+            private static final String CONTENT_TYPE =
+                Mime.CT_XML_ZIMBRA_SHARE + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
+            private static final String NAME = "XmlDataSource";
 
-            public OutputStream getOutputStream() {
-                throw new UnsupportedOperationException();
+            XmlPartDataSource(String text) {
+                super(text);
+            }
+            
+            public String getContentType() {
+                return CONTENT_TYPE;
+            }
+
+            public String getName() {
+                return NAME;
             }
         }
     }

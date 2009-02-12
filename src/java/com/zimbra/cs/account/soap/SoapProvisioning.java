@@ -2117,18 +2117,16 @@ public class SoapProvisioning extends Provisioning {
     }
     
     
-    private void toXML(Element req, List<ShareInfo.Publishing> shareInfo) {
-        for (ShareInfo.Publishing si : shareInfo) {
-            Element eShare = req.addElement(AdminConstants.E_SHARE);
-            eShare.addAttribute(AdminConstants.A_ACTION, si.getAction().name());
+    private void toXML(Element req, ShareInfo.Publishing si) {
+        Element eShare = req.addElement(AdminConstants.E_SHARE);
+        eShare.addAttribute(AdminConstants.A_ACTION, si.getAction().name());
         
-            eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(si.getOwnerAcctId());
-            eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, si.getFolderIdOrPath());
-        }
+        eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(si.getOwnerAcctId());
+        eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, si.getFolderIdOrPath());
     }
     
     @Override
-    public void modifyShareInfo(Account acct, List<ShareInfo.Publishing> shareInfo) throws ServiceException {
+    public void modifyShareInfo(Account acct, ShareInfo.Publishing shareInfo) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
         
         Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
@@ -2140,7 +2138,7 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void modifyShareInfo(DistributionList dl, List<ShareInfo.Publishing> shareInfo) throws ServiceException {
+    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing shareInfo) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
         
         Element eDL = req.addElement(AdminConstants.E_DL);
