@@ -27,6 +27,7 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.TimeRange;
@@ -51,7 +52,7 @@ public class CalendarQuery extends Report {
 		if (!query.getQName().equals(DavElements.E_CALENDAR_QUERY))
 			throw new DavException("msg "+query.getName()+" is not calendar-query", HttpServletResponse.SC_BAD_REQUEST, null);
 		
-		RequestProp reqProp = getRequestProp(ctxt);
+		RequestProp reqProp = ctxt.getRequestProp();
 		QueryContext qctxt = new QueryContext(ctxt, query, reqProp);
 		
 		if (qctxt.componentFilter == null)

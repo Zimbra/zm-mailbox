@@ -53,6 +53,17 @@ import com.zimbra.cs.dav.property.ResourceProperty;
  *
  */
 public abstract class DavResource {
+	
+	public static class InvalidResource extends DavResource {
+		public InvalidResource(String uri, String owner) {
+			super(uri, owner);
+		}
+		public InputStream getContent(DavContext ctxt) { return null; }
+		public void delete(DavContext ctxt) { }
+		public boolean isCollection() { return false; }
+		public boolean isValid() { return false; }
+	}
+	
 	protected String mUri;
 	protected String mOwner;
 	protected Map<QName,ResourceProperty> mProps;
@@ -93,6 +104,14 @@ public abstract class DavResource {
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
 		if (isCollection())
 			addResourceType(DavElements.E_COLLECTION);
+	}
+	
+	public void setHref(String href) {
+		getProperty(DavElements.E_HREF).setStringValue(href);
+	}
+	
+	public boolean isValid() {
+		return true;
 	}
 	
 	public boolean isNewlyCreated() {
@@ -217,6 +236,10 @@ public abstract class DavResource {
 	public abstract void delete(DavContext ctxt) throws DavException;
 	
 	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+		return Collections.emptyList();
+	}
+	
+	public Collection<DavResource> getChildren(DavContext ctxt, Collection<String> hrefs) throws DavException {
 		return Collections.emptyList();
 	}
 	

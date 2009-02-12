@@ -20,15 +20,17 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 
 import org.dom4j.Element;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 
 /*
@@ -40,13 +42,13 @@ import com.zimbra.cs.dav.service.DavResponse;
  *                                
  */
 public class CalendarMultiget extends Report {
-	public void handle(DavContext ctxt) throws DavException {
+	public void handle(DavContext ctxt) throws ServiceException, DavException {
 		Element query = ctxt.getRequestMessage().getRootElement();
 		if (!query.getQName().equals(DavElements.E_CALENDAR_MULTIGET))
 			throw new DavException("msg "+query.getName()+" is not calendar-multiget", HttpServletResponse.SC_BAD_REQUEST, null);
 
 		DavResponse resp = ctxt.getDavResponse();
-		RequestProp reqProp = getRequestProp(ctxt);
+		ArrayList<String> hrefs = new ArrayList<String>();
 		for (Object obj : query.elements(DavElements.E_HREF)) {
 			if (obj instanceof Element) {
 				String href = ((Element)obj).getText();
@@ -55,13 +57,13 @@ public class CalendarMultiget extends Report {
 				} catch (IOException e) {
 					ZimbraLog.dav.warn("can't decode href "+href, e);
 				}
-				try {
-                    DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href);
-                    resp.addResource(ctxt, rs, reqProp, false);
-                } catch (Exception e) {
-                    resp.addStatus(ctxt, href, HttpServletResponse.SC_NOT_FOUND);
-                }
+				hrefs.add(href);
 			}
+		}
+		DavResource reqResource = ctxt.getRequestedResource();
+		RequestProp reqProp = ctxt.getRequestProp();
+		for (DavResource rs : reqResource.getChildren(ctxt, hrefs)) {
+			resp.addResource(ctxt, rs, reqProp, false);
 		}
 	}
 }

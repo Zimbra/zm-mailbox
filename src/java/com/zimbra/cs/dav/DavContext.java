@@ -18,13 +18,20 @@ package com.zimbra.cs.dav;
 
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.Account;
@@ -85,6 +92,87 @@ public class DavContext {
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
+	/* List of properties in the PROPFIND or PROPPATCH request. */
+	public static class RequestProp {
+		boolean nameOnly;
+		boolean allProp;
+		Collection<QName> props;
+		HashMap<QName, DavException> errProps;
+
+		public RequestProp() {
+			props = new ArrayList<QName>();
+			errProps = new HashMap<QName, DavException>();
+			nameOnly = false;
+			allProp = true;
+		}
+		
+		public RequestProp(Element top) {
+			this();
+			
+			nameOnly = false;
+			allProp = false;
+			for (Object obj : top.elements()) {
+				if (!(obj instanceof Element))
+					continue;
+				Element e = (Element) obj;
+				String name = e.getName();
+				if (name.equals(DavElements.P_ALLPROP))
+					allProp = true;
+				else if (name.equals(DavElements.P_PROPNAME))
+					nameOnly = true;
+				else if (name.equals(DavElements.P_PROP)) {
+					@SuppressWarnings("unchecked")
+					List<Element> propElems = e.elements();
+					for (Element prop : propElems)
+						props.add(prop.getQName());
+				}
+			}
+		}
+		
+		public RequestProp(Collection<Element> set, Collection<QName> remove) {
+			this();
+			allProp = false;
+			for (Element e : set)
+				props.add(e.getQName());
+			props.addAll(remove);
+		}
+		
+		public boolean isNameOnly() {
+			return nameOnly;
+		}
+		public boolean isAllProp() {
+			return allProp;
+		}
+		public void addProp(QName p) {
+			allProp = false;
+			props.add(p);
+		}
+		public Collection<QName> getProps() {
+			return props;
+		}
+		public void addPropError(QName prop, DavException ex) {
+			allProp = false;
+			props.add(prop);
+			errProps.put(prop, ex);
+		}
+		public Map<QName, DavException> getErrProps() {
+			return errProps;
+		}
+	}
+	public RequestProp getRequestProp() throws DavException {
+		if (hasRequestMessage()) {
+			Document req = getRequestMessage();
+			return new RequestProp(req.getRootElement());
+		}
+		return sEmptyProp;
+	}
+	
+	protected static RequestProp sEmptyProp;
+	
+	static {
+		sEmptyProp = new RequestProp();
+	}
+	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp, Account authUser) {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo();

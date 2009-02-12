@@ -125,7 +125,11 @@ public class DavResponse {
 	/* Convenience method to gather requested properties from the resource and
 	 * append them to the response.
 	 */
-	public void addResource(DavContext ctxt, DavResource rs, DavMethod.RequestProp props, boolean includeChildren) throws DavException {
+	public void addResource(DavContext ctxt, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
+		if (!rs.isValid()) {
+			addStatus(ctxt, rs.getUri(), HttpServletResponse.SC_NOT_FOUND);
+			return;
+		}
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, false);
@@ -133,10 +137,10 @@ public class DavResponse {
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
 		Collection<QName> propNames;
 		
-		if (props.allProp)
+		if (props.isAllProp())
 			propNames = rs.getAllPropertyNames();
 		else
-			propNames = props.props;
+			propNames = props.getProps();
 		
 		Map<QName,DavException> errPropMap = props.getErrProps();
 		for (QName name : propNames) {
@@ -149,7 +153,7 @@ public class DavResponse {
 			} else if (prop == null) {
 				findProp(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
 			} else {
-				prop.toElement(ctxt, findProp(resp, propstatMap, HttpServletResponse.SC_OK), props.nameOnly);
+				prop.toElement(ctxt, findProp(resp, propstatMap, HttpServletResponse.SC_OK), props.isNameOnly());
 			}
 		}
 		

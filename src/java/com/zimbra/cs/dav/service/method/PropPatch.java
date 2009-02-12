@@ -27,6 +27,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.ResourceProperty;
