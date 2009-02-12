@@ -2153,8 +2153,7 @@ Access: domain admin sufficient
   <share action="{add|remove}">
       <owner by="id|name|foreignPrincipal">...</owner>
       <folder [l="{base-folder-id}"] [path="{fully-qualified-path}"] [pathOrId="{folder-path-or-id}"]/>
-      [<desc>{share-info}</desc>]
-  </share>+ 
+  </share>
 </ModifyShareInfoRequest>
 
 Notes:
@@ -2163,8 +2162,6 @@ Notes:
       If pathOrId is specified, server will first treat {folder-path-or-id} as a path and try to 
       find the folder by path; if there is not such folder, server will ten treat {folder-path-or-id} 
       as a folder id and try to find the folder by id.
-    - if action is "remove", <desc> in each <share> is optional, and is ignored by the server
-      if action is "add", <desc> in each <share> is required
 
 
 <ModifyShareInfoResponse/>
@@ -2172,7 +2169,7 @@ Notes:
 Notes:
 
 Access: domain admin sufficient.
-note: if the target is an account, this request is by default proxied to the account's home server
+note: this request is by default proxied to the owner's home server
    
 ----------------------------------------
 

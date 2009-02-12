@@ -23,7 +23,6 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
@@ -408,7 +407,7 @@ public class ShareInfo {
          * @param shareInfo
          * @throws ServiceException
          */
-        public static void persist(Provisioning prov, NamedEntry publishingOnEntry, List<Publishing> shareInfo) 
+        public void persist(Provisioning prov, NamedEntry publishingOnEntry) 
             throws ServiceException {
             
             Set<String> curShareInfo = publishingOnEntry.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
@@ -416,30 +415,28 @@ public class ShareInfo {
             String removeKey = "-" + Provisioning.A_zimbraShareInfo;
             
             Map<String, Object> attrs = new HashMap<String, Object>();
-            for (Publishing si : shareInfo) {
+            String value = serialize();
+            if (getAction() == Publishing.Action.add) {
+                attrs.put(addKey, value);
+            }
                 
-                String value = si.serialize();
-                if (si.getAction() == Publishing.Action.add) {
-                    attrs.put(addKey, value);
-                }
-                
-                /*
-                 * if adding, replace existing share info for the same owner:folder
-                 * if removing, delete all(there should be only one) share info for the same owner:folder
-                 * 
-                 * for both case, we remove any value that starts with the same owner:folder
-                 * 
-                 * one caveat: if we are adding an existing owner:folder and the share info have not 
-                 * changed since last published, we do not want to put a - in the mod map, because 
-                 * that will remove the value put in above.
-                 */
-                String ownerAndFoler = si.serializeOwnerAndFolder();
-                for (String curSi : curShareInfo) {
-                    if (curSi.startsWith(ownerAndFoler) && !curSi.equals(value)) {
-                        attrs.put(removeKey, curSi);
-                    }
+            /*
+             * if adding, replace existing share info for the same owner:folder
+             * if removing, delete all(there should be only one) share info for the same owner:folder
+             * 
+             * for both case, we remove any value that starts with the same owner:folder
+             * 
+             * one caveat: if we are adding an existing owner:folder and the share info have not 
+             * changed since last published, we do not want to put a - in the mod map, because 
+             * that will remove the value put in above.
+             */
+            String ownerAndFoler = serializeOwnerAndFolder();
+            for (String curSi : curShareInfo) {
+                if (curSi.startsWith(ownerAndFoler) && !curSi.equals(value)) {
+                    attrs.put(removeKey, curSi);
                 }
             }
+
             prov.modifyAttrs(publishingOnEntry, attrs);
         }
     }
@@ -1003,14 +1000,9 @@ public class ShareInfo {
             }
         }
          
-        // copied from CalendarMailSender
         private static class HtmlPartDataSource implements DataSource {
             private static final String CONTENT_TYPE =
                 Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
-            private static final String HEAD =
-                "<HTML><BODY>\n" +
-                "<PRE style=\"font-family: monospace; font-size: 14px\">\n";
-            private static final String TAIL = "</PRE>\n</BODY></HTML>\n";
             private static final String NAME = "HtmlDataSource";
 
             private String mText;
@@ -1018,11 +1010,6 @@ public class ShareInfo {
 
             public HtmlPartDataSource(String text) {
                 mText = text;
-                /*
-                mText = mText.replaceAll("&", "&amp;");
-                mText = mText.replaceAll("<", "&lt;");
-                mText = mText.replaceAll(">", "&gt;");
-                */
             }
 
             public String getContentType() {
@@ -1035,7 +1022,6 @@ public class ShareInfo {
                         ByteArrayOutputStream buf = new ByteArrayOutputStream();
                         OutputStreamWriter wout =
                             new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
-                        // String text = HEAD + mText + TAIL;
                         String text = mText;
                         wout.write(text);
                         wout.flush();
@@ -1052,84 +1038,6 @@ public class ShareInfo {
 
             public OutputStream getOutputStream() {
                 throw new UnsupportedOperationException();
-            }
-        }
-        
-        /*
-         * =======================
-         * dead code below, remove
-         * =======================
-         */
-        private static void doSendShareInfoMessage(OperationContext octxt, MailSenderVisitor visitor, DistributionList dl, String member) throws ServiceException {
-            Provisioning prov = Provisioning.getInstance();
-            
-            // the admin that triggered this
-            Account acct = octxt.getAuthenticatedUser();
-            
-            // locale
-            Locale locale;
-            Account memberAcct = prov.get(AccountBy.name, member);
-            if (memberAcct != null) {
-                locale = memberAcct.getLocale();
-            } else
-                locale = acct.getLocale();  // use the admin's locale
-            
-            String shareInfoText = visitor.renderText(dl.getName(), locale);
-            String shareInfoHtml = visitor.renderHtml(dl.getName(), locale);
-            
-            // sendMessage(dl, acct, memberAcct, locale, shareInfoText, shareInfoHtml);
-        }
-        
-
-        private static MimeMessage createShareInfoMessage(
-                Address fromAddr, Address senderAddr, List<Address> toAddrs, 
-                Locale locale,
-                String shareInfoText, String shareInfoHtml)
-            throws ServiceException {
-            
-            String subject = L10nUtil.getMessage(MsgKey.shareInfoSubject, locale);
-
-            try {
-                MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-
-                MimeMultipart mmp = new MimeMultipart("alternative");  // todo, verify alternative?
-                mm.setContent(mmp);
-
-                // ///////
-                // TEXT part (add me first!)
-                MimeBodyPart textPart = new MimeBodyPart();
-                textPart.setText(shareInfoText, Mime.P_CHARSET_UTF8);
-                mmp.addBodyPart(textPart);
-
-                // ///////
-                // HTML part 
-                MimeBodyPart htmlPart = new MimeBodyPart();
-                // htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
-                mmp.addBodyPart(htmlPart);
-                
-                // ///////
-                // MESSAGE HEADERS
-                if (subject != null)
-                    mm.setSubject(subject, Mime.P_CHARSET_UTF8);
-
-                if (toAddrs != null) {
-                    Address[] addrs = new Address[toAddrs.size()];
-                    toAddrs.toArray(addrs);
-                    mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-                }
-                if (fromAddr != null)
-                    mm.setFrom(fromAddr);
-                if (senderAddr != null) {
-                    mm.setSender(senderAddr);
-                    mm.setReplyTo(new Address[]{senderAddr});
-                }
-                mm.setSentDate(new Date());
-                mm.saveChanges();
-
-                return mm;
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE(
-                        "Messaging Exception while building MimeMessage from share info", e);
             }
         }
     }

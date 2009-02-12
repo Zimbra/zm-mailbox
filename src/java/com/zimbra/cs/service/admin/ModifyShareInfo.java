@@ -1,30 +1,21 @@
 package com.zimbra.cs.service.admin;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.ShareInfo;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyShareInfo extends ShareInfoHandler {
 
+    private static final String[] OWNER_ACCOUNT_PATH = new String[] { AdminConstants.E_SHARE, AdminConstants.E_OWNER};
+    protected String[] getProxiedAccountElementPath()  { return OWNER_ACCOUNT_PATH; }
+    
     @Override
     public Element handle(Element request, Map<String, Object> context)
             throws ServiceException {
@@ -37,43 +28,32 @@ public class ModifyShareInfo extends ShareInfoHandler {
         
         // TODO, check permission
         
-        List<ShareInfo.Publishing> shareInfo = new ArrayList<ShareInfo.Publishing>();
-        for (Element eShare : request.listElements(AdminConstants.E_SHARE)) {
-            ShareInfo.Publishing.Action action = ShareInfo.Publishing.Action.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
+        Element eShare = request.getElement(AdminConstants.E_SHARE);
+        ShareInfo.Publishing.Action action = ShareInfo.Publishing.Action.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
             
-            String ownerAcctId = getOwner(zsc, eShare, prov, true).getId();
+        String ownerAcctId = getOwner(zsc, eShare, prov, true).getId();
             
-            String desc = null;
-            // desc is required for add, ignored for remove
-            /*
-            if (action == ShareInfo.Action.add)
-                desc = eShare.getElement(AdminConstants.E_DESC).getText();
-            */
+        Element eFolder = eShare.getElement(AdminConstants.E_FOLDER);
+        String folderPath = eFolder.getAttribute(AdminConstants.A_PATH, null);
+        String folderId = eFolder.getAttribute(AdminConstants.A_FOLDER, null);
+        String folderIdOrPath = eFolder.getAttribute(AdminConstants.A_PATH_OR_ID, null);
             
-            Element eFolder = eShare.getElement(AdminConstants.E_FOLDER);
-            String folderPath = eFolder.getAttribute(AdminConstants.A_PATH, null);
-            String folderId = eFolder.getAttribute(AdminConstants.A_FOLDER, null);
-            String folderIdOrPath = eFolder.getAttribute(AdminConstants.A_PATH_OR_ID, null);
+        ShareInfo.Publishing si = null;
             
-            ShareInfo.Publishing si = null;
-            
-            if (folderPath != null) {
-                ensureOtherFolderDescriptorsAreNotPresent(folderId, folderIdOrPath);
-                si = new ShareInfo.Publishing(action, ownerAcctId, folderPath, Boolean.FALSE);
-            } else if (folderId != null) {
-                ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderIdOrPath);
-                si = new ShareInfo.Publishing(action, ownerAcctId, folderId, Boolean.TRUE);
-            } else if (folderIdOrPath != null) {
-                ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderId);
-                si = new ShareInfo.Publishing(action, ownerAcctId, folderIdOrPath, null);
-            } else
-                throw ServiceException.INVALID_REQUEST("missing folder descriptor", null);
+        if (folderPath != null) {
+            ensureOtherFolderDescriptorsAreNotPresent(folderId, folderIdOrPath);
+            si = new ShareInfo.Publishing(action, ownerAcctId, folderPath, Boolean.FALSE);
+        } else if (folderId != null) {
+            ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderIdOrPath);
+            si = new ShareInfo.Publishing(action, ownerAcctId, folderId, Boolean.TRUE);
+        } else if (folderIdOrPath != null) {
+            ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderId);
+            si = new ShareInfo.Publishing(action, ownerAcctId, folderIdOrPath, null);
+        } else
+            throw ServiceException.INVALID_REQUEST("missing folder descriptor", null);
 
-            if (si.validateAndDiscoverGrants(octxt, publishingOnEntry))
-                shareInfo.add(si);
-        }
-        
-        ShareInfo.Publishing.persist(prov, publishingOnEntry, shareInfo);
+        if (si.validateAndDiscoverGrants(octxt, publishingOnEntry))
+            si.persist(prov, publishingOnEntry);
         
         Element response = zsc.createElement(AdminConstants.MODIFY_SHARE_INFO_RESPONSE);
         return response;
