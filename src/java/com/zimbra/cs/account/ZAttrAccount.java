@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090211-1842 */
+    /* build: 5.0 pshao 20090212-1436 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -6309,7 +6309,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=806)
     public boolean isFeatureConfirmationPageEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureConfirmationPageEnabled, false);
     }
@@ -6323,7 +6323,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=806)
     public void setFeatureConfirmationPageEnabled(boolean zimbraFeatureConfirmationPageEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, zimbraFeatureConfirmationPageEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -6340,7 +6340,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=806)
     public Map<String,Object> setFeatureConfirmationPageEnabled(boolean zimbraFeatureConfirmationPageEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, zimbraFeatureConfirmationPageEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -6355,7 +6355,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=806)
     public void unsetFeatureConfirmationPageEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, "");
@@ -6371,7 +6371,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=806)
     public Map<String,Object> unsetFeatureConfirmationPageEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, "");
@@ -17074,6 +17074,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether to enable toaster notification for new mail
+     *
+     * @return zimbraPrefCalendarToasterEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=813)
+    public boolean isPrefCalendarToasterEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarToasterEnabled, false);
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @param zimbraPrefCalendarToasterEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=813)
+    public void setPrefCalendarToasterEnabled(boolean zimbraPrefCalendarToasterEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarToasterEnabled, zimbraPrefCalendarToasterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @param zimbraPrefCalendarToasterEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=813)
+    public Map<String,Object> setPrefCalendarToasterEnabled(boolean zimbraPrefCalendarToasterEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarToasterEnabled, zimbraPrefCalendarToasterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=813)
+    public void unsetPrefCalendarToasterEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarToasterEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=813)
+    public Map<String,Object> unsetPrefCalendarToasterEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarToasterEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether or not use quick add dialog or go into full appt edit view
      *
      * @return zimbraPrefCalendarUseQuickAdd, or true if unset
@@ -20239,6 +20311,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * wwhether to enable toaster notification for IM
+     *
+     * @return zimbraPrefIMToasterEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=814)
+    public boolean isPrefIMToasterEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefIMToasterEnabled, false);
+    }
+
+    /**
+     * wwhether to enable toaster notification for IM
+     *
+     * @param zimbraPrefIMToasterEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=814)
+    public void setPrefIMToasterEnabled(boolean zimbraPrefIMToasterEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMToasterEnabled, zimbraPrefIMToasterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * wwhether to enable toaster notification for IM
+     *
+     * @param zimbraPrefIMToasterEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=814)
+    public Map<String,Object> setPrefIMToasterEnabled(boolean zimbraPrefIMToasterEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMToasterEnabled, zimbraPrefIMToasterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * wwhether to enable toaster notification for IM
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=814)
+    public void unsetPrefIMToasterEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMToasterEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * wwhether to enable toaster notification for IM
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=814)
+    public Map<String,Object> unsetPrefIMToasterEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefIMToasterEnabled, "");
+        return attrs;
+    }
+
+    /**
      * last used yahoo id
      *
      * @return zimbraPrefIMYahooId, or null if unset
@@ -21941,6 +22085,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefMailSoundsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailSoundsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @return zimbraPrefMailToasterEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=812)
+    public boolean isPrefMailToasterEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefMailToasterEnabled, false);
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @param zimbraPrefMailToasterEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=812)
+    public void setPrefMailToasterEnabled(boolean zimbraPrefMailToasterEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailToasterEnabled, zimbraPrefMailToasterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @param zimbraPrefMailToasterEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=812)
+    public Map<String,Object> setPrefMailToasterEnabled(boolean zimbraPrefMailToasterEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailToasterEnabled, zimbraPrefMailToasterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=812)
+    public void unsetPrefMailToasterEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailToasterEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=812)
+    public Map<String,Object> unsetPrefMailToasterEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailToasterEnabled, "");
         return attrs;
     }
 

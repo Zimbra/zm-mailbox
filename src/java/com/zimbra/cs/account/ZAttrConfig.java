@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090211-1842 */
+    /* build: 5.0 pshao 20090212-1436 */
 
     /**
      * RFC2256: descriptive information
@@ -9287,7 +9287,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=808)
+    @ZAttr(id=807)
     public long getMailContentMaxSize() {
         return getLongAttr(Provisioning.A_zimbraMailContentMaxSize, 10240000L);
     }
@@ -9301,7 +9301,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=808)
+    @ZAttr(id=807)
     public void setMailContentMaxSize(long zimbraMailContentMaxSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, Long.toString(zimbraMailContentMaxSize));
@@ -9318,7 +9318,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=808)
+    @ZAttr(id=807)
     public Map<String,Object> setMailContentMaxSize(long zimbraMailContentMaxSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, Long.toString(zimbraMailContentMaxSize));
@@ -9333,7 +9333,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=808)
+    @ZAttr(id=807)
     public void unsetMailContentMaxSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, "");
@@ -9349,7 +9349,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=808)
+    @ZAttr(id=807)
     public Map<String,Object> unsetMailContentMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, "");

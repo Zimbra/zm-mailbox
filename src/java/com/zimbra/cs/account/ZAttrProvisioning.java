@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090211-1842 */
+    /* build: 5.0 pshao 20090212-1436 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1546,7 +1546,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=808)
     public static final String A_zimbraCalResMaxNumConflictsAllowed = "zimbraCalResMaxNumConflictsAllowed";
 
     /**
@@ -1556,7 +1556,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=810)
+    @ZAttr(id=809)
     public static final String A_zimbraCalResMaxPercentConflictsAllowed = "zimbraCalResMaxPercentConflictsAllowed";
 
     /**
@@ -1928,7 +1928,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=811)
     public static final String A_zimbraDistributionListSendShareMessageFromAddress = "zimbraDistributionListSendShareMessageFromAddress";
 
     /**
@@ -1938,7 +1938,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=805)
+    @ZAttr(id=810)
     public static final String A_zimbraDistributionListSendShareMessageToNewMembers = "zimbraDistributionListSendShareMessageToNewMembers";
 
     /**
@@ -2187,7 +2187,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=806)
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
@@ -3236,7 +3236,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=808)
+    @ZAttr(id=807)
     public static final String A_zimbraMailContentMaxSize = "zimbraMailContentMaxSize";
 
     /**
@@ -4184,6 +4184,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
 
     /**
+     * whether to enable toaster notification for new mail
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=813)
+    public static final String A_zimbraPrefCalendarToasterEnabled = "zimbraPrefCalendarToasterEnabled";
+
+    /**
      * whether or not use quick add dialog or go into full appt edit view
      */
     @ZAttr(id=274)
@@ -4465,6 +4473,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMSoundsEnabled = "zimbraPrefIMSoundsEnabled";
 
     /**
+     * wwhether to enable toaster notification for IM
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=814)
+    public static final String A_zimbraPrefIMToasterEnabled = "zimbraPrefIMToasterEnabled";
+
+    /**
      * last used yahoo id
      *
      * @since ZCS 6.0.0
@@ -4615,6 +4631,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=666)
     public static final String A_zimbraPrefMailSoundsEnabled = "zimbraPrefMailSoundsEnabled";
+
+    /**
+     * whether to enable toaster notification for new mail
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=812)
+    public static final String A_zimbraPrefMailToasterEnabled = "zimbraPrefMailToasterEnabled";
 
     /**
      * whether mandatory spell check is enabled

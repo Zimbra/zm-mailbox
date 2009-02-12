@@ -36,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090211-1842 */
+    /* build: 5.0 pshao 20090212-1436 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -645,7 +645,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=811)
     public String getDistributionListSendShareMessageFromAddress() {
         return getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, null);
     }
@@ -659,7 +659,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=811)
     public void setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, zimbraDistributionListSendShareMessageFromAddress);
@@ -676,7 +676,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=811)
     public Map<String,Object> setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, zimbraDistributionListSendShareMessageFromAddress);
@@ -691,7 +691,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=811)
     public void unsetDistributionListSendShareMessageFromAddress() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, "");
@@ -707,7 +707,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=811)
     public Map<String,Object> unsetDistributionListSendShareMessageFromAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, "");
@@ -723,7 +723,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=805)
+    @ZAttr(id=810)
     public boolean isDistributionListSendShareMessageToNewMembers() {
         return getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, false);
     }
@@ -738,7 +738,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=805)
+    @ZAttr(id=810)
     public void setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? Provisioning.TRUE : Provisioning.FALSE);
@@ -756,7 +756,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=805)
+    @ZAttr(id=810)
     public Map<String,Object> setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? Provisioning.TRUE : Provisioning.FALSE);
@@ -772,7 +772,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=805)
+    @ZAttr(id=810)
     public void unsetDistributionListSendShareMessageToNewMembers() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, "");
@@ -789,7 +789,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=805)
+    @ZAttr(id=810)
     public Map<String,Object> unsetDistributionListSendShareMessageToNewMembers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, "");
