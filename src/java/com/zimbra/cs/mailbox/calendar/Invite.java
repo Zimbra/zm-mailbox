@@ -2209,6 +2209,11 @@ public class Invite {
     }
 
     public Invite newCopy() {
+        List<ZAttendee> attendees = new ArrayList<ZAttendee>(mAttendees.size());
+        for (ZAttendee at : mAttendees) {
+            attendees.add(new ZAttendee(at));  // add a copy of attendee
+        }
+        ZOrganizer org = new ZOrganizer(mOrganizer);
         Invite inv = new Invite(
                 mItemType, mMethod != null ? mMethod.toString() : null,
                 mTzMap,
@@ -2218,7 +2223,7 @@ public class Invite {
                 mFreeBusy, mTransparency, mClass,
                 mStart, mEnd, mDuration,
                 mRecurrence,
-                mIsOrganizer, mOrganizer, new ArrayList<ZAttendee>(mAttendees),
+                mIsOrganizer, org, attendees,
                 mName, mLocation,
                 mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mSeqNo,
                 0, // mMailboxId

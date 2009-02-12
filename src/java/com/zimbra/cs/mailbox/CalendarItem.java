@@ -1490,7 +1490,6 @@ public abstract class CalendarItem extends MailItem {
                         copy.setDtStamp(cur.getDTStamp());
                         copy.setRecurId(cur.getRecurId());
                         copy.setRecurrence(null);  // because we're only dealing with exceptions
-                        copy.setPartStat(cur.getPartStat());  // carry over PARTSTAT
                         ParsedDateTime start = cur.getRecurId().getDt();
                         if (start != null) {
                             copy.setDtStart(start);  // snap back to series start time
@@ -1515,6 +1514,11 @@ public abstract class CalendarItem extends MailItem {
                         for (Iterator<Alarm> iter = cur.alarmsIterator(); iter.hasNext(); ) {
                             copy.addAlarm(iter.next());
                         }
+
+                        // Series was updated, so change this exception's partstat to NEEDS-ACTION.
+                        ZAttendee me = copy.getMatchingAttendee(getAccount());
+                        if (me != null)
+                            me.setPartStat(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
 
                         mInvites.set(i, copy);
                         addToUpdateList = true;
@@ -2220,6 +2224,10 @@ public abstract class CalendarItem extends MailItem {
                     if (cur.mSeqNo < seqNo) {
                         iter.remove();
                     }
+                } else if (recurId == null) {
+                    // We're updating the series and the current reply is for an instance.
+                    // Toss the instance reply because the series update can impact the exceptions.
+                    iter.remove();
                 }
             }
         }
@@ -2363,7 +2371,7 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
             
-            if (defaultAt == null)
+            if (defaultAt == null || !inv.isLocalOnly())
                 return inv.getMatchingAttendee(acct);
             else
                 return defaultAt;
