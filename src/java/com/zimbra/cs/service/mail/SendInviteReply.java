@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -52,6 +53,7 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.util.L10nUtil;
@@ -151,6 +153,38 @@ public class SendInviteReply extends CalendarRequest {
                 exceptDt = CalendarUtils.parseDateTime(exc, tzmap, oldInv);
             } else if (oldInv.hasRecurId()) {
                 exceptDt = oldInv.getRecurId().getDt();
+            }
+
+            // If we're replying to a non-exception instance of a recurring appointment, create a local
+            // exception instance first.  Then reply to it.
+            if (oldInv.isRecurrence() && exceptDt != null) {
+                Invite localException = oldInv.newCopy();
+                localException.setLocalOnly(true);
+
+                localException.setRecurrence(null);
+                RecurId rid = new RecurId(exceptDt, RecurId.RANGE_NONE);
+                localException.setRecurId(rid);
+                long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
+                localException.setDtStamp(now);
+                ParsedDateTime dtEnd = exceptDt.add(localException.getEffectiveDuration());
+                localException.setDtStart(exceptDt);
+                localException.setDtEnd(dtEnd);
+
+                String partStat = verb.getXmlPartStat();
+                localException.setPartStat(partStat);
+                ZAttendee at = localException.getMatchingAttendee(acct);
+                if (at != null)
+                    at.setPartStat(partStat);
+
+                // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
+                MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
+                ParsedMessage pm = new ParsedMessage(mmInv, false);
+
+                mbox.addInvite(octxt, localException, calItem.getFolderId(), pm, true, false, true);
+
+                // Refetch the updated calendar item and set oldInv to refetched local exception instance.
+                calItem = mbox.getCalendarItemById(octxt, calItemId);
+                oldInv = calItem.getInvite(rid);
             }
 
             if (updateOrg && oldInv.hasOrganizer()) {
