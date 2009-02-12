@@ -90,9 +90,18 @@ public class ReIndex extends AdminDocumentHandler {
                     itemIds.add(Integer.parseInt(target));
             }
 
-            ReIndexThread thread = new ReIndexThread(mbox, getOperationContext(zsc, context), types, itemIds);
-            thread.start();
-
+            HashSet<Byte> typesSet;
+            if (types == null)
+            	typesSet = null;
+            else {
+                typesSet = new HashSet<Byte>();
+                for (byte b : types) {
+                	typesSet.add(b);
+                }
+            }
+            
+            mbox.reIndexInBackgroundThread(getOperationContext(zsc, context), typesSet, itemIds);
+            
             response.addAttribute(AdminConstants.A_STATUS, "started");
         } else if (action.equalsIgnoreCase(ACTION_STATUS)) {
             synchronized (mbox) {
@@ -129,37 +138,4 @@ public class ReIndex extends AdminDocumentHandler {
         prog.addAttribute(AdminConstants.A_NUM_FAILED, status.mNumFailed);
         prog.addAttribute(AdminConstants.A_NUM_REMAINING, (status.mNumToProcess-status.mNumProcessed));
     }
-
-    public static class ReIndexThread extends Thread {
-        private Mailbox mMbox;
-        private OperationContext mOctxt;
-        private Set<Byte> mTypes = null;
-        private Set<Integer> mItemIds = null;
-        
-        public ReIndexThread(Mailbox mbox, OperationContext octxt, byte[] types, Set<Integer> itemIds) {
-            mMbox = mbox;
-            mOctxt = octxt;
-
-            if (types == null)
-                mTypes = null;
-            else {
-                mTypes = new HashSet<Byte>();
-                for (byte b : types) {
-                    mTypes.add(b);
-                }
-            }
-            
-            mItemIds = itemIds;
-        }
-
-        public void run() {
-            try {
-                mMbox.reIndex(mOctxt, mTypes, mItemIds, 0, false);
-            } catch (ServiceException e) {
-                if (!e.getCode().equals(ServiceException.INTERRUPTED)) 
-                    e.printStackTrace();
-            }
-        }
-    }
-
 }

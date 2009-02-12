@@ -515,7 +515,9 @@ public class Mailbox {
     			// Version (1.0,1.1)->1.2 Re-Index all contacts 
     			Set<Byte> types = new HashSet<Byte>();
     			types.add(MailItem.TYPE_CONTACT);
-    			reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2, false); 
+    			reIndexInBackgroundThread(null, types, null);
+    			// don't bother updating the version here -- the next update 
+    			// will do that for us.
     		}
     		
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
@@ -1709,36 +1711,43 @@ public class Mailbox {
         return mReIndexStatus;
     }
     
-    private static final int COMPLETED_REINDEX_CONTACTS_V1_2 = 100;
-    
-    /**
-     * Some long-running transactions (e.g. ReIndexing) might not complete while convienently in the stack
-     * of a particular caller: e.g. if the server goes down while a re-indexing is in progress, it is restarted
-     * when the server comes back up, and then completes sometime later.
-     * 
-     * This function is a general purpose completion routine for handler code.
-     * 
-     * This function should *NOT* throw ServiceException, since by definition there is nothing on the callstack
-     * that can properly handle the exception.  Error handling should happen in this function.
-     * 
-     * @param completionId
-     */
-    synchronized void completion(int completionId) {
-        switch(completionId) {
-            case COMPLETED_REINDEX_CONTACTS_V1_2:
-                // check current version, just in case someone updated the version while
-                // we were gone
-                if (!getVersion().atLeast(1,2)) {
-                    try {
-                        updateVersion(new MailboxVersion((short)1,(short)2));
-                    } catch (ServiceException e) {
-                        ZimbraLog.mailbox.warn("Could not update version in Mailbox v1.2 schema upgrade.", e);
-                    }
-                }
-                break;
+    public class ReIndexThread extends Thread {
+        private OperationContext mOctxt;
+        private Set<Byte> mTypes = null;
+        private Set<Integer> mItemIds = null;
+        
+        public ReIndexThread(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds) {
+        	mOctxt = octxt;
+            mTypes = types;
+            mItemIds = itemIds;
+        }
+
+        public void run() {
+            try {
+            	reIndex(mOctxt, mTypes, mItemIds, false);
+            } catch (ServiceException e) {
+            	if (!e.getCode().equals(ServiceException.INTERRUPTED)) { 
+            		ZimbraLog.mailbox.warn("Background reindexing failed for Mailbox "+this.getId()+" reindexing will not be completed.  " +
+            				"The mailbox must be manually reindexed", e);
+            	}
+            }
         }
     }
-
+    
+    
+    /**
+     * Kick off the requested reindexing in a background thread.  The reindexing is run on a best-effort basis, if it fails a WARN 
+     * message is logged but it is not retried.
+     * 
+     * @param octxt
+     * @param types
+     * @param itemIds
+     */
+    public void reIndexInBackgroundThread(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds) {
+    	Thread reindexThread = new ReIndexThread(octxt, types, itemIds);
+    	reindexThread.start();
+    }
+    
     /**
      * Re-Index all items in this mailbox.  This can be a *very* expensive operation (upwards of an hour to run
      * on a large mailbox on slow hardware).  We are careful to unlock the mailbox periodically so that the
@@ -1752,8 +1761,8 @@ public class Mailbox {
      *                              Integer.  A value of '0' means "don't run a completion function".
      * @throws ServiceException
      */
-    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) throws ServiceException {
-        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, itemIdsOrNull, completionId, skipDelete);
+    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, boolean skipDelete) throws ServiceException {
+        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, itemIdsOrNull, 0, skipDelete);
 
         long start = 0;
         if (ZimbraLog.mailbox.isInfoEnabled()) 
@@ -1845,9 +1854,6 @@ public class Mailbox {
                     +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
                     +" ("+mReIndexStatus.mNumFailed+" failed)");
             }
-            
-            if (completionId > 0)
-                completion(completionId);
             
             completedOperation = true;
             

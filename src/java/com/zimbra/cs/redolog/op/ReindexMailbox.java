@@ -69,7 +69,7 @@ public class ReindexMailbox extends RedoableOp {
      */
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mCompletionId, mSkipDelete);
+        mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mSkipDelete);
     }
 
     /* (non-Javadoc)
