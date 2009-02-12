@@ -484,6 +484,10 @@ public class ZimbraLog {
         ZimbraLog.addToContext(C_NAME, accountName);
     }
     
+    public static void removeAccountNameFromContext() {
+        removeFromContext(C_NAME);
+    }
+    
     /**
      * Adds ip to the current thread's logging context.
      */
