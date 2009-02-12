@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090211-1224 */
+    /* build: 5.0 pshao 20090211-1842 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4718,7 +4718,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=808)
     public long getMailContentMaxSize() {
         return getLongAttr(Provisioning.A_zimbraMailContentMaxSize, 10240000L);
     }
@@ -4732,7 +4732,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=808)
     public void setMailContentMaxSize(long zimbraMailContentMaxSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, Long.toString(zimbraMailContentMaxSize));
@@ -4749,7 +4749,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=808)
     public Map<String,Object> setMailContentMaxSize(long zimbraMailContentMaxSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, Long.toString(zimbraMailContentMaxSize));
@@ -4764,7 +4764,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=808)
     public void unsetMailContentMaxSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, "");
@@ -4780,7 +4780,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=808)
     public Map<String,Object> unsetMailContentMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, "");

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090211-1224 */
+    /* build: 5.0 pshao 20090211-1842 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1492,7 +1492,7 @@ public class ZAttrProvisioning {
 
     /**
      * Whether this calendar resource declines invites to recurring
-     * appointments; default FASE
+     * appointments; default FALSE
      */
     @ZAttr(id=323)
     public static final String A_zimbraCalResAutoDeclineRecurring = "zimbraCalResAutoDeclineRecurring";
@@ -1546,7 +1546,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=808)
+    @ZAttr(id=809)
     public static final String A_zimbraCalResMaxNumConflictsAllowed = "zimbraCalResMaxNumConflictsAllowed";
 
     /**
@@ -1556,7 +1556,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=810)
     public static final String A_zimbraCalResMaxPercentConflictsAllowed = "zimbraCalResMaxPercentConflictsAllowed";
 
     /**
@@ -1923,6 +1923,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultDomainName = "zimbraDefaultDomainName";
 
     /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public static final String A_zimbraDistributionListSendShareMessageFromAddress = "zimbraDistributionListSendShareMessageFromAddress";
+
+    /**
      * Whether to send an email with all the shares of the group when a new
      * member is added to the group. If not set, default is to send the
      * email.
@@ -2178,7 +2187,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=807)
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
@@ -3227,7 +3236,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=807)
+    @ZAttr(id=808)
     public static final String A_zimbraMailContentMaxSize = "zimbraMailContentMaxSize";
 
     /**

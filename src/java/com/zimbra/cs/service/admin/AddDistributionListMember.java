@@ -25,7 +25,9 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -43,7 +45,8 @@ public class AddDistributionListMember extends AdminDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
         Provisioning prov = Provisioning.getInstance();
         
         String id = request.getAttribute(AdminConstants.E_ID);
@@ -59,15 +62,20 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        if (!canAccessEmail(lc, dl.getName()))
+        if (!canAccessEmail(zsc, dl.getName()))
             throw ServiceException.PERM_DENIED("can not access dl");
 
         String[] members = (String[]) memberList.toArray(new String[0]); 
         prov.addMembers(dl, members);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                                                      new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
+                    new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
         
-        Element response = lc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
+        // send share info email
+        boolean sendShareInfoMsg = dl.getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, true);
+        if (sendShareInfoMsg)
+            ShareInfo.NotificationSender.sendShareInfoMessage(octxt, dl, members);
+        
+        Element response = zsc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;
     }
 }

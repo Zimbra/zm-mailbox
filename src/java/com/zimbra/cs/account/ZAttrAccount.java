@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090211-1224 */
+    /* build: 5.0 pshao 20090211-1842 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -6309,7 +6309,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=807)
     public boolean isFeatureConfirmationPageEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureConfirmationPageEnabled, false);
     }
@@ -6323,7 +6323,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=807)
     public void setFeatureConfirmationPageEnabled(boolean zimbraFeatureConfirmationPageEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, zimbraFeatureConfirmationPageEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -6340,7 +6340,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=807)
     public Map<String,Object> setFeatureConfirmationPageEnabled(boolean zimbraFeatureConfirmationPageEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, zimbraFeatureConfirmationPageEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -6355,7 +6355,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=807)
     public void unsetFeatureConfirmationPageEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, "");
@@ -6371,7 +6371,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 6.0.0
      */
-    @ZAttr(id=806)
+    @ZAttr(id=807)
     public Map<String,Object> unsetFeatureConfirmationPageEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConfirmationPageEnabled, "");

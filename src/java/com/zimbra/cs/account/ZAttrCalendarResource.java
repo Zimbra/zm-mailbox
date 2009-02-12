@@ -35,7 +35,7 @@ public class ZAttrCalendarResource extends Account {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090211-1224 */
+    /* build: 5.0 pshao 20090211-1842 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
@@ -350,7 +350,7 @@ public class ZAttrCalendarResource extends Account {
 
     /**
      * Whether this calendar resource declines invites to recurring
-     * appointments; default FASE
+     * appointments; default FALSE
      *
      * @return zimbraCalResAutoDeclineRecurring, or false if unset
      */
@@ -361,7 +361,7 @@ public class ZAttrCalendarResource extends Account {
 
     /**
      * Whether this calendar resource declines invites to recurring
-     * appointments; default FASE
+     * appointments; default FALSE
      *
      * @param zimbraCalResAutoDeclineRecurring new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -375,7 +375,7 @@ public class ZAttrCalendarResource extends Account {
 
     /**
      * Whether this calendar resource declines invites to recurring
-     * appointments; default FASE
+     * appointments; default FALSE
      *
      * @param zimbraCalResAutoDeclineRecurring new value
      * @param attrs existing map to populate, or null to create a new map
@@ -390,7 +390,7 @@ public class ZAttrCalendarResource extends Account {
 
     /**
      * Whether this calendar resource declines invites to recurring
-     * appointments; default FASE
+     * appointments; default FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -403,7 +403,7 @@ public class ZAttrCalendarResource extends Account {
 
     /**
      * Whether this calendar resource declines invites to recurring
-     * appointments; default FASE
+     * appointments; default FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -858,7 +858,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=808)
+    @ZAttr(id=809)
     public int getCalResMaxNumConflictsAllowed() {
         return getIntAttr(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, -1);
     }
@@ -873,7 +873,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=808)
+    @ZAttr(id=809)
     public void setCalResMaxNumConflictsAllowed(int zimbraCalResMaxNumConflictsAllowed) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, Integer.toString(zimbraCalResMaxNumConflictsAllowed));
@@ -891,7 +891,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=808)
+    @ZAttr(id=809)
     public Map<String,Object> setCalResMaxNumConflictsAllowed(int zimbraCalResMaxNumConflictsAllowed, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, Integer.toString(zimbraCalResMaxNumConflictsAllowed));
@@ -907,7 +907,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=808)
+    @ZAttr(id=809)
     public void unsetCalResMaxNumConflictsAllowed() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, "");
@@ -924,7 +924,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=808)
+    @ZAttr(id=809)
     public Map<String,Object> unsetCalResMaxNumConflictsAllowed(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, "");
@@ -940,7 +940,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=810)
     public int getCalResMaxPercentConflictsAllowed() {
         return getIntAttr(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, -1);
     }
@@ -955,7 +955,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=810)
     public void setCalResMaxPercentConflictsAllowed(int zimbraCalResMaxPercentConflictsAllowed) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, Integer.toString(zimbraCalResMaxPercentConflictsAllowed));
@@ -973,7 +973,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=810)
     public Map<String,Object> setCalResMaxPercentConflictsAllowed(int zimbraCalResMaxPercentConflictsAllowed, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, Integer.toString(zimbraCalResMaxPercentConflictsAllowed));
@@ -989,7 +989,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=810)
     public void unsetCalResMaxPercentConflictsAllowed() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, "");
@@ -1006,7 +1006,7 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 5.0.14
      */
-    @ZAttr(id=809)
+    @ZAttr(id=810)
     public Map<String,Object> unsetCalResMaxPercentConflictsAllowed(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, "");

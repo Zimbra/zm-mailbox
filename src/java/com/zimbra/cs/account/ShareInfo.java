@@ -1,15 +1,39 @@
 package com.zimbra.cs.account;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -22,15 +46,22 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 
 
 public class ShareInfo {
     
     private static String S_DELIMITER = ";";
     
+    // these two keys are set on our owne Metadata object
     private static final String MD_OWNER_NAME   = "n";
     private static final String MD_FOLDER_PATH  = "f";
-    private static final String MD_GRANTEE_NAME = "g";
+    
+    // note: this ket is set on the same Metadata object as 
+    //       one set by ACL.  mak sure name is not clashed.
+    private static final String MD_GRANTEE_NAME = "sign";  
     
     // owner's zimbra id
     private String mOwnerAcctId;
@@ -47,6 +78,11 @@ public class ShareInfo {
     // But when we publish share info we probably need to state where is right from, thus we keep 
     // a list of all grants that apply to the entry we are publishing share info for.   In the future 
     // when we support share info from cos/domain/all authed users, they will be added in the list too.
+    //
+    // e.g. 
+    //    - group dl2 is a member of group dl1
+    //    - owner shares /inbox to dl2 for rw rights 
+    //    - owner shares /inbox to dl1 for aid rights
     //
     protected MetadataList mGrants;
     
@@ -249,12 +285,15 @@ public class ShareInfo {
                         // of the folder of the grant), but there is no convenient way to get it.
                         md.put(MD_FOLDER_PATH, folder.getPath());
                         
-                        // yuck, ACL.Grant does *never* set the grantee name even there is an API.
-                        // we do our own here
-                        md.put(MD_GRANTEE_NAME, getGranteeName(prov, grant));
                         mGrants.add(md);
                     }
+                    
                     Metadata metadata = grant.encode();
+                    
+                    // yuck, ACL.Grant does *never* set the grantee name even there is an API.
+                    // we do our own here
+                    metadata.put(MD_GRANTEE_NAME, getGranteeName(prov, grant));
+                    
                     mGrants.add(metadata);
                 }
             }
@@ -321,7 +360,6 @@ public class ShareInfo {
         // Folder returned is guaranteed to be not null
         private Folder getFolder(OperationContext octxt, Mailbox mbox) throws ServiceException {
             
-            Folder folder = null;
             if (mIsFolderId == Boolean.TRUE) {
                 return getFolderById(octxt, mbox);
             } else if (mIsFolderId == Boolean.FALSE)
@@ -379,8 +417,9 @@ public class ShareInfo {
             
             Map<String, Object> attrs = new HashMap<String, Object>();
             for (Publishing si : shareInfo) {
+                
+                String value = si.serialize();
                 if (si.getAction() == Publishing.Action.add) {
-                    String value = si.serialize();
                     attrs.put(addKey, value);
                 }
                 
@@ -388,11 +427,15 @@ public class ShareInfo {
                  * if adding, replace existing share info for the same owner:folder
                  * if removing, delete all(there should be only one) share info for the same owner:folder
                  * 
-                 * for both case, we remove any value that start with the same owner:folder
+                 * for both case, we remove any value that starts with the same owner:folder
+                 * 
+                 * one caveat: if we are adding an existing owner:folder and the share info have not 
+                 * changed since last published, we do not want to put a - in the mod map, because 
+                 * that will remove the value put in above.
                  */
                 String ownerAndFoler = si.serializeOwnerAndFolder();
                 for (String curSi : curShareInfo) {
-                    if (curSi.startsWith(ownerAndFoler)) {
+                    if (curSi.startsWith(ownerAndFoler) && !curSi.equals(value)) {
                         attrs.put(removeKey, curSi);
                     }
                 }
@@ -415,6 +458,8 @@ public class ShareInfo {
         private byte mGranteeType;
         private String mGranteeId;
         private String mGranteeName;
+        
+        private String mDigest; // for deduping
         
         public static interface Visitor {
             public void visit(Published shareInfo) throws ServiceException;
@@ -446,12 +491,76 @@ public class ShareInfo {
             eShare.addAttribute(AccountConstants.A_GRANTEE_NAME, getGranteeName());
         }
         
+        private static List<Published> decodeMetadata(String encoded) throws ServiceException {
+            List<Published> siList = new ArrayList<Published>();
+            
+            // deserialize encoded to a dummy Published first
+            Published si = new Published(encoded);
+            
+            //
+            // split the dummy to multiple
+            //
+            
+            // data not btencoded in metadata
+            String ownerAcctId = si.getOwnerAcctId();
+            int folderId = si.getFolderId();
+            
+            // data btencoded in metadata by us (ShareInfo.Publishing)
+            Metadata metadata = si.mGrants.getMap(0);
+            String ownerAcctName = metadata.get(MD_OWNER_NAME);
+            String folderPath = metadata.get(MD_FOLDER_PATH);
+            
+            // data encoded by ACL.grant
+            for (int i = 1; i < si.mGrants.size(); i++) { 
+                metadata = si.mGrants.getMap(i);
+                
+                Grant grant = new Grant(metadata);
+                
+                short rights = grant.getGrantedRights();
+                byte granteeType = grant.getGranteeType();
+                String granteeId = grant.getGranteeId();
+                
+                // Mailbox.ACL never sets it, get it from our key in the metadata
+                String granteeName = metadata.get(MD_GRANTEE_NAME);
+                
+                Published p = new Published(ownerAcctId, folderId,
+                                            ownerAcctName, folderPath,
+                                            rights, granteeType,
+                                            granteeId, granteeName);
+                siList.add(p);
+            }
+           
+            return siList;
+        }
+        
+        // only used for the constructing the dummy for spliting
+        private Published(String encodedShareInfo) throws ServiceException {
+            deserialize(encodedShareInfo);
+        }
+        
         private Published() {
         }
         
-        private Published(String encodedShareInfo) throws ServiceException {
-            deserialize(encodedShareInfo);
-            extractMeatdata();
+        private Published(String ownerAcctId, int folderId,
+                String ownerAcctName, String folderPath,
+                short rights, byte granteeType,
+                String granteeId, String granteeName) {
+            
+            setOwnerAcctId(ownerAcctId);
+            setFolderId(folderId);
+            mOwnerAcctName = ownerAcctName;
+            mFolderPath = folderPath;
+            mRights = rights;
+            mGranteeType = granteeType;
+            mGranteeId = granteeId;
+            mGranteeName = granteeName;
+            
+            mDigest = mOwnerAcctName +
+                      mFolderPath +
+                      mRights + 
+                      ACL.typeToString(mGranteeType) +
+                      mGranteeId +
+                      mGranteeName;
         }
         
         public String getOwnerAcctName() {
@@ -466,6 +575,10 @@ public class ShareInfo {
             return ACL.rightsToString(mRights);
         }
         
+        public short getRightsCode() {
+            return mRights;
+        }
+        
         public String getGranteeType() {
             return ACL.typeToString(mGranteeType);
         }
@@ -477,29 +590,9 @@ public class ShareInfo {
         public String getGranteeName() {
             return mGranteeName;
         }
-        private void extractMeatdata() throws ServiceException {
-            // the first one is folder path
-            Metadata metadata = mGrants.getMap(0);
-            mOwnerAcctName = metadata.get(MD_OWNER_NAME);
-            mFolderPath = metadata.get(MD_FOLDER_PATH);
-            mGranteeName = metadata.get(MD_GRANTEE_NAME);
-            
-            // then extract our grants
-            for (int i = 1; i < mGrants.size(); i++) { 
-                metadata = mGrants.getMap(i);
-                extractMeatdata(metadata);
-            }
-        }
         
-        private void extractMeatdata(Metadata metadata) throws ServiceException {
-            Grant grant = new Grant(metadata);
-            
-            mRights = grant.getGrantedRights();
-            mGranteeType = grant.getGranteeType();
-            mGranteeId = grant.getGranteeId();
-            
-            // Mailbox.ACL never sets it
-            // mGranteeName = grant.getGranteeName();
+        private String getDigest() {
+            return mDigest;
         }
         
         public static void get(Account acct, String granteeType, Account owner, Visitor visitor) 
@@ -517,7 +610,6 @@ public class ShareInfo {
             }
             
             Provisioning prov = Provisioning.getInstance();
-            
     
             if (gt == 0) {
                 // no grantee type specified, return both folders shared with the 
@@ -612,25 +704,36 @@ public class ShareInfo {
             Set<String> publishedShareInfo = entry.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
             
             for (String psi : publishedShareInfo) {
+                
                 try {
-                    Published si = new Published(psi);
-                    if (owner != null) {
-                        if (!owner.getId().equals(si.getOwnerAcctId()))
+                    // each zimbraShareInfo value can expand to *multiple* Published share info, because
+                    // for each owner:folder, there could be multiple matched grantees
+                    // e.g. 
+                    //    - group dl2 is a member of group dl1
+                    //    - owner shares /inbox to dl2 for rw rights 
+                    //    - owner shares /inbox to dl1 for aid rights
+                    //
+                    List<Published> siList = decodeMetadata(psi);
+                        
+                    for (Published si : siList) {    
+                        if (owner != null) {
+                            if (!owner.getId().equals(si.getOwnerAcctId()))
+                                continue;
+                        }
+                        
+                        /*
+                         * dedup
+                         * 
+                         * It is possible that the same share is published on a group, and 
+                         * again on a sub group, and again on an account.  We return only 
+                         * one instance of all the identical published shares.
+                         */
+                        if (visited.contains(si.getDigest()))
                             continue;
+                        
+                        visitor.visit(si);
+                        visited.add(si.getDigest());
                     }
-                    
-                    /*
-                     * dedup
-                     * 
-                     * It is possible that the same share is published on a group, and 
-                     * again on a sub group, and again on an account.  We return only 
-                     * one instance of all the identical published shares.
-                     */
-                    if (visited.contains(psi))
-                        continue;
-                    
-                    visitor.visit(si);
-                    visited.add(psi);
                     
                 } catch (ServiceException e) {
                     // probably encountered malformed share info, log and ignore
@@ -638,8 +741,399 @@ public class ShareInfo {
                     ZimbraLog.account.warn("unable to process share info", e);
                 }
             }
+        }
+    }
+    
+    
+    
+    /*
+     * ===========================
+     *          Published
+     * ===========================
+     */
+    public static class NotificationSender {
+        
+        /* 
+         * do the l10n in the visitor, cons is we will need to rerun the 
+         * published.get(DistributionList dl, boolean directOnly, Account owner, Visitor visitor)  
+         * for each member added, yuck
+         */
+        /*
+        private static class MailSenderVisitor implements Published.Visitor {
             
+            Locale mLocale;
+            StringBuilder mBuf = new StringBuilder();
+            
+            
+            private MailSenderVisitor(Locale locale) {
+                mLocale = locale;
+            }
+            
+            public void visit(Published shareInfo) throws ServiceException {
+                mBuf.append(L10nUtil.getMessage(MsgKey.shareInfoBodyFormat, mLocale, 
+                        shareInfo.getFolderPath(),
+                        shareInfo.getOwnerAcctName(),
+                        shareInfo.getRights()));
+            }     
+                   
+            private String get() {
+                return mBuf.toString();
+            }
+        }
+        */
+        
+        private static class MailSenderVisitor implements Published.Visitor {
+            
+            List<Published> mShares = new ArrayList<Published>();
+            
+            public void visit(Published shareInfo) throws ServiceException {
+                mShares.add(shareInfo);
+            }
+            
+            private void appendCommaSeparated(StringBuffer sb, String s) {
+                if (sb.length() > 0)
+                    sb.append(", ");
+                sb.append(s);
+            }
+            
+            private String getRightsText(Published si, Locale locale) {
+                short rights = si.getRightsCode();
+                StringBuffer r = new StringBuffer();
+                if ((rights & ACL.RIGHT_READ) != 0)      appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionRead, locale));
+                if ((rights & ACL.RIGHT_WRITE) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionWrite, locale));
+                if ((rights & ACL.RIGHT_INSERT) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionInsert, locale));
+                if ((rights & ACL.RIGHT_DELETE) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionDelete, locale));
+                if ((rights & ACL.RIGHT_ACTION) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionAction, locale));
+                if ((rights & ACL.RIGHT_ADMIN) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionAdmin, locale));
+                if ((rights & ACL.RIGHT_PRIVATE) != 0)   appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionPrivate, locale));
+                if ((rights & ACL.RIGHT_FREEBUSY) != 0)  appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionFreebusy, locale));
+                if ((rights & ACL.RIGHT_SUBFOLDER) != 0) appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionCreateFolder, locale));
+              
+                return r.toString();
+            }
+            
+            private String formatShareInfoText(MsgKey key, String value, Locale locale) {
+                return L10nUtil.getMessage(key, locale) + ": " + value + "\n";
+            }
+            
+            private String renderText(String dlName, Locale locale) {
+                StringBuilder sb = new StringBuilder();
+                
+                sb.append("\n");
+                sb.append(L10nUtil.getMessage(MsgKey.shareInfoBodyAddedToGroup, locale, dlName));
+                sb.append("\n\n");
+                sb.append(L10nUtil.getMessage(MsgKey.shareInfoBodyIntroduction, locale, dlName));
+                sb.append("\n\n");
+                
+                for (Published si : mShares) {
+                    sb.append(formatShareInfoText(MsgKey.shareInfoBodySharedItem, si.getFolderPath(), locale));
+                    sb.append(formatShareInfoText(MsgKey.shareInfoBodyOwner, si.getOwnerAcctName(), locale));
+                    sb.append(formatShareInfoText(MsgKey.shareInfoBodyGrantee, si.getGranteeName(), locale));
+                    sb.append(formatShareInfoText(MsgKey.shareInfoBodyAllowedActions, getRightsText(si, locale), locale));
+                    sb.append("\n");
+                }
+                sb.append("\n\n");
+                return sb.toString();
+            }
+            
+            private String formatShareInfoHtml(MsgKey key, String value, Locale locale) {
+                return "<tr>" +
+                       "<th align=\"left\">" + L10nUtil.getMessage(key, locale) + ":" + "</th>" +
+                       "<td align=\"left\">" + value + "</td>" +
+                       "</tr>\n";
+            }
+            
+            private String renderHtml(String dlName, Locale locale) {
+                StringBuilder sb = new StringBuilder();
+                
+                sb.append("<h4>\n");
+                sb.append("<p>" + L10nUtil.getMessage(MsgKey.shareInfoBodyAddedToGroup, locale, dlName) + "</p>\n");
+                sb.append("<p>" + L10nUtil.getMessage(MsgKey.shareInfoBodyIntroduction, locale, dlName) + "</p>\n");
+                sb.append("</h4>\n");
+                sb.append("\n");
+                
+                for (Published si : mShares) {
+                    sb.append("<p>\n");
+                    sb.append("<table border=\"0\">\n");
+                    sb.append(formatShareInfoHtml(MsgKey.shareInfoBodySharedItem, si.getFolderPath(), locale));
+                    sb.append(formatShareInfoHtml(MsgKey.shareInfoBodyOwner, si.getOwnerAcctName(), locale));
+                    sb.append(formatShareInfoHtml(MsgKey.shareInfoBodyGrantee, si.getGranteeName(), locale));
+                    sb.append(formatShareInfoHtml(MsgKey.shareInfoBodyAllowedActions, getRightsText(si, locale), locale));
+                    sb.append("</table>\n");
+                    sb.append("</p>\n");
+                }
+                
+                return sb.toString();
+            }
         }
         
+        public static void sendShareInfoMessage(OperationContext octxt, DistributionList dl, String[] members) {
+            
+            Provisioning prov = Provisioning.getInstance();
+            Account authedAcct = octxt.getAuthenticatedUser();
+            
+            MailSenderVisitor visitor = new MailSenderVisitor();
+            try {
+                Published.get(dl, false, null, visitor);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("failed to retrieve share info for dl: " + dl.getName(), e);
+                return;
+            }
+            
+            try {
+                // send a separate mail to each member being added instead of sending one mail to all members being added
+                for (String member : members)
+                    sendMessage(prov, authedAcct, dl, member, visitor);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("failed to send share info message", e);
+            }
+        }
+        
+        private static Locale getLocale(Provisioning prov, Account fromAcct, String toAddr) throws ServiceException {
+            Locale locale;
+            Account rcptAcct = prov.get(AccountBy.name, toAddr);
+            if (rcptAcct != null)
+                locale = rcptAcct.getLocale();
+            else if (fromAcct != null)
+                locale = fromAcct.getLocale();
+            else
+                locale = prov.getConfig().getLocale();
+            
+            return locale;
+        }
+        
+        /*
+         * 1. if dl.zimbraDistributionListSendShareMessageFromAddress is set, use that.
+         * 2. otherwise if the authed admin has a valid email address, use that.
+         * 3. otherwise use the DL's address.
+         */
+        private static Pair<Address, Address> getFromAndReplyToAddr(Provisioning prov, Account fromAcct, DistributionList dl) throws AddressException {
+            
+            InternetAddress addr;
+            
+            // 1. if dl.zimbraDistributionListSendShareMessageFromAddress is set, use that.
+            String dlssmfa = dl.getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress);
+            try {
+                if (dlssmfa != null) {
+                    addr = new InternetAddress(dlssmfa);
+                    return new Pair<Address, Address>(addr, addr);
+                }
+            } catch (AddressException e) {
+                // log and try the next one 
+                ZimbraLog.account.warn("invalid address in " +
+                        Provisioning.A_zimbraDistributionListSendShareMessageFromAddress + 
+                        " on distribution list entry " + dl.getName() +
+                        ", ignored", e);
+            }
+            
+            // 2. otherwise if the authed admin has a valid email address, use that.
+            if (fromAcct != null) {
+                addr = AccountUtil.getFriendlyEmailAddress(fromAcct);
+                try {
+                    // getFriendlyEmailAddress always return an Address, validate it
+                    addr.validate();
+                    
+                    Address replyToAddr = addr;
+                    String replyTo = fromAcct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+                    if (replyTo != null)
+                        replyToAddr = new InternetAddress(replyTo);
+                    return new Pair<Address, Address>(addr, replyToAddr);
+                } catch (AddressException e) {
+                }
+            }
+
+            // 3. otherwise use the DL's address.
+            addr = new InternetAddress(dl.getName());
+            return new Pair<Address, Address>(addr, addr);
+        }
+        
+        private static void sendMessage(Provisioning prov,
+                                        Account fromAcct, DistributionList dl, String toAddr,
+                                        MailSenderVisitor visitor) throws ServiceException {
+            try {
+                SMTPMessage out = new SMTPMessage(JMSession.getSession());
+            
+                Pair<Address, Address> senderAddrs = getFromAndReplyToAddr(prov, fromAcct, dl);
+                Address fromAddr = senderAddrs.getFirst();
+                Address replyToAddr = senderAddrs.getSecond();
+                
+                // From
+                out.setFrom(fromAddr);
+                
+                // Reply-To
+                out.setReplyTo(new Address[]{replyToAddr});
+                
+                // To
+                out.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(toAddr));
+                
+                // Date
+                out.setSentDate(new Date());
+                
+                // generate locale specific stuff
+                Locale locale = getLocale(prov, fromAcct, toAddr);
+                String subject = L10nUtil.getMessage(MsgKey.shareInfoSubject, locale);
+                String shareInfoText = visitor.renderText(dl.getName(), locale);
+                String shareInfoHtml = visitor.renderHtml(dl.getName(), locale);
+                
+                // Subject 
+                out.setSubject(subject);
+                
+                // Body
+                MimeMultipart mmp = new MimeMultipart("alternative");  // todo, verify alternative?
+                out.setContent(mmp);
+
+                // ///////
+                // TEXT part (add me first!)
+                MimeBodyPart textPart = new MimeBodyPart();
+                textPart.setText(shareInfoText, Mime.P_CHARSET_UTF8);
+                mmp.addBodyPart(textPart);
+
+                // ///////
+                // HTML part 
+                MimeBodyPart htmlPart = new MimeBodyPart();
+                htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
+                mmp.addBodyPart(htmlPart);
+
+                // send the thing
+                Transport.send(out);
+                ZimbraLog.account.info("share info notification sent rcpt='" + toAddr + "' Message-ID=" + out.getMessageID());
+                
+            } catch (MessagingException e) {
+                ZimbraLog.account.warn("send share info notification failed rcpt='" + toAddr +"'", e);
+            }
+        }
+         
+        // copied from CalendarMailSender
+        private static class HtmlPartDataSource implements DataSource {
+            private static final String CONTENT_TYPE =
+                Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
+            private static final String HEAD =
+                "<HTML><BODY>\n" +
+                "<PRE style=\"font-family: monospace; font-size: 14px\">\n";
+            private static final String TAIL = "</PRE>\n</BODY></HTML>\n";
+            private static final String NAME = "HtmlDataSource";
+
+            private String mText;
+            private byte[] mBuf = null;
+
+            public HtmlPartDataSource(String text) {
+                mText = text;
+                /*
+                mText = mText.replaceAll("&", "&amp;");
+                mText = mText.replaceAll("<", "&lt;");
+                mText = mText.replaceAll(">", "&gt;");
+                */
+            }
+
+            public String getContentType() {
+                return CONTENT_TYPE;
+            }
+
+            public InputStream getInputStream() throws IOException {
+                synchronized(this) {
+                    if (mBuf == null) {
+                        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                        OutputStreamWriter wout =
+                            new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
+                        // String text = HEAD + mText + TAIL;
+                        String text = mText;
+                        wout.write(text);
+                        wout.flush();
+                        mBuf = buf.toByteArray();
+                    }
+                }
+                ByteArrayInputStream in = new ByteArrayInputStream(mBuf);
+                return in;
+            }
+
+            public String getName() {
+                return NAME;
+            }
+
+            public OutputStream getOutputStream() {
+                throw new UnsupportedOperationException();
+            }
+        }
+        
+        /*
+         * =======================
+         * dead code below, remove
+         * =======================
+         */
+        private static void doSendShareInfoMessage(OperationContext octxt, MailSenderVisitor visitor, DistributionList dl, String member) throws ServiceException {
+            Provisioning prov = Provisioning.getInstance();
+            
+            // the admin that triggered this
+            Account acct = octxt.getAuthenticatedUser();
+            
+            // locale
+            Locale locale;
+            Account memberAcct = prov.get(AccountBy.name, member);
+            if (memberAcct != null) {
+                locale = memberAcct.getLocale();
+            } else
+                locale = acct.getLocale();  // use the admin's locale
+            
+            String shareInfoText = visitor.renderText(dl.getName(), locale);
+            String shareInfoHtml = visitor.renderHtml(dl.getName(), locale);
+            
+            // sendMessage(dl, acct, memberAcct, locale, shareInfoText, shareInfoHtml);
+        }
+        
+
+        private static MimeMessage createShareInfoMessage(
+                Address fromAddr, Address senderAddr, List<Address> toAddrs, 
+                Locale locale,
+                String shareInfoText, String shareInfoHtml)
+            throws ServiceException {
+            
+            String subject = L10nUtil.getMessage(MsgKey.shareInfoSubject, locale);
+
+            try {
+                MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+
+                MimeMultipart mmp = new MimeMultipart("alternative");  // todo, verify alternative?
+                mm.setContent(mmp);
+
+                // ///////
+                // TEXT part (add me first!)
+                MimeBodyPart textPart = new MimeBodyPart();
+                textPart.setText(shareInfoText, Mime.P_CHARSET_UTF8);
+                mmp.addBodyPart(textPart);
+
+                // ///////
+                // HTML part 
+                MimeBodyPart htmlPart = new MimeBodyPart();
+                // htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
+                mmp.addBodyPart(htmlPart);
+                
+                // ///////
+                // MESSAGE HEADERS
+                if (subject != null)
+                    mm.setSubject(subject, Mime.P_CHARSET_UTF8);
+
+                if (toAddrs != null) {
+                    Address[] addrs = new Address[toAddrs.size()];
+                    toAddrs.toArray(addrs);
+                    mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
+                }
+                if (fromAddr != null)
+                    mm.setFrom(fromAddr);
+                if (senderAddr != null) {
+                    mm.setSender(senderAddr);
+                    mm.setReplyTo(new Address[]{senderAddr});
+                }
+                mm.setSentDate(new Date());
+                mm.saveChanges();
+
+                return mm;
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE(
+                        "Messaging Exception while building MimeMessage from share info", e);
+            }
+        }
     }
 }
+
+
+

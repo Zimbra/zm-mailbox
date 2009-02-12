@@ -36,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090211-1224 */
+    /* build: 5.0 pshao 20090211-1842 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -634,6 +634,83 @@ public class ZAttrDistributionList extends MailTarget {
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
+        return attrs;
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @return zimbraDistributionListSendShareMessageFromAddress, or null if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public String getDistributionListSendShareMessageFromAddress() {
+        return getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, null);
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @param zimbraDistributionListSendShareMessageFromAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public void setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, zimbraDistributionListSendShareMessageFromAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @param zimbraDistributionListSendShareMessageFromAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public Map<String,Object> setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, zimbraDistributionListSendShareMessageFromAddress);
+        return attrs;
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public void unsetDistributionListSendShareMessageFromAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=806)
+    public Map<String,Object> unsetDistributionListSendShareMessageFromAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, "");
         return attrs;
     }
 

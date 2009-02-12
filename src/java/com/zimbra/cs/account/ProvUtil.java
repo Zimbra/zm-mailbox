@@ -304,10 +304,10 @@ public class ProvUtil implements DebugListener {
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
-        ADD_ACCOUNT_SHARE_INFO("addAccountShareInfo", "aasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
+        ADD_ACCOUNT_SHARE_INFO("addAccountShareInfo", "aasi", "{account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
-        ADD_DISTRIBUTION_LIST_SHARE_INFO("addDistribtionListShareInfo", "adlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
+        ADD_DISTRIBUTION_LIST_SHARE_INFO("addDistribtionListShareInfo", "adlsi", "{dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 3),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
