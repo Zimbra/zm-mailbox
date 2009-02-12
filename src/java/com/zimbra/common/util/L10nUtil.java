@@ -83,6 +83,26 @@ public class L10nUtil {
         // caldav messages
         caldavCalendarDescription,
         
+        // share info
+        shareInfoSubject,
+        shareInfoBodyAddedToGroup,
+        shareInfoBodyIntroduction,
+
+        shareInfoBodySharedItem,
+        shareInfoBodyOwner,
+        shareInfoBodyGrantee,
+        shareInfoBodyAllowedActions,
+
+        shareInfoActionRead,
+        shareInfoActionWrite,
+        shareInfoActionInsert,
+        shareInfoActionDelete,
+        shareInfoActionAction,
+        shareInfoActionAdmin,
+        shareInfoActionPrivate,
+        shareInfoActionFreebusy,
+        shareInfoActionCreateFolder,
+        
         // ZimbraSync client invitation text
         zsApptNew,
         zsApptModified,
