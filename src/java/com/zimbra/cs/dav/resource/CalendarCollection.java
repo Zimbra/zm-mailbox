@@ -19,6 +19,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -111,13 +112,14 @@ public class CalendarCollection extends Collection {
 		//
 	}
 	
-	private static TimeRange sAllCalItems;
+	protected static TimeRange sAllCalItems;
 	
 	static {
 		sAllCalItems = new TimeRange(null);
 	}
 	
 	/* Returns all the appoinments stored in the calendar as DavResource. */
+    @Override
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
 			return get(ctxt, sAllCalItems);
@@ -127,6 +129,27 @@ public class CalendarCollection extends Collection {
 		return Collections.emptyList();
 	}
 
+	/* Returns all the appointments specified in hrefs */
+    @Override
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
+		ArrayList<DavResource> resp = new ArrayList<DavResource>();
+		for (String href : hrefs) {
+			DavResource rs = null;
+			try {
+				href = URLDecoder.decode(href, "UTF-8");
+				rs = UrlNamespace.getResourceAtUrl(ctxt, href);
+				rs.mUri = href;
+			} catch (IOException e) {
+				ZimbraLog.dav.warn("can't decode href "+href, e);
+			}
+			if (rs ==  null)
+				rs = new DavResource.InvalidResource(href, getOwner());
+			rs.setHref(href);
+			resp.add(rs);
+		}
+		return resp;
+	}
+	
 	/* Returns the appoinments in the specified time range. */
 	public java.util.Collection<DavResource> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
@@ -171,6 +194,7 @@ public class CalendarCollection extends Collection {
 	}
 
 	/* creates an appointment sent in PUT request in this calendar. */
+    @Override
 	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
 		HttpServletRequest req = ctxt.getRequest();
 		ContentType ct = new ContentType(req.getContentType());

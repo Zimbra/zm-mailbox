@@ -25,6 +25,7 @@ import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavContext.Depth;
@@ -50,7 +51,7 @@ public class PropFind extends DavMethod {
 
 		}
 		
-		RequestProp reqProp = getRequestProp(ctxt);
+		RequestProp reqProp = ctxt.getRequestProp();
 		DavResource resource = ctxt.getRequestedResource();
 		addComplianceHeader(ctxt, resource);
 		DavResponse resp = ctxt.getDavResponse();

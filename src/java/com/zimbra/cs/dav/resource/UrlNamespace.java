@@ -223,7 +223,7 @@ public class UrlNamespace {
 	private static LRUMap sRenamedResourceMap = new LRUMap(100);
 	
 	private static class RemoteFolder {
-	    static final long AGE = 60L * 1000L;
+	    static final long AGE = 5L * 60L * 1000L;
 	    RemoteCalendarCollection folder;
 	    long ts;
 	    boolean isStale(long now) {
@@ -297,23 +297,12 @@ public class UrlNamespace {
                 // the only information we have is the calendar UID and remote account folder id.
                 // we need the itemId for the calendar appt in order to query from the remote server.
                 // so we'll need to do getApptSummaries on the remote folder, then cache the result.
-                ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
-                RemoteFolder remoteFolder = null;
-                synchronized (sApptSummariesMap) {
-                    remoteFolder = (RemoteFolder)sApptSummariesMap.get(remoteId);
-                    long now = System.currentTimeMillis();
-                    if (remoteFolder != null && remoteFolder.isStale(now)) {
-                        sApptSummariesMap.remove(remoteId);
-                        remoteFolder = null;
-                    }
-                    if (remoteFolder == null) {
-                        remoteFolder = new RemoteFolder();
-                        remoteFolder.folder = new RemoteCalendarCollection(ctxt, mp);
-                        remoteFolder.ts = now;
-                        sApptSummariesMap.put(remoteId, remoteFolder);
-                    }
+                RemoteCalendarCollection col = checkCachedCalendarMountpoint(mp);
+                if (col == null) {
+                	col = new RemoteCalendarCollection(ctxt, mp);
+                	cacheCalendarMountpoint(col, mp);
                 }
-                DavResource res = remoteFolder.folder.getAppointment(ctxt, uid);
+                DavResource res = col.getAppointment(ctxt, uid);
                 if (res == null)
                     throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
                 return res;
@@ -327,6 +316,32 @@ public class UrlNamespace {
         }
         
         return getResourceFromMailItem(ctxt, item);
+    }
+    
+    private static RemoteCalendarCollection checkCachedCalendarMountpoint(Mountpoint mp) {
+        ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
+        RemoteFolder remoteFolder = null;
+        synchronized (sApptSummariesMap) {
+            remoteFolder = (RemoteFolder)sApptSummariesMap.get(remoteId);
+            long now = System.currentTimeMillis();
+            if (remoteFolder != null && remoteFolder.isStale(now)) {
+                sApptSummariesMap.remove(remoteId);
+                remoteFolder = null;
+            }
+        }
+        if (remoteFolder != null)
+        	return remoteFolder.folder;
+    	return null;
+    }
+
+    private static void cacheCalendarMountpoint(RemoteCalendarCollection col, Mountpoint mp) {
+        ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
+        RemoteFolder remoteFolder = new RemoteFolder();
+        remoteFolder.folder = col;
+        remoteFolder.ts = System.currentTimeMillis();
+        synchronized (sApptSummariesMap) {
+        	sApptSummariesMap.put(remoteId, remoteFolder);
+        }
     }
     
     public static void invalidateApptSummariesCache(String acctId, int itemId) {
@@ -369,8 +384,13 @@ public class UrlNamespace {
             case MailItem.TYPE_MOUNTPOINT :
 				Mountpoint mp = (Mountpoint) item;
             	viewType = mp.getDefaultView();
-            	if (viewType == MailItem.TYPE_APPOINTMENT)
-            		resource = new RemoteCalendarCollection(ctxt, mp);
+            	if (viewType == MailItem.TYPE_APPOINTMENT) {
+            		resource = checkCachedCalendarMountpoint(mp);
+            		if (resource == null) {
+                		resource = new RemoteCalendarCollection(ctxt, mp);
+                		cacheCalendarMountpoint((RemoteCalendarCollection)resource, mp);
+            		}
+            	}
             	else
             		resource = new RemoteCollection(ctxt, mp);
                 break;

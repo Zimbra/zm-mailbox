@@ -17,6 +17,7 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -26,7 +27,9 @@ import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
+import org.dom4j.QName;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -35,9 +38,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.TimeRange;
+import com.zimbra.cs.dav.client.CalDavClient;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -58,6 +63,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     private int mItemId;
     private ArrayList<DavResource> mChildren;
     private HashMap<String,DavResource> mAppointments;
+    private HashMap<String,String> mCalendarData;
     
     public RemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
@@ -76,6 +82,89 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
     
     @Override
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
+    	boolean needCalendarData = false;
+		for (QName prop : ctxt.getRequestProp().getProps()) {
+			if (prop.equals(DavElements.E_CALENDAR_DATA)) {
+				needCalendarData = true;
+				break;
+			}
+		}
+		
+		HashMap<String,String> uidmap = new HashMap<String,String>();
+		for (String href : hrefs) {
+			try {
+				href = URLDecoder.decode(href, "UTF-8");
+				int start = href.lastIndexOf('/') + 1;
+				int end = href.lastIndexOf(".ics");
+				if (start > 0 && end > 0 && end > start)
+					uidmap.put(href, href.substring(start, end));
+			} catch (IOException e) {
+				ZimbraLog.dav.warn("can't decode href "+href, e);
+			}
+		}
+		
+		if (needCalendarData)
+			try {
+				getCalendarData(ctxt, uidmap.values());
+			} catch (Exception e) {
+		        ZimbraLog.dav.warn("can't proxy calendar data for "+ctxt.getAuthAccount().getName(), e);
+			}
+		
+		get(ctxt, sAllCalItems);
+		ArrayList<DavResource> resp = new ArrayList<DavResource>();
+		for (String href : uidmap.keySet()) {
+			String uid = uidmap.get(href);
+			DavResource rs = mAppointments.get(uid);
+			if (rs == null)
+				rs = new DavResource.InvalidResource(href, getOwner());
+			resp.add(rs);
+		}
+		return resp;
+	}
+	
+    String getCalendarData(String uid) {
+    	if (mCalendarData != null)
+    		return mCalendarData.get(uid);
+    	return null;
+    }
+    
+    private void getCalendarData(DavContext ctxt, java.util.Collection<String> uids) throws ServiceException, IOException, DavException {
+        AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
+        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+        if (target == null)
+            return;
+        ZMailbox zmbx = getRemoteMailbox(authToken.toZAuthToken());
+        ZFolder f = zmbx.getFolderById(new ItemId(mRemoteId, mItemId).toString());
+        String path = f.getPath();
+        String url = DavServlet.getDavUrl(target.getName());
+        CalDavClient cl = new CalDavClient(url);
+    
+    	java.util.Collection<CalDavClient.Appointment> appts = new ArrayList<CalDavClient.Appointment>();
+    	HashMap<String,String> hrefmap = new HashMap<String,String>();
+    	for (String uid : uids) {
+    		StringBuilder buf = new StringBuilder();
+    		buf.append(DavServlet.DAV_PATH).append("/");
+    		buf.append(target.getName());
+    		buf.append(path).append("/");
+    		buf.append(uid);
+    		buf.append(".ics");
+    		hrefmap.put(buf.toString(), uid);
+    		appts.add(new CalDavClient.Appointment(buf.toString(), null));
+    	}
+        String auth = ctxt.getRequest().getHeader("Authorization");
+        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()));
+        int loc = userPass.indexOf(":"); 
+        String user = userPass.substring(0, loc);
+        String pass = userPass.substring(loc + 1);
+        cl.setCredential(user, pass);
+        appts = cl.getCalendarData(path, appts);
+        mCalendarData = new HashMap<String,String>();
+        for (CalDavClient.Appointment appt : appts)
+        	mCalendarData.put(hrefmap.get(appt.href), appt.data);
+    }
+    
+    @Override
     public java.util.Collection<DavResource> get(DavContext ctxt, TimeRange range) throws DavException {
         if (mChildren != null)
             return mChildren;
@@ -84,9 +173,6 @@ public class RemoteCalendarCollection extends CalendarCollection {
         ZAuthToken zat = null;
         try {
             zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-        } catch (AuthProviderException e) {
-            ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
-            return Collections.emptyList();
         } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
             return Collections.emptyList();
@@ -142,9 +228,6 @@ public class RemoteCalendarCollection extends CalendarCollection {
             String url = URLUtil.urlEscape(f.getPath() + "/" + ctxt.getItem());
             url = DavServlet.getDavUrl(target.getName()) + url;
             respHeaders = UserServlet.putRemoteResource(authToken, url, target, ctxt.getUpload().getInputStream(), headerList.toArray(new Header[0])).getFirst();
-        } catch (AuthProviderException e) {
-            ZimbraLog.dav.warn("can't proxy the request for "+ctxt.getAuthAccount().getName(), e);
-            throw new DavException("can't create resource", HttpServletResponse.SC_FORBIDDEN);
         } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't proxy the request for "+ctxt.getAuthAccount().getName(), e);
             throw new DavException("can't create resource", HttpServletResponse.SC_FORBIDDEN);

@@ -32,6 +32,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.Acl.Ace;
@@ -57,7 +58,7 @@ public class AclReports extends Report {
 	}
 	
 	private void handlePrincipalPropertySearch(DavContext ctxt, Element query) throws DavException, ServiceException {
-		RequestProp reqProp = getRequestProp(ctxt);
+		RequestProp reqProp = ctxt.getRequestProp();
 		DavResponse resp = ctxt.getDavResponse();
 		for (DavResource rs : getMatchingResources(ctxt, query))
             resp.addResource(ctxt, rs, reqProp, false);
@@ -112,7 +113,7 @@ public class AclReports extends Report {
 	}
 	
 	private void handleAclPrincipalPropSet(DavContext ctxt, Element query) throws DavException, ServiceException {
-		RequestProp reqProp = getRequestProp(ctxt);
+		RequestProp reqProp = ctxt.getRequestProp();
 		DavResponse resp = ctxt.getDavResponse();
 		for (DavResource rs : getAclPrincipals(ctxt))
             resp.addResource(ctxt, rs, reqProp, false);
@@ -139,7 +140,7 @@ public class AclReports extends Report {
 		if (ctxt.getDepth() != DavContext.Depth.zero)
 			throw new DavException("non-zero depth", HttpServletResponse.SC_BAD_REQUEST);
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
-		RequestProp reqProp = getRequestProp(ctxt);
+		RequestProp reqProp = ctxt.getRequestProp();
 		DavResponse resp = ctxt.getDavResponse();
 		Element principalProp = query.element(DavElements.E_PRINCIPAL_PROPERTY);
 		if (principalProp == null) {

@@ -273,7 +273,7 @@ public interface CalendarObject {
 	    
 	    @Override
 	    public boolean hasContent(DavContext ctxt) {
-	        return getRemoteContent(ctxt) != null;
+	        return true;
 	    }
 	    
 	    public String getUid() {
@@ -294,6 +294,11 @@ public interface CalendarObject {
         public byte[] getRemoteContent(DavContext ctxt) {
         	if (mContent != null)
         		return mContent;
+        	String data = mParent.getCalendarData(mUid);
+        	if (data != null) {
+        		mContent = data.getBytes();
+        		return mContent;
+        	}
             try {
                 AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
                 ItemId iid = new ItemId(mRemoteId, mItemId);
