@@ -313,7 +313,7 @@ public class ACL {
     }
 
     /** The <tt>List</tt> of all {@link ACL.Grant}s set on an item. */
-    private List<Grant> mGrants = new ArrayList<Grant>();
+    private List<Grant> mGrants = new ArrayList<Grant>(3);
 
 
     public ACL()  { }

@@ -893,7 +893,10 @@ public class Folder extends MailItem {
         boolean isNoInheritFlag = tag.getId() == Flag.ID_FLAG_NO_INHERIT;
         if (!canAccess(isNoInheritFlag ? ACL.RIGHT_ADMIN : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
+
         ACL effectiveACL = isNoInheritFlag ? getEffectiveACL() : null;
+        if (effectiveACL != null && effectiveACL.isEmpty())
+            effectiveACL = null;
 
         // change the tag on the Folder itself, not on its contents
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
@@ -904,13 +907,17 @@ public class Folder extends MailItem {
 
         DbMailItem.alterTag(tag, Arrays.asList(mId), newValue);
 
-        // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
         if (isNoInheritFlag) {
-            if (!newValue && mRights != null && !mRights.isEmpty()) {
+            markItemModified(Change.MODIFIED_ACL);
+            if (!newValue && mRights != null) {
+                // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
                 mRights = null;
                 saveMetadata();
             } else if (newValue) {
-                setPermissions(effectiveACL);
+                // setting the "no inherit" flag turns inherit OFF and thus must make a copy of the folder's effective ACL
+                //   note: can't just call Folder.setPermissions() because at this point inherit is OFF and mRights is NULL, so delegated admin would fail
+                mRights = effectiveACL;
+                saveMetadata();
             }
         }
     }
