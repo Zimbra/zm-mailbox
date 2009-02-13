@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -58,11 +59,11 @@ public class Alias extends MailTarget {
         String targetType;
         
         if (entry instanceof CalendarResource)
-            targetType = "resource";
+            targetType = TargetType.calresource.getCode();
         else if (entry instanceof Account)
-            targetType = "account";
+            targetType = TargetType.account.getCode();
         else if (entry instanceof DistributionList)
-            targetType = "distributionlist";
+            targetType = TargetType.dl.getCode();
         else
             throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
         
