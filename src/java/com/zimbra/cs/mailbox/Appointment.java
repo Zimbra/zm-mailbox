@@ -306,9 +306,11 @@ public class Appointment extends CalendarItem {
         Account authAcct = account;
         if (octxt != null) {
             Account authuser = octxt.getAuthenticatedUser();
-            onBehalfOf = !account.getId().equalsIgnoreCase(authuser.getId());
-            if (onBehalfOf)
-                authAcct = authuser;
+            if (authuser != null) {
+                onBehalfOf = !account.getId().equalsIgnoreCase(authuser.getId());
+                if (onBehalfOf)
+                    authAcct = authuser;
+            }
         }
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
         boolean allowPrivateAccess = allowPrivateAccess(authAcct, asAdmin);

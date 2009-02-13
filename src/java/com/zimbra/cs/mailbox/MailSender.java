@@ -123,17 +123,15 @@ public class MailSender {
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
+        if (authuser == null)
+            authuser = mbox.getAccount();
         Identity identity = null;
-        boolean saveToSent = true;
-        
-        if (authuser != null) {
-            if (identityId != null) {
-                identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
-            } else {
-                identity = Provisioning.getInstance().getDefaultIdentity(authuser); 
-            }
-            saveToSent = identity.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
-        }
+        if (identityId != null)
+            identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
+        else
+            identity = Provisioning.getInstance().getDefaultIdentity(authuser); 
+
+        boolean saveToSent = identity.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
 
         return sendMimeMessage(octxt, mbox, saveToSent, mm, newContacts, uploads, origMsgId, replyType, identity,
                                ignoreFailedAddresses, replyToSender);

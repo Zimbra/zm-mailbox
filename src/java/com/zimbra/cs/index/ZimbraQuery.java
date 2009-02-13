@@ -2603,8 +2603,12 @@ public final class ZimbraQuery {
                 //
                 // Now, for all the LOCAL PARTS of the query, add the trash/spam exclusion part
                 //
-                boolean includeTrash = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-                boolean includeSpam = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+                boolean includeTrash = false;
+                boolean includeSpam = false;
+                if (authAcct != null) {
+                    includeTrash = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+                    includeSpam = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+                }
                 if (!includeTrash || !includeSpam) {
                     ArrayList<QueryOperation> toAdd = new ArrayList<QueryOperation>();
                     for (Iterator<QueryOperation> iter = localOps.mQueryOperations.iterator(); iter.hasNext();) {
