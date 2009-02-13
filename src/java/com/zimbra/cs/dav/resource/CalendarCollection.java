@@ -22,10 +22,12 @@ import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -129,35 +131,63 @@ public class CalendarCollection extends Collection {
 		return Collections.emptyList();
 	}
 
+    Map<String,DavResource> mAppts;
+    
 	/* Returns all the appointments specified in hrefs */
     @Override
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
+		Map<String,String> uidmap = getHrefUidMap(hrefs, true);
+		
 		ArrayList<DavResource> resp = new ArrayList<DavResource>();
-		for (String href : hrefs) {
-			DavResource rs = null;
+		if (mAppts == null)
 			try {
-				href = URLDecoder.decode(href, "UTF-8");
-				rs = UrlNamespace.getResourceAtUrl(ctxt, href);
-				rs.mUri = href;
-			} catch (IOException e) {
-				ZimbraLog.dav.warn("can't decode href "+href, e);
+				mAppts = getAppointmentMap(ctxt, sAllCalItems);
+			} catch (ServiceException se) {
+				throw new DavException("can't get appointments", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 			}
-			if (rs ==  null)
-				rs = new DavResource.InvalidResource(href, getOwner());
-			rs.setHref(href);
-			resp.add(rs);
+		for (String uid : uidmap.keySet()) {
+			String href = uidmap.get(uid);
+			DavResource appt = mAppts.get(uid);
+			if (appt == null)
+				appt = new DavResource.InvalidResource(href, getOwner());
+			appt.setHref(href);
+			resp.add(appt);
 		}
 		return resp;
 	}
 	
+    protected Map<String,String> getHrefUidMap(java.util.Collection<String> hrefs, boolean reverseMap) {
+		HashMap<String,String> uidmap = new HashMap<String,String>();
+		for (String href : hrefs) {
+			try {
+				href = URLDecoder.decode(href, "UTF-8");
+				int start = href.lastIndexOf('/') + 1;
+				int end = href.lastIndexOf(".ics");
+				if (start > 0 && end > 0 && end > start) {
+					if (reverseMap)
+						uidmap.put(href.substring(start, end), href);
+					else
+						uidmap.put(href, href.substring(start, end));
+				}
+			} catch (IOException e) {
+				ZimbraLog.dav.warn("can't decode href "+href, e);
+			}
+		}
+		return uidmap;
+    }
+    
 	/* Returns the appoinments in the specified time range. */
 	public java.util.Collection<DavResource> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+		return getAppointmentMap(ctxt, range).values();
+	}
+	
+	protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
 		java.util.Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
-        ArrayList<DavResource> children = new ArrayList<DavResource>();
+        HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         for (CalendarItem calItem : calItems)
-            children.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
-        return children;
+            appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
+        return appts;
 	}
 	
 	private String findSummary(ZVCalendar cal) {

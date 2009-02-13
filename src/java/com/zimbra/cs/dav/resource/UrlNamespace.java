@@ -224,7 +224,7 @@ public class UrlNamespace {
 	
 	private static class RemoteFolder {
 	    static final long AGE = 5L * 60L * 1000L;
-	    RemoteCalendarCollection folder;
+	    CalendarCollection folder;
 	    long ts;
 	    boolean isStale(long now) {
 	        return (ts + AGE) < now;
@@ -297,11 +297,7 @@ public class UrlNamespace {
                 // the only information we have is the calendar UID and remote account folder id.
                 // we need the itemId for the calendar appt in order to query from the remote server.
                 // so we'll need to do getApptSummaries on the remote folder, then cache the result.
-                RemoteCalendarCollection col = checkCachedCalendarMountpoint(mp);
-                if (col == null) {
-                	col = new RemoteCalendarCollection(ctxt, mp);
-                	cacheCalendarMountpoint(col, mp);
-                }
+                RemoteCalendarCollection col = getRemoteCalendarCollection(ctxt, mp);
                 DavResource res = col.getAppointment(ctxt, uid);
                 if (res == null)
                     throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
@@ -318,7 +314,7 @@ public class UrlNamespace {
         return getResourceFromMailItem(ctxt, item);
     }
     
-    private static RemoteCalendarCollection checkCachedCalendarMountpoint(Mountpoint mp) {
+    private static RemoteCalendarCollection getRemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
         RemoteFolder remoteFolder = null;
         synchronized (sApptSummariesMap) {
@@ -329,19 +325,15 @@ public class UrlNamespace {
                 remoteFolder = null;
             }
         }
-        if (remoteFolder != null)
-        	return remoteFolder.folder;
-    	return null;
-    }
-
-    private static void cacheCalendarMountpoint(RemoteCalendarCollection col, Mountpoint mp) {
-        ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
-        RemoteFolder remoteFolder = new RemoteFolder();
-        remoteFolder.folder = col;
+        if (remoteFolder != null && remoteFolder.folder instanceof RemoteCalendarCollection)
+        	return (RemoteCalendarCollection)remoteFolder.folder;
+        remoteFolder = new RemoteFolder();
+        remoteFolder.folder = new RemoteCalendarCollection(ctxt, mp);
         remoteFolder.ts = System.currentTimeMillis();
         synchronized (sApptSummariesMap) {
         	sApptSummariesMap.put(remoteId, remoteFolder);
         }
+        return (RemoteCalendarCollection)remoteFolder.folder;
     }
     
     public static void invalidateApptSummariesCache(String acctId, int itemId) {
@@ -384,13 +376,8 @@ public class UrlNamespace {
             case MailItem.TYPE_MOUNTPOINT :
 				Mountpoint mp = (Mountpoint) item;
             	viewType = mp.getDefaultView();
-            	if (viewType == MailItem.TYPE_APPOINTMENT) {
-            		resource = checkCachedCalendarMountpoint(mp);
-            		if (resource == null) {
-                		resource = new RemoteCalendarCollection(ctxt, mp);
-                		cacheCalendarMountpoint((RemoteCalendarCollection)resource, mp);
-            		}
-            	}
+            	if (viewType == MailItem.TYPE_APPOINTMENT)
+            		resource = getRemoteCalendarCollection(ctxt, mp);
             	else
             		resource = new RemoteCollection(ctxt, mp);
                 break;

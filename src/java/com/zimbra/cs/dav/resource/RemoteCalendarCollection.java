@@ -17,12 +17,12 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletResponse;
@@ -91,18 +91,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
 			}
 		}
 		
-		HashMap<String,String> uidmap = new HashMap<String,String>();
-		for (String href : hrefs) {
-			try {
-				href = URLDecoder.decode(href, "UTF-8");
-				int start = href.lastIndexOf('/') + 1;
-				int end = href.lastIndexOf(".ics");
-				if (start > 0 && end > 0 && end > start)
-					uidmap.put(href, href.substring(start, end));
-			} catch (IOException e) {
-				ZimbraLog.dav.warn("can't decode href "+href, e);
-			}
-		}
+		Map<String,String> uidmap = getHrefUidMap(hrefs, false);
 		
 		if (needCalendarData)
 			try {
@@ -195,12 +184,12 @@ public class RemoteCalendarCollection extends CalendarCollection {
         
         mChildren = new ArrayList<DavResource>();
         for (ZAppointmentHit appt : results.get(0).getAppointments()) {
-            DavResource res = mAppointments.get(appt.getUid().toLowerCase());
+            DavResource res = mAppointments.get(appt.getUid());
             if (res != null)
                 continue;
             res = new CalendarObject.RemoteCalendarObject(mUri, mOwner, appt, this);
             mChildren.add(res);
-            mAppointments.put(appt.getUid().toLowerCase(), res);
+            mAppointments.put(appt.getUid(), res);
         }
         
         return mChildren;
