@@ -713,9 +713,11 @@ public class CalendarMailSender {
         Account authAcct = acct;
         if (octxt != null) {
             Account authuser = octxt.getAuthenticatedUser();
-            onBehalfOf = !acct.getId().equalsIgnoreCase(authuser.getId());
-            if (onBehalfOf)
-                authAcct = authuser;
+            if (authuser != null) {
+                onBehalfOf = !acct.getId().equalsIgnoreCase(authuser.getId());
+                if (onBehalfOf)
+                    authAcct = authuser;
+            }
         }
         Locale lc;
         Account organizer = inv.getOrganizerAccount();

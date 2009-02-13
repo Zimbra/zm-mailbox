@@ -412,8 +412,9 @@ public abstract class AuthProvider {
                     throw e;
             } 
         }
-        
-        throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
+
+        String acctName = acct != null ? acct.getName() : "null";
+        throw AuthProviderException.FAILURE("cannot get authtoken from account " + acctName);
     }
     
     public static AuthToken getAuthToken(Account acct, long expires) throws AuthProviderException {

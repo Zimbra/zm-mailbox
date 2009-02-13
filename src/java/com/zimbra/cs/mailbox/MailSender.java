@@ -109,6 +109,8 @@ public class MailSender {
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
+        if (authuser == null)
+            authuser = mbox.getAccount();
         Identity identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
         if (identity == null)
             identity = Provisioning.getInstance().getDefaultIdentity(authuser);

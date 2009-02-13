@@ -636,7 +636,7 @@ public class ItemActionHelper {
             org.setAddress(target.getName());
             org.setCn(target.getAttr(Provisioning.A_displayName));
             Account authAcct = mOpCtxt != null ? mOpCtxt.getAuthenticatedUser() : target;
-            if (authAcct.equals(target))
+            if (authAcct == null || authAcct.equals(target))
                 org.setSentBy(null);
             else
                 org.setSentBy(authAcct.getName());
