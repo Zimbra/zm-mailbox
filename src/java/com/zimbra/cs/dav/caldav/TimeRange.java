@@ -21,6 +21,9 @@ import java.util.TimeZone;
 
 import org.dom4j.Element;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavElements;
 
 /**
@@ -33,6 +36,25 @@ public class TimeRange {
 	private long mStart;
 	private long mEnd;
 
+	public TimeRange(String name) {
+		try {
+			Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
+			if (acct != null) {
+				mStart = acct.getTimeInterval(Provisioning.A_zimbraCalendarCalDavSyncStart, 0);
+				mEnd = acct.getTimeInterval(Provisioning.A_zimbraCalendarCalDavSyncEnd, 0);
+			}
+		} catch (ServiceException se) {
+		}
+		long now = System.currentTimeMillis();
+		if (mStart == 0)
+			mStart = -1;
+		else
+			mStart = now - mStart;
+		if (mEnd == 0)
+			mEnd = -1;
+		else
+			mEnd = now + mEnd;
+	}
 	public TimeRange(Element elem) {
 		mStart = mEnd = 0;
 		if (elem != null && elem.getQName().equals(DavElements.E_TIME_RANGE)) {
@@ -74,6 +96,12 @@ public class TimeRange {
     	return calendar.getTimeInMillis();
     }
     
+    public void intersection(TimeRange another) {
+    	if (mStart < another.mStart)
+    		mStart = another.mStart;
+    	if (mEnd > another.mEnd)
+    		mEnd = another.mEnd;
+    }
 	public long getStart() {
 		return mStart;
 	}
