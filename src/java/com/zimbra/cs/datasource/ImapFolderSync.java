@@ -386,8 +386,8 @@ class ImapFolderSync {
                     int flags = tracker.getTrackedFlags();
                     updateFlags(tracker, SyncUtil.zimbraToImapFlags(flags));
                 } else {
-                    // Case 4: Message moved from another folder. Let this
-                    // case be handled when the originating folder is processed.
+                    // Case 4: Message moved from another folder. Let move be
+                    // handled when source folder is processed.
                 }
             } else if (trackedFolderId == folderId) {
                 // Case 3: Message moved to another folder. Try to use COPY
@@ -407,21 +407,6 @@ class ImapFolderSync {
     public void finishSync() throws ServiceException, IOException {
         if (!completed) return;
         if (newMsgIds != null && !newMsgIds.isEmpty()) {
-            /// XXXX remove tracker from source folder - jj
-            // Skip messages for which a tracker still exists. This indicates
-            // that the message was moved from another folder which is not
-            // being synchronized, otherwise the tracker would have been
-            // deleted. The message will be appended once synchronization is
-            // enabled for the source folder, otherwise we will end up
-            // with a duplicate tracker.
-            Iterator<Integer> it = newMsgIds.iterator();
-            while (it.hasNext()) {
-                int id = it.next();
-                if (DbImapMessage.getImapMessage(mailbox, id) != null) {
-                    LOG.debug("Not appending message with item id %d since it was moved from another folder which is not being synchronized", id);
-                    it.remove();
-                }
-            }
             appendNewMessages(newMsgIds);
         }
         if (syncState != null) {
@@ -571,6 +556,11 @@ class ImapFolderSync {
             }
             remoteFolder.debug("Appending new message with item id %d", id);
             try {
+                // Bug 27924: delete tracker from source folder if it exists
+                Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
+                if (pair != null) {
+                    DbImapMessage.deleteImapMessage(mailbox, pair.getSecond(), id);
+                }
                 long uid = appendMessage(msg);
                 storeImapMessage(uid, id, msg.getFlagBitmask());
                 clearError(id);
@@ -616,6 +606,11 @@ class ImapFolderSync {
             Flags flags = SyncUtil.zimbraToImapFlags(ai.zflags);
             Date date = SyncUtil.getInternalDate(msg, mm);
             try {
+                // Bug 27924: delete tracker from source folder if it exists
+                Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
+                if (pair != null) {
+                    DbImapMessage.deleteImapMessage(mailbox, pair.getSecond(), id);
+                }
                 remoteFolder.appendMessage(mm, flags, date);
                 if (ai.messageId != null) {
                     // TODO How can Message-ID ever be missing?
