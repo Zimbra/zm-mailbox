@@ -4709,8 +4709,12 @@ public class Mailbox {
             Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
             // if the rules say to drop this duplicated incoming message, return null now
             // don't dedupe messages carrying calendar part
-            if (pm.getiCalendar() == null && dedupe(pm.getMimeMessage(), sentMsgID))
+            if (pm.getiCalendar() == null && dedupe(pm.getMimeMessage(), sentMsgID)) {
+                ZimbraLog.mailbox.info(
+                    "Not delivering message with Message-ID %s because it is a duplicate of sent message %d.",
+                    msgidHeader, sentMsgID);
                 return null;
+            }
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
