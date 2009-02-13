@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.rmi.RemoteException;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
@@ -276,7 +275,7 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private Folder getFolder(int id) throws ServiceException {
+    public Folder getFolder(int id) throws ServiceException {
         try {
             return localRootFolder.getMailbox().getFolderById(null, id);
         } catch (MailServiceException.NoSuchItemException e) {
