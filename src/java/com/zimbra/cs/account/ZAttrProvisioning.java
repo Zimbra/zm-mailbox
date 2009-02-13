@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090212-1436 */
+    /* build: 5.0 pshao 20090212-2106 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1399,6 +1399,36 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=652)
     public static final String A_zimbraCalendarCalDavDisableScheduling = "zimbraCalendarCalDavDisableScheduling";
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public static final String A_zimbraCalendarCalDavSharedFolderCacheDuration = "zimbraCalendarCalDavSharedFolderCacheDuration";
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public static final String A_zimbraCalendarCalDavSyncEnd = "zimbraCalendarCalDavSyncEnd";
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public static final String A_zimbraCalendarCalDavSyncStart = "zimbraCalendarCalDavSyncStart";
 
     /**
      * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
@@ -4473,7 +4503,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMSoundsEnabled = "zimbraPrefIMSoundsEnabled";
 
     /**
-     * wwhether to enable toaster notification for IM
+     * whether to enable toaster notification for IM
      *
      * @since ZCS 6.0.0
      */

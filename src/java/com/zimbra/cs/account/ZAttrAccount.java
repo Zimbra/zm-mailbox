@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090212-1436 */
+    /* build: 5.0 pshao 20090212-2106 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3431,6 +3431,306 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetCOSId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCOSId, "");
+        return attrs;
+    }
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * <p>Use getCalendarCalDavSharedFolderCacheDurationAsString to access value as a string.
+     *
+     * @see #getCalendarCalDavSharedFolderCacheDurationAsString()
+     *
+     * @return zimbraCalendarCalDavSharedFolderCacheDuration in millseconds, or 300000 (5m)  if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public long getCalendarCalDavSharedFolderCacheDuration() {
+        return getTimeInterval(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, 300000L);
+    }
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * @return zimbraCalendarCalDavSharedFolderCacheDuration, or "5m" if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public String getCalendarCalDavSharedFolderCacheDurationAsString() {
+        return getAttr(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, "5m");
+    }
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * @param zimbraCalendarCalDavSharedFolderCacheDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public void setCalendarCalDavSharedFolderCacheDuration(String zimbraCalendarCalDavSharedFolderCacheDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, zimbraCalendarCalDavSharedFolderCacheDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * @param zimbraCalendarCalDavSharedFolderCacheDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public Map<String,Object> setCalendarCalDavSharedFolderCacheDuration(String zimbraCalendarCalDavSharedFolderCacheDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, zimbraCalendarCalDavSharedFolderCacheDuration);
+        return attrs;
+    }
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public void unsetCalendarCalDavSharedFolderCacheDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CalDAV shared folder cache duration
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=817)
+    public Map<String,Object> unsetCalendarCalDavSharedFolderCacheDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, "");
+        return attrs;
+    }
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * <p>Use getCalendarCalDavSyncEndAsString to access value as a string.
+     *
+     * @see #getCalendarCalDavSyncEndAsString()
+     *
+     * @return zimbraCalendarCalDavSyncEnd in millseconds, or -1 if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public long getCalendarCalDavSyncEnd() {
+        return getTimeInterval(Provisioning.A_zimbraCalendarCalDavSyncEnd, -1L);
+    }
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * @return zimbraCalendarCalDavSyncEnd, or null if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public String getCalendarCalDavSyncEndAsString() {
+        return getAttr(Provisioning.A_zimbraCalendarCalDavSyncEnd, null);
+    }
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * @param zimbraCalendarCalDavSyncEnd new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public void setCalendarCalDavSyncEnd(String zimbraCalendarCalDavSyncEnd) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncEnd, zimbraCalendarCalDavSyncEnd);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * @param zimbraCalendarCalDavSyncEnd new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public Map<String,Object> setCalendarCalDavSyncEnd(String zimbraCalendarCalDavSyncEnd, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncEnd, zimbraCalendarCalDavSyncEnd);
+        return attrs;
+    }
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public void unsetCalendarCalDavSyncEnd() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncEnd, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * see description of zimbraCalendarCalDavSyncStart
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=816)
+    public Map<String,Object> unsetCalendarCalDavSyncEnd(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncEnd, "");
+        return attrs;
+    }
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * <p>Use getCalendarCalDavSyncStartAsString to access value as a string.
+     *
+     * @see #getCalendarCalDavSyncStartAsString()
+     *
+     * @return zimbraCalendarCalDavSyncStart in millseconds, or -1 if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public long getCalendarCalDavSyncStart() {
+        return getTimeInterval(Provisioning.A_zimbraCalendarCalDavSyncStart, -1L);
+    }
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * @return zimbraCalendarCalDavSyncStart, or null if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public String getCalendarCalDavSyncStartAsString() {
+        return getAttr(Provisioning.A_zimbraCalendarCalDavSyncStart, null);
+    }
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * @param zimbraCalendarCalDavSyncStart new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public void setCalendarCalDavSyncStart(String zimbraCalendarCalDavSyncStart) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncStart, zimbraCalendarCalDavSyncStart);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * @param zimbraCalendarCalDavSyncStart new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public Map<String,Object> setCalendarCalDavSyncStart(String zimbraCalendarCalDavSyncStart, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncStart, zimbraCalendarCalDavSyncStart);
+        return attrs;
+    }
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public void unsetCalendarCalDavSyncStart() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncStart, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits
+     * the window of appointment data available via CalDAV. for example when
+     * zimbraCalendarCalDavSyncStart is set to 30 days, and
+     * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
+     * between (now - 30 days) and (now + 1 year) will be available via
+     * CalDAV. When they are unset all the appointments are available via
+     * CalDAV.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=815)
+    public Map<String,Object> unsetCalendarCalDavSyncStart(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavSyncStart, "");
         return attrs;
     }
 
@@ -20311,7 +20611,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * wwhether to enable toaster notification for IM
+     * whether to enable toaster notification for IM
      *
      * @return zimbraPrefIMToasterEnabled, or false if unset
      *
@@ -20323,7 +20623,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * wwhether to enable toaster notification for IM
+     * whether to enable toaster notification for IM
      *
      * @param zimbraPrefIMToasterEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20338,7 +20638,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * wwhether to enable toaster notification for IM
+     * whether to enable toaster notification for IM
      *
      * @param zimbraPrefIMToasterEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20354,7 +20654,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * wwhether to enable toaster notification for IM
+     * whether to enable toaster notification for IM
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20368,7 +20668,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * wwhether to enable toaster notification for IM
+     * whether to enable toaster notification for IM
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

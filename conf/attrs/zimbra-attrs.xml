@@ -4075,5 +4075,24 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to enable toaster notification for IM</desc>
 </attr>
 
+<attr id="815" name="zimbraCalendarCalDavSyncStart" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.14">
+  <desc>
+    zimbraCalendarCalDavSyncStart and zimbraCalendarCalDavSyncEnd limits the
+    window of appointment data available via CalDAV.  for example when
+    zimbraCalendarCalDavSyncStart is set to 30 days, and
+    zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments between
+    (now - 30 days) and (now + 1 year) will be available via CalDAV.  When they are
+    unset all the appointments are available via CalDAV.
+  </desc>
+</attr>
+
+<attr id="816" name="zimbraCalendarCalDavSyncEnd" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.14">
+  <desc>see description of zimbraCalendarCalDavSyncStart</desc>
+</attr>
+
+<attr id="817" name="zimbraCalendarCalDavSharedFolderCacheDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.14">
+  <defaultCOSValue>5m</defaultCOSValue>
+  <desc>CalDAV shared folder cache duration</desc>
+</attr>
 
 </attrs>
