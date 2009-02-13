@@ -232,10 +232,8 @@ class ImapFolderSync {
         if (fullSync) {
             // If UIDPLUS supported, use COPY rather than APPEND to remotely
             // move messages that have moved locally between folders.
-            if (hasUidPlus()) {
-                for (ImapMessage msg : DbImapMessage.getMovedMessages(mailbox, localFolder.getId())) {
-                    moveMessage(msg);
-                }
+            if (hasCopyUid()) {
+                moveMessages();
             }
             syncFlags(lastUid);
         } else if (lastModSeq > 0) {
@@ -264,6 +262,20 @@ class ImapFolderSync {
         trackedMsgs = null;
         localMsgIds = null;
         completed = true;
+    }
+
+    private void moveMessages() throws IOException, ServiceException {
+        List<ImapMessage> msgs =
+            DbImapMessage.getMovedMessages(mailbox, localFolder.getId());
+        if (!msgs.isEmpty()) {
+            for (ImapMessage msg : msgs) {
+                moveMessage(msg);
+            }
+            if (!hasUidPlus()) {
+                // Expunge messages so we don't end up downloading flags again
+                connection.expunge();
+            }
+        }
     }
 
     private SyncState getSyncState(boolean fullSync) throws ServiceException {
@@ -409,6 +421,20 @@ class ImapFolderSync {
     public void finishSync() throws ServiceException, IOException {
         if (!completed) return;
         if (newMsgIds != null && !newMsgIds.isEmpty()) {
+            // Skip messages for which a tracker still exists. This indicates
+            // that the message was moved from another folder which is not
+            // being synchronized, otherwise the tracker would have been
+            // deleted. The message will be appended once synchronization is
+            // enabled for the source folder, otherwise we will end up
+            // with a duplicate tracker.
+            Iterator<Integer> it = newMsgIds.iterator();
+            while (it.hasNext()) {
+                int id = it.next();
+                if (DbImapMessage.getImapMessage(mailbox, id) != null) {
+                    LOG.debug("Not appending message with item id %d since it was moved from another folder which is not being synchronized", id);
+                    it.remove();
+                }
+            }
             appendNewMessages(newMsgIds);
         }
         if (syncState != null) {
@@ -532,7 +558,7 @@ class ImapFolderSync {
         remoteFolder.info("Appending %d new message(s) to remote IMAP folder",
                           newIds.size());
         try {
-            if (hasUidPlus()) {
+            if (hasAppendUid()) {
                 appendMessages(newIds);
             } else {
                 appendMessagesNoUidPlus(newIds);
@@ -573,14 +599,10 @@ class ImapFolderSync {
         Flags flags = SyncUtil.zimbraToImapFlags(msg.getFlagBitmask());
         Date date = SyncUtil.getInternalDate(msg, mm);
         long uid = remoteFolder.appendMessage(mm, flags, date);
-        if (uid <= 0 && hasUidPlus()) {
+        if (uid <= 0 && hasAppendUid()) {
             throw new CommandFailedException("APPEND", "UIDPLUS supported but UID not returned");
         }
         return uid;
-    }
-
-    private boolean hasUidPlus() {
-        return connection.hasUidPlus() || isYahoo();
     }
 
     private void appendMessagesNoUidPlus(List<Integer> ids)
@@ -1128,7 +1150,19 @@ class ImapFolderSync {
         return trackedFlags & (localFlags & remoteFlags) |
               ~trackedFlags & (localFlags | remoteFlags);
     }
+    
+    private boolean hasAppendUid() {
+        return hasUidPlus() || isYahoo();
+    }
 
+    private boolean hasCopyUid() {
+        return hasUidPlus() || isYahoo();
+    }
+
+    private boolean hasUidPlus() {
+        return connection.hasUidPlus();
+    }
+    
     private boolean isYahoo() {
         return connection.hasCapability(AUTH_XYMCOOKIEB64);
     }
