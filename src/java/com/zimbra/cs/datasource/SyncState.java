@@ -43,6 +43,12 @@ public class SyncState {
         this.lastUid = lastUid;
     }
 
+    public void updateLastUid(long uid) {
+        if (uid > lastUid) {
+            lastUid = uid;
+        }
+    }
+
     public void setLastModSeq(int lastModSeq) {
         this.lastModSeq = lastModSeq;
     }

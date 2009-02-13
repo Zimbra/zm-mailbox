@@ -264,20 +264,6 @@ class ImapFolderSync {
         completed = true;
     }
 
-    private void moveMessages() throws IOException, ServiceException {
-        List<ImapMessage> msgs =
-            DbImapMessage.getMovedMessages(mailbox, localFolder.getId());
-        if (!msgs.isEmpty()) {
-            for (ImapMessage msg : msgs) {
-                moveMessage(msg);
-            }
-            if (!hasUidPlus()) {
-                // Expunge messages so we don't end up downloading flags again
-                connection.expunge();
-            }
-        }
-    }
-
     private SyncState getSyncState(boolean fullSync) throws ServiceException {
         syncState = ds.removeSyncState(localFolder.getId());
         if (syncState == null || fullSync) {
@@ -421,6 +407,7 @@ class ImapFolderSync {
     public void finishSync() throws ServiceException, IOException {
         if (!completed) return;
         if (newMsgIds != null && !newMsgIds.isEmpty()) {
+            /// XXXX remove tracker from source folder - jj
             // Skip messages for which a tracker still exists. This indicates
             // that the message was moved from another folder which is not
             // being synchronized, otherwise the tracker would have been
@@ -726,9 +713,9 @@ class ImapFolderSync {
         }
     }
 
-    private void storeImapMessage(long uid, int itemId, int flags)
+    private void storeImapMessage(long uid, int msgId, int flags)
         throws ServiceException {
-        DbImapMessage.storeImapMessage(mailbox, localFolder.getId(), uid, itemId, flags);
+        DbImapMessage.storeImapMessage(mailbox, localFolder.getId(), uid, msgId, flags);
         if (uid > syncState.getLastUid()) {
             syncState.setLastUid(uid);
         }
@@ -1084,9 +1071,19 @@ class ImapFolderSync {
         }
     }
 
+    private void moveMessages() throws IOException, ServiceException {
+        List<ImapMessage> msgs =
+            DbImapMessage.getMovedMessages(mailbox, localFolder.getId());
+        if (!msgs.isEmpty()) {
+            for (ImapMessage msg : msgs) {
+                moveMessage(msg);
+            }
+        }
+    }
+
     private boolean moveMessage(ImapMessage msgTracker)
         throws ServiceException, IOException {
-        if (!hasUidPlus()) return false;
+        if (!hasCopyUid()) return false;
         Message msg;
         Folder folder;
         try {
@@ -1096,8 +1093,9 @@ class ImapFolderSync {
             return false;
         }
         if (!ds.isSyncEnabled(folder)) return false;
+        int fid = folder.getId();
         ImapFolderCollection trackedFolders = imapSync.getTrackedFolders();
-        ImapFolder folderTracker = trackedFolders.getByItemId(folder.getId());
+        ImapFolder folderTracker = trackedFolders.getByItemId(fid);
         String remotePath;
         if (folderTracker != null) {
             remotePath = folderTracker.getRemotePath();
@@ -1120,11 +1118,11 @@ class ImapFolderSync {
         // If remote folder created on demand, then create folder tracker
         if (folderTracker == null) {
             imapSync.createFolderTracker(
-                folder.getId(), folder.getPath(), remotePath, cr.getUidValidity());
+                fid, folder.getPath(), remotePath, cr.getUidValidity());
         } else {
             // If target folder was already sync'd, then make sure we remove
             // msg id from folder's list of new messages to be appended
-            ImapFolderSync syncedFolder = imapSync.getSyncedFolder(folder.getId());
+            ImapFolderSync syncedFolder = imapSync.getSyncedFolder(fid);
             if (syncedFolder != null && syncedFolder.newMsgIds != null) {
                 syncedFolder.newMsgIds.remove(Integer.valueOf(msg.getId()));
             }
@@ -1136,8 +1134,20 @@ class ImapFolderSync {
         // Delete original message tracker and create new one
         DbImapMessage.deleteImapMessage(mailbox, localFolder.getId(), msg.getId());
         long uid = Long.parseLong(cr.getUids());
-        DbImapMessage.storeImapMessage(mailbox, folder.getId(), uid,
-            msg.getId(), msgTracker.getTrackedFlags());
+        DbImapMessage.storeImapMessage(
+            mailbox, fid, uid, msg.getId(), msgTracker.getTrackedFlags());
+        // This bit of ugliness is to make sure we update target folder sync state
+        // to reflect UID that was just added
+        ImapFolderSync syncedFolder = imapSync.getSyncedFolder(fid);
+        if (syncedFolder != null && syncedFolder.syncState != null) {
+            syncedFolder.syncState.updateLastUid(uid);
+        } else {
+            SyncState ss = ds.getSyncState(fid);
+            if (ss != null) {
+                ss.updateLastUid(uid);
+                ds.putSyncState(fid, ss);
+            }
+        }
         return true;
     }
 
