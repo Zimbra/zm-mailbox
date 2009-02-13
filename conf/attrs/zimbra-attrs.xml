@@ -4091,7 +4091,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="817" name="zimbraCalendarCalDavSharedFolderCacheDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.14">
-  <defaultCOSValue>5m</defaultCOSValue>
+  <defaultCOSValue>1m</defaultCOSValue>
   <desc>CalDAV shared folder cache duration</desc>
 </attr>
 

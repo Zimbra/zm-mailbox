@@ -89,8 +89,6 @@ public abstract class Filter {
 					ZimbraLog.dav.info("unrecognized filter "+name.getNamespaceURI()+":"+name.getName());
 			}
 		}
-		if (mTimeRange == null)
-			mTimeRange = new TimeRange(null);
 	}
 
 	public boolean match(ZCalendar.ZComponent comp) {

@@ -100,7 +100,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		        ZimbraLog.dav.warn("can't proxy calendar data for "+ctxt.getAuthAccount().getName(), e);
 			}
 		
-		get(ctxt, sAllCalItems);
+		get(ctxt, null);
 		ArrayList<DavResource> resp = new ArrayList<DavResource>();
 		for (String href : uidmap.keySet()) {
 			String uid = uidmap.get(href);
@@ -176,7 +176,22 @@ public class RemoteCalendarCollection extends CalendarCollection {
                 return Collections.emptyList();
             }
             String folderId = Integer.toString(mItemId);
-            results = zmbx.getApptSummaries(null, range.getStart(), range.getEnd(), new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
+        	long start = 0;
+        	long end = 0;
+            if (range != null) {
+            	start = range.getStart();
+            	end = range.getEnd();
+            } else {
+            	TimeRange mine = new TimeRange(getOwner());
+            	Account remoteAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            	if (remoteAcct != null) {
+                	TimeRange theirs = new TimeRange(remoteAcct.getName());
+            		mine.intersection(theirs);
+            	}
+            	start = mine.getStart();
+            	end = mine.getEnd();
+            }
+            results = zmbx.getApptSummaries(null, start, end, new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
         } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't proxy the request for "+ctxt.getAuthAccount().getName(), e);
             return Collections.emptyList();

@@ -223,11 +223,19 @@ public class UrlNamespace {
 	private static LRUMap sRenamedResourceMap = new LRUMap(100);
 	
 	private static class RemoteFolder {
-	    static final long AGE = 5L * 60L * 1000L;
+	    static final long AGE = 60L * 1000L;
 	    CalendarCollection folder;
 	    long ts;
 	    boolean isStale(long now) {
-	        return (ts + AGE) < now;
+	    	if (folder == null)
+	    		return true;
+	    	try {
+		    	Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, folder.mOwnerId);
+		    	long interval = owner.getTimeInterval(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, AGE);
+		    	return (ts + interval) < now;
+	    	} catch (Exception e) {
+	    	}
+	    	return true;
 	    }
 	}
 	

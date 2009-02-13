@@ -64,6 +64,8 @@ public class CalendarQuery extends Report {
 		
 		CalendarCollection cal = (CalendarCollection) rsc;
 		TimeRange tr = qctxt.componentFilter.getTimeRange();
+		if (tr == null)
+			tr = new TimeRange(rsc.getOwner());
 
 		for (DavResource calItem : cal.get(ctxt, tr))
 		    handleCalendarItem(qctxt, calItem);

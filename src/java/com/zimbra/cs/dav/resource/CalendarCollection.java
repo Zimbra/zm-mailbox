@@ -114,17 +114,11 @@ public class CalendarCollection extends Collection {
 		//
 	}
 	
-	protected static TimeRange sAllCalItems;
-	
-	static {
-		sAllCalItems = new TimeRange(null);
-	}
-	
 	/* Returns all the appoinments stored in the calendar as DavResource. */
     @Override
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
-			return get(ctxt, sAllCalItems);
+			return get(ctxt, null);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get calendar items", se);
 		}
@@ -141,7 +135,7 @@ public class CalendarCollection extends Collection {
 		ArrayList<DavResource> resp = new ArrayList<DavResource>();
 		if (mAppts == null)
 			try {
-				mAppts = getAppointmentMap(ctxt, sAllCalItems);
+				mAppts = getAppointmentMap(ctxt, null);
 			} catch (ServiceException se) {
 				throw new DavException("can't get appointments", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 			}
@@ -183,6 +177,8 @@ public class CalendarCollection extends Collection {
 	
 	protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
+		if (range == null)
+			range = new TimeRange(getOwner());
 		java.util.Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         for (CalendarItem calItem : calItems)
