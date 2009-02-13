@@ -60,10 +60,16 @@ public class CalendarMultiget extends Report {
 				hrefs.add(href);
 			}
 		}
+		long ts = System.currentTimeMillis();
 		DavResource reqResource = ctxt.getRequestedResource();
+		long now = System.currentTimeMillis();
+		ZimbraLog.dav.debug("GetRequestedResource: "+(now - ts)+"ms");
 		RequestProp reqProp = ctxt.getRequestProp();
 		for (DavResource rs : reqResource.getChildren(ctxt, hrefs)) {
 			resp.addResource(ctxt, rs, reqProp, false);
+			ts = now;
+			now = System.currentTimeMillis();
+			ZimbraLog.dav.debug("addResource: "+(now - ts)+"ms");
 		}
 	}
 }
