@@ -4095,4 +4095,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>CalDAV shared folder cache duration</desc>
 </attr>
 
+<attr id="818" name="zimbraPrefConversationOrder" type="enum" value="dateDesc,dateAsc" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
+  <defaultCOSValue>dateDesc</defaultCOSValue>
+  <desc>order of messages displayed within a conversation</desc>
+</attr>
+
+
 </attrs>

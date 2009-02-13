@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090212-2106 */
+    /* build: 5.0 pshao 20090213-1111 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -456,6 +456,22 @@ public class ZAttrProvisioning {
         }
         public boolean isList() { return this == list;}
         public boolean isCards() { return this == cards;}
+    }
+
+    public static enum PrefConversationOrder {
+        dateAsc("dateAsc"),
+        dateDesc("dateDesc");
+        private String mValue;
+        private PrefConversationOrder(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefConversationOrder fromString(String s) throws ServiceException {
+            for (PrefConversationOrder value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDateAsc() { return this == dateAsc;}
+        public boolean isDateDesc() { return this == dateDesc;}
     }
 
     public static enum PrefDedupeMessagesSentToSelf {
@@ -4262,6 +4278,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=148)
     public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public static final String A_zimbraPrefConversationOrder = "zimbraPrefConversationOrder";
 
     /**
      * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll

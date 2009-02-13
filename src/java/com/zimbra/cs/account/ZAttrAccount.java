@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090212-2106 */
+    /* build: 5.0 pshao 20090213-1111 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -18089,6 +18089,137 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefContactsPerPage(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefContactsPerPage, "");
+        return attrs;
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @return zimbraPrefConversationOrder, or ZAttrProvisioning.PrefConversationOrder.dateDesc if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public ZAttrProvisioning.PrefConversationOrder getPrefConversationOrder() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefConversationOrder); return v == null ? ZAttrProvisioning.PrefConversationOrder.dateDesc : ZAttrProvisioning.PrefConversationOrder.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefConversationOrder.dateDesc; }
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @return zimbraPrefConversationOrder, or "dateDesc" if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public String getPrefConversationOrderAsString() {
+        return getAttr(Provisioning.A_zimbraPrefConversationOrder, "dateDesc");
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @param zimbraPrefConversationOrder new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public void setPrefConversationOrder(ZAttrProvisioning.PrefConversationOrder zimbraPrefConversationOrder) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationOrder, zimbraPrefConversationOrder.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @param zimbraPrefConversationOrder new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public Map<String,Object> setPrefConversationOrder(ZAttrProvisioning.PrefConversationOrder zimbraPrefConversationOrder, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationOrder, zimbraPrefConversationOrder.toString());
+        return attrs;
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @param zimbraPrefConversationOrder new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public void setPrefConversationOrderAsString(String zimbraPrefConversationOrder) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationOrder, zimbraPrefConversationOrder);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @param zimbraPrefConversationOrder new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public Map<String,Object> setPrefConversationOrderAsString(String zimbraPrefConversationOrder, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationOrder, zimbraPrefConversationOrder);
+        return attrs;
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public void unsetPrefConversationOrder() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationOrder, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * order of messages displayed within a conversation
+     *
+     * <p>Valid values: [dateDesc, dateAsc]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=818)
+    public Map<String,Object> unsetPrefConversationOrder(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationOrder, "");
         return attrs;
     }
 
