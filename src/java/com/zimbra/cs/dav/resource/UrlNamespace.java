@@ -26,6 +26,7 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -324,12 +325,13 @@ public class UrlNamespace {
     
     private static RemoteCalendarCollection getRemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
+        Pair<String,ItemId> key = new Pair<String,ItemId>(mp.getAccount().getId(), remoteId);
         RemoteFolder remoteFolder = null;
         synchronized (sApptSummariesMap) {
-            remoteFolder = (RemoteFolder)sApptSummariesMap.get(remoteId);
+            remoteFolder = (RemoteFolder)sApptSummariesMap.get(key);
             long now = System.currentTimeMillis();
             if (remoteFolder != null && remoteFolder.isStale(now)) {
-                sApptSummariesMap.remove(remoteId);
+                sApptSummariesMap.remove(key);
                 remoteFolder = null;
             }
         }
@@ -339,15 +341,16 @@ public class UrlNamespace {
         remoteFolder.folder = new RemoteCalendarCollection(ctxt, mp);
         remoteFolder.ts = System.currentTimeMillis();
         synchronized (sApptSummariesMap) {
-        	sApptSummariesMap.put(remoteId, remoteFolder);
+        	sApptSummariesMap.put(key, remoteFolder);
         }
         return (RemoteCalendarCollection)remoteFolder.folder;
     }
     
-    public static void invalidateApptSummariesCache(String acctId, int itemId) {
+    public static void invalidateApptSummariesCache(String ownerId, String acctId, int itemId) {
         ItemId remoteId = new ItemId(acctId, itemId);
+        Pair<String,ItemId> key = new Pair<String,ItemId>(ownerId, remoteId);
         synchronized (sApptSummariesMap) {
-            sApptSummariesMap.remove(remoteId);
+            sApptSummariesMap.remove(key);
         }
     }
     
