@@ -248,7 +248,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         if (status == null || etag == null)
             throw new DavException("can't create resource", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         
-        UrlNamespace.invalidateApptSummariesCache(mRemoteId, mItemId);
+        UrlNamespace.invalidateApptSummariesCache(mOwnerId, mRemoteId, mItemId);
         return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), etag, this, status.equals("" + HttpServletResponse.SC_CREATED));
     }
     
