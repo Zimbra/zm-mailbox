@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090213-1111 */
+    /* build: 5.0 pshao 20090213-2144 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1777,6 +1777,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=788)
     public static final String A_zimbraDataSourceCaldavPollingInterval = "zimbraDataSourceCaldavPollingInterval";
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public static final String A_zimbraDataSourceCalendarPollingInterval = "zimbraDataSourceCalendarPollingInterval";
 
     /**
      * Which security layer to use for connection (cleartext, ssl, starttls)

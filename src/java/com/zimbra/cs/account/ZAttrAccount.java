@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090213-1111 */
+    /* build: 5.0 pshao 20090213-2144 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3441,25 +3441,25 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @see #getCalendarCalDavSharedFolderCacheDurationAsString()
      *
-     * @return zimbraCalendarCalDavSharedFolderCacheDuration in millseconds, or 300000 (5m)  if unset
+     * @return zimbraCalendarCalDavSharedFolderCacheDuration in millseconds, or 60000 (1m)  if unset
      *
      * @since ZCS 5.0.14
      */
     @ZAttr(id=817)
     public long getCalendarCalDavSharedFolderCacheDuration() {
-        return getTimeInterval(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, 300000L);
+        return getTimeInterval(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, 60000L);
     }
 
     /**
      * CalDAV shared folder cache duration
      *
-     * @return zimbraCalendarCalDavSharedFolderCacheDuration, or "5m" if unset
+     * @return zimbraCalendarCalDavSharedFolderCacheDuration, or "1m" if unset
      *
      * @since ZCS 5.0.14
      */
     @ZAttr(id=817)
     public String getCalendarCalDavSharedFolderCacheDurationAsString() {
-        return getAttr(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, "5m");
+        return getAttr(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, "1m");
     }
 
     /**
@@ -4580,6 +4580,106 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetDataSourceCaldavPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceCaldavPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * <p>Use getDataSourceCalendarPollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceCalendarPollingIntervalAsString()
+     *
+     * @return zimbraDataSourceCalendarPollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public long getDataSourceCalendarPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceCalendarPollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @return zimbraDataSourceCalendarPollingInterval, or null if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public String getDataSourceCalendarPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceCalendarPollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceCalendarPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public void setDataSourceCalendarPollingInterval(String zimbraDataSourceCalendarPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCalendarPollingInterval, zimbraDataSourceCalendarPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceCalendarPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public Map<String,Object> setDataSourceCalendarPollingInterval(String zimbraDataSourceCalendarPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCalendarPollingInterval, zimbraDataSourceCalendarPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public void unsetDataSourceCalendarPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCalendarPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a remote calendar
+     * data source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=819)
+    public Map<String,Object> unsetDataSourceCalendarPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceCalendarPollingInterval, "");
         return attrs;
     }
 
