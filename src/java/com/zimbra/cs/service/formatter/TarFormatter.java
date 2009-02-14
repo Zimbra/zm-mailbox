@@ -128,16 +128,17 @@ public class TarFormatter extends Formatter {
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
+        String emptyname = context.params.get("emptyname");
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         MailboxLock ml = null;
         Set<String> names = new HashSet<String>(4096);
         String query = context.getQueryString();
-        byte[] sysTypes = {
+        byte sysTypes[] = {
             MailItem.TYPE_FOLDER, MailItem.TYPE_SEARCHFOLDER, MailItem.TYPE_TAG,
             MailItem.TYPE_FLAG, MailItem.TYPE_MOUNTPOINT
         };
-        byte[] searchTypes = {
+        byte searchTypes[] = {
             MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT,
             MailItem.TYPE_DOCUMENT, MailItem.TYPE_WIKI,
             MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK, MailItem.TYPE_CHAT,
@@ -147,6 +148,9 @@ public class TarFormatter extends Formatter {
         String types = context.getTypesString();
 
         try {
+            if (emptyname != null && !emptyname.equals("") &&
+                !emptyname.endsWith(".tgz"))
+                emptyname += ".tgz";
             if (filename == null || filename.equals("")) {
                 Date date = new Date();
                 DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -165,7 +169,7 @@ public class TarFormatter extends Formatter {
                 sysTypes = new byte[0];
                 if (Arrays.binarySearch(searchTypes, MailItem.TYPE_CONVERSATION) >= 0) {
                     int i = 0;
-                    byte[] newTypes = new byte[searchTypes.length - 1];
+                    byte newTypes[] = new byte[searchTypes.length - 1];
                 
                     for (byte type : searchTypes)
                         if (type != MailItem.TYPE_CONVERSATION)
@@ -244,9 +248,16 @@ public class TarFormatter extends Formatter {
                     if (results != null)
                         results.doneWithSearchResults();
                 }
-                if (tos == null)
-                    throw new UserServletException(HttpServletResponse.
-                        SC_NO_CONTENT, "No data found");
+                if (tos == null) {
+                    if (emptyname == null)
+                        throw new UserServletException(HttpServletResponse.
+                            SC_NO_CONTENT, "No data found");
+                    context.resp.setHeader("Content-Disposition", Part.ATTACHMENT +
+                        "; filename=" + HttpUtil.encodeFilename(context.req,
+                        emptyname));
+                    tos = new TarOutputStream(new GZIPOutputStream(
+                        context.resp.getOutputStream()));
+                }
             }
         } finally {
             if (ml != null)
@@ -373,7 +384,7 @@ public class TarFormatter extends Formatter {
             }
             entry.setGroupName(MailItem.getNameForType(mi));
             entry.setMajorDeviceId(mi.getType());
-            entry.setModTime(mi.getChangeDate());
+            entry.setModTime(mi.getDate());
             if (charset == null)
                 charset = UTF8;
             if (tos == null)
@@ -500,21 +511,19 @@ public class TarFormatter extends Formatter {
         String timeout = context.params.get("timeout");
  
         try {
-            int[] ids = null;
+            int ids[] = null;
+            Resolve r = resolve == null ? Resolve.Skip : Resolve.valueOf(
+                resolve.substring(0,1).toUpperCase() +
+                resolve.substring(1).toLowerCase());
+            long interval = 45 * 1000;
+            if (timeout != null)
+                interval = Long.parseLong(timeout);
+            byte searchTypes[] = null;
+
             if (context.reqListIds != null) {
                 ids = context.reqListIds.clone();
                 Arrays.sort(ids);
             }
-
-            Resolve r = resolve == null ? Resolve.Skip : Resolve.valueOf(
-                resolve.substring(0,1).toUpperCase() +
-                resolve.substring(1).toLowerCase());
-
-            long interval = 45 * 1000;
-            if (timeout != null)
-                interval = Long.parseLong(timeout);
-
-            byte[] searchTypes = null;
             if (types != null && !types.equals("")) {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
                 for (byte type : searchTypes) {
@@ -534,11 +543,11 @@ public class TarFormatter extends Formatter {
             TarInputStream tis = new TarInputStream(new GZIPInputStream(
                 context.getRequestInputStream(-1)), charset == null ? UTF8 :
                 charset);
-
             List<Folder> flist = fldr.getSubfolderHierarchy();
             
             if (subfolder != null && !subfolder.equals("")) {
-                fldr = createPath(context, fmap, fldr.getPath() + subfolder, Folder.TYPE_UNKNOWN);
+                fldr = createPath(context, fmap, fldr.getPath() + subfolder,
+                    Folder.TYPE_UNKNOWN);
                 flist = fldr.getSubfolderHierarchy();
             }
             if (r == Resolve.Reset) {
@@ -571,7 +580,7 @@ public class TarFormatter extends Formatter {
                         if (delIds == null)
                             continue;
         
-                        int[] delIdsArray = new int[delIds.size()];
+                        int delIdsArray[] = new int[delIds.size()];
                         int i = 0;
                         
                         for (Integer del : delIds)
@@ -724,20 +733,23 @@ public class TarFormatter extends Formatter {
             String path;
             ParsedMessage pm;
             boolean root = fldr.getId() == Mailbox.ID_FOLDER_ROOT ||
-                fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT;
+                fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT ||
+                id.path.startsWith(fldr.getPath() + '/');
     
             if ((ids != null && Arrays.binarySearch(ids, id.ud.id) < 0) ||
                 (searchTypes != null && Arrays.binarySearch(searchTypes,
                 id.ud.type) < 0))
                 return;
-            if (id.ud.getBlobDigest() != null && te == null)
+            if (id.ud.getBlobDigest() != null && te == null) {
                 addError(errs, id.path, "missing item blob for meta");
+                return;
+            }
             if (root)
                 path = id.path;
-            else if (id.path.equals("/"))
-                path = fldr.getPath();
             else
                 path = fldr.getPath() + id.path;
+            if (path.endsWith("/") && !path.equals("/"))
+                path = path.substring(0, path.length() - 1);
             switch (mi.getType()) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
@@ -1283,8 +1295,8 @@ public class TarFormatter extends Formatter {
                 ParsedMessage pm = new ParsedMessage(tis, (int)te.getSize(),
                     te.getModTime().getTime(), mbox.attachmentsIndexingEnabled());
                 
-                mbox.addMessage(oc, pm, fldr.getId(), true, Flag.ID_FLAG_UNREAD,
-                    null);
+                mbox.addMessage(oc, pm, fldr.getId(), true,
+		    (te.getMode() & 0200) == 0 ? 0 : Flag.ID_FLAG_UNREAD, null);
                 break;
             }
         } catch (Exception e) {
