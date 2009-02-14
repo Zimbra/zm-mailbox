@@ -808,7 +808,7 @@ public class LiveImport extends MailItemImport {
                 }
                 localIds.remove(trackedGroup.itemId);
             } else {
-                ZimbraLog.datasource.debug("group %s was deleted locally. Deleting remote copy.",
+                ZimbraLog.datasource.debug("Group %s was deleted locally. Deleting remote copy.",
                     remoteGroup.getName());
                 remoteGroup.delete();
                 LiveData.delete(ds, trackedGroup.itemId);
@@ -886,7 +886,6 @@ public class LiveImport extends MailItemImport {
                 String dlist = localContact.getFields().get(Contact.A_dlist);
                 
                 if (dlist == null) {
-                } else {
                     JDAVContact remoteContact = LiveData.getJDAVContact(localContact);
                     String[] newUids = null;
                     String nickName = remoteContact.getField(JDAVContact.Fields.nickname) + '-';
@@ -903,7 +902,7 @@ public class LiveImport extends MailItemImport {
                         }
                     }
                     if (newUids == null) {
-                        ZimbraLog.datasource.error("Unable to create remote ontact %s.",
+                        ZimbraLog.datasource.error("Unable to create remote contact %s.",
                             remoteContact.getName());
                     } else {
                         LiveData ld = new LiveData(ds, localContact.getId(),
@@ -919,6 +918,9 @@ public class LiveImport extends MailItemImport {
                         }
                         numAddedRemotely++;
                     }
+                } else {
+                    ZimbraLog.datasource.debug("Ignoring new local group %s",
+                        localContact.getFileAsString());
                 }
             } else {
                 ZimbraLog.datasource.debug("Contact %s was deleted remotely. Deleting local copy.",
