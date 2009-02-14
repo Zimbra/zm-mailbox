@@ -171,8 +171,8 @@ public class CalendarUtils {
         if (uid != null && uid.length() > 0)
             create.setUid(uid);
 
-        // SEQUENCE - Make sure it's greater than or equal to series sequence.  (bug 19111)
-        create.setSeqNo(Math.max(create.getSeqNo(), defaultInv.getSeqNo()));
+        // SEQUENCE - Make sure it's greater than the series sequence.  (bugs 19111 and 35036)
+        create.setSeqNo(Math.max(create.getSeqNo(), defaultInv.getSeqNo() + 1));
 
         // Don't allow changing organizer in an exception instance.
         create.setOrganizer(defaultInv.hasOrganizer()
