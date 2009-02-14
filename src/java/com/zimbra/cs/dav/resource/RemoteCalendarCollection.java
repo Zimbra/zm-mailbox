@@ -142,7 +142,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     		appts.add(new CalDavClient.Appointment(buf.toString(), null));
     	}
         String auth = ctxt.getRequest().getHeader("Authorization");
-        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()));
+        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes("UTF-8")));
         int loc = userPass.indexOf(":"); 
         String user = userPass.substring(0, loc);
         String pass = userPass.substring(loc + 1);

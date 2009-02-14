@@ -130,7 +130,7 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public String sendCalendarData(Appointment appt) throws IOException, DavException {
-		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes(), Mime.CT_TEXT_CALENDAR, appt.etag, null);
+		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes("UTF-8"), Mime.CT_TEXT_CALENDAR, appt.etag, null);
 		String etag = resp.getHeader(DavProtocol.HEADER_ETAG);
 		ZimbraLog.dav.debug("ETags: "+appt.etag+", "+etag);
 		int status = resp.getStatusCode();

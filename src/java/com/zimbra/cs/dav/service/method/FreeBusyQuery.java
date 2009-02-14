@@ -56,8 +56,8 @@ public class FreeBusyQuery extends Report {
 		try {
 			String freebusy = ((CalendarCollection)rs).getFreeBusyReport(ctxt, timeRange);
 			HttpServletResponse resp = ctxt.getResponse();
-			resp.setContentType(Mime.CT_TEXT_CALENDAR);
-			resp.getOutputStream().write(freebusy.getBytes());
+            resp.setContentType(Mime.CT_TEXT_CALENDAR);
+			resp.getOutputStream().write(freebusy.getBytes("UTF-8"));
 			ctxt.responseSent();
 		} catch (ServiceException se) {
 			throw new DavException("can't get freebusy report", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);

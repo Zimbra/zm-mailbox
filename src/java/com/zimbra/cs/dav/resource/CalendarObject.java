@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -194,7 +195,7 @@ public interface CalendarObject {
 
         @Override
         public InputStream getRawContent(DavContext ctxt) throws IOException, DavException {
-            return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes());
+            return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
         }
 
         @Override
@@ -223,7 +224,7 @@ public interface CalendarObject {
             }
 	        mEtag = getEtag(appt);
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
-	        setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
+            setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             addProperty(CalDavProperty.getCalendarData(this));
 	    }
 
@@ -296,7 +297,11 @@ public interface CalendarObject {
         		return mContent;
         	String data = mParent.getCalendarData(mUid);
         	if (data != null) {
-        		mContent = data.getBytes();
+        		try {
+                    mContent = data.getBytes("UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    ZimbraLog.dav.warn("can't get remote contents for "+mRemoteId+", "+mItemId, e);
+                }
         		return mContent;
         	}
             try {
