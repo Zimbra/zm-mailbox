@@ -67,7 +67,7 @@ public class Notebook extends MailItemResource {
 			buf.append("<title>").append(mDoc.getName()).append("</title>");
 			buf.append("<link rel='stylesheet' type='text/css' href='/zimbra/css/wiki.css'>");
 			buf.append("</head><body style='margin:0px'>").append(val).append("</body></html>");
-			return new ByteArrayInputStream(buf.toString().getBytes());
+			return new ByteArrayInputStream(buf.toString().getBytes("UTF-8"));
 		} catch (ServiceException se) {
 			throw new DavException("cannot get contents", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}
