@@ -50,18 +50,15 @@ import com.zimbra.cs.util.NetUtil;
 
 public class WebDavClient {
 
-	public static final String UA = "ZCS/1.0 (" + BuildInfo.VERSION + ")";
-
 	public WebDavClient(String baseUrl) {
-		mBaseUrl = baseUrl;
-		mClient = new HttpClient();
-		NetUtil.configureProxy(mClient);
-		mUserAgent = UA;
+		this(baseUrl, "ZCS");
 	}
 	
 	public WebDavClient(String baseUrl, String app) {
-		this(baseUrl);
-		mUserAgent = UA + " " + app;
+		mBaseUrl = baseUrl;
+		mClient = new HttpClient();
+		NetUtil.configureProxy(mClient);
+		setAppName(app);
 	}
 	
 	public Collection<DavObject> listObjects(String path, Collection<QName> extraProps) throws IOException, DavException {
@@ -217,6 +214,10 @@ public class WebDavClient {
 	
 	public void setDebugEnabled(boolean b) {
 	    mDebugEnabled = b; 
+	}
+	
+	public void setAppName(String app) {
+		mUserAgent = "Zimbra " + app + "/" + BuildInfo.VERSION + " (" + BuildInfo.DATE + ")";
 	}
 	
 	private String mUserAgent;

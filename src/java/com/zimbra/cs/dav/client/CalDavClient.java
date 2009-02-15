@@ -56,7 +56,7 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public CalDavClient(String baseUrl) {
-		super(baseUrl, "CalDAV client");
+		super(baseUrl);
 		mSchedulingEnabled = false;
 	}
 	
