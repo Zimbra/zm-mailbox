@@ -89,6 +89,7 @@ public class L10nUtil {
         shareInfoBodyIntroduction,
 
         shareInfoBodySharedItem,
+        shareInfoBodyFolder,
         shareInfoBodyOwner,
         shareInfoBodyGrantee,
         shareInfoBodyAllowedActions,
