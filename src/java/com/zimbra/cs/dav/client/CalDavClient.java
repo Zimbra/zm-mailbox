@@ -51,7 +51,7 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public CalDavClient(String baseUrl) {
-		super(baseUrl, "CalDAV client");
+		super(baseUrl);
 	}
 	
 	public void login(String principalUrl) throws IOException, DavException {
