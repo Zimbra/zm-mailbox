@@ -167,7 +167,7 @@ public class TestShareInfo extends TestCase {
                 if (!mOwnerAcctId.equals(shareInfo.getOwnerAcctId()))
                     return false;
                 
-                if (!mOwnerAcctName.equals(shareInfo.getOwnerAcctName()))
+                if (!mOwnerAcctName.equals(shareInfo.getOwnerAcctEmail()))
                     return false;
                 
                 if (mFolderId != shareInfo.getFolderId())

@@ -1330,7 +1330,7 @@ public class ProvUtil implements DebugListener {
         public void visit(ShareInfo.Published shareInfo) throws ServiceException {
             System.out.printf(mFormat, 
                     shareInfo.getOwnerAcctId(),
-                    shareInfo.getOwnerAcctName(),
+                    shareInfo.getOwnerAcctEmail(),
                     String.valueOf(shareInfo.getFolderId()),
                     shareInfo.getFolderPath(),
                     shareInfo.getRights(),
