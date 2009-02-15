@@ -1511,7 +1511,14 @@ public class Mailbox {
                 // FIXME: side effect of this is that parent is marked as dirty...
                 if (parent != null)
                     parent.addChild(folder);
-                if (persist)
+                // some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
+                boolean badChangeDate = folder.getChangeDate() <= 0;
+                if (badChangeDate) {
+                    markItemModified(folder, Change.INTERNAL_ONLY);
+                    folder.mData.metadataChanged(this);
+                }
+                // if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
+                if (persist || badChangeDate)
                     folder.saveFolderCounts(initial);
             }
 

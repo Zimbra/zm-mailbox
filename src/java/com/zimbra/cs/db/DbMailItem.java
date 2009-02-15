@@ -149,7 +149,7 @@ public class DbMailItem {
             if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_CHAT || data.type == MailItem.TYPE_FOLDER)
                 stmt.setInt(pos++, data.unreadCount);
             else
-                stmt.setNull(pos++, java.sql.Types.BOOLEAN);
+                stmt.setNull(pos++, Types.BOOLEAN);
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, checkSenderLength(data.sender));
@@ -157,7 +157,10 @@ public class DbMailItem {
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkMetadataLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
-            stmt.setInt(pos++, data.dateChanged);
+            if (data.dateChanged > 0)
+                stmt.setInt(pos++, data.dateChanged);
+            else
+                stmt.setNull(pos++, Types.INTEGER);
             stmt.setInt(pos++, data.modContent);
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -681,7 +684,10 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getUnreadCount());
             stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, item.getModifiedSequence());
-            stmt.setInt(pos++, (int) (item.getChangeDate() / 1000));
+            if (item.getChangeDate() > 0)
+                stmt.setInt(pos++, (int) (item.getChangeDate() / 1000));
+            else
+                stmt.setNull(pos++, Types.INTEGER);
             stmt.setInt(pos++, item.getSavedSequence());
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -1603,7 +1609,7 @@ public class DbMailItem {
                     stmt.close();
                     stmt = conn.prepareStatement("UPDATE " + table +
                             " SET parent_id = folder_id" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
                     int pos = 1;
                     if (!DebugConfig.disableMailboxGroups)
                         stmt.setInt(pos++, mbox.getId());
