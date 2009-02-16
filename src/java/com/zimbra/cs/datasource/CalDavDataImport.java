@@ -85,6 +85,7 @@ public class CalDavDataImport extends MailItemImport {
 
     public void test() throws ServiceException {
     	mClient = new CalDavClient(getTargetUrl());
+    	mClient.setAppName(getAppName());
 		mClient.setCredential(getUsername(), getDecryptedPassword());
 		mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
 		try {
@@ -131,9 +132,14 @@ public class CalDavDataImport extends MailItemImport {
     	return url.toString();
     }
 
+    protected String getAppName() {
+        return "ZCS";
+    }
+    
     private CalDavClient getClient() throws ServiceException, IOException, DavException {
     	if (mClient == null) {
         	mClient = new CalDavClient(getTargetUrl());
+        	mClient.setAppName(getAppName());
     		mClient.setCredential(getUsername(), getDecryptedPassword());
     		mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
     		mClient.login(getPrincipalUrl());
