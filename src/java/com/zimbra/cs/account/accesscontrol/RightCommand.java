@@ -1,8 +1,6 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +12,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -28,7 +22,6 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class RightCommand {
     

@@ -54,8 +54,7 @@ public class CreateAccount extends AdminDocumentHandler {
 	    String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
-	    if (!checkDomainRight(zsc, name, AdminRight.R_createAccount))
-	        throw ServiceException.PERM_DENIED("can not access account:" + name);
+	    checkDomainRightByEmail(zsc, name, AdminRight.R_createAccount);
 
 	    Account account = prov.createAccount(name, password, attrs);
 

@@ -31,7 +31,6 @@ import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;

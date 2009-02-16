@@ -2,8 +2,9 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.Set;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 
-public abstract class Right {
+public abstract class Right extends RightConsts {
     
     public enum RightType {
         preset,

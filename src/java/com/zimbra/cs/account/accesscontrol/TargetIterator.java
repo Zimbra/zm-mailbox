@@ -1,11 +1,8 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;

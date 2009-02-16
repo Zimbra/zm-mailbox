@@ -1,9 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -21,12 +19,10 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;

@@ -32,6 +32,9 @@ public class AdminDestroyWaitSetRequest extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // DA TODO: check right
+        
         Element response = zsc.createElement(AdminConstants.ADMIN_DESTROY_WAIT_SET_RESPONSE);
         return DestroyWaitSet.staticHandle(request, context, response);
     }

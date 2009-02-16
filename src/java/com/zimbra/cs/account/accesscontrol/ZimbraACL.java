@@ -10,7 +10,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.account.accesscontrol.Right.RightType;
 
 public class ZimbraACL {
     private static final Log sLog = LogFactory.getLog(ZimbraACL.class);

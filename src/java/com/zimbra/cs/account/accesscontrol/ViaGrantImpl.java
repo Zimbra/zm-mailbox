@@ -1,6 +1,5 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 
 public class ViaGrantImpl extends ViaGrant {

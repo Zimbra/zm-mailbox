@@ -833,6 +833,13 @@ public abstract class TestACL extends TestCase {
     }
     
 /*
+  Note: do *not* copy it to /Users/pshao/p4/main/ZimbraServer/conf
+        that could accidently generate a RightDef.java with our test rights.
+        
+  cp /Users/pshao/p4/main/ZimbraServer/data/unittest/* /opt/zimbra/conf/rights
+  zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.RoleAccessManager
+  
+  or:
   <key name="zimbra_class_accessmanager">
     <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
   </key>

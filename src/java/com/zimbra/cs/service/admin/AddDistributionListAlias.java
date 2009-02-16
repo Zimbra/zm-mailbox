@@ -23,6 +23,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -50,11 +51,10 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        if (!canAccessEmail(lc, dl.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        checkDistributionListRight(lc, dl, AdminRight.R_addDistributionListAlias);
 
-        if (!canAccessEmail(lc, alias))
-            throw ServiceException.PERM_DENIED("can not access email: "+alias);
+        // if the admin can create an alias in the domain
+        checkDomainRightByEmail(lc, alias, AdminRight.R_createAlias);
 
         prov.addAlias(dl, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

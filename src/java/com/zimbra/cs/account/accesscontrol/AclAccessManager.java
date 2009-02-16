@@ -1,7 +1,5 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 

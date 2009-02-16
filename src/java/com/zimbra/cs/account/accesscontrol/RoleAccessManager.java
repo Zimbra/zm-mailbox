@@ -11,7 +11,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -42,7 +41,10 @@ public class RoleAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
-        return canDo(at, target, UserRight.R_loginAs, asAdmin, false);
+        if (asAdmin)
+            return canDo(at, target, AdminRight.R_adminLoginAs, asAdmin, false);
+        else
+            return canDo(at, target, UserRight.R_loginAs, asAdmin, false);
     }
 
     @Override
@@ -54,7 +56,10 @@ public class RoleAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(Account credentials, Account target,
             boolean asAdmin) throws ServiceException {
-        return canDo(credentials, target, UserRight.R_loginAs, asAdmin, false);
+        if (asAdmin)
+            return canDo(credentials, target, AdminRight.R_adminLoginAs, asAdmin, false);
+        else
+            return canDo(credentials, target, UserRight.R_loginAs, asAdmin, false);
     }
 
     @Override

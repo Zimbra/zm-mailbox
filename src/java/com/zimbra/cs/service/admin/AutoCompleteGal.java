@@ -33,6 +33,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -50,7 +51,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         String n = request.getAttribute(AdminConstants.E_NAME);
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         while (n.endsWith("*"))
@@ -70,16 +71,14 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
         
-        // if we are a domain admin only, restrict to domain
-        if (isDomainAdminOnly(lc) && !canAccessDomain(lc, domain)) 
-            throw ServiceException.PERM_DENIED("can not access domain"); 
-
-        Element response = lc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
-        
         Provisioning prov = Provisioning.getInstance();
         Domain d = prov.get(DomainBy.name, domain);
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
+        
+        checkDomainRight(zsc, d, AdminRight.R_viewGAL); 
+
+        Element response = zsc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
 
         SearchGalResult result = prov.autoCompleteGal(d, n, type, max);
         com.zimbra.cs.service.account.SearchGal.toXML(response, result);

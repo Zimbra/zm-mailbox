@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,8 +9,13 @@ import java.util.TreeMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -17,9 +23,11 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.FileGenUtil;
 
 public class RightManager {
     private static final String E_A            = "a";
@@ -81,11 +89,12 @@ public class RightManager {
             File file = yetToProcess.get(0);
             
             if (!file.getPath().endsWith(".xml")) {
-                ZimbraLog.acl.warn("while loading attrs, ignoring not .xml file: " + file);
+                ZimbraLog.acl.warn("while loading rights, ignoring not .xml file: " + file);
+                yetToProcess.remove(file);
                 continue;
             }
             if (!file.isFile()) {
-                ZimbraLog.acl.warn("while loading attrs, ignored non-file: " + file);
+                ZimbraLog.acl.warn("while loading rights, ignored non-file: " + file);
             }
             try {
                 boolean done = loadSystemRights(file, processed);
@@ -383,24 +392,145 @@ public class RightManager {
         
         return sb.toString();
     }
-
+    
+    void genRightConst(Right r, StringBuilder sb) {
+        sb.append("\n    /**\n");
+        if (r.getDesc() != null) {
+            sb.append(FileGenUtil.wrapComments(StringUtil.escapeHtml(r.getDesc()), 70, "     * "));
+            sb.append("\n");
+        }
+        sb.append("     */\n");
+        sb.append("    public static final String RT_" + r.getName() + " = \"" + r.getName() + "\";" + "\n");
+    }
+    
+    //TODO
+    void genAdminRightVar(Right r, StringBuilder sb) {
+        // sb.append("    public static AdminRight R_" + r.getName() + ";" + "\n");
+    }
+    
+    // TODO
+    void genUserRightVar(Right r, StringBuilder sb) {
+        // sb.append("    public static UserRight R_" + r.getName() + ";" + "\n");
+    }
+    
+    private String genRightConsts() {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("\n\n");
+        sb.append("    /*\n");
+        sb.append("    ============\n");
+        sb.append("    user rights:\n");
+        sb.append("    ============\n");
+        sb.append("    */\n\n");
+        for (Map.Entry<String, UserRight> ur : getAllUserRights().entrySet()) {
+            genRightConst(ur.getValue(), sb);
+        }
+        
+        sb.append("\n\n");
+        sb.append("    /*\n");
+        sb.append("    =============\n");
+        sb.append("    admin rights:\n");
+        sb.append("    =============\n");
+        sb.append("    */\n\n");
+        for (Map.Entry<String, AdminRight> ar : getAllAdminRights().entrySet()) {
+            genRightConst(ar.getValue(), sb);
+        }
+        
+        return sb.toString();
+    }
+    
+    private String genAdminRightDef() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, AdminRight> ar : getAllAdminRights().entrySet()) {
+            genAdminRightVar(ar.getValue(), sb);
+        }
+        return sb.toString();
+    }
+    
+    private String genUserRightDef() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, UserRight> ar : getAllUserRights().entrySet()) {
+            genUserRightVar(ar.getValue(), sb);
+        }
+        return sb.toString();
+    }
+    
+    private static class CL {
+        private static Options sOptions = new Options();
+        
+        static {
+            sOptions.addOption("h", "help", false, "display this  usage info");
+            sOptions.addOption("a", "action", true, "action, one of genRightConsts");
+            sOptions.addOption("i", "input", true,"rights definition xml input directory");
+            sOptions.addOption("r", "regenerateFile", true, "Java file to regenerate");
+        }
+        
+        private static void check() throws ServiceException  {
+            ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+            
+            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
+            System.out.println(rm.dump(null));
+        }
+    
+        private static void usage(String errmsg) {
+            if (errmsg != null) {
+                System.out.println(errmsg);
+            }
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("AttributeManager [options] where [options] are one of:", sOptions);
+            System.exit((errmsg == null) ? 0 : 1);
+        }
+        
+        private static CommandLine parseArgs(String args[]) {
+            StringBuffer gotCL = new StringBuffer("cmdline: ");
+            for (int i = 0; i < args.length; i++) {
+                gotCL.append("'").append(args[i]).append("' ");
+            }
+            System.out.println(gotCL);
+                
+            CommandLineParser parser = new GnuParser();
+            CommandLine cl = null;
+            try {
+                cl = parser.parse(sOptions, args);
+            } catch (ParseException pe) {
+                usage(pe.getMessage());
+            }
+            if (cl.hasOption('h')) {
+                usage(null);
+            }
+            return cl;
+        }
+        
+        private static void main(String[] args) throws ServiceException, IOException {
+            CliUtil.toolSetup();
+            CommandLine cl = parseArgs(args);
+        
+            if (!cl.hasOption('a')) usage("no action specified");
+            if (!cl.hasOption('i')) usage("no input dir specified");
+            if (!cl.hasOption('r')) usage("no regenerate file specified");
+            
+            String action = cl.getOptionValue('a');
+            String inputDir = cl.getOptionValue('i');
+            String regenFile = cl.getOptionValue('r');
+            RightManager rm = new RightManager(inputDir);
+            
+            if ("genRightConsts".equals(action))
+                FileGenUtil.replaceJavaFile(regenFile, rm.genRightConsts());
+            /*
+            else if ("genAdminRightDef".equals(action))
+                FileGenUtil.replaceJavaFile(regenFile, rm.genAdminRightDef());
+            else if ("genUserRightDef".equals(action))
+                FileGenUtil.replaceJavaFile(regenFile, rm.genUserRightDef());
+            */
+            else
+                usage("invalid action");
+        }
+    }
     /**
      * @param args
      */
-    public static void main(String[] args) throws ServiceException {
-        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
-        
-        RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
-        System.out.println(rm.dump(null));
-        /*
-        for (Right r : RightManager.getInstance().getAllRights().values()) {
-            System.out.println(r.getName());
-            System.out.println("    desc: " + r.getDesc());
-            System.out.println("    doc: " + r.getDoc());
-            System.out.println();
-        }
-        */
-        
+    public static void main(String[] args) throws ServiceException, IOException {
+        CL.main(args);
     }
     
 }

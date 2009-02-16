@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -64,9 +65,7 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
        
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
-
+        checkAccountRight(zsc, account, AdminRight.R_getAccountInfo);
 
         Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_INFO_RESPONSE);
         response.addElement(AdminConstants.E_NAME).setText(account.getName());

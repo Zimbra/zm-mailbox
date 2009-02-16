@@ -27,7 +27,9 @@ import java.util.Map.Entry;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -37,12 +39,16 @@ public class GetAllConfig extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    Map attrs = prov.getConfig().getUnicodeAttrs();
+	    Config config = prov.getConfig();
+	        
+	    checkGlobalConfigRight(zsc, config, AdminRight.R_getGlobalConfig);
+	        
+	    Map attrs = config.getUnicodeAttrs();
 
-	    Element response = lc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);
 	    
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
