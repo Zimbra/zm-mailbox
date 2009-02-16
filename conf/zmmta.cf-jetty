@@ -43,6 +43,7 @@ SECTION mta DEPENDS amavis
   LOCAL postfix_enable_smtpd_policyd
   REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
 	VAR zimbraMtaRestriction
+	VAR zimbraMtaAuthEnabled
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraMtaRecipientDelimiter
 	VAR zimbraMtaMyNetworks
@@ -72,9 +73,9 @@ SECTION mta DEPENDS amavis
 		POSTCONF myhostname VAR zimbraMtaMyHostname
 	fi
 	POSTCONF recipient_delimiter	                VAR zimbraMtaRecipientDelimiter
-	POSTCONF smtpd_sasl_auth_enable               VAR zimbraMtaAuthEnabled
+	POSTCONF smtpd_sasl_auth_enable               VAR zimbraMtaSaslAuthEnable
 	POSTCONF smtpd_tls_auth_only	                VAR zimbraMtaTlsAuthOnly
-	POSTCONF smtpd_use_tls			                  yes
+	POSTCONF smtpd_tls_security_level			                 VAR zimbraMtaTlsSecurityLevel
 	POSTCONF disable_dns_lookups	                VAR !zimbraMtaDnsLookupsEnabled	
 	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit		                0
@@ -84,6 +85,7 @@ SECTION mta DEPENDS amavis
 
 	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
 	POSTCONF broken_sasl_auth_clients			        LOCAL postfix_broken_sasl_auth_clients
+  POSTCONF bounce_queue_lifetime                LOCAL postfix_bounce_queue_lifetime
 	POSTCONF mail_owner                           LOCAL postfix_mail_owner
 	POSTCONF setgid_group                         LOCAL postfix_setgid_group
 	POSTCONF command_directory					          LOCAL postfix_command_directory
@@ -92,7 +94,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF mailq_path							              LOCAL postfix_mailq_path
 	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
 	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
-	POSTCONF policy_time_limit					LOCAL postfix_policy_time_limit
+	POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	POSTCONF queue_directory					            LOCAL postfix_queue_directory
 	POSTCONF sender_canonical_maps				        LOCAL postfix_sender_canonical_maps
 	POSTCONF sendmail_path						            LOCAL postfix_sendmail_path
@@ -209,4 +211,42 @@ SECTION imapproxy
 	VAR zimbraReverseProxyWorkerProcesses
 	PROXYGEN
 	RESTART imapproxy
+
+SECTION ldap
+	LOCAL ldap_common_loglevel
+	LOCAL ldap_common_require_tls
+	LOCAL ldap_common_threads
+	LOCAL ldap_common_toolthreads
+	LOCAL ldap_db_cachefree
+	LOCAL ldap_db_cachesize
+	LOCAL ldap_db_checkpoint
+	LOCAL ldap_db_dncachesize
+	LOCAL ldap_db_idlcachesize
+	LOCAL ldap_accesslog_cachefree
+	LOCAL ldap_accesslog_cachesize
+	LOCAL ldap_accesslog_checkpoint
+	LOCAL ldap_accesslog_dncachesize
+	LOCAL ldap_accesslog_idlcachesize
+	LOCAL ldap_overlay_syncprov_checkpoint
+	LOCAL ldap_overlay_syncprov_sessionlog
+	LOCAL ldap_overlay_accesslog_logpurge
+	LDAP ldap_common_loglevel LOCAL ldap_common_loglevel
+	LDAP ldap_common_require_tls LOCAL ldap_common_require_tls
+	LDAP ldap_common_threads LOCAL ldap_common_threads
+	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
+	LDAP ldap_db_cachefree LOCAL ldap_db_cachefree
+	LDAP ldap_db_cachesize LOCAL ldap_db_cachesize
+	LDAP ldap_db_checkpoint LOCAL ldap_db_checkpoint
+	LDAP ldap_db_dncachesize LOCAL ldap_db_dncachesize
+	LDAP ldap_db_idlcachesize LOCAL ldap_db_idlcachesize
+	LDAP ldap_db_shmkey LOCAL ldap_db_shmkey
+	LDAP ldap_accesslog_cachefree LOCAL ldap_accesslog_cachefree
+	LDAP ldap_accesslog_cachesize LOCAL ldap_accesslog_cachesize
+	LDAP ldap_accesslog_checkpoint LOCAL ldap_accesslog_checkpoint
+	LDAP ldap_accesslog_dncachesize LOCAL ldap_accesslog_dncachesize
+	LDAP ldap_accesslog_idlcachesize LOCAL ldap_accesslog_idlcachesize
+	LDAP ldap_accesslog_shmkey LOCAL ldap_accesslog_shmkey
+	LDAP ldap_overlay_syncprov_checkpoint LOCAL ldap_overlay_syncprov_checkpoint
+	LDAP ldap_overlay_syncprov_sessionlog LOCAL ldap_overlay_syncprov_sessionlog
+	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
 
