@@ -59,6 +59,7 @@ public class CreateFolder extends MailDocumentHandler {
         String folderId  = t.getAttribute(MailConstants.A_FOLDER, null);
         ItemId iidParent = folderId != null ? new ItemId(folderId, zsc) : null;
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
+        boolean syncToUrl = t.getAttributeBool(MailConstants.A_SYNC, true);
         ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL));
 
         Folder folder;
@@ -70,7 +71,7 @@ public class CreateFolder extends MailDocumentHandler {
             else
                 folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color, url);
 
-            if (!folder.getUrl().equals("")) {
+            if (!folder.getUrl().equals("") && syncToUrl) {
                 try {
                     mbox.synchronizeFolder(octxt, folder.getId());
                 } catch (ServiceException e) {
