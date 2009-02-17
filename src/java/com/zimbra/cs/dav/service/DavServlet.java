@@ -89,16 +89,42 @@ public class DavServlet extends ZimbraServlet {
 		resp.setHeader(DavProtocol.HEADER_ALLOW, buf.toString());
 	}
 	
+	enum RequestType { password, authtoken, both, none };
+	
+    private RequestType getAllowedRequestType(HttpServletRequest req) {
+    	if (!super.isRequestOnAllowedPort(req))
+    		return RequestType.none;
+    	Server server = null;
+    	try {
+    		server = Provisioning.getInstance().getLocalServer();
+    	} catch (Exception e) {
+    		return RequestType.none;
+    	}
+    	boolean allowPassword = server.getBooleanAttr(Provisioning.A_zimbraCalendarCalDavClearTextPasswordEnabled, true);
+    	int sslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 443);
+    	int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 80);
+    	int incomingPort = req.getLocalPort();
+    	if (incomingPort == sslPort)
+    		return RequestType.both;
+    	else if (incomingPort == mailPort && allowPassword)
+    		return RequestType.both;
+    	else
+    		return RequestType.authtoken;
+    }
+    
 	public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		ZimbraLog.clearContext();
 		addRemoteIpToLoggingContext(req);
 		ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
+
+		RequestType rtype = getAllowedRequestType(req);
 		
-		if (!isRequestOnAllowedPort(req)) {
+		if (rtype == RequestType.none) {
 			resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return;
 		}
 
+		/*
 		if (ZimbraLog.dav.isDebugEnabled()) {
 			java.util.Enumeration en = req.getHeaderNames();
 			while (en.hasMoreElements()) {
@@ -110,19 +136,21 @@ public class DavServlet extends ZimbraServlet {
 				}
 			}
 		}
+		*/
 		DavContext ctxt;
 		try {
             AuthToken at = AuthProvider.getAuthToken(req, false);
             if (at != null && at.isExpired())
                 at = null;
             Account authUser = null;
-            if (at != null)
+            if (at != null && (rtype == RequestType.both || rtype == RequestType.authtoken))
             	authUser = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
-            else
+            else if (at == null && (rtype == RequestType.both || rtype == RequestType.password))
     			authUser = basicAuthRequest(req, resp, true);
-
-			if (authUser == null)
+			if (authUser == null) {
+				resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 				return;
+			}
 			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
 			ctxt = new DavContext(req, resp, authUser);
             if (ctxt.getUser() == null) {
