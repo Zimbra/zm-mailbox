@@ -72,6 +72,7 @@ public class Contact extends MailItem {
     private static final int FA_MAXIMUM = FA_EXPLICIT;
 
     // these are the "well known attrs". keep in sync with Attr enum below
+    public static final String A_assistantPhone = "assistantPhone";
     public static final String A_birthday = "birthday";
     public static final String A_callbackPhone = "callbackPhone";
     public static final String A_carPhone = "carPhone";
