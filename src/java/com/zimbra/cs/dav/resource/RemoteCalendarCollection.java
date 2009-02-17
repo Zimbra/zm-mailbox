@@ -27,7 +27,6 @@ import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.dom4j.QName;
 
@@ -141,12 +140,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     		hrefmap.put(buf.toString(), uid);
     		appts.add(new CalDavClient.Appointment(buf.toString(), null));
     	}
-        String auth = ctxt.getRequest().getHeader("Authorization");
-        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes("UTF-8")));
-        int loc = userPass.indexOf(":"); 
-        String user = userPass.substring(0, loc);
-        String pass = userPass.substring(loc + 1);
-        cl.setCredential(user, pass);
+    	cl.setAuthCookie(authToken.toZAuthToken());
         appts = cl.getCalendarData(path, appts);
         mCalendarData = new HashMap<String,String>();
         for (CalDavClient.Appointment appt : appts)
@@ -226,7 +220,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             ArrayList<Header> headerList = new ArrayList<Header>();
             while (reqHeaders.hasMoreElements()) {
                 String hdr = (String)reqHeaders.nextElement();
-                if (!hdr.equals("Host") && !hdr.equals("Cookie"))
+                if (!hdr.equals("Host") && !hdr.equals("Cookie") && !hdr.equals("Authorization"))
                     headerList.add(new Header(hdr, ctxt.getRequest().getHeader(hdr)));
             }
             String url = URLUtil.urlEscape(f.getPath() + "/" + ctxt.getItem());

@@ -17,8 +17,10 @@
 package com.zimbra.cs.dav.client;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
@@ -29,6 +31,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
@@ -38,6 +41,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
@@ -203,6 +207,23 @@ public class WebDavClient {
 		authPrefs.add(AuthPolicy.BASIC);
 		mClient.getParams().setParameter(AuthPolicy.AUTH_SCHEME_PRIORITY, authPrefs);
 		mClient.getParams().setAuthenticationPreemptive(true);
+	}
+	
+	public void setAuthCookie(ZAuthToken auth) {
+        Map<String, String> cookieMap = auth.cookieMap(false);
+        if (cookieMap != null) {
+        	String host = null;
+        	try {
+        		host = new URL(mBaseUrl).getHost();
+        	} catch (Exception e) {
+        	}
+            HttpState state = new HttpState();
+            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                state.addCookie(new org.apache.commons.httpclient.Cookie(host, ck.getKey(), ck.getValue(), "/", null, false));
+            }
+            mClient.setState(state);
+            mClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        }
 	}
 	
 	public String getUsername() {

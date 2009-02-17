@@ -31,6 +31,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -41,6 +43,7 @@ import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.service.method.*;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 @SuppressWarnings("serial")
@@ -96,9 +99,28 @@ public class DavServlet extends ZimbraServlet {
 			return;
 		}
 
+		if (ZimbraLog.dav.isDebugEnabled()) {
+			java.util.Enumeration en = req.getHeaderNames();
+			while (en.hasMoreElements()) {
+				String n = (String)en.nextElement();
+				java.util.Enumeration vals = req.getHeaders(n);
+				while (vals.hasMoreElements()) {
+					String v = (String)vals.nextElement();
+		        	ZimbraLog.dav.debug("HEADER "+n+": "+v);
+				}
+			}
+		}
 		DavContext ctxt;
 		try {
-			Account authUser = basicAuthRequest(req, resp, true);
+            AuthToken at = AuthProvider.getAuthToken(req, false);
+            if (at != null && at.isExpired())
+                at = null;
+            Account authUser = null;
+            if (at != null)
+            	authUser = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+            else
+    			authUser = basicAuthRequest(req, resp, true);
+
 			if (authUser == null)
 				return;
 			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
@@ -107,6 +129,10 @@ public class DavServlet extends ZimbraServlet {
                 resp.sendRedirect(DAV_PATH + "/" + authUser.getName() + "/");
                 return;
             }
+		} catch (AuthTokenException e) {
+			ZimbraLog.dav.error("error getting authenticated user", e);
+			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return;
 		} catch (ServiceException e) {
 			ZimbraLog.dav.error("error getting authenticated user", e);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
