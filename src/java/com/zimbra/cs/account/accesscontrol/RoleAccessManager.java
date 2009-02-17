@@ -4,13 +4,18 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -28,14 +33,8 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean isDomainAdminOnly(AuthToken at) {
-        /*
-         * returning true to essentially trigger all permission checks 
-         * for all admins, not just domain admins.  
-         * 
-         * Should probably retire this call when we will never ever 
-         * go back to the domain admin paradigm.
-         */
-        return true;
+        // there is no such thing as domain admin
+        return false;
     }
     
     @Override
@@ -101,7 +100,7 @@ public class RoleAccessManager extends AccessManager {
         // TODO Auto-generated method stub
         return false;
     }
-
+    
     @Override
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
@@ -193,12 +192,7 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
-        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
-        if (granteeAcct == null)
-            throw ServiceException.PERM_DENIED("cannot access attr");
-        
-        return canGetAttrs(granteeAcct, target, attrs, asAdmin);
+        return canGetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
     }
     
     
@@ -213,12 +207,7 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
-        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
-        if (granteeAcct == null)
-            throw ServiceException.PERM_DENIED("cannot access attr");
-        
-        return canSetAttrs(granteeAcct, target, attrs, asAdmin);
+        return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
     }
     
     @Override
@@ -233,12 +222,42 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
-        Account granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
-        // Account not found, throw PERM_DENIED instead of NO_SUCH_ACCOUNT so we are not vulnerable to account harvest attack
-        if (granteeAcct == null)
-            throw ServiceException.PERM_DENIED("cannot access attr");
+        return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
+    }
+    
+    public boolean canSetAttrsOnCreate(AuthToken grantee, TargetType targetType, String entryName, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
+        DomainBy domainBy = null;
+        String domainStr = null;
+        CosBy cosBy = null;
+        String cosStr = null;
         
-        return canSetAttrs(granteeAcct, target, attrs, asAdmin);
+        if (targetType == TargetType.account ||
+            targetType == TargetType.calresource ||
+            targetType == TargetType.dl) {
+            String parts[] = EmailUtil.getLocalPartAndDomain(entryName);
+            if (parts == null)
+                throw ServiceException.INVALID_REQUEST("must be valid email address: "+entryName, null);
+            
+            domainBy = DomainBy.name;
+            domainStr = parts[1];
+        }
+        
+        if (targetType == TargetType.account ||
+            targetType == TargetType.calresource) {
+            cosStr = (String)attrs.get(Provisioning.A_zimbraCOSId);
+            if (cosStr != null) {
+                if (LdapUtil.isValidUUID(cosStr))
+                    cosBy = cosBy.id;
+                else
+                    cosBy = cosBy.name;
+            }
+        }
+        
+        Entry target = RightChecker.createPseudoTarget(Provisioning.getInstance(),
+                                                      targetType, 
+                                                      domainBy, domainStr,
+                                                      cosBy, cosStr);
+        return canSetAttrs(grantee, target, attrs, asAdmin);
     }
     
     @Override
@@ -371,6 +390,27 @@ public class RoleAccessManager extends AccessManager {
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
 
+    //
+    // util methods
+    //
+    
+    /*
+     * get the authed account from an auth token
+     */
+    private Account getAccountFromAuthToken(AuthToken authToken) throws ServiceException {
+        String acctId = authToken.getAccountId();
+        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
+        if (acct == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
+        
+        return acct;
+    }
+
+    
+    //
+    // end util methods
+    //
+    
     
     /**
      * @param args

@@ -30,6 +30,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -50,14 +51,14 @@ public class CreateDataSource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminConstants.E_ID);
-        
 
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+        // is this really used by admin console?
+        // for now just use the adminLoginAs right.
+        checkAccountRight(zsc, account, AdminRight.R_adminLoginAs);
 
         Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);

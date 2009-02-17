@@ -13,6 +13,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CountAccount extends AdminDocumentHandler {
@@ -38,8 +39,7 @@ public class CountAccount extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-        if (isDomainAdminOnly(zsc) && !canAccessDomain(zsc, domain))
-            throw ServiceException.PERM_DENIED("can not access domain");
+        checkDomainRight(zsc, domain, AdminRight.R_countAccount);
 
         Element response = zsc.createElement(AdminConstants.COUNT_ACCOUNT_RESPONSE);
         CountAccountResult result = Provisioning.getInstance().countAccount(domain);

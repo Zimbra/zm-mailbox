@@ -24,8 +24,11 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -61,13 +64,18 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         
         String acctName = "";
         if (account != null) {
-            if (!canAccessAccount(zsc, account))
-                throw ServiceException.PERM_DENIED("can not access account");
+            if (account.isCalendarResource()) {
+                // need a CalendarResource instance for RightChecker
+                CalendarResource resource = prov.get(CalendarResourceBy.id, id);
+                checkCalendarResourceRight(zsc, resource, AdminRight.R_removeCalendarResourceAlias);
+            } else
+                checkAccountRight(zsc, account, AdminRight.R_removeAccountAlias);
+
             acctName = account.getName();
         }
         
-        if (!canAccessEmail(zsc, alias)) // sanity check
-            throw ServiceException.PERM_DENIED("can not access email: "+alias);
+        // if the admin can remove an alias in the domain
+        checkDomainRightByEmail(zsc, alias, AdminRight.R_deleteAlias);
         
         prov.removeAlias(account, alias);
         

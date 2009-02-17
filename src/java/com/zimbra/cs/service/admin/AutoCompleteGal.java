@@ -76,7 +76,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         
-        checkDomainRight(zsc, d, AdminRight.R_viewGAL); 
+        checkDomainRight(zsc, d, AdminRight.R_accessGAL); 
 
         Element response = zsc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
 

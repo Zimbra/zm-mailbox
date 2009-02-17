@@ -9,6 +9,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import  javax.naming.*;
@@ -33,8 +34,8 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
         String value = d.getText();
 	    
 	    Domain domain = prov.get(DomainBy.fromString(key), value);	
-	    if (isDomainAdminOnly(zsc) && !canAccessDomain(zsc, domain))
-	    	throw ServiceException.PERM_DENIED("can not access domain");   
+	    
+	    checkDomainRight(zsc, domain, AdminRight.R_checkDomainMXRecord);
 	       
 	    String SMTPHost = domain.getAttr(Provisioning.A_zimbraDNSCheckHostname, true);
 	    String domainName = domain.getName();

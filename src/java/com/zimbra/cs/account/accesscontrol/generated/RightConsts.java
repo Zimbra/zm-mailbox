@@ -12,7 +12,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090216-1055 */
+    /* build: 5.0 pshao 20090216-2350 */
 
 
     /*
@@ -50,6 +50,11 @@ public class RightConsts {
     =============
     */
 
+
+    /**
+     * access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests
+     */
+    public static final String RT_accessGAL = "accessGAL";
 
     /**
      * add account alias
@@ -90,6 +95,11 @@ public class RightConsts {
     public static final String RT_assignCos = "assignCos";
 
     /**
+     * check doamin MX record
+     */
+    public static final String RT_checkDomainMXRecord = "checkDomainMXRecord";
+
+    /**
      * configure admin UI
      */
     public static final String RT_configureAdminUI = "configureAdminUI";
@@ -115,9 +125,19 @@ public class RightConsts {
     public static final String RT_configureGlobalConfigConstraint = "configureGlobalConfigConstraint";
 
     /**
+     * configure password strength
+     */
+    public static final String RT_configurePasswordStrength = "configurePasswordStrength";
+
+    /**
      * configure quota
      */
     public static final String RT_configureQuota = "configureQuota";
+
+    /**
+     * count accounts in a domain
+     */
+    public static final String RT_countAccount = "countAccount";
 
     /**
      * create account in the domain
@@ -168,6 +188,11 @@ public class RightConsts {
      * delete account
      */
     public static final String RT_deleteAccount = "deleteAccount";
+
+    /**
+     * delete alias in this domain
+     */
+    public static final String RT_deleteAlias = "deleteAlias";
 
     /**
      * delete calendar resource
@@ -238,6 +263,11 @@ public class RightConsts {
      * get all domain attributes
      */
     public static final String RT_getDomain = "getDomain";
+
+    /**
+     * get domain quota usage
+     */
+    public static final String RT_getDomainQuotaUsage = "getDomainQuotaUsage";
 
     /**
      * get all global config attributes
@@ -403,7 +433,7 @@ public class RightConsts {
     /**
      * set calendar resource password
      */
-    public static final String RT_setCalenceResourcePassword = "setCalenceResourcePassword";
+    public static final String RT_setCalendarResourcePassword = "setCalendarResourcePassword";
 
     /**
      * view the account&#039;s email
@@ -411,14 +441,14 @@ public class RightConsts {
     public static final String RT_viewEmail = "viewEmail";
 
     /**
-     * view GAL by doing AutoCompleteGal/SearchGal/SyncGal requests
-     */
-    public static final String RT_viewGAL = "viewGAL";
-
-    /**
      * view mail queues
      */
     public static final String RT_viewMailQueue = "viewMailQueue";
+
+    /**
+     * configure password strength
+     */
+    public static final String RT_viewPasswordStrength = "viewPasswordStrength";
 
     ///// END-AUTO-GEN-REPLACE
 }

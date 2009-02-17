@@ -27,6 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -55,6 +56,7 @@ public class CreateAccount extends AdminDocumentHandler {
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
 	    checkDomainRightByEmail(zsc, name, AdminRight.R_createAccount);
+	    checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
 
 	    Account account = prov.createAccount(name, password, attrs);
 

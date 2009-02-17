@@ -24,8 +24,10 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,7 +63,12 @@ public class AddAccountAlias extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
         // if the admin can add an alias for the account
-        checkAccountRight(zsc, account, AdminRight.R_addAccountAlias);
+        if (account.isCalendarResource()) {
+            // need a CalendarResource instance for RightChecker
+            CalendarResource resource = prov.get(CalendarResourceBy.id, id);
+            checkCalendarResourceRight(zsc, resource, AdminRight.R_addCalendarResourceAlias);
+        } else
+            checkAccountRight(zsc, account, AdminRight.R_addAccountAlias);
 
         // if the admin can create an alias in the domain
         checkDomainRightByEmail(zsc, alias, AdminRight.R_createAlias);

@@ -28,6 +28,9 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -37,18 +40,33 @@ public class CreateDomain extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
+	    
+	    int firstDot = name.indexOf('.');
+	    if (firstDot == -1)
+	        checkRight(zsc, context, null, AdminRight.R_createTopDomain);
+	    else {
+	        String parentDomainName = name.substring(firstDot+1);
+	        Domain parentDomain = Provisioning.getInstance().get(DomainBy.name, parentDomainName);
+	        if (parentDomain == null)
+	            checkRight(zsc, context, null, AdminRight.R_createSubDomain);
+	        else
+	            checkRight(zsc, context, parentDomain, AdminRight.R_createSubDomain);
+	    }
+	    
+	    // check if all the attrs can be set and within constraints
+        checkSetAttrsOnCreate(zsc, TargetType.domain, name, attrs);
 	    
 	    Domain domain = prov.createDomain(name, attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateDomain","name", name}, attrs));         
 
-	    Element response = lc.createElement(AdminConstants.CREATE_DOMAIN_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.CREATE_DOMAIN_RESPONSE);
 	    GetDomain.doDomain(response, domain);
 
 	    return response;

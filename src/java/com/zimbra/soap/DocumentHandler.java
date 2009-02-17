@@ -193,12 +193,11 @@ public abstract class DocumentHandler {
         return false;
     }
 
-
-    public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+    protected Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target) throws ServiceException {
         if (zsc.getAuthtokenAccountId() == null || target == null)
-            return false;
+            return Boolean.FALSE;
         if (target.getId().equals(zsc.getAuthtokenAccountId()))
-            return true;
+            return Boolean.TRUE;
         else {
             // 1. delegated auth case has been logged in SoapEngine
             // 2. we do not want to log delegated request, where the target account is specified in 
@@ -207,6 +206,13 @@ public abstract class DocumentHandler {
             if (!zsc.getAuthToken().isDelegatedAuth() && !zsc.isDelegatedRequest()) 
                 logAuditAccess(null, zsc.getAuthtokenAccountId(), target.getId());
         }
+        return null;
+    }
+
+    public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+        Boolean canAccess = canAccessAccountCommon(zsc, target);
+        if (canAccess != null)
+            return canAccess.booleanValue();
         return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
     }
 

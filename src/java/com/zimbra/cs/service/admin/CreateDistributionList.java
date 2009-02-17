@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AdminDocumentHandler {
@@ -38,21 +40,21 @@ public class CreateDistributionList extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 	    
         String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
-        if (!canAccessEmail(lc, name))
-            throw ServiceException.PERM_DENIED("can not access address: "+name);
-
+        checkDomainRightByEmail(zsc, name, AdminRight.R_createDistributionList);
+        checkSetAttrsOnCreate(zsc, TargetType.dl, name, attrs);
+        
         DistributionList dl = prov.createDistributionList(name, attrs);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                  new String[] {"cmd", "CreateDistributionList","name", name}, attrs));         
 
-        Element response = lc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
         
         GetDistributionList.doDistributionList(response, dl);
 

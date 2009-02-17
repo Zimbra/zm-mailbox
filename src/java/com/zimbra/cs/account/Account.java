@@ -261,5 +261,11 @@ public class Account extends ZAttrAccount  {
             return Provisioning.ACCOUNT_STATUS_CLOSED;
         }
     }
+
+    // need when when cal resource is loaded as an account and we need to know if 
+    // it actually a cal resource.
+    public boolean isCalendarResource() {
+        return getAttr(Provisioning.A_zimbraCalResType) != null;
+    }
 }
  

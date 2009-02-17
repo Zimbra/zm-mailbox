@@ -396,7 +396,15 @@ class AttributeConstraint {
         if (constraint == null)
             return false;
         
-        return constraint.violated(value);  
+        // throw exception if constraint is violated so it can be bubbled all the way up to 
+        // the admin, otherwise it's too much pain to find out why PERM_DENIED. 
+        // this is a bit deviated from rest the ACL checking code, which return false instead
+        // of throwing Exception.
+        
+        boolean violated = constraint.violated(value);  
+        if (violated)
+            throw ServiceException.PERM_DENIED("constraint violated: " + constraint.getAttrName());
+        return violated;
     }
     
     

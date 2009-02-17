@@ -27,6 +27,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -62,8 +63,7 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        if (!canAccessEmail(zsc, dl.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        checkDistributionListRight(zsc, dl, AdminRight.R_addDistributionListMember);
 
         String[] members = (String[]) memberList.toArray(new String[0]); 
         prov.addMembers(dl, members);

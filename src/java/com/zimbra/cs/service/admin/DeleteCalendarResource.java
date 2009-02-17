@@ -23,6 +23,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -61,9 +62,8 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
         CalendarResource resource = prov.get(CalendarResourceBy.id, id);
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
-
-        if (!canAccessAccount(zsc, resource))
-            throw ServiceException.PERM_DENIED("cannot access calendar resource account");
+        
+        checkCalendarResourceRight(zsc, resource, AdminRight.R_deleteCalendarResource);        
 
         if (!Provisioning.onLocalServer(resource)) {
             // Request must be sent to the host that the mailbox is on, so that

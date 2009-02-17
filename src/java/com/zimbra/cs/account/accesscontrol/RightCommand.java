@@ -519,7 +519,7 @@ public class RightCommand {
                                                        CosBy cosBy, String cosStr,
                                                        GranteeBy granteeBy, String grantee) throws ServiceException {
         
-
+        verifyAccessManager();
         
         TargetType tt = TargetType.fromString(targetType);
         Entry targetEntry = RightChecker.createPseudoTarget(prov, tt, domainBy, domainStr, cosBy, cosStr);

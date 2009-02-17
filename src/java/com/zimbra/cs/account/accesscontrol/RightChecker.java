@@ -1194,6 +1194,7 @@ public class RightChecker {
                 cos = prov.get(cosBy, cosStr);
                 if (cos == null)
                     throw AccountServiceException.NO_SUCH_COS(cosStr);
+                attrMap.put(Provisioning.A_zimbraCOSId, cos.getId());
             } else {
                 String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
                 if (domainCosId != null) cos = prov.get(CosBy.id, domainCosId);

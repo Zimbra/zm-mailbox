@@ -26,6 +26,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -43,7 +44,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
@@ -53,11 +54,11 @@ public class RenameDistributionList extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessEmail(lc, dl.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        // check if the admin can rename the DL
+        checkDistributionListRight(zsc, dl, AdminRight.R_renameDistributionList);
 
-        if (!canAccessEmail(lc, newName)) //
-            throw ServiceException.PERM_DENIED("can not access email: "+newName);
+        // check if the admin can "create DL" in the domain (can be same or diff)
+        checkDomainRightByEmail(zsc, newName, AdminRight.R_createDistributionList);
         
         String oldName = dl.getName();
 
@@ -71,7 +72,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
         dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
             throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
-	    Element response = lc.createElement(AdminConstants.RENAME_DISTRIBUTION_LIST_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.RENAME_DISTRIBUTION_LIST_RESPONSE);
 	    GetDistributionList.doDistributionList(response, dl);
 	    return response;
 

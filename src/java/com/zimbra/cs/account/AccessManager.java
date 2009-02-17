@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 
 public abstract class AccessManager {
 
@@ -46,6 +47,8 @@ public abstract class AccessManager {
         return sManager;
     }
     
+    // why is this an AccessManager method?  should probably just 
+    // to AdminDocumentHanlder
     public abstract boolean isDomainAdminOnly(AuthToken at);
 
     public Account getAccount(AuthToken at) throws ServiceException {
@@ -139,6 +142,9 @@ public abstract class AccessManager {
     public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
     public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
     
+    public boolean canSetAttrsOnCreate(AuthToken grantee, TargetType targetType, String entryName, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
     
     // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
     public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, 

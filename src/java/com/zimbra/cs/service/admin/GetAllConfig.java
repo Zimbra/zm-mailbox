@@ -44,7 +44,7 @@ public class GetAllConfig extends AdminDocumentHandler {
 
 	    Config config = prov.getConfig();
 	        
-	    checkGlobalConfigRight(zsc, config, AdminRight.R_getGlobalConfig);
+	    checkRight(zsc, context, config, AdminRight.R_getGlobalConfig);
 	        
 	    Map attrs = config.getUnicodeAttrs();
 

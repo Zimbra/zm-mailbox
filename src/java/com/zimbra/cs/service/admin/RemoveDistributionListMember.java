@@ -26,6 +26,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -43,7 +44,7 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminConstants.E_ID);
@@ -56,8 +57,7 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        if (!canAccessEmail(lc, dl.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        checkDistributionListRight(zsc, dl, AdminRight.R_removeDistributionListMember);
 
         String[] members = (String[]) memberList.toArray(new String[0]); 
         prov.removeMembers(dl, members);
@@ -65,7 +65,7 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                                                       new String[] {"cmd", "RemoveDistributionListMember", "name", dl.getName(), "member", Arrays.deepToString(members)})); 
 
-        Element response = lc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_MEMBER_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;
     }
 }
