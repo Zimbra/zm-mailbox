@@ -226,7 +226,31 @@
  
 <right name="setAccountPassword" type="preset" targetType="account">
   <desc>set account password</desc>
-</right>         
+</right>
+
+<right name="viewPasswordStrength" type="getAttrs" targetType="account,calresource,cos">
+  <desc>configure password strength</desc>
+  <attrs>
+      <a n="zimbraPasswordMinLength"/>
+      <a n="zimbraPasswordMaxLength"/>
+      <a n="zimbraPasswordMinUpperCaseChars"/>
+      <a n="zimbraPasswordMinLowerCaseChars"/>
+      <a n="zimbraPasswordMinNumericChars"/>
+      <a n="zimbraPasswordMinPunctuationChars"/>
+  </attrs>
+</right>
+
+<right name="configurePasswordStrength" type="setAttrs" targetType="account,calresource,cos">
+  <desc>configure password strength</desc>
+  <attrs>
+      <a n="zimbraPasswordMinLength"/>
+      <a n="zimbraPasswordMaxLength"/>
+      <a n="zimbraPasswordMinUpperCaseChars"/>
+      <a n="zimbraPasswordMinLowerCaseChars"/>
+      <a n="zimbraPasswordMinNumericChars"/>
+      <a n="zimbraPasswordMinPunctuationChars"/>
+  </attrs>
+</right>       
           
 <right name="configureQuota" type="setAttrs" targetType="account,cos">
   <desc>configure quota</desc>
@@ -346,10 +370,16 @@
           - restoreCalenceResource             : restore calendar resource from backup
 -->
        
-<right name="setCalenceResourcePassword" type="preset" targetType="account">
+<right name="setCalendarResourcePassword" type="preset" targetType="account">
   <desc>set calendar resource password</desc>
 </right>     
 
+A_zimbraPasswordMinLength
+A_zimbraPasswordMaxLength
+A_zimbraPasswordMinUpperCaseChars
+A_zimbraPasswordMinLowerCaseChars
+A_zimbraPasswordMinNumericChars
+A_zimbraPasswordMinPunctuationChars
 
 <!-- 
 ========================================================
@@ -492,6 +522,18 @@
 <right name="createSubDomain" type="preset" targetType="domain">
   <desc>create sub domain</desc>
 </right>
+
+<right name="checkDomainMXRecord" type="preset" targetType="domain">
+  <desc>check doamin MX record</desc>
+</right>
+
+<right name="countAccount" type="preset" targetType="domain">
+  <desc>count accounts in a domain</desc>
+</right>
+
+<right name="getDomainQuotaUsage" type="preset" targetType="domain">
+  <desc>get domain quota usage</desc>
+</right>
           
 <!--       
   TODO:      
@@ -514,13 +556,12 @@
   <desc>create alias in this domain</desc>
 </right>
 
-<!--  
-  TODO:  (do we need this?)
-  - deleteAlias                       : delete alias in this domain
--->
+<right name="deleteAlias" type="preset" targetType="domain">
+  <desc>delete alias in this domain</desc>
+</right>
 
-<right name="viewGAL" type="preset" targetType="domain">
-  <desc>view GAL by doing AutoCompleteGal/SearchGal/SyncGal requests</desc>
+<right name="accessGAL" type="preset" targetType="domain">
+  <desc>access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests</desc>
 </right>
 
 <right name="configureExternalGAL" type="setAttrs" targetType="domain">
