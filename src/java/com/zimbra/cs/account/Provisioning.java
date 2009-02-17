@@ -1566,7 +1566,8 @@ public abstract class Provisioning {
     public static final String A_zimbraCalendarCalDavSyncStart = "zimbraCalendarCalDavSyncStart";
     public static final String A_zimbraCalendarCalDavSyncEnd = "zimbraCalendarCalDavSyncEnd";
     public static final String A_zimbraCalendarCalDavSharedFolderCacheDuration = "zimbraCalendarCalDavSharedFolderCacheDuration";
-
+    public static final String A_zimbraCalendarCalDavClearTextPasswordEnabled = "zimbraCalendarCalDavClearTextPasswordEnabled";
+    
     public static final String A_zimbraCalendarRecurrenceMaxInstances = "zimbraCalendarRecurrenceMaxInstances";
     public static final String A_zimbraCalendarRecurrenceDailyMaxDays = "zimbraCalendarRecurrenceDailyMaxDays";
     public static final String A_zimbraCalendarRecurrenceWeeklyMaxWeeks = "zimbraCalendarRecurrenceWeeklyMaxWeeks";
