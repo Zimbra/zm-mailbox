@@ -896,7 +896,7 @@ public final class ZimbraQuery {
                 if (mIncludeSubfolders) {
                     List<Folder> subFolders = mFolder.getSubfolderHierarchy();
                     
-                    if (truth) {
+                    if (calcTruth(truth)) {
                         // (A or B or C)
                         UnionQueryOperation union = new UnionQueryOperation();
                         
@@ -906,13 +906,13 @@ public final class ZimbraQuery {
                             if (f instanceof Mountpoint) {
                                 Mountpoint mpt = (Mountpoint)f;
                                 if (!mpt.isLocal()) {
-                                    dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, truth);
+                                    dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, calcTruth(truth));
                                 } else {
                                     // TODO FIXME handle local mountpoints.  Don't forget to check for infinite recursion!
                                 }
                                 
                             } else {
-                                dbop.addInClause(f, truth);
+                                dbop.addInClause(f, calcTruth(truth));
                             }
                         }
                         return union;
@@ -926,13 +926,13 @@ public final class ZimbraQuery {
                             if (f instanceof Mountpoint) {
                                 Mountpoint mpt = (Mountpoint)f;
                                 if (!mpt.isLocal()) {
-                                    dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, truth);
+                                    dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, calcTruth(truth));
                                 } else {
                                     // TODO FIXME handle local mountpoints.  Don't forget to check for infinite recursion!
                                 }
                                 
                             } else {
-                                dbop.addInClause(f, truth);
+                                dbop.addInClause(f, calcTruth(truth));
                             }
                         }
                         return iop;
@@ -967,7 +967,7 @@ public final class ZimbraQuery {
                 return toRet;
             } else {
                 return super.toString(expLevel)+
-                ",IN:"+(mRemoteId!=null ? mRemoteId.toString() :
+                ","+(mIncludeSubfolders?"UNDER":"IN")+":"+(mRemoteId!=null ? mRemoteId.toString() :
                     (mFolder!=null?mFolder.getName():"ANY_FOLDER"))
                     + (mSubfolderPath != null ? "/"+mSubfolderPath : "")
                     +")";
