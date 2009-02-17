@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090213-2144 */
+    /* build: 5.0 pshao 20090217-1402 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1195,6 +1195,93 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetBackupTarget(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupTarget, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port from CalDAV
+     * clients. If it set to TRUE the server will allow access from CalDAV
+     * client to zimbraMailPort. If it set to FALSE the server will return an
+     * error if a request is made from CalDAV client to zimbraMailPort.
+     *
+     * @return zimbraCalendarCalDavClearTextPasswordEnabled, or true if unset
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=820)
+    public boolean isCalendarCalDavClearTextPasswordEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCalendarCalDavClearTextPasswordEnabled, true);
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port from CalDAV
+     * clients. If it set to TRUE the server will allow access from CalDAV
+     * client to zimbraMailPort. If it set to FALSE the server will return an
+     * error if a request is made from CalDAV client to zimbraMailPort.
+     *
+     * @param zimbraCalendarCalDavClearTextPasswordEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=820)
+    public void setCalendarCalDavClearTextPasswordEnabled(boolean zimbraCalendarCalDavClearTextPasswordEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavClearTextPasswordEnabled, zimbraCalendarCalDavClearTextPasswordEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port from CalDAV
+     * clients. If it set to TRUE the server will allow access from CalDAV
+     * client to zimbraMailPort. If it set to FALSE the server will return an
+     * error if a request is made from CalDAV client to zimbraMailPort.
+     *
+     * @param zimbraCalendarCalDavClearTextPasswordEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=820)
+    public Map<String,Object> setCalendarCalDavClearTextPasswordEnabled(boolean zimbraCalendarCalDavClearTextPasswordEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavClearTextPasswordEnabled, zimbraCalendarCalDavClearTextPasswordEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port from CalDAV
+     * clients. If it set to TRUE the server will allow access from CalDAV
+     * client to zimbraMailPort. If it set to FALSE the server will return an
+     * error if a request is made from CalDAV client to zimbraMailPort.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=820)
+    public void unsetCalendarCalDavClearTextPasswordEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavClearTextPasswordEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow password sent to non-secured port from CalDAV
+     * clients. If it set to TRUE the server will allow access from CalDAV
+     * client to zimbraMailPort. If it set to FALSE the server will return an
+     * error if a request is made from CalDAV client to zimbraMailPort.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=820)
+    public Map<String,Object> unsetCalendarCalDavClearTextPasswordEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavClearTextPasswordEnabled, "");
         return attrs;
     }
 

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090213-2144 */
+    /* build: 5.0 pshao 20090217-1402 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1401,6 +1401,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=651)
     public static final String A_zimbraCalendarCalDavAlternateCalendarHomeSet = "zimbraCalendarCalDavAlternateCalendarHomeSet";
+
+    /**
+     * Whether to allow password sent to non-secured port from CalDAV
+     * clients. If it set to TRUE the server will allow access from CalDAV
+     * client to zimbraMailPort. If it set to FALSE the server will return an
+     * error if a request is made from CalDAV client to zimbraMailPort.
+     *
+     * @since ZCS 5.0.14
+     */
+    @ZAttr(id=820)
+    public static final String A_zimbraCalendarCalDavClearTextPasswordEnabled = "zimbraCalendarCalDavClearTextPasswordEnabled";
 
     /**
      * set true to turn off handling free/busy lookup for CalDAV
