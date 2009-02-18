@@ -64,34 +64,36 @@ class LuceneQueryOperation extends TextQueryOperation
             return true;
 
         BooleanClause[] clauses = mQuery.getClauses();
-        if (clauses.length > 1)
-            return false;
-        
-        Query q = clauses[0].getQuery();
-
-        if (q instanceof TermQuery) {
-            TermQuery tq = (TermQuery)q;
-            Term term = tq.getTerm();
-            try {
-                int freq = mSearcher.getSearcher().docFreq(term);
-                int docsCutoff = (int)(mSearcher.getSearcher().maxDoc() * sDbFirstTermFreqPerc);
-                if (ZimbraLog.index.isDebugEnabled())
-                    ZimbraLog.index.debug("Term matches "+freq+" docs.  DB-First cutoff ("+(100*sDbFirstTermFreqPerc)+"%) is "+docsCutoff+" docs");
-                if (freq > docsCutoff)  
-                    return true;
-            } catch (IOException e) {
-                return false;
+        if (clauses.length <= 1) {
+            Query q = clauses[0].getQuery();
+            
+            if (q instanceof TermQuery) {
+                TermQuery tq = (TermQuery)q;
+                Term term = tq.getTerm();
+                try {
+                    int freq = mSearcher.getSearcher().docFreq(term);
+                    int docsCutoff = (int)(mSearcher.getSearcher().maxDoc() * sDbFirstTermFreqPerc);
+                    if (ZimbraLog.index.isDebugEnabled())
+                        ZimbraLog.index.debug("Term matches "+freq+" docs.  DB-First cutoff ("+(100*sDbFirstTermFreqPerc)+"%) is "+docsCutoff+" docs");
+                    if (freq > docsCutoff)  
+                        return true;
+                } catch (IOException e) {
+                    return false;
+                }
             }
         }
-    
+        
         try {
             fetchFirstResults(1000); // some arbitrarily large initial size to fetch
-            if (this.countHits() > (3 * DBQueryOperation.MAX_HITS_PER_CHUNK)) { // also arbitrary, just to make very small searches run w/o 
+            if (ZimbraLog.index.isDebugEnabled()) {
+                ZimbraLog.index.debug("Lucene part has "+this.countHits()+" hits");
+            }
+            if (this.countHits() > 1000) { // also arbitrary, just to make very small searches run w/o extra DB check
                 int dbHitCount = this.mDBOp.getDbHitCount();
-                
                 if (ZimbraLog.index.isDebugEnabled()) {
                     ZimbraLog.index.debug("Lucene part has "+this.countHits()+" hits, db part has "+dbHitCount);
                 }
+                
                 if (dbHitCount < this.countHits())
                     return true; // run DB-FIRST 
             }
