@@ -45,6 +45,10 @@ abstract class TextQueryOperation extends QueryOperation {
     protected String mQueryString = "";
     protected BooleanQuery mQuery;
     
+    protected List<Term> mFilterTerms;  // used for doing DB-joins: the list of terms for the filter
+                                        // one of the terms in the list MUST occur in the document
+                                        // for it to match
+    
     /**
      * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
      * in order to properly get our results.
@@ -138,11 +142,7 @@ abstract class TextQueryOperation extends QueryOperation {
      *   (e.g. going in w/ "a b c" if we addAndedClause("d") we get "(a b c) AND d"
      * 
      * This API may only be called AFTER query optimizing and AFTER remote queries have been
-     * split.  
-     * 
-     * This API is used by the query executor so that it can temporarily add a bunch of 
-     * indexIds to the existing query -- this is necessary when we are doing a DB-first query
-     * plan execution.
+     * split.
      * 
      * Note that this API does *not* update the text-representation of this query
      * 
@@ -160,6 +160,36 @@ abstract class TextQueryOperation extends QueryOperation {
         top.add(rhs);
         mQuery = top;
     }        
+    
+    /**
+     * Add the specified text clause as a filter over the existing query
+     *   (e.g. going in w/ "a b c" if we addAndedClause("d") we get "(a b c) AND d"
+     * 
+     * This API is used by the query executor so that it can temporarily add a bunch of 
+     * indexIds to the existing query -- this is necessary when we are doing a DB-first query
+     * plan execution.
+     * 
+     * Note that this API does *not* update the text-representation of this query
+     * 
+     * @param q
+     * @param truth
+     */
+    void addFilterClause(Term t) {
+        mHaveRunSearch = false; // will need to re-run the search with this new clause
+        mCurHitNo = 0;
+        
+        if (mFilterTerms == null) {
+            mFilterTerms = new ArrayList<Term>();
+        }
+        mFilterTerms.add(t);
+    }
+    
+    /**
+     * Clear the filter clause 
+     */
+    void clearFilterClause() {
+        mFilterTerms = null;
+    }
     
     /**
      * Set the text query *representation* manually -- the thing that is output if we have

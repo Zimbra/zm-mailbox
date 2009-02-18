@@ -236,13 +236,21 @@ class LuceneQueryOperation extends TextQueryOperation
         try {
             if (mQuery != null) {
                 if (mSearcher != null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
-                	BooleanQuery outerQuery = new BooleanQuery();
+                    BooleanQuery outerQuery = new BooleanQuery();
                     outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), Occur.MUST));
                     outerQuery.add(new BooleanClause(mQuery, Occur.MUST));
                     if (mLog.isDebugEnabled()) {
                     	mLog.debug("Executing Lucene Query: "+outerQuery.toString());
                     }
-                    mTopDocs = mSearcher.search(outerQuery, null, mTopDocsLen);
+                    
+                    TermsFilter filter = null;
+                    if (mFilterTerms != null) {
+                        filter = new TermsFilter();
+                        for (Term t : mFilterTerms) {
+                            filter.addTerm(t);
+                        }
+                    }
+                    mTopDocs = mSearcher.search(outerQuery, filter, mTopDocsLen);
                 } else {
                     mTopDocs = null;
                 }

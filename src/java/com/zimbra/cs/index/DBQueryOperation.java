@@ -634,18 +634,19 @@ class DBQueryOperation extends QueryOperation
                     }
 
                     if (mExecuteMode == null) {
-                        BooleanQuery origQuery = null;
-                        if (mLuceneOp != null)
-                            origQuery = mLuceneOp.getCurrentQuery();
+//                        BooleanQuery origQuery = null;
+//                        if (mLuceneOp != null)
+//                            origQuery = mLuceneOp.getCurrentQuery();
 
                         if (hasNoResults() || !prepareSearchConstraints()) {
                             mExecuteMode = QueryExecuteMode.NO_RESULTS;
                         } else if (mLuceneOp == null) {
                             mExecuteMode = QueryExecuteMode.NO_LUCENE;
                         } else if (shouldExecuteDbFirst()) {
-                            // make sure the Lucene search is reset -- we might have executed it partially
-                            // in order to determine DB-First 
-                            mLuceneOp.resetQuery(origQuery);
+//                            // make sure the Lucene search is reset -- we might have executed it partially
+//                            // in order to determine DB-First 
+//                            mLuceneOp.resetQuery(origQuery);
+                            mLuceneOp.clearFilterClause();
                             mExecuteMode = QueryExecuteMode.DB_FIRST;
                         } else {
                             mExecuteMode = QueryExecuteMode.LUCENE_FIRST;
@@ -925,8 +926,8 @@ class DBQueryOperation extends QueryOperation
                 //    for "ORIGINAL-LUCENE-PART AND id:(RESULTS-FROM-1-ABOVE)"
                 //
                 
-                // save the original Lucene query, we'll restore it later
-                BooleanQuery originalQuery = mLuceneOp.getCurrentQuery();
+//                // save the original Lucene query, we'll restore it later
+//                BooleanQuery originalQuery = mLuceneOp.getCurrentQuery();
                 
                 try {
                     BooleanQuery idsQuery = new BooleanQuery();
@@ -946,11 +947,9 @@ class DBQueryOperation extends QueryOperation
                         }
                         l.add(res);
                         
-                        idsQuery.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId))), Occur.SHOULD);
+                        // add the new query to the mLuceneOp's query
+                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId)));
                     }
-                    
-                    // add the new query to the mLuceneOp's query
-                    mLuceneOp.addAndedClause(idsQuery, true);
                     
                     boolean hasMore = true;
                     
@@ -983,8 +982,9 @@ class DBQueryOperation extends QueryOperation
                         }
                     }
                 } finally {
-                    // restore the query
-                    mLuceneOp.resetQuery(originalQuery);
+//                    // restore the query
+//                    mLuceneOp.resetQuery(originalQuery);
+                    mLuceneOp.clearFilterClause();
                 }
             }
                 
