@@ -23,7 +23,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,10 +61,10 @@ public class RenameCalendarResource extends AdminDocumentHandler {
         String oldName = resource.getName();
 
         // check if the admin can rename the calendar resource
-        checkAccountRight(zsc, resource, AdminRight.R_renameCalendarResource);
+        checkAccountRight(zsc, resource, Admin.R_renameCalendarResource);
 
         // check if the admin can "create calendar resource" in the domain (can be same or diff)
-        checkDomainRightByEmail(zsc, newName, AdminRight.R_createCalendarResource);
+        checkDomainRightByEmail(zsc, newName, Admin.R_createCalendarResource);
 
         prov.renameCalendarResource(id, newName);
 

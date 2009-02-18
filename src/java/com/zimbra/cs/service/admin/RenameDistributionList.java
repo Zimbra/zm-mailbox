@@ -26,7 +26,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -55,10 +55,10 @@ public class RenameDistributionList extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
         // check if the admin can rename the DL
-        checkDistributionListRight(zsc, dl, AdminRight.R_renameDistributionList);
+        checkDistributionListRight(zsc, dl, Admin.R_renameDistributionList);
 
         // check if the admin can "create DL" in the domain (can be same or diff)
-        checkDomainRightByEmail(zsc, newName, AdminRight.R_createDistributionList);
+        checkDomainRightByEmail(zsc, newName, Admin.R_createDistributionList);
         
         String oldName = dl.getName();
 

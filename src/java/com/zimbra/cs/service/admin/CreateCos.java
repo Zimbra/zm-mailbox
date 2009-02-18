@@ -28,7 +28,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -45,7 +45,7 @@ public class CreateCos extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
-	    checkRight(zsc, context, null, AdminRight.R_createCos);
+	    checkRight(zsc, context, null, Admin.R_createCos);
 	    checkSetAttrsOnCreate(zsc, TargetType.cos, name, attrs);
 	        
 	    Cos cos = prov.createCos(name, attrs);

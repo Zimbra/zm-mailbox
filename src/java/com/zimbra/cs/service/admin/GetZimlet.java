@@ -23,6 +23,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -30,7 +31,7 @@ public class GetZimlet extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element z = request.getElement(AdminConstants.E_ZIMLET);
@@ -40,8 +41,10 @@ public class GetZimlet extends AdminDocumentHandler {
 
         if (zimlet == null)
             throw AccountServiceException.NO_SUCH_ZIMLET(n);
+        
+        checkRight(zsc, context, zimlet, Admin.R_getZimlet);
 
-	    Element response = lc.createElement(AdminConstants.GET_ZIMLET_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.GET_ZIMLET_RESPONSE);
 	    doZimlet(response, zimlet);
 	    
 	    return response;

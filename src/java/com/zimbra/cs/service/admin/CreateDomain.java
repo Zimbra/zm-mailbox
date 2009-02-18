@@ -29,7 +29,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -48,14 +48,14 @@ public class CreateDomain extends AdminDocumentHandler {
 	    
 	    int firstDot = name.indexOf('.');
 	    if (firstDot == -1)
-	        checkRight(zsc, context, null, AdminRight.R_createTopDomain);
+	        checkRight(zsc, context, null, Admin.R_createTopDomain);
 	    else {
 	        String parentDomainName = name.substring(firstDot+1);
 	        Domain parentDomain = Provisioning.getInstance().get(DomainBy.name, parentDomainName);
 	        if (parentDomain == null)
-	            checkRight(zsc, context, null, AdminRight.R_createSubDomain);
+	            checkRight(zsc, context, null, Admin.R_createSubDomain);
 	        else
-	            checkRight(zsc, context, parentDomain, AdminRight.R_createSubDomain);
+	            checkRight(zsc, context, parentDomain, Admin.R_createSubDomain);
 	    }
 	    
 	    // check if all the attrs can be set and within constraints

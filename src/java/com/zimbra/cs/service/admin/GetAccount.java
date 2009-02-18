@@ -30,7 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -62,7 +62,7 @@ public class GetAccount extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        checkAccountRight(zsc, account, AdminRight.R_getAccount);
+        checkAccountRight(zsc, account, Admin.R_getAccount);
 
 	    Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
         ToXML.encodeAccountOld(response, account, applyCos);

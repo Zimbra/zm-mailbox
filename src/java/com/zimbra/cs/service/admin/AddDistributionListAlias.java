@@ -23,7 +23,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -51,10 +51,10 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        checkDistributionListRight(lc, dl, AdminRight.R_addDistributionListAlias);
+        checkDistributionListRight(lc, dl, Admin.R_addDistributionListAlias);
 
         // if the admin can create an alias in the domain
-        checkDomainRightByEmail(lc, alias, AdminRight.R_createAlias);
+        checkDomainRightByEmail(lc, alias, Admin.R_createAlias);
 
         prov.addAlias(dl, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

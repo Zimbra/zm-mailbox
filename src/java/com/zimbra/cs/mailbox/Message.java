@@ -34,7 +34,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.UserRight;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -441,12 +441,12 @@ public class Message extends MailItem {
                     onBehalfOf = octxt.isDelegatedRequest(getMailbox());
                     senderAcct = octxt.getAuthenticatedUser();
                     senderEmail = senderAcct.getName();
-                    canInvite = accessMgr.canDo(senderAcct, acct, UserRight.R_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
                 } else {
                     senderEmail = pm != null ? pm.getSenderEmail(false) : null;
                     if (senderEmail != null)
                         senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
-                    canInvite = accessMgr.canDo(senderEmail, acct, UserRight.R_invite, false, allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canDo(senderEmail, acct, User.R_invite, false, allowInviteIfNoAceDefined);
                 }
                 if (!canInvite) {
                     Invite invite = invites.get(0);

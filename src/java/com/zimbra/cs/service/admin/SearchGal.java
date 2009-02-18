@@ -30,7 +30,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -74,7 +74,7 @@ public class SearchGal extends AdminDocumentHandler {
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         
-        checkDomainRight(zsc, d, AdminRight.R_accessGAL); 
+        checkDomainRight(zsc, d, Admin.R_accessGAL); 
 
         Element response = zsc.createElement(AdminConstants.SEARCH_GAL_RESPONSE);
 

@@ -20,12 +20,16 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -35,15 +39,21 @@ public class GetConfig extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element a = request.getElement(AdminConstants.E_A);
         String name = a.getAttribute(AdminConstants.A_N);
 
-        String value[] = prov.getConfig().getMultiAttr(name);
+        Config config = prov.getConfig();
+        
+        Set<String> attrsNeeded = new HashSet<String>();
+        attrsNeeded.add(name);
+        checkRight(zsc, context, config, attrsNeeded);
+        
+        String value[] = config.getMultiAttr(name);
 
-        Element response = lc.createElement(AdminConstants.GET_CONFIG_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_CONFIG_RESPONSE);
         doConfig(response, name, value);
 
         return response;

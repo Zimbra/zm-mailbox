@@ -25,7 +25,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,7 +46,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
         String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
-        checkDomainRightByEmail(zsc, name, AdminRight.R_createDistributionList);
+        checkDomainRightByEmail(zsc, name, Admin.R_createDistributionList);
         checkSetAttrsOnCreate(zsc, TargetType.dl, name, attrs);
         
         DistributionList dl = prov.createDistributionList(name, attrs);

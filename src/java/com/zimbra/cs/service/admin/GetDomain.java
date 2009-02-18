@@ -27,7 +27,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Iterator;
@@ -62,7 +62,7 @@ public class GetDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-        checkDomainRight(zsc, domain, AdminRight.R_getDomain);
+        checkDomainRight(zsc, domain, Admin.R_getDomain);
 
         Element response = zsc.createElement(AdminConstants.GET_DOMAIN_RESPONSE);
         doDomain(response, domain, applyConfig);

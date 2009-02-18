@@ -27,7 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -56,7 +56,7 @@ public class DeleteDataSource extends AdminDocumentHandler {
 
         // is this really used by admin console?
         // for now just use the adminLoginAs right.
-        checkAccountRight(zsc, account, AdminRight.R_adminLoginAs);
+        checkAccountRight(zsc, account, Admin.R_adminLoginAs);
 
         Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         String dsId = dsEl.getAttribute(AccountConstants.A_ID);

@@ -33,9 +33,9 @@ public abstract class Right extends RightConsts {
     private TargetType mTargetType;
     
     
-    static void initKnownRights(RightManager rm) throws ServiceException {
-        UserRight.initKnownUserRights(rm);
-        AdminRight.initKnownAdminRights(rm);
+    static void init(RightManager rm) throws ServiceException {
+        UserRight.init(rm);
+        AdminRight.init(rm);
     }
     
     Right(String name, RightType rightType) {

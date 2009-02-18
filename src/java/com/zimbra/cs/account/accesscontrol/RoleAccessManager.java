@@ -13,9 +13,12 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -41,9 +44,9 @@ public class RoleAccessManager extends AccessManager {
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
         if (asAdmin)
-            return canDo(at, target, AdminRight.R_adminLoginAs, asAdmin, false);
+            return canDo(at, target, Admin.R_adminLoginAs, asAdmin, false);
         else
-            return canDo(at, target, UserRight.R_loginAs, asAdmin, false);
+            return canDo(at, target, User.R_loginAs, asAdmin, false);
     }
 
     @Override
@@ -56,9 +59,9 @@ public class RoleAccessManager extends AccessManager {
     public boolean canAccessAccount(Account credentials, Account target,
             boolean asAdmin) throws ServiceException {
         if (asAdmin)
-            return canDo(credentials, target, AdminRight.R_adminLoginAs, asAdmin, false);
+            return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin, false);
         else
-            return canDo(credentials, target, UserRight.R_loginAs, asAdmin, false);
+            return canDo(credentials, target, User.R_loginAs, asAdmin, false);
     }
 
     @Override
@@ -290,6 +293,14 @@ public class RoleAccessManager extends AccessManager {
         }
         
         return allowed;
+    }
+    
+    @Override
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+        Account authedAcct = getAccountFromAuthToken(grantee);
+        return canPerform(authedAcct, target, rightNeeded, canDelegate, 
+                          attrs, asAdmin, viaGrant);
     }
     
     // all user and admin preset rights go through here 

@@ -28,7 +28,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -66,12 +66,12 @@ public class AddAccountAlias extends AdminDocumentHandler {
         if (account.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
             CalendarResource resource = prov.get(CalendarResourceBy.id, id);
-            checkCalendarResourceRight(zsc, resource, AdminRight.R_addCalendarResourceAlias);
+            checkCalendarResourceRight(zsc, resource, Admin.R_addCalendarResourceAlias);
         } else
-            checkAccountRight(zsc, account, AdminRight.R_addAccountAlias);
+            checkAccountRight(zsc, account, Admin.R_addAccountAlias);
 
         // if the admin can create an alias in the domain
-        checkDomainRightByEmail(zsc, alias, AdminRight.R_createAlias);
+        checkDomainRightByEmail(zsc, alias, Admin.R_createAlias);
 
         prov.addAlias(account, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

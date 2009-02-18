@@ -24,7 +24,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,7 +45,7 @@ public class CreateServer extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
-	    checkRight(zsc, context, null, AdminRight.R_createServer);
+	    checkRight(zsc, context, null, Admin.R_createServer);
 	    checkSetAttrsOnCreate(zsc, TargetType.server, name, attrs);
 	    
 	    Server server = prov.createServer(name, attrs);

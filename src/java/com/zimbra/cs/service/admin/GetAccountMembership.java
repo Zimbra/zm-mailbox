@@ -32,7 +32,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -61,7 +61,7 @@ public class GetAccountMembership extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        checkAccountRight(zsc, account, AdminRight.R_getAccountMembership);
+        checkAccountRight(zsc, account, Admin.R_getAccountMembership);
 
         HashMap<String,String> via = new HashMap<String, String>();
         List<DistributionList> lists = prov.getDistributionLists(account, false, via);

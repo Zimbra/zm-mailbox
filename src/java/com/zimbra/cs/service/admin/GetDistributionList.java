@@ -30,6 +30,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AdminDocumentHandler {
@@ -43,7 +44,7 @@ public class GetDistributionList extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 	    
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
@@ -65,10 +66,9 @@ public class GetDistributionList extends AdminDocumentHandler {
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
 
-        if (!canAccessEmail(lc, distributionList.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        checkDistributionListRight(zsc, distributionList, Admin.R_getDistributionList);
             
-        Element response = lc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         Element dlElement = doDistributionList(response, distributionList);
         
         String[] members = distributionList.getAllMembers();

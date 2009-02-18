@@ -25,6 +25,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -37,7 +38,7 @@ public class GetXMPPComponent extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
         Element id = request.getElement(AdminConstants.E_XMPP_COMPONENT);
@@ -50,11 +51,10 @@ public class GetXMPPComponent extends AdminDocumentHandler {
         XMPPComponentBy by = Provisioning.XMPPComponentBy.valueOf(byStr);
         
         XMPPComponent comp = prov.get(by, name);
-        if (comp == null) {
+        if (comp == null)
             throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(name);
-        }
         
-        Element response = lc.createElement(AdminConstants.GET_XMPPCOMPONENT_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_XMPPCOMPONENT_RESPONSE);
         ToXML.encodeXMPPComponent(response, comp);
         return response;
     }

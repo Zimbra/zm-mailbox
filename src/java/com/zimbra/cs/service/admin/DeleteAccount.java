@@ -29,7 +29,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -69,7 +69,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        checkAccountRight(zsc, account, AdminRight.R_deleteAccount);        
+        checkAccountRight(zsc, account, Admin.R_deleteAccount);        
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
         //check if domain-level wiki account

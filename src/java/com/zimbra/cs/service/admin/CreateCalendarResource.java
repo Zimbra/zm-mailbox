@@ -26,7 +26,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,7 +52,7 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
-        checkDomainRightByEmail(zsc, name, AdminRight.R_createCalendarResource);
+        checkDomainRightByEmail(zsc, name, Admin.R_createCalendarResource);
         checkSetAttrsOnCreate(zsc, TargetType.calresource, name, attrs);
         
         CalendarResource resource = prov.createCalendarResource(name,password, attrs);

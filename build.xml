@@ -446,14 +446,6 @@
           <arg line="-a generateGetters -c ${getter.class} -i ${config.dir}/attrs -r ${src.java.dir}/com/zimbra/cs/account/${getter.output}"/>
         </java>
     </target>
-	
-    <target name="generate-rights" depends="set-buildinfo-vars,compile">
-       <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
-              failonerror="true">
-          <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-          <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
-        </java>
-    </target>
 
     <target name="generate-provisioning">
        <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
@@ -1763,6 +1755,24 @@
         <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
 
         <antcall target="server2-provision-ldap"/>
+    </target>
+	
+    <target name="generate-rights" depends="set-buildinfo-vars,compile">
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+            <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
+        </java>
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+            <arg line="-a genAdminRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/ZAdminRight.java"/>
+        </java>
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+            <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/ZUserRight.java"/>
+        </java>
     </target>
 	
 	<target name="refresh-rights">

@@ -24,7 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.accesscontrol.UserRight;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.fb.FreeBusy.IntervalList;
@@ -68,7 +68,7 @@ public class LocalFreeBusyProvider {
         }
 
         AccessManager accessMgr = AccessManager.getInstance();
-        boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), UserRight.R_viewFreeBusy, asAdmin, true);
+        boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), User.R_viewFreeBusy, asAdmin, true);
 
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 

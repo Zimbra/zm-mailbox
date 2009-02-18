@@ -8,6 +8,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
@@ -26,7 +27,7 @@ public class AclAccessManager extends DomainAccessManager {
         if (super.canAccessAccount(at, target, asAdmin))
             return true;
         else
-            return canDo(at, target, UserRight.R_loginAs, asAdmin, false);
+            return canDo(at, target, User.R_loginAs, asAdmin, false);
     }
     
     public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
@@ -37,7 +38,7 @@ public class AclAccessManager extends DomainAccessManager {
         if (super.canAccessAccount(credentials, target, asAdmin))
             return true;
         else
-            return canDo(credentials, target, UserRight.R_loginAs, asAdmin, false);
+            return canDo(credentials, target, User.R_loginAs, asAdmin, false);
     }
     
     public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
@@ -56,7 +57,7 @@ public class AclAccessManager extends DomainAccessManager {
             }
             
             // 2. check admin access - if the right being asked for is not loginAs
-            if (rightNeeded != UserRight.R_loginAs) {
+            if (rightNeeded != Rights.User.R_loginAs) {
                 if (target instanceof Account) {
                     if (canAccessAccount(grantee, (Account)target, asAdmin))
                         return true;

@@ -26,7 +26,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.account.ToXML;
@@ -66,10 +66,10 @@ public class RenameAccount extends AdminDocumentHandler {
         String oldName = account.getName();
         
         // check if the admin can rename the account
-        checkAccountRight(zsc, account, AdminRight.R_renameAccount);
+        checkAccountRight(zsc, account, Admin.R_renameAccount);
 
         // check if the admin can "create account" in the domain (can be same or diff)
-        checkDomainRightByEmail(zsc, newName, AdminRight.R_createAccount);
+        checkDomainRightByEmail(zsc, newName, Admin.R_createAccount);
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
         prov.renameAccount(id, newName);

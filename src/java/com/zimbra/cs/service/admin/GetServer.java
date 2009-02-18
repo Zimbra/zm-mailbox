@@ -29,6 +29,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -38,7 +39,7 @@ public class GetServer extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
@@ -53,10 +54,13 @@ public class GetServer extends AdminDocumentHandler {
         
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(name);
-        else
-            prov.reload(server);
         
-	    Element response = lc.createElement(AdminConstants.GET_SERVER_RESPONSE);
+        checkRight(zsc, context, server, Admin.R_getServer);
+        
+        // reload the server 
+        prov.reload(server);
+        
+	    Element response = zsc.createElement(AdminConstants.GET_SERVER_RESPONSE);
         doServer(response, server, applyConfig);
 
 	    return response;

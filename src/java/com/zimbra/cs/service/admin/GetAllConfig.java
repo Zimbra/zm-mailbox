@@ -29,7 +29,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -44,7 +44,7 @@ public class GetAllConfig extends AdminDocumentHandler {
 
 	    Config config = prov.getConfig();
 	        
-	    checkRight(zsc, context, config, AdminRight.R_getGlobalConfig);
+	    checkRight(zsc, context, config, Admin.R_getGlobalConfig);
 	        
 	    Map attrs = config.getUnicodeAttrs();
 

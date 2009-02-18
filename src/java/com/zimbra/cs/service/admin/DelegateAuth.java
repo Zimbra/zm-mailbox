@@ -30,7 +30,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -75,7 +75,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
         
-        checkAccountRight(zsc, account, AdminRight.R_adminLoginAs);
+        checkAccountRight(zsc, account, Admin.R_adminLoginAs);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DelegateAuth","accountId", account.getId(),"accountName", account.getName()})); 

@@ -151,7 +151,11 @@ public abstract class AccessManager {
                               Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
-
+    
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
 
     /**
      * Returns true if authAccount should be allowed access to private data in appointments owned

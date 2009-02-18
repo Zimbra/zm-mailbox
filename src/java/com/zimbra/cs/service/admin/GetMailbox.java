@@ -29,7 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -59,7 +59,7 @@ public class GetMailbox extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
 
-        checkAccountRight(zsc, account, AdminRight.R_getMailboxInfo);
+        checkAccountRight(zsc, account, Admin.R_getMailboxInfo);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
         Element response = zsc.createElement(AdminConstants.GET_MAILBOX_RESPONSE);

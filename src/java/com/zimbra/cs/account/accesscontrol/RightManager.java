@@ -64,7 +64,7 @@ public class RightManager {
         mInstance = new RightManager(dir);
         
         try {
-            Right.initKnownRights(mInstance);
+            Right.init(mInstance);
         } catch (ServiceException e) {
             ZimbraLog.acl.error("failed to initialize known right from: " + dir, e);
             throw e;
@@ -403,16 +403,6 @@ public class RightManager {
         sb.append("    public static final String RT_" + r.getName() + " = \"" + r.getName() + "\";" + "\n");
     }
     
-    //TODO
-    void genAdminRightVar(Right r, StringBuilder sb) {
-        // sb.append("    public static AdminRight R_" + r.getName() + ";" + "\n");
-    }
-    
-    // TODO
-    void genUserRightVar(Right r, StringBuilder sb) {
-        // sb.append("    public static UserRight R_" + r.getName() + ";" + "\n");
-    }
-    
     private String genRightConsts() {
         StringBuilder sb = new StringBuilder();
         
@@ -439,19 +429,39 @@ public class RightManager {
         return sb.toString();
     }
     
-    private String genAdminRightDef() {
+    private String genAdminRights() {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, AdminRight> ar : getAllAdminRights().entrySet()) {
-            genAdminRightVar(ar.getValue(), sb);
+        
+        sb.append("\n\n");
+        for (AdminRight r : getAllAdminRights().values()) {
+            sb.append("    public static AdminRight R_" + r.getName() + ";" + "\n");
         }
+        
+        sb.append("\n\n");
+        sb.append("    public static void init(RightManager rm) throws ServiceException {\n");
+        for (AdminRight r : getAllAdminRights().values()) {
+            String s = String.format("        R_%-36s = rm.getAdminRight(Right.RT_%s);\n", r.getName(), r.getName());
+            sb.append(s);
+        }
+        sb.append("    }\n");
         return sb.toString();
     }
     
-    private String genUserRightDef() {
+    private String genUserRights() {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, UserRight> ar : getAllUserRights().entrySet()) {
-            genUserRightVar(ar.getValue(), sb);
+        
+        sb.append("\n\n");
+        for (UserRight r : getAllUserRights().values()) {
+            sb.append("    public static UserRight R_" + r.getName() + ";" + "\n");
         }
+        
+        sb.append("\n\n");
+        sb.append("    public static void init(RightManager rm) throws ServiceException {\n");
+        for (UserRight r : getAllUserRights().values()) {
+            String s = String.format("        R_%-36s = rm.getUserRight(Right.RT_%s);\n", r.getName(), r.getName());
+            sb.append(s);
+        }
+        sb.append("    }\n");
         return sb.toString();
     }
     
@@ -460,7 +470,7 @@ public class RightManager {
         
         static {
             sOptions.addOption("h", "help", false, "display this  usage info");
-            sOptions.addOption("a", "action", true, "action, one of genRightConsts");
+            sOptions.addOption("a", "action", true, "action, one of genRightConsts, genAdminRights, genUserRights");
             sOptions.addOption("i", "input", true,"rights definition xml input directory");
             sOptions.addOption("r", "regenerateFile", true, "Java file to regenerate");
         }
@@ -516,12 +526,10 @@ public class RightManager {
             
             if ("genRightConsts".equals(action))
                 FileGenUtil.replaceJavaFile(regenFile, rm.genRightConsts());
-            /*
-            else if ("genAdminRightDef".equals(action))
-                FileGenUtil.replaceJavaFile(regenFile, rm.genAdminRightDef());
-            else if ("genUserRightDef".equals(action))
-                FileGenUtil.replaceJavaFile(regenFile, rm.genUserRightDef());
-            */
+           else if ("genAdminRights".equals(action))
+                FileGenUtil.replaceJavaFile(regenFile, rm.genAdminRights());
+            else if ("genUserRights".equals(action))
+                FileGenUtil.replaceJavaFile(regenFile, rm.genUserRights());
             else
                 usage("invalid action");
         }

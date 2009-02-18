@@ -417,7 +417,7 @@ public class RightCommand {
      * remove when all is well
      */
     private static boolean READY() {
-        return false;
+        return true;
     }
     
     private static void verifyAccessManager() throws ServiceException {

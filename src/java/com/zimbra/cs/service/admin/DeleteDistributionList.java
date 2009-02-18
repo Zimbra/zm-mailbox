@@ -23,7 +23,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -50,7 +50,7 @@ public class DeleteDistributionList extends AdminDocumentHandler {
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        checkDistributionListRight(zsc, distributionList, AdminRight.R_deleteDistributionList);        
+        checkDistributionListRight(zsc, distributionList, Admin.R_deleteDistributionList);        
 
         prov.deleteDistributionList(distributionList.getId());
 

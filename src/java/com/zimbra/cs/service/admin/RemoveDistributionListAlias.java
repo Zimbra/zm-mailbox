@@ -22,7 +22,7 @@ import java.util.Map;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -52,12 +52,12 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
             
         String dlName = "";
         if (dl != null) {
-            checkDistributionListRight(zsc, dl, AdminRight.R_removeDistributionListAlias);
+            checkDistributionListRight(zsc, dl, Admin.R_removeDistributionListAlias);
             dlName = dl.getName();
         }
         
         // if the admin can remove an alias in the domain
-        checkDomainRightByEmail(zsc, alias, AdminRight.R_deleteAlias);
+        checkDomainRightByEmail(zsc, alias, Admin.R_deleteAlias);
         
         prov.removeAlias(dl, alias);
         

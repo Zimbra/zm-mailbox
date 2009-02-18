@@ -45,6 +45,8 @@ import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.RightUtil;
 import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -66,7 +68,7 @@ public abstract class TestACL extends TestCase {
     protected static final String PASSWORD = "test123";
     
     // user right
-    protected static final Right USER_RIGHT = UserRight.R_viewFreeBusy;
+    protected static final Right USER_RIGHT = User.R_viewFreeBusy;
     
     // account right
     protected static Right ADMIN_RIGHT_ACCOUNT;

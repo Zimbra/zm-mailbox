@@ -33,7 +33,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -76,7 +76,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         
-        checkDomainRight(zsc, d, AdminRight.R_accessGAL); 
+        checkDomainRight(zsc, d, Admin.R_accessGAL); 
 
         Element response = zsc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
 
