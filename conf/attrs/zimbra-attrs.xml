@@ -4116,4 +4116,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="821" name="zimbraFeatureReadReceiptsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether the web UI shows UI elements related to read receipts</desc>
+</attr>
+
+<attr id="822" name="zimbraPrefMailSendReadReceipts" type="enum" value="always,never,prompt" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
+  <defaultCOSValue>never</defaultCOSValue>
+  <desc>whether to send read receipt</desc>
+</attr>
+
+<attr id="823" name="zimbraPrefReadReceiptsToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="6.0.0">
+  <desc>
+    address to put in reply-to header of read receipt messages, 
+    if it is not set, then the compose identitys primary email address is used.
+  </desc>
+</attr>
+
+
 </attrs>

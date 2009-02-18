@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090217-1402 */
+    /* build: 5.0 pshao 20090218-1346 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -564,6 +564,24 @@ public class ZAttrProvisioning {
         public boolean isXa() { return this == xa;}
         public boolean isAway() { return this == away;}
         public boolean isInvisible() { return this == invisible;}
+    }
+
+    public static enum PrefMailSendReadReceipts {
+        never("never"),
+        prompt("prompt"),
+        always("always");
+        private String mValue;
+        private PrefMailSendReadReceipts(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefMailSendReadReceipts fromString(String s) throws ServiceException {
+            for (PrefMailSendReadReceipts value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNever() { return this == never;}
+        public boolean isPrompt() { return this == prompt;}
+        public boolean isAlways() { return this == always;}
     }
 
     public static enum PrefMailSignatureStyle {
@@ -2476,6 +2494,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=447)
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
+
+    /**
+     * whether the web UI shows UI elements related to read receipts
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=821)
+    public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
 
     /**
      * saved search feature
@@ -4677,6 +4703,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
 
     /**
+     * whether to send read receipt
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public static final String A_zimbraPrefMailSendReadReceipts = "zimbraPrefMailSendReadReceipts";
+
+    /**
      * mail text signature (deprecatedSince 5.0 in identity)
      */
     @ZAttr(id=17)
@@ -4820,6 +4854,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=804)
     public static final String A_zimbraPrefReadingPaneLocation = "zimbraPrefReadingPaneLocation";
+
+    /**
+     * address to put in reply-to header of read receipt messages, if it is
+     * not set, then the compose identitys primary email address is used.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=823)
+    public static final String A_zimbraPrefReadReceiptsToAddress = "zimbraPrefReadReceiptsToAddress";
 
     /**
      * what part of the original message to include during replies

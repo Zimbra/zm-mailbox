@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090217-1402 */
+    /* build: 5.0 pshao 20090218-1346 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -5916,6 +5916,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeaturePortalEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeaturePortalEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether the web UI shows UI elements related to read receipts
+     *
+     * @return zimbraFeatureReadReceiptsEnabled, or true if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=821)
+    public boolean isFeatureReadReceiptsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureReadReceiptsEnabled, true);
+    }
+
+    /**
+     * whether the web UI shows UI elements related to read receipts
+     *
+     * @param zimbraFeatureReadReceiptsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=821)
+    public void setFeatureReadReceiptsEnabled(boolean zimbraFeatureReadReceiptsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureReadReceiptsEnabled, zimbraFeatureReadReceiptsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the web UI shows UI elements related to read receipts
+     *
+     * @param zimbraFeatureReadReceiptsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=821)
+    public Map<String,Object> setFeatureReadReceiptsEnabled(boolean zimbraFeatureReadReceiptsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureReadReceiptsEnabled, zimbraFeatureReadReceiptsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether the web UI shows UI elements related to read receipts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=821)
+    public void unsetFeatureReadReceiptsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureReadReceiptsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the web UI shows UI elements related to read receipts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=821)
+    public Map<String,Object> unsetFeatureReadReceiptsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureReadReceiptsEnabled, "");
         return attrs;
     }
 
@@ -16084,6 +16156,137 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefMailPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @return zimbraPrefMailSendReadReceipts, or ZAttrProvisioning.PrefMailSendReadReceipts.never if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public ZAttrProvisioning.PrefMailSendReadReceipts getPrefMailSendReadReceipts() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefMailSendReadReceipts); return v == null ? ZAttrProvisioning.PrefMailSendReadReceipts.never : ZAttrProvisioning.PrefMailSendReadReceipts.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefMailSendReadReceipts.never; }
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @return zimbraPrefMailSendReadReceipts, or "never" if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public String getPrefMailSendReadReceiptsAsString() {
+        return getAttr(Provisioning.A_zimbraPrefMailSendReadReceipts, "never");
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @param zimbraPrefMailSendReadReceipts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public void setPrefMailSendReadReceipts(ZAttrProvisioning.PrefMailSendReadReceipts zimbraPrefMailSendReadReceipts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSendReadReceipts, zimbraPrefMailSendReadReceipts.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @param zimbraPrefMailSendReadReceipts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public Map<String,Object> setPrefMailSendReadReceipts(ZAttrProvisioning.PrefMailSendReadReceipts zimbraPrefMailSendReadReceipts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSendReadReceipts, zimbraPrefMailSendReadReceipts.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @param zimbraPrefMailSendReadReceipts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public void setPrefMailSendReadReceiptsAsString(String zimbraPrefMailSendReadReceipts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSendReadReceipts, zimbraPrefMailSendReadReceipts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @param zimbraPrefMailSendReadReceipts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public Map<String,Object> setPrefMailSendReadReceiptsAsString(String zimbraPrefMailSendReadReceipts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSendReadReceipts, zimbraPrefMailSendReadReceipts);
+        return attrs;
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public void unsetPrefMailSendReadReceipts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSendReadReceipts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to send read receipt
+     *
+     * <p>Valid values: [prompt, never, always]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=822)
+    public Map<String,Object> unsetPrefMailSendReadReceipts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSendReadReceipts, "");
         return attrs;
     }
 
