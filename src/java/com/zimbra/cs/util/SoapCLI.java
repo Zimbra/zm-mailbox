@@ -24,24 +24,30 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.soap.*;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * For command line interface utilities that are SOAP clients and need to authenticate with
@@ -147,18 +153,31 @@ public abstract class SoapCLI {
         return cl;
     }
 
-    // Combine normal and hidden options.
+    /**
+     * Returns an <tt>Options</tt> object that combines the standard options
+     * and the hidden ones.
+     */
+    @SuppressWarnings("unchecked")
     private Options getAllOptions() {
-        Options options = new Options();
-        Collection[] optsCols =
-            new Collection[] { mOptions.getOptions(), mHiddenOptions.getOptions() };
-        for (Collection opts : optsCols) {
-            for (Iterator iter = opts.iterator(); iter.hasNext(); ) {
-                Option opt = (Option) iter.next();
-                options.addOption(opt);
+        Options newOptions = new Options();
+        Set<OptionGroup> groups = new HashSet<OptionGroup>();
+        Options[] optionses =
+            new Options[] { mOptions, mHiddenOptions };
+        for (Options options : optionses) {
+            for (Option opt : (Collection<Option>) options.getOptions()) {
+                OptionGroup group = options.getOptionGroup(opt);
+                if (group != null) {
+                    groups.add(group);
+                } else {
+                    newOptions.addOption(opt);
+                }
             }
         }
-        return options;
+        
+        for (OptionGroup group : groups) {
+            newOptions.addOptionGroup(group);
+        }
+        return newOptions;
     }
 
     private boolean helpOptionSpecified(String[] args) {

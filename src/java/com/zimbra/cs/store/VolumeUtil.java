@@ -392,6 +392,7 @@ public class VolumeUtil extends SoapCLI {
         og.addOption(new Option(O_DC, "displayCurrent", false, "Displays the current volumes."));
         og.addOption(new Option(O_SC, "setCurrent", false, "Sets the current volume."));
         og.addOption(new Option(O_TS, "turnOffSecondary", false, "Turns off the current secondary message volume"));
+        og.setRequired(true);
         options.addOptionGroup(og);
         options.addOption(O_ID, "id", true, "Volume ID");
         options.addOption(O_T, "type", true,
