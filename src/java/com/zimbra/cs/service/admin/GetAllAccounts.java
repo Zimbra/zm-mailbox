@@ -36,6 +36,8 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -57,7 +59,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
         Element response = null;
@@ -79,10 +81,11 @@ public class GetAllAccounts extends AdminDocumentHandler {
         }
         
         Element d = request.getOptionalElement(AdminConstants.E_DOMAIN);
-        if (d != null || isDomainAdminOnly(lc)) {
+        
+        if (d != null || isDomainAdminOnly(zsc)) {
             
             String key = d == null ? BY_NAME : d.getAttribute(AdminConstants.A_BY);
-            String value = d == null ? getAuthTokenAccountDomain(lc).getName() : d.getText();
+            String value = d == null ? getAuthTokenAccountDomain(zsc).getName() : d.getText();
 	    
             Domain domain = null;
         
@@ -97,22 +100,21 @@ public class GetAllAccounts extends AdminDocumentHandler {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(value);
             
-            if (!canAccessDomain(lc, domain)) 
-                throw ServiceException.PERM_DENIED("can not access domain"); 
+            checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW); 
 
-            response = lc.createElement(getResponseQName());
-            doDomain(response, domain, server);
+            response = zsc.createElement(getResponseQName());
+            doDomain(zsc, response, domain, server);
 
         } else {
-            response = lc.createElement(getResponseQName());
+            response = zsc.createElement(getResponseQName());
             List domains = prov.getAllDomains();
             if (domains != null) {
 	            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
 	                Domain domain = (Domain) dit.next();
-	                doDomain(response, domain, server);                
+	                doDomain(zsc, response, domain, server);                
 	            }
             } else { //domains not supported, for now only offline
-            	doDomain(response, null, server);
+            	doDomain(zsc, response, null, server);
             }
         }
         return response;        
@@ -122,12 +124,25 @@ public class GetAllAccounts extends AdminDocumentHandler {
         return AdminConstants.GET_ALL_ACCOUNTS_RESPONSE;
     }
 
-    protected void doDomain(final Element e, Domain d, Server s) throws ServiceException {
-        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-            public void visit(com.zimbra.cs.account.NamedEntry entry) {
-                ToXML.encodeAccountOld(e, (Account) entry);
-            }
-        };
+    private static class AccountVisitor implements NamedEntry.Visitor {
+        ZimbraSoapContext mZsc;
+        AdminDocumentHandler mHandler;
+        Element mParent;
+        
+        AccountVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler, Element parent) {
+            mZsc = zsc;
+            mHandler = handler;
+            mParent = parent;
+        }
+        
+        public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
+            if (mHandler.hasRightsToList(mZsc, entry, Admin.R_listAccount, Admin.R_getAccount))
+                ToXML.encodeAccountOld(mParent, (Account) entry);
+        }
+    }
+    
+    protected void doDomain(ZimbraSoapContext zsc, final Element e, Domain d, Server s) throws ServiceException {
+        AccountVisitor visitor = new AccountVisitor(zsc, this, e);
         Provisioning.getInstance().getAllAccounts(d, s, visitor);
     }
 }

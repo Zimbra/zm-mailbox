@@ -126,6 +126,14 @@ public class RoleAccessManager extends AccessManager {
         if (RightChecker.isSystemAdmin(grantee, asAdmin))
             return true;
         
+        // check pseudo rights
+        if (asAdmin) {
+            if (rightNeeded == AdminRight.R_PSEUDO_ALWAYS_ALLOW)
+                return true;
+            else if (rightNeeded == AdminRight.R_PSEUDO_ALWAYS_DENY)
+                return false;
+        }
+        
         return checkPresetRight(grantee, target, rightNeeded, false, asAdmin, defaultGrant, via);
     }
     

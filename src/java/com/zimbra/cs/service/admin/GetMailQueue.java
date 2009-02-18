@@ -33,6 +33,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.SummaryItem;
@@ -45,7 +46,7 @@ public class GetMailQueue extends AdminDocumentHandler {
     public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element serverElem = request.getElement(AdminConstants.E_SERVER);
@@ -55,6 +56,8 @@ public class GetMailQueue extends AdminDocumentHandler {
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
+        
+        checkRight(zsc, context, server, Admin.R_viewMailQueue);
 
         Element queueElem = serverElem.getElement(AdminConstants.E_QUEUE);
         String queueName = queueElem.getAttribute(AdminConstants.A_NAME);
@@ -70,7 +73,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         boolean stillScanning = rmq.waitForScan(waitMillis);
         RemoteMailQueue.SearchResult sr = rmq.search(query, offset, limit);
 
-        Element response = lc.createElement(AdminConstants.GET_MAIL_QUEUE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_MAIL_QUEUE_RESPONSE);
         serverElem = response.addElement(AdminConstants.E_SERVER);
         serverElem.addAttribute(AdminConstants.A_NAME, serverName);
 

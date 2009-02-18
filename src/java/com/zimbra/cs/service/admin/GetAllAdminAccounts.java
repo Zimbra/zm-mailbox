@@ -29,6 +29,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -39,15 +40,17 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
         List accounts = prov.getAllAdminAccounts();
 
-        Element response = lc.createElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_RESPONSE);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-            ToXML.encodeAccountOld(response, (Account)it.next(), applyCos);
+            Account acct = (Account)it.next();
+            if (hasRightsToList(zsc, acct, Admin.R_listAccount, Admin.R_getAccount))
+                ToXML.encodeAccountOld(response, acct, applyCos);
         }
 	    return response;
 	}

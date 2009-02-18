@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -61,8 +62,8 @@ public class ReIndex extends AdminDocumentHandler {
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+        
+        checkAccountRight(zsc, account, Admin.R_reindexMailbox);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
         if (mbox == null)

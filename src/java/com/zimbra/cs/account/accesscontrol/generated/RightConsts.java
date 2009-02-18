@@ -10,7 +10,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090217-2115 */
+    /* build: 5.0 pshao 20090218-1439 */
 
 
     /*
@@ -273,7 +273,7 @@ public class RightConsts {
     public static final String RT_getGlobalConfig = "getGlobalConfig";
 
     /**
-     * get mailbox id and size of an account
+     * get mailbox id and size(quota) of an account
      */
     public static final String RT_getMailboxInfo = "getMailboxInfo";
 
@@ -327,6 +327,11 @@ public class RightConsts {
      * take actions on mail queues
      */
     public static final String RT_manageMailQueue = "manageMailQueue";
+
+    /**
+     * activate/deactivate zimlets on a cos
+     */
+    public static final String RT_manageZimlet = "manageZimlet";
 
     /**
      * modify all account attributes

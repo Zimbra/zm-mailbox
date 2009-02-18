@@ -23,6 +23,7 @@ package com.zimbra.cs.service.admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -32,6 +33,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -76,6 +80,10 @@ public class SearchAccounts extends AdminDocumentHandler {
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
+        //
+        // Note: pure ACL based AccessManager won't go in the if here, 
+        // because its isDomainAdminOnly always returns false.
+        //
         if (isDomainAdminOnly(zsc)) {
             if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
                 throw ServiceException.PERM_DENIED("can not search for domains");
@@ -83,8 +91,7 @@ public class SearchAccounts extends AdminDocumentHandler {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(zsc, domain)) 
-                    throw ServiceException.PERM_DENIED("can not access domain"); 
+                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW);
             }
         }
 
@@ -112,15 +119,29 @@ public class SearchAccounts extends AdminDocumentHandler {
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
         	if (entry instanceof CalendarResource) {
-        	    ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
+        	    if (hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
+        	        ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
         	} else if (entry instanceof Account) {
-                ToXML.encodeAccountOld(response, (Account) entry, applyCos);
+        	    if (hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount))
+                    ToXML.encodeAccountOld(response, (Account) entry, applyCos);
             } else if (entry instanceof DistributionList) {
-                doDistributionList(response, (DistributionList) entry);
+                if (hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList))
+                    doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
-                doAlias(response, (Alias) entry);
+                boolean hasRight;
+                String tt = ((Alias)entry).getTargetType(prov);
+                if (TargetType.dl.getCode().equals(tt))
+                    hasRight = hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList);
+                else if (TargetType.calresource.getCode().equals(tt))
+                    hasRight = hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource);
+                else
+                    hasRight = hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount);
+                
+                if (hasRight)
+                    doAlias(response, (Alias) entry);
             } else if (entry instanceof Domain) {
-                GetDomain.doDomain(response, (Domain) entry, applyCos);
+                if (hasRightsToList(zsc, entry, Admin.R_listDomain, Admin.R_getDomain))
+                    GetDomain.doDomain(response, (Domain) entry, applyCos);
             }
         }          
 
@@ -158,4 +179,6 @@ public class SearchAccounts extends AdminDocumentHandler {
                 e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }       
     }   
+
+    
 }

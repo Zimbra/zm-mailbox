@@ -39,7 +39,7 @@ public class ModifyCos extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
@@ -49,13 +49,15 @@ public class ModifyCos extends AdminDocumentHandler {
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
         
+        checkRight(zsc, context, cos, attrs);
+        
         // pass in true to checkImmutable
         prov.modifyAttrs(cos, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyCos","name", cos.getName()}, attrs));
         
-	    Element response = lc.createElement(AdminConstants.MODIFY_COS_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.MODIFY_COS_RESPONSE);
 	    GetCos.doCos(response, cos);
 	    return response;
 	}

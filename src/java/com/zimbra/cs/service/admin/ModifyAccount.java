@@ -62,8 +62,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+        checkAccountRight(zsc, account, attrs);
 
         if (isDomainAdminOnly(zsc)) {
             

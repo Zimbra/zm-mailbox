@@ -24,6 +24,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -31,7 +32,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class MailQueueFlush extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
  
         Element serverElem = request.getElement(AdminConstants.E_SERVER);
@@ -42,9 +43,11 @@ public class MailQueueFlush extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
         
+        checkRight(zsc, context, server, Admin.R_manageMailQueue);
+        
         RemoteManager rmgr = RemoteManager.getRemoteManager(server);
         rmgr.execute(RemoteCommands.FLUSHQUEUE);
-        Element response = lc.createElement(AdminConstants.MAIL_QUEUE_FLUSH_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.MAIL_QUEUE_FLUSH_RESPONSE);
 	    return response;
 	}
 }

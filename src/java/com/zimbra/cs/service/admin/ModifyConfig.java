@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -42,8 +43,11 @@ public class ModifyConfig extends AdminDocumentHandler {
 
         Map<String, Object> attrs = AdminService.getAttrs(request);
         
+        Config config = prov.getConfig();
+        checkRight(lc, context, config, attrs);
+        
         // pass in true to checkImmutable
-        prov.modifyAttrs(prov.getConfig(), attrs, true);
+        prov.modifyAttrs(config, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyConfig",}, attrs));

@@ -30,6 +30,8 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -69,12 +71,15 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         EntrySearchFilter filter = com.zimbra.cs.service.account.SearchCalendarResources.parseSearchFilter(request);
 
         // if we are a domain admin only, restrict to domain
+        //
+        // Note: pure ACL based AccessManager won't go in the if here, 
+        // because its isDomainAdminOnly always returns false.
+        //
         if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(zsc, domain)) 
-                    throw ServiceException.PERM_DENIED("cannot access domain");
+                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW);
             }
         }
 
@@ -101,7 +106,8 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < resources.size(); i++) {
             NamedEntry entry = (NamedEntry) resources.get(i);
-            ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
+            if (hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
+                ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
         }
 
         response.addAttribute(AdminConstants.A_MORE, i < resources.size());

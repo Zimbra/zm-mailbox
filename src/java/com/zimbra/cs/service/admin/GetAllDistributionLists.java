@@ -29,6 +29,8 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllDistributionLists extends AdminDocumentHandler {
@@ -45,7 +47,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element response = null;
@@ -68,30 +70,33 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(value);            
         }
         
-        if (isDomainAdminOnly(lc)) {
-            if (domain != null && !canAccessDomain(lc, domain))
-                throw ServiceException.PERM_DENIED("can not access domain");
-            domain = getAuthTokenAccountDomain(lc);
+        if (isDomainAdminOnly(zsc)) {
+            if (domain != null) { 
+                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW); 
+            }
+            domain = getAuthTokenAccountDomain(zsc);
         }
 
         if (domain != null) {
-            response = lc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
-            doDomain(response, domain);
+            response = zsc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
+            doDomain(zsc, response, domain);
         } else {
-            response = lc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
+            response = zsc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain dm = (Domain) dit.next();
-                doDomain(response, dm);                
+                doDomain(zsc, response, dm);                
             }
         }
         return response;        
     }
     
-    public static void doDomain(Element e, Domain d) throws ServiceException {
+    private void doDomain(ZimbraSoapContext zsc, Element e, Domain d) throws ServiceException {
         List dls = Provisioning.getInstance().getAllDistributionLists(d);
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
-            GetDistributionList.doDistributionList(e, (DistributionList) it.next());
+            DistributionList dl = (DistributionList) it.next();
+            if (hasRightsToList(zsc, dl, Admin.R_listDistributionList, Admin.R_getDistributionList))
+                GetDistributionList.doDistributionList(e, dl);
         }        
     }
 }

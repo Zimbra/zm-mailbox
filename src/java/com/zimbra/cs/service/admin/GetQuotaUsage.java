@@ -29,7 +29,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -63,12 +66,16 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
 
         // if we are a domain admin only, restrict to domain
+        // hmm, this SOAP is not domainAuthSufficient, bug? 
+        //
+        // Note: pure ACL based AccessManager won't go in the if here, 
+        // because its isDomainAdminOnly always returns false.
+        //
         if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(zsc, domain)) 
-                    throw ServiceException.PERM_DENIED("can not access domain"); 
+                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW);
             }
         }
 
@@ -101,6 +108,17 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < quotas.size(); i++) {
             AccountQuota quota = quotas.get(i);
+            
+            //==============================================================
+            // checking right could be a perf hit, need to load each account
+            // if the account is not in cache, will laod from LDAP.
+            Account acct = prov.get(AccountBy.id, quota.id);
+            if (acct == null)
+                continue;
+            checkRight(zsc, acct, Admin.R_getMailboxInfo);
+            // end right checking
+            //==============================================================
+            
             Element account = response.addElement(AdminConstants.E_ACCOUNT);
             account.addAttribute(AdminConstants.A_NAME, quota.name);
             account.addAttribute(AdminConstants.A_ID, quota.id);

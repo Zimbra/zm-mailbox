@@ -33,6 +33,9 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -100,7 +103,12 @@ public class SearchDirectory extends AdminDocumentHandler {
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
         Set<String> reqAttrs = attrs == null ? null : new HashSet(Arrays.asList(attrs));
         Element response = zsc.createElement(AdminConstants.SEARCH_DIRECTORY_RESPONSE);
+        
         // if we are a domain admin only, restrict to domain
+        //
+        // Note: pure ACL based AccessManager won't go in the if here, 
+        // because its isDomainAdminOnly always returns false.
+        //
         if (isDomainAdminOnly(zsc)) {
             if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG) {
             	if(query != null && query.length()>0) {
@@ -126,8 +134,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(zsc, domain)) 
-                    throw ServiceException.PERM_DENIED("can not access domain"); 
+                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW);
             }
         }
 
@@ -160,17 +167,32 @@ public class SearchDirectory extends AdminDocumentHandler {
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
         	if (entry instanceof CalendarResource) {
-        	    ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
+        	    if (hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
+        	        ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
         	} else if (entry instanceof Account) {
-                ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
+        	    if (hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount))
+                    ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
             } else if (entry instanceof DistributionList) {
-                doDistributionList(response, (DistributionList)entry);
+                if (hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList))
+                    doDistributionList(response, (DistributionList)entry);
             } else if (entry instanceof Alias) {
-                doAlias(response, prov, (Alias)entry);
+                boolean hasRight;
+                String tt = ((Alias)entry).getTargetType(prov);
+                if (TargetType.dl.getCode().equals(tt))
+                    hasRight = hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList);
+                else if (TargetType.calresource.getCode().equals(tt))
+                    hasRight = hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource);
+                else
+                    hasRight = hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount);
+                
+                if (hasRight)
+                    doAlias(response, prov, (Alias)entry);
             } else if (entry instanceof Domain) {
-                GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
+                if (hasRightsToList(zsc, entry, Admin.R_listDomain, Admin.R_getDomain))
+                    GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
             } else if (entry instanceof Cos) {
-                GetCos.doCos(response, (Cos)entry);
+                if (hasRightsToList(zsc, entry, Admin.R_listCos, Admin.R_getCos))
+                    GetCos.doCos(response, (Cos)entry);
             }
         }          
 

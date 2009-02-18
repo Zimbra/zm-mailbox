@@ -945,7 +945,7 @@ public class LdapProvisioning extends Provisioning {
      */
     @SuppressWarnings("unchecked")
     public List<Account> getAllAdminAccounts() throws ServiceException {
-        return (List<Account>)searchAccountsInternal("(|(zimbraIsAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return (List<Account>)searchAccountsInternal(LdapFilter.adminAccountByAdminFlag(), null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
 
     @SuppressWarnings("unchecked")

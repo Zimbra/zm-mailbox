@@ -59,8 +59,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 
-        if (!canAccessAccount(zsc, resource))
-            throw ServiceException.PERM_DENIED("cannot access calendar resource account");
+        checkCalendarResourceRight(zsc, resource, attrs);
 
         if (isDomainAdminOnly(zsc)) {
             for (String attrName : attrs.keySet()) {

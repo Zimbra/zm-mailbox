@@ -38,6 +38,10 @@ public class LdapFilter {
         return "(&(" + namingRdnAttr + "=" + name + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
     }
     
+    public static String adminAccountByAdminFlag() {
+        return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsSystemAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
+    }
+    
     /*
      * calendar resource
      */

@@ -16,7 +16,7 @@ public abstract class ZAdminRight {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090217-2115 */
+    /* build: 5.0 pshao 20090218-1439 */
 
 
     public static AdminRight R_accessGAL;
@@ -73,6 +73,7 @@ public abstract class ZAdminRight {
     public static AdminRight R_listServer;
     public static AdminRight R_listZimlet;
     public static AdminRight R_manageMailQueue;
+    public static AdminRight R_manageZimlet;
     public static AdminRight R_modifyAccount;
     public static AdminRight R_modifyCalendarResource;
     public static AdminRight R_modifyCos;
@@ -154,6 +155,7 @@ public abstract class ZAdminRight {
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
+        R_manageZimlet                         = rm.getAdminRight(Right.RT_manageZimlet);
         R_modifyAccount                        = rm.getAdminRight(Right.RT_modifyAccount);
         R_modifyCalendarResource               = rm.getAdminRight(Right.RT_modifyCalendarResource);
         R_modifyCos                            = rm.getAdminRight(Right.RT_modifyCos);
