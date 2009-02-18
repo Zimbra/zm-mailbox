@@ -30,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -173,6 +174,9 @@ public class TnefConverter extends MimeVisitor {
             TNEFInputStream tnefis = new TNEFInputStream(is = bp.getInputStream());
             converted = TNEFMime.convert(JMSession.getSession(), tnefis);
         } catch (Throwable t) {
+            if (t instanceof OutOfMemoryError) {
+                Zimbra.halt("Ran out of memory while expanding TNEF attachment", t);
+            }
             ZimbraLog.extensions.warn("Conversion failed.  TNEF attachment will not be expanded.", t);
             return null;
         } finally {
