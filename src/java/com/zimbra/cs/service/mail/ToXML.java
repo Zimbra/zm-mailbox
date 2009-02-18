@@ -1701,7 +1701,17 @@ public class ToXML {
         MimePart mp = mpi.getMimePart();
         Mime.repairTransferEncoding(mp);
 
+        
         String data = null;
+        try {
+            if (maxSize <= 0) {
+                maxSize = (int) Provisioning.getInstance().getLocalServer().getMailContentMaxSize();
+            } else {
+                maxSize = Math.min(maxSize, (int) Provisioning.getInstance().getLocalServer().getMailContentMaxSize());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.soap.warn("Unable to determine max content size", e);
+        }
 
         if (ctype.equals(Mime.CT_TEXT_HTML)) {
             String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);

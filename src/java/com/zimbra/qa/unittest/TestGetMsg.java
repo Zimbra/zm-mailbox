@@ -18,6 +18,7 @@ package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.zclient.ZGetMessageParams;
@@ -31,9 +32,12 @@ extends TestCase {
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestGetMsg.class.getSimpleName();
     
+    private String mOriginalContentMaxSize;
+    
     public void setUp()
     throws Exception {
         cleanUp();
+        mOriginalContentMaxSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailContentMaxSize);
     }
     
     public void testPlainMessageContent()
@@ -64,28 +68,33 @@ extends TestCase {
             body = TextEnrichedHandler.convertToHTML(body);
         }
         
-        verifyMessageContent(mbox, msgId, false, null, body, contentType);
-        verifyMessageContent(mbox, msgId, false, 24, body, contentType);
+        verifyMessageContent(mbox, msgId, false, null, null, false, body, contentType);
+        verifyMessageContent(mbox, msgId, true, null, null, false, body, contentType);
+        verifyMessageContent(mbox, msgId, false, 24, 24, true, body, contentType);
+        verifyMessageContent(mbox, msgId, true, 24, 24, true, body, contentType);
+        
+        // Set zimbraMailMaxContentLength and confirm that the content
+        // gets truncated.
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailContentMaxSize, "24");
+        verifyMessageContent(mbox, msgId, false, null, 24, true, body, contentType);
+        verifyMessageContent(mbox, msgId, true, null, 24, true, body, contentType);
     }
     
     private void verifyMessageContent(ZMailbox mbox, String msgId, boolean wantHtml,
-                                      Integer maxLength, String body, String contentType)
+                                      Integer requestMaxLength, Integer expectedLength,
+                                      boolean expectedTruncated, String body, String contentType)
     throws Exception {
         ZGetMessageParams params = new ZGetMessageParams();
         params.setId(msgId);
         params.setWantHtml(wantHtml);
-        params.setMax(maxLength);
+        params.setMax(requestMaxLength);
         ZMessage msg = mbox.getMessage(params);
         ZMimePart mp = msg.getMimeStructure();
-        
-        int expectedLength = body.length();
+
+        assertEquals(expectedTruncated, mp.wasTruncated());
         String expected = body;
-        if (maxLength != null) {
-            expectedLength = Math.min(maxLength, body.length());
+        if (expectedLength != null) {
             expected = body.substring(0, expectedLength);
-            assertEquals(maxLength < body.length(), mp.wasTruncated());
-        } else {
-            assertFalse(mp.wasTruncated());
         }
 
         if (contentType.equals(Mime.CT_TEXT_ENRICHED)) {
@@ -102,6 +111,7 @@ extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailContentMaxSize, mOriginalContentMaxSize);
     }
     
     private void cleanUp()
