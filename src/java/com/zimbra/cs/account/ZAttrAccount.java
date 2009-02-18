@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1346 */
+    /* build: 5.0 pshao 20090218-1458 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8969,13 +8969,13 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * whether the web UI shows UI elements related to read receipts
      *
-     * @return zimbraFeatureReadReceiptsEnabled, or true if unset
+     * @return zimbraFeatureReadReceiptsEnabled, or false if unset
      *
      * @since ZCS 6.0.0
      */
     @ZAttr(id=821)
     public boolean isFeatureReadReceiptsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureReadReceiptsEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureReadReceiptsEnabled, false);
     }
 
     /**
