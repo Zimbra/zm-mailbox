@@ -68,9 +68,9 @@ class RefCountedIndexSearcher {
     
     synchronized TopDocs search(Query query, Filter filter, int num) throws IOException {
         if (mSort == null) {
-            return getSearcher().search(query, null, num);            
+            return getSearcher().search(query, filter, num);            
         } else {
-            return getSearcher().search(query, null, num, mSort);
+            return getSearcher().search(query, filter, num, mSort);
         }
     }
 }
