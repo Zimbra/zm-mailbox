@@ -202,7 +202,7 @@
 </right>
 
 <right name="getMailboxInfo" type="preset" targetType="account">
-  <desc>get mailbox id and size of an account</desc>
+  <desc>get mailbox id and size(quota) of an account</desc>
 </right>
 
 <right name="viewEmail" type="preset" targetType="account">
@@ -409,6 +409,10 @@ A_zimbraPasswordMinPunctuationChars
 
 <right name="assignCos" type="preset" targetType="cos">
   <desc>assign the cos (to domains or accounts)</desc>
+</right>
+
+<right name="manageZimlet" type="preset" targetType="cos">
+  <desc>activate/deactivate zimlets on a cos</desc>
 </right>
 
 <right name="configureCosConstraint" type="setAttrs" targetType="cos">
