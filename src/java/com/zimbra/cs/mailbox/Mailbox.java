@@ -5439,7 +5439,11 @@ public class Mailbox {
         }
     }
 
-    private MailItem trainSpamFilter(MailItem item, Folder target) {
+    private <T extends MailItem> T trainSpamFilter(T item, Folder target) {
+        // don't re-train filter on replayed operation
+        if (mCurrentChange.getRedoPlayer() != null)
+            return item;
+
         TargetConstraint tcon = getOperationTargetConstraint();
 
         try {
@@ -5447,7 +5451,7 @@ public class Mailbox {
             if (item instanceof Conversation)
                 items = ((Conversation) item).getMessages(DbSearch.SORT_NONE);
             else
-                items = Arrays.asList(item);
+                items = Arrays.asList((MailItem) item);
 
             for (MailItem candidate : items) {
                 // if it's not a move into or out of Spam, no training is necessary
