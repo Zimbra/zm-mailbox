@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 public class AdminFileDownload  extends ZimbraServlet {
 
     private static final String ACTION_GETBP = "getBP" ;
+    private static final String ACTION_GETSR = "getSR" ; //get search results
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -31,7 +32,8 @@ public class AdminFileDownload  extends ZimbraServlet {
 			//check the auth token
 
             AuthToken authToken = getAdminAuthTokenFromCookie(req, resp);
-			if (authToken == null)
+            
+            if (authToken == null)
 			   return;
 		    String action = req.getParameter("action") ;
             if (action != null && action.length() > 0) {
@@ -39,10 +41,10 @@ public class AdminFileDownload  extends ZimbraServlet {
             }else{
                 return ;
             }
-
+            String filename ;
             if (action.equalsIgnoreCase(ACTION_GETBP))  {
                 String aid = req.getParameter("aid") ;
-                String filename = "bp_result.csv"  ;
+                filename = "bp_result.csv"  ;
 
                 if (aid == null) {
                     ZimbraLog.webclient.error("Missing required parameter aid " ) ;
@@ -67,6 +69,21 @@ public class AdminFileDownload  extends ZimbraServlet {
                 writeBulkProvisionResults (resp.getOutputStream(), aid);
 
                 return ;
+            } else if (action.equalsIgnoreCase(ACTION_GETSR) )  {
+
+                //TODO: 1. need to consider the permission of the admin user
+                //TODO: 2. need to consider the type of search results
+                filename = "search_result.csv" ;
+                String query = req.getParameter("q") ;
+                String domain = req.getParameter("domain") ;
+                String types = req.getParameter("types") ;
+                
+                resp.setHeader("Expires", "Tue, 24 Jan 2000 20:46:50 GMT");
+                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+                resp.setStatus(resp.SC_OK);
+                resp.setContentType("application/x-download");
+                resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
+                writeSearchResults (resp.getOutputStream(), query, domain, types);
             }
 
 
@@ -104,4 +121,29 @@ public class AdminFileDownload  extends ZimbraServlet {
           if (in != null) in.close(  );
         }
     }
+
+    private static void writeSearchResults (OutputStream out, String query, String domain, String types) 
+        throws IOException {
+        InputStream in = null;
+        StringBuffer sb = new StringBuffer();
+        try {
+            Class c = ExtensionUtil.findClass("com.zimbra.bp.SearchResults") ;
+            Class [] params = new Class [4] ;
+            params[0] = Class.forName("java.io.OutputStream") ;
+            params[1] = Class.forName("java.lang.String") ;
+            params[2] = Class.forName("java.lang.String") ;
+            params[3] = Class.forName("java.lang.String") ;
+            Method m = c.getMethod("writeSearchResultOutputStream", params) ;
+            Object [] paramValue = new Object [4] ;
+            paramValue[0] = out ;
+            paramValue[1] = query ;
+            paramValue[2] = domain ;
+            paramValue[3] = types ;
+            m.invoke(c, paramValue) ;
+        } catch (Exception e) {
+             ZimbraLog.webclient.error(e) ;
+        } finally {
+          if (in != null) in.close(  );
+        }
+    } 
 }
