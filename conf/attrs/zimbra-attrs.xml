@@ -4117,7 +4117,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="821" name="zimbraFeatureReadReceiptsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValueUpgrade>FALSE</defaultCOSValueUpgrade>
   <desc>whether the web UI shows UI elements related to read receipts</desc>
 </attr>
 

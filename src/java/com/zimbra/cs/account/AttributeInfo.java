@@ -77,7 +77,11 @@ public class AttributeInfo {
     
     private List<String> mGlobalConfigValues;
     
+    private List<String> mGlobalConfigValuesUpgrade;
+    
     private List<String> mDefaultCOSValues;
+    
+    private List<String> mDefaultCOSValuesUpgrade;
     
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
     
@@ -127,7 +131,9 @@ public class AttributeInfo {
                    AttributeOrder order, String value, boolean immutable, String min, String max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
-                   List<String> globalConfigValues, List<String> defaultCOSValues, String description, BuildInfo.Version since)
+                   List<String> globalConfigValues, List<String> defaultCOSValues, 
+                   List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade, 
+                   String description, BuildInfo.Version since)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -143,7 +149,9 @@ public class AttributeInfo {
         mOptionalInClasses = optionalIn;
         mFlags = flags;
         mGlobalConfigValues = globalConfigValues;
+        mGlobalConfigValuesUpgrade = globalConfigValuesUpgrade;
         mDefaultCOSValues = defaultCOSValues;
+        mDefaultCOSValuesUpgrade = defaultCOSValuesUpgrade;
         mDescription = description;
         mSince = since;
         
@@ -441,9 +449,17 @@ public class AttributeInfo {
     public List<String> getGlobalConfigValues() {
         return mGlobalConfigValues;
     }
+    
+    public List<String> getGlobalConfigValuesUpgrade() {
+        return mGlobalConfigValuesUpgrade;
+    }
    
     public List<String> getDefaultCosValues() {
         return mDefaultCOSValues;
+    }
+    
+    public List<String> getDefaultCosValuesUpgrade() {
+        return mDefaultCOSValuesUpgrade;
     }
 
     boolean isImmutable() {

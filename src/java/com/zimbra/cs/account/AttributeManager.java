@@ -102,7 +102,9 @@ public class AttributeManager {
     private static final String E_DESCRIPTION = "desc";
     private static final String E_DEPRECATE_DESC = "deprecateDesc";
     private static final String E_GLOBAL_CONFIG_VALUE = "globalConfigValue";
+    private static final String E_GLOBAL_CONFIG_VALUE_UPGRADE = "globalConfigValueUpgrade";
     private static final String E_DEFAULT_COS_VALUE = "defaultCOSValue";
+    private static final String E_DEFAULT_COS_VALUE_UPGRADE = "defaultCOSValueUpgrade";
     
     // multi-line continuation prefix chars
     private static final String ML_CONT_PREFIX = "  ";
@@ -331,15 +333,25 @@ public class AttributeManager {
             }
 
             List<String> globalConfigValues = new LinkedList<String>();
+            List<String> globalConfigValuesUpgrade = null; // note: init to null instead of empty List
             List<String> defaultCOSValues = new LinkedList<String>();
+            List<String> defaultCOSValuesUpgrade = null;   // note: init to null instead of empty List
             String description = null;
             String deprecateDesc = null;
             for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
                 Element elem = (Element)elemIter.next();
                 if (elem.getName().equals(E_GLOBAL_CONFIG_VALUE)) {
                     globalConfigValues.add(elem.getText());
+                } else if (elem.getName().equals(E_GLOBAL_CONFIG_VALUE_UPGRADE)) {
+                    if (globalConfigValuesUpgrade == null)
+                        globalConfigValuesUpgrade = new LinkedList<String>();
+                    globalConfigValuesUpgrade.add(elem.getText());
                 } else if (elem.getName().equals(E_DEFAULT_COS_VALUE)) {
                     defaultCOSValues.add(elem.getText());
+                } else if (elem.getName().equals(E_DEFAULT_COS_VALUE_UPGRADE)) {
+                    if (defaultCOSValuesUpgrade == null)
+                        defaultCOSValuesUpgrade = new LinkedList<String>();
+                    defaultCOSValuesUpgrade.add(elem.getText());
                 } else if (elem.getName().equals(E_DESCRIPTION)) {
                     if (description != null) {
                         error(name, file, "more than one " + E_DESCRIPTION);
@@ -407,9 +419,12 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
-                                                   cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
-                                                   description, sinceVer);
+            AttributeInfo info = new AttributeInfo(
+                    name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
+                    cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
+                    globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
+                    description, sinceVer);
+            
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }

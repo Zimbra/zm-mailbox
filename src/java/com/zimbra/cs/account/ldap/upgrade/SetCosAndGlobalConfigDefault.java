@@ -114,12 +114,28 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
                     continue;
                 }
                 
+                /*
+                 * use the upgrade values if set, otherwise use the default values
+                 * 
+                 * Note, we support the case when we need to leave the value unset
+                 * on upgrades, but set a value on new installs.  In AttributeManager,
+                 * if <globalConfigValueUpgrade> or <defaultCOSValueUpgrade> element 
+                 * is present but does not have a value, AttributeInfo.getGlobalConfigValuesUpgrade()/
+                 * getDefaultCosValuesUpgrade() will return an empty List.  If the upgrade
+                 * element is not present, the two methods will return null.  We check
+                 * null here and if it is null then use the same default value for new 
+                 * installs.
+                 */
                 List<String> values = null;
-                if (klass == AttributeClass.globalConfig)
-                    values = ai.getGlobalConfigValues();
-                else if (klass == AttributeClass.cos)
-                    values = ai.getDefaultCosValues();
-                else {
+                if (klass == AttributeClass.globalConfig) {
+                    values = ai.getGlobalConfigValuesUpgrade();
+                    if (values == null)
+                        values = ai.getGlobalConfigValues();
+                } else if (klass == AttributeClass.cos) {
+                    values = ai.getDefaultCosValuesUpgrade();
+                    if (values == null)
+                        values = ai.getDefaultCosValues();
+                } else {
                     System.out.println("Internal error: invalid attribute class " + klass.name());
                     return;
                 }
