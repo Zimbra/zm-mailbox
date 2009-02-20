@@ -117,6 +117,11 @@ public class ContactAutoComplete {
             	return diff;
         	return this.mEmail.compareTo(that.mEmail);
         }
+        public boolean equals(Object obj) {
+        	if (obj instanceof ContactEntry)
+        		return compareTo((ContactEntry)obj) == 0;
+        	return false;
+        }
         public String toString() {
         	StringBuilder buf = new StringBuilder();
         	toString(buf);
