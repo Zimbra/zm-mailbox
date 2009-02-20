@@ -201,6 +201,10 @@
   </desc>
 </right>
 
+<right name="checkRight" type="preset" targetType="account">
+  <desc>check if the account has a specific right</desc>
+</right> 
+
 <right name="getMailboxInfo" type="preset" targetType="account">
   <desc>get mailbox id and size(quota) of an account</desc>
 </right>
@@ -229,7 +233,7 @@
 </right>
 
 <right name="viewPasswordStrength" type="getAttrs" targetType="account,calresource,cos">
-  <desc>configure password strength</desc>
+  <desc>view password strength</desc>
   <attrs>
       <a n="zimbraPasswordMinLength"/>
       <a n="zimbraPasswordMaxLength"/>
@@ -374,12 +378,6 @@
   <desc>set calendar resource password</desc>
 </right>     
 
-A_zimbraPasswordMinLength
-A_zimbraPasswordMaxLength
-A_zimbraPasswordMinUpperCaseChars
-A_zimbraPasswordMinLowerCaseChars
-A_zimbraPasswordMinNumericChars
-A_zimbraPasswordMinPunctuationChars
 
 <!-- 
 ========================================================
@@ -568,6 +566,10 @@ A_zimbraPasswordMinPunctuationChars
   <desc>access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests</desc>
 </right>
 
+<right name="checkExternalGALConfig" type="preset" targetType="domain">
+  <desc>check external GAL config</desc>
+</right>
+
 <right name="configureExternalGAL" type="setAttrs" targetType="domain">
   <desc>configure attributes for external GAL</desc>
    <attrs>
@@ -587,7 +589,12 @@ A_zimbraPasswordMinPunctuationChars
   </attrs> 
 </right>
 
-<right name="configureExternaAuth" type="setAttrs" targetType="domain">
+
+<right name="checkExternalAuthConfig" type="preset" targetType="domain">
+  <desc>check auth config for external auth</desc>
+</right>
+
+<right name="configureExternalAuth" type="setAttrs" targetType="domain">
   <desc>configure attributes for external auth</desc>
    <attrs>
     <a n="zimbraAuthMech"/>
@@ -596,11 +603,16 @@ A_zimbraPasswordMinPunctuationChars
     <a n="zimbraAuthLdapSearchBase"/>
     <a n="zimbraAuthLdapSearchFilter"/>
     <a n="zimbraAuthLdapSearchBindDn"/>
-    <a n="zimbraAuthLdapSearchBindPassword"/>            
+    <a n="zimbraAuthLdapSearchBindPassword"/>      
+    <a n="zimbraAuthFallbackToLocal"/>
+    <a n="zimbraAuthKerberos5Realm"/>
+    <a n="zimbraAuthLdapStartTlsEnabled"/>
   </attrs> 
 </right>         
-          
-
+         
+<right name="checkExchangeAuthConfig" type="preset" targetType="domain">
+  <desc>check exchange auth config</desc>
+</right>
     
 <!-- 
 ========================================================
@@ -628,6 +640,18 @@ A_zimbraPasswordMinPunctuationChars
 <right name="deleteServer" type="preset" targetType="server">
   <desc>delete server</desc>
 </right>
+
+<right name="checkDirectoryOnFileSystem" type="preset" targetType="server">
+  <desc>check and create directory on file system</desc>
+</right>
+
+<right name="checkHealth" type="preset" targetType="server">
+  <desc>check server health</desc>
+</right>
+       
+<right name="dumpSession" type="preset" targetType="server">
+  <desc>dump session</desc>
+</right>
        
 <right name="viewMailQueue" type="preset" targetType="server">
   <desc>view mail queues</desc>
@@ -635,7 +659,19 @@ A_zimbraPasswordMinPunctuationChars
 
 <right name="manageMailQueue" type="preset" targetType="server">
   <desc>take actions on mail queues</desc>
-</right>       
+</right>   
+
+<right name="manageAccountLogger" type="preset" targetType="server">
+  <desc>add/remove account loggers</desc>
+</right>
+
+<right name="manageVolume" type="preset" targetType="server">
+  <desc>create, volumes</desc>
+</right>  
+
+<right name="manageWaitSet" type="preset" targetType="server">
+  <desc>create, destroy, wait, query wait sets</desc>
+</right>  
        
 <!-- 
   TODO:
@@ -654,6 +690,21 @@ A_zimbraPasswordMinPunctuationChars
           - configureVolumes                 : configure volumes
           - configureServiceEnabled          : configure services enabled
 -->
+
+<!-- 
+========================================================
+                    XMPP component rights
+========================================================
+--> 
+
+<right name="deleteXMPPComponent" type="preset" targetType="xmppcomponent">
+  <desc>delete XMPP component</desc>
+</right>
+
+<right name="modifyXMPPComponent" type="setAttrs" targetType="xmppcomponent">
+  <desc>set all XMPP component attributes</desc>
+</right>
+
 
 <!-- 
 ========================================================
@@ -694,6 +745,10 @@ A_zimbraPasswordMinPunctuationChars
 
 <right name="createTopDomain" type="preset" targetType="global">
   <desc>create a top-level domain</desc>
+</right>
+
+<right name="createXMPPComponent" type="preset" targetType="global">
+  <desc>create XMPP component</desc>
 </right>
 
 <right name="createZimlet" type="preset" targetType="global">
