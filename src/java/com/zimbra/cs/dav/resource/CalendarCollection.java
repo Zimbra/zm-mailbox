@@ -93,7 +93,7 @@ public class CalendarCollection extends Collection {
 		ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
 		desc.setMessageLocale(lc);
 		desc.setStringValue(description);
-		desc.setProtected(true);
+		desc.setVisible(false);
 		addProperty(desc);
 		addProperty(CalDavProperty.getSupportedCalendarComponentSet(f.getDefaultView()));
 		addProperty(CalDavProperty.getSupportedCalendarData());
