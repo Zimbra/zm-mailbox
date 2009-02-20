@@ -84,8 +84,6 @@ class DBQueryOperation extends QueryOperation
     
     protected boolean mIncludeIsLocalFolders = false;
     protected boolean mIncludeIsRemoteFolders = false;
-    
-    
 
     protected List<SearchResult> mDBHits;
     protected List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
@@ -166,7 +164,7 @@ class DBQueryOperation extends QueryOperation
                     }
                 }
                 if (!added) {
-                    return new NullQueryOperation();
+                    return new NoResultsQueryOperation();
                 } else {
                     return this;
                 }
@@ -187,7 +185,7 @@ class DBQueryOperation extends QueryOperation
                     }
                 }
                 if (!added) {
-                    return new NullQueryOperation();
+                    return new NoResultsQueryOperation();
                 } else {
                     return toRet;
                 }                    
@@ -1351,7 +1349,7 @@ class DBQueryOperation extends QueryOperation
             if (mQueryTarget != QueryTarget.UNSPECIFIED && dbOther.mQueryTarget != QueryTarget.UNSPECIFIED) {
                 if (!mQueryTarget.equals(dbOther.mQueryTarget)) {
                     mLog.debug("ANDing two DBOps with different targets -- this is a no results query!");
-                    return new NullQueryOperation();
+                    return new NoResultsQueryOperation();
                 }
             }
 

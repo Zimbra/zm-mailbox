@@ -859,7 +859,7 @@ public final class ZimbraQuery {
         protected QueryOperation getQueryOperation(boolean truth) {
             if (mSpecialTarget != null) {
                 if (mSpecialTarget == IN_NO_FOLDER) {
-                    return new NullQueryOperation();
+                    return new NoResultsQueryOperation();
                 } else if (mSpecialTarget == IN_ANY_FOLDER) {
                     DBQueryOperation dbOp = DBQueryOperation.Create();
                     dbOp.addAnyFolderClause(calcTruth(truth));
@@ -1476,7 +1476,7 @@ public final class ZimbraQuery {
             if (truth&&mIsAllQuery || !truth&&mIsNoneQuery) {
                 // adding no constraints should match everything...
             } else if (truth&&mIsNoneQuery || !truth&&mIsAllQuery) {
-                return new NullQueryOperation();
+                return new NoResultsQueryOperation();
             } else {
                 for (ItemId iid : mItemIds) {
                     dbOp.addItemIdClause(mMailbox, iid, truth);
@@ -2479,7 +2479,7 @@ public final class ZimbraQuery {
             // optimize the query down
             mOp = mOp.optimize(mMbox);
             if (mOp == null)
-                mOp = new NullQueryOperation();
+                mOp = new NoResultsQueryOperation();
             if (mLog.isDebugEnabled()) {
                 mLog.debug("OPTIMIZED="+mOp.toString());
             }
@@ -2855,7 +2855,7 @@ public final class ZimbraQuery {
                     if (visibleFolders.size() == 0) {
                         union.mQueryOperations.remove(i);
                         ZimbraLog.index.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
-                        union.mQueryOperations.add(i, new NullQueryOperation());
+                        union.mQueryOperations.add(i, new NoResultsQueryOperation());
                     } else {
                         union.mQueryOperations.remove(i);
                         

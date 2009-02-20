@@ -30,7 +30,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 
 class RemoteQueryOperation extends FilterQueryOperation {
-    
     RemoteQueryOperation() {}
 
     private ProxiedQueryResults mResults = null;
@@ -115,9 +114,5 @@ class RemoteQueryOperation extends FilterQueryOperation {
             return mResults.getResultInfo();
         else
             return new ArrayList<QueryInfo>();
-    }
-    
-    public int estimateResultSize() throws ServiceException {
-        return mOp.estimateResultSize();
     }
 }

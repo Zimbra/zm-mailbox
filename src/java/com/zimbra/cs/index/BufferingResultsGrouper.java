@@ -23,10 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 
 /**
- * @author tim
- * 
  * Groups hit results for various reasons.  Subclass must override BufferHits below
- *
  */
 public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
 

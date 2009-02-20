@@ -24,7 +24,10 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 
 /** 
- * Result set that does filtering
+ * Result set that does filtering. 
+ * 
+ * Currently only supports filtering by the \DELETED tag
+ * (enable it by calling setFilterTagDeleted API)
  */
 public class FilteredQueryResults implements ZimbraQueryResults {
     ZimbraQueryResults mResults;
@@ -35,6 +38,12 @@ public class FilteredQueryResults implements ZimbraQueryResults {
         mResults = other;
     }
 
+    /**
+     * If set, then this class will filter out all messages with the
+     * \DELETED tag set
+     * 
+     * @param truthiness
+     */
     void setFilterTagDeleted(boolean truthiness) {
         mFilterTagDeleted = truthiness;
     }

@@ -36,7 +36,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  *     RESULTS(NoTemQuery) = NONE
  *
  * Basically, this pseudo-Operation is here to handle the situation when a Lucene term 
- * evaluates to the empty string -- by generating a special-purpose Pseudo-Operation for 
+ * evaluates to the empty string (as might happen if a stopword were searched for,
+ * eg searching for "the") -- by generating a special-purpose Pseudo-Operation for 
  * this case we can hand-tune the Optimizer behavior and make it do the right thing in all 
  * cases.
  *

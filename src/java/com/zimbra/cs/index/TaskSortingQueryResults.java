@@ -25,7 +25,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 
 /**
- * 
+ * QueryResults wrapper that implements Sort-By-Task.  It does this by caching **ALL** 
+ * hits and then sorting them.
  */
 public class TaskSortingQueryResults implements ZimbraQueryResults {
 

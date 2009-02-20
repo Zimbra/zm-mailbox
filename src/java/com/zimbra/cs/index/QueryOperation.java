@@ -42,8 +42,6 @@ import com.zimbra.cs.mailbox.Mailbox;
  * whereas a QueryResults set is just a set of results and can only be iterated.  
  * 
  ***********************************************************************/
-
-
 abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
     static final int MIN_CHUNK_SIZE = 26;

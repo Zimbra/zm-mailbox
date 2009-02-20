@@ -665,7 +665,7 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
     QueryTargetSet targets = getQueryTargets();
     if (targets.size() == 0) {
         mLog.debug("ELIMINATING "+toString()+" b/c of incompatible QueryTargets");
-        return new NullQueryOperation();
+        return new NoResultsQueryOperation();
     } 
 
     pruneIncompatibleTargets(targets);
@@ -864,7 +864,7 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
                 mQueryOperations.clear();
                 mMessageGrouper = new HitGrouper[1];
 
-                QueryOperation nullOp = new NullQueryOperation();
+                QueryOperation nullOp = new NoResultsQueryOperation();
                 addQueryOp(nullOp);
                 mMessageGrouper[0] = new HitGrouper(nullOp, res
                             .getSortBy());
