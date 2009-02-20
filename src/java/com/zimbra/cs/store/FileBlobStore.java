@@ -223,6 +223,8 @@ public class FileBlobStore extends StoreManager {
             throw new IOException("MailboxBlob.copy(" + srcPath + "," + destPath + "): unable to read content from " + srcPath);
 
         boolean srcCompressed = srcStream instanceof GZIPInputStream;
+        ByteUtil.closeStream(srcStream);
+        
         boolean destCompressed = false;
         if (volume.getCompressBlobs()) {
             if (srcCompressed || src.getFile().length() <= volume.getCompressionThreshold()) {
