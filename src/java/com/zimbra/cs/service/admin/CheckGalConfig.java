@@ -27,6 +27,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.service.account.SearchGal;
@@ -39,8 +41,10 @@ public class CheckGalConfig extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
+        checkRight(zsc, context, null, Admin.R_checkExternalGALConfig);
+        
         Element q = request.getOptionalElement(AdminConstants.E_QUERY);
         String query = null;
         long limit = 0;
@@ -57,7 +61,7 @@ public class CheckGalConfig extends AdminDocumentHandler {
 	    Map attrs = AdminService.getAttrs(request, true);
 
 
-        Element response = lc.createElement(AdminConstants.CHECK_GAL_CONFIG_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.CHECK_GAL_CONFIG_RESPONSE);
         Check.Result r = Check.checkGalConfig(attrs, query, (int)limit, galOp);
         
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
@@ -75,4 +79,13 @@ public class CheckGalConfig extends AdminDocumentHandler {
         }
 	    return response;
 	}
+	
+	@Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_checkExternalGALConfig);
+        notes.append(Admin.R_checkExternalGALConfig.getName() + 
+                " is a domain right.  However CheckExchangeAuth does not take a " + 
+                "domain, thus the right has to be granted on the globla grant " +
+                "to be effective.");
+    }
 }

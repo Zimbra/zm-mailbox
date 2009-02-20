@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -30,6 +31,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -43,6 +47,9 @@ public class AddAccountLogger extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_manageAccountLogger);
         
         // Look up account
         Account account = getAccountFromLoggerRequest(request);
@@ -101,5 +108,10 @@ public class AddAccountLogger extends AdminDocumentHandler {
             }
         }
         return account;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageAccountLogger);
     }
 }

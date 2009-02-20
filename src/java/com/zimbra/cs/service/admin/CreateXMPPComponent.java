@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -28,6 +29,9 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -71,10 +75,20 @@ public class CreateXMPPComponent extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("Specified component name must be full name, and must be a subdomain of the specified parent", null);
         }
         
+        checkRight(zsc, context, null, Admin.R_createXMPPComponent);
+        checkSetAttrsOnCreate(zsc, TargetType.xmppcomponent, name, attrs);
+        
         XMPPComponent comp = prov.createXMPPComponent(name, domain, server, attrs);
         
         Element response = zsc.createElement(AdminConstants.CREATE_XMPPCOMPONENT_RESPONSE);
         ToXML.encodeXMPPComponent(response, comp);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createXMPPComponent);
+        notes.append(String.format(sDocRightNotesCreateEntry, 
+                Admin.R_modifyXMPPComponent.getName(), "XMPP component"));
     }
 }

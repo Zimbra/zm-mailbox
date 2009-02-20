@@ -21,7 +21,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -35,8 +38,12 @@ public class DumpSessions extends AdminDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminConstants.DUMP_SESSIONS_RESPONSE);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_dumpSession);
+        
+        Element response = zsc.createElement(AdminConstants.DUMP_SESSIONS_RESPONSE);
         
         boolean includeAccounts = request.getAttributeBool(AdminConstants.A_LIST_SESSIONS, false);
         boolean groupByAccount = request.getAttributeBool(AdminConstants.A_GROUP_BY_ACCOUNT, false);
@@ -124,5 +131,10 @@ public class DumpSessions extends AdminDocumentHandler {
         sElt.addAttribute(AdminConstants.A_CREATED_DATE, s.getCreationTime());
         sElt.addAttribute(AdminConstants.A_LAST_ACCESSED_DATE, s.getLastAccessTime());
         s.encodeState(sElt);
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_dumpSession);
     }
 }

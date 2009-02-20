@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -27,6 +28,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -66,5 +68,10 @@ public class DeleteDataSource extends AdminDocumentHandler {
         
         Element response = zsc.createElement(AdminConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_adminLoginAs);
     }
 }

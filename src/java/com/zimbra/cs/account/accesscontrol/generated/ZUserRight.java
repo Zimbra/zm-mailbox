@@ -17,7 +17,7 @@ public abstract class ZUserRight {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1439 */
+    /* build: 5.0 pshao 20090219-2000 */
 
 
     public static UserRight R_invite;

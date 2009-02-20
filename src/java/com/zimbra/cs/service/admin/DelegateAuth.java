@@ -30,10 +30,12 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -94,6 +96,11 @@ public class DelegateAuth extends AdminDocumentHandler {
         at.encodeAuthResp(response, true);
         response.addAttribute(AdminConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_adminLoginAs);
     }
     
     /*

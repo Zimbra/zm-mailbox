@@ -21,6 +21,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
@@ -32,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.service.AuthProvider;
@@ -203,5 +205,10 @@ public class Auth extends AdminDocumentHandler {
     public boolean needsAdminAuth(Map<String, Object> context) {
         // can't require auth on auth request
         return false;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Do not need any right.");
     }
 }

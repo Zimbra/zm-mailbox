@@ -16,10 +16,14 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -36,6 +40,9 @@ public class CreateZimlet extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
+	    checkRight(lc, context, null, Admin.R_createZimlet);
+        checkSetAttrsOnCreate(lc, TargetType.zimlet, name, attrs);
+        
 	    Zimlet zimlet = prov.createZimlet(name, attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -46,4 +53,11 @@ public class CreateZimlet extends AdminDocumentHandler {
 
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createZimlet);
+        notes.append(String.format(sDocRightNotesCreateEntry, 
+                Admin.R_modifyZimlet.getName(), "zimlet"));
+    }
 }

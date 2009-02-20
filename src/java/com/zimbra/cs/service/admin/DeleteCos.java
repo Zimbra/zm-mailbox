@@ -20,12 +20,14 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -50,6 +52,7 @@ public class DeleteCos extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_COS(id);
         
         checkRight(zsc, context, cos, Admin.R_deleteCos);
+        
         prov.deleteCos(cos.getId());
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -59,4 +62,8 @@ public class DeleteCos extends AdminDocumentHandler {
 	    return response;
 	}
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_deleteCos);
+    }
 }

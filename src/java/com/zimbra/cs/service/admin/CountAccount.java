@@ -1,5 +1,6 @@
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -13,6 +14,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -54,5 +56,10 @@ public class CountAccount extends AdminDocumentHandler {
             eCos.addAttribute(AdminConstants.A_NAME, c.getCosName());
             eCos.setText(String.valueOf(c.getCount()));
         }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_countAccount);
     }
 }

@@ -20,11 +20,14 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -34,15 +37,21 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class CheckAuthConfig extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    String password = request.getAttribute(AdminConstants.E_PASSWORD);
 	    Map attrs = AdminService.getAttrs(request, true);
 
+	    // checkExternalAuthConfig is a domain right.
+	    //
+	    // This SOAP does not take a domain, pass null to checkRight,
+	    // it'll check right on global grant.  If this SOAP supports a 
+	    // domain parameter and the admin has a checkExternalAuthConfig 
+	    // grant on the domain, the domain grant will be effective.
+	    checkRight(zsc, context, null, Admin.R_checkExternalAuthConfig);
 
-        Element response = lc.createElement(AdminConstants.CHECK_AUTH_CONFIG_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.CHECK_AUTH_CONFIG_RESPONSE);
         Check.Result r = Check.checkAuthConfig(attrs, name, password);
         
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
@@ -53,4 +62,13 @@ public class CheckAuthConfig extends AdminDocumentHandler {
 
 	    return response;
 	}
+	
+	@Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_checkExternalAuthConfig);
+        notes.append(Admin.R_checkExternalAuthConfig.getName() + 
+                " is a domain right.  However CheckExchangeAuth does not take a " + 
+                "domain, thus the right has to be granted on the globla grant " +
+                "to be effective.");
+    }
 }

@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +36,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -44,6 +44,7 @@ import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
@@ -242,18 +243,34 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     
     /*
      * ======================================================================
-     *     connector methods between domain based access manager and 
+     *     Connector methods between domain based access manager and 
      *     pure ACL based access manager.
      *     
-     *     Maybe we should just make them all AccessManager methods, instead 
-     *     if doing the isDomainBasedAccessManager test here.  TODO
+     *     The difference cannot be resolved cleanly in AccessManager API and 
+     *     is cleaner this way.
      *     
      *     TODO: make sure only the following methods are called from
      *           all admin handlers, non of the legacy ones:
      *           (Admin)AccessManager.canAccessAccount, canAccessEmail, canAccessDomain 
      *           should be called.
+     *           
+     *     TODO: make sure *all* admin soap handlers call one of:
+     *               checkRightTODO
+     *               checkSetAttrsOnCreate
+     *               hasRightsToList
+     *               checkRight
+     *               checkAccountRight
+     *               checkCalendarResourceRight
+     *               checkDistributionListRight
+     *               checkDomainRightByEmail
+     *               checkDomainRight
      * ======================================================================
      */
+    
+    // bookmark for callsites still needs ACL checking but is not done yet
+    // in the end, no one should call this method
+    protected void checkRightTODO() {
+    }
     
     private boolean isDomainBasedAccessManager(AccessManager am) {
         return (!(am instanceof RoleAccessManager));
@@ -270,21 +287,23 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * @return
      * @throws ServiceException
      */
-    protected boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
+    private boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
+        
+        Account authedAcct = getAuthenticatedAccount(zsc);
         
         if (needed instanceof AdminRight) {
             AdminRight adminRight = (AdminRight)needed;
             if (adminRight.isPresetRight())
-                return am.canDo(zsc.getAuthToken(), target, (AdminRight)needed, true, false, null);
+                return am.canDo(authedAcct, target, (AdminRight)needed, true, false, null);
             else if (adminRight.isAttrRight() && 
                      adminRight.getRightType() == Right.RightType.getAttrs)
-                return am.canGetAttrs(zsc.getAuthToken(), target, ((AttrRight)needed).getAttrs(), true);
+                return am.canGetAttrs(authedAcct, target, ((AttrRight)needed).getAttrs(), true);
             else
                 throw ServiceException.FAILURE("internal error", null);
         } else if (needed instanceof Set)
-            return am.canGetAttrs(zsc.getAuthToken(), target, (Set<String>)needed, true);
+            return am.canGetAttrs(authedAcct, target, (Set<String>)needed, true);
         else if (needed instanceof Map)
-            return am.canSetAttrs(zsc.getAuthToken(), target, (Map<String, Object>)needed, true);
+            return am.canSetAttrs(authedAcct, target, (Map<String, Object>)needed, true);
         else
             throw ServiceException.FAILURE("internal error", null);
     }
@@ -378,8 +397,6 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * here.  But we sanity check again, just in case.
      * -------------------
      */
-    // context is only needed for the domainAuthSufficient call, we don't really need it, as 
-    // none of the domainAuthSufficient impl uses it, cam remove.  TODO
     protected void checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         boolean hasRight;
@@ -436,9 +453,6 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * AccessManager.  so we can:
      * 1. switch back to domain based AccessManager if needed.
      * 2. callsites in Admin soap handlers looks cleaner.
-     * 
-     * The diff cannot be resolved cleanly in AccessManager API and 
-     * is cleaner this way.
      * 
      * ------------------------------------------------------------
      */
@@ -577,5 +591,18 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         }
     }
     
+
+    // ==========================================
+    // commonly used notes for documenting rights
+    // ==========================================
+    
+    // for documenting which rights are needed for a SOAP.
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {}
+    
+    protected static final String sDocRightNotesCreateEntry = 
+        "All attrs provided in the attribute list have to settable by. " + 
+        "the authed admin.   You can grant the %s right, which allows " + 
+        "setting all attributes on %s, or grant the set attrs right just " +
+        "for the attributes the admin needs to set while creating an entry.";
 
 }

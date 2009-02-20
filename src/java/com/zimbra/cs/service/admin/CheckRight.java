@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -41,10 +42,12 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -68,6 +71,17 @@ public class CheckRight extends RightDocumentHandler {
             throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
         GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
+        
+        // ===============================================
+        // check if the authed admin has the checkRight right on the user it is
+        // checking right for.
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), 
+                GranteeType.GT_USER, granteeBy, grantee);  
+        Account granteeAcct = (Account)granteeEntry;
+        // call checkRight instead of checkAccountRight because there is no backward compatibility
+        // issue for this SOAP.
+        checkRight(zsc, granteeAcct, Admin.R_checkRight);
+        // ================================================
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
@@ -103,6 +117,11 @@ public class CheckRight extends RightDocumentHandler {
         }
         
         return resp;
+    }
+
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_checkRight);
     }
 
 }

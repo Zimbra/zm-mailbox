@@ -27,10 +27,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,4 +71,10 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createAccount);
+        notes.append(String.format(sDocRightNotesCreateEntry, Admin.R_modifyAccount.getName(), "account"));
+    }
 }

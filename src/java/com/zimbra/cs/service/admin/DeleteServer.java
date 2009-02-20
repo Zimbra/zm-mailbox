@@ -20,12 +20,15 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -42,7 +45,7 @@ public class DeleteServer extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
@@ -51,12 +54,19 @@ public class DeleteServer extends AdminDocumentHandler {
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(id);
         
+        checkRight(zsc, context, server, Admin.R_deleteServer);
+        
         prov.deleteServer(server.getId());
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DeleteServer","name", server.getName(), "id", server.getId()}));
 
-	    Element response = lc.createElement(AdminConstants.DELETE_SERVER_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.DELETE_SERVER_RESPONSE);
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_deleteServer);
+    }
 }

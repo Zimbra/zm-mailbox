@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -30,6 +31,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,6 +48,7 @@ public class CreateDomain extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
+	    // check if the domain can be created 
 	    int firstDot = name.indexOf('.');
 	    if (firstDot == -1)
 	        checkRight(zsc, context, null, Admin.R_createTopDomain);
@@ -71,4 +74,12 @@ public class CreateDomain extends AdminDocumentHandler {
 
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createTopDomain);
+        relatedRights.add(Admin.R_createSubDomain);
+        notes.append(String.format(sDocRightNotesCreateEntry, 
+                Admin.R_modifyDomain.getName(), "domain"));
+    }
 }

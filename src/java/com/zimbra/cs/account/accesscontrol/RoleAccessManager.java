@@ -23,8 +23,8 @@ import com.zimbra.cs.mailbox.ACL;
 
 /*
  * TODO: when things are stable:
- *       rename AclAccessManager to DomainAclAccessManager, then
- *       rename RoleAccessManager to AclAccessManager
+ *       rename AclAccessManager to DomainACLAccessManager, then
+ *       rename RoleAccessManager to ACLAccessManager
  */
 
 public class RoleAccessManager extends AccessManager {
@@ -36,7 +36,7 @@ public class RoleAccessManager extends AccessManager {
     
     @Override
     public boolean isDomainAdminOnly(AuthToken at) {
-        // there is no such thing as domain admin
+        // there is no such thing as domain admin in the realm of ACL checking.
         return false;
     }
     

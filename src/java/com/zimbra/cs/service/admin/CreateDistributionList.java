@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -26,6 +27,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -59,5 +61,12 @@ public class CreateDistributionList extends AdminDocumentHandler {
         GetDistributionList.doDistributionList(response, dl);
 
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createDistributionList);
+        notes.append(String.format(sDocRightNotesCreateEntry, 
+                Admin.R_modifyDistributionList.getName(), "distribution list"));
     }
 }

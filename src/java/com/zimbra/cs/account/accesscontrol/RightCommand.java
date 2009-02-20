@@ -417,7 +417,7 @@ public class RightCommand {
      * remove when all is well
      */
     private static boolean READY() {
-        return true;
+        return false;
     }
     
     private static void verifyAccessManager() throws ServiceException {
@@ -470,8 +470,8 @@ public class RightCommand {
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
         
         // grantee
-        GranteeType gt = GranteeType.GT_USER;
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  // grantee for check right must be an Account
+        GranteeType gt = GranteeType.GT_USER;  // grantee for check right must be an Account
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         
         // right
         Right r = RightManager.getInstance().getRight(right);

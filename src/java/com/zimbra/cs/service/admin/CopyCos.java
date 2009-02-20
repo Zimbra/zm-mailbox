@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -27,6 +28,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -48,6 +51,9 @@ public class CopyCos extends AdminDocumentHandler {
         if (srcCos == null)
             throw AccountServiceException.NO_SUCH_COS(srcCosNameOrId);
         
+        checkRight(lc, context, null, Admin.R_createCos);
+        checkRight(lc, context, srcCos, Admin.R_getCos);
+        
         Cos cos = prov.copyCos(srcCos.getId(), destCosName);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -57,5 +63,12 @@ public class CopyCos extends AdminDocumentHandler {
         GetCos.doCos(response, cos);
 
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createCos);
+        relatedRights.add(Admin.R_getCos);
+        notes.append("Need the " + Admin.R_getCos + " right on the source cos");
     }
 }

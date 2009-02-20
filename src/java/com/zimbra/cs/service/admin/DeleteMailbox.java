@@ -20,11 +20,14 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -57,12 +60,21 @@ public class DeleteMailbox extends AdminDocumentHandler {
         
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null) {
+            // Note: pure ACL based AccessManager won't go in the if here, 
+            // because its isDomainAdminOnly always returns false.
             if (isDomainAdminOnly(zsc)) {
                 throw ServiceException.PERM_DENIED("account doesn't exist, unable to determine authorization");
             }
+            
+            // still need to check right, since we don't have an account, the 
+            // last resort is checking the global grant.  Do this for now until 
+            // there is complain.
+            checkRight(zsc, context, null, Admin.R_deleteAccount); 
+            
             ZimbraLog.account.warn("DeleteMailbox: account doesn't exist: "+accountId+" (still deleting mailbox)");
-        } else if (!canAccessAccount(zsc, account)) {
-            throw ServiceException.PERM_DENIED("can not access account");
+
+        } else {
+            checkAccountRight(zsc, account, Admin.R_deleteAccount);   
         }
 
         if (account != null)
@@ -85,5 +97,10 @@ public class DeleteMailbox extends AdminDocumentHandler {
             response.addElement(AdminConstants.E_MAILBOX)
             .addAttribute(AdminConstants.A_MAILBOXID, mailboxId);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_deleteAccount);
     }
 }

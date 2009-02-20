@@ -16,27 +16,35 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.mail.CreateWaitSet;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * 
- */
 public class AdminCreateWaitSetRequest extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        // DA TODO: check right
+        Server server = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, server, Admin.R_manageWaitSet);
         
         Element response = zsc.createElement(AdminConstants.ADMIN_CREATE_WAIT_SET_RESPONSE);
         return CreateWaitSet.staticHandle(request, context, response);
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageWaitSet);
     }
 
 }

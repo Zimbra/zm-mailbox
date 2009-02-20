@@ -17,8 +17,11 @@
 package com.zimbra.cs.service.admin;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -35,6 +38,9 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	    
+	    checkRightTODO();
+	    
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element content = request.getElement(MailConstants.E_CONTENT);
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
@@ -55,4 +61,9 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 		}
 		return response;
 	}
+	
+	@Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+	    notes.append("TODO");
+    }
 }

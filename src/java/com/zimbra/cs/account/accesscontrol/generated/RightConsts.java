@@ -10,7 +10,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1439 */
+    /* build: 5.0 pshao 20090219-2000 */
 
 
     /*
@@ -93,9 +93,39 @@ public class RightConsts {
     public static final String RT_assignCos = "assignCos";
 
     /**
+     * check and create directory on file system
+     */
+    public static final String RT_checkDirectoryOnFileSystem = "checkDirectoryOnFileSystem";
+
+    /**
      * check doamin MX record
      */
     public static final String RT_checkDomainMXRecord = "checkDomainMXRecord";
+
+    /**
+     * check exchange auth config
+     */
+    public static final String RT_checkExchangeAuthConfig = "checkExchangeAuthConfig";
+
+    /**
+     * check auth config for external auth
+     */
+    public static final String RT_checkExternalAuthConfig = "checkExternalAuthConfig";
+
+    /**
+     * check external GAL config
+     */
+    public static final String RT_checkExternalGALConfig = "checkExternalGALConfig";
+
+    /**
+     * check server health
+     */
+    public static final String RT_checkHealth = "checkHealth";
+
+    /**
+     * check if the account has a specific right
+     */
+    public static final String RT_checkRight = "checkRight";
 
     /**
      * configure admin UI
@@ -110,7 +140,7 @@ public class RightConsts {
     /**
      * configure attributes for external auth
      */
-    public static final String RT_configureExternaAuth = "configureExternaAuth";
+    public static final String RT_configureExternalAuth = "configureExternalAuth";
 
     /**
      * configure attributes for external GAL
@@ -178,6 +208,11 @@ public class RightConsts {
     public static final String RT_createTopDomain = "createTopDomain";
 
     /**
+     * create XMPP component
+     */
+    public static final String RT_createXMPPComponent = "createXMPPComponent";
+
+    /**
      * create zimlet
      */
     public static final String RT_createZimlet = "createZimlet";
@@ -218,9 +253,19 @@ public class RightConsts {
     public static final String RT_deleteServer = "deleteServer";
 
     /**
+     * delete XMPP component
+     */
+    public static final String RT_deleteXMPPComponent = "deleteXMPPComponent";
+
+    /**
      * delete zimlet
      */
     public static final String RT_deleteZimlet = "deleteZimlet";
+
+    /**
+     * dump session
+     */
+    public static final String RT_dumpSession = "dumpSession";
 
     /**
      * get all account attributes
@@ -324,9 +369,24 @@ public class RightConsts {
     public static final String RT_listZimlet = "listZimlet";
 
     /**
+     * add/remove account loggers
+     */
+    public static final String RT_manageAccountLogger = "manageAccountLogger";
+
+    /**
      * take actions on mail queues
      */
     public static final String RT_manageMailQueue = "manageMailQueue";
+
+    /**
+     * create, volumes
+     */
+    public static final String RT_manageVolume = "manageVolume";
+
+    /**
+     * create, destroy, wait, query wait sets
+     */
+    public static final String RT_manageWaitSet = "manageWaitSet";
 
     /**
      * activate/deactivate zimlets on a cos
@@ -367,6 +427,11 @@ public class RightConsts {
      * set all server attributes
      */
     public static final String RT_modifyServer = "modifyServer";
+
+    /**
+     * set all XMPP component attributes
+     */
+    public static final String RT_modifyXMPPComponent = "modifyXMPPComponent";
 
     /**
      * set all zimlet attributes
@@ -449,7 +514,7 @@ public class RightConsts {
     public static final String RT_viewMailQueue = "viewMailQueue";
 
     /**
-     * configure password strength
+     * view password strength
      */
     public static final String RT_viewPasswordStrength = "viewPasswordStrength";
 

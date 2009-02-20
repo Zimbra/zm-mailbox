@@ -16,7 +16,7 @@ public abstract class ZAdminRight {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1439 */
+    /* build: 5.0 pshao 20090219-2000 */
 
 
     public static AdminRight R_accessGAL;
@@ -26,10 +26,16 @@ public abstract class ZAdminRight {
     public static AdminRight R_addDistributionListMember;
     public static AdminRight R_adminLoginAs;
     public static AdminRight R_assignCos;
+    public static AdminRight R_checkDirectoryOnFileSystem;
     public static AdminRight R_checkDomainMXRecord;
+    public static AdminRight R_checkExchangeAuthConfig;
+    public static AdminRight R_checkExternalAuthConfig;
+    public static AdminRight R_checkExternalGALConfig;
+    public static AdminRight R_checkHealth;
+    public static AdminRight R_checkRight;
     public static AdminRight R_configureAdminUI;
     public static AdminRight R_configureCosConstraint;
-    public static AdminRight R_configureExternaAuth;
+    public static AdminRight R_configureExternalAuth;
     public static AdminRight R_configureExternalGAL;
     public static AdminRight R_configureGlobalConfigConstraint;
     public static AdminRight R_configurePasswordStrength;
@@ -43,6 +49,7 @@ public abstract class ZAdminRight {
     public static AdminRight R_createServer;
     public static AdminRight R_createSubDomain;
     public static AdminRight R_createTopDomain;
+    public static AdminRight R_createXMPPComponent;
     public static AdminRight R_createZimlet;
     public static AdminRight R_deleteAccount;
     public static AdminRight R_deleteAlias;
@@ -51,7 +58,9 @@ public abstract class ZAdminRight {
     public static AdminRight R_deleteDistributionList;
     public static AdminRight R_deleteDomain;
     public static AdminRight R_deleteServer;
+    public static AdminRight R_deleteXMPPComponent;
     public static AdminRight R_deleteZimlet;
+    public static AdminRight R_dumpSession;
     public static AdminRight R_getAccount;
     public static AdminRight R_getAccountFeatures;
     public static AdminRight R_getAccountInfo;
@@ -72,7 +81,10 @@ public abstract class ZAdminRight {
     public static AdminRight R_listDomain;
     public static AdminRight R_listServer;
     public static AdminRight R_listZimlet;
+    public static AdminRight R_manageAccountLogger;
     public static AdminRight R_manageMailQueue;
+    public static AdminRight R_manageVolume;
+    public static AdminRight R_manageWaitSet;
     public static AdminRight R_manageZimlet;
     public static AdminRight R_modifyAccount;
     public static AdminRight R_modifyCalendarResource;
@@ -81,6 +93,7 @@ public abstract class ZAdminRight {
     public static AdminRight R_modifyDomain;
     public static AdminRight R_modifyGlobalConfig;
     public static AdminRight R_modifyServer;
+    public static AdminRight R_modifyXMPPComponent;
     public static AdminRight R_modifyZimlet;
     public static AdminRight R_reindexMailbox;
     public static AdminRight R_removeAccountAlias;
@@ -108,10 +121,16 @@ public abstract class ZAdminRight {
         R_addDistributionListMember            = rm.getAdminRight(Right.RT_addDistributionListMember);
         R_adminLoginAs                         = rm.getAdminRight(Right.RT_adminLoginAs);
         R_assignCos                            = rm.getAdminRight(Right.RT_assignCos);
+        R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);
         R_checkDomainMXRecord                  = rm.getAdminRight(Right.RT_checkDomainMXRecord);
+        R_checkExchangeAuthConfig              = rm.getAdminRight(Right.RT_checkExchangeAuthConfig);
+        R_checkExternalAuthConfig              = rm.getAdminRight(Right.RT_checkExternalAuthConfig);
+        R_checkExternalGALConfig               = rm.getAdminRight(Right.RT_checkExternalGALConfig);
+        R_checkHealth                          = rm.getAdminRight(Right.RT_checkHealth);
+        R_checkRight                           = rm.getAdminRight(Right.RT_checkRight);
         R_configureAdminUI                     = rm.getAdminRight(Right.RT_configureAdminUI);
         R_configureCosConstraint               = rm.getAdminRight(Right.RT_configureCosConstraint);
-        R_configureExternaAuth                 = rm.getAdminRight(Right.RT_configureExternaAuth);
+        R_configureExternalAuth                = rm.getAdminRight(Right.RT_configureExternalAuth);
         R_configureExternalGAL                 = rm.getAdminRight(Right.RT_configureExternalGAL);
         R_configureGlobalConfigConstraint      = rm.getAdminRight(Right.RT_configureGlobalConfigConstraint);
         R_configurePasswordStrength            = rm.getAdminRight(Right.RT_configurePasswordStrength);
@@ -125,6 +144,7 @@ public abstract class ZAdminRight {
         R_createServer                         = rm.getAdminRight(Right.RT_createServer);
         R_createSubDomain                      = rm.getAdminRight(Right.RT_createSubDomain);
         R_createTopDomain                      = rm.getAdminRight(Right.RT_createTopDomain);
+        R_createXMPPComponent                  = rm.getAdminRight(Right.RT_createXMPPComponent);
         R_createZimlet                         = rm.getAdminRight(Right.RT_createZimlet);
         R_deleteAccount                        = rm.getAdminRight(Right.RT_deleteAccount);
         R_deleteAlias                          = rm.getAdminRight(Right.RT_deleteAlias);
@@ -133,7 +153,9 @@ public abstract class ZAdminRight {
         R_deleteDistributionList               = rm.getAdminRight(Right.RT_deleteDistributionList);
         R_deleteDomain                         = rm.getAdminRight(Right.RT_deleteDomain);
         R_deleteServer                         = rm.getAdminRight(Right.RT_deleteServer);
+        R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
+        R_dumpSession                          = rm.getAdminRight(Right.RT_dumpSession);
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
         R_getAccountFeatures                   = rm.getAdminRight(Right.RT_getAccountFeatures);
         R_getAccountInfo                       = rm.getAdminRight(Right.RT_getAccountInfo);
@@ -154,7 +176,10 @@ public abstract class ZAdminRight {
         R_listDomain                           = rm.getAdminRight(Right.RT_listDomain);
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
+        R_manageAccountLogger                  = rm.getAdminRight(Right.RT_manageAccountLogger);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
+        R_manageVolume                         = rm.getAdminRight(Right.RT_manageVolume);
+        R_manageWaitSet                        = rm.getAdminRight(Right.RT_manageWaitSet);
         R_manageZimlet                         = rm.getAdminRight(Right.RT_manageZimlet);
         R_modifyAccount                        = rm.getAdminRight(Right.RT_modifyAccount);
         R_modifyCalendarResource               = rm.getAdminRight(Right.RT_modifyCalendarResource);
@@ -163,6 +188,7 @@ public abstract class ZAdminRight {
         R_modifyDomain                         = rm.getAdminRight(Right.RT_modifyDomain);
         R_modifyGlobalConfig                   = rm.getAdminRight(Right.RT_modifyGlobalConfig);
         R_modifyServer                         = rm.getAdminRight(Right.RT_modifyServer);
+        R_modifyXMPPComponent                  = rm.getAdminRight(Right.RT_modifyXMPPComponent);
         R_modifyZimlet                         = rm.getAdminRight(Right.RT_modifyZimlet);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);
         R_removeAccountAlias                   = rm.getAdminRight(Right.RT_removeAccountAlias);

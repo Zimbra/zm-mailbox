@@ -20,12 +20,15 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -59,8 +62,7 @@ public class CheckPasswordStrength extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+        checkAccountRight(zsc, account, Admin.R_viewPasswordStrength);
  
         prov.checkPasswordStrength(account, password);
         
@@ -69,6 +71,11 @@ public class CheckPasswordStrength extends AdminDocumentHandler {
 
         Element response = zsc.createElement(AdminConstants.CHECK_PASSWORD_STRENGTH_RESPONSE);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_viewPasswordStrength);
     }
 
 }

@@ -20,12 +20,16 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.db.DbStatus;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -41,6 +45,11 @@ public class CheckHealth extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminConstants.CHECK_HEALTH_RESPONSE);
 
+        if (needsAdminAuth(context)) {
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            checkRight(lc, context, localServer, Admin.R_checkHealth);
+        }
+        
         boolean dir = Provisioning.getInstance().healthCheck();
         boolean db = DbStatus.healthCheck();
         boolean healthy = dir && db;
@@ -63,5 +72,12 @@ public class CheckHealth extends AdminDocumentHandler {
      */
     public boolean needsAdminAuth(Map<String, Object> context) {
         return !clientIsLocal(context);
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_checkHealth);
+        notes.append("The " + Admin.R_checkHealth.getName() + " is needed " +
+                "only when the client making the SOAP request is localhost.");
     }
 }

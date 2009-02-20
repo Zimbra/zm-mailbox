@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -30,6 +31,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -82,5 +84,10 @@ public class CreateDataSource extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.CREATE_DATA_SOURCE_RESPONSE);
         ToXML.encodeDataSource(response, ds);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_adminLoginAs);
     }
 }

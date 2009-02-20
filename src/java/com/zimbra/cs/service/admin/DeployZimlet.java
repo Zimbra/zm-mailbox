@@ -25,6 +25,7 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -122,6 +123,9 @@ public class DeployZimlet extends AdminDocumentHandler {
 	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	    
+	    checkRightTODO();
+	    
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
@@ -142,4 +146,9 @@ public class DeployZimlet extends AdminDocumentHandler {
 			progress.writeResponse(response);
 		return response;
 	}
+	
+	@Override
+	protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+	    notes.append("TODO");
+    }
 }

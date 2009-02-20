@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.service.account.ToXML;
@@ -27,6 +28,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -67,5 +69,12 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         ToXML.encodeCalendarResourceOld(response, resource, true);
 
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_createCalendarResource);
+        notes.append(String.format(sDocRightNotesCreateEntry, 
+                Admin.R_modifyCalendarResource.getName(), "calendar resource"));
     }
 }
