@@ -35,6 +35,7 @@ import com.zimbra.cs.dav.DavElements;
  */
 public class ResourceProperty {
 	private boolean mProtected;
+	private boolean mVisible;
 	private boolean mLive;
 	private QName mName;
 	private Locale mLocale;
@@ -66,6 +67,11 @@ public class ResourceProperty {
 	/* Returns true if the property is protected. */
 	public boolean isProtected() {
 		return mProtected;
+	}
+	
+	/* Returns true if the property is to be returned in allprop request. */
+	public boolean isVisible() {
+		return mVisible;
 	}
 	
 	/* Returns true if the property is live. */
@@ -118,8 +124,12 @@ public class ResourceProperty {
 	}
 	
 	public void setProtected(boolean pr) {
-		// TODO: protect
 		mProtected = pr;
+		mVisible = !pr;  // by default protected == not visible
+	}
+
+	public void setVisible(boolean v) {
+		mVisible = v;
 	}
 	
 	public String toString() {

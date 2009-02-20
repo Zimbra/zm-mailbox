@@ -151,7 +151,7 @@ public abstract class DavResource {
 	public Set<QName> getAllPropertyNames() {
 		Set<QName> ret = new HashSet<QName>();
 		for (QName key : mProps.keySet())
-			if (!mProps.get(key).isProtected())
+			if (mProps.get(key).isVisible())
 				ret.add(key);
 		
 		return ret;
