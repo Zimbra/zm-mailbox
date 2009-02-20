@@ -28,6 +28,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -41,16 +43,25 @@ public class GetAllDomains extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
         List domains = prov.getAllDomains();
         
-        Element response = lc.createElement(AdminConstants.GET_ALL_DOMAINS_RESPONSE);
-        for (Iterator it = domains.iterator(); it.hasNext(); )
-            GetDomain.doDomain(response, (Domain) it.next(), applyConfig);
+        Element response = zsc.createElement(AdminConstants.GET_ALL_DOMAINS_RESPONSE);
+        for (Iterator it = domains.iterator(); it.hasNext(); ) {
+            Domain domain = (Domain) it.next();
+            if (hasRightsToList(zsc, domain, Admin.R_listDomain, Admin.R_getDomain))
+                GetDomain.doDomain(response, domain, applyConfig);
+        }
 
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listDomain);
+        relatedRights.add(Admin.R_getDomain);
+    }
 }

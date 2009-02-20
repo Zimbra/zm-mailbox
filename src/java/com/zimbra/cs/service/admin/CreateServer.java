@@ -64,7 +64,7 @@ public class CreateServer extends AdminDocumentHandler {
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
         relatedRights.add(Admin.R_createServer);
-        notes.append(String.format(sDocRightNotesCreateEntry, 
+        notes.append(String.format(sDocRightNotesModifyEntry, 
                 Admin.R_modifyServer.getName(), "server"));
     }
 }

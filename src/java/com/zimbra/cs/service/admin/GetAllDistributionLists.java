@@ -99,4 +99,10 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
                 GetDistributionList.doDistributionList(e, dl);
         }        
     }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listDistributionList);
+        relatedRights.add(Admin.R_getDistributionList);
+    }
 }

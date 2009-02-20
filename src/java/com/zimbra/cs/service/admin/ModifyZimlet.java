@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -25,6 +26,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -117,4 +119,13 @@ public class ModifyZimlet extends AdminDocumentHandler {
 
 		ZimletUtil.setPriority(name, val);
 	}
+    
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageZimlet);
+        relatedRights.add(Admin.R_modifyZimlet);
+        notes.append("For acl: needs " + Admin.R_manageZimlet.getName() + " on cos\n" +
+                     "For status and priority: needs " + Admin.R_modifyZimlet.getName() + " on zimlet.");
+    }
 }

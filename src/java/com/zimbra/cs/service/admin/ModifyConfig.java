@@ -20,10 +20,12 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -38,13 +40,13 @@ public class ModifyConfig extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Map<String, Object> attrs = AdminService.getAttrs(request);
         
         Config config = prov.getConfig();
-        checkRight(lc, context, config, attrs);
+        checkRight(zsc, context, config, attrs);
         
         // pass in true to checkImmutable
         prov.modifyAttrs(config, attrs, true);
@@ -52,7 +54,12 @@ public class ModifyConfig extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyConfig",}, attrs));
         
-        Element response = lc.createElement(AdminConstants.MODIFY_CONFIG_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.MODIFY_CONFIG_RESPONSE);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyGlobalConfig.getName(), "global config"));
     }
 }

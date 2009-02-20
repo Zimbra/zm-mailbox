@@ -10,7 +10,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090219-2000 */
+    /* build: 5.0 pshao 20090220-0241 */
 
 
     /*
@@ -268,6 +268,11 @@ public class RightConsts {
     public static final String RT_dumpSession = "dumpSession";
 
     /**
+     * flush LDAP, skin, local caches on server
+     */
+    public static final String RT_flushCache = "flushCache";
+
+    /**
      * get all account attributes
      */
     public static final String RT_getAccount = "getAccount";
@@ -326,6 +331,11 @@ public class RightConsts {
      * get all server attributes
      */
     public static final String RT_getServer = "getServer";
+
+    /**
+     * get all XMPP component attributes
+     */
+    public static final String RT_getXMPPComponent = "getXMPPComponent";
 
     /**
      * get all zimlet attributes
@@ -499,9 +509,19 @@ public class RightConsts {
     public static final String RT_setAccountPassword = "setAccountPassword";
 
     /**
+     * save admin saved searches
+     */
+    public static final String RT_setAdminSavedSearch = "setAdminSavedSearch";
+
+    /**
      * set calendar resource password
      */
     public static final String RT_setCalendarResourcePassword = "setCalendarResourcePassword";
+
+    /**
+     * view admin saved searches
+     */
+    public static final String RT_viewAdminSavedSearch = "viewAdminSavedSearch";
 
     /**
      * view the account&#039;s email

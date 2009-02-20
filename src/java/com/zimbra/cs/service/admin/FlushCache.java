@@ -24,8 +24,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -33,7 +36,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class FlushCache extends AdminDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_flushCache);
         
         Element eCache = request.getElement(AdminConstants.E_CACHE);
         String type = eCache.getAttribute(AdminConstants.A_TYPE);
@@ -56,8 +62,13 @@ public class FlushCache extends AdminDocumentHandler {
             Provisioning.getInstance().flushCache(type, entries);
         }
 
-        Element response = lc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_flushCache);
     }
 
 }

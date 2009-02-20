@@ -18,12 +18,17 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -31,6 +36,10 @@ public class GetVolume extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(lc, context, localServer, Admin.R_manageVolume);
+        
         long idLong = request.getAttributeLong(AdminConstants.A_ID);
         Volume.validateID(idLong);  // avoid Java truncation
         short id = (short) idLong;
@@ -72,5 +81,10 @@ public class GetVolume extends AdminDocumentHandler {
             current.add(vol.getId());
         }
         return current;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageVolume);
     }
 }

@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
@@ -44,7 +45,11 @@ public class FixCalendarTZ extends AdminDocumentHandler {
     private static final long DEFAULT_FIXUP_AFTER = 1199098800000L;
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // what to check for this SOAP?
+        // allow just system admin for now
+        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
 
         boolean sync = request.getAttributeBool(AdminConstants.A_TZFIXUP_SYNC, false);
         long after = request.getAttributeLong(AdminConstants.A_TZFIXUP_AFTER, DEFAULT_FIXUP_AFTER);
@@ -62,7 +67,7 @@ public class FixCalendarTZ extends AdminDocumentHandler {
             thread.start();
         }
 
-        Element response = lc.createElement(AdminConstants.FIX_CALENDAR_TZ_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.FIX_CALENDAR_TZ_RESPONSE);
         return response;
     }
 
@@ -160,5 +165,10 @@ public class FixCalendarTZ extends AdminDocumentHandler {
                         "Error while fixing up calendar timezones: " + e.getMessage(), e);
             }
         }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Only system admins are allowed");
     }
 }

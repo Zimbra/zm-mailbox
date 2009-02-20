@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -31,6 +32,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -119,5 +121,10 @@ public class GetAccountInfo extends AdminDocumentHandler  {
             eCos.addAttribute(AdminConstants.A_ID, cos.getId());
             eCos.addAttribute(AdminConstants.A_NAME, cos.getName());
         }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getAccountInfo);
     }
 }

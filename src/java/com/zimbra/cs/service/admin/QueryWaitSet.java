@@ -24,6 +24,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -39,6 +43,10 @@ public class QueryWaitSet extends AdminDocumentHandler {
     throws ServiceException {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server server = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, server, Admin.R_manageWaitSet);
+        
         Element response = zsc.createElement(AdminConstants.QUERY_WAIT_SET_RESPONSE);
         
         String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID, null);
@@ -61,5 +69,10 @@ public class QueryWaitSet extends AdminDocumentHandler {
             set.handleQuery(waitSetElt);
         }
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageWaitSet);
     }
 }

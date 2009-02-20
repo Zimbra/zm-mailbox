@@ -17,12 +17,15 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.soap.AdminConstants;
 
@@ -53,4 +56,8 @@ public class GetVersionInfo extends AdminDocumentHandler {
         return false;
     }
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Do not need any right");
+    }
 }

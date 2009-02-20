@@ -88,7 +88,7 @@ public class CreateXMPPComponent extends AdminDocumentHandler {
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
         relatedRights.add(Admin.R_createXMPPComponent);
-        notes.append(String.format(sDocRightNotesCreateEntry, 
+        notes.append(String.format(sDocRightNotesModifyEntry, 
                 Admin.R_modifyXMPPComponent.getName(), "XMPP component"));
     }
 }

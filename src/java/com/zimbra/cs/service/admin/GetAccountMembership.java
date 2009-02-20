@@ -32,6 +32,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -75,5 +76,10 @@ public class GetAccountMembership extends AdminDocumentHandler {
             if (viaDl != null) distributionList.addAttribute(AdminConstants.A_VIA, viaDl);
         }
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getAccountMembership);
     }
 }

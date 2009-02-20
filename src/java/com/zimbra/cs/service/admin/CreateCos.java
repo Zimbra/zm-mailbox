@@ -64,7 +64,7 @@ public class CreateCos extends AdminDocumentHandler {
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
         relatedRights.add(Admin.R_createCos);
-        notes.append(String.format(sDocRightNotesCreateEntry, 
+        notes.append(String.format(sDocRightNotesModifyEntry, 
                 Admin.R_modifyCos.getName(), "cos"));
     }
 }

@@ -21,6 +21,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -33,6 +34,8 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -55,15 +58,10 @@ public class GetCos extends AdminDocumentHandler {
 
 	    Cos cos = prov.get(CosBy.fromString(key), value);
 	    
-	    // if we are a domain admin only, restrict to the COSs viewable by the domain admin
-        if (isDomainAdminOnly(zsc)) {
-            // for domain admin, if the requested COS does not exist, throw PERM_DENIED instead of NO_SUCH_COS
-            if (cos == null || !canAccessCos(zsc, cos.getId()))
-                throw ServiceException.PERM_DENIED("can not access cos"); 
-        }
-	    
-        if (cos == null)
+	    if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);
+        
+        checkCosRight(zsc, cos, Admin.R_getCos);
 
 	    Element response = zsc.createElement(AdminConstants.GET_COS_RESPONSE);
         doCos(response, cos);
@@ -100,5 +98,10 @@ public class GetCos extends AdminDocumentHandler {
                 attr.setText((String) value);
             }
         }
+    }
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getCos);
     }
 }

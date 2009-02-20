@@ -16,19 +16,25 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllFreeBusyProviders extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminConstants.GET_ALL_FREE_BUSY_PROVIDERS_RESPONSE);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // allow only system admin for now
+        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+        
+        Element response = zsc.createElement(AdminConstants.GET_ALL_FREE_BUSY_PROVIDERS_RESPONSE);
         
         for (FreeBusyProvider prov : FreeBusyProvider.getProviders()) {
             Element provElem = response.addElement(AdminConstants.E_PROVIDER);
@@ -41,4 +47,9 @@ public class GetAllFreeBusyProviders extends AdminDocumentHandler {
         }
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Only system admins are allowed");
+    }
 }

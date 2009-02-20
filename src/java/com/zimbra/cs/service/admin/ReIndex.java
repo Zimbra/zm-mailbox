@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -138,5 +140,10 @@ public class ReIndex extends AdminDocumentHandler {
         prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, (status.mNumProcessed-status.mNumFailed));
         prog.addAttribute(AdminConstants.A_NUM_FAILED, status.mNumFailed);
         prog.addAttribute(AdminConstants.A_NUM_REMAINING, (status.mNumToProcess-status.mNumProcessed));
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_reindexMailbox);
     }
 }

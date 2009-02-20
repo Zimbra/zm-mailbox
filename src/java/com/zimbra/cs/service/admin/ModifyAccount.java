@@ -30,10 +30,13 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -116,6 +119,7 @@ public class ModifyAccount extends AdminDocumentHandler {
             }
         }
         
+        checkRightTODO();
         if (!canModifyMailQuota(zsc,  account, quota))
             throw ServiceException.PERM_DENIED("can not modify mail quota");
     }
@@ -151,5 +155,10 @@ public class ModifyAccount extends AdminDocumentHandler {
             ZimbraLog.mailbox.warn("cannot flush account cache on server " + (newServer==null?"":newServer.getName()) + " for " + acct.getName(), e);
         }
     }
-
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("TODO:  check quota\n\n");
+        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
+    }
 }

@@ -17,17 +17,24 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
+
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
+import com.zimbra.cs.service.admin.GetAllAccounts.AccountVisitor;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author jhahm
@@ -38,17 +45,29 @@ public class GetAllCalendarResources extends GetAllAccounts {
         return AdminConstants.GET_ALL_CALENDAR_RESOURCES_RESPONSE;
     }
     
+    protected static class CalendarResourceVisitor extends AccountVisitor {
+        CalendarResourceVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler, Element parent) {
+            super(zsc, handler, parent);
+        }
+        
+        public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
+            if (mHandler.hasRightsToList(mZsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
+                ToXML.encodeCalendarResourceOld(mParent, (CalendarResource) entry, true);
+        }
+    }
+    
     /*
      * server s is not used, need to use the same signature as GetAllAccounts.doDomain 
      * so the overridden doDomain is called.
      */
-    protected void doDomain(final Element e, Domain d, Server s)
-    throws ServiceException {
-        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-            public void visit(com.zimbra.cs.account.NamedEntry entry) {
-                ToXML.encodeCalendarResourceOld(e, (CalendarResource) entry, true);
-            }
-        };
+    protected void doDomain(ZimbraSoapContext zsc, final Element e, Domain d, Server s) throws ServiceException {
+        CalendarResourceVisitor visitor = new CalendarResourceVisitor(zsc, this, e);
         Provisioning.getInstance().getAllCalendarResources(d, s, visitor);
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listCalendarResource);
+        relatedRights.add(Admin.R_getCalendarResource);
     }
 }

@@ -20,11 +20,14 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 /**
  * @author schemers
@@ -50,5 +53,10 @@ public class Ping extends AdminDocumentHandler {
         // return false because this may be called from Perl which
         // doesn't have auth token
         return false;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Do not need any right");
     }
 }

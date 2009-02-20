@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -43,7 +44,7 @@ public class GetAllZimlets extends AdminDocumentHandler {
 	    Element response = lc.createElement(AdminConstants.GET_ALL_ZIMLETS_RESPONSE);
     	if(AdminConstants.A_EXTENSION.equalsIgnoreCase(exclude)) {
 		    for (Zimlet zimlet : zimlets) {
-		    	if(!zimlet.isExtension())
+		        if(!zimlet.isExtension())
 		    		GetZimlet.doZimlet(response, zimlet);
 		    }
     	} else if(AdminConstants.A_MAIL.equalsIgnoreCase(exclude)) {

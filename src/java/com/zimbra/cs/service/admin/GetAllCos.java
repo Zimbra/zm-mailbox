@@ -29,6 +29,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -45,17 +47,21 @@ public class GetAllCos extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
         List<Cos> coses = prov.getAllCos();
         
-        Element response = lc.createElement(AdminConstants.GET_ALL_COS_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ALL_COS_RESPONSE);
         for (Cos cos : coses) {
-            if (isDomainAdminOnly(lc) && !canAccessCos(lc, cos.getId()))
-                continue;
-            
-            GetCos.doCos(response, cos);
+            if (hasRightsToListCos(zsc, cos, Admin.R_listCos, Admin.R_getCos))
+                GetCos.doCos(response, cos);
         }
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listCos);
+        relatedRights.add(Admin.R_getCos);
+    }
 }

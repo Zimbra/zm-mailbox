@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
@@ -25,6 +26,8 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -78,5 +81,11 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.MODIFY_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResourceOld(response, resource, true);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("TODO:  check quota\n\n");
+        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyCalendarResource.getName(), "calendar resource"));
     }
 }

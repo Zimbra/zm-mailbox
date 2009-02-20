@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
@@ -28,6 +29,8 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -61,6 +64,10 @@ public class ModifyDomain extends AdminDocumentHandler {
         if (domain.isShutdown())
             throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
         
+        //
+        // Note: pure ACL based AccessManager won't go in the if here, 
+        // because its isDomainAdminOnly always returns false.
+        //
         if (isDomainAdminOnly(zsc)) {
             for (String attrName : attrs.keySet()) {
                 if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
@@ -70,6 +77,8 @@ public class ModifyDomain extends AdminDocumentHandler {
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }
+        
+        checkDomainRight(zsc, domain, attrs);
         
         // pass in true to checkImmutable
         prov.modifyAttrs(domain, attrs, true);
@@ -81,4 +90,9 @@ public class ModifyDomain extends AdminDocumentHandler {
 	    GetDomain.doDomain(response, domain);
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyDomain.getName(), "domain"));
+    }
 }

@@ -175,7 +175,7 @@ Depending on the context, there are three aspects of targets that need to be dea
       delete{Object}    - delete an object                                 Delete{Object}Request
       rename{Object}    - rename an object                                 Rename{Object}Request
       list{Object}      - know the existence of an object                  GetAll{Object}Request, SearchDirectory
-      get{Object}       - read some attributes on an object                Get{Object}Request
+      get{Object}       - read all attributes on an object                 Get{Object}Request
       modify{Object}    - modify and read all attributes on an object      Modify{Object}Request
       view{Object}      - read some attributes on an object                Get{Object}Request
       configure{Object} - modify and read some attributes on an object     Modify{Object}Request

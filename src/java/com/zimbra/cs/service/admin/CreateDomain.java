@@ -79,7 +79,7 @@ public class CreateDomain extends AdminDocumentHandler {
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
         relatedRights.add(Admin.R_createTopDomain);
         relatedRights.add(Admin.R_createSubDomain);
-        notes.append(String.format(sDocRightNotesCreateEntry, 
+        notes.append(String.format(sDocRightNotesModifyEntry, 
                 Admin.R_modifyDomain.getName(), "domain"));
     }
 }

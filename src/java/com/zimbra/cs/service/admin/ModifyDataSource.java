@@ -30,6 +30,8 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.common.soap.*;
 import com.zimbra.common.util.ZimbraLog;
@@ -57,8 +59,9 @@ public class ModifyDataSource extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+        // is this really used by admin console?
+        // for now just use the adminLoginAs right.
+        checkAccountRight(zsc, account, Admin.R_adminLoginAs);
         
         Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);
@@ -98,5 +101,10 @@ public class ModifyDataSource extends AdminDocumentHandler {
             return AttributeClass.liveDataSource;
         else
             return AttributeClass.dataSource;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_adminLoginAs);
     }
 }

@@ -18,6 +18,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -26,6 +27,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.admin.GetAdminSavedSearches;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -39,10 +42,12 @@ public class ModifyAdminSavedSearches extends AdminDocumentHandler {
     }
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
+        
+        checkAccountRight(zsc, acct, Admin.R_setAdminSavedSearch);
 
-        Element response = lc.createElement(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_RESPONSE);
         
         HashMap<String, String> searches = null;
         for (Iterator it = request.elementIterator(AdminConstants.E_SEARCH); it.hasNext(); ) {
@@ -98,6 +103,10 @@ public class ModifyAdminSavedSearches extends AdminDocumentHandler {
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put(Provisioning.A_zimbraAdminSavedSearches, mods);
         prov.modifyAttrs(acct, modmap);
-
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_setAdminSavedSearch);
     }
 }

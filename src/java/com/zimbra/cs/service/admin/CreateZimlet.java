@@ -57,7 +57,7 @@ public class CreateZimlet extends AdminDocumentHandler {
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
         relatedRights.add(Admin.R_createZimlet);
-        notes.append(String.format(sDocRightNotesCreateEntry, 
+        notes.append(String.format(sDocRightNotesModifyEntry, 
                 Admin.R_modifyZimlet.getName(), "zimlet"));
     }
 }

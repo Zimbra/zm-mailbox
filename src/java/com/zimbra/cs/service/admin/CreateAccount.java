@@ -75,6 +75,6 @@ public class CreateAccount extends AdminDocumentHandler {
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
         relatedRights.add(Admin.R_createAccount);
-        notes.append(String.format(sDocRightNotesCreateEntry, Admin.R_modifyAccount.getName(), "account"));
+        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
     }
 }

@@ -28,6 +28,7 @@ import org.testng.TestListenerAdapter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -82,6 +83,11 @@ public class RunUnitTests extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_NUM_EXECUTED, numPassed + numFailed);
         response.addAttribute(AdminConstants.A_NUM_FAILED, numFailed);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Do not need any right");
     }
 }
 

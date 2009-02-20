@@ -84,7 +84,7 @@ public abstract class AccessManager {
     public abstract boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException;
     public abstract boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException;
     
-    public abstract boolean canAccessCos(AuthToken at, String cosId) throws ServiceException;
+    public abstract boolean canAccessCos(AuthToken at, Cos cos) throws ServiceException;
 
     public abstract boolean canAccessEmail(AuthToken at, String email) throws ServiceException;
 

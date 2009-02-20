@@ -18,6 +18,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -25,6 +26,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -38,10 +41,12 @@ public class GetAdminSavedSearches extends AdminDocumentHandler {
     }
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
+        
+        checkAccountRight(zsc, acct, Admin.R_viewAdminSavedSearch);
 
-        Element response = lc.createElement(AdminConstants.GET_ADMIN_SAVED_SEARCHES_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ADMIN_SAVED_SEARCHES_RESPONSE);
         
         HashSet<String> specificSearches = null;
         for (Iterator it = request.elementIterator(AdminConstants.E_SEARCH); it.hasNext(); ) {
@@ -67,6 +72,11 @@ public class GetAdminSavedSearches extends AdminDocumentHandler {
             if (specificSearches == null || specificSearches.contains(as.getName()))
                 response.addElement(AdminConstants.E_SEARCH).addAttribute(AdminConstants.A_NAME, as.getName()).setText(as.getQuery());
         }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_viewAdminSavedSearch);
     }
     
     public static class AdminSearch {

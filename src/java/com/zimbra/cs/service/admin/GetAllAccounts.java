@@ -124,7 +124,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
         return AdminConstants.GET_ALL_ACCOUNTS_RESPONSE;
     }
 
-    private static class AccountVisitor implements NamedEntry.Visitor {
+    protected static class AccountVisitor implements NamedEntry.Visitor {
         ZimbraSoapContext mZsc;
         AdminDocumentHandler mHandler;
         Element mParent;
@@ -144,5 +144,11 @@ public class GetAllAccounts extends AdminDocumentHandler {
     protected void doDomain(ZimbraSoapContext zsc, final Element e, Domain d, Server s) throws ServiceException {
         AccountVisitor visitor = new AccountVisitor(zsc, this, e);
         Provisioning.getInstance().getAllAccounts(d, s, visitor);
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listAccount);
+        relatedRights.add(Admin.R_getAccount);
     }
 }

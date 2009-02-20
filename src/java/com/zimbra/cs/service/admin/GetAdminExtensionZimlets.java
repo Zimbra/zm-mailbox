@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -25,6 +26,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -35,22 +38,34 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		
-        Element response = lc.createElement(AdminConstants.GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE);
         Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
-        doExtensionZimlets(zimlets);
+        doExtensionZimlets(zsc, context, zimlets);
         
         return response;
     }
 
-	private void doExtensionZimlets(Element response) throws ServiceException {
+	private void doExtensionZimlets(ZimbraSoapContext zsc, Map<String, Object> context, Element response) throws ServiceException {
 		Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
 		while (zimlets.hasNext()) {
-			Zimlet z = (Zimlet) zimlets.next();
+		    
+		    Zimlet z = (Zimlet) zimlets.next();
+		    
+		    if (!hasRightsToList(zsc, z, Admin.R_listZimlet, Admin.R_getZimlet))
+			    continue;
+			
 			if (z.isExtension()) {
 				ZimletUtil.listZimlet(response, z, -1);
 			}
 		}
     }
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listZimlet);
+        relatedRights.add(Admin.R_getZimlet);
+    }
+	
 }

@@ -10,6 +10,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -71,7 +72,7 @@ public class RoleAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canAccessCos(AuthToken at, String cosId)
+    public boolean canAccessCos(AuthToken at, Cos cos)
             throws ServiceException {
         // TODO Auto-generated method stub
         return false;

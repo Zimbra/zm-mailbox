@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.search.Query;
@@ -26,6 +27,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAction;
@@ -83,4 +85,8 @@ public class MailQueueAction extends AdminDocumentHandler {
 	    return response;
 	}
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageMailQueue);
+    }
 }

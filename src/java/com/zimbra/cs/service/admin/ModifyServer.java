@@ -20,12 +20,15 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.util.Config;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -71,5 +74,10 @@ public class ModifyServer extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.MODIFY_SERVER_RESPONSE);
         GetServer.doServer(response, server);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyServer.getName(), "server"));
     }
 }

@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -235,8 +236,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return canAccessDomain(zsc, getDomainFromEmail(email));
     }
     
-    public boolean canAccessCos(ZimbraSoapContext zsc, String cosId) throws ServiceException {
-        return AccessManager.getInstance().canAccessCos(zsc.getAuthToken(), cosId);
+    public boolean canAccessCos(ZimbraSoapContext zsc, Cos cos) throws ServiceException {
+        return AccessManager.getInstance().canAccessCos(zsc.getAuthToken(), cos);
     }
     
 
@@ -267,7 +268,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * ======================================================================
      */
     
-    // bookmark for callsites still needs ACL checking but is not done yet
+    // book mark for callsites still needs ACL checking but is not done yet
     // in the end, no one should call this method
     protected void checkRightTODO() {
     }
@@ -345,7 +346,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * right.
      * 
      * Note: if the AccessManager is a domain based AccessManager, it always 
-     *       returns true.  Callsites of the this mehtod must have either 
+     *       returns true.  Callsites of the this method must have either 
      *       already checked the domain right (passing a pseudo "always allow"
      *       AdminRight to the checker), or the handler is not for domain 
      *       admins anyway so domain admins would have been blocked at SoapEngine
@@ -385,6 +386,23 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         }
         
         return true;
+    }
+    
+    protected boolean hasRightsToListCos(ZimbraSoapContext zsc, Cos target, 
+            AdminRight listRight, AdminRight getAttrRight) throws ServiceException {
+        AccessManager am = AccessManager.getInstance();
+        boolean hasRight;
+        
+        if (isDomainBasedAccessManager(am)) {
+            if (isDomainAdminOnly(zsc))  
+                hasRight = canAccessCos(zsc, target);
+            else
+                hasRight = true;
+        } else {
+            hasRight = hasRightsToList(zsc, target, listRight,  getAttrRight);
+        }
+        
+        return hasRight;
     }
     
     /*
@@ -591,6 +609,24 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         }
     }
     
+    protected void checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
+        AccessManager am = AccessManager.getInstance();
+        boolean hasRight;
+        
+        if (isDomainBasedAccessManager(am)) {
+            if (isDomainAdminOnly(zsc))  
+                hasRight = canAccessCos(zsc, cos);
+            else
+                hasRight = true;
+            if (!hasRight)
+                throw ServiceException.PERM_DENIED("can not access cos");
+        } else {
+            hasRight = doCheckRight(am, zsc, cos, needed);
+            if (!hasRight)
+                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+        }
+    }
+    
 
     // ==========================================
     // commonly used notes for documenting rights
@@ -599,7 +635,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     // for documenting which rights are needed for a SOAP.
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {}
     
-    protected static final String sDocRightNotesCreateEntry = 
+    protected static final String sDocRightNotesModifyEntry = 
         "All attrs provided in the attribute list have to settable by. " + 
         "the authed admin.   You can grant the %s right, which allows " + 
         "setting all attributes on %s, or grant the set attrs right just " +
