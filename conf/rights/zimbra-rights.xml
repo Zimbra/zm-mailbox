@@ -254,7 +254,21 @@
       <a n="zimbraPasswordMinNumericChars"/>
       <a n="zimbraPasswordMinPunctuationChars"/>
   </attrs>
-</right>       
+</right>
+
+<right name="viewAdminSavedSearch" type="getAttrs" targetType="account,calresource">
+  <desc>view admin saved searches</desc>
+  <attrs>
+      <a n="zimbraAdminSavedSearches"/>
+  </attrs>
+</right>
+
+<right name="setAdminSavedSearch" type="setAttrs" targetType="account,calresource">
+  <desc>save admin saved searches</desc>
+  <attrs>
+      <a n="zimbraAdminSavedSearches"/>
+  </attrs>
+</right>   
           
 <right name="configureQuota" type="setAttrs" targetType="account,cos">
   <desc>configure quota</desc>
@@ -620,7 +634,6 @@
 ========================================================
 -->   
 
-
 <right name="getServer" type="getAttrs" targetType="server">
   <desc>get all server attributes</desc>
 </right>
@@ -639,6 +652,10 @@
 
 <right name="deleteServer" type="preset" targetType="server">
   <desc>delete server</desc>
+</right>
+
+<right name="flushCache" type="preset" targetType="server">
+  <desc>flush LDAP, skin, local caches on server</desc>
 </right>
 
 <right name="checkDirectoryOnFileSystem" type="preset" targetType="server">
@@ -696,6 +713,10 @@
                     XMPP component rights
 ========================================================
 --> 
+
+<right name="getXMPPComponent" type="getAttrs" targetType="xmppcomponent">
+  <desc>get all XMPP component attributes</desc>
+</right>
 
 <right name="deleteXMPPComponent" type="preset" targetType="xmppcomponent">
   <desc>delete XMPP component</desc>
