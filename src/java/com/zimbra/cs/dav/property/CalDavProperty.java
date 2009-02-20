@@ -33,7 +33,10 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 
@@ -79,6 +82,10 @@ public class CalDavProperty extends ResourceProperty {
 	
 	public static ResourceProperty getCalendarUserAddressSet(Collection<String> addrs) {
 		return new CalendarUserAddressSet(addrs);
+	}
+	
+	public static ResourceProperty getCalendarFreeBusySet(String user, Collection<Folder> folders) {
+		return new CalendarFreeBusySet(user, folders);
 	}
 	
 	protected CalDavProperty(QName name) {
@@ -221,6 +228,44 @@ public class CalDavProperty extends ResourceProperty {
 				if (!addr.startsWith("http:") && !addr.startsWith("mailto:") && !addr.startsWith("/"))
 				    addr = "mailto:" + addr;
 				e.setText(addr);
+				mChildren.add(e);
+			}
+		}
+	}
+	
+	private static class CalendarFreeBusySet extends CalDavProperty {
+		public CalendarFreeBusySet(String user, Collection<Folder> folders) {
+			super(DavElements.E_CALENDAR_FREE_BUSY_SET);
+			setProtected(false);
+			setVisible(false);
+			
+			ArrayList<Integer> parentIds = new ArrayList<Integer>();
+			try {
+				String[] homeSets = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraCalendarCalDavAlternateCalendarHomeSet);
+				if (homeSets != null) {
+					for (Folder f : folders) {
+						String name = f.getName();
+						for (String homeset : homeSets) {
+							if (name.compareTo(homeset) == 0) {
+								parentIds.add(f.getId());
+							}
+						}
+					}
+				}
+			} catch (ServiceException se) {
+				ZimbraLog.dav.warn("can't generate calendar home set", se);
+			}
+			for (Folder f : folders) {
+				if (f.getDefaultView() != MailItem.TYPE_APPOINTMENT && f.getDefaultView() != MailItem.TYPE_TASK)
+					continue;
+				if (parentIds.isEmpty() && f.getFolderId() != Mailbox.ID_FOLDER_USER_ROOT)
+					continue;
+				if (!parentIds.isEmpty() && !parentIds.contains(f.getFolderId()))
+					continue;
+	            if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
+	                continue;
+				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+				e.setText(DavServlet.DAV_PATH + "/" + user + f.getPath());
 				mChildren.add(e);
 			}
 		}
