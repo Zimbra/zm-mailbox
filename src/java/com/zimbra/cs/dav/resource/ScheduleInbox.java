@@ -24,11 +24,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -38,6 +39,9 @@ public class ScheduleInbox extends Collection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
+        String user = getOwner();
+        Mailbox mbox = getMailbox(ctxt);
+        addProperty(CalDavProperty.getCalendarFreeBusySet(user, mbox.getFolderList(ctxt.getOperationContext(), DbSearch.SORT_NONE)));
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {

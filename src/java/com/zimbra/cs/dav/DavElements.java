@@ -62,6 +62,7 @@ public class DavElements {
 	public static final String P_CALENDAR_COLOR = "calendar-color";
 	public static final String P_CALENDAR_DATA = "calendar-data";
 	public static final String P_CALENDAR_DESCRIPTION = "calendar-description";
+	public static final String P_CALENDAR_FREE_BUSY_SET = "calendar-free-busy-set";
 	public static final String P_CALENDAR_HOME_SET = "calendar-home-set";
 	public static final String P_CALENDAR_MULTIGET = "calendar-multiget";
 	public static final String P_CALENDAR_QUERY = "calendar-query";
@@ -231,6 +232,7 @@ public class DavElements {
 	public static final QName E_CALENDAR_COLOR = QName.get(P_CALENDAR_COLOR, APPLE_NS);
 	public static final QName E_CALENDAR_DATA = QName.get(P_CALENDAR_DATA, CALDAV_NS);
 	public static final QName E_CALENDAR_DESCRIPTION = QName.get(P_CALENDAR_DESCRIPTION, CALDAV_NS);
+	public static final QName E_CALENDAR_FREE_BUSY_SET = QName.get(P_CALENDAR_FREE_BUSY_SET, CALDAV_NS);
 	public static final QName E_CALENDAR_HOME_SET = QName.get(P_CALENDAR_HOME_SET, CALDAV_NS);
 	public static final QName E_CALENDAR_MULTIGET = QName.get(P_CALENDAR_MULTIGET, CALDAV_NS);
 	public static final QName E_CALENDAR_QUERY = QName.get(P_CALENDAR_QUERY, CALDAV_NS);
