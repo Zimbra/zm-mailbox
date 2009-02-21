@@ -320,9 +320,15 @@ public class ImapImport extends MailItemImport {
                     String jmPath = localPathToRemotePath(ds, localRootFolder, zimbraFolder, remoteRootFolder.getSeparator());
                     if (jmPath != null) { //null means don't sync up
                     	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
-	                    IMAPFolder jmFolder = createJavaMailFolder(jmPath);
+                        IMAPFolder jmFolder = (IMAPFolder) store.getFolder(jmPath);
+                        long uidValidity = 0;
+                        if (jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES)) {
+                            uidValidity = jmFolder.getUIDValidity();
+                        } else {
+                            ZimbraLog.datasource.warn("Unable to create remote folder: " + jmFolder.getFullName());
+                        }
 	                    imapFolder = ds.createImapFolder(zimbraFolder.getId(),
-	                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());
+	                        zimbraFolder.getPath(), jmFolder.getFullName(), uidValidity);
 	                    imapFolders.add(imapFolder);
                     }
                 }
@@ -431,13 +437,6 @@ public class ImapImport extends MailItemImport {
         remoteFolder.renameTo(newName);
     }
 
-    private IMAPFolder createJavaMailFolder(String jmPath)
-    throws MessagingException {
-        IMAPFolder jmFolder = (IMAPFolder) store.getFolder(jmPath);
-        jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES);
-        return jmFolder;
-    }
-
     private String localPathToRemotePath(DataSource ds, com.zimbra.cs.mailbox.Folder localRootFolder,
                                          com.zimbra.cs.mailbox.Folder localFolder, char separator) {
         // Strip local root from the folder's path.  IMAP paths don't start with "/".
@@ -458,7 +457,7 @@ public class ImapImport extends MailItemImport {
         else if (imapPath == null && localFolder.getId() >= Mailbox.FIRST_USER_ID)
         	imapPath = folderPath;
         if (imapPath != null && separator != '/') {
-            String[] parts = localFolder.getPath().split("/");
+            String[] parts = imapPath.split("/");
             for (int i = 0; i < parts.length; ++i)
             	parts[i] = parts[i].replace(separator, '/');
             imapPath = StringUtil.join("" + separator, parts);
