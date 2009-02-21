@@ -500,6 +500,10 @@
   <desc>remove distribution list alias</desc>
 </right>
 
+<right name="getDistributionListMembership" type="preset" targetType="dl">
+  <desc>get all groups the distribution list is a member of</desc>
+</right>
+
 <right name="addDistributionListMember" type="preset" targetType="dl">
   <desc>add member to distribution list</desc>
 </right>
@@ -507,6 +511,7 @@
 <right name="removeDistributionListMember" type="preset" targetType="dl">
   <desc>remove member from distribution list</desc>
 </right>
+
 
 
 <!-- 
@@ -666,16 +671,16 @@
   <desc>check server health</desc>
 </right>
        
-<right name="dumpSession" type="preset" targetType="server">
-  <desc>dump session</desc>
+<right name="getSessions" type="preset" targetType="server">
+  <desc>dump/get sessions</desc>
 </right>
-       
-<right name="viewMailQueue" type="preset" targetType="server">
-  <desc>view mail queues</desc>
+
+<right name="getMailboxStats" type="preset" targetType="server">
+  <desc>get mailbox stats homed on the server</desc>
 </right>
 
 <right name="manageMailQueue" type="preset" targetType="server">
-  <desc>take actions on mail queues</desc>
+  <desc>view and take actions on mail queues</desc>
 </right>   
 
 <right name="manageAccountLogger" type="preset" targetType="server">
@@ -718,13 +723,18 @@
   <desc>get all XMPP component attributes</desc>
 </right>
 
+<right name="modifyXMPPComponent" type="setAttrs" targetType="xmppcomponent">
+  <desc>set all XMPP component attributes</desc>
+</right>
+
+<right name="listXMPPComponent" type="preset" targetType="zimlet">
+  <desc>see XMPP component in GetAllXMPPComponents</desc>
+</right>
+
 <right name="deleteXMPPComponent" type="preset" targetType="xmppcomponent">
   <desc>delete XMPP component</desc>
 </right>
 
-<right name="modifyXMPPComponent" type="setAttrs" targetType="xmppcomponent">
-  <desc>set all XMPP component attributes</desc>
-</right>
 
 
 <!-- 
@@ -776,5 +786,50 @@
   <desc>create zimlet</desc>
 </right>
 
+
+<!-- 
+========================================================
+                    misc rights
+========================================================
+-->
+
+<!-- 
+   
+   
+ -->
+<right name="viewGrants" type="getAttrs" targetType="account,calresource,cos,dl,domain,server,xmppcomponent,zimlet,config,global">
+  <desc>view grants on all target types</desc>
+  <doc>
+	  Use just the one same right on all target types for now.
+	     
+	   e.g. If this right is granted on a domain, the grantee 
+	        can see zimbraACE on the domain, all DLs, and all 
+	        accounts in the domain.
+	        
+	        To do things like:
+	        "can see grants granted on all accounts in the domain
+	         but cannot see any grants on the domain entry itself"
+	        
+	        grant an inline right on the domain entry, like:
+	            get:account:zimbraACE
+	        and do not grant this right.
+	        
+	        This right the equivalent of the sum of the following inline
+	        rights:
+	            get.account.zimbraACE
+	            get.calresource.zimbraACE
+	            get.cos.zimbraACE
+	            get.dl.zimbraACE
+	            get.domain.zimbraACE
+	            get.server.zimbraACE
+	            get.xmppcomponent.zimbraACE
+	            get.zimlet.zimbraACE
+	            get.config.zimbraACE
+	            get.global.zimbraACE
+  </doc>
+  <attrs>
+      <a n="zimbraACE"/>
+  </attrs>
+</right>
 
 </rights>
