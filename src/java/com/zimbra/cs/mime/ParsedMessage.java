@@ -129,7 +129,6 @@ public class ParsedMessage {
     private BlobInputStream mBlobInputStream;
     private boolean mWasMutated;
     private Integer mRawSize;
-    private boolean mIsSpam = false;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments)
     throws ServiceException {
@@ -1308,9 +1307,9 @@ public class ParsedMessage {
     }
 
     // these *should* be taken from a properties file
-    private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] {
-                "Accept:", "Accepted:", "Decline:", "Declined:", "Tentative:", "Cancelled:", "CANCELLED:", "New Time Proposed:"
-    }));
+    private static final Set<String> SYSTEM_PREFIXES = new HashSet<String>(Arrays.asList(
+        "accept:", "accepted:", "decline:", "declined:", "tentative:", "cancelled:", "new time proposed:", "read-receipt:"
+    ));
     private static final String FWD_TRAILER = "(fwd)";
 
     private static final int MAX_PREFIX_LENGTH = 3;
@@ -1335,9 +1334,9 @@ public class ParsedMessage {
             // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
             String prefix = subject.substring(braced ? 1 : 0, colon + 1);
             boolean matched = true;
-            if (CALENDAR_PREFIXES.contains(prefix))
+            if (SYSTEM_PREFIXES.contains(prefix.toLowerCase())) {
                 matched = true;
-            else {
+            } else {
                 // make sure to catch "re(2):" and "fwd[5]:" as well...
                 int paren = -1;
                 for (int i = 0; matched && i < prefix.length() - 1; i++) {
@@ -1346,15 +1345,15 @@ public class ParsedMessage {
                         paren = i;
                     else if ((c == ')' || c == ']') && paren != -1)
                         matched &= i > paren + 1 && i == prefix.length() - 2;
-                        else if (!Character.isLetter(c))
-                            matched &= c >= '0' && c <= '9' && paren != -1;
-                            else if (i >= MAX_PREFIX_LENGTH || paren != -1)
-                                matched = false;
+                    else if (!Character.isLetter(c))
+                        matched &= c >= '0' && c <= '9' && paren != -1;
+                    else if (i >= MAX_PREFIX_LENGTH || paren != -1)
+                        matched = false;
                 }
             }
-
             if (!matched)
                 return subject;
+
             if (braced && subject.endsWith("]"))
                 subject = subject.substring(colon + 1, length - 1).trim();
             else

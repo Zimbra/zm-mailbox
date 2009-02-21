@@ -716,6 +716,9 @@ public class ToXML {
             addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
             addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
             addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+            // read-receipts only get sent by the mailbox's owner
+            if (!octxt.isDelegatedRequest(msg.getMailbox()))
+                addEmails(m, Mime.parseAddressHeader(mm, "Disposition-Notification-To"), EmailType.READ_RECEIPT);
 
             String subject = mm.getSubject();
             if (subject != null)
@@ -1784,7 +1787,7 @@ public class ToXML {
 
 
     public enum EmailType {
-        NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s");
+        NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s"), READ_RECEIPT("n");
 
         private final String mRep;
         private EmailType(String c)  { mRep = c; }

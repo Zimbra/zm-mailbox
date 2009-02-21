@@ -802,19 +802,19 @@ public class ParseMimeMessage {
     private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs, String defaultCharset)
     throws MessagingException {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
-        if (addrs != null) {
+        if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
             mLog.debug("\t\tTO: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.CC.toString());
-        if (addrs != null) {
+        if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.CC, addrs);
             mLog.debug("\t\tCC: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.BCC.toString());
-        if (addrs != null) {
+        if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.BCC, addrs);
             mLog.debug("\t\tBCC: " + Arrays.toString(addrs));
         }
@@ -835,6 +835,12 @@ public class ParseMimeMessage {
         if (addrs != null && addrs.length > 0) {
             mm.setReplyTo(addrs);
             mLog.debug("\t\tReply-To: " + addrs[0]);
+        }
+
+        addrs = maddrs.get(EmailType.READ_RECEIPT.toString());
+        if (addrs != null && addrs.length > 0) {
+            mm.addHeader("Disposition-Notification-To", InternetAddress.toString(addrs));
+            mLog.debug("\t\tDisposition-Notification-To: " + Arrays.toString(addrs));
         }
     }
 
