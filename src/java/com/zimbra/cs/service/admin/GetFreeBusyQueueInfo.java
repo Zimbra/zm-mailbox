@@ -16,25 +16,30 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.fb.FreeBusyProvider.FreeBusySyncQueue;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFreeBusyQueueInfo extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // allow only system admin for now
+        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
         
         String name = null;
         Element provider = request.getOptionalElement(AdminConstants.E_PROVIDER);
         if (provider != null)
         	name = provider.getAttribute(AdminConstants.A_NAME);
         
-        Element response = lc.createElement(AdminConstants.GET_FREE_BUSY_QUEUE_INFO_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_FREE_BUSY_QUEUE_INFO_RESPONSE);
         if (name != null) {
         	FreeBusyProvider prov = FreeBusyProvider.getProvider(name);
         	if (prov == null)
@@ -58,4 +63,9 @@ public class GetFreeBusyQueueInfo extends AdminDocumentHandler {
         		provider.addElement(AdminConstants.E_ACCOUNT).addAttribute(AdminConstants.A_ID, id);
         }
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesSystemAdminsOnly);
+    }
 }

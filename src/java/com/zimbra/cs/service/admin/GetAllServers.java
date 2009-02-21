@@ -29,6 +29,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -41,17 +43,29 @@ public class GetAllServers extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String service = request.getAttribute(AdminConstants.A_SERVICE, null);
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
-        List cos = prov.getAllServers(service);
+        List servers = prov.getAllServers(service);
         
-        Element response = lc.createElement(AdminConstants.GET_ALL_SERVERS_RESPONSE);
-        for (Iterator it = cos.iterator(); it.hasNext(); )
-            GetServer.doServer(response, (Server) it.next(), applyConfig);
+        Element response = zsc.createElement(AdminConstants.GET_ALL_SERVERS_RESPONSE);
+        for (Iterator it = servers.iterator(); it.hasNext(); ) {
+            Server server = (Server) it.next();
+            
+            if (!hasRightsToList(zsc, server, Admin.R_listServer, Admin.R_getServer))
+                continue;
+            
+            GetServer.doServer(response, server, applyConfig);
+        }
 
 	    return response;
 	}
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listServer);
+        relatedRights.add(Admin.R_getServer);
+    }
 }

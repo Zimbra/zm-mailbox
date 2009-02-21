@@ -3,6 +3,7 @@ package com.zimbra.cs.service.admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -10,6 +11,8 @@ import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class RightDocumentHandler extends AdminDocumentHandler {
     
@@ -28,6 +31,27 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
         String grantee = eGrantee.getText();
         
         return GranteeType.lookupGrantee(prov, granteeType, granteeBy, grantee);
-   }
+    }
+    
+    /**
+     * check the checkRight right
+     * 
+     * check if the authed admin has the checkRight right on the user it is
+     * checking right for.
+     * 
+     * @param zsc
+     * @param granteeBy
+     * @param grantee
+     */
+    protected void checkCheckRightRight(ZimbraSoapContext zsc, GranteeBy granteeBy, String grantee) throws ServiceException {
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), GranteeType.GT_USER, granteeBy, grantee);  
+        Account granteeAcct = (Account)granteeEntry;
+        
+        // call checkRight instead of checkAccountRight because there is no 
+        // backward compatibility issue for this SOAP.
+        //
+        // Note: granteeAcct is the target for the R_checkRight right here
+        checkRight(zsc, granteeAcct, Admin.R_checkRight);
+    }
     
 }

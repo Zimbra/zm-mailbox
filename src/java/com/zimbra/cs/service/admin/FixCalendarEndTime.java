@@ -42,7 +42,7 @@ public class FixCalendarEndTime extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         // what to check for this SOAP?
-        // allow just system admin for now
+        // allow only system admin for now
         checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
         
         boolean sync = request.getAttributeBool(AdminConstants.A_TZFIXUP_SYNC, false);
@@ -156,6 +156,6 @@ public class FixCalendarEndTime extends AdminDocumentHandler {
     
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append("Only system admins are allowed");
+        notes.append(sDocRightNotesSystemAdminsOnly);
     }
 }

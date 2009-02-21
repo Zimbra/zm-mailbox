@@ -33,6 +33,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
@@ -57,7 +58,7 @@ public class GetMailQueue extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
         
-        checkRight(zsc, context, server, Admin.R_viewMailQueue);
+        checkRight(zsc, context, server, Admin.R_manageMailQueue);
 
         Element queueElem = serverElem.getElement(AdminConstants.E_QUEUE);
         String queueName = queueElem.getAttribute(AdminConstants.A_NAME);
@@ -133,4 +134,9 @@ public class GetMailQueue extends AdminDocumentHandler {
         }
     }
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_manageMailQueue);
+    }
+    
 }

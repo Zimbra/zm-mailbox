@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +29,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDomainInfo extends AdminDocumentHandler {
@@ -146,6 +148,11 @@ public class GetDomainInfo extends AdminDocumentHandler {
 
     public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesAllowAllAdmins);
     }
     
     public static void main(String args[]) throws ServiceException {

@@ -41,7 +41,7 @@ public class DumpSessions extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         Server localServer = Provisioning.getInstance().getLocalServer();
-        checkRight(zsc, context, localServer, Admin.R_dumpSession);
+        checkRight(zsc, context, localServer, Admin.R_getSessions);
         
         Element response = zsc.createElement(AdminConstants.DUMP_SESSIONS_RESPONSE);
         
@@ -135,6 +135,6 @@ public class DumpSessions extends AdminDocumentHandler {
     
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        relatedRights.add(Admin.R_dumpSession);
+        relatedRights.add(Admin.R_getSessions);
     }
 }

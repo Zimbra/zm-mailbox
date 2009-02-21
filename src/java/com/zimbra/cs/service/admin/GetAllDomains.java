@@ -52,8 +52,11 @@ public class GetAllDomains extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.GET_ALL_DOMAINS_RESPONSE);
         for (Iterator it = domains.iterator(); it.hasNext(); ) {
             Domain domain = (Domain) it.next();
-            if (hasRightsToList(zsc, domain, Admin.R_listDomain, Admin.R_getDomain))
-                GetDomain.doDomain(response, domain, applyConfig);
+            
+            if (!hasRightsToList(zsc, domain, Admin.R_listDomain, Admin.R_getDomain))
+                continue;
+            
+            GetDomain.doDomain(response, domain, applyConfig);
         }
 
 	    return response;

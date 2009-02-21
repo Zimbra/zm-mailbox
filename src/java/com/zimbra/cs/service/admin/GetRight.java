@@ -1,11 +1,13 @@
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -20,7 +22,6 @@ public Element handle(Element request, Map<String, Object> context) throws Servi
         
         boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATRTS, false);
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
-        // String rightBy = eRight.getAttribute(AdminConstants.A_BY);
         String value = eRight.getText();
 
         Right right = RightManager.getInstance().getRight(value);
@@ -34,5 +35,8 @@ public Element handle(Element request, Map<String, Object> context) throws Servi
         return response;
     }
 
-    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesAllowAllAdmins);
+    }
 }

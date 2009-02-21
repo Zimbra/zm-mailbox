@@ -20,6 +20,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -30,6 +31,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -107,24 +109,27 @@ public class GetDistributionList extends AdminDocumentHandler {
 
     static void doAttrs(Element e, Map attrs) {
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-           Map.Entry entry = (Entry) mit.next();
-           String name = (String) entry.getKey();
-           Object value = entry.getValue();
+            Map.Entry entry = (Entry) mit.next();
+            String name = (String) entry.getKey();
+            Object value = entry.getValue();
            
-           // Hide the postfix lookup table attr - should we though?
-           if (name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
-        	   continue;
-           }
+            // Hide the postfix lookup table attr - should we though?
+            if (name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
+                continue;
+            }
            
-           if (value instanceof String[]) {
-               String sv[] = (String[]) value;
-               for (int i = 0; i < sv.length; i++)
-                   e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
-           } else if (value instanceof String) {
-               e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
-           }
-       }       
-   }
+            if (value instanceof String[]) {
+                String sv[] = (String[]) value;
+                for (int i = 0; i < sv.length; i++)
+                    e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
+            } else if (value instanceof String) {
+                e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
+            } 
+        }
+    }
 
-    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getDistributionList);
+    }
 }

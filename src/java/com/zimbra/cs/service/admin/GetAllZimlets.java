@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -36,27 +37,43 @@ public class GetAllZimlets extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
 		String exclude = request.getAttribute(AdminConstants.A_EXCLUDE, AdminConstants.A_NONE);
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
 		List<Zimlet> zimlets = prov.listAllZimlets();
 
-	    Element response = lc.createElement(AdminConstants.GET_ALL_ZIMLETS_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.GET_ALL_ZIMLETS_RESPONSE);
     	if(AdminConstants.A_EXTENSION.equalsIgnoreCase(exclude)) {
 		    for (Zimlet zimlet : zimlets) {
-		        if(!zimlet.isExtension())
-		    		GetZimlet.doZimlet(response, zimlet);
+		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
+                    continue;
+		        
+    		    if(!zimlet.isExtension())
+    		        GetZimlet.doZimlet(response, zimlet);
 		    }
     	} else if(AdminConstants.A_MAIL.equalsIgnoreCase(exclude)) {
 		    for (Zimlet zimlet : zimlets) {
+		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
+                    continue;    
+		    
 		    	if(zimlet.isExtension())
 		    		GetZimlet.doZimlet(response, zimlet);
 		    }
     	} else {
-		    for (Zimlet zimlet : zimlets) 
+		    for (Zimlet zimlet : zimlets) {
+		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
+                    continue;
+		    
 	    		GetZimlet.doZimlet(response, zimlet);
+    	    }
     		
     	}
 	    return response;
 	}
+    	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listZimlet);
+        relatedRights.add(Admin.R_getZimlet);
+    }
 }

@@ -1,7 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.accesscontrol.generated.ZAdminRight;
+import com.zimbra.cs.account.accesscontrol.generated.AdminRights;
 
 public abstract class AdminRight extends Right {
     //
@@ -25,7 +25,7 @@ public abstract class AdminRight extends Right {
         R_PSEUDO_ALWAYS_ALLOW = newAdminSystemRight("PSEUDO_ALWAYS_ALLOW", RightType.preset);
         R_PSEUDO_ALWAYS_DENY = newAdminSystemRight("PSEUDO_ALWAYS_DENY", RightType.preset);
         
-        ZAdminRight.init(rm);
+        AdminRights.init(rm);
     }
     
     protected AdminRight(String name, RightType rightType) {

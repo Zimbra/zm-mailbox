@@ -35,9 +35,9 @@ import com.zimbra.cs.account.Zimlet;
 public enum TargetType {
     account(true,           AttributeClass.account),
     calresource(true,       AttributeClass.calendarResource),
+    cos(true,               AttributeClass.cos),
     dl(true,                AttributeClass.distributionList),
     domain(true,            AttributeClass.domain),
-    cos(true,               AttributeClass.cos),
     server(true,            AttributeClass.server),
     xmppcomponent(true,     AttributeClass.xmppComponent),
     zimlet(true,            AttributeClass.zimletEntry),

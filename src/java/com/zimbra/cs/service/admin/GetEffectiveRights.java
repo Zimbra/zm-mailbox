@@ -1,5 +1,6 @@
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -8,9 +9,11 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetEffectiveRights  extends RightDocumentHandler {
@@ -53,8 +56,10 @@ public class GetEffectiveRights  extends RightDocumentHandler {
             grantee = eGrantee.getText();
         } else {
             granteeBy = GranteeBy.id;
-            grantee = zsc.getRequestedAccountId();  // TODO: need to check if the authed user has right to do this the request account, if they are not the same
+            grantee = zsc.getRequestedAccountId();  
         }
+        
+        checkCheckRightRight(zsc, granteeBy, grantee);
         
         RightCommand.EffectiveRights er = RightCommand.getEffectiveRights(Provisioning.getInstance(),
                                                                           targetType, targetBy, target,
@@ -66,4 +71,8 @@ public class GetEffectiveRights  extends RightDocumentHandler {
         return resp;
     }
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_checkRight);
+    }
 }

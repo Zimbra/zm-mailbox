@@ -6,6 +6,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -28,4 +29,8 @@ public class GetAllRights extends RightDocumentHandler {
         return response;
     }
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesAllowAllAdmins);
+    }
 }

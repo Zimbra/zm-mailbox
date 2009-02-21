@@ -641,4 +641,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         "setting all attributes on %s, or grant the set attrs right just " +
         "for the attributes the admin needs to set while creating an entry.";
 
+    // only system admins are allowed
+    protected static final String sDocRightNotesSystemAdminsOnly = "Only system admins are allowed.";
+    
+    // no right is needed, any admin can do it.
+    protected static final String sDocRightNotesAllowAllAdmins = "Do not need any right, all admins are allowed.";
 }

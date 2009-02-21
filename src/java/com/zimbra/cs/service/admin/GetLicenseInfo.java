@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.soap.Element;
@@ -24,6 +25,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 
 public class GetLicenseInfo extends AdminDocumentHandler {
 
@@ -47,5 +49,8 @@ public class GetLicenseInfo extends AdminDocumentHandler {
         return false;
     }
 
-
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesAllowAllAdmins);
+    }
 }

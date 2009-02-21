@@ -10,7 +10,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090220-0241 */
+    /* build: 5.0 pshao 20090220-1635 */
 
 
     /*
@@ -263,11 +263,6 @@ public class RightConsts {
     public static final String RT_deleteZimlet = "deleteZimlet";
 
     /**
-     * dump session
-     */
-    public static final String RT_dumpSession = "dumpSession";
-
-    /**
      * flush LDAP, skin, local caches on server
      */
     public static final String RT_flushCache = "flushCache";
@@ -308,6 +303,11 @@ public class RightConsts {
     public static final String RT_getDistributionList = "getDistributionList";
 
     /**
+     * get all groups the distribution list is a member of
+     */
+    public static final String RT_getDistributionListMembership = "getDistributionListMembership";
+
+    /**
      * get all domain attributes
      */
     public static final String RT_getDomain = "getDomain";
@@ -328,9 +328,19 @@ public class RightConsts {
     public static final String RT_getMailboxInfo = "getMailboxInfo";
 
     /**
+     * get mailbox stats homed on the server
+     */
+    public static final String RT_getMailboxStats = "getMailboxStats";
+
+    /**
      * get all server attributes
      */
     public static final String RT_getServer = "getServer";
+
+    /**
+     * dump/get sessions
+     */
+    public static final String RT_getSessions = "getSessions";
 
     /**
      * get all XMPP component attributes
@@ -374,6 +384,11 @@ public class RightConsts {
     public static final String RT_listServer = "listServer";
 
     /**
+     * see XMPP component in GetAllXMPPComponents
+     */
+    public static final String RT_listXMPPComponent = "listXMPPComponent";
+
+    /**
      * see zimlet in GetAllZimlets
      */
     public static final String RT_listZimlet = "listZimlet";
@@ -384,7 +399,7 @@ public class RightConsts {
     public static final String RT_manageAccountLogger = "manageAccountLogger";
 
     /**
-     * take actions on mail queues
+     * view and take actions on mail queues
      */
     public static final String RT_manageMailQueue = "manageMailQueue";
 
@@ -529,9 +544,9 @@ public class RightConsts {
     public static final String RT_viewEmail = "viewEmail";
 
     /**
-     * view mail queues
+     * view grants on all target types
      */
-    public static final String RT_viewMailQueue = "viewMailQueue";
+    public static final String RT_viewGrants = "viewGrants";
 
     /**
      * view password strength

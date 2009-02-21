@@ -72,16 +72,7 @@ public class CheckRight extends RightDocumentHandler {
         GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
         
-        // ===============================================
-        // check if the authed admin has the checkRight right on the user it is
-        // checking right for.
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), 
-                GranteeType.GT_USER, granteeBy, grantee);  
-        Account granteeAcct = (Account)granteeEntry;
-        // call checkRight instead of checkAccountRight because there is no backward compatibility
-        // issue for this SOAP.
-        checkRight(zsc, granteeAcct, Admin.R_checkRight);
-        // ================================================
+        checkCheckRightRight(zsc, granteeBy, grantee);
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();

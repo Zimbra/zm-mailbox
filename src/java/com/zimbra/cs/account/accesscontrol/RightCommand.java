@@ -415,6 +415,13 @@ public class RightCommand {
      * return false before check into p4
      * 
      * remove when all is well
+     * 
+     * TODOs:
+     * 1. can change quota
+     * 2. can assign cos
+     * 3. cross domain right
+     * 4. grant the same negative grants of the granter to the grantee
+     * 
      */
     private static boolean READY() {
         return false;
@@ -539,6 +546,8 @@ public class RightCommand {
     
     public static ACL getGrants(Provisioning prov,
                                 String targetType, TargetBy targetBy, String target) throws ServiceException {
+        verifyAccessManager();
+        
         // target
         TargetType tt = TargetType.fromString(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);

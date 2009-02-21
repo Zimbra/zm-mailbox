@@ -50,8 +50,11 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_RESPONSE);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
             Account acct = (Account)it.next();
-            if (hasRightsToList(zsc, acct, Admin.R_listAccount, Admin.R_getAccount))
-                ToXML.encodeAccountOld(response, acct, applyCos);
+            
+            if (!hasRightsToList(zsc, acct, Admin.R_listAccount, Admin.R_getAccount))
+                continue;
+            
+            ToXML.encodeAccountOld(response, acct, applyCos);
         }
 	    return response;
 	}

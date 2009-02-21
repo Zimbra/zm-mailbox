@@ -21,6 +21,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +31,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -70,5 +72,10 @@ public class GetConfig extends AdminDocumentHandler {
         if (value == null)
             return;
         e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value);
+    }
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Need get attr right for the specificed attribute.");
     }
 }

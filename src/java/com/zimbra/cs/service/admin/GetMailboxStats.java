@@ -6,6 +6,10 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -20,6 +24,9 @@ public class GetMailboxStats extends AdminDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_getMailboxStats);
         
         MailboxStats stats = null;
         
@@ -71,5 +78,10 @@ public class GetMailboxStats extends AdminDocumentHandler {
             DbPool.quietClose(conn);
         }
         return result;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getMailboxStats);
     }
 }

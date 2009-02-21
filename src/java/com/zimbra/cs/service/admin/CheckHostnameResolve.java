@@ -38,13 +38,13 @@ public class CheckHostnameResolve extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
 	    String host = request.getAttribute(AdminConstants.E_HOSTNAME).toLowerCase();
 
         Check.Result r = Check.checkHostnameResolve(host);
 
-	    Element response = lc.createElement(AdminConstants.CHECK_HOSTNAME_RESOLVE_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.CHECK_HOSTNAME_RESOLVE_RESPONSE);
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
         String message = r.getMessage();
         if (message != null)
@@ -54,6 +54,6 @@ public class CheckHostnameResolve extends AdminDocumentHandler {
 	
 	@Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-	    notes.append("Do not need any right.");
+	    notes.append(sDocRightNotesAllowAllAdmins);
 	}
 }

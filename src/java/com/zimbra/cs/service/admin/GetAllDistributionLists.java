@@ -95,8 +95,11 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
         List dls = Provisioning.getInstance().getAllDistributionLists(d);
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
             DistributionList dl = (DistributionList) it.next();
-            if (hasRightsToList(zsc, dl, Admin.R_listDistributionList, Admin.R_getDistributionList))
-                GetDistributionList.doDistributionList(e, dl);
+            
+            if (!hasRightsToList(zsc, dl, Admin.R_listDistributionList, Admin.R_getDistributionList))
+                continue;
+            
+            GetDistributionList.doDistributionList(e, dl);
         }        
     }
     

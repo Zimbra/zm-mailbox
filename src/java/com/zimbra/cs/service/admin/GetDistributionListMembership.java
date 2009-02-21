@@ -31,6 +31,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -67,9 +69,8 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
         
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
-
-        if (!canAccessEmail(lc, distributionList.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        
+        checkDistributionListRight(lc, distributionList, Admin.R_getDistributionListMembership);
 
         HashMap<String,String> via = new HashMap<String, String>();
         List<DistributionList> lists = prov.getDistributionLists(distributionList, false, via);
@@ -84,5 +85,10 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
         }
 
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getDistributionListMembership);
     }
 }

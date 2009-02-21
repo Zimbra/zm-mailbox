@@ -22,6 +22,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -39,6 +40,9 @@ public class GetAllMailboxes extends AdminDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // allow only system admin for now
+        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
 
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
         if (limit == 0)
@@ -144,4 +148,8 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         }
     }
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesSystemAdminsOnly);
+    }
 }

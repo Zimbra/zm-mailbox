@@ -1,12 +1,12 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.accesscontrol.generated.ZUserRight;
+import com.zimbra.cs.account.accesscontrol.generated.UserRights;
 
 public class UserRight extends Right {
     
     static void init(RightManager rm) throws ServiceException {
-        ZUserRight.init(rm);
+        UserRights.init(rm);
     }
     
     UserRight(String name) {

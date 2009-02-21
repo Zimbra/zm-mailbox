@@ -21,7 +21,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.Session.Type;
 import com.zimbra.cs.session.SessionCache;
@@ -42,6 +45,10 @@ public class GetSessions extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_getSessions);
+        
         Element response = zsc.createElement(AdminConstants.GET_SESSIONS_RESPONSE);
 
         String typeStr = request.getAttribute(AdminConstants.A_TYPE);
@@ -179,5 +186,10 @@ public class GetSessions extends AdminDocumentHandler {
         } catch (ServiceException e) {
             return id;
         }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getSessions);
     }
 }

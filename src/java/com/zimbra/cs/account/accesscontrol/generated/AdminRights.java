@@ -12,11 +12,11 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 //     ant generate-rights
 //
 
-public abstract class ZAdminRight {
+public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090220-0241 */
+    /* build: 5.0 pshao 20090220-1635 */
 
 
     public static AdminRight R_accessGAL;
@@ -60,7 +60,6 @@ public abstract class ZAdminRight {
     public static AdminRight R_deleteServer;
     public static AdminRight R_deleteXMPPComponent;
     public static AdminRight R_deleteZimlet;
-    public static AdminRight R_dumpSession;
     public static AdminRight R_flushCache;
     public static AdminRight R_getAccount;
     public static AdminRight R_getAccountFeatures;
@@ -69,11 +68,14 @@ public abstract class ZAdminRight {
     public static AdminRight R_getCalendarResource;
     public static AdminRight R_getCos;
     public static AdminRight R_getDistributionList;
+    public static AdminRight R_getDistributionListMembership;
     public static AdminRight R_getDomain;
     public static AdminRight R_getDomainQuotaUsage;
     public static AdminRight R_getGlobalConfig;
     public static AdminRight R_getMailboxInfo;
+    public static AdminRight R_getMailboxStats;
     public static AdminRight R_getServer;
+    public static AdminRight R_getSessions;
     public static AdminRight R_getXMPPComponent;
     public static AdminRight R_getZimlet;
     public static AdminRight R_listAccount;
@@ -82,6 +84,7 @@ public abstract class ZAdminRight {
     public static AdminRight R_listDistributionList;
     public static AdminRight R_listDomain;
     public static AdminRight R_listServer;
+    public static AdminRight R_listXMPPComponent;
     public static AdminRight R_listZimlet;
     public static AdminRight R_manageAccountLogger;
     public static AdminRight R_manageMailQueue;
@@ -113,7 +116,7 @@ public abstract class ZAdminRight {
     public static AdminRight R_setCalendarResourcePassword;
     public static AdminRight R_viewAdminSavedSearch;
     public static AdminRight R_viewEmail;
-    public static AdminRight R_viewMailQueue;
+    public static AdminRight R_viewGrants;
     public static AdminRight R_viewPasswordStrength;
 
 
@@ -159,7 +162,6 @@ public abstract class ZAdminRight {
         R_deleteServer                         = rm.getAdminRight(Right.RT_deleteServer);
         R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
-        R_dumpSession                          = rm.getAdminRight(Right.RT_dumpSession);
         R_flushCache                           = rm.getAdminRight(Right.RT_flushCache);
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
         R_getAccountFeatures                   = rm.getAdminRight(Right.RT_getAccountFeatures);
@@ -168,11 +170,14 @@ public abstract class ZAdminRight {
         R_getCalendarResource                  = rm.getAdminRight(Right.RT_getCalendarResource);
         R_getCos                               = rm.getAdminRight(Right.RT_getCos);
         R_getDistributionList                  = rm.getAdminRight(Right.RT_getDistributionList);
+        R_getDistributionListMembership        = rm.getAdminRight(Right.RT_getDistributionListMembership);
         R_getDomain                            = rm.getAdminRight(Right.RT_getDomain);
         R_getDomainQuotaUsage                  = rm.getAdminRight(Right.RT_getDomainQuotaUsage);
         R_getGlobalConfig                      = rm.getAdminRight(Right.RT_getGlobalConfig);
         R_getMailboxInfo                       = rm.getAdminRight(Right.RT_getMailboxInfo);
+        R_getMailboxStats                      = rm.getAdminRight(Right.RT_getMailboxStats);
         R_getServer                            = rm.getAdminRight(Right.RT_getServer);
+        R_getSessions                          = rm.getAdminRight(Right.RT_getSessions);
         R_getXMPPComponent                     = rm.getAdminRight(Right.RT_getXMPPComponent);
         R_getZimlet                            = rm.getAdminRight(Right.RT_getZimlet);
         R_listAccount                          = rm.getAdminRight(Right.RT_listAccount);
@@ -181,6 +186,7 @@ public abstract class ZAdminRight {
         R_listDistributionList                 = rm.getAdminRight(Right.RT_listDistributionList);
         R_listDomain                           = rm.getAdminRight(Right.RT_listDomain);
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
+        R_listXMPPComponent                    = rm.getAdminRight(Right.RT_listXMPPComponent);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
         R_manageAccountLogger                  = rm.getAdminRight(Right.RT_manageAccountLogger);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
@@ -212,7 +218,7 @@ public abstract class ZAdminRight {
         R_setCalendarResourcePassword          = rm.getAdminRight(Right.RT_setCalendarResourcePassword);
         R_viewAdminSavedSearch                 = rm.getAdminRight(Right.RT_viewAdminSavedSearch);
         R_viewEmail                            = rm.getAdminRight(Right.RT_viewEmail);
-        R_viewMailQueue                        = rm.getAdminRight(Right.RT_viewMailQueue);
+        R_viewGrants                           = rm.getAdminRight(Right.RT_viewGrants);
         R_viewPasswordStrength                 = rm.getAdminRight(Right.RT_viewPasswordStrength);
     }
 

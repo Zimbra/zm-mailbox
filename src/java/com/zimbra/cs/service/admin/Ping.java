@@ -57,6 +57,6 @@ public class Ping extends AdminDocumentHandler {
     
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append("Do not need any right");
+        notes.append(sDocRightNotesAllowAllAdmins);
     }
 }

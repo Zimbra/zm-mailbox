@@ -1,7 +1,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
-import com.zimbra.cs.account.accesscontrol.generated.ZAdminRight;
-import com.zimbra.cs.account.accesscontrol.generated.ZUserRight;
+import com.zimbra.cs.account.accesscontrol.generated.AdminRights;
+import com.zimbra.cs.account.accesscontrol.generated.UserRights;
 
 /**
  * 
@@ -11,9 +11,9 @@ import com.zimbra.cs.account.accesscontrol.generated.ZUserRight;
  */
 public abstract class Rights {
 
-    public static class Admin extends ZAdminRight {
+    public static class Admin extends AdminRights {
     }
     
-    public static class User extends ZUserRight {
+    public static class User extends UserRights {
     }
 }
