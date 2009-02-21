@@ -333,9 +333,15 @@ public class ImapMessage implements Comparable<ImapMessage> {
     }
 
     private static void address(PrintStream ps, InternetAddress addr) {
-        String[] parts = addr.getAddress().split("@", 2);
+        String address = addr.getAddress().trim(), route = null;
+        int colon;
+        // handle obsolete route-addr
+        if (address.startsWith("@") && (colon = address.indexOf(':')) != -1) {
+            route = address.substring(0, colon);  address = address.substring(colon + 1);
+        }
+        String[] parts = address.split("@", 2);
         ps.write('(');  nstring2047(ps, addr.getPersonal());
-        ps.write(' ');  ps.write(NIL, 0, 3);
+        ps.write(' ');  nstring(ps, route);
         ps.write(' ');  nstring(ps, parts[0]);
         ps.write(' ');  nstring(ps, parts.length > 1 ? parts[1] : null);
         ps.write(')');
