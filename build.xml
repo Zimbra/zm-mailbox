@@ -1766,12 +1766,12 @@
         <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
               failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a genAdminRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/ZAdminRight.java"/>
+            <arg line="-a genAdminRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/AdminRights.java"/>
         </java>
         <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
               failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/ZUserRight.java"/>
+            <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/UserRights.java"/>
         </java>
     </target>
 	
