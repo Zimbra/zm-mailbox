@@ -36,7 +36,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1458 */
+    /* build: 5.0 pshao 20090220-1935 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -406,6 +406,8 @@ public class ZAttrDistributionList extends MailTarget {
      * Zimbra access control list
      *
      * @return zimbraACE, or ampty array if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public String[] getACE() {
@@ -417,6 +419,8 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @param zimbraACE new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void setACE(String[] zimbraACE) throws com.zimbra.common.service.ServiceException {
@@ -431,6 +435,8 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraACE new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> setACE(String[] zimbraACE, Map<String,Object> attrs) {
@@ -444,6 +450,8 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @param zimbraACE new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void addACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
@@ -458,6 +466,8 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraACE new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> addACE(String zimbraACE, Map<String,Object> attrs) {
@@ -471,6 +481,8 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @param zimbraACE existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void removeACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
@@ -485,6 +497,8 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraACE existing value to remove
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> removeACE(String zimbraACE, Map<String,Object> attrs) {
@@ -497,6 +511,8 @@ public class ZAttrDistributionList extends MailTarget {
      * Zimbra access control list
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void unsetACE() throws com.zimbra.common.service.ServiceException {
@@ -510,6 +526,8 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> unsetACE(Map<String,Object> attrs) {

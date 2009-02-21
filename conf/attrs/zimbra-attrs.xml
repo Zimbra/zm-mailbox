@@ -141,7 +141,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     Version since which the attribute had been introduced.
     For attributes that don't have "since" declared, it is assumed the attribute 
     was introduced since the very beginning.
-    Required after(inclusive) oid 710.
+    Required after(inclusive) oid 525.
 
   Element deprecateDesc:
     Documentation for how the attribute was deprecated. e.g. attributes and
@@ -2525,53 +2525,53 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>value of postfix mydestination</desc>
 </attr>
 
-<attr id="525" name="zimbraDataSourceMinPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="525" name="zimbraDataSourceMinPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>1m</defaultCOSValue>
   <desc>Shortest allowed duration for zimbraDataSourcePollingInterval.</desc>
 </attr>
 
-<attr id="526" name="zimbraPrefVoiceItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="526" name="zimbraPrefVoiceItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>25</defaultCOSValue>
   <desc>number of voice messages/call logs per page</desc>
 </attr>
 
-<attr id="527" name="zimbraFeatureMailUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="527" name="zimbraFeatureMailUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>email upsell enabled</desc>
 </attr>
 
-<attr id="528" name="zimbraFeatureMailUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="528" name="zimbraFeatureMailUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>email upsell URL</desc>
 </attr>
 
-<attr id="529" name="zimbraFeatureContactsUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="529" name="zimbraFeatureContactsUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>address book upsell enabled</desc>
 </attr>
 
-<attr id="530" name="zimbraFeatureContactsUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="530" name="zimbraFeatureContactsUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>address book upsell URL</desc>
 </attr>
 
-<attr id="531" name="zimbraFeatureCalendarUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="531" name="zimbraFeatureCalendarUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>calendar upsell enabled</desc>
 </attr>
 
-<attr id="532" name="zimbraFeatureCalendarUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="532" name="zimbraFeatureCalendarUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>calendar upsell URL</desc>
 </attr>
 
-<attr id="533" name="zimbraFeatureVoiceUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="533" name="zimbraFeatureVoiceUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>voice upsell enabled</desc>
 </attr>
 
-<attr id="534" name="zimbraFeatureVoiceUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="534" name="zimbraFeatureVoiceUpsellURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>voice upsell URL</desc>
 </attr>
 
-<attr id="535" name="zimbraDomainStatus" type="enum" value="active,maintenance,locked,closed,suspended,shutdown" callback="DomainStatus" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="535" name="zimbraDomainStatus" type="enum" value="active,maintenance,locked,closed,suspended,shutdown" callback="DomainStatus" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.0">
   <desc>domain status.  enum values are akin to those of zimbraAccountStatus
         
         zimbraAccountStatus values:
@@ -2610,11 +2610,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="536" name="zimbraDomainRenameInfo" type="string" max="1024" cardinality="single" optionalIn="domain">
+<attr id="536" name="zimbraDomainRenameInfo" type="string" max="1024" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>domain rename info/status</desc>
 </attr>
     
-<attr id="537" name="zimbraPrefInboxUnreadLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="537" name="zimbraPrefInboxUnreadLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     Retention period of unread messages in the Inbox folder.  0 means that
@@ -2622,7 +2622,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="538" name="zimbraPrefInboxReadLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="538" name="zimbraPrefInboxReadLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     Retention period of read messages in the Inbox folder.  0 means that all
@@ -2630,7 +2630,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="539" name="zimbraPrefSentLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="539" name="zimbraPrefSentLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     Retention period of messages in the Sent folder.  0 means that all messages
@@ -2638,7 +2638,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="540" name="zimbraPrefJunkLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="540" name="zimbraPrefJunkLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     Retention period of messages in the Junk folder.  0 means that all messages
@@ -2648,7 +2648,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="541" name="zimbraPrefTrashLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="541" name="zimbraPrefTrashLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     Retention period of messages in the Trash folder.  0 means that all messages
@@ -2658,7 +2658,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="542" name="zimbraMailPurgeSleepInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" callback="MailboxPurge">
+<attr id="542" name="zimbraMailPurgeSleepInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" callback="MailboxPurge" since="5.0.0">
   <globalConfigValue>1m</globalConfigValue>
   <desc>
     Sleep time between subsequent mailbox purges.  0 means that mailbox purging
@@ -2666,34 +2666,34 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="543" name="zimbraMailLastPurgedMailboxId" type="integer" cardinality="single" optionalIn="server">
+<attr id="543" name="zimbraMailLastPurgedMailboxId" type="integer" cardinality="single" optionalIn="server" since="5.0.0">
   <desc>The id of the last purged mailbox.</desc>
 </attr>
 
-<attr id="544" name="zimbraFeatureZimbraAssistantEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="544" name="zimbraFeatureZimbraAssistantEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Zimbra Assistant enabled</desc>
 </attr>
 
-<attr id="545" name="zimbraReverseProxyDomainNameQuery" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="545" name="zimbraReverseProxyDomainNameQuery" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.0">
   <globalConfigValue>(&amp;(zimbraVirtualIPAddress=${IPADDR})(objectClass=zimbraDomain))</globalConfigValue>
   <desc>LDAP query to find a domain</desc>
 </attr>
 
-<attr id="546" name="zimbraReverseProxyDomainNameSearchBase" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="546" name="zimbraReverseProxyDomainNameSearchBase" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.0">
   <desc>search base for zimbraReverseProxyDomainNameQuery</desc>
 </attr>
 
-<attr id="547" name="zimbraReverseProxyDomainNameAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="547" name="zimbraReverseProxyDomainNameAttribute" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.0">
   <globalConfigValue>zimbraDomainName</globalConfigValue>
   <desc>LDAP attribute that contains domain name for the domain</desc>
 </attr>
 
-<attr id="548" name="zimbraAuthKerberos5Realm" type="string" max="1024" cardinality="single" optionalIn="domain">
+<attr id="548" name="zimbraAuthKerberos5Realm" type="string" max="1024" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>kerberos5 realm for kerberos5 auth mech</desc>
 </attr>
 
-<attr id="549" name="zimbraGalLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain">
+<attr id="549" name="zimbraGalLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>external LDAP GAL authentication mechanism
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
@@ -2701,160 +2701,160 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>kerberos5 principal for external GAL queries</desc>
 </attr>
 
-<attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>kerberos5 keytab file path for external GAL queries</desc>
 </attr>
 
-<attr id="552" name="zimbraPrefIMLogChatsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="552" name="zimbraPrefIMLogChatsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether IM log chats is enabled</desc>
 </attr>
 
-<attr id="553" name="zimbraPrefChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" callback="ChildAccount">
+<attr id="553" name="zimbraPrefChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" callback="ChildAccount" since="5.0.0">
   <desc>zimbraId of visible child accounts</desc>
 </attr>
 
-<attr id="554" name="zimbraPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="554" name="zimbraPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether POP3 SASL GSSAPI is enabled for a given server</desc>
 </attr>
 
-<attr id="555" name="zimbraImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="555" name="zimbraImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether POP3 SASL GSSAPI is enabled for a given server</desc>
 </attr>
 
-<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to log IM chats to the Chats folder</desc>
 </attr>  
 
-<attr id="557" name="zimbraSoapRequestMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="557" name="zimbraSoapRequestMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <globalConfigValue>15360000</globalConfigValue>
   <desc>Maximum size in bytes for incoming SOAP requests.  0 means no limit.</desc>
 </attr>
 
-<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to report IM idle status</desc>
 </attr>
 
-<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>10</defaultCOSValue>
   <desc>IM session idle timeout in minutes</desc>
 </attr>   
 
-<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>away</defaultCOSValue>
   <desc>IM idle status</desc>
 </attr>
 
-<attr id="561" name="zimbraPrefAutoSaveDraftInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="561" name="zimbraPrefAutoSaveDraftInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>30s</defaultCOSValue>
   <desc>time to wait before auto saving a draft(nnnnn[hmsd])</desc>
 </attr>
 
-<attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain">
+<attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.0">
   <desc>An virtual IP address for this domain, used to determine domain based on an IP address</desc>
 </attr>
 
-<attr id="563" name="zimbraSSLCertificate" type="astring" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="563" name="zimbraSSLCertificate" type="astring" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <desc>SSL certificate</desc>
 </attr>
 
-<attr id="564" name="zimbraSSLPrivateKey" type="astring" max="2048" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="564" name="zimbraSSLPrivateKey" type="astring" max="2048" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <desc>SSL private key</desc>
 </attr>
 
-<attr id="565" name="zimbraMailDiskStreamingThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="565" name="zimbraMailDiskStreamingThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <globalConfigValue>1048576</globalConfigValue>
   <desc>Incoming messages larger than this number of bytes are streamed to disk during LMTP delivery, instead of being read into memory.  This limits memory consumption at the expense of higher disk utilization.</desc>
 </attr>
 
-<attr id="566" name="zimbraFeatureMailPriorityEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="566" name="zimbraFeatureMailPriorityEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>mail priority feature</desc>
 </attr>
 
-<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server">
+<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" since="5.0.0">
   <desc>interface address(es) on which IM server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="568" name="zimbraFeatureImapDataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="568" name="zimbraFeatureImapDataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether user is allowed to retrieve mail from an external IMAP data source</desc>
 </attr>
 
-<attr id="569" name="zimbraReverseProxyAuthWaitInterval" type="duration" cardinality="single" optionalIn="globalConfig">
+<attr id="569" name="zimbraReverseProxyAuthWaitInterval" type="duration" cardinality="single" optionalIn="globalConfig" since="5.0.0">
   <globalConfigValue>10s</globalConfigValue>
   <desc>wait duration before nginx sending back the NO response for failed imap/pop3 reverse proxy lookups</desc>
 </attr>
 
-<attr id="570" name="zimbraPrefIMSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="570" name="zimbraPrefIMSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether sounds is enabled in IM</desc>
 </attr>
 
-<attr id="571" name="zimbraIMAvailableInteropGateways" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="571" name="zimbraIMAvailableInteropGateways" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>available IM interop gateways</desc>
 </attr>
 
-<attr id="572" name="zimbraReverseProxyUserNameAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="572" name="zimbraReverseProxyUserNameAttribute" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.0">
   <desc>LDAP attribute that contains user name for the principal</desc>
 </attr>
 
-<attr id="573" name="zimbraPrefCalendarReminderDuration1" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="573" name="zimbraPrefCalendarReminderDuration1" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>-PT15M</defaultCOSValue>
   <desc>When to send the first reminder for an event.</desc>
 </attr>
 
-<attr id="574" name="zimbraPrefCalendarReminderDuration2" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="574" name="zimbraPrefCalendarReminderDuration2" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>When to send the second reminder for an event.</desc>
 </attr>
 
-<attr id="575" name="zimbraPrefCalendarReminderEmail" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="575" name="zimbraPrefCalendarReminderEmail" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <desc>The email the reminder goes to.</desc>
 </attr>
 
-<attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>To send email or to not send email is the question.</desc>
 </attr>
 
-<attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>  
   <desc>The mobile device (phone) the reminder goes to.</desc>
 </attr>
 
-<attr id="578" name="zimbraPrefCalendarReminderYMessenger" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="578" name="zimbraPrefCalendarReminderYMessenger" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Send a reminder via YIM</desc>
 </attr>
 
-<attr id="579" name="zimbraJunkMessagesIndexingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="579" name="zimbraJunkMessagesIndexingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether to index junk messages</desc>
 </attr>
 
-<attr id="580" name="zimbraMemcachedBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="580" name="zimbraMemcachedBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="5.0.0">
   <globalConfigValue>11211</globalConfigValue>
   <desc>port number on which memcached server should listen</desc>
 </attr>
 
-<attr id="581" name="zimbraMemcachedBindAddress" type="string" max="128" cardinality="multi" optionalIn="server">
+<attr id="581" name="zimbraMemcachedBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" since="5.0.0">
   <desc>interface address(es) on which memcached server</desc>
 </attr>
 
-<attr id="582" name="zimbraAttachmentsIndexedTextLimit" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="582" name="zimbraAttachmentsIndexedTextLimit" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <globalConfigValue>1048576</globalConfigValue>
   <desc>Maximum number of characters that will be indexed for a given MIME part.</desc>
 </attr>
 
-<attr id="583" name="zimbraGalLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="583" name="zimbraGalLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.1">
   <globalConfigValue>1000</globalConfigValue>
   <desc>LDAP page size for paged search control while accessing LDAP server for GAL.  
         This apples to both Zimbra and external LDAP servers.
@@ -2862,43 +2862,43 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="584" name="zimbraFeatureComposeInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="584" name="zimbraFeatureComposeInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.1">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not compose messages in a new windows is allowed</desc>
 </attr>
 
-<attr id="585" name="zimbraFeatureOpenMailInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="585" name="zimbraFeatureOpenMailInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.1">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not open a new msg/conv in a new windows is allowed</desc>
 </attr>
 
-<attr id="586" name="zimbraPasswordChangeListener" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="586" name="zimbraPasswordChangeListener" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.1">
   <desc>registered change password listener name</desc>
 </attr>
 
-<attr id="587" name="zimbraReverseProxySendPop3Xoip" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="587" name="zimbraReverseProxySendPop3Xoip" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.1">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx should send XOIP command for pop3</desc>
 </attr>
 
-<attr id="588" name="zimbraReverseProxySendImapId" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="588" name="zimbraReverseProxySendImapId" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.1">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx should send ID command for imap</desc>
 </attr>
 
-<attr id="589" name="zimbraGalSyncLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain">
+<attr id="589" name="zimbraGalSyncLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.2">
   <desc>LDAP URL for external GAL sync, if not set fallback to zimbraGalLdapURL</desc>
 </attr>
 
-<attr id="590" name="zimbraGalSyncLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="590" name="zimbraGalSyncLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>LDAP search base for external GAL sync queries, if not set fallback to zimbraGalLdapSearchBase</desc>
 </attr>
 
-<attr id="591" name="zimbraGalSyncLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain">
+<attr id="591" name="zimbraGalSyncLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>LDAP search filter for external GAL sync queries, if not set fallback to zimbraGalLdapFilter</desc>
 </attr>
 
-<attr id="592" name="zimbraGalSyncLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain">
+<attr id="592" name="zimbraGalSyncLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>external LDAP GAL authentication mechanism for GAL sync
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
@@ -2908,23 +2908,23 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="593" name="zimbraGalSyncLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="593" name="zimbraGalSyncLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>LDAP bind dn for external GAL sync queries, if not set fallback to zimbraGalLdapBindDn</desc>
 </attr>
 
-<attr id="594" name="zimbraGalSyncLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="594" name="zimbraGalSyncLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>LDAP bind password for external GAL sync queries, if not set fallback to zimbraGalLdapBindPassword</desc>
 </attr>
 
-<attr id="595" name="zimbraGalSyncLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="595" name="zimbraGalSyncLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>kerberos5 principal for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Principal</desc>
 </attr>
 
-<attr id="596" name="zimbraGalSyncLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="596" name="zimbraGalSyncLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>kerberos5 keytab file path for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Keytab</desc>
 </attr>
 
-<attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.2">
   <globalConfigValue>1000</globalConfigValue>
   <desc>LDAP page size for paged search control while accessing LDAP server for GAL sync.  
         This apples to both Zimbra and external LDAP servers.
@@ -2933,74 +2933,74 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="598" name="zimbraGalSyncInternalSearchBase"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="598" name="zimbraGalSyncInternalSearchBase"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.2">
   <desc>LDAP search base for internal GAL sync (special values: "ROOT" for top, "DOMAIN" for domain only, "SUBDOMAINS" for domain and subdomains)
         If not set fallback to zimbraGalInternalSearchBase
   </desc>
 </attr>
 
-<attr id="599" name="zimbraGalTokenizeAutoCompleteKey" type="enum" value="and,or" cardinality="single" optionalIn="domain">
+<attr id="599" name="zimbraGalTokenizeAutoCompleteKey" type="enum" value="and,or" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>whether to tokenize key and AND or OR the tokenized queries for GAL auto complete, if not set, key is not tokenized</desc>
 </attr>
 
-<attr id="600" name="zimbraGalTokenizeSearchKey" type="enum" value="and,or" cardinality="single" optionalIn="domain">
+<attr id="600" name="zimbraGalTokenizeSearchKey" type="enum" value="and,or" cardinality="single" optionalIn="domain" since="5.0.2">
   <desc>whether to tokenize key and AND or OR the tokenized queries for GAL search, if not set, key is not tokenized</desc>
 </attr>
 
-<attr id="601" name="zimbraIsCustomerCareAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo">
+<attr id="601" name="zimbraIsCustomerCareAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="5.0.2">
   <desc>set to true for customer care accounts</desc>
 </attr>
 
-<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.2">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether web search feature is enabled</desc>
 </attr>
 
-<attr id="603" name="zimbraPrefLabel" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+<attr id="603" name="zimbraPrefLabel" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="5.0.2">
   <desc>optional account descriptive label</desc>
 </attr>
 
-<attr id="604" name="zimbraSpamApplyUserFilters" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="604" name="zimbraSpamApplyUserFilters" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.2">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>If TRUE, spam messages will be affected by user mail filters instead of
         being automatically filed into the Junk folder.  This attribute is deprecated
         and will be removed in a future release.  See bug 23886 for details.</desc>
 </attr>
 
-<attr id="605" name="zimbraCustomerCareTier" type="integer" max="3" cardinality="single" optionalIn="account" flags="accountInfo" order="integerOrderingMatch">
+<attr id="605" name="zimbraCustomerCareTier" type="integer" max="3" cardinality="single" optionalIn="account" flags="accountInfo" order="integerOrderingMatch" since="5.0.3">
   <desc>set to 1 or 3 to specify customer care account tier level</desc>
 </attr>
 
-<attr id="606" name="zimbraZimletTarget" type="cstring" max="1024" cardinality="multi" optionalIn="zimletEntry">
+<attr id="606" name="zimbraZimletTarget" type="cstring" max="1024" cardinality="multi" optionalIn="zimletEntry" since="5.0.3">
   <desc>Zimlet target apps</desc>
 </attr>
 
-<attr id="607" name="zimbraFreebusyExchangeURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="607" name="zimbraFreebusyExchangeURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <desc>URL to Exchange server for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="608" name="zimbraFreebusyExchangeAuthUsername" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="608" name="zimbraFreebusyExchangeAuthUsername" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <desc>Exchange username for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="609" name="zimbraFreebusyExchangeAuthPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="609" name="zimbraFreebusyExchangeAuthPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <desc>Exchange user password for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="610" name="zimbraFreebusyExchangeUserOrg" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="610" name="zimbraFreebusyExchangeUserOrg" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <desc>O and OU used in legacyExchangeDN attribute</desc>
 </attr>
 
-<attr id="611" name="zimbraFreebusyExchangeAuthScheme" type="enum" value="basic,form" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="611" name="zimbraFreebusyExchangeAuthScheme" type="enum" value="basic,form" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <desc>auth scheme to use</desc>
 </attr>
 
-<attr id="612" name="zimbraMtaAntiSpamLockMethod" type="astring" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="612" name="zimbraMtaAntiSpamLockMethod" type="astring" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.3">
   <globalConfigValue>flock</globalConfigValue>
   <desc>mta anti spam lock method.</desc>
 </attr>
 
-<attr id="613" name="zimbraMailReferMode" type="enum" value="always,wronghost,reverse-proxied" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="613" name="zimbraMailReferMode" type="enum" value="always,wronghost,reverse-proxied" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.3">
   <globalConfigValue>wronghost</globalConfigValue>
   <desc>whether to send back a refer tag in an auth response to force a client redirect.
         always           - always send refer
@@ -3009,47 +3009,47 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="614" name="zimbraInterceptAddress" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="614" name="zimbraInterceptAddress" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
   <desc>The address to which legal intercept messages will be sent.</desc>
 </attr>
 
-<attr id="615" name="zimbraInterceptSendHeadersOnly" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="615" name="zimbraInterceptSendHeadersOnly" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Specifies whether legal intercept messages should contain the entire original
         message or just the headers.</desc>
 </attr>
 
-<attr id="616" name="zimbraInterceptFrom" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="616" name="zimbraInterceptFrom" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
   <defaultCOSValue>Postmaster &lt;postmaster@${ACCOUNT_DOMAIN}&gt;</defaultCOSValue>
   <desc>Template used to construct the sender of a legal intercept message.</desc>
 </attr>
 
-<attr id="617" name="zimbraInterceptSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="617" name="zimbraInterceptSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
   <defaultCOSValue>Intercepted message for ${ACCOUNT_ADDRESS}: ${MESSAGE_SUBJECT}</defaultCOSValue>
   <desc>Template used to construct the subject of a legal intercept message.</desc>
 </attr>
 
-<attr id="618" name="zimbraInterceptBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="618" name="zimbraInterceptBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
   <defaultCOSValue>Intercepted message for ${ACCOUNT_ADDRESS}.${NEWLINE}Operation=${OPERATION}, folder=${FOLDER_NAME}, folder ID=${FOLDER_ID}.</defaultCOSValue>
   <desc>Template used to construct the body of a legal intercept message.</desc>
 </attr>
 
-<attr id="619" name="zimbraBatchedIndexingSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="619" name="zimbraBatchedIndexingSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Batch size to use when indexing data</desc>
 </attr>
 
-<attr id="620" name="zimbraFreebusyExchangeCachedIntervalStart" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="620" name="zimbraFreebusyExchangeCachedIntervalStart" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <globalConfigValue>7d</globalConfigValue>
   <desc>The value of duration is used to indicate the start date (in the past relative to today) of the f/b interval pushed to Exchange server.</desc>
 </attr>
 
-<attr id="621" name="zimbraFreebusyExchangeCachedInterval" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited">
+<attr id="621" name="zimbraFreebusyExchangeCachedInterval" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountInherited" since="5.0.3">
   <globalConfigValue>60d</globalConfigValue>
   <desc>The duration of f/b block pushed to Exchange server.</desc>
 </attr>
 
-<attr id="622" name="zimbraReverseProxyIPLoginLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+<attr id="622" name="zimbraReverseProxyIPLoginLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="5.0.3">
   <globalConfigValue>0</globalConfigValue>
   <desc>Sets the upper limit on logins from a remote IP via POP or
     IMAP to this proxy server after which login is rejected with an
@@ -3068,7 +3068,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     place for any IP.</desc>
 </attr>
 
-<attr id="623" name="zimbraReverseProxyIPLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+<attr id="623" name="zimbraReverseProxyIPLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="5.0.3">
   <globalConfigValue>3600</globalConfigValue>
   <desc>Sets the time-to-live for the hit counter for IP based login
     throttling.  If time is set to 3600 and limit is set to 1000, then
@@ -3079,7 +3079,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="624" name="zimbraReverseProxyUserLoginLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+<attr id="624" name="zimbraReverseProxyUserLoginLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="5.0.3">
   <globalConfigValue>0</globalConfigValue>
   <desc>Limit how many times a user can login via the proxy.  Setting
     limit to 100 and time to 3600 means: allow maximum 100 logins per
@@ -3093,7 +3093,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="625" name="zimbraReverseProxyUserLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+<attr id="625" name="zimbraReverseProxyUserLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="5.0.3">
   <globalConfigValue>3600</globalConfigValue>
   <desc>
     Sets the time-to-live for the hit counter for per user login
@@ -3101,72 +3101,72 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="626" name="zimbraMailProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="626" name="zimbraMailProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="5.0.3">
   <globalConfigValue>0</globalConfigValue>
   <desc>HTTP proxy port</desc>
 </attr>
 
-<attr id="627" name="zimbraMailSSLProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="627" name="zimbraMailSSLProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="5.0.3">
   <globalConfigValue>0</globalConfigValue>
   <desc>SSL port HTTP proxy</desc>
 </attr>
 
-<attr id="628" name="zimbraReverseProxyHttpEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="628" name="zimbraReverseProxyHttpEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.3">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable HTTP proxy</desc>
 </attr>
 
-<attr id="629" name="zimbraReverseProxyMailEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="629" name="zimbraReverseProxyMailEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.3">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable IMAP/POP proxy</desc>
 </attr>
 
-<attr id="630" name="zimbraLmtpServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="630" name="zimbraLmtpServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.4">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether LMTP server is enabled for a given server</desc>
 </attr>
 
-<attr id="631" name="zimbraFeatureNewAddrBookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="631" name="zimbraFeatureNewAddrBookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.4">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether user can create address books</desc>
 </attr>
 
-<attr id="632" name="zimbraReverseProxyHttpPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="632" name="zimbraReverseProxyHttpPortAttribute" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.5">
   <globalConfigValue>zimbraMailPort</globalConfigValue>
   <desc>attribute that contains http bind port</desc>
 </attr>
 
-<attr id="633" name="zimbraPrefTagTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="633" name="zimbraPrefTagTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.5">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not tag tree is expanded</desc>
 </attr>
 
-<attr id="634" name="zimbraPrefSearchTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="634" name="zimbraPrefSearchTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.5">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not search tree is expanded</desc>
 </attr>
 
-<attr id="635" name="zimbraPrefGalSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="635" name="zimbraPrefGalSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.5">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether end-user wants search from GAL. Feature must also be enabled</desc>
 </attr>
 
-<attr id="636" name="zimbraSmtpSendAddMailer" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="636" name="zimbraSmtpSendAddMailer" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.5">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether X-Mailer will be added to messages sent by Zimbra</desc>
 </attr>
 
-<attr id="637" name="zimbraPrefFolderTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="637" name="zimbraPrefFolderTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.5">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not folder tree is expanded</desc>
 </attr>
 
-<attr id="638" name="zimbraPrefZimletTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="638" name="zimbraPrefZimletTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.5">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not zimlet tree is expanded</desc>
 </attr>
 
-<attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig">
+<attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig" since="5.0.5">
   <globalConfigValue>SSL_RSA_WITH_DES_CBC_SHA</globalConfigValue>
   <globalConfigValue>SSL_DHE_RSA_WITH_DES_CBC_SHA</globalConfigValue>
   <globalConfigValue>SSL_DHE_DSS_WITH_DES_CBC_SHA</globalConfigValue> 
@@ -3177,7 +3177,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>space separated list of excluded cipher suites</desc>
 </attr>
 
-<attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.5">
   <globalConfigValue>!SSLv2:!MD5:HIGH</globalConfigValue>
   <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL 
         e.g. ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
@@ -3185,7 +3185,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="641" name="zimbraReverseProxyImapStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="641" name="zimbraReverseProxyImapStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.5">
   <globalConfigValue>only</globalConfigValue>
   <desc>on   - on the plain POP/IMAP port, starttls is allowed
         off  - no starttls is offered on plain port
@@ -3193,7 +3193,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="642" name="zimbraReverseProxyPop3StartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="642" name="zimbraReverseProxyPop3StartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.5">
   <globalConfigValue>only</globalConfigValue>
   <desc>on   - on the plain POP/IMAP port, starttls is allowed
         off  - no starttls is offered on plain port
@@ -3201,38 +3201,38 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="643" name="zimbraReverseProxyImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="643" name="zimbraReverseProxyImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.5">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether IMAP SASL GSSAPI is enabled for reverse proxy</desc>
 </attr>
 
-<attr id="644" name="zimbraReverseProxyPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="644" name="zimbraReverseProxyPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.5">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether POP3 SASL GSSAPI is enabled for reverse proxy</desc>
 </attr>
 
-<attr id="645" name="zimbraPrefIMCustomStatusMessage" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+<attr id="645" name="zimbraPrefIMCustomStatusMessage" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" since="5.0.6">
   <desc>Custom IM status messages</desc>
 </attr>
 
-<attr id="646" name="zimbraNotebookSanitizeHtml" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited">
+<attr id="646" name="zimbraNotebookSanitizeHtml" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="5.0.6">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to strip off potentially harming HTML tags in Wiki and HTML Documents.</desc>
 </attr>
 
-<attr id="647" name="zimbraSkinForegroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="647" name="zimbraSkinForegroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.6">
   <desc>foreground color for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="648" name="zimbraSkinBackgroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="648" name="zimbraSkinBackgroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.6">
   <desc>background color for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="649" name="zimbraSkinLogoURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="649" name="zimbraSkinLogoURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.6">
   <desc>Logo URL for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="650" name="zimbraPrefMarkMsgRead" type="integer" cardinality="single" min="-1" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="650" name="zimbraPrefMarkMsgRead" type="integer" cardinality="single" min="-1" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.6">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>whether and mark a message as read
           -1: Do not mark read
@@ -3241,127 +3241,127 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="651" name="zimbraCalendarCalDavAlternateCalendarHomeSet" type="string" cardinality="multi" optionalIn="globalConfig">
+<attr id="651" name="zimbraCalendarCalDavAlternateCalendarHomeSet" type="string" cardinality="multi" optionalIn="globalConfig" since="5.0.6">
   <desc>alternate location for calendar and task folders</desc>
 </attr>
 
-<attr id="652" name="zimbraCalendarCalDavDisableScheduling" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="652" name="zimbraCalendarCalDavDisableScheduling" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>set true to turn off handling scheduling message for CalDAV</desc>
 </attr>
 
-<attr id="653" name="zimbraPrefPop3DownloadSince" type="gentime" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="653" name="zimbraPrefPop3DownloadSince" type="gentime" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.6">
   <desc>download pop3 messages since</desc>
 </attr>
 
-<attr id="654" name="zimbraAuthLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain">
+<attr id="654" name="zimbraAuthLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="5.0.6">
   <desc>whether to use startTLS for external LDAP auth</desc>
 </attr>
 
-<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain">
+<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="5.0.6">
   <desc>whether to use startTLS for external GAL.
         startTLS will be used for external GAL access only if this attribute is true and zimbraGalLdapURL(or zimbraGalSyncLdapURL for sync) does not contain a ldaps URL.
   </desc>
 </attr>
 
-<attr id="656" name="zimbraGalSyncLdapStartTlsEnabled"  type="boolean" cardinality="single" optionalIn="domain">
+<attr id="656" name="zimbraGalSyncLdapStartTlsEnabled"  type="boolean" cardinality="single" optionalIn="domain" since="5.0.6">
   <desc>whether to use startTLS for external GAL sync, if not set fallback to zimbraGalLdapStartTlsEnabled</desc>
 </attr>
 
-<attr id="657" name="zimbraLmtpPermanentFailureWhenOverQuota" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="657" name="zimbraLmtpPermanentFailureWhenOverQuota" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>If true, a permanent failure (552) is returned when the user is over quota.  If false, a temporary failure (452) is returned.</desc>
 </attr>
 
-<attr id="658" name="zimbraYahooId" type="string" max="256" cardinality="single" optionalIn="account">
+<attr id="658" name="zimbraYahooId" type="string" max="256" cardinality="single" optionalIn="account" since="5.0.6">
   <desc>Yahoo ID</desc>
 </attr>
 
-<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,zimletEntry,xmppComponent,aclTarget">
+<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,zimletEntry,xmppComponent,aclTarget" since="5.0.7">
   <desc>Zimbra access control list</desc>
 </attr>
 
-<attr id="660" name="zimbraCalendarRecurrenceMaxInstances" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="660" name="zimbraCalendarRecurrenceMaxInstances" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <globalConfigValue>0</globalConfigValue>
   <desc>Maximum number of instances expanded per recurrence rule; 0 means unlimited</desc>
 </attr>
 
-<attr id="661" name="zimbraCalendarRecurrenceDailyMaxDays" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="661" name="zimbraCalendarRecurrenceDailyMaxDays" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <globalConfigValue>730</globalConfigValue>
   <desc>Maximum number of days a DAILY recurrence rule can span; 0 means unlimited</desc>
 </attr>
 
-<attr id="662" name="zimbraCalendarRecurrenceWeeklyMaxWeeks" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="662" name="zimbraCalendarRecurrenceWeeklyMaxWeeks" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <globalConfigValue>520</globalConfigValue>
   <desc>Maximum number of weeks a WEEKLY recurrence rule can span; 0 means unlimited</desc>
 </attr>
 
-<attr id="663" name="zimbraCalendarRecurrenceMonthlyMaxMonths" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="663" name="zimbraCalendarRecurrenceMonthlyMaxMonths" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <globalConfigValue>360</globalConfigValue>
   <desc>Maximum number of months a MONTHLY recurrence rule can span; 0 means unlimited</desc>
 </attr>
 
-<attr id="664" name="zimbraCalendarRecurrenceYearlyMaxYears" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="664" name="zimbraCalendarRecurrenceYearlyMaxYears" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <globalConfigValue>100</globalConfigValue>
   <desc>Maximum number of years a YEARLY recurrence rule can span; 0 means unlimited</desc>
 </attr>
 
-<attr id="665" name="zimbraCalendarRecurrenceOtherFrequencyMaxYears" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="665" name="zimbraCalendarRecurrenceOtherFrequencyMaxYears" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <globalConfigValue>1</globalConfigValue>
   <desc>Maximum number of years a recurrence rule can span for frequencies other than DAILY/WEEKLY/MONTHLY/YEARLY; 0 means unlimited</desc>
 </attr>
 
-<attr id="666" name="zimbraPrefMailSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="666" name="zimbraPrefMailSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether audible alert is enabled when a new email arrives</desc>
 </attr>
 
-<attr id="667" name="zimbraPrefCalendarReminderSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="667" name="zimbraPrefCalendarReminderSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether audible alert is enabled when appointment notification is played</desc>
 </attr>
 
-<attr id="668" name="zimbraSkinSecondaryColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="668" name="zimbraSkinSecondaryColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>secondary color for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="669" name="zimbraSkinSelectionColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="669" name="zimbraSkinSelectionColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>selection color for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="670" name="zimbraSkinLogoLoginBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="670" name="zimbraSkinLogoLoginBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>logo login banner for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="671" name="zimbraSkinLogoAppBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="671" name="zimbraSkinLogoAppBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>logo app banner for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="672" name="zimbraMtaSmtpdMilters" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="672" name="zimbraMtaSmtpdMilters" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <desc>value for postfix smtpd_milters</desc>
 </attr>
 
-<attr id="673" name="zimbraMtaNonSmtpdMilters" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="673" name="zimbraMtaNonSmtpdMilters" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <desc>value for postfix non_smtpd_milters</desc>
 </attr>
 
-<attr id="674" name="zimbraHelpAdminURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="674" name="zimbraHelpAdminURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>help URL for admin</desc>
 </attr>
 
-<attr id="675" name="zimbraHelpDelegatedURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="675" name="zimbraHelpDelegatedURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>help URL for delegated admin</desc>
 </attr>
 
-<attr id="676" name="zimbraHelpAdvancedURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="676" name="zimbraHelpAdvancedURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>help URL for advanced client</desc>
 </attr>
 
-<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
   <desc>help URL for standard client</desc>
 </attr>
 
-<attr id="678" name="zimbraPrefAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="678" name="zimbraPrefAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>After login, whether the advanced client should enforce minimum display resolution</desc>
 </attr>
@@ -3394,7 +3394,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
 </attr>
 
-<attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.8">
+<attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
   <desc>whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.  See also related attributes zimbraMailProxyPort and zimbraMailSSLProxyPort</desc>
 </attr>
 

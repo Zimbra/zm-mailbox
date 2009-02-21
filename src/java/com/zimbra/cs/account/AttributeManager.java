@@ -380,8 +380,8 @@ public class AttributeManager {
                     description = deprecateInfo + ".  Orig desc: " + description;
             }
             
-            // since is required after(inclusive) oid 710
-            if (sinceVer == null && id >= 710) {
+            // since is required after(inclusive) oid 525 - first attribute in 5.0
+            if (sinceVer == null && id >= 525) {
                 error(name, file, "missing since (required after(inclusive) oid 710)");
             }
 

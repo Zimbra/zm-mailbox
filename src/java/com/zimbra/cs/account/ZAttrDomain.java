@@ -42,7 +42,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1458 */
+    /* build: 5.0 pshao 20090220-1935 */
 
     /**
      * RFC2256: descriptive information
@@ -164,6 +164,8 @@ public class ZAttrDomain extends NamedEntry {
      * Zimbra access control list
      *
      * @return zimbraACE, or ampty array if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public String[] getACE() {
@@ -175,6 +177,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraACE new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void setACE(String[] zimbraACE) throws com.zimbra.common.service.ServiceException {
@@ -189,6 +193,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraACE new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> setACE(String[] zimbraACE, Map<String,Object> attrs) {
@@ -202,6 +208,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraACE new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void addACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
@@ -216,6 +224,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraACE new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> addACE(String zimbraACE, Map<String,Object> attrs) {
@@ -229,6 +239,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraACE existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void removeACE(String zimbraACE) throws com.zimbra.common.service.ServiceException {
@@ -243,6 +255,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraACE existing value to remove
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> removeACE(String zimbraACE, Map<String,Object> attrs) {
@@ -255,6 +269,8 @@ public class ZAttrDomain extends NamedEntry {
      * Zimbra access control list
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public void unsetACE() throws com.zimbra.common.service.ServiceException {
@@ -268,6 +284,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public Map<String,Object> unsetACE(Map<String,Object> attrs) {
@@ -918,6 +936,8 @@ public class ZAttrDomain extends NamedEntry {
      * kerberos5 realm for kerberos5 auth mech
      *
      * @return zimbraAuthKerberos5Realm, or null if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=548)
     public String getAuthKerberos5Realm() {
@@ -929,6 +949,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraAuthKerberos5Realm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=548)
     public void setAuthKerberos5Realm(String zimbraAuthKerberos5Realm) throws com.zimbra.common.service.ServiceException {
@@ -943,6 +965,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraAuthKerberos5Realm new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=548)
     public Map<String,Object> setAuthKerberos5Realm(String zimbraAuthKerberos5Realm, Map<String,Object> attrs) {
@@ -955,6 +979,8 @@ public class ZAttrDomain extends NamedEntry {
      * kerberos5 realm for kerberos5 auth mech
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=548)
     public void unsetAuthKerberos5Realm() throws com.zimbra.common.service.ServiceException {
@@ -968,6 +994,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=548)
     public Map<String,Object> unsetAuthKerberos5Realm(Map<String,Object> attrs) {
@@ -1290,6 +1318,8 @@ public class ZAttrDomain extends NamedEntry {
      * whether to use startTLS for external LDAP auth
      *
      * @return zimbraAuthLdapStartTlsEnabled, or false if unset
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=654)
     public boolean isAuthLdapStartTlsEnabled() {
@@ -1301,6 +1331,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraAuthLdapStartTlsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=654)
     public void setAuthLdapStartTlsEnabled(boolean zimbraAuthLdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -1315,6 +1347,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraAuthLdapStartTlsEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=654)
     public Map<String,Object> setAuthLdapStartTlsEnabled(boolean zimbraAuthLdapStartTlsEnabled, Map<String,Object> attrs) {
@@ -1327,6 +1361,8 @@ public class ZAttrDomain extends NamedEntry {
      * whether to use startTLS for external LDAP auth
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=654)
     public void unsetAuthLdapStartTlsEnabled() throws com.zimbra.common.service.ServiceException {
@@ -1340,6 +1376,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=654)
     public Map<String,Object> unsetAuthLdapStartTlsEnabled(Map<String,Object> attrs) {
@@ -2481,6 +2519,8 @@ public class ZAttrDomain extends NamedEntry {
      * domain rename info/status
      *
      * @return zimbraDomainRenameInfo, or null if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=536)
     public String getDomainRenameInfo() {
@@ -2492,6 +2532,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraDomainRenameInfo new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=536)
     public void setDomainRenameInfo(String zimbraDomainRenameInfo) throws com.zimbra.common.service.ServiceException {
@@ -2506,6 +2548,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainRenameInfo new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=536)
     public Map<String,Object> setDomainRenameInfo(String zimbraDomainRenameInfo, Map<String,Object> attrs) {
@@ -2518,6 +2562,8 @@ public class ZAttrDomain extends NamedEntry {
      * domain rename info/status
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=536)
     public void unsetDomainRenameInfo() throws com.zimbra.common.service.ServiceException {
@@ -2531,6 +2577,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=536)
     public Map<String,Object> unsetDomainRenameInfo(Map<String,Object> attrs) {
@@ -2568,6 +2616,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @return zimbraDomainStatus, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public ZAttrProvisioning.DomainStatus getDomainStatus() {
@@ -2603,6 +2653,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @return zimbraDomainStatus, or null if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public String getDomainStatusAsString() {
@@ -2639,6 +2691,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraDomainStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public void setDomainStatus(ZAttrProvisioning.DomainStatus zimbraDomainStatus) throws com.zimbra.common.service.ServiceException {
@@ -2678,6 +2732,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainStatus new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public Map<String,Object> setDomainStatus(ZAttrProvisioning.DomainStatus zimbraDomainStatus, Map<String,Object> attrs) {
@@ -2716,6 +2772,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraDomainStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public void setDomainStatusAsString(String zimbraDomainStatus) throws com.zimbra.common.service.ServiceException {
@@ -2755,6 +2813,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainStatus new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public Map<String,Object> setDomainStatusAsString(String zimbraDomainStatus, Map<String,Object> attrs) {
@@ -2792,6 +2852,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public void unsetDomainStatus() throws com.zimbra.common.service.ServiceException {
@@ -2830,6 +2892,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public Map<String,Object> unsetDomainStatus(Map<String,Object> attrs) {
@@ -3533,6 +3597,8 @@ public class ZAttrDomain extends NamedEntry {
      * Exchange user password for free/busy lookup and propagation
      *
      * @return zimbraFreebusyExchangeAuthPassword, or null if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=609)
     public String getFreebusyExchangeAuthPassword() {
@@ -3544,6 +3610,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeAuthPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=609)
     public void setFreebusyExchangeAuthPassword(String zimbraFreebusyExchangeAuthPassword) throws com.zimbra.common.service.ServiceException {
@@ -3558,6 +3626,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeAuthPassword new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=609)
     public Map<String,Object> setFreebusyExchangeAuthPassword(String zimbraFreebusyExchangeAuthPassword, Map<String,Object> attrs) {
@@ -3570,6 +3640,8 @@ public class ZAttrDomain extends NamedEntry {
      * Exchange user password for free/busy lookup and propagation
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=609)
     public void unsetFreebusyExchangeAuthPassword() throws com.zimbra.common.service.ServiceException {
@@ -3583,6 +3655,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=609)
     public Map<String,Object> unsetFreebusyExchangeAuthPassword(Map<String,Object> attrs) {
@@ -3597,6 +3671,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [basic, form]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public ZAttrProvisioning.FreebusyExchangeAuthScheme getFreebusyExchangeAuthScheme() {
@@ -3609,6 +3685,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [basic, form]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public String getFreebusyExchangeAuthSchemeAsString() {
@@ -3622,6 +3700,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public void setFreebusyExchangeAuthScheme(ZAttrProvisioning.FreebusyExchangeAuthScheme zimbraFreebusyExchangeAuthScheme) throws com.zimbra.common.service.ServiceException {
@@ -3638,6 +3718,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public Map<String,Object> setFreebusyExchangeAuthScheme(ZAttrProvisioning.FreebusyExchangeAuthScheme zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
@@ -3653,6 +3735,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public void setFreebusyExchangeAuthSchemeAsString(String zimbraFreebusyExchangeAuthScheme) throws com.zimbra.common.service.ServiceException {
@@ -3669,6 +3753,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public Map<String,Object> setFreebusyExchangeAuthSchemeAsString(String zimbraFreebusyExchangeAuthScheme, Map<String,Object> attrs) {
@@ -3683,6 +3769,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [basic, form]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public void unsetFreebusyExchangeAuthScheme() throws com.zimbra.common.service.ServiceException {
@@ -3698,6 +3786,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public Map<String,Object> unsetFreebusyExchangeAuthScheme(Map<String,Object> attrs) {
@@ -3710,6 +3800,8 @@ public class ZAttrDomain extends NamedEntry {
      * Exchange username for free/busy lookup and propagation
      *
      * @return zimbraFreebusyExchangeAuthUsername, or null if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=608)
     public String getFreebusyExchangeAuthUsername() {
@@ -3721,6 +3813,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeAuthUsername new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=608)
     public void setFreebusyExchangeAuthUsername(String zimbraFreebusyExchangeAuthUsername) throws com.zimbra.common.service.ServiceException {
@@ -3735,6 +3829,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeAuthUsername new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=608)
     public Map<String,Object> setFreebusyExchangeAuthUsername(String zimbraFreebusyExchangeAuthUsername, Map<String,Object> attrs) {
@@ -3747,6 +3843,8 @@ public class ZAttrDomain extends NamedEntry {
      * Exchange username for free/busy lookup and propagation
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=608)
     public void unsetFreebusyExchangeAuthUsername() throws com.zimbra.common.service.ServiceException {
@@ -3760,6 +3858,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=608)
     public Map<String,Object> unsetFreebusyExchangeAuthUsername(Map<String,Object> attrs) {
@@ -3776,6 +3876,8 @@ public class ZAttrDomain extends NamedEntry {
      * @see #getFreebusyExchangeCachedIntervalAsString()
      *
      * @return zimbraFreebusyExchangeCachedInterval in millseconds, or 5184000000 (60d)  if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public long getFreebusyExchangeCachedInterval() {
@@ -3786,6 +3888,8 @@ public class ZAttrDomain extends NamedEntry {
      * The duration of f/b block pushed to Exchange server.
      *
      * @return zimbraFreebusyExchangeCachedInterval, or "60d" if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public String getFreebusyExchangeCachedIntervalAsString() {
@@ -3797,6 +3901,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public void setFreebusyExchangeCachedInterval(String zimbraFreebusyExchangeCachedInterval) throws com.zimbra.common.service.ServiceException {
@@ -3811,6 +3917,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public Map<String,Object> setFreebusyExchangeCachedInterval(String zimbraFreebusyExchangeCachedInterval, Map<String,Object> attrs) {
@@ -3823,6 +3931,8 @@ public class ZAttrDomain extends NamedEntry {
      * The duration of f/b block pushed to Exchange server.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public void unsetFreebusyExchangeCachedInterval() throws com.zimbra.common.service.ServiceException {
@@ -3836,6 +3946,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public Map<String,Object> unsetFreebusyExchangeCachedInterval(Map<String,Object> attrs) {
@@ -3853,6 +3965,8 @@ public class ZAttrDomain extends NamedEntry {
      * @see #getFreebusyExchangeCachedIntervalStartAsString()
      *
      * @return zimbraFreebusyExchangeCachedIntervalStart in millseconds, or 604800000 (7d)  if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public long getFreebusyExchangeCachedIntervalStart() {
@@ -3864,6 +3978,8 @@ public class ZAttrDomain extends NamedEntry {
      * relative to today) of the f/b interval pushed to Exchange server.
      *
      * @return zimbraFreebusyExchangeCachedIntervalStart, or "7d" if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public String getFreebusyExchangeCachedIntervalStartAsString() {
@@ -3876,6 +3992,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public void setFreebusyExchangeCachedIntervalStart(String zimbraFreebusyExchangeCachedIntervalStart) throws com.zimbra.common.service.ServiceException {
@@ -3891,6 +4009,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public Map<String,Object> setFreebusyExchangeCachedIntervalStart(String zimbraFreebusyExchangeCachedIntervalStart, Map<String,Object> attrs) {
@@ -3904,6 +4024,8 @@ public class ZAttrDomain extends NamedEntry {
      * relative to today) of the f/b interval pushed to Exchange server.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public void unsetFreebusyExchangeCachedIntervalStart() throws com.zimbra.common.service.ServiceException {
@@ -3918,6 +4040,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public Map<String,Object> unsetFreebusyExchangeCachedIntervalStart(Map<String,Object> attrs) {
@@ -3930,6 +4054,8 @@ public class ZAttrDomain extends NamedEntry {
      * URL to Exchange server for free/busy lookup and propagation
      *
      * @return zimbraFreebusyExchangeURL, or null if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=607)
     public String getFreebusyExchangeURL() {
@@ -3941,6 +4067,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=607)
     public void setFreebusyExchangeURL(String zimbraFreebusyExchangeURL) throws com.zimbra.common.service.ServiceException {
@@ -3955,6 +4083,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=607)
     public Map<String,Object> setFreebusyExchangeURL(String zimbraFreebusyExchangeURL, Map<String,Object> attrs) {
@@ -3967,6 +4097,8 @@ public class ZAttrDomain extends NamedEntry {
      * URL to Exchange server for free/busy lookup and propagation
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=607)
     public void unsetFreebusyExchangeURL() throws com.zimbra.common.service.ServiceException {
@@ -3980,6 +4112,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=607)
     public Map<String,Object> unsetFreebusyExchangeURL(Map<String,Object> attrs) {
@@ -3992,6 +4126,8 @@ public class ZAttrDomain extends NamedEntry {
      * O and OU used in legacyExchangeDN attribute
      *
      * @return zimbraFreebusyExchangeUserOrg, or null if unset
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=610)
     public String getFreebusyExchangeUserOrg() {
@@ -4003,6 +4139,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraFreebusyExchangeUserOrg new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=610)
     public void setFreebusyExchangeUserOrg(String zimbraFreebusyExchangeUserOrg) throws com.zimbra.common.service.ServiceException {
@@ -4017,6 +4155,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraFreebusyExchangeUserOrg new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=610)
     public Map<String,Object> setFreebusyExchangeUserOrg(String zimbraFreebusyExchangeUserOrg, Map<String,Object> attrs) {
@@ -4029,6 +4169,8 @@ public class ZAttrDomain extends NamedEntry {
      * O and OU used in legacyExchangeDN attribute
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=610)
     public void unsetFreebusyExchangeUserOrg() throws com.zimbra.common.service.ServiceException {
@@ -4042,6 +4184,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=610)
     public Map<String,Object> unsetFreebusyExchangeUserOrg(Map<String,Object> attrs) {
@@ -4309,6 +4453,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [kerberos5, none, simple]
      *
      * @return zimbraGalLdapAuthMech, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public ZAttrProvisioning.GalLdapAuthMech getGalLdapAuthMech() {
@@ -4324,6 +4470,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [kerberos5, none, simple]
      *
      * @return zimbraGalLdapAuthMech, or null if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public String getGalLdapAuthMechAsString() {
@@ -4340,6 +4488,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public void setGalLdapAuthMech(ZAttrProvisioning.GalLdapAuthMech zimbraGalLdapAuthMech) throws com.zimbra.common.service.ServiceException {
@@ -4359,6 +4509,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public Map<String,Object> setGalLdapAuthMech(ZAttrProvisioning.GalLdapAuthMech zimbraGalLdapAuthMech, Map<String,Object> attrs) {
@@ -4377,6 +4529,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public void setGalLdapAuthMechAsString(String zimbraGalLdapAuthMech) throws com.zimbra.common.service.ServiceException {
@@ -4396,6 +4550,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public Map<String,Object> setGalLdapAuthMechAsString(String zimbraGalLdapAuthMech, Map<String,Object> attrs) {
@@ -4413,6 +4569,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [kerberos5, none, simple]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public void unsetGalLdapAuthMech() throws com.zimbra.common.service.ServiceException {
@@ -4431,6 +4589,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public Map<String,Object> unsetGalLdapAuthMech(Map<String,Object> attrs) {
@@ -4629,6 +4789,8 @@ public class ZAttrDomain extends NamedEntry {
      * kerberos5 keytab file path for external GAL queries
      *
      * @return zimbraGalLdapKerberos5Keytab, or null if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=551)
     public String getGalLdapKerberos5Keytab() {
@@ -4640,6 +4802,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalLdapKerberos5Keytab new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=551)
     public void setGalLdapKerberos5Keytab(String zimbraGalLdapKerberos5Keytab) throws com.zimbra.common.service.ServiceException {
@@ -4654,6 +4818,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalLdapKerberos5Keytab new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=551)
     public Map<String,Object> setGalLdapKerberos5Keytab(String zimbraGalLdapKerberos5Keytab, Map<String,Object> attrs) {
@@ -4666,6 +4832,8 @@ public class ZAttrDomain extends NamedEntry {
      * kerberos5 keytab file path for external GAL queries
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=551)
     public void unsetGalLdapKerberos5Keytab() throws com.zimbra.common.service.ServiceException {
@@ -4679,6 +4847,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=551)
     public Map<String,Object> unsetGalLdapKerberos5Keytab(Map<String,Object> attrs) {
@@ -4691,6 +4861,8 @@ public class ZAttrDomain extends NamedEntry {
      * kerberos5 principal for external GAL queries
      *
      * @return zimbraGalLdapKerberos5Principal, or null if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=550)
     public String getGalLdapKerberos5Principal() {
@@ -4702,6 +4874,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalLdapKerberos5Principal new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=550)
     public void setGalLdapKerberos5Principal(String zimbraGalLdapKerberos5Principal) throws com.zimbra.common.service.ServiceException {
@@ -4716,6 +4890,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalLdapKerberos5Principal new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=550)
     public Map<String,Object> setGalLdapKerberos5Principal(String zimbraGalLdapKerberos5Principal, Map<String,Object> attrs) {
@@ -4728,6 +4904,8 @@ public class ZAttrDomain extends NamedEntry {
      * kerberos5 principal for external GAL queries
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=550)
     public void unsetGalLdapKerberos5Principal() throws com.zimbra.common.service.ServiceException {
@@ -4741,6 +4919,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=550)
     public Map<String,Object> unsetGalLdapKerberos5Principal(Map<String,Object> attrs) {
@@ -4755,6 +4935,8 @@ public class ZAttrDomain extends NamedEntry {
      * of 0 means paging is not enabled.
      *
      * @return zimbraGalLdapPageSize, or 1000 if unset
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=583)
     public int getGalLdapPageSize() {
@@ -4768,6 +4950,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalLdapPageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=583)
     public void setGalLdapPageSize(int zimbraGalLdapPageSize) throws com.zimbra.common.service.ServiceException {
@@ -4784,6 +4968,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalLdapPageSize new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=583)
     public Map<String,Object> setGalLdapPageSize(int zimbraGalLdapPageSize, Map<String,Object> attrs) {
@@ -4798,6 +4984,8 @@ public class ZAttrDomain extends NamedEntry {
      * of 0 means paging is not enabled.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=583)
     public void unsetGalLdapPageSize() throws com.zimbra.common.service.ServiceException {
@@ -4813,6 +5001,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=583)
     public Map<String,Object> unsetGalLdapPageSize(Map<String,Object> attrs) {
@@ -4890,6 +5080,8 @@ public class ZAttrDomain extends NamedEntry {
      * ldaps URL.
      *
      * @return zimbraGalLdapStartTlsEnabled, or false if unset
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=655)
     public boolean isGalLdapStartTlsEnabled() {
@@ -4904,6 +5096,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalLdapStartTlsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=655)
     public void setGalLdapStartTlsEnabled(boolean zimbraGalLdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -4921,6 +5115,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalLdapStartTlsEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=655)
     public Map<String,Object> setGalLdapStartTlsEnabled(boolean zimbraGalLdapStartTlsEnabled, Map<String,Object> attrs) {
@@ -4936,6 +5132,8 @@ public class ZAttrDomain extends NamedEntry {
      * ldaps URL.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=655)
     public void unsetGalLdapStartTlsEnabled() throws com.zimbra.common.service.ServiceException {
@@ -4952,6 +5150,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=655)
     public Map<String,Object> unsetGalLdapStartTlsEnabled(Map<String,Object> attrs) {
@@ -5268,6 +5468,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalInternalSearchBase
      *
      * @return zimbraGalSyncInternalSearchBase, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=598)
     public String getGalSyncInternalSearchBase() {
@@ -5282,6 +5484,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncInternalSearchBase new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=598)
     public void setGalSyncInternalSearchBase(String zimbraGalSyncInternalSearchBase) throws com.zimbra.common.service.ServiceException {
@@ -5299,6 +5503,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncInternalSearchBase new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=598)
     public Map<String,Object> setGalSyncInternalSearchBase(String zimbraGalSyncInternalSearchBase, Map<String,Object> attrs) {
@@ -5314,6 +5520,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalInternalSearchBase
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=598)
     public void unsetGalSyncInternalSearchBase() throws com.zimbra.common.service.ServiceException {
@@ -5330,6 +5538,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=598)
     public Map<String,Object> unsetGalSyncInternalSearchBase(Map<String,Object> attrs) {
@@ -5348,6 +5558,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [kerberos5, none, simple]
      *
      * @return zimbraGalSyncLdapAuthMech, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public ZAttrProvisioning.GalSyncLdapAuthMech getGalSyncLdapAuthMech() {
@@ -5364,6 +5576,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [kerberos5, none, simple]
      *
      * @return zimbraGalSyncLdapAuthMech, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public String getGalSyncLdapAuthMechAsString() {
@@ -5381,6 +5595,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public void setGalSyncLdapAuthMech(ZAttrProvisioning.GalSyncLdapAuthMech zimbraGalSyncLdapAuthMech) throws com.zimbra.common.service.ServiceException {
@@ -5401,6 +5617,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public Map<String,Object> setGalSyncLdapAuthMech(ZAttrProvisioning.GalSyncLdapAuthMech zimbraGalSyncLdapAuthMech, Map<String,Object> attrs) {
@@ -5420,6 +5638,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public void setGalSyncLdapAuthMechAsString(String zimbraGalSyncLdapAuthMech) throws com.zimbra.common.service.ServiceException {
@@ -5440,6 +5660,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public Map<String,Object> setGalSyncLdapAuthMechAsString(String zimbraGalSyncLdapAuthMech, Map<String,Object> attrs) {
@@ -5458,6 +5680,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [kerberos5, none, simple]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public void unsetGalSyncLdapAuthMech() throws com.zimbra.common.service.ServiceException {
@@ -5477,6 +5701,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public Map<String,Object> unsetGalSyncLdapAuthMech(Map<String,Object> attrs) {
@@ -5490,6 +5716,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapBindDn
      *
      * @return zimbraGalSyncLdapBindDn, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=593)
     public String getGalSyncLdapBindDn() {
@@ -5502,6 +5730,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapBindDn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=593)
     public void setGalSyncLdapBindDn(String zimbraGalSyncLdapBindDn) throws com.zimbra.common.service.ServiceException {
@@ -5517,6 +5747,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapBindDn new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=593)
     public Map<String,Object> setGalSyncLdapBindDn(String zimbraGalSyncLdapBindDn, Map<String,Object> attrs) {
@@ -5530,6 +5762,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapBindDn
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=593)
     public void unsetGalSyncLdapBindDn() throws com.zimbra.common.service.ServiceException {
@@ -5544,6 +5778,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=593)
     public Map<String,Object> unsetGalSyncLdapBindDn(Map<String,Object> attrs) {
@@ -5557,6 +5793,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalLdapBindPassword
      *
      * @return zimbraGalSyncLdapBindPassword, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=594)
     public String getGalSyncLdapBindPassword() {
@@ -5569,6 +5807,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapBindPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=594)
     public void setGalSyncLdapBindPassword(String zimbraGalSyncLdapBindPassword) throws com.zimbra.common.service.ServiceException {
@@ -5584,6 +5824,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapBindPassword new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=594)
     public Map<String,Object> setGalSyncLdapBindPassword(String zimbraGalSyncLdapBindPassword, Map<String,Object> attrs) {
@@ -5597,6 +5839,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalLdapBindPassword
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=594)
     public void unsetGalSyncLdapBindPassword() throws com.zimbra.common.service.ServiceException {
@@ -5611,6 +5855,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=594)
     public Map<String,Object> unsetGalSyncLdapBindPassword(Map<String,Object> attrs) {
@@ -5624,6 +5870,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalLdapFilter
      *
      * @return zimbraGalSyncLdapFilter, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=591)
     public String getGalSyncLdapFilter() {
@@ -5636,6 +5884,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapFilter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=591)
     public void setGalSyncLdapFilter(String zimbraGalSyncLdapFilter) throws com.zimbra.common.service.ServiceException {
@@ -5651,6 +5901,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapFilter new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=591)
     public Map<String,Object> setGalSyncLdapFilter(String zimbraGalSyncLdapFilter, Map<String,Object> attrs) {
@@ -5664,6 +5916,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalLdapFilter
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=591)
     public void unsetGalSyncLdapFilter() throws com.zimbra.common.service.ServiceException {
@@ -5678,6 +5932,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=591)
     public Map<String,Object> unsetGalSyncLdapFilter(Map<String,Object> attrs) {
@@ -5691,6 +5947,8 @@ public class ZAttrDomain extends NamedEntry {
      * fallback to zimbraGalLdapKerberos5Keytab
      *
      * @return zimbraGalSyncLdapKerberos5Keytab, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=596)
     public String getGalSyncLdapKerberos5Keytab() {
@@ -5703,6 +5961,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapKerberos5Keytab new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=596)
     public void setGalSyncLdapKerberos5Keytab(String zimbraGalSyncLdapKerberos5Keytab) throws com.zimbra.common.service.ServiceException {
@@ -5718,6 +5978,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapKerberos5Keytab new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=596)
     public Map<String,Object> setGalSyncLdapKerberos5Keytab(String zimbraGalSyncLdapKerberos5Keytab, Map<String,Object> attrs) {
@@ -5731,6 +5993,8 @@ public class ZAttrDomain extends NamedEntry {
      * fallback to zimbraGalLdapKerberos5Keytab
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=596)
     public void unsetGalSyncLdapKerberos5Keytab() throws com.zimbra.common.service.ServiceException {
@@ -5745,6 +6009,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=596)
     public Map<String,Object> unsetGalSyncLdapKerberos5Keytab(Map<String,Object> attrs) {
@@ -5758,6 +6024,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalLdapKerberos5Principal
      *
      * @return zimbraGalSyncLdapKerberos5Principal, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=595)
     public String getGalSyncLdapKerberos5Principal() {
@@ -5770,6 +6038,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapKerberos5Principal new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=595)
     public void setGalSyncLdapKerberos5Principal(String zimbraGalSyncLdapKerberos5Principal) throws com.zimbra.common.service.ServiceException {
@@ -5785,6 +6055,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapKerberos5Principal new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=595)
     public Map<String,Object> setGalSyncLdapKerberos5Principal(String zimbraGalSyncLdapKerberos5Principal, Map<String,Object> attrs) {
@@ -5798,6 +6070,8 @@ public class ZAttrDomain extends NamedEntry {
      * to zimbraGalLdapKerberos5Principal
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=595)
     public void unsetGalSyncLdapKerberos5Principal() throws com.zimbra.common.service.ServiceException {
@@ -5812,6 +6086,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=595)
     public Map<String,Object> unsetGalSyncLdapKerberos5Principal(Map<String,Object> attrs) {
@@ -5827,6 +6103,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapPageSize
      *
      * @return zimbraGalSyncLdapPageSize, or 1000 if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=597)
     public int getGalSyncLdapPageSize() {
@@ -5841,6 +6119,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapPageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=597)
     public void setGalSyncLdapPageSize(int zimbraGalSyncLdapPageSize) throws com.zimbra.common.service.ServiceException {
@@ -5858,6 +6138,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapPageSize new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=597)
     public Map<String,Object> setGalSyncLdapPageSize(int zimbraGalSyncLdapPageSize, Map<String,Object> attrs) {
@@ -5873,6 +6155,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapPageSize
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=597)
     public void unsetGalSyncLdapPageSize() throws com.zimbra.common.service.ServiceException {
@@ -5889,6 +6173,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=597)
     public Map<String,Object> unsetGalSyncLdapPageSize(Map<String,Object> attrs) {
@@ -5902,6 +6188,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapSearchBase
      *
      * @return zimbraGalSyncLdapSearchBase, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=590)
     public String getGalSyncLdapSearchBase() {
@@ -5914,6 +6202,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapSearchBase new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=590)
     public void setGalSyncLdapSearchBase(String zimbraGalSyncLdapSearchBase) throws com.zimbra.common.service.ServiceException {
@@ -5929,6 +6219,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapSearchBase new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=590)
     public Map<String,Object> setGalSyncLdapSearchBase(String zimbraGalSyncLdapSearchBase, Map<String,Object> attrs) {
@@ -5942,6 +6234,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapSearchBase
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=590)
     public void unsetGalSyncLdapSearchBase() throws com.zimbra.common.service.ServiceException {
@@ -5956,6 +6250,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=590)
     public Map<String,Object> unsetGalSyncLdapSearchBase(Map<String,Object> attrs) {
@@ -5969,6 +6265,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapStartTlsEnabled
      *
      * @return zimbraGalSyncLdapStartTlsEnabled, or false if unset
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=656)
     public boolean isGalSyncLdapStartTlsEnabled() {
@@ -5981,6 +6279,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapStartTlsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=656)
     public void setGalSyncLdapStartTlsEnabled(boolean zimbraGalSyncLdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -5996,6 +6296,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapStartTlsEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=656)
     public Map<String,Object> setGalSyncLdapStartTlsEnabled(boolean zimbraGalSyncLdapStartTlsEnabled, Map<String,Object> attrs) {
@@ -6009,6 +6311,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapStartTlsEnabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=656)
     public void unsetGalSyncLdapStartTlsEnabled() throws com.zimbra.common.service.ServiceException {
@@ -6023,6 +6327,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=656)
     public Map<String,Object> unsetGalSyncLdapStartTlsEnabled(Map<String,Object> attrs) {
@@ -6036,6 +6342,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapURL
      *
      * @return zimbraGalSyncLdapURL, or ampty array if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public String[] getGalSyncLdapURL() {
@@ -6048,6 +6356,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public void setGalSyncLdapURL(String[] zimbraGalSyncLdapURL) throws com.zimbra.common.service.ServiceException {
@@ -6063,6 +6373,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public Map<String,Object> setGalSyncLdapURL(String[] zimbraGalSyncLdapURL, Map<String,Object> attrs) {
@@ -6077,6 +6389,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public void addGalSyncLdapURL(String zimbraGalSyncLdapURL) throws com.zimbra.common.service.ServiceException {
@@ -6092,6 +6406,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapURL new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public Map<String,Object> addGalSyncLdapURL(String zimbraGalSyncLdapURL, Map<String,Object> attrs) {
@@ -6106,6 +6422,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalSyncLdapURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public void removeGalSyncLdapURL(String zimbraGalSyncLdapURL) throws com.zimbra.common.service.ServiceException {
@@ -6121,6 +6439,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncLdapURL existing value to remove
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public Map<String,Object> removeGalSyncLdapURL(String zimbraGalSyncLdapURL, Map<String,Object> attrs) {
@@ -6134,6 +6454,8 @@ public class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapURL
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public void unsetGalSyncLdapURL() throws com.zimbra.common.service.ServiceException {
@@ -6148,6 +6470,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public Map<String,Object> unsetGalSyncLdapURL(Map<String,Object> attrs) {
@@ -6163,6 +6487,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [and, or]
      *
      * @return zimbraGalTokenizeAutoCompleteKey, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public ZAttrProvisioning.GalTokenizeAutoCompleteKey getGalTokenizeAutoCompleteKey() {
@@ -6176,6 +6502,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [and, or]
      *
      * @return zimbraGalTokenizeAutoCompleteKey, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public String getGalTokenizeAutoCompleteKeyAsString() {
@@ -6190,6 +6518,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public void setGalTokenizeAutoCompleteKey(ZAttrProvisioning.GalTokenizeAutoCompleteKey zimbraGalTokenizeAutoCompleteKey) throws com.zimbra.common.service.ServiceException {
@@ -6207,6 +6537,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public Map<String,Object> setGalTokenizeAutoCompleteKey(ZAttrProvisioning.GalTokenizeAutoCompleteKey zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
@@ -6223,6 +6555,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public void setGalTokenizeAutoCompleteKeyAsString(String zimbraGalTokenizeAutoCompleteKey) throws com.zimbra.common.service.ServiceException {
@@ -6240,6 +6574,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public Map<String,Object> setGalTokenizeAutoCompleteKeyAsString(String zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
@@ -6255,6 +6591,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [and, or]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public void unsetGalTokenizeAutoCompleteKey() throws com.zimbra.common.service.ServiceException {
@@ -6271,6 +6609,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public Map<String,Object> unsetGalTokenizeAutoCompleteKey(Map<String,Object> attrs) {
@@ -6286,6 +6626,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [and, or]
      *
      * @return zimbraGalTokenizeSearchKey, or null if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public ZAttrProvisioning.GalTokenizeSearchKey getGalTokenizeSearchKey() {
@@ -6299,6 +6641,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [and, or]
      *
      * @return zimbraGalTokenizeSearchKey, or null if unset
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public String getGalTokenizeSearchKeyAsString() {
@@ -6313,6 +6657,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public void setGalTokenizeSearchKey(ZAttrProvisioning.GalTokenizeSearchKey zimbraGalTokenizeSearchKey) throws com.zimbra.common.service.ServiceException {
@@ -6330,6 +6676,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalTokenizeSearchKey new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public Map<String,Object> setGalTokenizeSearchKey(ZAttrProvisioning.GalTokenizeSearchKey zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
@@ -6346,6 +6694,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public void setGalTokenizeSearchKeyAsString(String zimbraGalTokenizeSearchKey) throws com.zimbra.common.service.ServiceException {
@@ -6363,6 +6713,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraGalTokenizeSearchKey new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public Map<String,Object> setGalTokenizeSearchKeyAsString(String zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
@@ -6378,6 +6730,8 @@ public class ZAttrDomain extends NamedEntry {
      * <p>Valid values: [and, or]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public void unsetGalTokenizeSearchKey() throws com.zimbra.common.service.ServiceException {
@@ -6394,6 +6748,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public Map<String,Object> unsetGalTokenizeSearchKey(Map<String,Object> attrs) {
@@ -6406,6 +6762,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for admin
      *
      * @return zimbraHelpAdminURL, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=674)
     public String getHelpAdminURL() {
@@ -6417,6 +6775,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraHelpAdminURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=674)
     public void setHelpAdminURL(String zimbraHelpAdminURL) throws com.zimbra.common.service.ServiceException {
@@ -6431,6 +6791,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraHelpAdminURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=674)
     public Map<String,Object> setHelpAdminURL(String zimbraHelpAdminURL, Map<String,Object> attrs) {
@@ -6443,6 +6805,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for admin
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=674)
     public void unsetHelpAdminURL() throws com.zimbra.common.service.ServiceException {
@@ -6456,6 +6820,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=674)
     public Map<String,Object> unsetHelpAdminURL(Map<String,Object> attrs) {
@@ -6468,6 +6834,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for advanced client
      *
      * @return zimbraHelpAdvancedURL, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=676)
     public String getHelpAdvancedURL() {
@@ -6479,6 +6847,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraHelpAdvancedURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=676)
     public void setHelpAdvancedURL(String zimbraHelpAdvancedURL) throws com.zimbra.common.service.ServiceException {
@@ -6493,6 +6863,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraHelpAdvancedURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=676)
     public Map<String,Object> setHelpAdvancedURL(String zimbraHelpAdvancedURL, Map<String,Object> attrs) {
@@ -6505,6 +6877,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for advanced client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=676)
     public void unsetHelpAdvancedURL() throws com.zimbra.common.service.ServiceException {
@@ -6518,6 +6892,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=676)
     public Map<String,Object> unsetHelpAdvancedURL(Map<String,Object> attrs) {
@@ -6530,6 +6906,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for delegated admin
      *
      * @return zimbraHelpDelegatedURL, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=675)
     public String getHelpDelegatedURL() {
@@ -6541,6 +6919,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraHelpDelegatedURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=675)
     public void setHelpDelegatedURL(String zimbraHelpDelegatedURL) throws com.zimbra.common.service.ServiceException {
@@ -6555,6 +6935,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraHelpDelegatedURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=675)
     public Map<String,Object> setHelpDelegatedURL(String zimbraHelpDelegatedURL, Map<String,Object> attrs) {
@@ -6567,6 +6949,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for delegated admin
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=675)
     public void unsetHelpDelegatedURL() throws com.zimbra.common.service.ServiceException {
@@ -6580,6 +6964,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=675)
     public Map<String,Object> unsetHelpDelegatedURL(Map<String,Object> attrs) {
@@ -6592,6 +6978,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for standard client
      *
      * @return zimbraHelpStandardURL, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=677)
     public String getHelpStandardURL() {
@@ -6603,6 +6991,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraHelpStandardURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=677)
     public void setHelpStandardURL(String zimbraHelpStandardURL) throws com.zimbra.common.service.ServiceException {
@@ -6617,6 +7007,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraHelpStandardURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=677)
     public Map<String,Object> setHelpStandardURL(String zimbraHelpStandardURL, Map<String,Object> attrs) {
@@ -6629,6 +7021,8 @@ public class ZAttrDomain extends NamedEntry {
      * help URL for standard client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=677)
     public void unsetHelpStandardURL() throws com.zimbra.common.service.ServiceException {
@@ -6642,6 +7036,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=677)
     public Map<String,Object> unsetHelpStandardURL(Map<String,Object> attrs) {
@@ -6902,6 +7298,8 @@ public class ZAttrDomain extends NamedEntry {
      * registered change password listener name
      *
      * @return zimbraPasswordChangeListener, or null if unset
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=586)
     public String getPasswordChangeListener() {
@@ -6913,6 +7311,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraPasswordChangeListener new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=586)
     public void setPasswordChangeListener(String zimbraPasswordChangeListener) throws com.zimbra.common.service.ServiceException {
@@ -6927,6 +7327,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraPasswordChangeListener new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=586)
     public Map<String,Object> setPasswordChangeListener(String zimbraPasswordChangeListener, Map<String,Object> attrs) {
@@ -6939,6 +7341,8 @@ public class ZAttrDomain extends NamedEntry {
      * registered change password listener name
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=586)
     public void unsetPasswordChangeListener() throws com.zimbra.common.service.ServiceException {
@@ -6952,6 +7356,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=586)
     public Map<String,Object> unsetPasswordChangeListener(Map<String,Object> attrs) {
@@ -7410,6 +7816,8 @@ public class ZAttrDomain extends NamedEntry {
      * background color for chameleon skin for the domain
      *
      * @return zimbraSkinBackgroundColor, or null if unset
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=648)
     public String getSkinBackgroundColor() {
@@ -7421,6 +7829,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinBackgroundColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=648)
     public void setSkinBackgroundColor(String zimbraSkinBackgroundColor) throws com.zimbra.common.service.ServiceException {
@@ -7435,6 +7845,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinBackgroundColor new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=648)
     public Map<String,Object> setSkinBackgroundColor(String zimbraSkinBackgroundColor, Map<String,Object> attrs) {
@@ -7447,6 +7859,8 @@ public class ZAttrDomain extends NamedEntry {
      * background color for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=648)
     public void unsetSkinBackgroundColor() throws com.zimbra.common.service.ServiceException {
@@ -7460,6 +7874,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=648)
     public Map<String,Object> unsetSkinBackgroundColor(Map<String,Object> attrs) {
@@ -7544,6 +7960,8 @@ public class ZAttrDomain extends NamedEntry {
      * foreground color for chameleon skin for the domain
      *
      * @return zimbraSkinForegroundColor, or null if unset
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=647)
     public String getSkinForegroundColor() {
@@ -7555,6 +7973,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinForegroundColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=647)
     public void setSkinForegroundColor(String zimbraSkinForegroundColor) throws com.zimbra.common.service.ServiceException {
@@ -7569,6 +7989,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinForegroundColor new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=647)
     public Map<String,Object> setSkinForegroundColor(String zimbraSkinForegroundColor, Map<String,Object> attrs) {
@@ -7581,6 +8003,8 @@ public class ZAttrDomain extends NamedEntry {
      * foreground color for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=647)
     public void unsetSkinForegroundColor() throws com.zimbra.common.service.ServiceException {
@@ -7594,6 +8018,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=647)
     public Map<String,Object> unsetSkinForegroundColor(Map<String,Object> attrs) {
@@ -7606,6 +8032,8 @@ public class ZAttrDomain extends NamedEntry {
      * logo app banner for chameleon skin for the domain
      *
      * @return zimbraSkinLogoAppBanner, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=671)
     public String getSkinLogoAppBanner() {
@@ -7617,6 +8045,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinLogoAppBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=671)
     public void setSkinLogoAppBanner(String zimbraSkinLogoAppBanner) throws com.zimbra.common.service.ServiceException {
@@ -7631,6 +8061,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinLogoAppBanner new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=671)
     public Map<String,Object> setSkinLogoAppBanner(String zimbraSkinLogoAppBanner, Map<String,Object> attrs) {
@@ -7643,6 +8075,8 @@ public class ZAttrDomain extends NamedEntry {
      * logo app banner for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=671)
     public void unsetSkinLogoAppBanner() throws com.zimbra.common.service.ServiceException {
@@ -7656,6 +8090,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=671)
     public Map<String,Object> unsetSkinLogoAppBanner(Map<String,Object> attrs) {
@@ -7668,6 +8104,8 @@ public class ZAttrDomain extends NamedEntry {
      * logo login banner for chameleon skin for the domain
      *
      * @return zimbraSkinLogoLoginBanner, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=670)
     public String getSkinLogoLoginBanner() {
@@ -7679,6 +8117,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinLogoLoginBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=670)
     public void setSkinLogoLoginBanner(String zimbraSkinLogoLoginBanner) throws com.zimbra.common.service.ServiceException {
@@ -7693,6 +8133,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinLogoLoginBanner new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=670)
     public Map<String,Object> setSkinLogoLoginBanner(String zimbraSkinLogoLoginBanner, Map<String,Object> attrs) {
@@ -7705,6 +8147,8 @@ public class ZAttrDomain extends NamedEntry {
      * logo login banner for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=670)
     public void unsetSkinLogoLoginBanner() throws com.zimbra.common.service.ServiceException {
@@ -7718,6 +8162,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=670)
     public Map<String,Object> unsetSkinLogoLoginBanner(Map<String,Object> attrs) {
@@ -7730,6 +8176,8 @@ public class ZAttrDomain extends NamedEntry {
      * Logo URL for chameleon skin for the domain
      *
      * @return zimbraSkinLogoURL, or null if unset
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=649)
     public String getSkinLogoURL() {
@@ -7741,6 +8189,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinLogoURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=649)
     public void setSkinLogoURL(String zimbraSkinLogoURL) throws com.zimbra.common.service.ServiceException {
@@ -7755,6 +8205,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinLogoURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=649)
     public Map<String,Object> setSkinLogoURL(String zimbraSkinLogoURL, Map<String,Object> attrs) {
@@ -7767,6 +8219,8 @@ public class ZAttrDomain extends NamedEntry {
      * Logo URL for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=649)
     public void unsetSkinLogoURL() throws com.zimbra.common.service.ServiceException {
@@ -7780,6 +8234,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=649)
     public Map<String,Object> unsetSkinLogoURL(Map<String,Object> attrs) {
@@ -7792,6 +8248,8 @@ public class ZAttrDomain extends NamedEntry {
      * secondary color for chameleon skin for the domain
      *
      * @return zimbraSkinSecondaryColor, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=668)
     public String getSkinSecondaryColor() {
@@ -7803,6 +8261,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinSecondaryColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=668)
     public void setSkinSecondaryColor(String zimbraSkinSecondaryColor) throws com.zimbra.common.service.ServiceException {
@@ -7817,6 +8277,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinSecondaryColor new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=668)
     public Map<String,Object> setSkinSecondaryColor(String zimbraSkinSecondaryColor, Map<String,Object> attrs) {
@@ -7829,6 +8291,8 @@ public class ZAttrDomain extends NamedEntry {
      * secondary color for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=668)
     public void unsetSkinSecondaryColor() throws com.zimbra.common.service.ServiceException {
@@ -7842,6 +8306,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=668)
     public Map<String,Object> unsetSkinSecondaryColor(Map<String,Object> attrs) {
@@ -7854,6 +8320,8 @@ public class ZAttrDomain extends NamedEntry {
      * selection color for chameleon skin for the domain
      *
      * @return zimbraSkinSelectionColor, or null if unset
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=669)
     public String getSkinSelectionColor() {
@@ -7865,6 +8333,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraSkinSelectionColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=669)
     public void setSkinSelectionColor(String zimbraSkinSelectionColor) throws com.zimbra.common.service.ServiceException {
@@ -7879,6 +8349,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSkinSelectionColor new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=669)
     public Map<String,Object> setSkinSelectionColor(String zimbraSkinSelectionColor, Map<String,Object> attrs) {
@@ -7891,6 +8363,8 @@ public class ZAttrDomain extends NamedEntry {
      * selection color for chameleon skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=669)
     public void unsetSkinSelectionColor() throws com.zimbra.common.service.ServiceException {
@@ -7904,6 +8378,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=669)
     public Map<String,Object> unsetSkinSelectionColor(Map<String,Object> attrs) {
@@ -8344,6 +8820,8 @@ public class ZAttrDomain extends NamedEntry {
      * on an IP address
      *
      * @return zimbraVirtualIPAddress, or ampty array if unset
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public String[] getVirtualIPAddress() {
@@ -8356,6 +8834,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraVirtualIPAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public void setVirtualIPAddress(String[] zimbraVirtualIPAddress) throws com.zimbra.common.service.ServiceException {
@@ -8371,6 +8851,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraVirtualIPAddress new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public Map<String,Object> setVirtualIPAddress(String[] zimbraVirtualIPAddress, Map<String,Object> attrs) {
@@ -8385,6 +8867,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraVirtualIPAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public void addVirtualIPAddress(String zimbraVirtualIPAddress) throws com.zimbra.common.service.ServiceException {
@@ -8400,6 +8884,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraVirtualIPAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public Map<String,Object> addVirtualIPAddress(String zimbraVirtualIPAddress, Map<String,Object> attrs) {
@@ -8414,6 +8900,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param zimbraVirtualIPAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public void removeVirtualIPAddress(String zimbraVirtualIPAddress) throws com.zimbra.common.service.ServiceException {
@@ -8429,6 +8917,8 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraVirtualIPAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public Map<String,Object> removeVirtualIPAddress(String zimbraVirtualIPAddress, Map<String,Object> attrs) {
@@ -8442,6 +8932,8 @@ public class ZAttrDomain extends NamedEntry {
      * on an IP address
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public void unsetVirtualIPAddress() throws com.zimbra.common.service.ServiceException {
@@ -8456,6 +8948,8 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public Map<String,Object> unsetVirtualIPAddress(Map<String,Object> attrs) {

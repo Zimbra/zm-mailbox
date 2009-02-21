@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090218-1458 */
+    /* build: 5.0 pshao 20090220-1935 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1060,6 +1060,8 @@ public class ZAttrProvisioning {
 
     /**
      * Zimbra access control list
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=659)
     public static final String A_zimbraACE = "zimbraACE";
@@ -1225,6 +1227,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of characters that will be indexed for a given MIME
      * part.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=582)
     public static final String A_zimbraAttachmentsIndexedTextLimit = "zimbraAttachmentsIndexedTextLimit";
@@ -1267,6 +1271,8 @@ public class ZAttrProvisioning {
 
     /**
      * kerberos5 realm for kerberos5 auth mech
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=548)
     public static final String A_zimbraAuthKerberos5Realm = "zimbraAuthKerberos5Realm";
@@ -1309,6 +1315,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether to use startTLS for external LDAP auth
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=654)
     public static final String A_zimbraAuthLdapStartTlsEnabled = "zimbraAuthLdapStartTlsEnabled";
@@ -1410,12 +1418,16 @@ public class ZAttrProvisioning {
 
     /**
      * Batch size to use when indexing data
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=619)
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
 
     /**
      * alternate location for calendar and task folders
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=651)
     public static final String A_zimbraCalendarCalDavAlternateCalendarHomeSet = "zimbraCalendarCalDavAlternateCalendarHomeSet";
@@ -1441,6 +1453,8 @@ public class ZAttrProvisioning {
 
     /**
      * set true to turn off handling scheduling message for CalDAV
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=652)
     public static final String A_zimbraCalendarCalDavDisableScheduling = "zimbraCalendarCalDavDisableScheduling";
@@ -1504,6 +1518,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of days a DAILY recurrence rule can span; 0 means
      * unlimited
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=661)
     public static final String A_zimbraCalendarRecurrenceDailyMaxDays = "zimbraCalendarRecurrenceDailyMaxDays";
@@ -1511,6 +1527,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of instances expanded per recurrence rule; 0 means
      * unlimited
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=660)
     public static final String A_zimbraCalendarRecurrenceMaxInstances = "zimbraCalendarRecurrenceMaxInstances";
@@ -1518,6 +1536,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of months a MONTHLY recurrence rule can span; 0 means
      * unlimited
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=663)
     public static final String A_zimbraCalendarRecurrenceMonthlyMaxMonths = "zimbraCalendarRecurrenceMonthlyMaxMonths";
@@ -1525,6 +1545,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of years a recurrence rule can span for frequencies
      * other than DAILY/WEEKLY/MONTHLY/YEARLY; 0 means unlimited
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=665)
     public static final String A_zimbraCalendarRecurrenceOtherFrequencyMaxYears = "zimbraCalendarRecurrenceOtherFrequencyMaxYears";
@@ -1532,6 +1554,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of weeks a WEEKLY recurrence rule can span; 0 means
      * unlimited
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=662)
     public static final String A_zimbraCalendarRecurrenceWeeklyMaxWeeks = "zimbraCalendarRecurrenceWeeklyMaxWeeks";
@@ -1539,6 +1563,8 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of years a YEARLY recurrence rule can span; 0 means
      * unlimited
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=664)
     public static final String A_zimbraCalendarRecurrenceYearlyMaxYears = "zimbraCalendarRecurrenceYearlyMaxYears";
@@ -1785,6 +1811,8 @@ public class ZAttrProvisioning {
 
     /**
      * set to 1 or 3 to specify customer care account tier level
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=605)
     public static final String A_zimbraCustomerCareTier = "zimbraCustomerCareTier";
@@ -1904,6 +1932,8 @@ public class ZAttrProvisioning {
 
     /**
      * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=525)
     public static final String A_zimbraDataSourceMinPollingInterval = "zimbraDataSourceMinPollingInterval";
@@ -2115,6 +2145,8 @@ public class ZAttrProvisioning {
 
     /**
      * domain rename info/status
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=536)
     public static final String A_zimbraDomainRenameInfo = "zimbraDomainRenameInfo";
@@ -2144,6 +2176,8 @@ public class ZAttrProvisioning {
      * closed, else maintenance suspended zimbraAccountStatus if it is
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=535)
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
@@ -2244,12 +2278,16 @@ public class ZAttrProvisioning {
 
     /**
      * calendar upsell enabled
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=531)
     public static final String A_zimbraFeatureCalendarUpsellEnabled = "zimbraFeatureCalendarUpsellEnabled";
 
     /**
      * calendar upsell URL
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=532)
     public static final String A_zimbraFeatureCalendarUpsellURL = "zimbraFeatureCalendarUpsellURL";
@@ -2262,6 +2300,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether or not compose messages in a new windows is allowed
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=584)
     public static final String A_zimbraFeatureComposeInNewWindowEnabled = "zimbraFeatureComposeInNewWindowEnabled";
@@ -2283,12 +2323,16 @@ public class ZAttrProvisioning {
 
     /**
      * address book upsell enabled
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=529)
     public static final String A_zimbraFeatureContactsUpsellEnabled = "zimbraFeatureContactsUpsellEnabled";
 
     /**
      * address book upsell URL
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=530)
     public static final String A_zimbraFeatureContactsUpsellURL = "zimbraFeatureContactsUpsellURL";
@@ -2362,6 +2406,8 @@ public class ZAttrProvisioning {
     /**
      * whether user is allowed to retrieve mail from an external IMAP data
      * source
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=568)
     public static final String A_zimbraFeatureImapDataSourceEnabled = "zimbraFeatureImapDataSourceEnabled";
@@ -2421,18 +2467,24 @@ public class ZAttrProvisioning {
 
     /**
      * mail priority feature
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=566)
     public static final String A_zimbraFeatureMailPriorityEnabled = "zimbraFeatureMailPriorityEnabled";
 
     /**
      * email upsell enabled
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=527)
     public static final String A_zimbraFeatureMailUpsellEnabled = "zimbraFeatureMailUpsellEnabled";
 
     /**
      * email upsell URL
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=528)
     public static final String A_zimbraFeatureMailUpsellURL = "zimbraFeatureMailUpsellURL";
@@ -2445,6 +2497,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether user can create address books
+     *
+     * @since ZCS 5.0.4
      */
     @ZAttr(id=631)
     public static final String A_zimbraFeatureNewAddrBookEnabled = "zimbraFeatureNewAddrBookEnabled";
@@ -2465,6 +2519,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether or not open a new msg/conv in a new windows is allowed
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=585)
     public static final String A_zimbraFeatureOpenMailInNewWindowEnabled = "zimbraFeatureOpenMailInNewWindowEnabled";
@@ -2559,24 +2615,32 @@ public class ZAttrProvisioning {
 
     /**
      * voice upsell enabled
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=533)
     public static final String A_zimbraFeatureVoiceUpsellEnabled = "zimbraFeatureVoiceUpsellEnabled";
 
     /**
      * voice upsell URL
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=534)
     public static final String A_zimbraFeatureVoiceUpsellURL = "zimbraFeatureVoiceUpsellURL";
 
     /**
      * whether web search feature is enabled
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=602)
     public static final String A_zimbraFeatureWebSearchEnabled = "zimbraFeatureWebSearchEnabled";
 
     /**
      * Zimbra Assistant enabled
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
@@ -2595,24 +2659,32 @@ public class ZAttrProvisioning {
 
     /**
      * Exchange user password for free/busy lookup and propagation
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=609)
     public static final String A_zimbraFreebusyExchangeAuthPassword = "zimbraFreebusyExchangeAuthPassword";
 
     /**
      * auth scheme to use
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=611)
     public static final String A_zimbraFreebusyExchangeAuthScheme = "zimbraFreebusyExchangeAuthScheme";
 
     /**
      * Exchange username for free/busy lookup and propagation
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=608)
     public static final String A_zimbraFreebusyExchangeAuthUsername = "zimbraFreebusyExchangeAuthUsername";
 
     /**
      * The duration of f/b block pushed to Exchange server.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=621)
     public static final String A_zimbraFreebusyExchangeCachedInterval = "zimbraFreebusyExchangeCachedInterval";
@@ -2620,18 +2692,24 @@ public class ZAttrProvisioning {
     /**
      * The value of duration is used to indicate the start date (in the past
      * relative to today) of the f/b interval pushed to Exchange server.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=620)
     public static final String A_zimbraFreebusyExchangeCachedIntervalStart = "zimbraFreebusyExchangeCachedIntervalStart";
 
     /**
      * URL to Exchange server for free/busy lookup and propagation
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=607)
     public static final String A_zimbraFreebusyExchangeURL = "zimbraFreebusyExchangeURL";
 
     /**
      * O and OU used in legacyExchangeDN attribute
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=610)
     public static final String A_zimbraFreebusyExchangeUserOrg = "zimbraFreebusyExchangeUserOrg";
@@ -2670,6 +2748,8 @@ public class ZAttrProvisioning {
      * simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=549)
     public static final String A_zimbraGalLdapAuthMech = "zimbraGalLdapAuthMech";
@@ -2700,12 +2780,16 @@ public class ZAttrProvisioning {
 
     /**
      * kerberos5 keytab file path for external GAL queries
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=551)
     public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
 
     /**
      * kerberos5 principal for external GAL queries
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=550)
     public static final String A_zimbraGalLdapKerberos5Principal = "zimbraGalLdapKerberos5Principal";
@@ -2714,6 +2798,8 @@ public class ZAttrProvisioning {
      * LDAP page size for paged search control while accessing LDAP server
      * for GAL. This apples to both Zimbra and external LDAP servers. A value
      * of 0 means paging is not enabled.
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=583)
     public static final String A_zimbraGalLdapPageSize = "zimbraGalLdapPageSize";
@@ -2729,6 +2815,8 @@ public class ZAttrProvisioning {
      * external GAL access only if this attribute is true and
      * zimbraGalLdapURL(or zimbraGalSyncLdapURL for sync) does not contain a
      * ldaps URL.
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=655)
     public static final String A_zimbraGalLdapStartTlsEnabled = "zimbraGalLdapStartTlsEnabled";
@@ -2757,6 +2845,8 @@ public class ZAttrProvisioning {
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains) If not set fallback
      * to zimbraGalInternalSearchBase
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=598)
     public static final String A_zimbraGalSyncInternalSearchBase = "zimbraGalSyncInternalSearchBase";
@@ -2767,6 +2857,8 @@ public class ZAttrProvisioning {
      * zimbraGalLdapBindPassword has to be set kerberos5:
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=592)
     public static final String A_zimbraGalSyncLdapAuthMech = "zimbraGalSyncLdapAuthMech";
@@ -2774,6 +2866,8 @@ public class ZAttrProvisioning {
     /**
      * LDAP bind dn for external GAL sync queries, if not set fallback to
      * zimbraGalLdapBindDn
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=593)
     public static final String A_zimbraGalSyncLdapBindDn = "zimbraGalSyncLdapBindDn";
@@ -2781,6 +2875,8 @@ public class ZAttrProvisioning {
     /**
      * LDAP bind password for external GAL sync queries, if not set fallback
      * to zimbraGalLdapBindPassword
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=594)
     public static final String A_zimbraGalSyncLdapBindPassword = "zimbraGalSyncLdapBindPassword";
@@ -2788,6 +2884,8 @@ public class ZAttrProvisioning {
     /**
      * LDAP search filter for external GAL sync queries, if not set fallback
      * to zimbraGalLdapFilter
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=591)
     public static final String A_zimbraGalSyncLdapFilter = "zimbraGalSyncLdapFilter";
@@ -2795,6 +2893,8 @@ public class ZAttrProvisioning {
     /**
      * kerberos5 keytab file path for external GAL sync queries, if not set
      * fallback to zimbraGalLdapKerberos5Keytab
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=596)
     public static final String A_zimbraGalSyncLdapKerberos5Keytab = "zimbraGalSyncLdapKerberos5Keytab";
@@ -2802,6 +2902,8 @@ public class ZAttrProvisioning {
     /**
      * kerberos5 principal for external GAL sync queries, if not set fallback
      * to zimbraGalLdapKerberos5Principal
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=595)
     public static final String A_zimbraGalSyncLdapKerberos5Principal = "zimbraGalSyncLdapKerberos5Principal";
@@ -2811,6 +2913,8 @@ public class ZAttrProvisioning {
      * for GAL sync. This apples to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=597)
     public static final String A_zimbraGalSyncLdapPageSize = "zimbraGalSyncLdapPageSize";
@@ -2818,6 +2922,8 @@ public class ZAttrProvisioning {
     /**
      * LDAP search base for external GAL sync queries, if not set fallback to
      * zimbraGalLdapSearchBase
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=590)
     public static final String A_zimbraGalSyncLdapSearchBase = "zimbraGalSyncLdapSearchBase";
@@ -2825,6 +2931,8 @@ public class ZAttrProvisioning {
     /**
      * whether to use startTLS for external GAL sync, if not set fallback to
      * zimbraGalLdapStartTlsEnabled
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=656)
     public static final String A_zimbraGalSyncLdapStartTlsEnabled = "zimbraGalSyncLdapStartTlsEnabled";
@@ -2832,6 +2940,8 @@ public class ZAttrProvisioning {
     /**
      * LDAP URL for external GAL sync, if not set fallback to
      * zimbraGalLdapURL
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=589)
     public static final String A_zimbraGalSyncLdapURL = "zimbraGalSyncLdapURL";
@@ -2839,6 +2949,8 @@ public class ZAttrProvisioning {
     /**
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public static final String A_zimbraGalTokenizeAutoCompleteKey = "zimbraGalTokenizeAutoCompleteKey";
@@ -2846,6 +2958,8 @@ public class ZAttrProvisioning {
     /**
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public static final String A_zimbraGalTokenizeSearchKey = "zimbraGalTokenizeSearchKey";
@@ -2859,24 +2973,32 @@ public class ZAttrProvisioning {
 
     /**
      * help URL for admin
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=674)
     public static final String A_zimbraHelpAdminURL = "zimbraHelpAdminURL";
 
     /**
      * help URL for advanced client
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=676)
     public static final String A_zimbraHelpAdvancedURL = "zimbraHelpAdvancedURL";
 
     /**
      * help URL for delegated admin
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=675)
     public static final String A_zimbraHelpDelegatedURL = "zimbraHelpDelegatedURL";
 
     /**
      * help URL for standard client
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=677)
     public static final String A_zimbraHelpStandardURL = "zimbraHelpStandardURL";
@@ -2994,6 +3116,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether POP3 SASL GSSAPI is enabled for a given server
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=555)
     public static final String A_zimbraImapSaslGssapiEnabled = "zimbraImapSaslGssapiEnabled";
@@ -3046,6 +3170,8 @@ public class ZAttrProvisioning {
 
     /**
      * available IM interop gateways
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=571)
     public static final String A_zimbraIMAvailableInteropGateways = "zimbraIMAvailableInteropGateways";
@@ -3053,6 +3179,8 @@ public class ZAttrProvisioning {
     /**
      * interface address(es) on which IM server should listen; if empty,
      * binds to all interfaces
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=567)
     public static final String A_zimbraIMBindAddress = "zimbraIMBindAddress";
@@ -3076,18 +3204,24 @@ public class ZAttrProvisioning {
 
     /**
      * The address to which legal intercept messages will be sent.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=614)
     public static final String A_zimbraInterceptAddress = "zimbraInterceptAddress";
 
     /**
      * Template used to construct the body of a legal intercept message.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=618)
     public static final String A_zimbraInterceptBody = "zimbraInterceptBody";
 
     /**
      * Template used to construct the sender of a legal intercept message.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=616)
     public static final String A_zimbraInterceptFrom = "zimbraInterceptFrom";
@@ -3095,12 +3229,16 @@ public class ZAttrProvisioning {
     /**
      * Specifies whether legal intercept messages should contain the entire
      * original message or just the headers.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=615)
     public static final String A_zimbraInterceptSendHeadersOnly = "zimbraInterceptSendHeadersOnly";
 
     /**
      * Template used to construct the subject of a legal intercept message.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=617)
     public static final String A_zimbraInterceptSubject = "zimbraInterceptSubject";
@@ -3121,6 +3259,8 @@ public class ZAttrProvisioning {
 
     /**
      * set to true for customer care accounts
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=601)
     public static final String A_zimbraIsCustomerCareAccount = "zimbraIsCustomerCareAccount";
@@ -3154,6 +3294,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to index junk messages
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=579)
     public static final String A_zimbraJunkMessagesIndexingEnabled = "zimbraJunkMessagesIndexingEnabled";
@@ -3217,12 +3359,16 @@ public class ZAttrProvisioning {
     /**
      * If true, a permanent failure (552) is returned when the user is over
      * quota. If false, a temporary failure (452) is returned.
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=657)
     public static final String A_zimbraLmtpPermanentFailureWhenOverQuota = "zimbraLmtpPermanentFailureWhenOverQuota";
 
     /**
      * whether LMTP server is enabled for a given server
+     *
+     * @since ZCS 5.0.4
      */
     @ZAttr(id=630)
     public static final String A_zimbraLmtpServerEnabled = "zimbraLmtpServerEnabled";
@@ -3342,6 +3488,8 @@ public class ZAttrProvisioning {
      * Incoming messages larger than this number of bytes are streamed to
      * disk during LMTP delivery, instead of being read into memory. This
      * limits memory consumption at the expense of higher disk utilization.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=565)
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
@@ -3372,6 +3520,8 @@ public class ZAttrProvisioning {
 
     /**
      * The id of the last purged mailbox.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=543)
     public static final String A_zimbraMailLastPurgedMailboxId = "zimbraMailLastPurgedMailboxId";
@@ -3403,6 +3553,8 @@ public class ZAttrProvisioning {
 
     /**
      * HTTP proxy port
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=626)
     public static final String A_zimbraMailProxyPort = "zimbraMailProxyPort";
@@ -3410,6 +3562,8 @@ public class ZAttrProvisioning {
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
      * purging is disabled.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=542)
     public static final String A_zimbraMailPurgeSleepInterval = "zimbraMailPurgeSleepInterval";
@@ -3446,6 +3600,8 @@ public class ZAttrProvisioning {
      * the account being authenticated does not live on this mail host
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=613)
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
@@ -3480,6 +3636,8 @@ public class ZAttrProvisioning {
 
     /**
      * SSL port HTTP proxy
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=627)
     public static final String A_zimbraMailSSLProxyPort = "zimbraMailSSLProxyPort";
@@ -3531,12 +3689,16 @@ public class ZAttrProvisioning {
 
     /**
      * interface address(es) on which memcached server
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=581)
     public static final String A_zimbraMemcachedBindAddress = "zimbraMemcachedBindAddress";
 
     /**
      * port number on which memcached server should listen
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=580)
     public static final String A_zimbraMemcachedBindPort = "zimbraMemcachedBindPort";
@@ -3594,6 +3756,8 @@ public class ZAttrProvisioning {
 
     /**
      * mta anti spam lock method.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=612)
     public static final String A_zimbraMtaAntiSpamLockMethod = "zimbraMtaAntiSpamLockMethod";
@@ -3676,6 +3840,8 @@ public class ZAttrProvisioning {
 
     /**
      * value for postfix non_smtpd_milters
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=673)
     public static final String A_zimbraMtaNonSmtpdMilters = "zimbraMtaNonSmtpdMilters";
@@ -3709,6 +3875,8 @@ public class ZAttrProvisioning {
 
     /**
      * value for postfix smtpd_milters
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=672)
     public static final String A_zimbraMtaSmtpdMilters = "zimbraMtaSmtpdMilters";
@@ -3793,6 +3961,8 @@ public class ZAttrProvisioning {
     /**
      * whether to strip off potentially harming HTML tags in Wiki and HTML
      * Documents.
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=646)
     public static final String A_zimbraNotebookSanitizeHtml = "zimbraNotebookSanitizeHtml";
@@ -3881,6 +4051,8 @@ public class ZAttrProvisioning {
 
     /**
      * registered change password listener name
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=586)
     public static final String A_zimbraPasswordChangeListener = "zimbraPasswordChangeListener";
@@ -4067,6 +4239,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether POP3 SASL GSSAPI is enabled for a given server
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=554)
     public static final String A_zimbraPop3SaslGssapiEnabled = "zimbraPop3SaslGssapiEnabled";
@@ -4125,6 +4299,8 @@ public class ZAttrProvisioning {
     /**
      * After login, whether the advanced client should enforce minimum
      * display resolution
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=678)
     public static final String A_zimbraPrefAdvancedClientEnforceMinDisplay = "zimbraPrefAdvancedClientEnforceMinDisplay";
@@ -4138,6 +4314,8 @@ public class ZAttrProvisioning {
 
     /**
      * time to wait before auto saving a draft(nnnnn[hmsd])
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=561)
     public static final String A_zimbraPrefAutoSaveDraftInterval = "zimbraPrefAutoSaveDraftInterval";
@@ -4227,18 +4405,24 @@ public class ZAttrProvisioning {
 
     /**
      * When to send the first reminder for an event.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=573)
     public static final String A_zimbraPrefCalendarReminderDuration1 = "zimbraPrefCalendarReminderDuration1";
 
     /**
      * When to send the second reminder for an event.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=574)
     public static final String A_zimbraPrefCalendarReminderDuration2 = "zimbraPrefCalendarReminderDuration2";
 
     /**
      * The email the reminder goes to.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=575)
     public static final String A_zimbraPrefCalendarReminderEmail = "zimbraPrefCalendarReminderEmail";
@@ -4253,12 +4437,16 @@ public class ZAttrProvisioning {
 
     /**
      * The mobile device (phone) the reminder goes to.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=577)
     public static final String A_zimbraPrefCalendarReminderMobile = "zimbraPrefCalendarReminderMobile";
 
     /**
      * To send email or to not send email is the question.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public static final String A_zimbraPrefCalendarReminderSendEmail = "zimbraPrefCalendarReminderSendEmail";
@@ -4266,12 +4454,16 @@ public class ZAttrProvisioning {
     /**
      * whether audible alert is enabled when appointment notification is
      * played
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=667)
     public static final String A_zimbraPrefCalendarReminderSoundsEnabled = "zimbraPrefCalendarReminderSoundsEnabled";
 
     /**
      * Send a reminder via YIM
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=578)
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
@@ -4292,6 +4484,8 @@ public class ZAttrProvisioning {
 
     /**
      * zimbraId of visible child accounts
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=553)
     public static final String A_zimbraPrefChildVisibleAccount = "zimbraPrefChildVisibleAccount";
@@ -4369,6 +4563,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether or not folder tree is expanded
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=637)
     public static final String A_zimbraPrefFolderTreeOpen = "zimbraPrefFolderTreeOpen";
@@ -4423,6 +4619,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether end-user wants search from GAL. Feature must also be enabled
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=635)
     public static final String A_zimbraPrefGalSearchEnabled = "zimbraPrefGalSearchEnabled";
@@ -4485,6 +4683,8 @@ public class ZAttrProvisioning {
 
     /**
      * Custom IM status messages
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=645)
     public static final String A_zimbraPrefIMCustomStatusMessage = "zimbraPrefIMCustomStatusMessage";
@@ -4521,12 +4721,16 @@ public class ZAttrProvisioning {
 
     /**
      * IM idle status
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=560)
     public static final String A_zimbraPrefIMIdleStatus = "zimbraPrefIMIdleStatus";
 
     /**
      * IM session idle timeout in minutes
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=559)
     public static final String A_zimbraPrefIMIdleTimeout = "zimbraPrefIMIdleTimeout";
@@ -4539,12 +4743,16 @@ public class ZAttrProvisioning {
 
     /**
      * whether to log IM chats to the Chats folder
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=556)
     public static final String A_zimbraPrefIMLogChats = "zimbraPrefIMLogChats";
 
     /**
      * whether IM log chats is enabled
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=552)
     public static final String A_zimbraPrefIMLogChatsEnabled = "zimbraPrefIMLogChatsEnabled";
@@ -4563,12 +4771,16 @@ public class ZAttrProvisioning {
 
     /**
      * whether to report IM idle status
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=558)
     public static final String A_zimbraPrefIMReportIdle = "zimbraPrefIMReportIdle";
 
     /**
      * whether sounds is enabled in IM
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=570)
     public static final String A_zimbraPrefIMSoundsEnabled = "zimbraPrefIMSoundsEnabled";
@@ -4592,6 +4804,8 @@ public class ZAttrProvisioning {
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
      * all messages will be retained.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=538)
     public static final String A_zimbraPrefInboxReadLifetime = "zimbraPrefInboxReadLifetime";
@@ -4599,6 +4813,8 @@ public class ZAttrProvisioning {
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
      * all messages will be retained.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=537)
     public static final String A_zimbraPrefInboxUnreadLifetime = "zimbraPrefInboxUnreadLifetime";
@@ -4620,12 +4836,16 @@ public class ZAttrProvisioning {
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
      * The shorter duration is used.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=540)
     public static final String A_zimbraPrefJunkLifetime = "zimbraPrefJunkLifetime";
 
     /**
      * optional account descriptive label
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=603)
     public static final String A_zimbraPrefLabel = "zimbraPrefLabel";
@@ -4737,6 +4957,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether audible alert is enabled when a new email arrives
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=666)
     public static final String A_zimbraPrefMailSoundsEnabled = "zimbraPrefMailSoundsEnabled";
@@ -4760,6 +4982,8 @@ public class ZAttrProvisioning {
     /**
      * whether and mark a message as read -1: Do not mark read 0: Mark read
      * 1..n: Mark read after this many seconds
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=650)
     public static final String A_zimbraPrefMarkMsgRead = "zimbraPrefMarkMsgRead";
@@ -4837,6 +5061,8 @@ public class ZAttrProvisioning {
 
     /**
      * download pop3 messages since
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=653)
     public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
@@ -4897,6 +5123,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether or not search tree is expanded
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=634)
     public static final String A_zimbraPrefSearchTreeOpen = "zimbraPrefSearchTreeOpen";
@@ -4904,6 +5132,8 @@ public class ZAttrProvisioning {
     /**
      * Retention period of messages in the Sent folder. 0 means that all
      * messages will be retained.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=539)
     public static final String A_zimbraPrefSentLifetime = "zimbraPrefSentLifetime";
@@ -4963,6 +5193,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether or not tag tree is expanded
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=633)
     public static final String A_zimbraPrefTagTreeOpen = "zimbraPrefTagTreeOpen";
@@ -4978,6 +5210,8 @@ public class ZAttrProvisioning {
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
      * The shorter duration is used.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=541)
     public static final String A_zimbraPrefTrashLifetime = "zimbraPrefTrashLifetime";
@@ -5012,6 +5246,8 @@ public class ZAttrProvisioning {
 
     /**
      * number of voice messages/call logs per page
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=526)
     public static final String A_zimbraPrefVoiceItemsPerPage = "zimbraPrefVoiceItemsPerPage";
@@ -5062,6 +5298,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether or not zimlet tree is expanded
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=638)
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
@@ -5210,6 +5448,8 @@ public class ZAttrProvisioning {
     /**
      * wait duration before nginx sending back the NO response for failed
      * imap/pop3 reverse proxy lookups
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=569)
     public static final String A_zimbraReverseProxyAuthWaitInterval = "zimbraReverseProxyAuthWaitInterval";
@@ -5260,30 +5500,40 @@ public class ZAttrProvisioning {
 
     /**
      * LDAP attribute that contains domain name for the domain
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=547)
     public static final String A_zimbraReverseProxyDomainNameAttribute = "zimbraReverseProxyDomainNameAttribute";
 
     /**
      * LDAP query to find a domain
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=545)
     public static final String A_zimbraReverseProxyDomainNameQuery = "zimbraReverseProxyDomainNameQuery";
 
     /**
      * search base for zimbraReverseProxyDomainNameQuery
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=546)
     public static final String A_zimbraReverseProxyDomainNameSearchBase = "zimbraReverseProxyDomainNameSearchBase";
 
     /**
      * Whether to enable HTTP proxy
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=628)
     public static final String A_zimbraReverseProxyHttpEnabled = "zimbraReverseProxyHttpEnabled";
 
     /**
      * attribute that contains http bind port
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=632)
     public static final String A_zimbraReverseProxyHttpPortAttribute = "zimbraReverseProxyHttpPortAttribute";
@@ -5312,6 +5562,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether IMAP SASL GSSAPI is enabled for reverse proxy
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=643)
     public static final String A_zimbraReverseProxyImapSaslGssapiEnabled = "zimbraReverseProxyImapSaslGssapiEnabled";
@@ -5334,6 +5586,8 @@ public class ZAttrProvisioning {
      * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
      * is offered on plain port only - you have to use starttls before clear
      * text login
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=641)
     public static final String A_zimbraReverseProxyImapStartTlsMode = "zimbraReverseProxyImapStartTlsMode";
@@ -5362,6 +5616,8 @@ public class ZAttrProvisioning {
      * affect this counter (the counter is aggregate for all protocols, *not*
      * separate). If this value is set to 0, then no limiting will take place
      * for any IP.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=622)
     public static final String A_zimbraReverseProxyIPLoginLimit = "zimbraReverseProxyIPLoginLimit";
@@ -5373,6 +5629,8 @@ public class ZAttrProvisioning {
      * the proxy from the same IP, within the time interval of an hour. The
      * semantics for such a configuration would then be: allow maximum 1000
      * users per hour from any given IP address.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=623)
     public static final String A_zimbraReverseProxyIPLoginLimitTime = "zimbraReverseProxyIPLoginLimitTime";
@@ -5403,6 +5661,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to enable IMAP/POP proxy
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=629)
     public static final String A_zimbraReverseProxyMailEnabled = "zimbraReverseProxyMailEnabled";
@@ -5430,7 +5690,7 @@ public class ZAttrProvisioning {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * @since ZCS 5.0.8
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=685)
     public static final String A_zimbraReverseProxyMailMode = "zimbraReverseProxyMailMode";
@@ -5468,6 +5728,8 @@ public class ZAttrProvisioning {
 
     /**
      * whether POP3 SASL GSSAPI is enabled for reverse proxy
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=644)
     public static final String A_zimbraReverseProxyPop3SaslGssapiEnabled = "zimbraReverseProxyPop3SaslGssapiEnabled";
@@ -5490,6 +5752,8 @@ public class ZAttrProvisioning {
      * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
      * is offered on plain port only - you have to use starttls before clear
      * text login
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=642)
     public static final String A_zimbraReverseProxyPop3StartTlsMode = "zimbraReverseProxyPop3StartTlsMode";
@@ -5528,12 +5792,16 @@ public class ZAttrProvisioning {
 
     /**
      * whether nginx should send ID command for imap
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=588)
     public static final String A_zimbraReverseProxySendImapId = "zimbraReverseProxySendImapId";
 
     /**
      * whether nginx should send XOIP command for pop3
+     *
+     * @since ZCS 5.0.1
      */
     @ZAttr(id=587)
     public static final String A_zimbraReverseProxySendPop3Xoip = "zimbraReverseProxySendPop3Xoip";
@@ -5543,6 +5811,8 @@ public class ZAttrProvisioning {
      * supported by OpenSSL e.g.
      * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
      * default ciphers permitted by nginx will apply
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=640)
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
@@ -5569,6 +5839,8 @@ public class ZAttrProvisioning {
      * first. A login may be rejected (throttled) because the IP is
      * over-usage, or because the login name itself is over-usage. A value of
      * 0 indicates that no throttling will take place for any user.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=624)
     public static final String A_zimbraReverseProxyUserLoginLimit = "zimbraReverseProxyUserLoginLimit";
@@ -5576,12 +5848,16 @@ public class ZAttrProvisioning {
     /**
      * Sets the time-to-live for the hit counter for per user login
      * throttling.
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=625)
     public static final String A_zimbraReverseProxyUserLoginLimitTime = "zimbraReverseProxyUserLoginLimitTime";
 
     /**
      * LDAP attribute that contains user name for the principal
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=572)
     public static final String A_zimbraReverseProxyUserNameAttribute = "zimbraReverseProxyUserNameAttribute";
@@ -5691,6 +5967,8 @@ public class ZAttrProvisioning {
 
     /**
      * background color for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=648)
     public static final String A_zimbraSkinBackgroundColor = "zimbraSkinBackgroundColor";
@@ -5705,36 +5983,48 @@ public class ZAttrProvisioning {
 
     /**
      * foreground color for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=647)
     public static final String A_zimbraSkinForegroundColor = "zimbraSkinForegroundColor";
 
     /**
      * logo app banner for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=671)
     public static final String A_zimbraSkinLogoAppBanner = "zimbraSkinLogoAppBanner";
 
     /**
      * logo login banner for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=670)
     public static final String A_zimbraSkinLogoLoginBanner = "zimbraSkinLogoLoginBanner";
 
     /**
      * Logo URL for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=649)
     public static final String A_zimbraSkinLogoURL = "zimbraSkinLogoURL";
 
     /**
      * secondary color for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=668)
     public static final String A_zimbraSkinSecondaryColor = "zimbraSkinSecondaryColor";
 
     /**
      * selection color for chameleon skin for the domain
+     *
+     * @since ZCS 5.0.7
      */
     @ZAttr(id=669)
     public static final String A_zimbraSkinSelectionColor = "zimbraSkinSelectionColor";
@@ -5770,6 +6060,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether X-Mailer will be added to messages sent by Zimbra
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=636)
     public static final String A_zimbraSmtpSendAddMailer = "zimbraSmtpSendAddMailer";
@@ -5804,6 +6096,8 @@ public class ZAttrProvisioning {
 
     /**
      * Maximum size in bytes for incoming SOAP requests. 0 means no limit.
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=557)
     public static final String A_zimbraSoapRequestMaxSize = "zimbraSoapRequestMaxSize";
@@ -5813,6 +6107,8 @@ public class ZAttrProvisioning {
      * of being automatically filed into the Junk folder. This attribute is
      * deprecated and will be removed in a future release. See bug 23886 for
      * details.
+     *
+     * @since ZCS 5.0.2
      */
     @ZAttr(id=604)
     public static final String A_zimbraSpamApplyUserFilters = "zimbraSpamApplyUserFilters";
@@ -5922,18 +6218,24 @@ public class ZAttrProvisioning {
 
     /**
      * SSL certificate
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=563)
     public static final String A_zimbraSSLCertificate = "zimbraSSLCertificate";
 
     /**
      * space separated list of excluded cipher suites
+     *
+     * @since ZCS 5.0.5
      */
     @ZAttr(id=639)
     public static final String A_zimbraSSLExcludeCipherSuites = "zimbraSSLExcludeCipherSuites";
 
     /**
      * SSL private key
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=564)
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
@@ -6054,6 +6356,8 @@ public class ZAttrProvisioning {
     /**
      * An virtual IP address for this domain, used to determine domain based
      * on an IP address
+     *
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=562)
     public static final String A_zimbraVirtualIPAddress = "zimbraVirtualIPAddress";
@@ -6167,6 +6471,8 @@ public class ZAttrProvisioning {
 
     /**
      * Yahoo ID
+     *
+     * @since ZCS 5.0.6
      */
     @ZAttr(id=658)
     public static final String A_zimbraYahooId = "zimbraYahooId";
@@ -6268,6 +6574,8 @@ public class ZAttrProvisioning {
 
     /**
      * Zimlet target apps
+     *
+     * @since ZCS 5.0.3
      */
     @ZAttr(id=606)
     public static final String A_zimbraZimletTarget = "zimbraZimletTarget";
