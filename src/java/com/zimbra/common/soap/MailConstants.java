@@ -57,6 +57,8 @@ public class MailConstants {
     //   SendMsg/AddMsg/SaveDraft
     public static final QName SEND_MSG_REQUEST = QName.get("SendMsgRequest", NAMESPACE);
     public static final QName SEND_MSG_RESPONSE = QName.get("SendMsgResponse", NAMESPACE);
+    public static final QName SEND_REPORT_REQUEST = QName.get("SendDeliveryReportRequest", NAMESPACE);
+    public static final QName SEND_REPORT_RESPONSE = QName.get("SendDeliveryReportResponse", NAMESPACE);
     public static final QName ADD_MSG_REQUEST = QName.get("AddMsgRequest", NAMESPACE);
     public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get("SaveDraftRequest", NAMESPACE);

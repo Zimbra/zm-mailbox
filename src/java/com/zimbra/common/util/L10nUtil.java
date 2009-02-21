@@ -103,7 +103,10 @@ public class L10nUtil {
         shareInfoActionPrivate,
         shareInfoActionFreebusy,
         shareInfoActionCreateFolder,
-        
+
+        // read-receipt notification body
+        readReceiptNotification,
+
         // ZimbraSync client invitation text
         zsApptNew,
         zsApptModified,
