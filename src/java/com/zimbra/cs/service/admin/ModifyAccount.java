@@ -158,7 +158,7 @@ public class ModifyAccount extends AdminDocumentHandler {
     
     @Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append("TODO:  check quota\n\n");
+        notes.append(sDocRightNotesTODO + "  check quota\n\n");
         notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
     }
 }

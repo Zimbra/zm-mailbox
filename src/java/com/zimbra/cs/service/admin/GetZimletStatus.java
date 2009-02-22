@@ -16,9 +16,11 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -27,6 +29,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -34,35 +38,60 @@ public class GetZimletStatus extends AdminDocumentHandler {
 
 	@Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		Provisioning prov = Provisioning.getInstance();
 		
-        Element response = lc.createElement(AdminConstants.GET_ZIMLET_STATUS_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ZIMLET_STATUS_RESPONSE);
         Element elem = response.addElement(AccountConstants.E_ZIMLETS);
 		@SuppressWarnings({"unchecked"})
 		List<Zimlet> zimlets = prov.listAllZimlets();
     	zimlets = ZimletUtil.orderZimletsByPriority(zimlets);
     	int priority = 0;
 		for (Zimlet z : zimlets) {
-			doZimlet(z, elem, priority++);
+		    // check if the zimlet can be listed
+		    if (!hasRightsToList(zsc, z, Admin.R_listZimlet, null))
+		        continue;
+		    
+			doZimlet(zsc, context, z, elem, priority++);
 		}
         
 		Iterator<Cos> cos = prov.getAllCos().iterator();
+		
+		Set<String> needCosAttrs = new HashSet<String>();
+		needCosAttrs.add(Provisioning.A_zimbraZimletAvailableZimlets);
+		
 		while (cos.hasNext()) {
-			Cos c = (Cos) cos.next();
+		    Cos c = (Cos) cos.next();
+		    
+		    // check if the cos can be listed 
+		    if (!hasRightsToListCos(zsc, c, Admin.R_listCos, needCosAttrs))
+		        continue;
+			
 			elem = response.addElement(AdminConstants.E_COS);
 			elem.addAttribute(AdminConstants.E_NAME, c.getName());
 			String[] z = ZimletUtil.getZimlets(c);
 			for (int i = 0; i < z.length; i++) {
-				doZimlet(prov.getZimlet(z[i]), elem, -1);
+			    doZimlet(zsc, context, prov.getZimlet(z[i]), elem, -1);
 			}
 		}
         return response;
     }
 
-	private void doZimlet(Zimlet z, Element elem, int priority) {
+	private void doZimlet(ZimbraSoapContext zsc, Map<String, Object> context,
+	        Zimlet z, Element elem, int priority) throws ServiceException {
 		if (z == null)
 			return;
+		
+		// skip if no get right
+		try {
+            checkRight(zsc, context, z, Admin.R_getZimlet);
+        } catch (ServiceException e) {
+            if (ServiceException.PERM_DENIED.equals(e.getCode()))
+                return;
+            else
+                throw e;
+        }
+        
         Element zim = elem.addElement(AccountConstants.E_ZIMLET);
 		zim.addAttribute(AdminConstants.A_NAME, z.getName());
 		zim.addAttribute(AdminConstants.A_STATUS, (z.isEnabled() ? "enabled" : "disabled"));
@@ -70,5 +99,12 @@ public class GetZimletStatus extends AdminDocumentHandler {
 		if (priority >= 0) {
 			zim.addAttribute(AdminConstants.A_PRIORITY, priority);
 		}
+    }
+	
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_listZimlet);
+        relatedRights.add(Admin.R_listCos);
+        relatedRights.add(Admin.R_getZimlet);
     }
 }

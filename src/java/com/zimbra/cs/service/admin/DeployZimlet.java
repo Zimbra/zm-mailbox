@@ -126,7 +126,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	    
 	    checkRightTODO();
 	    
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
 		String aid = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
@@ -134,13 +134,13 @@ public class DeployZimlet extends AdminDocumentHandler {
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
-			deploy(lc, aid, lc.getRawAuthToken());
+			deploy(zsc, aid, zsc.getRawAuthToken());
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
-			deploy(lc, aid, null);
+			deploy(zsc, aid, null);
 		} else {
 			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 		}
-		Element response = lc.createElement(AdminConstants.DEPLOY_ZIMLET_RESPONSE);
+		Element response = zsc.createElement(AdminConstants.DEPLOY_ZIMLET_RESPONSE);
 		Progress progress = (Progress)mProgressMap.get(aid);
 		if (progress != null)
 			progress.writeResponse(response);
@@ -149,6 +149,6 @@ public class DeployZimlet extends AdminDocumentHandler {
 	
 	@Override
 	protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-	    notes.append("TODO");
+	    notes.append(sDocRightNotesTODO);
     }
 }

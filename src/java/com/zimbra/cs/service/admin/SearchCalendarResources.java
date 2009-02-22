@@ -117,4 +117,10 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, resources.size());
         return response;
     }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getCalendarResource);
+        relatedRights.add(Admin.R_listCalendarResource);
+    }
 }

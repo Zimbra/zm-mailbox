@@ -16,11 +16,13 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.operation.Scheduler;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -31,7 +33,10 @@ public class SetThrottle extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
                 throws ServiceException, SoapFaultException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // allow just system admin for now
+        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
         
         String concurStr = request.getAttribute(AdminConstants.A_CONCURRENCY, null);
         
@@ -42,7 +47,7 @@ public class SetThrottle extends AdminDocumentHandler {
             Scheduler.setConcurrency(params);    
         }
         
-        Element response = lc.createElement(AdminConstants.SET_THROTTLE_RESPOSNE);
+        Element response = zsc.createElement(AdminConstants.SET_THROTTLE_RESPOSNE);
         
         Scheduler s = Scheduler.get(null);
         concurStr = "";
@@ -55,6 +60,12 @@ public class SetThrottle extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_CONCURRENCY, concurStr);
         
         return response;
+    }
+    
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesSystemAdminsOnly);
     }
     
 }

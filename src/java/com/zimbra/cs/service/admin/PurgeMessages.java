@@ -20,12 +20,18 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.soap.Element;
@@ -37,16 +43,30 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class PurgeMessages extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element mreq = request.getOptionalElement(AdminConstants.E_MAILBOX);
         String[] accounts;
-        if (mreq != null)
+        if (mreq != null) {
             accounts = new String[] { mreq.getAttribute(AdminConstants.A_ACCOUNTID) };
-        else
+            
+            // accounts are specified, check right or each account
+            Provisioning prov = Provisioning.getInstance();
+            for (String acctId : accounts) {
+                Account acct = prov.get(AccountBy.id, acctId);
+                if (acct == null)
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
+                checkAccountRight(zsc, acct, Admin.R_purgeMessages);
+            }
+            
+        } else {
+            // all accounts on the system, has to be a system admin
+            checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+            
             accounts = MailboxManager.getInstance().getAccountIds();
-
-        Element response = lc.createElement(AdminConstants.PURGE_MESSAGES_RESPONSE);
+        }
+        
+        Element response = zsc.createElement(AdminConstants.PURGE_MESSAGES_RESPONSE);
         for (int i = 0; i < accounts.length; i++) {
             Mailbox mbox = null;
             try {
@@ -70,4 +90,13 @@ public class PurgeMessages extends AdminDocumentHandler {
         }
         return response;
 	}
+	
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_purgeMessages);
+        notes.append("If account ids are specified, needs effective " +
+                Admin.R_purgeMessages.getName() + " right for each account.  " +
+                "If account ids are not specified, the authed account has to be a system admin.");
+    }
 }

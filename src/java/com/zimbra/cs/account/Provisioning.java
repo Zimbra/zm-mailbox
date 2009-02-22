@@ -1614,6 +1614,41 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
     
+    public static class RightsDoc { 
+        String mCmd;
+        List<String> mRights;
+        String mNotes;
+        
+        public RightsDoc(String cmd) {
+            mCmd = cmd;
+            mRights = new ArrayList<String>();
+        }
+        
+        public void addRight(String right) {
+            mRights.add(right);
+        }
+        
+        public void setNotes(String notes) {
+            mNotes = notes;
+        }
+        
+        public String getCmd() {
+            return mCmd;
+        }
+        
+        public List<String> getRights() {
+            return mRights;
+        }
+        
+        public String getNotes() {
+            return mNotes;
+        }
+    }
+    
+    public List<RightsDoc> getRightsDoc() throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
     public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }

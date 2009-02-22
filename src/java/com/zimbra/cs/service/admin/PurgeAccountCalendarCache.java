@@ -22,8 +22,12 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -59,8 +63,13 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
+        if (account.isCalendarResource()) {
+            // need a CalendarResource instance for RightChecker
+            CalendarResource resource = prov.get(CalendarResourceBy.id, id);
+            checkCalendarResourceRight(zsc, resource, Admin.R_purgeCalendarResourceCalendarCache);
+        } else
+            checkAccountRight(zsc, account, Admin.R_purgeAccountCalendarCache);
+        
         if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
 
@@ -77,5 +86,11 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
         }
         Element response = zsc.createElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_RESPONSE);
         return response;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_purgeAccountCalendarCache);
+        relatedRights.add(Admin.R_purgeCalendarResourceCalendarCache);
     }
 }

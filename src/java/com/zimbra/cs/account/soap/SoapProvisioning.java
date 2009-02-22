@@ -54,6 +54,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
@@ -1927,13 +1928,34 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
+    public List<RightsDoc> getRightsDoc() throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_RIGHTS_DOC_REQUEST);
+        Element resp = invoke(req);
+        
+        List<RightsDoc> docs = new ArrayList<RightsDoc>();
+        for (Element eCmd : resp.listElements(AdminConstants.E_CMD)) {
+            RightsDoc doc = new RightsDoc(eCmd.getAttribute(AdminConstants.A_NAME));
+            
+            Element eRights = eCmd.getElement(AdminConstants.E_RIGHTS);
+            for (Element eRight : eRights.listElements(AdminConstants.E_RIGHT))
+                doc.addRight(eRight.getAttribute(AdminConstants.A_NAME));
+                
+            doc.setNotes(eCmd.getElement(AdminConstants.E_DESC).getText());
+            
+            docs.add(doc);
+        }
+        
+        return docs;
+    }
+    
+    @Override
     public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_RIGHT_REQUEST);
         req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAllAttrs);
         req.addElement(AdminConstants.E_RIGHT).setText(rightName);
         
         Element resp = invoke(req);
-        Element eRight = resp.getElement(AdminConstants.A_RIGHT);
+        Element eRight = resp.getElement(AdminConstants.E_RIGHT);
         Right right = RightCommand.XMLToRight(eRight);
         return right;
     }
@@ -1946,7 +1968,7 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
         
         List<Right> rights = new ArrayList<Right>();
-        for (Element eRight : resp.listElements(AdminConstants.A_RIGHT)) {
+        for (Element eRight : resp.listElements(AdminConstants.E_RIGHT)) {
             rights.add(RightCommand.XMLToRight(eRight));
         }
         return rights;

@@ -31,6 +31,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbServiceStatus;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -43,6 +44,9 @@ public class GetServiceStatus extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws SoapFaultException, ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // allow only system admin for now
+        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
 
         // this command can only execute on the monitor host, so proxy if necessary
         Provisioning prov = Provisioning.getInstance();
@@ -90,5 +94,10 @@ public class GetServiceStatus extends AdminDocumentHandler {
             s.addAttribute(AdminConstants.A_T, stat.getTime());
             s.setText(Integer.toString(stat.getStatus()));
         }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesSystemAdminsOnly);
     }
 }

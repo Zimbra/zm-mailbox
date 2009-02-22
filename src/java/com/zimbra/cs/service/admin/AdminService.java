@@ -207,6 +207,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST, new PurgeAccountCalendarCache());
 
         // rights
+        dispatcher.registerHandler(AdminConstants.GET_RIGHTS_DOC_REQUEST, new GetRightsDoc());
         dispatcher.registerHandler(AdminConstants.GET_RIGHT_REQUEST, new GetRight());
         dispatcher.registerHandler(AdminConstants.GET_ALL_RIGHTS_REQUEST, new GetAllRights());
         dispatcher.registerHandler(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST, new GetEffectiveRights());

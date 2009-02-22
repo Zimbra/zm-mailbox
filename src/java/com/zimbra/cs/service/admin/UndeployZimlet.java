@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.auth.ZAuthToken;
@@ -23,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,15 +48,24 @@ public class UndeployZimlet extends AdminDocumentHandler {
 	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
+	    
+	    checkRightTODO();
+	    
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		
 	    String name = request.getAttribute(AdminConstants.A_NAME);
 		String action = request.getAttribute(AdminConstants.A_ACTION, null);
 		ZAuthToken auth = null;
 		
 		if (action == null)
-			auth = lc.getRawAuthToken();
-	    Element response = lc.createElement(AdminConstants.UNDEPLOY_ZIMLET_RESPONSE);
+			auth = zsc.getRawAuthToken();
+	    Element response = zsc.createElement(AdminConstants.UNDEPLOY_ZIMLET_RESPONSE);
 	    new Thread(new UndeployThread(name, auth)).start();
 		return response;
+	}
+	
+	@Override
+	protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+	    notes.append(sDocRightNotesTODO);
 	}
 }

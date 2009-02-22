@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.account.accesscontrol.generated;
 
 import com.zimbra.common.service.ServiceException;
@@ -16,7 +32,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090220-1635 */
+    /* build: 5.0 pshao 20090221-1211 */
 
 
     public static AdminRight R_accessGAL;
@@ -40,6 +56,7 @@ public class AdminRights {
     public static AdminRight R_configureGlobalConfigConstraint;
     public static AdminRight R_configurePasswordStrength;
     public static AdminRight R_configureQuota;
+    public static AdminRight R_configureWikiAccount;
     public static AdminRight R_countAccount;
     public static AdminRight R_createAccount;
     public static AdminRight R_createAlias;
@@ -65,10 +82,13 @@ public class AdminRights {
     public static AdminRight R_getAccountFeatures;
     public static AdminRight R_getAccountInfo;
     public static AdminRight R_getAccountMembership;
+    public static AdminRight R_getAccountShareInfo;
     public static AdminRight R_getCalendarResource;
+    public static AdminRight R_getCalendarResourceShareInfo;
     public static AdminRight R_getCos;
     public static AdminRight R_getDistributionList;
     public static AdminRight R_getDistributionListMembership;
+    public static AdminRight R_getDistributionListShareInfo;
     public static AdminRight R_getDomain;
     public static AdminRight R_getDomainQuotaUsage;
     public static AdminRight R_getGlobalConfig;
@@ -100,6 +120,12 @@ public class AdminRights {
     public static AdminRight R_modifyServer;
     public static AdminRight R_modifyXMPPComponent;
     public static AdminRight R_modifyZimlet;
+    public static AdminRight R_publishAccountShareInfo;
+    public static AdminRight R_publishCalendarResourceShareInfo;
+    public static AdminRight R_publishDistributionListShareInfo;
+    public static AdminRight R_purgeAccountCalendarCache;
+    public static AdminRight R_purgeCalendarResourceCalendarCache;
+    public static AdminRight R_purgeMessages;
     public static AdminRight R_reindexMailbox;
     public static AdminRight R_removeAccountAlias;
     public static AdminRight R_removeCalendarResourceAlias;
@@ -142,6 +168,7 @@ public class AdminRights {
         R_configureGlobalConfigConstraint      = rm.getAdminRight(Right.RT_configureGlobalConfigConstraint);
         R_configurePasswordStrength            = rm.getAdminRight(Right.RT_configurePasswordStrength);
         R_configureQuota                       = rm.getAdminRight(Right.RT_configureQuota);
+        R_configureWikiAccount                 = rm.getAdminRight(Right.RT_configureWikiAccount);
         R_countAccount                         = rm.getAdminRight(Right.RT_countAccount);
         R_createAccount                        = rm.getAdminRight(Right.RT_createAccount);
         R_createAlias                          = rm.getAdminRight(Right.RT_createAlias);
@@ -167,10 +194,13 @@ public class AdminRights {
         R_getAccountFeatures                   = rm.getAdminRight(Right.RT_getAccountFeatures);
         R_getAccountInfo                       = rm.getAdminRight(Right.RT_getAccountInfo);
         R_getAccountMembership                 = rm.getAdminRight(Right.RT_getAccountMembership);
+        R_getAccountShareInfo                  = rm.getAdminRight(Right.RT_getAccountShareInfo);
         R_getCalendarResource                  = rm.getAdminRight(Right.RT_getCalendarResource);
+        R_getCalendarResourceShareInfo         = rm.getAdminRight(Right.RT_getCalendarResourceShareInfo);
         R_getCos                               = rm.getAdminRight(Right.RT_getCos);
         R_getDistributionList                  = rm.getAdminRight(Right.RT_getDistributionList);
         R_getDistributionListMembership        = rm.getAdminRight(Right.RT_getDistributionListMembership);
+        R_getDistributionListShareInfo         = rm.getAdminRight(Right.RT_getDistributionListShareInfo);
         R_getDomain                            = rm.getAdminRight(Right.RT_getDomain);
         R_getDomainQuotaUsage                  = rm.getAdminRight(Right.RT_getDomainQuotaUsage);
         R_getGlobalConfig                      = rm.getAdminRight(Right.RT_getGlobalConfig);
@@ -202,6 +232,12 @@ public class AdminRights {
         R_modifyServer                         = rm.getAdminRight(Right.RT_modifyServer);
         R_modifyXMPPComponent                  = rm.getAdminRight(Right.RT_modifyXMPPComponent);
         R_modifyZimlet                         = rm.getAdminRight(Right.RT_modifyZimlet);
+        R_publishAccountShareInfo              = rm.getAdminRight(Right.RT_publishAccountShareInfo);
+        R_publishCalendarResourceShareInfo     = rm.getAdminRight(Right.RT_publishCalendarResourceShareInfo);
+        R_publishDistributionListShareInfo     = rm.getAdminRight(Right.RT_publishDistributionListShareInfo);
+        R_purgeAccountCalendarCache            = rm.getAdminRight(Right.RT_purgeAccountCalendarCache);
+        R_purgeCalendarResourceCalendarCache   = rm.getAdminRight(Right.RT_purgeCalendarResourceCalendarCache);
+        R_purgeMessages                        = rm.getAdminRight(Right.RT_purgeMessages);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);
         R_removeAccountAlias                   = rm.getAdminRight(Right.RT_removeAccountAlias);
         R_removeCalendarResourceAlias          = rm.getAdminRight(Right.RT_removeCalendarResourceAlias);

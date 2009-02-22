@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.account.accesscontrol.generated;
 
 //
@@ -10,7 +26,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090220-1635 */
+    /* build: 5.0 pshao 20090221-1211 */
 
 
     /*
@@ -163,6 +179,11 @@ public class RightConsts {
     public static final String RT_configureQuota = "configureQuota";
 
     /**
+     * configure attributes for wiki account
+     */
+    public static final String RT_configureWikiAccount = "configureWikiAccount";
+
+    /**
      * count accounts in a domain
      */
     public static final String RT_countAccount = "countAccount";
@@ -288,9 +309,19 @@ public class RightConsts {
     public static final String RT_getAccountMembership = "getAccountMembership";
 
     /**
+     * get share info on account
+     */
+    public static final String RT_getAccountShareInfo = "getAccountShareInfo";
+
+    /**
      * get all calendar resource attributes
      */
     public static final String RT_getCalendarResource = "getCalendarResource";
+
+    /**
+     * get share info on distribution list
+     */
+    public static final String RT_getCalendarResourceShareInfo = "getCalendarResourceShareInfo";
 
     /**
      * get all cos attributes
@@ -306,6 +337,11 @@ public class RightConsts {
      * get all groups the distribution list is a member of
      */
     public static final String RT_getDistributionListMembership = "getDistributionListMembership";
+
+    /**
+     * get share info on distribution list
+     */
+    public static final String RT_getDistributionListShareInfo = "getDistributionListShareInfo";
 
     /**
      * get all domain attributes
@@ -462,6 +498,36 @@ public class RightConsts {
      * set all zimlet attributes
      */
     public static final String RT_modifyZimlet = "modifyZimlet";
+
+    /**
+     * publish share info on account
+     */
+    public static final String RT_publishAccountShareInfo = "publishAccountShareInfo";
+
+    /**
+     * publish share info on calendar resource
+     */
+    public static final String RT_publishCalendarResourceShareInfo = "publishCalendarResourceShareInfo";
+
+    /**
+     * publish share info on distribution list
+     */
+    public static final String RT_publishDistributionListShareInfo = "publishDistributionListShareInfo";
+
+    /**
+     * purge account calendar cache
+     */
+    public static final String RT_purgeAccountCalendarCache = "purgeAccountCalendarCache";
+
+    /**
+     * purge calendar resource calendar cache
+     */
+    public static final String RT_purgeCalendarResourceCalendarCache = "purgeCalendarResourceCalendarCache";
+
+    /**
+     * purge messages of an account
+     */
+    public static final String RT_purgeMessages = "purgeMessages";
 
     /**
      * reindex mailbox

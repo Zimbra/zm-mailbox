@@ -22,7 +22,6 @@ package com.zimbra.soap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
@@ -31,9 +30,9 @@ import org.dom4j.QName;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Iterator;
 
 /**
  * @author schemers
@@ -116,5 +115,9 @@ public class DocumentDispatcher {
 		if (handler == null) 
 			throw ServiceException.UNKNOWN_DOCUMENT(doc.getQualifiedName(), null);
 		return handler.handle(doc, context);
+	}
+	
+	public Map<QName, DocumentHandler> getHandlers() {
+	    return Collections.unmodifiableMap(mHandlers);
 	}
 }

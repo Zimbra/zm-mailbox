@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -28,6 +29,8 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,18 +55,13 @@ public class PushFreeBusy extends AdminDocumentHandler {
         			ZimbraLog.misc.warn("account is not on this server: "+accountId);
         			continue;
         		}
+        		checkAccountRight(zsc, acct, Admin.R_adminLoginAs);
             	FreeBusyProvider.mailboxChanged(accountId);
         	}
         } else {
         	String[] domains = domainElem.getAttribute(AdminConstants.A_NAME).split(",");
         	Server s = prov.getLocalServer();
-    		NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-    			public void visit(NamedEntry entry) {
-    				if (entry instanceof Account) {
-    					FreeBusyProvider.mailboxChanged(((Account)entry).getId());
-    				}
-    			}
-    		};
+    		NamedEntry.Visitor visitor = new PushFreeBusyVisitor(zsc, this);
         	for (String domain : domains) {
             	Domain d = prov.get(Provisioning.DomainBy.name, domain);
         		prov.getAllAccounts(d, s, visitor);
@@ -72,5 +70,28 @@ public class PushFreeBusy extends AdminDocumentHandler {
 
         Element response = zsc.createElement(AdminConstants.PUSH_FREE_BUSY_RESPONSE);
         return response;
+    }
+    
+    private static class PushFreeBusyVisitor implements NamedEntry.Visitor {
+        
+        ZimbraSoapContext mZsc;
+        AdminDocumentHandler mHandler;
+        
+        PushFreeBusyVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler) {
+            mZsc = zsc;
+            mHandler = handler;
+        }
+        
+        public void visit(NamedEntry entry) throws ServiceException {
+            if (entry instanceof Account) {
+                mHandler.checkAccountRight(mZsc, (Account)entry, Admin.R_adminLoginAs);
+                FreeBusyProvider.mailboxChanged(((Account)entry).getId());
+            }
+        }
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_adminLoginAs);
     }
 }

@@ -1,5 +1,6 @@
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -8,6 +9,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -38,6 +40,8 @@ public class GrantRight extends RightDocumentHandler {
         
         RightModifier rightModifier = getRightModifier(eRight);
         
+        // right checking is done in RightCommand
+        
         RightCommand.grantRight(Provisioning.getInstance(),
                                 getAuthenticatedAccount(zsc),
                                 targetType, targetBy, target,
@@ -62,6 +66,12 @@ public class GrantRight extends RightDocumentHandler {
             rightModifier = RightModifier.RM_CAN_DELEGATE;
         
         return rightModifier;
+    }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append("Grantor must have the same or more rights on the same target or " + 
+                "on a larger target set.");
     }
 
 }

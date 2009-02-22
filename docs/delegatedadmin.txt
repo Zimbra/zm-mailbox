@@ -1090,145 +1090,24 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 ===============
 7. Admin SOAP
 ===============
+
+See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
+
 7.1 Granting/Revoking/Checking/Getting Rights on a Target
     
 7.1.1 GrantRightRequest
       Grant right on a target.
-    
-<GrantRightRequest>
-  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
-</GrantRightRequest>    
-
-{target-type} = account | resource | distributionlist | domain | cos | server | xmppcomponent | zimlet | config | global 
-
-{target-by}   = name | id
-  
-{grantee-type} = usr | grp
-  
-{grantee-bt}   = name | id
-
-{deny} = 1 | 0(default)
-
-{canDelegate}  = 1 | 0(default)
-
-{right} = {right-name} | {inline-right}
-
-{right-name} = a system defined right name
-
-{inline-right} = {op}.{target-type}.{attr-name}
-
-{op} = set | get
-
-{attr-name} = a valid attribute name on the specified target type
-
-  
-  
-<GrantRightResponse/>
-
 
 7.1.2 RevokeRightRequest
       Revoke right previously granted on a target.
- 
-<RevokeRightRequest>
-  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right-name}</right>
-</RevokeRightRequest>    
-
-<RevokeRightResponse/>
-
 
 7.1.3 CheckRightRequest
       Check if a principal has the specified right on target.
     
-<CheckRightRequest>
-  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-  <grantee by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right>{right-name}</right>
-  [<attrs>
-     <a n="...">...</a>+
-   </attrs>]
-</CheckPermissionRequest>
-
-{right-name}: right name
-              must be a preset, getAttrs, or setAttrs right, it cannot be a combo right.
-                
-              If right is a setAttrs right, an attr/value map can be provided 
-              in <attrs>, which contains the attrs/values that are attempted to
-              be modified.   If one of the values to be modified violates one of 
-              the constraint for the the attributes, the result in CheckRightResponse
-              will be allow="0".  If attr/value map is not provided, system will just 
-              check if all attributes defined by the setAttrs right are allowed, 
-              without taking into account any constraint. 
-               
-              
-
-<CheckRightResponse allow="{1|0}">
-  [<via>
-    <target type={target-type}>{target-name-or-id}</target>
-    <grantee type={grantee-type}>{grantee-name-or-id}</grantee>
-    <right [deny="${deny}"]>{right-name}</right>
-  <via>]
-</CheckRightResponse>  
-
-    A successful return means the principal specified by the <grantee> is allowed
-    for the specified right on the target object.  
-    If PERM_DENIED is thrown, it means the authed user does not have privilege
-    to run this SOAP command(has to be an admin because this command is in admin namespace).
-    Result of CheckRightRequest is in the allow="1|0" attribute in CheckRightResponse.
-    <via> in the CheckRightResponse is the grant that decisively
-    lead to the result.  
-    
-    e.g. if a combo right C containing renameAccount is granted to group G on domain D, and
-         admin A is in group G, then
-              <CheckRightRequest>
-                 <target type="account"> by="name">user1@D</target>
-                 <grantee by="name">admin@D</grantee>
-                 <right>renameAccount</right>
-              </CheckRightRequest>
-          
-         will return:
-              <CheckRightResponse hasRight="1">
-                 <via>
-                   <target type=domain>D</target>
-                   <grantee type=grp>G</grantee>
-                   <right>C</right>
-                 </via>
-              </CheckRightResponse>
-      
-         Note, <via> is optional.  If the right of interest is not granted at all, there will be no <via>
-         in the response.     Also, <via> will probably be hairy for rights that modify/get
-         selective attrs, it may not be returned for those rights.  TDB...
-
-    e.g. 
-         <CheckRightRequest>
-             <target type="account"> by="name">user1@D</target>
-             <grantee by="name">admin@D</grantee>
-             <right>configureQuota</right>
-             <attrs>
-                 <a n="zimbraMailQuota">100000</a>
-                 <a n="zimbraQuotaWarnPercent">80</a>
-             <attrs>    
-         </CheckRightRequest>
-              
-         <CheckRightResponse hasRight="0">     
-         
-         
 7.1.4 GetGrantsRequest
       Returns all grants on the specified target entry.
       The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
       
-<GetGrantsRequest>
-  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-</GetGrantsRequest>
-
-<GetGrantsResponse>
-    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" right="{right-name}" deny="{deny}" canDelegate="{canDelegate}"/>+
-</GetGrantsResponse>  
-   
-         
 7.1.5 GetEffectiveRightsRequest
       Returns all *effective* rights the authenticated admin has on the specified target entry.
     
@@ -1239,100 +1118,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
       The result can help the admin console decide on what tabs to display after a target 
       is selected.  For example, after user1 is selected, if the admin does not have right 
       to setPassword, it should probably hide or gray out the setPassword tab.
-    
-<GetEffectiveRightsRequest expandAllAttrs="{expand-all-attrs}">
-  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-  [<grantee by="{grantee-by}">{grantee-name-or-id}</grantee>]
-</GetEffectiveRightsRequest>
-
-if <grantee> is omitted, it means the account identified by the auth token.
-
-{expand-all-attrs} : whether to include all attribute names in the <getAttrs>/<setAttrs> elements in 
-                     GetEffectiveRightsResponse if all attributes of the target are gettable/settable
-                     
-                     comma separated values of "getAttrs", "setAttrs"
-                     
-                     e.g. getAttrs           - expand attrs in getAttrs in GetEffectiveRightsResponse
-                          setAttrs           - expand attrs in setAttrs in GetEffectiveRightsResponse
-                          getAttrs,setAttrs  - expand attrs in both getAttrs and setAttrs in GetEffectiveRightsResponse
-                                     
-                     - when all="1" in setAttrs/getAttrs in GetEffectiveRightsResponse: 
-                           0: do not expand attributes
-                           1: expand all attributes
-                     - when all is not present or is 0 in setAttrs/getAttrs in GetEffectiveRightsResponse: 
-                           value of {whether-to-expand-all-attrs} does not apply.  Allowed attributes are always 
-                           returned in setAttrs/getAttrs in GetEffectiveRightsResponse.  
-    
-<GetEffectiveRightsResponse>    
-  <grantee id"{grantee-id}" name="{grantee-name}">
-  <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
-      <right n="{right-name}"/>+
-      <setAttrs [all="{all}"]>
-          <a n="...">
-              [<default>
-                   <v>...</v>+
-               </default>]
-              [<constraint>
-                   [<min>{min}</min>]
-                   [<max>{max}</max>]
-                   [<values>
-                       <v>...</v>+
-                    </values>]
-               </constraint>]       
-          </a>+
-      </setAttrs>
-      <getAttrs [all="{all}"]>
-        <a n="...">
-              [<default>
-                   <v>...</v>+
-               </default>]
-          </a>+
-      </getAttrs>
-  </target>
-</GetEffectiveRightsResponse>   
-
-    <right>       : all effective system rights
-                    - getAttrs/setAttrs rights will not appear in the list because they will be 
-                      expanded to a list of attributes that can be get/set, which appear in the 
-                      <getAttrs> and <setAttrs> elements in the response.
-                    - Combo rights will not appear in the list because they will be expanded to 
-                      system rights and/or a set of attributes that can be get/set.
-    <setAttrs>    : all attrs can be set
-    <getAttrs>    : all attrs can be get
-    
-    {all} : 0(default) | 1
-            1 - all attributes on the target entry are accessible
-                if 1, no <a> elements will appear under the <setAttrs>/<getAttrs>
-                
-    <default> : inherited default value(or values if the attribute is multl-valued)
-    
-    e.g. 
-    <GetEffectiveRightsRequest>
-      <target type="account" by="id">bba95d7d-0b13-401f-a343-03a8f5a96f7c"/>
-      <grantee by="name">admin@test.com</grantee>
-    </GetEffectiveRightsRequest>
-    
-    <GetEffectiveRightsResponse>
-      <grantee name="admin@test.com</grantee" id=""/>
-      <target type="account" name="user1@test.com" id="bba95d7d-0b13-401f-a343-03a8f5a96f7c">
-        <right n="setPassword"/>
-        <right n="renameAccount"/>
-        <right n="deleteAccount"/>
-        <setAttrs>
-          <a n="zimbraMailQuota" min="100000000"/>
-          <a n="zimbraMailStatus"/>
-          <a n="zimbraFeatureMailEnabled" values="TRUE,FALSE"/>
-          ...
-        </setAttrs>
-        <getAttrs>
-          <a n="..."/>
-          <a n="..."/>
-          ...
-        </getAttrs>
-      </target>
-    </GetEffectiveRightsRequest>
-
-         
+             
 7.1.6 GetCreateObjectAttrsRequest
       
       Returns attributes, with defaults and constratints if any,  that can be set by the authed admin when an 
@@ -1345,132 +1131,14 @@ if <grantee> is omitted, it means the account identified by the auth token.
       The result can help the admin console decide on what tabs/attributes to display for creating objects.
     
 
-<GetCreateObjectAttrsRequest>
-    <target type="{target-type}">
-    [<domain by="{domain-by}">...</domain>]
-    [<cos by="{cos-by}">...</cos>]
-</GetCreateObjectAttrsRequest>    
-
-<domain> : required if {target-type} is "account"
-           ignored otherwise
-          
-<cos>    : optional if {target-type} is "account", if missing, default cos of the domain will be used
-           ignored otherwise
-          
-e.g. 1  creating an account:
-
-<GetCreateObjectAttrsRequest>
-  <target type="account"/>  
-  <domain by="name">test.com</domain>
-  <cos by="name">standard</cos>
-</GetCreateObjectAttrsRequest>
-
-<GetCreateObjectAttrsResponse>
-    <setAttrs>
-          <a n="zimbraMailQuota"/>
-              <constraint>
-                  <min>1</min>
-                  <max>3</max>
-              </constraint>
-              <default>
-                  <v>2</v>
-              </default>
-          <a n="zimbraMailStatus"/>
-          <a n="zimbraFeatureCalendarEnabled"/>
-          ...
-    </setAttrs>
-</GetCreateObjectAttrsResponse>
-
-
-e.g. 2 creating a server:
-
-<GetCreateObjectAttrsRequest>
-  <target type="server"/>  
-</GetCreateObjectAttrsRequest>
-
-<GetCreateObjectAttrsResponse>
-    <target type="server"/>
-    <setAttrs>
-          <a n="zimbraLmtpExposeVersionOnBanner"/>
-          <a n="zimbraXMPPServerDialbackKey"/>
-          <a n="zimbraReverseProxyImapEnabledCapability"/>
-              <constraint>
-                  <values>
-                      <v>IMAP4rev1</v>
-                      <v>BINARY</v>
-                  </values>
-              </constraint>    
-          ...
-    </setAttrs>
-</GetCreateObjectAttrsResponse>
-         
-         
 7.2 Get/GetAll Right Definition
 
 7.2.1 GetRightRequest
-      Get a right definition.
+      Get definition for a right.
     
-<GetRightRequest [expandAllAttrs="{expand-all-attrs}"]>
-  <right>{right-name}</right>
-</GetRightRequest>
-
-{expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
-                     GetRightResponse if the right is meant for all attributes 
-                     0: default, do not include all attribute names in the <attrs> elements
-                     1: include all attribute names in the <attrs> elements
-
-<GetRightResponse>
-  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
-    <desc>{right-description}</desc>
-    [<attrs [all="1"]>
-       [<a n="{attr-name}"/>+]
-     </attrs>]
-    [<rights>
-       <r n="{right-name}"/>+
-     </rights>]
-  </right>
-</GetRightResponse>
-
-{right-name}: right name
-
-{right-type}: getAttrs | setAttrs | combo | preset
-
-{target-type}: if {right-type} is:
-               - preset: always present (exactly target type)
-               - getAttrs/setAtrts: always present (comma-separated target types)
-               - combo: always not present
-
-
 7.2.2 GetAllRights
       Get all system defined rights
       
-<GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"]/>
-
-{target-type} : target type on which a right is grantable
-                e.g. createAccount right is only grantable on domain entries and the globalgrant 
-                     entry.
-                Don't confuse this with "whether a right is applicable on a target type".
-                e.g. the renameAccount right is "applicable" on account entries, but it is "grantable" 
-                     on account, distribuiton list, domain, and globalgrant entries.
-     
-{expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
-                     GetRightResponse if the right is meant for all attributes 
-                     0: default, do not include all attribute names in the <attrs> elements
-                     1: include all attribute names in the <attrs> elements
-                     
-<GetAllRightsResponse>
-  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
-    <desc>{right-description}</desc>
-    [<attrs all="1">
-       [<a n="{attr-name}"/>+]
-     </attrs>]
-    [<rights>
-       <r n="{right-name}"/>+
-     </rights>]
-  </right>+
-</GetAllRightsResponse>
-
-See <GetRightResponse> for description of each <right> in the response. 
 
 
 ===========
@@ -1489,7 +1157,7 @@ See <GetRightResponse> for description of each <right> in the response.
 
 8.2 zmprov (via soap)
 
-TODO
+    run "zmprov help right" for all right related zmprov commands.
 
                 
 ==========================

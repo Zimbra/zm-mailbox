@@ -268,14 +268,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * ======================================================================
      */
     
-    // book mark for callsites still needs ACL checking but is not done yet
-    // in the end, no one should call this method
-    protected void checkRightTODO() {
-    }
-    
     private boolean isDomainBasedAccessManager(AccessManager am) {
         return (!(am instanceof RoleAccessManager));
     }
+
     
     /**
      * 
@@ -359,7 +355,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * @return
      */
     protected boolean hasRightsToList(ZimbraSoapContext zsc, NamedEntry target, 
-            AdminRight listRight, AdminRight getAttrRight) throws ServiceException {
+            AdminRight listRight, Object getAttrRight) throws ServiceException {
         
         try {
             checkRight(zsc, target, listRight);
@@ -372,6 +368,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             } else
                 throw e;
         }
+        
+        // check only the list right, do not check the get attrs right
+        if (getAttrRight == null)
+            return true;
         
         try {
             checkRight(zsc, target, getAttrRight);
@@ -389,7 +389,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     }
     
     protected boolean hasRightsToListCos(ZimbraSoapContext zsc, Cos target, 
-            AdminRight listRight, AdminRight getAttrRight) throws ServiceException {
+            AdminRight listRight, Object getAttrRight) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         boolean hasRight;
         
@@ -629,11 +629,21 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     
 
     // ==========================================
-    // commonly used notes for documenting rights
+    //    bookkeeping and documenting gadgets
     // ==========================================
     
-    // for documenting which rights are needed for a SOAP.
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {}
+    // book mark for callsites still needs ACL checking but is not done yet
+    // in the end, no one should call this method
+    protected void checkRightTODO() {
+    }
+    
+    // for documenting rights needed and notes for a SOAP.
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        notes.append(sDocRightNotesTODO);
+    }
+    
+    // in the end no one should refer to this string
+    protected static final String sDocRightNotesTODO = "TDB";
     
     protected static final String sDocRightNotesModifyEntry = 
         "All attrs provided in the attribute list have to settable by. " + 

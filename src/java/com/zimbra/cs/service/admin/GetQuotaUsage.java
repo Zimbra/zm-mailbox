@@ -223,4 +223,9 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             return mResult;
         }
     }
+    
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+        relatedRights.add(Admin.R_getMailboxInfo);
+    }
 }

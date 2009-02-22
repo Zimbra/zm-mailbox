@@ -41,14 +41,14 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 	    
 	    checkRightTODO();
 	    
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element content = request.getElement(MailConstants.E_CONTENT);
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getAuthToken());
+        Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachment, zsc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachment);
 
-        Element response = lc.createElement(AdminConstants.CONFIGURE_ZIMLET_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.CONFIGURE_ZIMLET_RESPONSE);
 		try {
 			byte[] blob = ByteUtil.getContent(up.getInputStream(), 0);
 			ZimletUtil.installConfig(new String(blob));
@@ -64,6 +64,6 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 	
 	@Override
     protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-	    notes.append("TODO");
+	    notes.append(sDocRightNotesTODO);
     }
 }
