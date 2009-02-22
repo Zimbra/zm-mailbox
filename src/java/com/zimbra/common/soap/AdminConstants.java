@@ -363,6 +363,8 @@ public class AdminConstants {
     public static final QName GET_CREATE_OBJECT_ATTRS_RESPONSE = QName.get("GetCreateObjectAttrsResponse", NAMESPACE);
     public static final QName GET_GRANTS_REQUEST = QName.get("GetGrantsRequest", NAMESPACE);
     public static final QName GET_GRANTS_RESPONSE = QName.get("GetGrantsResponse", NAMESPACE);
+    public static final QName GET_RIGHTS_DOC_REQUEST = QName.get("GetRightsDocRequest", NAMESPACE);
+    public static final QName GET_RIGHTS_DOC_RESPONSE = QName.get("GetRightsDocResponse", NAMESPACE);
     public static final QName GRANT_RIGHT_REQUEST = QName.get("GrantRightRequest", NAMESPACE);
     public static final QName GRANT_RIGHT_RESPONSE = QName.get("GrantRightResponse", NAMESPACE);
     public static final QName REVOKE_RIGHT_REQUEST = QName.get("RevokeRightRequest", NAMESPACE);
@@ -598,6 +600,7 @@ public class AdminConstants {
     
     // right
     public static final String E_ATTRS       = "attrs";
+    public static final String E_CMD         = "cmd";
     public static final String E_CONSTRAINT  = "constraint";
     public static final String E_DEFAULT     = "default";
     public static final String E_DESC        = "desc";
