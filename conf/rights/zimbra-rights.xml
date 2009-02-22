@@ -209,13 +209,29 @@
   <desc>get mailbox id and size(quota) of an account</desc>
 </right>
 
+<right name="purgeMessages" type="preset" targetType="account">
+  <desc>purge messages of an account</desc>
+</right>
+
 <right name="viewEmail" type="preset" targetType="account">
   <desc>view the account's email</desc>
 </right>
 
 <right name="reindexMailbox" type="preset" targetType="account">
   <desc>reindex mailbox</desc>
-</right>          
+</right> 
+
+<right name="purgeAccountCalendarCache" type="preset" targetType="account">
+  <desc>purge account calendar cache</desc>
+</right>   
+
+<right name="publishAccountShareInfo" type="preset" targetType="account">
+  <desc>publish share info on account</desc>
+</right>  
+
+<right name="getAccountShareInfo" type="preset" targetType="account">
+  <desc>get share info on account</desc>
+</right>         
 
 <!--
     TODO:      
@@ -330,6 +346,8 @@
     <a n="zimbraAdminConsoleUIComponents"/>
   </attrs>
 </right>
+
+
           
 <!-- 
     TODO:     
@@ -388,10 +406,21 @@
           - restoreCalenceResource             : restore calendar resource from backup
 -->
        
-<right name="setCalendarResourcePassword" type="preset" targetType="account">
+<right name="setCalendarResourcePassword" type="preset" targetType="calresource">
   <desc>set calendar resource password</desc>
 </right>     
 
+<right name="purgeCalendarResourceCalendarCache" type="preset" targetType="calresource">
+  <desc>purge calendar resource calendar cache</desc>
+</right>
+
+<right name="publishCalendarResourceShareInfo" type="preset" targetType="calresource">
+  <desc>publish share info on calendar resource</desc>
+</right>
+
+<right name="getCalendarResourceShareInfo" type="preset" targetType="calresource">
+  <desc>get share info on distribution list</desc>
+</right>
 
 <!-- 
 ========================================================
@@ -512,7 +541,13 @@
   <desc>remove member from distribution list</desc>
 </right>
 
+<right name="publishDistributionListShareInfo" type="preset" targetType="dl">
+  <desc>publish share info on distribution list</desc>
+</right>
 
+<right name="getDistributionListShareInfo" type="preset" targetType="dl">
+  <desc>get share info on distribution list</desc>
+</right>
 
 <!-- 
 ========================================================
@@ -588,6 +623,14 @@
 <right name="checkExternalGALConfig" type="preset" targetType="domain">
   <desc>check external GAL config</desc>
 </right>
+
+<right name="configureWikiAccount" type="setAttrs" targetType="domain,config">
+  <desc>configure attributes for wiki account</desc>
+   <attrs>
+    <a n="zimbraNotebookAccount"/>                                
+  </attrs> 
+</right>
+
 
 <right name="configureExternalGAL" type="setAttrs" targetType="domain">
   <desc>configure attributes for external GAL</desc>
