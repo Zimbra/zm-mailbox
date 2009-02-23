@@ -26,6 +26,7 @@ import org.apache.commons.collections.map.LRUMap;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -124,9 +125,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-	    checkRightTODO();
-	    
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
 		String aid = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
@@ -134,8 +133,16 @@ public class DeployZimlet extends AdminDocumentHandler {
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
+		    
+		    for (Server server : Provisioning.getInstance().getAllServers())
+		        checkRight(zsc, context, server, Admin.R_deployZimlet);
+		    
 			deploy(zsc, aid, zsc.getRawAuthToken());
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
+		    
+		    Server localServer = Provisioning.getInstance().getLocalServer();
+		    checkRight(zsc, context, localServer, Admin.R_deployZimlet);
+		    
 			deploy(zsc, aid, null);
 		} else {
 			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
@@ -149,6 +156,10 @@ public class DeployZimlet extends AdminDocumentHandler {
 	
 	@Override
 	protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-	    notes.add(sDocRightNotesTODO);
+	    relatedRights.add(Admin.R_deployZimlet);
+	    
+	    notes.add("If deploying on all servers, need the " + Admin.R_deployZimlet.getName() + 
+	            " right on all servers or on global grant.  If deploying on local server, need " +
+	            "the " + Admin.R_deployZimlet.getName() + " on the local server.");
     }
 }

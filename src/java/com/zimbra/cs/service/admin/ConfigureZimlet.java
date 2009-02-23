@@ -65,5 +65,11 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 	@Override
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
 	    notes.add(sDocRightNotesTODO);
+	    
+	    notes.add("Currentlt the soap gets a uploaded blob containing metadata. " + 
+	            "The zimlet name is encoded in in the blob and is decoded in ZimletUtil. " +
+	            "We need a way to know the zimlet name (and cos name if any, currently it " +
+	            "seems to always only update the default cos) in the SOAP handler in order to " +
+	            "check right.");
     }
 }

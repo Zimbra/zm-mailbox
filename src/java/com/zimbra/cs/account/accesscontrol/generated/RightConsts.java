@@ -26,7 +26,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090221-1211 */
+    /* build: 5.0 pshao 20090222-2139 */
 
 
     /*
@@ -282,6 +282,11 @@ public class RightConsts {
      * delete zimlet
      */
     public static final String RT_deleteZimlet = "deleteZimlet";
+
+    /**
+     * deploy and undeploy zimlets on a server
+     */
+    public static final String RT_deployZimlet = "deployZimlet";
 
     /**
      * flush LDAP, skin, local caches on server
@@ -573,16 +578,6 @@ public class RightConsts {
      * rename distribution list
      */
     public static final String RT_renameDistributionList = "renameDistributionList";
-
-    /**
-     * rename domain
-     */
-    public static final String RT_renameDomain = "renameDomain";
-
-    /**
-     * rename server
-     */
-    public static final String RT_renameServer = "renameServer";
 
     /**
      * set account password

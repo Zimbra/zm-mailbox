@@ -65,16 +65,19 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT) || sortBy.equals(SORT_ACCOUNT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
 
+        //
         // if we are a domain admin only, restrict to domain
         // hmm, this SOAP is not domainAuthSufficient, bug? 
         //
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            if (domain == null) {
+            // need a domain, if domain is not specified, use the authed admins own domain.
+            if (domain == null)
                 domain = getAuthTokenAccountDomain(zsc).getName();
-            } else {
-                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW);
-            }
+            
+            // sanity check 
+            if (domain == null)
+                throw AccountServiceException.INVALID_REQUEST("no domain", null);
         }
 
         Domain d = null;
@@ -83,7 +86,13 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
-
+        
+        // if we have a domain, check the domain right getDomainQuotaUsage
+        // if we don't have a domain, only allow system admin
+        if (d != null)
+            checkDomainRight(zsc, d, Admin.R_getDomainQuotaUsage);
+        else
+            checkRight(zsc, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
         
         QuotaUsageParams params = new QuotaUsageParams(d, sortBy,sortAscending);
 
@@ -106,16 +115,6 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < quotas.size(); i++) {
             AccountQuota quota = quotas.get(i);
-            
-            //==============================================================
-            // checking right could be a perf hit, need to load each account
-            // if the account is not in cache, will laod from LDAP.
-            Account acct = prov.get(AccountBy.id, quota.id);
-            if (acct == null)
-                continue;
-            checkRight(zsc, acct, Admin.R_getMailboxInfo);
-            // end right checking
-            //==============================================================
             
             Element account = response.addElement(AdminConstants.E_ACCOUNT);
             account.addAttribute(AdminConstants.A_NAME, quota.name);
@@ -224,6 +223,9 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     
     @Override
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_getMailboxInfo);
+        relatedRights.add(Admin.R_getDomainQuotaUsage);
+        
+        notes.add("If a domain is specified, need the the domain right " + Admin.R_getDomainQuotaUsage.getName() +
+                ".  If domain is not specified, only system admins are allowed.");
     }
 }

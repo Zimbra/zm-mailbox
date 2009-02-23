@@ -17,18 +17,22 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Set;
 
 import org.dom4j.QName;
 
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.DocumentDispatcher;
@@ -38,7 +42,7 @@ import com.zimbra.soap.DocumentDispatcher;
  */
 public class GetRightsDoc extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
         Element response = lc.createElement(AdminConstants.GET_RIGHTS_DOC_RESPONSE);
@@ -46,7 +50,7 @@ public class GetRightsDoc extends AdminDocumentHandler {
         return response;
     }
     
-    private void doGetRightsDoc(Map<String, Object> context, Element response) {
+    private void doGetRightsDoc(Map<String, Object> context, Element response) throws ServiceException {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         DocumentDispatcher dispatcher = engine.getDocumentDispatcher();
         
@@ -63,6 +67,8 @@ public class GetRightsDoc extends AdminDocumentHandler {
                 handlersWithRightsDoc.put(qname.getQualifiedName(), (AdminDocumentHandler)soapHandler);
             }
         }
+        
+        Set<AdminRight> usedRights = new HashSet<AdminRight>();
         
         List<AdminRight> relatedRights = new ArrayList<AdminRight>();
         List<String> notes = new ArrayList<String>();
@@ -81,12 +87,21 @@ public class GetRightsDoc extends AdminDocumentHandler {
             for (AdminRight adminRight : relatedRights) {
                 Element eRight = eRights.addElement(AdminConstants.E_RIGHT);
                 eRight.addAttribute(AdminConstants.A_NAME, adminRight.getName());
+                
+                usedRights.add(adminRight);
             }
             
             Element eNotes = eCommand.addElement(AdminConstants.E_DESC);
             for (String note : notes)
                 eNotes.addElement(AdminConstants.E_NOTE).setText(note);
         }
+        
+        // see which ones are not being applied yet
+        Set<AdminRight> allRights = new HashSet<AdminRight>();
+        allRights.addAll(RightManager.getInstance().getAllAdminRights().values());
+        Set<AdminRight> notUsed = SetUtil.subtract(allRights, usedRights);
+        for (AdminRight nu : notUsed)
+            response.addElement("notUsed").setText(nu.getName());
     }
 
     public boolean needsAuth(Map<String, Object> context) {

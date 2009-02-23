@@ -46,11 +46,6 @@ public class GetDomainInfo extends AdminDocumentHandler {
         DomainBy domainBy = DomainBy.fromString(key);
         Domain domain = prov.get(domainBy, value);
 
-        /* 
-        if (domain != null && !canAccessDomain(lc, domain))
-            throw ServiceException.PERM_DENIED("can not access domain");
-        */
-        
         Element response = lc.createElement(AdminConstants.GET_DOMAIN_INFO_RESPONSE);
         
         if (domain == null && domainBy != DomainBy.name && domainBy != DomainBy.virtualHostname) {

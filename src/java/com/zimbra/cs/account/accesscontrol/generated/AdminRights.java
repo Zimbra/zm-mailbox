@@ -32,7 +32,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090221-1211 */
+    /* build: 5.0 pshao 20090222-2139 */
 
 
     public static AdminRight R_accessGAL;
@@ -77,6 +77,7 @@ public class AdminRights {
     public static AdminRight R_deleteServer;
     public static AdminRight R_deleteXMPPComponent;
     public static AdminRight R_deleteZimlet;
+    public static AdminRight R_deployZimlet;
     public static AdminRight R_flushCache;
     public static AdminRight R_getAccount;
     public static AdminRight R_getAccountFeatures;
@@ -135,8 +136,6 @@ public class AdminRights {
     public static AdminRight R_renameCalendarResource;
     public static AdminRight R_renameCos;
     public static AdminRight R_renameDistributionList;
-    public static AdminRight R_renameDomain;
-    public static AdminRight R_renameServer;
     public static AdminRight R_setAccountPassword;
     public static AdminRight R_setAdminSavedSearch;
     public static AdminRight R_setCalendarResourcePassword;
@@ -189,6 +188,7 @@ public class AdminRights {
         R_deleteServer                         = rm.getAdminRight(Right.RT_deleteServer);
         R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
+        R_deployZimlet                         = rm.getAdminRight(Right.RT_deployZimlet);
         R_flushCache                           = rm.getAdminRight(Right.RT_flushCache);
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
         R_getAccountFeatures                   = rm.getAdminRight(Right.RT_getAccountFeatures);
@@ -247,8 +247,6 @@ public class AdminRights {
         R_renameCalendarResource               = rm.getAdminRight(Right.RT_renameCalendarResource);
         R_renameCos                            = rm.getAdminRight(Right.RT_renameCos);
         R_renameDistributionList               = rm.getAdminRight(Right.RT_renameDistributionList);
-        R_renameDomain                         = rm.getAdminRight(Right.RT_renameDomain);
-        R_renameServer                         = rm.getAdminRight(Right.RT_renameServer);
         R_setAccountPassword                   = rm.getAdminRight(Right.RT_setAccountPassword);
         R_setAdminSavedSearch                  = rm.getAdminRight(Right.RT_setAdminSavedSearch);
         R_setCalendarResourcePassword          = rm.getAdminRight(Right.RT_setCalendarResourcePassword);

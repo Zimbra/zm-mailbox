@@ -44,9 +44,6 @@ public abstract class ShareInfoHandler extends AdminDocumentHandler {
             if (account == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(value);
             
-            if (!canAccessAccount(zsc, account))
-                throw ServiceException.PERM_DENIED("can not access account");
-            
             entry = account;
         } else {
             String key = eDl.getAttribute(AdminConstants.A_BY);
@@ -56,9 +53,6 @@ public abstract class ShareInfoHandler extends AdminDocumentHandler {
             
             if (dl == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
-    
-            if (!canAccessEmail(zsc, dl.getName()))
-                throw ServiceException.PERM_DENIED("can not access dl");
             
             entry = dl;
         }

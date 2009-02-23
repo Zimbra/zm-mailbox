@@ -435,8 +435,6 @@ public class RightCommand {
      * TODOs:
      *
      * 3. family mailbox (currently in DomainAccessManager, move to AccessManager so can apply to non domain based AM)
-     * 4. callsites:
-     *       canAccessAccount, canAccessDomain, canAccessEmail, checkRightTODO
      *
      * 6. domain admin rights     
      * 7. check all rights in zimbra-rights.xml ar used or still need to be used

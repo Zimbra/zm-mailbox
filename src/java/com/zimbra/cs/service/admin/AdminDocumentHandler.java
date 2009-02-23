@@ -215,15 +215,15 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return AccessManager.getInstance().getDomain(zsc.getAuthToken());
     }
     
-    public boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
+    private boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
         return AccessManager.getInstance().canAccessDomain(zsc.getAuthToken(), domainName);
     }
 
-    public boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
+    private boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
         return canAccessDomain(zsc, domain.getName());
     }
 
-    public boolean canModifyMailQuota(ZimbraSoapContext zsc, Account target, long mailQuota) throws ServiceException {
+    protected boolean canModifyMailQuota(ZimbraSoapContext zsc, Account target, long mailQuota) throws ServiceException {
         return AccessManager.getInstance().canModifyMailQuota(zsc.getAuthToken(), target, mailQuota);
     }
 
@@ -234,11 +234,16 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return parts[1];
     }
     
+    /*
+     * TODO:  can't be private yet, still called from ZimbraAdminExt and ZimbraCustomerServices/hosted
+     * 
+     * Need to fix those callsite to call one of the check*** methods.
+     */
     public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
         return canAccessDomain(zsc, getDomainFromEmail(email));
     }
     
-    public boolean canAccessCos(ZimbraSoapContext zsc, Cos cos) throws ServiceException {
+    private boolean canAccessCos(ZimbraSoapContext zsc, Cos cos) throws ServiceException {
         return AccessManager.getInstance().canAccessCos(zsc.getAuthToken(), cos);
     }
     
@@ -249,24 +254,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      *     Connector methods between domain based access manager and 
      *     pure ACL based access manager.
      *     
-     *     The difference cannot be resolved cleanly in AccessManager API and 
-     *     is cleaner this way.
-     *     
-     *     TODO: make sure only the following methods are called from
-     *           all admin handlers, non of the legacy ones:
-     *           (Admin)AccessManager.canAccessAccount, canAccessEmail, canAccessDomain 
-     *           should be called.
-     *           
-     *     TODO: make sure *all* admin soap handlers call one of:
-     *               checkRightTODO
-     *               checkSetAttrsOnCreate
-     *               hasRightsToList
-     *               checkRight
-     *               checkAccountRight
-     *               checkCalendarResourceRight
-     *               checkDistributionListRight
-     *               checkDomainRightByEmail
-     *               checkDomainRight
+     *     It is cleaner this way instead of wrap all the diff in 
+     *     AccessManager API.
      * ======================================================================
      */
     
@@ -292,6 +281,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     }
     
     /**
+     * Only called for pure ACL based access manager.
      * 
      * @param am
      * @param zsc
@@ -334,9 +324,15 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             throw ServiceException.FAILURE("internal error", null);
     }
     
-    /*
+    /**
      * This has to be called *after* the *can create* check.
      * For domain based AccessManager, all attrs are allowed if the admin can create.
+     * 
+     * @param zsc
+     * @param targetType
+     * @param entryName
+     * @param attrs
+     * @throws ServiceException
      */
     protected void checkSetAttrsOnCreate(ZimbraSoapContext zsc, TargetType targetType, String entryName, Map<String, Object> attrs) 
         throws ServiceException {
