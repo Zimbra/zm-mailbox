@@ -567,10 +567,6 @@
   <desc>see domain in GetAllCos/SearchDirectoryResponse</desc>
 </right>
 
-<right name="renameDomain" type="preset" targetType="domain">
-  <desc>rename domain</desc>
-</right>
-
 <right name="deleteDomain" type="preset" targetType="domain">
   <desc>delete domain</desc>
 </right>
@@ -694,10 +690,6 @@
   <desc>see server in GetAllCos/SearchDirectoryResponse</desc>
 </right>
 
-<right name="renameServer" type="preset" targetType="server">
-  <desc>rename server</desc>
-</right>
-
 <right name="deleteServer" type="preset" targetType="server">
   <desc>delete server</desc>
 </right>
@@ -737,6 +729,10 @@
 <right name="manageWaitSet" type="preset" targetType="server">
   <desc>create, destroy, wait, query wait sets</desc>
 </right>  
+
+<right name="deployZimlet" type="preset" targetType="server">
+  <desc>deploy and undeploy zimlets on a server</desc>
+</right> 
        
 <!-- 
   TODO:
@@ -770,7 +766,7 @@
   <desc>set all XMPP component attributes</desc>
 </right>
 
-<right name="listXMPPComponent" type="preset" targetType="zimlet">
+<right name="listXMPPComponent" type="preset" targetType="xmppcomponent">
   <desc>see XMPP component in GetAllXMPPComponents</desc>
 </right>
 
@@ -874,5 +870,26 @@
       <a n="zimbraACE"/>
   </attrs>
 </right>
+
+<!-- 
+      <notUsed>configureAdminUI</notUsed>
+      <notUsed>configureQuota</notUsed>
+      <notUsed>configureExternalAuth</notUsed>
+      <notUsed>configureWikiAccount</notUsed>
+      <notUsed>viewEmail</notUsed>
+      <notUsed>modifyAccount</notUsed>
+      <notUsed>configureCosConstraint</notUsed>
+      <notUsed>modifyXMPPComponent</notUsed>
+      <notUsed>modifyDomain</notUsed>
+      <notUsed>configureGlobalConfigConstraint</notUsed>
+      <notUsed>configurePasswordStrength</notUsed>
+      <notUsed>modifyCalendarResource</notUsed>
+      <notUsed>modifyServer</notUsed>
+      <notUsed>modifyDistributionList</notUsed>
+      <notUsed>getAccountFeatures</notUsed>
+      <notUsed>modifyGlobalConfig</notUsed>
+      <notUsed>modifyCos</notUsed>
+      <notUsed>configureExternalGAL</notUsed>
+-->
 
 </rights>
