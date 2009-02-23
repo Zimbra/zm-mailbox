@@ -451,10 +451,10 @@ public class RightCommand {
         if (!READY())
             return;
         
-        if (!(AccessManager.getInstance() instanceof RoleAccessManager))
+        if (!(AccessManager.getInstance() instanceof ACLAccessManager))
             throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + AccessManager.getInstance().getClass().getCanonicalName() +
                                            ", check localonfig key " + LC.zimbra_class_accessmanager.key() + 
-                                           ", it should be set to " +  RoleAccessManager.class.getCanonicalName(), null);
+                                           ", it should be set to " +  ACLAccessManager.class.getCanonicalName(), null);
     }
     
     /**

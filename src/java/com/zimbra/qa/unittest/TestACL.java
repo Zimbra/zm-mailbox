@@ -48,7 +48,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.RightUtil;
-import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
+import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -647,7 +647,7 @@ public abstract class TestACL extends TestCase {
         if (expected == null && actual == null)
             return;
         
-        if (!(AccessManager.getInstance() instanceof RoleAccessManager))
+        if (!(AccessManager.getInstance() instanceof ACLAccessManager))
             return;
         
         if (expected instanceof TodoViaGrant)
@@ -839,12 +839,12 @@ public abstract class TestACL extends TestCase {
         
   cp /Users/pshao/p4/main/ZimbraServer/data/unittest/* /opt/zimbra/conf/rights
   
-  zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.RoleAccessManager
+  zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.ACLAccessManager
   then restart server
   
   or:
   <key name="zimbra_class_accessmanager">
-    <value>com.zimbra.cs.account.accesscontrol.RoleAccessManager</value>
+    <value>com.zimbra.cs.account.accesscontrol.ACLAccessManager</value>
   </key>
 */
     public static void main(String[] args) throws Exception {
@@ -855,7 +855,7 @@ public abstract class TestACL extends TestCase {
         TestUtil.runTest(TestACLGrantee.class);    // all user rights for now
         TestUtil.runTest(TestACLPrecedence.class); // all user rights for now
         
-        if (mAM instanceof RoleAccessManager) {
+        if (mAM instanceof ACLAccessManager) {
             TestUtil.runTest(TestACLTarget.class);
             TestUtil.runTest(TestACLAttrRight.class);
             TestUtil.runTest(TestACLRight.class);

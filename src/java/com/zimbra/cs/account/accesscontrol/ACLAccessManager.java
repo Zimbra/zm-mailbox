@@ -38,15 +38,9 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.ACL;
 
-/*
- * TODO: when things are stable:
- *       rename AclAccessManager to DomainACLAccessManager, then
- *       rename RoleAccessManager to ACLAccessManager
- */
+public class ACLAccessManager extends AccessManager {
 
-public class RoleAccessManager extends AccessManager {
-
-    public RoleAccessManager() throws ServiceException {
+    public ACLAccessManager() throws ServiceException {
         // initialize RightManager
         RightManager.getInstance();
     }

@@ -24,7 +24,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
+import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -72,7 +72,7 @@ public class TestACLGrantee extends TestACL {
         verify(target, target, User.R_invite, ALLOW, null);
         
         // admin access using admin privileges
-        if (AccessManager.getInstance() instanceof RoleAccessManager) // *all* decisions are based on ACL, admins don't have special rights 
+        if (AccessManager.getInstance() instanceof ACLAccessManager) // *all* decisions are based on ACL, admins don't have special rights 
             verify(admin, target, User.R_invite, AS_ADMIN, DENY, null);
         else
             verify(admin, target, User.R_invite, AS_ADMIN, ALLOW, null);

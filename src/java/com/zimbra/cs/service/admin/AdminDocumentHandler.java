@@ -31,9 +31,9 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
@@ -45,7 +45,6 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RoleAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -260,7 +259,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     
     private boolean isDomainBasedAccessManager(AccessManager am) {
-        return (!(am instanceof RoleAccessManager));
+        return ((am instanceof DomainAccessManager));
     }
 
     /**
