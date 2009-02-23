@@ -60,7 +60,6 @@ public abstract class TestACL extends TestCase {
     
     protected static boolean CHECK_LIMIT = false;  // todo: remove this and all limit related code after all tests pass. 
     
-    // private static final AclAccessManager mAM = new AclAccessManager();
     protected static final AccessManager mAM = AccessManager.getInstance();
     protected static final Provisioning mProv = Provisioning.getInstance();
     protected static final String TEST_ID = TestProvisioningUtil.genTestId();

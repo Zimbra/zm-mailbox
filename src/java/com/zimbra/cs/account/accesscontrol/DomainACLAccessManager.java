@@ -28,13 +28,12 @@ import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.ACL;
 
 /*
- * subclass DomainAccessManager for now
- * will replace DomainAccessManager after ACL based access controls are fully implemented.
- * 
+ * - domain based access manager
+ * - support user ACL only, not admin rights.
  */
-public class AclAccessManager extends DomainAccessManager {
+public class DomainACLAccessManager extends DomainAccessManager {
     
-    public AclAccessManager() throws ServiceException {
+    public DomainACLAccessManager() throws ServiceException {
         // initialize RightManager
         RightManager.getInstance();
     }
