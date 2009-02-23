@@ -214,11 +214,11 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return AccessManager.getInstance().getDomain(zsc.getAuthToken());
     }
     
-    private boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
+    protected boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
         return AccessManager.getInstance().canAccessDomain(zsc.getAuthToken(), domainName);
     }
 
-    private boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
+    protected boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
         return canAccessDomain(zsc, domain.getName());
     }
 
