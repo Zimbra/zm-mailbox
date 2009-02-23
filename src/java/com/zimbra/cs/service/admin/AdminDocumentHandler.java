@@ -644,12 +644,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     }
     
     // for documenting rights needed and notes for a SOAP.
-    protected abstract void docRights(List<AdminRight> relatedRights, List<String> notes);
-    /*
-    {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add(sDocRightNotesTODO);
     }
-    */
+   
     
     // in the end no one should refer to this string
     protected static final String sDocRightNotesTODO = "TDB";
