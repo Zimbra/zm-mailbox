@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
@@ -1086,6 +1087,14 @@ public class RightChecker {
         return granteeIds;
     }
     
+
+    
+    private static String getActualAttrName(String attr) {
+        if (attr.charAt(0) == '+' || attr.charAt(0) == '-')
+            return attr.substring(1);
+        else
+            return attr;
+    }
     
     static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded) throws ServiceException {
         
@@ -1119,13 +1128,13 @@ public class RightChecker {
         // see if all needed are allowed
         Set<String> allowed = attrsAllowed.getAllowed();
         for (String attr : attrsNeeded) {
-            if (!allowed.contains(attr))
+            String attrName = getActualAttrName(attr);
+            if (!allowed.contains(attrName))
                 return false;
         }
         return true;
     }
 
-    
     /**
      * Given a result from canAccessAttrsfrom, returns if setting attrs to values is allowed.
      * 
@@ -1161,11 +1170,13 @@ public class RightChecker {
         Set<String> allowed = attrsAllowed.getAllowed();
         
         for (Map.Entry<String, Object> attr : attrsNeeded.entrySet()) {
-            if (!allowAll && !allowed.contains(attr.getKey()))
+            String attrName = getActualAttrName(attr.getKey());
+            
+            if (!allowAll && !allowed.contains(attrName))
                 return false;
-                  
+                 
             if (hasConstraints) {
-                if (AttributeConstraint.violateConstraint(constraints, attr.getKey(), attr.getValue()))
+                if (AttributeConstraint.violateConstraint(constraints, attrName, attr.getValue()))
                     return false;
             }
         }
@@ -1216,11 +1227,19 @@ public class RightChecker {
                 if (domainCosId != null) cos = prov.get(CosBy.id, domainCosId);
                 if (cos == null) cos = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
             }
-            targetEntry = new Account("pseudo@"+domain.getName(),
-                                       zimbraId,
-                                       attrMap,
-                                       cos.getAccountDefaults(),
-                                       prov);
+            
+            if (targetType == TargetType.account)
+                targetEntry = new Account("pseudo@"+domain.getName(),
+                                           zimbraId,
+                                           attrMap,
+                                           cos.getAccountDefaults(),
+                                           prov);
+            else
+                targetEntry = new CalendarResource("pseudo@"+domain.getName(),
+                                           zimbraId,
+                                           attrMap,
+                                           cos.getAccountDefaults(),
+                                           prov);
             break;
             
         case cos:  

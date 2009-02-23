@@ -81,9 +81,7 @@ public class SearchAccounts extends AdminDocumentHandler {
 
         // if we are a domain admin only, restrict to domain
         //
-        // Note: pure ACL based AccessManager won't go in the if here, 
-        // because its isDomainAdminOnly always returns false.
-        //
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
             if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
                 throw ServiceException.PERM_DENIED("can not search for domains");
@@ -181,7 +179,7 @@ public class SearchAccounts extends AdminDocumentHandler {
     }   
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccount);
         relatedRights.add(Admin.R_getCalendarResource);
         relatedRights.add(Admin.R_getDistributionList);

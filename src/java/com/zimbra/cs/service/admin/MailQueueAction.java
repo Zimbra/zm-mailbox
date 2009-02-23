@@ -86,7 +86,7 @@ public class MailQueueAction extends AdminDocumentHandler {
 	}
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageMailQueue);
     }
 }

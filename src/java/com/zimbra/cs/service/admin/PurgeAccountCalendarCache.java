@@ -89,7 +89,7 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_purgeAccountCalendarCache);
         relatedRights.add(Admin.R_purgeCalendarResourceCalendarCache);
     }

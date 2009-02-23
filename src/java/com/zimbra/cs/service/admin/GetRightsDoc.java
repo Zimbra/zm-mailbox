@@ -65,13 +65,13 @@ public class GetRightsDoc extends AdminDocumentHandler {
         }
         
         List<AdminRight> relatedRights = new ArrayList<AdminRight>();
-        
+        List<String> notes = new ArrayList<String>();
         for (Map.Entry<String, AdminDocumentHandler> handler : handlersWithRightsDoc.entrySet()) {
             String soapName = handler.getKey();
             AdminDocumentHandler soapHandler = handler.getValue();
             
             relatedRights.clear();
-            StringBuilder notes = new StringBuilder();
+            notes.clear();
             soapHandler.docRights(relatedRights, notes);
             
             Element eCommand = response.addElement(AdminConstants.E_CMD);
@@ -84,7 +84,8 @@ public class GetRightsDoc extends AdminDocumentHandler {
             }
             
             Element eNotes = eCommand.addElement(AdminConstants.E_DESC);
-            eNotes.setText(notes.toString());
+            for (String note : notes)
+                eNotes.addElement(AdminConstants.E_NOTE).setText(note);
         }
     }
 
@@ -97,7 +98,7 @@ public class GetRightsDoc extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append(sDocRightNotesAllowAllAdmins);
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(sDocRightNotesAllowAllAdmins);
     }
 }

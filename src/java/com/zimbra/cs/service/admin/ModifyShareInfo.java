@@ -108,7 +108,7 @@ public class ModifyShareInfo extends ShareInfoHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_publishAccountShareInfo);
         relatedRights.add(Admin.R_publishCalendarResourceShareInfo);
         relatedRights.add(Admin.R_publishDistributionListShareInfo);

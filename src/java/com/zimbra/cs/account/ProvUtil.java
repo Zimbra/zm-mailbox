@@ -1891,7 +1891,8 @@ public class ProvUtil implements DebugListener {
             
             System.out.println();
             System.out.println("    Notes:");
-            System.out.println("        " + doc.getNotes());
+            for (String n : doc.getNotes())
+                System.out.println(FileGenUtil.wrapComments(StringUtil.escapeHtml(n), 70, "        ") + "\n");
             System.out.println();
         }
     }

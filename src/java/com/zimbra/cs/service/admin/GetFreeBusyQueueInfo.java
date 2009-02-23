@@ -65,7 +65,7 @@ public class GetFreeBusyQueueInfo extends AdminDocumentHandler {
 	}
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append(sDocRightNotesSystemAdminsOnly);
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(sDocRightNotesSystemAdminsOnly);
     }
 }

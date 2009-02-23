@@ -64,13 +64,6 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
 
         checkCalendarResourceRight(zsc, resource, attrs);
 
-        if (isDomainAdminOnly(zsc)) {
-            for (String attrName : attrs.keySet()) {
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, AttributeClass.calendarResource))
-                    throw ServiceException.PERM_DENIED("can not modify attr: " + attrName);
-            }
-        }
-
         // pass in true to checkImmutable
         prov.modifyAttrs(resource, attrs, true);
 
@@ -84,8 +77,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append("TODO:  check quota\n\n");
-        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyCalendarResource.getName(), "calendar resource"));
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyCalendarResource.getName(), "calendar resource"));
     }
 }

@@ -117,8 +117,21 @@ public class RoleAccessManager extends AccessManager {
 
     @Override
     public boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException {
-        // TODO Auto-generated method stub
-        return false;
+        
+        Account authedAcct = getAccountFromAuthToken(at);
+        
+        if (RightChecker.isSystemAdmin(authedAcct, true))
+            return true;
+        
+        // TODO: how do we handle the use case "only certain (non-system) admins can 
+        // set quota to unlimited" ?
+        // Use a setUnlimitedQuota preset right?
+        /*
+        if (canDo(authedAcct, targetAccount, Admin.R_setUnlimitedQuota, true, false, null))
+            return true;
+        */
+        
+        return canSetMailQuota(at, targetAccount, mailQuota);
     }
     
     @Override
@@ -164,7 +177,7 @@ public class RoleAccessManager extends AccessManager {
                 else
                     return false;
             } else if (grantee.isZimbraUser())
-                granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+                granteeAcct = getAccountFromAuthToken(grantee);
             else {
                 if (rightNeeded.isUserRight())
                     granteeAcct = new ACL.GuestAccount(grantee);

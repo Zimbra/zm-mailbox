@@ -75,9 +75,9 @@ public class CheckHealth extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_checkHealth);
-        notes.append("The " + Admin.R_checkHealth.getName() + " is needed " +
+        notes.add("The " + Admin.R_checkHealth.getName() + " is needed " +
                 "only when the client making the SOAP request is localhost.");
     }
 }

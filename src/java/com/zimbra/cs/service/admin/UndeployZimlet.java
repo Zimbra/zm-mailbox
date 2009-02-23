@@ -65,7 +65,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 	}
 	
 	@Override
-	protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-	    notes.append(sDocRightNotesTODO);
+	protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+	    notes.add(sDocRightNotesTODO);
 	}
 }

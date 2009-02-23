@@ -122,10 +122,10 @@ public class ModifyZimlet extends AdminDocumentHandler {
     
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageZimlet);
         relatedRights.add(Admin.R_modifyZimlet);
-        notes.append("For acl: needs " + Admin.R_manageZimlet.getName() + " on cos\n" +
-                     "For status and priority: needs " + Admin.R_modifyZimlet.getName() + " on zimlet.");
+        notes.add("For acl: needs " + Admin.R_manageZimlet.getName() + " on cos.");
+        notes.add("For status and priority: needs " + Admin.R_modifyZimlet.getName() + " on zimlet.");
     }
 }

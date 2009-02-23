@@ -1617,19 +1617,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static class RightsDoc { 
         String mCmd;
         List<String> mRights;
-        String mNotes;
+        List<String> mNotes;
         
         public RightsDoc(String cmd) {
             mCmd = cmd;
             mRights = new ArrayList<String>();
+            mNotes = new ArrayList<String>();
         }
         
         public void addRight(String right) {
             mRights.add(right);
         }
         
-        public void setNotes(String notes) {
-            mNotes = notes;
+        public void addNote(String note) {
+            mNotes.add(note);
         }
         
         public String getCmd() {
@@ -1640,7 +1641,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return mRights;
         }
         
-        public String getNotes() {
+        public List<String> getNotes() {
             return mNotes;
         }
     }

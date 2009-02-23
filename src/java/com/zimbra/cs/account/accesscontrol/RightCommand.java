@@ -433,10 +433,16 @@ public class RightCommand {
      * remove when all is well
      * 
      * TODOs:
-     * 1. can change quota
-     * 2. can assign cos
-     * 3. cross domain right
-     * 4. grant the same negative grants of the granter to the grantee
+     *
+     * 3. family mailbox (currently in DomainAccessManager, move to AccessManager so can apply to non domain based AM)
+     * 4. callsites:
+     *       canAccessAccount, canAccessDomain, canAccessEmail, checkRightTODO
+     *
+     * 6. domain admin rights     
+     * 7. check all rights in zimbra-rights.xml ar used or still need to be used
+     *   
+     * 7. cross domain right
+     * 8. grant the same negative grants of the granter to the grantee
      * 
      */
     private static boolean READY() {

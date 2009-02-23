@@ -68,9 +68,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         // if we are a domain admin only, restrict to domain
         // hmm, this SOAP is not domainAuthSufficient, bug? 
         //
-        // Note: pure ACL based AccessManager won't go in the if here, 
-        // because its isDomainAdminOnly always returns false.
-        //
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
@@ -225,7 +223,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getMailboxInfo);
     }
 }

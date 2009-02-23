@@ -93,9 +93,9 @@ public class PurgeMessages extends AdminDocumentHandler {
 	
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_purgeMessages);
-        notes.append("If account ids are specified, needs effective " +
+        notes.add("If account ids are specified, needs effective " +
                 Admin.R_purgeMessages.getName() + " right for each account.  " +
                 "If account ids are not specified, the authed account has to be a system admin.");
     }

@@ -60,8 +60,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
         
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null) {
-            // Note: pure ACL based AccessManager won't go in the if here, 
-            // because its isDomainAdminOnly always returns false.
+            // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
             if (isDomainAdminOnly(zsc)) {
                 throw ServiceException.PERM_DENIED("account doesn't exist, unable to determine authorization");
             }
@@ -100,7 +99,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_deleteAccount);
     }
 }

@@ -1940,7 +1940,9 @@ public class SoapProvisioning extends Provisioning {
             for (Element eRight : eRights.listElements(AdminConstants.E_RIGHT))
                 doc.addRight(eRight.getAttribute(AdminConstants.A_NAME));
                 
-            doc.setNotes(eCmd.getElement(AdminConstants.E_DESC).getText());
+            Element eDesc = eCmd.getElement(AdminConstants.E_DESC);
+            for (Element eNote : eDesc.listElements(AdminConstants.E_NOTE))
+                doc.addNote(eNote.getText());
             
             docs.add(doc);
         }

@@ -24,6 +24,7 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AttributeType;
@@ -406,11 +407,22 @@ class AttributeConstraint {
         
         return constraints;
     }
+    
+    private static boolean ignoreConstraint(String attrName) {
+        return (Provisioning.A_zimbraMailQuota.equals(attrName) ||
+                Provisioning.A_zimbraCOSId.equals(attrName) ||
+                Provisioning.A_zimbraDomainDefaultCOSId.equals(attrName));
+    }
 
     static boolean violateConstraint(Map<String, AttributeConstraint> constraints, String attrName, Object value) throws ServiceException {
         AttributeConstraint constraint = constraints.get(attrName);
         if (constraint == null)
             return false;
+        
+        if (ignoreConstraint(attrName)) {
+            ZimbraLog.acl.warn("Constraint for " + attrName + " is not suported and is ignored.");
+            return false;
+        }
         
         // throw exception if constraint is violated so it can be bubbled all the way up to 
         // the admin, otherwise it's too much pain to find out why PERM_DENIED. 
@@ -422,7 +434,6 @@ class AttributeConstraint {
             throw ServiceException.PERM_DENIED("constraint violated: " + constraint.getAttrName());
         return violated;
     }
-    
     
     private static void test(Map<String, AttributeConstraint> constraints, String attrName, Object value, boolean expected) throws ServiceException {
         boolean violated = violateConstraint(constraints, attrName, value);

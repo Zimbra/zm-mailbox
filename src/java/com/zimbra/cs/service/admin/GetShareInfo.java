@@ -85,7 +85,7 @@ public class GetShareInfo extends ShareInfoHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccountShareInfo);
         relatedRights.add(Admin.R_getCalendarResourceShareInfo);
         relatedRights.add(Admin.R_getDistributionListShareInfo);

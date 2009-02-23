@@ -23,13 +23,16 @@ package com.zimbra.cs.service.admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
@@ -67,20 +70,11 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         checkAccountRight(zsc, account, attrs);
 
-        if (isDomainAdminOnly(zsc)) {
-            
-            for (String attrName : attrs.keySet()) {
-                if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
-                    attrName = attrName.substring(1);
-                
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, AttributeClass.account))
-                    throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
-            }
-        }
-
         // check to see if quota is being changed
         checkQuota(zsc, account, attrs);
 
+        // check to see if cos is being changed, need right on new cos 
+        checkCos(zsc, account, attrs);
 
         // pass in true to checkImmutable
         prov.modifyAttrs(account, attrs, true);
@@ -94,17 +88,24 @@ public class ModifyAccount extends AdminDocumentHandler {
         ToXML.encodeAccountOld(response, account);
 	    return response;
 	}
-
-    private void checkQuota(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
-        Object object = attrs.get(Provisioning.A_zimbraMailQuota);
-        if (object == null) object = attrs.get("+" + Provisioning.A_zimbraMailQuota);
-        if (object == null) object = attrs.get("-" + Provisioning.A_zimbraMailQuota);
-        if (object == null) return;
+	
+    static String getStringAttrNewValue(String attrName, Map<String, Object> attrs) throws ServiceException {
+	    Object object = attrs.get(attrName);
+        if (object == null) object = attrs.get("+" + attrName);
+        if (object == null) object = attrs.get("-" + attrName);
+        if (object == null) return null;
 
         if (!(object instanceof String))
-            throw ServiceException.PERM_DENIED("can not modify mail quota (single valued attribute)");
+            throw ServiceException.PERM_DENIED("can not modify " +  attrName + "(single valued attribute)");
 
-        String quotaAttr = (String) object;
+        String attrNewValue = (String)object;
+        return attrNewValue;
+	}
+
+    private void checkQuota(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
+        String quotaAttr = getStringAttrNewValue(Provisioning.A_zimbraMailQuota, attrs);
+        if (quotaAttr == null)
+            return;  // not changing it
 
         long quota;
 
@@ -115,13 +116,38 @@ public class ModifyAccount extends AdminDocumentHandler {
             try {
                 quota = Long.parseLong(quotaAttr);
             } catch (NumberFormatException e) {
-                throw AccountServiceException.INVALID_ATTR_VALUE("can not modify mail quota (invalid format): "+object, e);
+                throw AccountServiceException.INVALID_ATTR_VALUE("can not modify mail quota (invalid format): "+quotaAttr, e);
             }
         }
         
-        checkRightTODO();
         if (!canModifyMailQuota(zsc,  account, quota))
             throw ServiceException.PERM_DENIED("can not modify mail quota");
+    }
+    
+    private void checkCos(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
+        String newCosId = getStringAttrNewValue(Provisioning.A_zimbraCOSId, attrs);
+        if (newCosId == null)
+            return;  // not changing it
+        
+        Provisioning prov = Provisioning.getInstance();
+        if (newCosId.equals("")) {
+            // they are unsetting it, so check the domain
+            newCosId = prov.getDomain(account).getAttr(Provisioning.A_zimbraDomainDefaultCOSId);
+            if (newCosId == null)
+                return;  // no domain cos, use the default COS, which is available to all
+        } 
+
+        Cos cos = prov.get(CosBy.id, newCosId);
+        if (cos == null) {
+            // will just use the default cos, let it through
+            ZimbraLog.account.warn("no such cos " + newCosId + ", will use system default COS");
+            return;  // or should we throw?
+        }
+        
+        // call checkRight instead of checkCosRight, because:
+        // 1. no domain based access manager backward compatibility issue
+        // 2. we only want to check right if we are using pure ACL based access manager. 
+        checkRight(zsc, cos, Admin.R_assignCos);
     }
     
     /*
@@ -157,8 +183,26 @@ public class ModifyAccount extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append(sDocRightNotesTODO + "  check quota\n\n");
-        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_assignCos);
+        
+        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account") + "\n");
+        
+        notes.add("Notes on " + Provisioning.A_zimbraMailQuota + ": " +
+                "Prior to ACL based AccessManager, " + 
+                "We've been supporting \"per admin limit\" (zimbraDomainAdminMaxMailQuota), which cannot be " +
+                "achieved by our constraint model(i.e. cos limit).  Also, 0 means unlimited quota, which cannot " + 
+                "be enforced by our constraint model either.  For now, we ignore any constraints " + 
+                "(zimbraConstraints, if any) on zimbraMailQuota and continue to support the old model.  " + 
+                "And, only a system admin can set quota to unlimited(i.e. 0).");
+        
+        notes.add("Notes on " + Provisioning.A_zimbraCOSId + ": " +
+                "If setting " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 
+                " right on the cos." + 
+                "If removing " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 
+                " right on the domain default cos. (in domain attribute " + Provisioning.A_zimbraDomainDefaultCOSId +")." +
+                "If there is no such cos (either specified by the new cos id value or from the domain default cos id value, " +
+                "will fallback to use the system default cos, and ACL is not check, because the system default cos " +
+                "is available to all.");
     }
 }

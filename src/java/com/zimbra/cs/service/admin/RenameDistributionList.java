@@ -81,7 +81,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
     }
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_renameDistributionList);
         relatedRights.add(Admin.R_createDistributionList);
     }

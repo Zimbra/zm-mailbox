@@ -50,7 +50,7 @@ public class GetLicenseInfo extends AdminDocumentHandler {
     }
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append(sDocRightNotesAllowAllAdmins);
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(sDocRightNotesAllowAllAdmins);
     }
 }

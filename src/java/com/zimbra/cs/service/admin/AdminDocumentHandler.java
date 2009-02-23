@@ -27,6 +27,8 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
@@ -272,6 +274,22 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return (!(am instanceof RoleAccessManager));
     }
 
+    /**
+     * only called for domain based access manager
+     * 
+     * @param attrClass
+     * @param attrs
+     * @throws ServiceException
+     */
+    public void checkModifyAttrs(AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException {
+        for (String attrName : attrs.keySet()) {
+            if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
+                attrName = attrName.substring(1);
+
+            if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, attrClass))
+                throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
+        }
+    }
     
     /**
      * 
@@ -417,21 +435,18 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     protected void checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
             // sanity check, this path is really for global admins 
-            if (isDomainAdminOnly(zsc))
-                hasRight = domainAuthSufficient(context);
-            else
-                hasRight = true;
-            if (!hasRight)
-                throw ServiceException.PERM_DENIED("cannot access entry");
+            if (isDomainAdminOnly(zsc)) {
+                if (!domainAuthSufficient(context))
+                    throw ServiceException.PERM_DENIED("cannot access entry");
+            }
+            
         } else {
             if (target == null)
                 target = Provisioning.getInstance().getGlobalGrant();
-            hasRight = doCheckRight(am, zsc, target, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, target, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
@@ -448,15 +463,13 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     protected void checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
             return;
         } else {
             if (target == null)
                 target = Provisioning.getInstance().getGlobalGrant();
-            hasRight = doCheckRight(am, zsc, target, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, target, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
@@ -483,14 +496,17 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     protected void checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            hasRight = canAccessAccount(zsc, account);
-            if (!hasRight)
+            if (!canAccessAccount(zsc, account))
                 throw ServiceException.PERM_DENIED("can not access account");
+            
+            if (isDomainAdminOnly(zsc) && (needed instanceof Map))
+                checkModifyAttrs(AttributeClass.account, (Map<String, Object>)needed);
+            
         } else {
             Boolean canAccess = canAccessAccountCommon(zsc, account);
+            boolean hasRight;
             if (canAccess == null)
                 hasRight = doCheckRight(am, zsc, account, needed);
             else
@@ -507,14 +523,17 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     protected void checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            hasRight = canAccessAccount(zsc, cr);
-            if (!hasRight)
+            if (!canAccessAccount(zsc, cr))
                 throw ServiceException.PERM_DENIED("can not access calendar resource");
+
+            if (isDomainAdminOnly(zsc) && (needed instanceof Map))
+                checkModifyAttrs(AttributeClass.calendarResource, (Map<String, Object>)needed);
+            
         } else {
             Boolean canAccess = canAccessAccountCommon(zsc, cr);
+            boolean hasRight;
             if (canAccess == null)
                 hasRight = doCheckRight(am, zsc, cr, needed);
             else
@@ -531,15 +550,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     protected void checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            hasRight = canAccessEmail(zsc, dl.getName());
-            if (!hasRight)
+            if (!canAccessEmail(zsc, dl.getName()))
                 throw ServiceException.PERM_DENIED("can not access dl");
         } else {
-            hasRight = doCheckRight(am, zsc, dl, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, dl, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
@@ -551,11 +567,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      */
     protected void checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            hasRight = canAccessEmail(zsc, email);
-            if (!hasRight)
+            if (!canAccessEmail(zsc, email))
                 throw ServiceException.PERM_DENIED("can not access email:" + email);
         } else {
             String domainName = getDomainFromEmail(email);
@@ -563,66 +577,58 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             if (domain == null)
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
-            hasRight = doCheckRight(am, zsc, domain, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, domain, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
     
     protected void checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            if (isDomainAdminOnly(zsc))  
-                hasRight = canAccessDomain(zsc, domainName);
-            else
-                hasRight = true;
-            if (!hasRight)
-                throw ServiceException.PERM_DENIED("can not access domain");
+            if (isDomainAdminOnly(zsc)) {
+                if (!canAccessDomain(zsc, domainName))
+                    throw ServiceException.PERM_DENIED("can not access domain");
+                
+                if (needed instanceof Map)
+                    checkModifyAttrs(AttributeClass.domain, (Map<String, Object>)needed);
+            }
         } else {
             Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
             if (domain == null)
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
-            hasRight = doCheckRight(am, zsc, domain, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, domain, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
     
     protected void checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            if (isDomainAdminOnly(zsc))  
-                hasRight = canAccessDomain(zsc, domain);
-            else
-                hasRight = true;
-            if (!hasRight)
-                throw ServiceException.PERM_DENIED("can not access domain");
+            // delegate to the String version of checkDomainRight instead of duplicating
+            // the code here, since domain based access manager resolve domain rights 
+            // by comparing the domain name anyway.
+            checkDomainRight(zsc, domain.getName(), needed);
+            
         } else {
-            hasRight = doCheckRight(am, zsc, domain, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, domain, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
     
     protected void checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
         
         if (isDomainBasedAccessManager(am)) {
-            if (isDomainAdminOnly(zsc))  
-                hasRight = canAccessCos(zsc, cos);
-            else
-                hasRight = true;
-            if (!hasRight)
-                throw ServiceException.PERM_DENIED("can not access cos");
+            if (isDomainAdminOnly(zsc)) {
+                if (!canAccessCos(zsc, cos))
+                    throw ServiceException.PERM_DENIED("can not access cos");
+            }
+            
         } else {
-            hasRight = doCheckRight(am, zsc, cos, needed);
-            if (!hasRight)
+            if (!doCheckRight(am, zsc, cos, needed))
                 throw ServiceException.PERM_DENIED(dumpNeeded(needed));
         }
     }
@@ -638,9 +644,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     }
     
     // for documenting rights needed and notes for a SOAP.
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append(sDocRightNotesTODO);
+    protected abstract void docRights(List<AdminRight> relatedRights, List<String> notes);
+    /*
+    {
+        notes.add(sDocRightNotesTODO);
     }
+    */
     
     // in the end no one should refer to this string
     protected static final String sDocRightNotesTODO = "TDB";

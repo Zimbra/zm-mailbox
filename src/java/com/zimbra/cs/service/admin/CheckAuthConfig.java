@@ -64,9 +64,9 @@ public class CheckAuthConfig extends AdminDocumentHandler {
 	}
 	
 	@Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_checkExternalAuthConfig);
-        notes.append(Admin.R_checkExternalAuthConfig.getName() + 
+        notes.add(Admin.R_checkExternalAuthConfig.getName() + 
                 " is a domain right.  However CheckExchangeAuth does not take a " + 
                 "domain, thus the right has to be granted on the globla grant " +
                 "to be effective.");

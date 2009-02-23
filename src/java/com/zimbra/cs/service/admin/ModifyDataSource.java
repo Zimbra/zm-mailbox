@@ -71,15 +71,14 @@ public class ModifyDataSource extends AdminDocumentHandler {
         if (ds == null)
             throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
         
+        DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountConstants.A_TYPE));
+        
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            AttributeClass klass = getAttributeClassFromType(ds.getType());
-            for (String attrName : attrs.keySet()) {
-                if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
-                    attrName = attrName.substring(1);
-
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, klass))
-                    throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
-            }
+            // yuck, can't really integrate into AdminDocumentHandler methods
+            // have to check separately here
+            AttributeClass klass = ModifyDataSource.getAttributeClassFromType(type);
+            checkModifyAttrs(klass, attrs);
         }
         
         ZimbraLog.addDataSourceNameToContext(ds.getName());
@@ -104,7 +103,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
     }
 }

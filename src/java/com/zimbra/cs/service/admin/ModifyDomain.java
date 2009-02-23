@@ -23,11 +23,14 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -58,27 +61,13 @@ public class ModifyDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         
-        if (isDomainAdminOnly(zsc) && !canAccessDomain(zsc, domain)) 
-            throw ServiceException.PERM_DENIED("can not access domain"); 
-        
         if (domain.isShutdown())
             throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
         
-        //
-        // Note: pure ACL based AccessManager won't go in the if here, 
-        // because its isDomainAdminOnly always returns false.
-        //
-        if (isDomainAdminOnly(zsc)) {
-            for (String attrName : attrs.keySet()) {
-                if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
-                    attrName = attrName.substring(1);
-
-                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, AttributeClass.domain))
-                    throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
-            }
-        }
-        
         checkDomainRight(zsc, domain, attrs);
+        
+        // check to see if domain default cos is being changed, need right on new cos 
+        checkCos(zsc, attrs);
         
         // pass in true to checkImmutable
         prov.modifyAttrs(domain, attrs, true);
@@ -91,8 +80,34 @@ public class ModifyDomain extends AdminDocumentHandler {
 	    return response;
 	}
 	
+    private void checkCos(ZimbraSoapContext zsc, Map<String, Object> attrs) throws ServiceException {
+        String newDomainCosId = ModifyAccount.getStringAttrNewValue(Provisioning.A_zimbraDomainDefaultCOSId, attrs);
+        if (newDomainCosId == null)
+            return;  // not changing it
+        
+        Provisioning prov = Provisioning.getInstance();
+        if (newDomainCosId.equals("")) {
+            // they are unsetting it, no problem
+            return; 
+        } 
+
+        Cos cos = prov.get(CosBy.id, newDomainCosId);
+        if (cos == null) {
+            throw AccountServiceException.NO_SUCH_COS("newDomainCosId");
+        }
+        
+        // call checkRight instead of checkCosRight, because:
+        // 1. no domain based access manager backward compatibility issue
+        // 2. we only want to check right if we are using pure ACL based access manager. 
+        checkRight(zsc, cos, Admin.R_assignCos);
+    }
+	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
-        notes.append(String.format(sDocRightNotesModifyEntry, Admin.R_modifyDomain.getName(), "domain"));
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyDomain.getName(), "domain"));
+        
+        notes.add("Notes on " + Provisioning.A_zimbraDomainDefaultCOSId + ": " +
+                "If setting " + Provisioning.A_zimbraDomainDefaultCOSId + ", needs the " + Admin.R_assignCos.getName() + 
+                " right on the cos.");
     }
 }

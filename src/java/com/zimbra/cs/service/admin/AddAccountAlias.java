@@ -84,7 +84,7 @@ public class AddAccountAlias extends AdminDocumentHandler {
 	}
 	
 	@Override
-	protected void docRights(List<AdminRight> relatedRights, StringBuilder notes) {
+	protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
 	    relatedRights.add(Admin.R_addCalendarResourceAlias);
 	    relatedRights.add(Admin.R_addAccountAlias);
 	    relatedRights.add(Admin.R_createAlias);
