@@ -292,7 +292,7 @@ public class Search extends MailDocumentHandler  {
         
         if (calElement != null) {
             response.addElement(encoded.element);
-            ToXML.setCalendarItemFields(encoded.element, ifmt, octxt, calItem, fields, false);
+            ToXML.setCalendarItemFields(encoded.element, ifmt, octxt, calItem, fields, false, params.getNeuterImages());
 
             calElement.addAttribute(MailConstants.A_CONTENTMATCHED, true);
             if (ah.getScore() != 0)

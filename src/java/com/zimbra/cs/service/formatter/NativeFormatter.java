@@ -132,7 +132,8 @@ public class NativeFormatter extends Formatter {
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
             InputStream is = calItem.getRawMessage();
-            ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+            if (is != null)
+                ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
     }
 

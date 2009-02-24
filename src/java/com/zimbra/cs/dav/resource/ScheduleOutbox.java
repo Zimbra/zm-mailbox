@@ -173,7 +173,7 @@ public class ScheduleOutbox extends Collection {
         }
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         recipients.add(to);
-        String subject, uid, text, status, method;
+        String subject, uid, desc, descHtml, status, method;
 
         status = req.getPropVal(ICalTok.STATUS, "");
         method = cal.getPropVal(ICalTok.METHOD, "REQUEST");
@@ -209,7 +209,8 @@ public class ScheduleOutbox extends Collection {
         if (status.equals("CANCELLED"))
             subject = "Meeting Cancelled: ";
         subject += req.getPropVal(ICalTok.SUMMARY, "");
-        text = req.getPropVal(ICalTok.DESCRIPTION, "");
+        desc = req.getPropVal(ICalTok.DESCRIPTION, "");
+        descHtml = req.getDescriptionHtml();
         uid = req.getPropVal(ICalTok.UID, null);
         if (uid == null) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
@@ -217,7 +218,7 @@ public class ScheduleOutbox extends Collection {
             return;
         }
         try {
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, from, recipients, subject, text, uid, cal);
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, from, recipients, subject, desc, descHtml, uid, cal);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
             mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, null, true, false);
         } catch (ServiceException e) {

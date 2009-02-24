@@ -158,7 +158,7 @@ public class CalendarMailSender {
                 throw MailServiceException.ADDRESS_PARSE_ERROR(e);
             }
         }
-        return createCalendarMessage(from, sender, rcpts, subject, sb.toString(), inv.getUid(), iCal);
+        return createCalendarMessage(from, sender, rcpts, subject, sb.toString(), null, inv.getUid(), iCal);
     }
 
     public static MimeMessage createDefaultReply(Account fromAccount, Account authAccount, boolean asAdmin,
@@ -244,14 +244,14 @@ public class CalendarMailSender {
         if (onBehalfOf)
             senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
         return createCalendarMessage(AccountUtil.getFriendlyEmailAddress(fromAccount),
-                senderAddr, toList, replySubject, replyText.toString(), inv.getUid(), iCal);
+                senderAddr, toList, replySubject, replyText.toString(), null, inv.getUid(), iCal);
     }
 
     private static void attachInviteSummary(StringBuilder sb,
                                             MimeMessage mmInv,
                                             Locale lc)
     throws ServiceException {
-        String notes = Invite.getDescription(mmInv);
+        String notes = Invite.getDescription(mmInv, Mime.CT_TEXT_PLAIN);
         if (notes != null) {
             // Remove Outlook's special "*~*~*~*" delimiter from original
             // body. If we leave it in, Outlook will hide all text above
@@ -348,26 +348,27 @@ public class CalendarMailSender {
             sender = AccountUtil.getFriendlyEmailAddress(senderAccount);
 
         return createCalendarMessage(
-                from, sender, toAddrs, sbj, sb.toString(),
+                from, sender, toAddrs, sbj, sb.toString(), null,
                 defaultInv != null ? defaultInv.getUid() : "unknown", iCal);
     }
 
     public static MimeMessage createCalendarMessage(Invite inv)
     throws ServiceException {
         String subject = inv.getName();
-        String text = inv.getDescription();
+        String desc = inv.getDescription();
+        String descHtml = inv.getDescriptionHtml();
         String uid = inv.getUid();
         ZVCalendar cal = inv.newToICalendar(true);
-        return createCalendarMessage(null, null, null, subject, text, uid, cal);
+        return createCalendarMessage(null, null, null, subject, desc, descHtml, uid, cal);
     }
 
     public static MimeMessage createCalendarMessage(
             Address fromAddr, Address senderAddr, List<Address> toAddrs,
-            String subject, String text,
+            String subject, String desc, String descHtml,
             String uid, ZCalendar.ZVCalendar cal)
     throws ServiceException {
-        if (text == null)
-            text = "";
+        if (desc == null)
+            desc = "";
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
 
@@ -377,18 +378,25 @@ public class CalendarMailSender {
             // Add the text as DESCRIPTION property in the iCalendar part.
             // MS Entourage for Mac wants this.  It ignores text/plain and
             // text/html MIME parts.
-            cal.addDescription(text);
+            cal.addDescription(desc, null);
 
             // ///////
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(text, Mime.P_CHARSET_UTF8);
+            textPart.setText(desc, Mime.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
             MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(text)));
+            if (descHtml != null) {
+                ContentType ct = new ContentType(Mime.CT_TEXT_HTML);
+                ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
+                htmlPart.setHeader("Content-Type", ct.toString());
+                htmlPart.setText(descHtml, Mime.P_CHARSET_UTF8);
+            } else {
+                htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(desc)));
+            }
             mmp.addBodyPart(htmlPart);
 
             // ///////
@@ -488,34 +496,42 @@ public class CalendarMailSender {
 
     public static MimeMessage createCalendarMessage(
             Address fromAddr, Address senderAddr, List<Address> toAddrs,
-            MimeMessage srcMm, String uid, ZVCalendar cal)
+            MimeMessage srcMm, Invite inv, ZVCalendar cal)
     throws ServiceException {
         try {
-            MimeMessage mm = new MimeMessage(srcMm);  // Get a copy so we can modify it.
-            mm.setHeader("Message-ID", null);  // Don't reuse Message-ID header.
-            mm.setSentDate(new Date());
-
-            if (toAddrs != null) {
-                Address[] addrs = new Address[toAddrs.size()];
-                toAddrs.toArray(addrs);
-                mm.setRecipients(javax.mail.Message.RecipientType.TO, addrs);
+            String uid = inv.getUid();
+            if (srcMm != null) {
+                MimeMessage mm = new MimeMessage(srcMm);  // Get a copy so we can modify it.
+                mm.setHeader("Message-ID", null);  // Don't reuse Message-ID header.
+                mm.setSentDate(new Date());
+    
+                if (toAddrs != null) {
+                    Address[] addrs = new Address[toAddrs.size()];
+                    toAddrs.toArray(addrs);
+                    mm.setRecipients(javax.mail.Message.RecipientType.TO, addrs);
+                }
+                mm.setRecipients(javax.mail.Message.RecipientType.CC, (Address[]) null);
+                mm.setRecipients(javax.mail.Message.RecipientType.BCC, (Address[]) null);
+    
+                if (fromAddr != null)
+                    mm.setFrom(fromAddr);
+                if (senderAddr != null) {
+                    mm.setSender(senderAddr);
+                    mm.setReplyTo(new Address[]{senderAddr});
+                }
+    
+                // Find and replace the existing calendar part with the new calendar object.
+                CalendarPartReplacingVisitor visitor = new CalendarPartReplacingVisitor(uid, cal);
+                visitor.accept(mm);
+    
+                mm.saveChanges();
+                return mm;
+            } else {
+                String subject = inv.getName();
+                String desc = inv.getDescription();
+                String descHtml = inv.getDescriptionHtml();
+                return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal);
             }
-            mm.setRecipients(javax.mail.Message.RecipientType.CC, (Address[]) null);
-            mm.setRecipients(javax.mail.Message.RecipientType.BCC, (Address[]) null);
-
-            if (fromAddr != null)
-                mm.setFrom(fromAddr);
-            if (senderAddr != null) {
-                mm.setSender(senderAddr);
-                mm.setReplyTo(new Address[]{senderAddr});
-            }
-
-            // Find and replace the existing calendar part with the new calendar object.
-            CalendarPartReplacingVisitor visitor = new CalendarPartReplacingVisitor(uid, cal);
-            visitor.accept(mm);
-
-            mm.saveChanges();
-            return mm;
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
                     "Messaging Exception while building calendar message from source MimeMessage", e);
@@ -541,7 +557,7 @@ public class CalendarMailSender {
             senderAddr = AccountUtil.getFriendlyEmailAddress(senderAccount);
         List<Address> toAddrs = new ArrayList<Address>(1);
         toAddrs.add(toAddr);
-        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, text, uid, iCal);
+        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, text, null, uid, iCal);
     }
 
     public static void sendInviteDeniedMessage(
@@ -773,9 +789,9 @@ public class CalendarMailSender {
         private static final String CONTENT_TYPE =
             Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
         private static final String HEAD =
-            "<HTML><BODY>\n" +
-            "<PRE style=\"font-family: monospace; font-size: 14px\">\n";
-        private static final String TAIL = "</PRE>\n</BODY></HTML>\n";
+            "<html><body>\n" +
+            "<pre style=\"font-family: monospace; font-size: 14px\">\n";
+        private static final String TAIL = "</pre>\n</body></html>\n";
         private static final String NAME = "HtmlDataSource";
 
         private String mText;

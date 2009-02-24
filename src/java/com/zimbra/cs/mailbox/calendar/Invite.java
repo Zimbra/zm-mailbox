@@ -117,6 +117,7 @@ public class Invite {
             int componentNum,
             boolean sentByMe,
             String description,
+            String descHtml,
             String fragment,
             List<String> comments,
             List<String> categories,
@@ -155,7 +156,7 @@ public class Invite {
         mMailItemId = mailItemId;
         mComponentNum = componentNum;
         mSentByMe = sentByMe;
-        mDescription = description;
+        setDescription(description, descHtml);
         mFragment = fragment != null ? fragment : "";
         mComments = comments != null ? comments : new ArrayList<String>();
         mCategories = categories != null ? categories : new ArrayList<String>();
@@ -247,6 +248,7 @@ public class Invite {
             String name,
             String location,
             String description,
+            String descHtml,
             List<String> comments,
             List<String> categories,
             List<String> contacts,
@@ -290,7 +292,7 @@ public class Invite {
                 0, // mailItemId MUST BE SET
                 0, // component num
                 sentByMe,
-                description,
+                description, descHtml,
                 Fragment.getFragment(description, true),
                 comments, categories, contacts, geo, url
         );
@@ -322,6 +324,9 @@ public class Invite {
     private static final String FN_COMPNUM         = "comp";
     private static final String FN_COMMENT         = "cmt";
     private static final String FN_CONTACT         = "contact";
+    private static final String FN_DESC            = "desc";
+    private static final String FN_DESC_HTML       = "descH";
+    private static final String FN_DESC_IN_META    = "dinM";  // whether description is stored in metadata
     private static final String FN_FRAGMENT        = "frag";
     private static final String FN_DTSTAMP         = "dts";
     private static final String FN_DURATION        = "duration";
@@ -356,6 +361,10 @@ public class Invite {
     private static final String FN_DONT_INDEX_MM   = "noidxmm";
     private static final String FN_URL             = "url";
 
+    public static int getMaxDescInMeta() {
+        return LC.calendar_max_desc_in_metadata.intValueWithinRange(0, 1048576);
+    }
+
     /**
      * This is only really public to support serializing RedoOps -- you
      * really don't want to call this API from anywhere else 
@@ -389,8 +398,16 @@ public class Invite {
         meta.put(FN_DURATION, inv.mDuration);
         meta.put(FN_METHOD, inv.mMethod.toString());
         meta.put(FN_FRAGMENT, inv.mFragment);
-        // Don't put mDescription in metadata because it may be too big.
-        
+
+        // Put mDescription in metadata if it's short enough.
+        if (inv.mDescInMeta) {
+            meta.put(FN_DESC_IN_META, inv.mDescInMeta);
+            if (inv.mDescription != null)
+                meta.put(FN_DESC, inv.mDescription);
+            if (inv.mDescHtml != null)
+                meta.put(FN_DESC_HTML, inv.mDescHtml);
+        }
+
         if (inv.mRecurrence != null) {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
         }
@@ -542,7 +559,11 @@ public class Invite {
         String transp = meta.get(FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
-        // Metadata never contains mDescription because it can be too big.
+
+        boolean descInMeta = meta.getBool(FN_DESC_IN_META, false);  // default to false for backward compat
+        String desc = descInMeta ? meta.get(FN_DESC, null) : null;
+        String descHtml = descInMeta ? meta.get(FN_DESC_HTML, null) : null;
+
         long completed = meta.getLong(FN_COMPLETED, 0);
 
         ParsedDateTime dtStart = null;
@@ -688,8 +709,9 @@ public class Invite {
                 dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
                 name, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
-                mailboxId, mailItemId, componentNum, sentByMe, null, fragment,
+                mailboxId, mailItemId, componentNum, sentByMe, desc, descHtml, fragment,
                 comments, categories, contacts, geo, url);
+        invite.mDescInMeta = descInMeta;  // a little hacky, but necessary
 
         invite.setClassPropSetByMe(classPropSetByMe);
 
@@ -712,7 +734,18 @@ public class Invite {
         List<ZProperty> xprops = Util.decodeXPropsFromMetadata(meta);
         if (xprops != null) {
             for (ZProperty xprop : xprops) {
-                invite.addXProp(xprop);
+                boolean isHtmlDesc = false;
+                if (ICalTok.X_ALT_DESC.equals(xprop.getToken())) {
+                    // Backward compat.  We used to save X-ALT-DESC property as an x-prop.  Now we use it
+                    // for HTML description, when FMTTYPE=text/html.
+                    ZParameter fmttype = xprop.getParameter(ICalTok.FMTTYPE);
+                    if (fmttype != null && Mime.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
+                        isHtmlDesc = true;
+                        invite.mDescHtml = xprop.getValue();
+                    }
+                }
+                if (!isHtmlDesc)
+                    invite.addXProp(xprop);
             }
         }
         
@@ -725,8 +758,9 @@ public class Invite {
     }
 
 
-    private static final int CACHED_DESC_MAXLEN = 1024;
     private String mDescription;
+    private String mDescHtml;
+    private boolean mDescInMeta = true;  // assume description is in metadata unless someone sets a large value
     
     /**
      * An optimization for indexing, if this is set then we don't need to try to fetch 
@@ -741,6 +775,20 @@ public class Invite {
     public synchronized boolean getDontIndexMimeMessage() { return mDontIndexMimeMessage; }
 
     /**
+     * Returns if this Invite object has DESCRIPTION that is stored in metadata.  If this method returns
+     * false, it means getting the description requires the expensive parsing of the MIME part in
+     * calendar item blob.
+     * @return
+     */
+    public boolean descInMeta() { return mDescInMeta; }
+
+    /**
+     * Returns whether this Invite has a MIME part in calendar item blob.
+     * @return
+     */
+    public boolean hasBlobPart() { return !descInMeta() || hasAttachment(); }
+
+    /**
      * Returns the meeting notes.  Meeting notes is the text/plain part in an
      * invite.  It typically includes CUA-generated meeting summary as well as
      * text entered by the user.
@@ -753,17 +801,32 @@ public class Invite {
      * @throws ServiceException
      */
     public synchronized String getDescription() throws ServiceException {
-        if (mDescription != null) return mDescription;
-        if (mCalItem == null) return null;
-        MimeMessage mmInv = mCalItem.getSubpartMessage(mMailItemId);
-        String desc = getDescription(mmInv);
-        if (desc != null && desc.length() <= CACHED_DESC_MAXLEN)
-            mDescription = desc;
-        return desc;
+        if (!mDescInMeta && mDescription == null)
+            loadDescFromBlob();
+        return mDescription;
     }
 
-    public synchronized void setDescription(String desc) {
+    public synchronized String getDescriptionHtml() throws ServiceException {
+        if (!mDescInMeta && mDescHtml == null)
+            loadDescFromBlob();
+        return mDescHtml;
+    }
+
+    private synchronized void loadDescFromBlob() throws ServiceException {
+        MimeMessage mmInv = mCalItem != null ? mCalItem.getSubpartMessage(mMailItemId) : null;
+        if (mmInv != null) {
+            mDescription = getDescription(mmInv, Mime.CT_TEXT_PLAIN);
+            mDescHtml = getDescription(mmInv, Mime.CT_TEXT_HTML);
+        }
+    }
+
+    public synchronized void setDescription(String desc, String html) {
+        int maxInMeta = getMaxDescInMeta();
+        boolean shortDesc = desc == null || desc.length() <= maxInMeta;
+        boolean shortHtml = html == null || html.length() <= maxInMeta * 3;  // markups are bloated
+        mDescInMeta = shortDesc && shortHtml;
         mDescription = desc;
+        mDescHtml = html;
     }
 
     /**
@@ -774,15 +837,16 @@ public class Invite {
      * @return null if notes is not found
      * @throws ServiceException
      */
-    public static String getDescription(Part mmInv) throws ServiceException {
+    public static String getDescription(Part mmInv, String mimeType) throws ServiceException {
         if (mmInv == null) return null;
         try {
-            // If top-level is text/icalendar, parse the iCalendar object and return
+            // If top-level is text/calendar, parse the iCalendar object and return
             // the DESCRIPTION of the first VEVENT/VTODO encountered.
             String mmCtStr = mmInv.getContentType();
             if (mmCtStr != null) {
                 ContentType mmCt = new ContentType(mmCtStr);
                 if (mmCt.match(Mime.CT_TEXT_CALENDAR)) {
+                    boolean wantHtml = Mime.CT_TEXT_HTML.equalsIgnoreCase(mimeType);
                     Object mmInvContent = mmInv.getContent();
                     Reader reader = null;
                     try {
@@ -799,12 +863,10 @@ public class Invite {
                                 ZComponent component = compIter.next();
                                 ICalTok compTypeTok = component.getTok();
                                 if (compTypeTok == ICalTok.VEVENT || compTypeTok == ICalTok.VTODO) {
-                                    for (Iterator<ZProperty> propIter = component.getPropertyIterator(); propIter.hasNext(); ) {
-                                        ZProperty prop = propIter.next();
-                                        if (prop.getToken() == ICalTok.DESCRIPTION) {
-                                            return prop.getValue();
-                                        }
-                                    }
+                                    if (!wantHtml)
+                                        return component.getPropVal(ICalTok.DESCRIPTION, null);
+                                    else
+                                        return component.getDescriptionHtml();
                                 }
                             }
                         }
@@ -820,7 +882,7 @@ public class Invite {
                 return null;
             MimeMultipart mm = (MimeMultipart) mmInvContent;
 
-            // If top-level is multipart, get description from text/plain part.
+            // If top-level is multipart, get description from text/* part.
             int numParts = mm.getCount();
             String charset = null;
             for (int i  = 0; i < numParts; i++) {
@@ -828,7 +890,7 @@ public class Invite {
                 String ctStr = part.getContentType();
                 try {
                     ContentType ct = new ContentType(ctStr);
-                    if (ct.match(Mime.CT_TEXT_PLAIN)) {
+                    if (ct.match(mimeType)) {
                         charset = ct.getParameter(Mime.P_CHARSET);
                         if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
                         byte[] descBytes = ByteUtil.getContent(part.getInputStream(), part.getSize());
@@ -841,7 +903,7 @@ public class Invite {
                 // If part is a multipart, recurse.
                 Object mmObj = part.getContent();
                 if (mmObj instanceof MimeMultipart) {
-                    String str = getDescription(part);
+                    String str = getDescription(part, mimeType);
                     if (str != null)
                         return str;
                 }
@@ -1731,8 +1793,18 @@ public class Invite {
                                 newInv.setName(summary);
                                 break;
                             case DESCRIPTION:
-                                newInv.setDescription(prop.mValue);
+                                newInv.setDescription(prop.mValue, newInv.mDescHtml);
                                 newInv.setFragment(Fragment.getFragment(prop.mValue, true));
+                                break;
+                            case X_ALT_DESC:
+                                ZParameter fmttype = prop.getParameter(ICalTok.FMTTYPE);
+                                if (fmttype != null && Mime.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
+                                    String html = prop.getValue();
+                                    newInv.setDescription(newInv.mDescription, html);
+                                } else {
+                                    // Unknown format.  Just add as an x-prop.
+                                    newInv.addXProp(prop);
+                                }
                                 break;
                             case COMMENT:
                                 newInv.addComment(prop.getValue());
@@ -1956,7 +2028,7 @@ public class Invite {
         ZComponent component = new ZComponent(compTok);
 
         component.addProperty(new ZProperty(ICalTok.UID, getUid()));
-        
+
         IRecurrence recur = getRecurrence();
         if (recur != null) {
             for (Iterator iter = recur.addRulesIterator(); iter!=null && iter.hasNext();) {
@@ -1991,7 +2063,6 @@ public class Invite {
                 }
             }
         }
-        
 
         if (includePrivateData || isPublic()) {
             // SUMMARY (aka Name or Subject)
@@ -1999,10 +2070,16 @@ public class Invite {
             if (name != null && name.length()>0)
                 component.addProperty(new ZProperty(ICalTok.SUMMARY, name));
             
-            // DESCRIPTION
+            // DESCRIPTION and X-ALT-DESC;FMTTYPE=text/html
             String desc = getDescription();
-            if (desc != null && desc.length()>0)
+            if (desc != null && desc.length() > 0)
                 component.addProperty(new ZProperty(ICalTok.DESCRIPTION, desc));
+            String descHtml = getDescriptionHtml();
+            if (descHtml != null && descHtml.length() > 0) {
+                ZProperty altDesc = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
+                altDesc.addParameter(new ZParameter(ICalTok.FMTTYPE, Mime.CT_TEXT_HTML));
+                component.addProperty(altDesc);
+            }
             
             // COMMENT
             List<String> comments = getComments();
@@ -2230,7 +2307,7 @@ public class Invite {
                 0, // mMailItemId
                 0, // mComponentNum
                 mSentByMe,
-                mDescription, mFragment,
+                mDescription, mDescHtml, mFragment,
                 new ArrayList<String>(mComments),
                 new ArrayList<String>(mCategories),
                 new ArrayList<String>(mContacts),

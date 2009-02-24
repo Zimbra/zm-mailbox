@@ -32,6 +32,7 @@ import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mime.Mime;
 
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -89,7 +90,10 @@ public class ZCalendar {
         
         // RECURRENCE-ID
         RANGE, THISANDFUTURE, THISANDPRIOR,
-        
+
+        // alternate DESCRIPTION (HTML; used by Outlook 2007)
+        X_ALT_DESC,
+
         X_MICROSOFT_CDO_ALLDAYEVENT, X_MICROSOFT_CDO_INTENDEDSTATUS, X_MICROSOFT_DISALLOW_COUNTER,
 
         // ZCO Custom values
@@ -189,25 +193,29 @@ public class ZCalendar {
             w.write("END:VCALENDAR");
         }
 
-        // Add DESCRIPTION property to components that take that property,
-        // if the property is not set.
-        public void addDescription(String desc) {
-            if (desc == null || desc.length() < 1) return;
+        public void addDescription(String desc, String descHtml) {
             ZProperty descProp = new ZProperty(ICalTok.DESCRIPTION, desc);
+            ZProperty altDescProp = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
+            altDescProp.addParameter(new ZParameter(ICalTok.FMTTYPE, Mime.CT_TEXT_HTML));
             for (ZComponent comp : mComponents) {
                 ICalTok name = comp.getTok();
-                if (ICalTok.VEVENT.equals(name) ||
-                    ICalTok.VTODO.equals(name) ||
-                    ICalTok.VJOURNAL.equals(name)) {
-                    ZProperty prop = comp.getProperty(ICalTok.DESCRIPTION);
-                    if (prop == null) {
-                        comp.addProperty(descProp);
-                    } else {
-                        String val = prop.getValue();
-                        if (val == null || val.length() < 1)
-                            prop.setValue(desc);
+                if (ICalTok.VEVENT.equals(name) || ICalTok.VTODO.equals(name) || ICalTok.VJOURNAL.equals(name)) {
+                    if (desc != null && desc.length() > 0) {
+                        // Add DESCRIPTION property to components that take that property,
+                        // if the property is not set.
+                        ZProperty prop = comp.getProperty(ICalTok.DESCRIPTION);
+                        if (prop == null) {
+                            comp.addProperty(descProp);
+                        } else {
+                            String val = prop.getValue();
+                            if (val == null || val.length() < 1)
+                                prop.setValue(desc);
+                        }
                     }
-                        
+                    if (descHtml != null && descHtml.length() > 0) {
+                        // Just add the X-ALT-DESC value.  Don't worry about replacing existing value.
+                        comp.addProperty(altDescProp);
+                    }
                 }
             }
         }
@@ -315,7 +323,18 @@ public class ZCalendar {
             w.write("END:");
             w.write(name);
             w.write(LINE_BREAK);
-        }        
+        }
+
+        public String getDescriptionHtml() {
+            for (ZProperty prop : mProperties) {
+                if (ICalTok.X_ALT_DESC.equals(prop.getToken())) {
+                    ZParameter fmttype = prop.getParameter(ICalTok.FMTTYPE);
+                    if (fmttype != null && Mime.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue()))
+                        return prop.getValue();
+                }
+            }
+            return null;
+        }
     }
 
     // these are the characters that MUST be escaped: , ; " \n and \ -- note that \

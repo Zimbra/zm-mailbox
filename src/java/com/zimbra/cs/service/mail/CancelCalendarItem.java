@@ -126,7 +126,8 @@ public class CancelCalendarItem extends CalendarRequest {
 
         if (msgElem != null) {
             String desc = ParseMimeMessage.getTextPlainContent(msgElem);
-            iCal.addDescription(desc);
+            String html = ParseMimeMessage.getTextHtmlContent(msgElem);
+            iCal.addDescription(desc, html);
 
             MimeBodyPart[] mbps = new MimeBodyPart[1];
             mbps[0] = CalendarMailSender.makeICalIntoMimePart(defaultInv.getUid(), iCal);
@@ -180,7 +181,8 @@ public class CancelCalendarItem extends CalendarRequest {
         
         if (msgElem != null) {
             String desc = ParseMimeMessage.getTextPlainContent(msgElem);
-            iCal.addDescription(desc);
+            String html = ParseMimeMessage.getTextHtmlContent(msgElem);
+            iCal.addDescription(desc, html);
 
             MimeBodyPart[] mbps = new MimeBodyPart[1];
             mbps[0] = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), iCal);

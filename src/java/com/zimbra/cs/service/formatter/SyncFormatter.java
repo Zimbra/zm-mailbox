@@ -129,9 +129,10 @@ public class SyncFormatter extends Formatter {
             addXZimbraHeaders(context, calItem, calItemMsgData.getSecond());
             calItemMsgData.getFirst().writeTo(context.resp.getOutputStream());
         } else {
-            InputStream is = calItem.getRawMessage();
             addXZimbraHeaders(context, calItem, calItem.getSize());
-            ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+            InputStream is = calItem.getRawMessage();
+            if (is != null)
+                ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }        
     }
 

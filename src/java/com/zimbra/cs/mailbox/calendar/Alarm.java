@@ -210,10 +210,9 @@ public class Alarm {
             Element repeat = mRepeatDuration.toXml(alarm, MailConstants.E_CAL_ALARM_REPEAT);
             repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, mRepeatCount);
         }
-        if (!Action.AUDIO.equals(mAction)) {
+        if (!Action.AUDIO.equals(mAction) && mDescription != null) {
             Element desc = alarm.addElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
-            if (mDescription != null)
-                desc.setText(mDescription);
+            desc.setText(mDescription);
         }
         if (mAttach != null)
             mAttach.toXml(alarm);
@@ -310,12 +309,12 @@ public class Alarm {
 
         Element descElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
         if (descElem != null) {
-            description = descElem.getTextTrim();
+            description = descElem.getText();
         }
 
         Element summaryElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_SUMMARY);
         if (summaryElem != null) {
-            summary = summaryElem.getTextTrim();
+            summary = summaryElem.getText();
         }
 
         Element attachElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ATTACH);
