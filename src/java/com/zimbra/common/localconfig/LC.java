@@ -293,6 +293,7 @@ public class LC {
     public static final KnownKey calendar_entourage_compatible_timezones;
     public static final KnownKey calendar_ics_import_full_parse_max_size;
     public static final KnownKey calendar_ics_export_buffer_size;
+    public static final KnownKey calendar_max_desc_in_metadata;
     public static final KnownKey calendar_canonical_tzid;
 
     public static final KnownKey calendar_search_max_days;
@@ -998,6 +999,9 @@ public class LC {
 
         calendar_ics_export_buffer_size = new KnownKey("calendar_ics_export_buffer_size");
         calendar_ics_export_buffer_size.setDefault("131072");  // 128KB
+
+        calendar_max_desc_in_metadata = new KnownKey("calendar_max_desc_in_metadata");
+        calendar_max_desc_in_metadata.setDefault("4096");  // 4KB
 
         calendar_canonical_tzid = new KnownKey("calendar_canonical_tzid");
         calendar_canonical_tzid.setDefault("windows");
