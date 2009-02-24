@@ -24,6 +24,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
@@ -61,6 +62,7 @@ extends TestCase {
     private ZMailbox mLocalMbox;
     private String mOriginalCleartextValue;
     private ZDataSource mDataSource;
+    private boolean mOriginalEnableStarttls;
     
     public void setUp()
     throws Exception {
@@ -99,6 +101,11 @@ extends TestCase {
         mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
         TestUtil.setServerAttr(
             Provisioning.A_zimbraImapCleartextLoginEnabled, Provisioning.TRUE);
+        
+        // Turn off STARTTLS support so that unit tests don't bomb on Linux
+        // (see bug 33683).
+        mOriginalEnableStarttls = LC.javamail_imap_enable_starttls.booleanValue();
+        LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
     }
     
     public void testImapImport()
@@ -345,6 +352,7 @@ extends TestCase {
         cleanUp();
         TestUtil.setServerAttr(
             Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
+        LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(mOriginalEnableStarttls));
     }
     
     public void cleanUp()
