@@ -476,6 +476,7 @@ public class LC {
     // zmailbox
     public static final KnownKey zmailbox_message_cachesize;
     
+    public static final KnownKey contact_ranking_enabled;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1391,6 +1392,7 @@ public class LC {
         
         zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
               
+        contact_ranking_enabled = new KnownKey("contact_ranking_enabled", "true", "Enable contact ranking table");
         
         
 		// NOTE: When adding a new KnownKey, you do not need to call
