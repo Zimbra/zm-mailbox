@@ -29,10 +29,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailbox;
-import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -175,7 +175,7 @@ public class MailboxManager {
         Connection conn = null;
         try {
             conn = DbPool.getConnection();
-            mMailboxIds = DbMailbox.getMailboxes(conn);
+            mMailboxIds = DbMailbox.listMailboxes(conn);
             mMailboxCache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
         } finally {
             DbPool.quietClose(conn);
@@ -641,18 +641,30 @@ public class MailboxManager {
     /** Returns the zimbra IDs and approximate sizes for all mailboxes on
      *  the system.  Note that mailboxes are created lazily, so there may be
      *  accounts homed on this system for whom there is is not yet a mailbox
-     *  and hence are not included in the returned <code>Map</code>.  Sizes
-     *  are checkpointed frequently, but there is no guarantee that the
-     *  approximate sizes are currently accurate.
+     *  and hence are not included in the returned <code>Map</code>.
      *  
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>service.FAILURE</code> - an error occurred while accessing
      *        the database; a SQLException is encapsulated</ul> */
-    public Map<String, Long> getMailboxSizes() throws ServiceException {
+    public Map<String, Long> getMailboxSizes(List<NamedEntry> accounts) throws ServiceException {
+        List<Integer> requested;
+        synchronized (this) {
+            if (accounts == null) {
+                requested = new ArrayList<Integer>(mMailboxIds.values());
+            } else {
+                requested = new ArrayList<Integer>(accounts.size());
+                for (NamedEntry account : accounts) {
+                    Integer mailboxId = mMailboxIds.get(account.getId());
+                    if (mailboxId != null)
+                        requested.add(mailboxId);
+                }
+            }
+        }
+
         Connection conn = null;
         try {
             conn = DbPool.getConnection();
-            return DbMailbox.getMailboxSizes(conn);
+            return DbMailbox.getMailboxSizes(conn, requested);
         } finally {
             if (conn != null)
                 DbPool.quietClose(conn);
@@ -680,9 +692,9 @@ public class MailboxManager {
             throw ServiceException.FAILURE("createMailbox: must specify an account", null);
         if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-    
-        Mailbox mailbox = null;
-    
+
+        Mailbox mbox = null;
+
         synchronized (this) {
             // check to make sure the mailbox doesn't already exist
             Integer mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
@@ -691,44 +703,33 @@ public class MailboxManager {
 
             // didn't have the mailbox in the database; need to create one now
             CreateMailbox redoRecorder = new CreateMailbox(account.getId());
-    
+
             Connection conn = null;
-            MailboxData data = null;
             boolean success = false;
             try {
                 conn = DbPool.getConnection();
-                data = new MailboxData();
-                data.accountId = account.getId();
-    
+
                 // create the mailbox row and the mailbox database
                 CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
                 int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
-                NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName(), -1);
-                ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.",
-                    newMboxId.id, newMboxId.groupId, account.getName());
-                data.id = newMboxId.id;
-                data.schemaGroupId = newMboxId.groupId;
+                MailboxData data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
+                ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
 
-                // The above initialization of data is incomplete because it
-                // is missing the message/index volume information.  Query
-                // the database to get it.
-                DbMailbox.getMailboxVolumeInfo(conn, data);
+                mbox = instantiateMailbox(data);
 
-                mailbox = instantiateMailbox(data);
-                
-                synchronized (mailbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
                     // the existing Connection is used for the rest of this transaction...
-                    mailbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
+                    mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
                 }
-                
+
                 // create the default folders
-                mailbox.initialize();
+                mbox.initialize();
 
                 // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
                 mMailboxIds.put(data.accountId.toLowerCase(), new Integer(data.id));
-                cacheMailbox(mailbox);
-                redoRecorder.setMailboxId(mailbox.getId());
+                cacheMailbox(mbox);
+                redoRecorder.setMailboxId(mbox.getId());
 
                 success = true;
             } catch (ServiceException e) {
@@ -741,9 +742,9 @@ public class MailboxManager {
                 throw ServiceException.FAILURE("createMailbox", t);
             } finally {
                 try {
-                    if (mailbox != null) {
-                        synchronized(mailbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
-                            mailbox.endTransaction(success);
+                    if (mbox != null) {
+                        synchronized(mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                            mbox.endTransaction(success);
                         }
                         conn = null;
                     } else {
@@ -760,10 +761,10 @@ public class MailboxManager {
         // now, make sure the mailbox is initialized -- we do this after releasing 
         // the Mgr lock so that filesystem IO and other longer operations don't 
         // block the system
-        if (mailbox.finishInitialization())
-            notifyMailboxCreated(mailbox);
+        if (mbox.finishInitialization())
+            notifyMailboxCreated(mbox);
         
-        return mailbox;
+        return mbox;
     }
 
     void markMailboxDeleted(Mailbox mailbox) {
@@ -843,7 +844,7 @@ public class MailboxManager {
             if (obj == null) {
                 obj = mSoftMap.get(key);
                 if (obj instanceof SoftReference) {
-                    obj = ((SoftReference) obj).get();
+                    obj = ((SoftReference<?>) obj).get();
                     if (trackGC && obj == null)
                         ZimbraLog.mailbox.debug("mailbox " + key + " has been GCed; reloading");
                 }
@@ -875,7 +876,7 @@ public class MailboxManager {
                 removed = mSoftMap.put(key, value);
             }
             if (removed instanceof SoftReference)
-                removed = ((SoftReference) removed).get();
+                removed = ((SoftReference<?>) removed).get();
             return removed;
         }
 
@@ -889,7 +890,7 @@ public class MailboxManager {
             if (removed == null) {
                 removed = mSoftMap.remove(key);
                 if (removed instanceof SoftReference)
-                    removed = ((SoftReference) removed).get();
+                    removed = ((SoftReference<?>) removed).get();
             }
             return removed;
         }
@@ -904,7 +905,7 @@ public class MailboxManager {
                 values.addAll(mHardMap.values());
             for (Object o : mSoftMap.values()) {
                 if (o instanceof SoftReference)
-                    o = ((SoftReference) o).get();
+                    o = ((SoftReference<?>) o).get();
                 values.add(o);
             }
             return values;

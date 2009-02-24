@@ -250,7 +250,7 @@ implements LmtpCallback {
         // If we've already sent to this user, do not send again
         Connection conn = null;
         try {
-            conn = DbPool.getConnection();
+            conn = DbPool.getConnection(mbox);
             if (DbOutOfOffice.alreadySent(conn, mbox, destination, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS))) {
                 ofailed("already sent", destination, rcpt, msg);
                 return;
@@ -313,7 +313,7 @@ implements LmtpCallback {
             // Save so we will not send to again
             conn = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 DbOutOfOffice.setSentTime(conn, mbox, destination);
                 conn.commit();
             } finally {
@@ -335,8 +335,7 @@ implements LmtpCallback {
      * message to the user's notification address.
      */
     private void notifyIfNecessary(Account account, Message msg, String rcpt)
-        throws MessagingException, ServiceException
-    {
+    throws MessagingException, ServiceException {
         // Does user have new mail notification turned on
         boolean notify = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
         if (!notify) {

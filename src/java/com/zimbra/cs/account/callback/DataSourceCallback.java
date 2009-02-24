@@ -179,7 +179,7 @@ public class DataSourceCallback extends AttributeCallback {
         
         try {
             conn = DbPool.getConnection();
-            accountIds = DbMailbox.getAccountIds(conn);
+            accountIds = DbMailbox.listAccountIds(conn);
         } finally {
             DbPool.quietClose(conn);
         }

@@ -99,7 +99,7 @@ public class TestOutOfOffice extends TestCase
     
     private void cleanUp()
     throws Exception {
-        DbOutOfOffice.clear(mConn, mMbox.getAccountId());
+        DbOutOfOffice.clear(mConn, mMbox);
         mConn.commit();
     }
 }

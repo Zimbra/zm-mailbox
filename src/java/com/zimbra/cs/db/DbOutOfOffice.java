@@ -29,8 +29,8 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 
 // TODO mailbox migration between servers
@@ -61,12 +61,14 @@ public class DbOutOfOffice {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + TABLE_NAME +
-                    " WHERE mailbox_id = ? AND sent_to = ? AND sent_on > ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, sentTo);
-            stmt.setTimestamp(3, cutoff);
-            
+            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "AND sent_to = ? AND sent_on > ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setString(pos++, sentTo);
+            stmt.setTimestamp(pos++, cutoff);
+
             rs = stmt.executeQuery();
             rs.next();
             int count = rs.getInt(1);
@@ -78,7 +80,7 @@ public class DbOutOfOffice {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
-        
+
         if (mLog.isDebugEnabled()) {
             mLog.debug("DbOutOfOffice.alreadySent() returning " + result +
                         ".  mailbox_id=" + mbox.getId() + ", sent_to='" + sentTo + "'");
@@ -96,8 +98,7 @@ public class DbOutOfOffice {
      * @throws ServiceException if a database error occurred
      */
     public static void setSentTime(Connection conn, Mailbox mbox, String sentTo)
-    throws ServiceException
-    {
+    throws ServiceException {
         setSentTime(conn, mbox, sentTo, System.currentTimeMillis());
     }
     
@@ -116,7 +117,8 @@ public class DbOutOfOffice {
 
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + TABLE_NAME + "(mailbox_id, sent_to, sent_on) VALUES (?, ?, ?) " +
+            stmt = conn.prepareStatement("INSERT INTO " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
+                    "(mailbox_id, sent_to, sent_on) VALUES (?, ?, ?) " +
                     (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? "ON DUPLICATE KEY UPDATE sent_on = ?" : ""));
             stmt.setInt(1, mbox.getId());
             stmt.setString(2, sentTo.toLowerCase());
@@ -166,25 +168,18 @@ public class DbOutOfOffice {
      * @param mbox mailbox
      * @throws ServiceException if a database error occurred
      */
-    public static void clear(Connection conn, String accountId) throws ServiceException {
+    public static void clear(Connection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT id FROM zimbra.mailbox WHERE account_id = ?");
-            stmt.setString(1, accountId);
-            rs = stmt.executeQuery();
-            if (!rs.next())
-                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-            int mailboxId = rs.getInt(1);
-            rs.close();
-            stmt.close();
-
-            stmt = conn.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE mailbox_id = ?");
-            stmt.setInt(1, mailboxId);
+            stmt = conn.prepareStatement("DELETE FROM " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
+                    (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(1, mbox.getId());
             int num = stmt.executeUpdate();
-            mLog.debug("DbOutOfOffice.clear() mbox=" + mailboxId + " rows=" + num);
+            mLog.debug("DbOutOfOffice.clear() mbox=" + mbox.getId() + " rows=" + num);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("DbOutOfOffice.clear acctId=" + accountId, e);
+            throw ServiceException.FAILURE("DbOutOfOffice.clear acctId=" + mbox.getAccountId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -193,6 +188,10 @@ public class DbOutOfOffice {
     
     public static void prune(Connection conn, long cacheDurationMillis)
     throws ServiceException {
+        // there's no centralized OoO table to prune in the DB-per-user case
+        if (DebugConfig.disableMailboxGroups)
+            return;
+
         PreparedStatement stmt = null;
         try {
             Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cacheDurationMillis);

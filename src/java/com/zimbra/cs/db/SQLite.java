@@ -101,6 +101,8 @@ public class SQLite extends Db {
 
             try {
                 conn.setAutoCommit(true);
+                pragma(conn, "page_size", "4096");
+                pragma(conn, "default_page_size", "4096");
                 pragma(conn, "synchronous", "NORMAL");
                 pragma(conn, "fullfsync", "0");
                 pragma(conn, "journal_mode", "PERSIST");
@@ -259,7 +261,7 @@ public class SQLite extends Db {
 
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + dbname + ".sqlite_master WHERE type='table'");
             rs = stmt.executeQuery();
-            boolean complete = rs.next() ? (rs.getInt(1) >= DbMailbox.sTables.length) : false;
+            boolean complete = rs.next() ? (rs.getInt(1) >= DbMailbox.sTables.size()) : false;
 
             if (!autocommit)
                 conn.getConnection().setAutoCommit(autocommit);

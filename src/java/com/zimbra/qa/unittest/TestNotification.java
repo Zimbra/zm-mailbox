@@ -372,8 +372,8 @@ extends TestCase {
     throws Exception {
         if (mIsServerTest) {
             Connection conn = DbPool.getConnection();
-            String accountId = TestUtil.getMailbox(RECIPIENT_NAME).getAccountId();
-            DbOutOfOffice.clear(conn, accountId);
+            Mailbox mbox = TestUtil.getMailbox(RECIPIENT_NAME);
+            DbOutOfOffice.clear(conn, mbox);
             conn.commit();
             DbPool.quietClose(conn);
         }

@@ -74,8 +74,8 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         }
 
         Element response = zsc.createElement(AdminConstants.GET_ALL_MAILBOXES_RESPONSE);
-        int i, limitMax = offset+limit;
-        for (i=offset; i < limitMax && i < mailboxes.size(); i++) {
+        int i, limitMax = offset + limit;
+        for (i = offset; i < limitMax && i < mailboxes.size(); i++) {
             Mailbox.MailboxData mailbox = mailboxes.get(i);
             
             Element mbx = response.addElement(AdminConstants.E_MAILBOX);
@@ -89,7 +89,8 @@ public class GetAllMailboxes extends AdminDocumentHandler {
             mbx.addAttribute(AdminConstants.A_MT_CHANGECHECKPOINT, mailbox.lastChangeId);
             mbx.addAttribute(AdminConstants.A_MT_TRACKINGSYNC, mailbox.trackSync);
             mbx.addAttribute(AdminConstants.A_MT_TRACKINGIMAP, mailbox.trackImap);
-            mbx.addAttribute(AdminConstants.A_MT_LASTBACKUPAT, mailbox.lastBackupDate);
+            if (mailbox.lastBackupDate > 0)
+                mbx.addAttribute(AdminConstants.A_MT_LASTBACKUPAT, mailbox.lastBackupDate);
             // mbx.addAttribute(AdminConstants.A_MT_COMMENT, mailbox.comment);
             mbx.addAttribute(AdminConstants.A_MT_LASTSOAPACCESS, mailbox.lastWriteDate);
             mbx.addAttribute(AdminConstants.A_MT_NEWNESSAGES, mailbox.recentMessages);

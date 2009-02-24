@@ -26,8 +26,6 @@ package com.zimbra.cs.localconfig;
 import com.zimbra.common.localconfig.LC;
 
 /**
- * @author jhahm
- *
  * Various switches to turn features on/off, mainly for measuring the
  * performance overhead.  Refer to the code that uses these keys to
  * see precisely which code paths are avoided by turning a feature off.
@@ -105,15 +103,12 @@ public class DebugConfig {
     // to ensure cache consistency (very expensive)
     public static boolean checkMailboxCacheConsistency;
 
-    // If true, the database layer will try to avoid cross-database commits
-    // by writing all mailbox statistic checkpoints to a MAILBOX table in the
-    // mailbox group database.  Those changes are also written to memory and
-    // batched to the ZIMBRA.MAILBOX table periodically.
-    public static boolean deferMailboxUpdates;
-
     // If true, the database layer assumes that every mailbox gets its own
     // database instance and that all the tables in that database do *not*
-    // have the MAILBOX_ID column.
+    // have the MAILBOX_ID column.  All mutable mailbox data, including
+    // sizes and checkpoints as well as out-of-office reply tracking and
+    // the "mailbox metadata" scratch space, are moved out of the ZIMBRA
+    // database and into this per-user database.
     public static boolean disableMailboxGroups;
 
     // The number of MBOXGROUP<N> databases to distribute the users over.
@@ -166,8 +161,6 @@ public class DebugConfig {
 
         checkMailboxCacheConsistency = booleanValue("debug_check_mailbox_cache_consistency", false);
 
-        deferMailboxUpdates = booleanValue("debug_defer_mailbox_updates", false);
-
         disableMailboxGroups = booleanValue("debug_disable_mailbox_group", false);
         numMailboxGroups = disableMailboxGroups ? Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
 
@@ -186,10 +179,10 @@ public class DebugConfig {
         return Boolean.valueOf(val).booleanValue();
     }
 
-    private static int intValue(String key, int defaultValue) {
-        String val = LC.get(key);
-        if (val.length() < 1)
-            return defaultValue;
-        return Integer.valueOf(val).intValue();
-    }
+//    private static int intValue(String key, int defaultValue) {
+//        String val = LC.get(key);
+//        if (val.length() < 1)
+//            return defaultValue;
+//        return Integer.valueOf(val).intValue();
+//    }
 }

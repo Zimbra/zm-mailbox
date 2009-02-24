@@ -461,7 +461,7 @@ public class Mailbox {
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
-    /** used by checkInitialization() to make sure the init steps happen only once */
+    /** used by finishInitialization() to make sure the init steps happen only once */
     private boolean mInitializationComplete = false;
 
     /**
@@ -475,8 +475,8 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
-        // version init done in checkInitialization()
-        // index init done in checkInitialization()
+        // version init done in finishInitialization()
+        // index init done in finishInitialization()
     }
 
     /**
@@ -509,7 +509,7 @@ public class Mailbox {
                 Metadata md = getConfig(null, MD_CONFIG_VERSION);
                 mVersion = MailboxVersion.fromMetadata(md);
             }
-            
+
             // check for mailbox upgrade
     		if (!getVersion().atLeast(1, 2)) {
     			// Version (1.0,1.1)->1.2 Re-Index all contacts 
@@ -519,13 +519,13 @@ public class Mailbox {
     			// don't bother updating the version here -- the next update 
     			// will do that for us.
     		}
-    		
+
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
             if (!getVersion().atLeast(1, 4)) {
                 recalculateFolderAndTagCounts();
                 updateVersion(new MailboxVersion((short) 1, (short) 4));
     		}
-    		
+
     		// done!
     		mInitializationComplete = true;
     		return true;
@@ -1643,18 +1643,17 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("Cannot rename mailbox to empty name", null);
         
         RenameMailbox redoRecorder = new RenameMailbox(mId, oldName, newName);
-        beginTransaction("renameMailbox", octxt, redoRecorder);
         boolean success = false;
         try {
-            Connection conn = getOperationConnection();
-            DbMailbox.renameMailbox(conn, this, newName);
+            beginTransaction("renameMailbox", octxt, redoRecorder);
 
-            boolean xmppEnabled = Provisioning.getInstance().getServer(getAccount()).
+            DbMailbox.renameMailbox(this, newName);
+
+            Account acct = getAccount();
+            boolean imEnabledThisAcct = acct.getBooleanAttr(Provisioning.A_zimbraFeatureIMEnabled, false);
+            boolean xmppEnabled = Provisioning.getInstance().getServer(acct).
                                      getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false);
-            
-            boolean imEnabledThisAcct = getAccount().
-                                          getBooleanAttr(Provisioning.A_zimbraFeatureIMEnabled, false);
-            
+
             if (mPersona != null || (xmppEnabled && imEnabledThisAcct)) {
                 getPersona().renamePersona(newName);
 //              if we're currently connected to IM, we'll need to update our IM Persona
@@ -7158,31 +7157,6 @@ public class Mailbox {
             if (change.idxDeferred != MailboxChange.NO_CHANGE)
                 mData.idxDeferredCount = change.idxDeferred;
 
-            if (change.isMailboxRowDirty(mData) && sDeferredUpdates != null) {
-                synchronized (sDeferredUpdates) {
-                    sDeferredUpdates.put(mId, mData.clone());
-                    sDeferredUpdateCount++;
-
-                    if (sDeferredUpdateCount >= 10) {
-                        Connection conn = null;
-                        try {
-                            conn = DbPool.getConnection();
-                            for (MailboxData mbd : sDeferredUpdates.values())
-                                DbMailbox.writeActualMailboxStats(conn, mbd);
-                            conn.commit();
-
-                            ZimbraLog.mailbox.info("wrote " + sDeferredUpdateCount + " sets of stat updates to primary mailbox table");
-                            sDeferredUpdates.clear();
-                            sDeferredUpdateCount = 0;
-                        } catch (ServiceException e) {
-                            ZimbraLog.mailbox.warn("could not write stats update to primary mailbox table", e);
-                        } finally {
-                            DbPool.quietClose(conn);
-                        }
-                    }
-                }
-            }
-
             // delete any index entries associated with items deleted from db
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty() && mMailboxIndex != null) {
@@ -7334,11 +7308,6 @@ public class Mailbox {
             ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
     }
-
-    private static int sDeferredUpdateCount;
-    private static final Map<Integer, MailboxData> sDeferredUpdates =
-        DebugConfig.deferMailboxUpdates ? new HashMap<Integer, MailboxData>(12) : null;
-
     
 
     public boolean attachmentsIndexingEnabled() throws ServiceException {

@@ -28,6 +28,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -169,7 +170,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             
             Provisioning prov = Provisioning.getInstance();
             int flags = Provisioning.SA_ACCOUNT_FLAG;
-            List accounts;
+            List<NamedEntry> accounts;
             Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.id, mDomainId);
             if (d != null) {
                 accounts = prov.searchAccounts(d, query, null, null, true, flags);
@@ -177,8 +178,8 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 accounts = prov.searchAccounts(query, null, null, true, flags);
             }
 
-            Map<String, Long> quotaUsed = MailboxManager.getInstance().getMailboxSizes();
-            
+            Map<String, Long> quotaUsed = MailboxManager.getInstance().getMailboxSizes(accounts);
+
             for (Object obj: accounts) {
                 if (!(obj instanceof Account))continue;
                 AccountQuota aq = new AccountQuota();            
