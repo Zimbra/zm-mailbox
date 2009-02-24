@@ -25,6 +25,7 @@ import java.util.TreeSet;
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.MultiTreeMap;
@@ -53,9 +54,13 @@ public class ContactRankings {
 				});
 		mEntrySet = new TreeSet<ContactEntry>();
 		mTableSize = Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
+		if (!LC.contact_ranking_enabled.booleanValue())
+			return;
 		readFromDatabase();
 	}
 	public static void increment(String accountId, Collection<? extends Address> addrs) throws ServiceException {
+		if (!LC.contact_ranking_enabled.booleanValue())
+			return;
 		ContactRankings rankings = new ContactRankings(accountId);
 		for (Address addr : addrs)
 			if (addr instanceof InternetAddress)
