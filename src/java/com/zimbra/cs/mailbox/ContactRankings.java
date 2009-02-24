@@ -65,11 +65,9 @@ public class ContactRankings {
 		rankings.writeToDatabase();
 	}
 	public synchronized void increment(String email, String displayName) {
-		ZimbraLog.gal.debug("increment contact "+email);
 		long now = System.currentTimeMillis();
 		ContactEntry entry = mEntryMap.getFirst(email);
 		if (entry == null) {
-			ZimbraLog.gal.debug("it's a new contact");
 			entry = new ContactEntry();
 			entry.mEmail = email;
 			entry.mRanking = 1;
@@ -78,43 +76,26 @@ public class ContactRankings {
 			entry.mLastAccessed = now;
 			updateContactInfo(entry);
 			
-			if (mEntrySet.size() < mTableSize) {
-				ZimbraLog.gal.debug("ranking table is within the limit: "+mEntrySet.size()+"("+mTableSize+")");
-				add(entry);
-			}
-			else {
-				ZimbraLog.gal.debug("ranking table size: "+mEntrySet.size()+"("+mTableSize+")");
-				while (mEntrySet.size() > mTableSize) {
-					ContactEntry first = mEntrySet.first();
-					ZimbraLog.gal.debug("removing contact "+first.mEmail+" from ranking table");
-					remove(first);
+			if (mEntrySet.size() >= mTableSize) {
+				for (ContactEntry e : mEntrySet) {
+					int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
+					e.mRanking -= weeksOld;
 				}
-				ZimbraLog.gal.debug("ranking table size: "+mEntrySet.size()+"("+mTableSize+")");
 				ContactEntry firstEntry = mEntrySet.first();
-				if (firstEntry.mRanking <= 1) {
-					ZimbraLog.gal.debug("removing contact "+firstEntry.mEmail+" from ranking table");
+				if (firstEntry.mRanking <= 1)
 					remove(firstEntry);
-					ZimbraLog.gal.debug("adding contact "+entry.mEmail+" to ranking table");
-					add(entry);
-				} else {
-					for (ContactEntry e : mEntrySet) {
-						int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
-						e.mRanking -= weeksOld;
-						ZimbraLog.gal.debug("decrementing ranking for "+e.mEmail+": "+e.mRanking);
-					}
-				}
 			}
+			if (mEntrySet.size() < mTableSize)
+				add(entry);
 		} else {
 			entry.mRanking++;
 			entry.mLastAccessed = now;
-			ZimbraLog.gal.debug("incrementing ranking for contact "+entry.mEmail+" ("+entry.mRanking+")");
 			if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
 					entry.mDisplayName.length() == 0)
 				updateContactInfo(entry);
 		}
 	}
 	private void updateContactInfo(ContactEntry entry) {
-		ZimbraLog.gal.debug("updating contact info for "+entry.mEmail);
 		ContactAutoComplete auto = new ContactAutoComplete(mAccountId);
 		ContactEntry storedContact = null;
 		try {
@@ -139,7 +120,6 @@ public class ContactRankings {
 			entry.mDisplayName = storedContact.mDisplayName;
 	}
 	public synchronized Collection<ContactEntry> query(String str, Collection<Integer> folders) {
-		ZimbraLog.gal.debug("querying ranking database");
 		TreeSet<ContactEntry> entries = new TreeSet<ContactEntry>(Collections.reverseOrder());
 		int len = str.length();
 		for (String k : mEntryMap.tailMap(str).keySet()) {
@@ -150,7 +130,6 @@ public class ContactRankings {
 							folders == null ||
 							folders.contains(entry.mFolderId)) {
 						entries.add(entry);
-						ZimbraLog.gal.debug("adding "+entry.toString());
 					}
 				}
 			} else
@@ -162,7 +141,6 @@ public class ContactRankings {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
 		Metadata config = mbox.getConfig(null, CONFIG_KEY_CONTACT_RANKINGS);
         if (config == null) {
-			ZimbraLog.gal.debug("creating new contact ranking list for account "+mAccountId);
         	config = new Metadata();
         	mbox.setConfig(null, CONFIG_KEY_CONTACT_RANKINGS, config);
         }
