@@ -213,10 +213,6 @@
   <desc>purge messages of an account</desc>
 </right>
 
-<right name="viewEmail" type="preset" targetType="account">
-  <desc>view the account's email</desc>
-</right>
-
 <right name="reindexMailbox" type="preset" targetType="account">
   <desc>reindex mailbox</desc>
 </right> 
@@ -296,48 +292,7 @@
   </attrs>
 </right>
 
-﻿<!-- 
-    current domainAdminModifiable attrs in zimbra-attrs.xml
- -->
- <right name="getAccountFeatures" type="getAttrs" targetType="account,cos">
-  <desc>for unittest only, do we have a use case for this?</desc>
-  <attrs>
-    <a n="zimbraFeatureMailPriorityEnabled"/>
-    <a n="zimbraFeatureInstantNotify"/>
-    <a n="zimbraFeatureImapDataSourceEnabled"/>
-    <a n="zimbraFeaturePop3DataSourceEnabled"/>
-    <a n="zimbraFeatureIdentitiesEnabled"/>
-    <a n="zimbraFeatureMailForwardingEnabled"/>
-    <a n="zimbraFeatureContactsEnabled"/>
-    <a n="zimbraFeatureCalendarEnabled"/>
-    <a n="zimbraFeatureTasksEnabled"/>
-    <a n="zimbraFeatureTaggingEnabled"/>
-    <a n="zimbraFeatureAdvancedSearchEnabled"/>
-    <a n="zimbraFeatureSavedSearchesEnabled"/>
-    <a n="zimbraFeatureConversationsEnabled"/>
-    <a n="zimbraFeatureChangePasswordEnabled"/>
-    <a n="zimbraFeatureInitialSearchPreferenceEnabled"/>
-    <a n="zimbraFeatureFiltersEnabled"/>
-    <a n="zimbraFeatureGalEnabled"/>
-    <a n="zimbraFeatureSharingEnabled"/>
-    <a n="zimbraFeatureNotebookEnabled"/>
-    <a n="zimbraFeatureBriefcasesEnabled"/>
-    <a n="zimbraFeatureHtmlComposeEnabled"/>
-    <a n="zimbraFeatureGalAutoCompleteEnabled"/>
-    <a n="zimbraImapEnabled"/>
-    <a n="zimbraPop3Enabled"/>
-    <a n="zimbraFeatureSkinChangeEnabled"/>
-    <a n="zimbraFeatureOutOfOfficeReplyEnabled"/>
-    <a n="zimbraFeatureNewMailNotificationEnabled"/>
-    <a n="zimbraFeatureMailPollingIntervalPreferenceEnabled"/>
-    <a n="zimbraFeatureOptionsEnabled"/>
-    <a n="zimbraFeatureShortcutAliasesEnabled"/>
-    <a n="zimbraFeatureMailEnabled"/>
-    <a n="zimbraFeatureGroupCalendarEnabled"/>
-    <a n="zimbraFeatureIMEnabled"/>
-    <a n="zimbraFeatureFlaggingEnabled"/>
-  </attrs>
-</right>
+
 
 
 <right name="configureAdminUI" type="setAttrs" targetType="account">
@@ -615,6 +570,10 @@
 <right name="accessGAL" type="preset" targetType="domain">
   <desc>access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests</desc>
 </right>
+         
+<right name="checkExchangeAuthConfig" type="preset" targetType="domain">
+  <desc>check exchange auth config</desc>
+</right>
 
 <right name="checkExternalGALConfig" type="preset" targetType="domain">
   <desc>check external GAL config</desc>
@@ -667,10 +626,9 @@
     <a n="zimbraAuthLdapStartTlsEnabled"/>
   </attrs> 
 </right>         
-         
-<right name="checkExchangeAuthConfig" type="preset" targetType="domain">
-  <desc>check exchange auth config</desc>
-</right>
+
+
+
     
 <!-- 
 ========================================================
@@ -832,10 +790,6 @@
 ========================================================
 -->
 
-<!-- 
-   
-   
- -->
 <right name="viewGrants" type="getAttrs" targetType="account,calresource,cos,dl,domain,server,xmppcomponent,zimlet,config,global">
   <desc>view grants on all target types</desc>
   <doc>
@@ -871,25 +825,5 @@
   </attrs>
 </right>
 
-<!-- 
-      <notUsed>configureAdminUI</notUsed>
-      <notUsed>configureQuota</notUsed>
-      <notUsed>configureExternalAuth</notUsed>
-      <notUsed>configureWikiAccount</notUsed>
-      <notUsed>viewEmail</notUsed>
-      <notUsed>modifyAccount</notUsed>
-      <notUsed>configureCosConstraint</notUsed>
-      <notUsed>modifyXMPPComponent</notUsed>
-      <notUsed>modifyDomain</notUsed>
-      <notUsed>configureGlobalConfigConstraint</notUsed>
-      <notUsed>configurePasswordStrength</notUsed>
-      <notUsed>modifyCalendarResource</notUsed>
-      <notUsed>modifyServer</notUsed>
-      <notUsed>modifyDistributionList</notUsed>
-      <notUsed>getAccountFeatures</notUsed>
-      <notUsed>modifyGlobalConfig</notUsed>
-      <notUsed>modifyCos</notUsed>
-      <notUsed>configureExternalGAL</notUsed>
--->
-
+      
 </rights>
