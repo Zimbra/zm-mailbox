@@ -423,6 +423,7 @@ public class RightCommand {
     }
     
     public static Right getRight(String rightName) throws ServiceException {
+        verifyAccessManager();
         return RightManager.getInstance().getRight(rightName);
     }
     
@@ -436,15 +437,22 @@ public class RightCommand {
      *
      * 3. family mailbox (currently in DomainAccessManager, move to AccessManager so can apply to non domain based AM)
      *
+     * 4. check all callsites of AuthToken.isAdmin() to call AccessManager.isGlobalAdmin()
+     * 
      * 6. domain admin rights     
      * 7. check all rights in zimbra-rights.xml ar used or still need to be used
      *   
      * 7. cross domain right
      * 8. grant the same negative grants of the granter to the grantee
      * 
+     * For domain admin login:
+     * 
+     * zmprov grr config usr da@test.com getGlobalConfig (???)
+     * zmprov grr domain test.com usr da@test.com domainAdminRights
+     * 
      */
     private static boolean READY() {
-        return false;
+        return true;
     }
     
     private static void verifyAccessManager() throws ServiceException {
@@ -452,9 +460,10 @@ public class RightCommand {
             return;
         
         if (!(AccessManager.getInstance() instanceof ACLAccessManager))
-            throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + AccessManager.getInstance().getClass().getCanonicalName() +
-                                           ", check localonfig key " + LC.zimbra_class_accessmanager.key() + 
-                                           ", it should be set to " +  ACLAccessManager.class.getCanonicalName(), null);
+            throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + 
+                    AccessManager.getInstance().getClass().getCanonicalName() +
+                    ", check localonfig key " + LC.zimbra_class_accessmanager.key() + 
+                    ", this method requires " +  ACLAccessManager.class.getCanonicalName(), null);
     }
     
     /**
@@ -638,6 +647,8 @@ public class RightCommand {
                                   String granteeType, GranteeBy granteeBy, String grantee,
                                   String right, RightModifier rightModifier) throws ServiceException {
         
+        verifyAccessManager();
+        
         // target
         TargetType tt = TargetType.fromString(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
@@ -667,6 +678,8 @@ public class RightCommand {
                                    String targetType, TargetBy targetBy, String target,
                                    String granteeType, GranteeBy granteeBy, String grantee,
                                    String right, RightModifier rightModifier) throws ServiceException {
+        
+        verifyAccessManager();
         
         // target
         TargetType tt = TargetType.fromString(targetType);

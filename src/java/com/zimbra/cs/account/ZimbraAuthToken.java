@@ -70,7 +70,8 @@ public class ZimbraAuthToken extends AuthToken {
     private static final String C_AID  = "aid";    
     private static final String C_EXP = "exp";
     private static final String C_ADMIN = "admin";
-    private static final String C_DOMAIN = "domain";    
+    private static final String C_DOMAIN = "domain"; 
+    private static final String C_SYSADMIN = "sysadmin";
     private static final String C_TYPE = "type";
     private static final String C_TYPE_ZIMBRA_USER = "zimbra";
     private static final String C_TYPE_EXTERNAL_USER = "external";
@@ -87,6 +88,7 @@ public class ZimbraAuthToken extends AuthToken {
     private String mEncoded;
     private boolean mIsAdmin;
     private boolean mIsDomainAdmin;
+    private boolean mIsSystemAdmin;
 //  private static AuthTokenKey mTempKey;
     private String mType;
     private String mExternalUserEmail;
@@ -96,7 +98,7 @@ public class ZimbraAuthToken extends AuthToken {
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
-        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+")";
+        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+" isSysAd="+mIsSystemAdmin+")";
     }
     
     protected static AuthTokenKey getCurrentKey() throws AuthTokenException {
@@ -172,6 +174,8 @@ public class ZimbraAuthToken extends AuthToken {
             mIsAdmin = "1".equals(ia);
             String da = (String) map.get(C_DOMAIN);            
             mIsDomainAdmin = "1".equals(da);
+            String sa = (String) map.get(C_SYSADMIN);            
+            mIsSystemAdmin = "1".equals(sa);
             mType = (String)map.get(C_TYPE);
             mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             mDigest = (String)map.get(C_DIGEST);
@@ -190,7 +194,7 @@ public class ZimbraAuthToken extends AuthToken {
 
     public ZimbraAuthToken(Account acct, boolean isAdmin) {
         this(acct, 0, isAdmin, null);
-        long lifetime = mIsAdmin || mIsDomainAdmin ?
+        long lifetime = mIsAdmin || mIsDomainAdmin || mIsSystemAdmin ?
                     acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :                                    
                     acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
         mExpires = System.currentTimeMillis() + lifetime;
@@ -213,6 +217,7 @@ public class ZimbraAuthToken extends AuthToken {
         mExpires = expires;
         mIsAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
+        mIsSystemAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsSystemAdminAccount));
         mEncoded = null;
         if (acct instanceof ACL.GuestAccount) {
             mType = C_TYPE_EXTERNAL_USER;
@@ -260,6 +265,9 @@ public class ZimbraAuthToken extends AuthToken {
         return mIsDomainAdmin;
     }
     
+    public boolean isSystemAdmin() {
+        return mIsSystemAdmin;
+    }
     
     public boolean isZimbraUser() {
         return mType == null || mType.compareTo(C_TYPE_ZIMBRA_USER) == 0;
@@ -288,6 +296,8 @@ public class ZimbraAuthToken extends AuthToken {
                 BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
             if (mIsDomainAdmin)
                 BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);
+            if (mIsSystemAdmin)
+                BlobMetaData.encodeMetaData(C_SYSADMIN, "1", encodedBuff);
             BlobMetaData.encodeMetaData(C_TYPE, mType, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, mExternalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, mDigest, encodedBuff);

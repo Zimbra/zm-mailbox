@@ -52,6 +52,14 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
+    /**
+     * treat domain admins equally
+     */
+    public boolean isGeneralAdmin(AuthToken at) {
+        return at.isAdmin() || at.isDomainAdmin() || at.isSystemAdmin();
+    }
+    
+    @Override
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
         if (asAdmin)

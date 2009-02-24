@@ -26,7 +26,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090222-2139 */
+    /* build: 5.0 pshao 20090223-2014 */
 
 
     /*
@@ -289,6 +289,41 @@ public class RightConsts {
     public static final String RT_deployZimlet = "deployZimlet";
 
     /**
+     * domain admin account right
+     */
+    public static final String RT_domainAdminAccountRights = "domainAdminAccountRights";
+
+    /**
+     * domain admin calresource right
+     */
+    public static final String RT_domainAdminCalendarResourceRights = "domainAdminCalendarResourceRights";
+
+    /**
+     * domain admin cos right
+     */
+    public static final String RT_domainAdminCosRights = "domainAdminCosRights";
+
+    /**
+     * domain admin dl right
+     */
+    public static final String RT_domainAdminDistributionListRights = "domainAdminDistributionListRights";
+
+    /**
+     * domain admin domain right
+     */
+    public static final String RT_domainAdminDomainRights = "domainAdminDomainRights";
+
+    /**
+     * domain admin rights
+     */
+    public static final String RT_domainAdminRights = "domainAdminRights";
+
+    /**
+     * domain admin zimlet right
+     */
+    public static final String RT_domainAdminZimletRights = "domainAdminZimletRights";
+
+    /**
      * flush LDAP, skin, local caches on server
      */
     public static final String RT_flushCache = "flushCache";
@@ -297,11 +332,6 @@ public class RightConsts {
      * get all account attributes
      */
     public static final String RT_getAccount = "getAccount";
-
-    /**
-     * for unittest only, do we have a use case for this?
-     */
-    public static final String RT_getAccountFeatures = "getAccountFeatures";
 
     /**
      * get account id, home server, cos id and name, and access URL
@@ -595,14 +625,27 @@ public class RightConsts {
     public static final String RT_setCalendarResourcePassword = "setCalendarResourcePassword";
 
     /**
+     * account and calendar resource attrs modifiable by domain admins for
+     * domain based access manager
+     */
+    public static final String RT_setDomainAdminAccountAndCalendarResourceAttrs = "setDomainAdminAccountAndCalendarResourceAttrs";
+
+    /**
+     * calendar resource attrs modifiable by domain admins for domain based
+     * access manager
+     */
+    public static final String RT_setDomainAdminCalendarResourceAttrs = "setDomainAdminCalendarResourceAttrs";
+
+    /**
+     * domain attrs modifiable by domain admins for domain based access
+     * manager
+     */
+    public static final String RT_setDomainAdminDomainAttrs = "setDomainAdminDomainAttrs";
+
+    /**
      * view admin saved searches
      */
     public static final String RT_viewAdminSavedSearch = "viewAdminSavedSearch";
-
-    /**
-     * view the account&#039;s email
-     */
-    public static final String RT_viewEmail = "viewEmail";
 
     /**
      * view grants on all target types

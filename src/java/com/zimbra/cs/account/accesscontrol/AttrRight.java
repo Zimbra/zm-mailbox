@@ -101,7 +101,7 @@ public class AttrRight extends AdminRight {
     }
     
     @Override
-    TargetType getTargetType() throws ServiceException {
+    public TargetType getTargetType() throws ServiceException {
         throw ServiceException.FAILURE("internal error", null);
     }
     

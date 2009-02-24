@@ -1190,18 +1190,24 @@
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Administrator' displayName 'Administrator' \
             zimbraIsAdminAccount TRUE \
-            zimbraIsSystemAdminAccount TRUE \
-        	zimbraAdminConsoleUIComponents cartBlancheUI \
+            zimbraAdminConsoleUIComponents cartBlancheUI \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             telephoneNumber '+1 650 555 0000'
             ca domainadmin@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Domain Administrator' displayName 'Domain Administrator' \
-            zimbraIsAdminAccount TRUE \
+            zimbraIsDomainAdminAccount TRUE \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             telephoneNumber '+1 650 555 0000'   
+        	ca sysadmin@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+        	cn 'System Administrator' displayName 'System Administrator' \
+        	zimbraIsSystemAdminAccount TRUE \
+        	zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+        	zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+        	telephoneNumber '+1 650 555 0000'   
             ca user1@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Demo User One' \
@@ -1211,7 +1217,7 @@
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             zimbraPrefMailPollingInterval 12h \
             zimbraPrefWarnOnExit FALSE \
-        zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
+            zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
             telephoneNumber '+1 650 555 1111'
             ca user2@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
@@ -1357,34 +1363,6 @@
             ca wiki@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             zimbraMailQuota 0
-            grr global usr admin@${defaultdomain.name} createTopDomain
-            grr global usr admin@${defaultdomain.name} modifyAccount
-            grr global usr admin@${defaultdomain.name} deleteAccount
-            grr global usr admin@${defaultdomain.name} configureAdminUI
-            grr global usr admin@${defaultdomain.name} configureExternalGAL
-            grr global usr admin@${defaultdomain.name} configureExternaAuth
-            grr global usr admin@${defaultdomain.name} createAlias
-            grr global usr admin@${defaultdomain.name} modifyCos
-            grr global usr admin@${defaultdomain.name} deleteCos
-            grr global usr admin@${defaultdomain.name} listCos
-            grr global usr admin@${defaultdomain.name} createCos
-            grr global usr admin@${defaultdomain.name} getDomain
-            grr global usr admin@${defaultdomain.name} modifyDomain
-            grr global usr admin@${defaultdomain.name} deleteDomain
-            grr global usr admin@${defaultdomain.name} setAccountPassword
-            grr global usr admin@${defaultdomain.name} viewEmail
-            grr global usr admin@${defaultdomain.name} reindexMailbox
-            grr global usr admin@${defaultdomain.name} renameCos
-            grr global usr admin@${defaultdomain.name} modifyServer
-            grr global usr admin@${defaultdomain.name} deleteServer
-            grr global usr admin@${defaultdomain.name} modifyGlobalConfig
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} renameAccount
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} deleteAccount
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} addAccountAlias
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} removeAccountAlias
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} viewEmail
-            grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} setAccountPassword
          </echo>
     </target>
 
@@ -1761,6 +1739,12 @@
         <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
               failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+            <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
+        </java>
+        	
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
         </java>
         <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
@@ -1773,6 +1757,7 @@
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/UserRights.java"/>
         </java>
+
     </target>
 	
 	<target name="refresh-rights">
@@ -1798,7 +1783,7 @@
         </java>
     </target>	
 	
-	<property name="admin-name" value="aa@${defaultdomain.name}"/>
+	<property name="admin-name" value="admin@${defaultdomain.name}"/>
 	
 	<target name="grant-rights">
 		<antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getAccount"/>           </antcall>
@@ -1808,6 +1793,34 @@
 		<antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getGlobalConfig"/>      </antcall>
 		<antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getMailboxInfo"/>       </antcall>
     </target>
+
+	<!--
+	zmprov grr domain phoebe.mac usr admin@phoebe.mac domainAdminRights
+	zmprov grr config            usr admin@phoebe.mac getGlobalConfig
+	
+    grr global usr admin@${defaultdomain.name} createTopDomain
+    grr global usr admin@${defaultdomain.name} modifyAccount
+    grr global usr admin@${defaultdomain.name} deleteAccount
+    grr global usr admin@${defaultdomain.name} configureAdminUI
+    grr global usr admin@${defaultdomain.name} configureExternalGAL
+    grr global usr admin@${defaultdomain.name} configureExternaAuth
+    grr global usr admin@${defaultdomain.name} createAlias
+    grr global usr admin@${defaultdomain.name} modifyCos
+    grr global usr admin@${defaultdomain.name} deleteCos
+    grr global usr admin@${defaultdomain.name} listCos
+    grr global usr admin@${defaultdomain.name} createCos
+    grr global usr admin@${defaultdomain.name} getDomain
+    grr global usr admin@${defaultdomain.name} modifyDomain
+    grr global usr admin@${defaultdomain.name} deleteDomain
+    grr global usr admin@${defaultdomain.name} setAccountPassword
+    grr global usr admin@${defaultdomain.name} viewEmail
+    grr global usr admin@${defaultdomain.name} reindexMailbox
+    grr global usr admin@${defaultdomain.name} renameCos
+    grr global usr admin@${defaultdomain.name} modifyServer
+    grr global usr admin@${defaultdomain.name} deleteServer
+    grr global usr admin@${defaultdomain.name} modifyGlobalConfig
+    grr domain ${defaultdomain.name} usr domainadmin@${defaultdomain.name} getAccountFeatures
+	-->
 	
 	<target name="create-admin">
 		<antcall target="zmprov">

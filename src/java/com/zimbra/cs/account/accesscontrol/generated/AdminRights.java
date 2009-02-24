@@ -32,7 +32,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090222-2139 */
+    /* build: 5.0 pshao 20090223-2014 */
 
 
     public static AdminRight R_accessGAL;
@@ -78,9 +78,15 @@ public class AdminRights {
     public static AdminRight R_deleteXMPPComponent;
     public static AdminRight R_deleteZimlet;
     public static AdminRight R_deployZimlet;
+    public static AdminRight R_domainAdminAccountRights;
+    public static AdminRight R_domainAdminCalendarResourceRights;
+    public static AdminRight R_domainAdminCosRights;
+    public static AdminRight R_domainAdminDistributionListRights;
+    public static AdminRight R_domainAdminDomainRights;
+    public static AdminRight R_domainAdminRights;
+    public static AdminRight R_domainAdminZimletRights;
     public static AdminRight R_flushCache;
     public static AdminRight R_getAccount;
-    public static AdminRight R_getAccountFeatures;
     public static AdminRight R_getAccountInfo;
     public static AdminRight R_getAccountMembership;
     public static AdminRight R_getAccountShareInfo;
@@ -139,8 +145,10 @@ public class AdminRights {
     public static AdminRight R_setAccountPassword;
     public static AdminRight R_setAdminSavedSearch;
     public static AdminRight R_setCalendarResourcePassword;
+    public static AdminRight R_setDomainAdminAccountAndCalendarResourceAttrs;
+    public static AdminRight R_setDomainAdminCalendarResourceAttrs;
+    public static AdminRight R_setDomainAdminDomainAttrs;
     public static AdminRight R_viewAdminSavedSearch;
-    public static AdminRight R_viewEmail;
     public static AdminRight R_viewGrants;
     public static AdminRight R_viewPasswordStrength;
 
@@ -189,9 +197,15 @@ public class AdminRights {
         R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
         R_deployZimlet                         = rm.getAdminRight(Right.RT_deployZimlet);
+        R_domainAdminAccountRights             = rm.getAdminRight(Right.RT_domainAdminAccountRights);
+        R_domainAdminCalendarResourceRights    = rm.getAdminRight(Right.RT_domainAdminCalendarResourceRights);
+        R_domainAdminCosRights                 = rm.getAdminRight(Right.RT_domainAdminCosRights);
+        R_domainAdminDistributionListRights    = rm.getAdminRight(Right.RT_domainAdminDistributionListRights);
+        R_domainAdminDomainRights              = rm.getAdminRight(Right.RT_domainAdminDomainRights);
+        R_domainAdminRights                    = rm.getAdminRight(Right.RT_domainAdminRights);
+        R_domainAdminZimletRights              = rm.getAdminRight(Right.RT_domainAdminZimletRights);
         R_flushCache                           = rm.getAdminRight(Right.RT_flushCache);
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
-        R_getAccountFeatures                   = rm.getAdminRight(Right.RT_getAccountFeatures);
         R_getAccountInfo                       = rm.getAdminRight(Right.RT_getAccountInfo);
         R_getAccountMembership                 = rm.getAdminRight(Right.RT_getAccountMembership);
         R_getAccountShareInfo                  = rm.getAdminRight(Right.RT_getAccountShareInfo);
@@ -250,8 +264,10 @@ public class AdminRights {
         R_setAccountPassword                   = rm.getAdminRight(Right.RT_setAccountPassword);
         R_setAdminSavedSearch                  = rm.getAdminRight(Right.RT_setAdminSavedSearch);
         R_setCalendarResourcePassword          = rm.getAdminRight(Right.RT_setCalendarResourcePassword);
+        R_setDomainAdminAccountAndCalendarResourceAttrs = rm.getAdminRight(Right.RT_setDomainAdminAccountAndCalendarResourceAttrs);
+        R_setDomainAdminCalendarResourceAttrs  = rm.getAdminRight(Right.RT_setDomainAdminCalendarResourceAttrs);
+        R_setDomainAdminDomainAttrs            = rm.getAdminRight(Right.RT_setDomainAdminDomainAttrs);
         R_viewAdminSavedSearch                 = rm.getAdminRight(Right.RT_viewAdminSavedSearch);
-        R_viewEmail                            = rm.getAdminRight(Right.RT_viewEmail);
         R_viewGrants                           = rm.getAdminRight(Right.RT_viewGrants);
         R_viewPasswordStrength                 = rm.getAdminRight(Right.RT_viewPasswordStrength);
     }

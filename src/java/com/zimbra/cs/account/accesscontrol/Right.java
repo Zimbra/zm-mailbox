@@ -164,7 +164,7 @@ public abstract class Right extends RightConsts {
             throw ServiceException.PARSE_ERROR("missing target type", null);
     }
     
-    TargetType getTargetType() throws ServiceException {
+    public TargetType getTargetType() throws ServiceException {
         return mTargetType;
     }
     

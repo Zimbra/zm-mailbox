@@ -352,7 +352,7 @@ public class SoapEngine {
         if ((needsAuth || needsAdminAuth) && at == null)
             return soapFault(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
 
-        if (needsAdminAuth && !at.isAdmin()) {
+        if (needsAdminAuth && !AccessManager.getInstance().isGeneralAdmin(at)) {
             boolean ok = handler.domainAuthSufficient(context) && at.isDomainAdmin();
             if (!ok)
                 return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need admin token"));

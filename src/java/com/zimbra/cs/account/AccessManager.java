@@ -47,9 +47,8 @@ public abstract class AccessManager {
         return sManager;
     }
     
-    // why is this an AccessManager method?  should probably just 
-    // to AdminDocumentHanlder
     public abstract boolean isDomainAdminOnly(AuthToken at);
+    public abstract boolean isGeneralAdmin(AuthToken at);
 
     public Account getAccount(AuthToken at) throws ServiceException {
         return Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);

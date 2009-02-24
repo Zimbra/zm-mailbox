@@ -178,7 +178,8 @@ public class Auth extends AdminDocumentHandler {
 	private void checkAdmin(Account acct) throws ServiceException {
 	    boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
-        boolean ok = (isDomainAdmin || isAdmin);
+        boolean isSystemAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsSystemAdminAccount, false);            
+        boolean ok = (isDomainAdmin || isAdmin || isSystemAdmin);
         if (!ok) 
             throw ServiceException.PERM_DENIED("not an admin account");
 	}

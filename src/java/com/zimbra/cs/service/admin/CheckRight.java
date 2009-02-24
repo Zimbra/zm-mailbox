@@ -52,7 +52,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CheckRight extends RightDocumentHandler {
-
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
@@ -80,6 +80,9 @@ public class CheckRight extends RightDocumentHandler {
         
         Element eAttrs = request.getOptionalElement(AdminConstants.E_ATTRS);
         Map<String, Object> attrs = (eAttrs==null)? null : AdminService.getAttrs(request);
+        
+        if (!grantee.equals(zsc.getAuthtokenAccountId()))
+            checkCheckRightRight(zsc, granteeBy, grantee);
         
         ViaGrant via = new ViaGrant();
         boolean result = RightCommand.checkRight(Provisioning.getInstance(),

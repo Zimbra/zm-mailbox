@@ -64,6 +64,10 @@ public abstract class AuthToken {
 
     public abstract boolean isDomainAdmin();
     
+    public boolean isSystemAdmin() {
+        return false;
+    }
+    
     public abstract boolean isZimbraUser();
 
     public abstract String getExternalUserEmail() ;

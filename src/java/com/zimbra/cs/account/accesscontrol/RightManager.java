@@ -16,15 +16,28 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -39,11 +52,18 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeInfo;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.FileGenUtil;
+import com.zimbra.cs.util.BuildInfo;
+
 
 public class RightManager {
     private static final String E_A            = "a";
@@ -488,7 +508,8 @@ public class RightManager {
             sOptions.addOption("h", "help", false, "display this  usage info");
             sOptions.addOption("a", "action", true, "action, one of genRightConsts, genAdminRights, genUserRights");
             sOptions.addOption("i", "input", true,"rights definition xml input directory");
-            sOptions.addOption("r", "regenerateFile", true, "Java file to regenerate");
+            sOptions.addOption("r", "regenerateFile", true, "file file to regenerate");
+            sOptions.addOption("t", "templateFile", true, "template file");
         }
         
         private static void check() throws ServiceException  {
@@ -497,7 +518,100 @@ public class RightManager {
             RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
             System.out.println(rm.dump(null));
         }
-    
+        
+        private static void genDomainAdminSetAttrsRights(String outFile, String templateFile) throws Exception {
+            Set<String> acctAttrs = getDomainAdminModifiableAttrs(AttributeClass.account);
+            Set<String> crAttrs = getDomainAdminModifiableAttrs(AttributeClass.calendarResource);
+            Set<String> domainAttrs = getDomainAdminModifiableAttrs(AttributeClass.domain);
+            
+            Set<String> acctAndCrAttrs = SetUtil.intersect(acctAttrs, crAttrs);
+            Set<String> acctOnlyAttrs = SetUtil.subtract(acctAttrs, crAttrs);
+            Set<String> crOnlyAttrs = SetUtil.subtract(crAttrs, acctAttrs);
+            
+            // sanity check, since we are not generating it, make sure it is indeed empty
+            if (acctOnlyAttrs.size() != 0)
+                throw ServiceException.FAILURE("account only attrs is not empty???", null);
+            
+            String acctAndCrAttrsFiller = genAttrs(acctAndCrAttrs);
+            String crOnlyAttrsFiller = genAttrs(crOnlyAttrs);
+            String domainAttrsFiller = genAttrs(domainAttrs);
+            
+            Map<String,String> templateFillers = new HashMap<String,String>();
+            templateFillers.put("ACCOUNT_AND_CALENDAR_RESOURCE_ATTRS", acctAndCrAttrsFiller);
+            templateFillers.put("CALENDAR_RESOURCE_ATTRS", crOnlyAttrsFiller);
+            templateFillers.put("DOMAIN_ATTRS", domainAttrsFiller);
+            
+            genFile(outFile, templateFile, templateFillers);
+        }
+        
+        private static void genFile(String outFile, String templateFile, Map<String,String> templateFillers) 
+            throws Exception {
+            // OutputStream os = new FileOutputStream(outFile);
+            // PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf8")));
+            
+            byte[] templateBytes = ByteUtil.getContent(new File(templateFile));
+            String templateString = new String(templateBytes, "utf-8");
+            
+            String content = StringUtil.fillTemplate(templateString, templateFillers);
+            // pw.print(content);
+            
+            File oldFile = new File(outFile);
+            if (!oldFile.canWrite()) {
+                System.err.println("============================================");
+                System.err.println("Unable to write to: "+outFile);
+                System.err.println("============================================");
+                System.exit(1);
+            }
+            
+            BufferedWriter out = null;
+            File newFile = new File(outFile+"-autogen");
+
+            try {
+                out = new BufferedWriter(new FileWriter(newFile));
+                out.write(content);
+
+                out.close();
+                out = null;
+
+                if (!newFile.renameTo(oldFile)) {
+                    System.err.println("============================================");
+                    System.err.format("Unable to rename(%s) to (%s)%n", newFile.getName(), oldFile);
+                    System.err.println("============================================");
+                    System.exit(1);
+                }
+
+                System.out.println("======================================");
+                System.out.println("generated: "+outFile);
+                System.out.println("======================================");
+
+            } finally {
+                if (out != null) out.close();
+            }
+        }
+        
+        private static Set<String> getDomainAdminModifiableAttrs(AttributeClass klass) throws ServiceException {
+            AttributeManager am = AttributeManager.getInstance();
+            Set<String> allAttrs = am.getAllAttrsInClass(klass);
+            
+            Set<String> domainAdminModifiableAttrs = new HashSet<String>();
+            for (String attr : allAttrs) {
+                if (am.isDomainAdminModifiable(attr, klass))
+                    domainAdminModifiableAttrs.add(attr);
+            }
+            return domainAdminModifiableAttrs;
+        }
+            
+        private static String genAttrs(Set<String> attrs) {
+            // sort it
+            Set<String> sortedAttrs = new TreeSet<String>(attrs);
+            
+            StringBuilder sb = new StringBuilder();
+            for (String attr : sortedAttrs) {
+                sb.append("    <a n=\"" + attr + "\"/>\n");
+            }
+            return sb.toString();
+        }
+
         private static void usage(String errmsg) {
             if (errmsg != null) {
                 System.out.println(errmsg);
@@ -527,34 +641,44 @@ public class RightManager {
             return cl;
         }
         
-        private static void main(String[] args) throws ServiceException, IOException {
+        private static void main(String[] args) throws Exception {
             CliUtil.toolSetup();
             CommandLine cl = parseArgs(args);
         
             if (!cl.hasOption('a')) usage("no action specified");
-            if (!cl.hasOption('i')) usage("no input dir specified");
             if (!cl.hasOption('r')) usage("no regenerate file specified");
             
             String action = cl.getOptionValue('a');
-            String inputDir = cl.getOptionValue('i');
             String regenFile = cl.getOptionValue('r');
-            RightManager rm = new RightManager(inputDir);
             
+            String inputDir = null;
+            RightManager rm = null;
+            if (!"genDomainAdminSetAttrsRights".equals(action)) {
+                if (!cl.hasOption('i')) usage("no input dir specified");
+                inputDir = cl.getOptionValue('i');
+                rm = new RightManager(inputDir);
+            }
+             
             if ("genRightConsts".equals(action))
                 FileGenUtil.replaceJavaFile(regenFile, rm.genRightConsts());
-           else if ("genAdminRights".equals(action))
+            else if ("genAdminRights".equals(action))
                 FileGenUtil.replaceJavaFile(regenFile, rm.genAdminRights());
             else if ("genUserRights".equals(action))
                 FileGenUtil.replaceJavaFile(regenFile, rm.genUserRights());
-            else
+            else if ("genDomainAdminSetAttrsRights".equals(action)) {
+                String templateFile = cl.getOptionValue('t');
+                genDomainAdminSetAttrsRights(regenFile, templateFile);
+            } else
                 usage("invalid action");
         }
     }
     /**
      * @param args
      */
-    public static void main(String[] args) throws ServiceException, IOException {
+    public static void main(String[] args) throws Exception {
         CL.main(args);
+        
+        // CL.check();
     }
     
 }

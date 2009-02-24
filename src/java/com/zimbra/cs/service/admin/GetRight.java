@@ -16,7 +16,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetRight extends RightDocumentHandler {
 
-public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         

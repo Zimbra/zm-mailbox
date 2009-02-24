@@ -1272,13 +1272,27 @@ public class RightChecker {
     /**
      * returns if grantee is an admin account or admin group
      * 
+     * Note: 
+     *     - system admins cannot receive grants - they don't need any
+     *     
+     *     - legacy "domain admins" can receive grants.  
+     *       zimbraIsDomainAdminAccount and zimbraIsAdminAccount are treated 
+     *       equally by the ACLAccessManger.  They both indicate that the account 
+     *       "is an admin" so they can receive grants and their grants are 
+     *       effective.   Their rights are purely decided by their grants.
+     *       
+     *       We do not migrade domain admins to have zimbraIsAdminAccount, this 
+     *       is so customers can switch between the legacy domain access manager 
+     *       and pure ACL based access manager.
+     * 
      * @param gt
      * @param grantee
      * @return
      */
     static boolean isValidGranteeForAdminRights(GranteeType gt, NamedEntry grantee) {
         if (gt == GranteeType.GT_USER) {
-            return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+            return (grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
+                    grantee.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false));
         } else if (gt == GranteeType.GT_GROUP) {
             return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
         } else

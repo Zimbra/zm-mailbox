@@ -49,20 +49,20 @@ import com.zimbra.cs.account.Zimlet;
 
 
 public enum TargetType {
-    account(true,           AttributeClass.account),
-    calresource(true,       AttributeClass.calendarResource),
-    cos(true,               AttributeClass.cos),
-    dl(true,                AttributeClass.distributionList),
-    domain(true,            AttributeClass.domain),
-    server(true,            AttributeClass.server),
-    xmppcomponent(true,     AttributeClass.xmppComponent),
-    zimlet(true,            AttributeClass.zimletEntry),
-    config(false,           AttributeClass.globalConfig),
-    global(false,           AttributeClass.aclTarget);
+    account(true,           AttributeClass.account,          "Account"),
+    calresource(true,       AttributeClass.calendarResource, "CalendarResource"),
+    cos(true,               AttributeClass.cos,              "Cos"),
+    dl(true,                AttributeClass.distributionList, "DistributionList"),
+    domain(true,            AttributeClass.domain,           "Domain"),
+    server(true,            AttributeClass.server,           "Server"),
+    xmppcomponent(true,     AttributeClass.xmppComponent,    "XMPPComponent"),
+    zimlet(true,            AttributeClass.zimletEntry,      "Zimlet"),
+    config(false,           AttributeClass.globalConfig,     "GlobalConfig"),
+    global(false,           AttributeClass.aclTarget,        "GlobalGrant");
     
     private boolean mNeedsTargetIdentity;
     private AttributeClass mAttrClass;
-    
+    private String mPrettyName;
     
     //
     // mInheritedByTargetTypes and mInheritFromTargetTypes represents 
@@ -88,9 +88,10 @@ public enum TargetType {
      * @param applicableTargetTypes target types of rights that can be granted on this target type
      *                              if null, all target types
      */
-    TargetType(boolean NeedsTargetIdentity, AttributeClass attrClass) {
+    TargetType(boolean NeedsTargetIdentity, AttributeClass attrClass, String prettyName) {
         mNeedsTargetIdentity = NeedsTargetIdentity;
         mAttrClass = attrClass;
+        mPrettyName = prettyName;
     }
     
     private void setInheritedByTargetTypes(TargetType[] targetTypes) {
@@ -152,6 +153,10 @@ public enum TargetType {
     
     public String getCode() {
         return name();
+    }
+    
+    public String getPrettyName() {
+        return mPrettyName;
     }
     
     public boolean needsTargetIdentity() {
