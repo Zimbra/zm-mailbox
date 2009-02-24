@@ -171,7 +171,7 @@ public class CompleteTaskInstance extends CalendarRequest {
         inst.setName(recur.getName());
         inst.setLocation(recur.getLocation());
         inst.setFlags(recur.getFlags());
-        inst.setDescription(recur.getDescription());
+        inst.setDescription(recur.getDescription(), recur.getDescriptionHtml());
         inst.setFragment(recur.getFragment());
 
         return inst;

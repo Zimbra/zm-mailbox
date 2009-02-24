@@ -4092,8 +4092,11 @@ public class Mailbox {
             for (SetCalendarItemData scid : scidList) {
                 if (scid.mPm == null) {
                     scid.mInv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
-                    MimeMessage mm = CalendarMailSender.createCalendarMessage(scid.mInv);
-                    scid.mPm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
+                    String desc = scid.mInv.getDescription();
+                    if (desc != null && desc.length() > Invite.getMaxDescInMeta()) {
+                        MimeMessage mm = CalendarMailSender.createCalendarMessage(scid.mInv);
+                        scid.mPm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
+                    }
                 }
 
                 if (first) {
@@ -4329,14 +4332,18 @@ public class Mailbox {
                            boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision)
     throws ServiceException {
         if (pm == null) {
-            inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(inv);
-            pm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
+            inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it            
+            String desc = inv.getDescription();
+            if (desc != null && desc.length() > Invite.getMaxDescInMeta()) {
+                MimeMessage mm = CalendarMailSender.createCalendarMessage(inv);
+                pm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
+            }
         }
 
         byte[] data = null;
         try {
-            data = pm.getRawData();
+            if (pm != null)
+                data = pm.getRawData();
         } catch (MessagingException me) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         } catch (IOException ioe) {

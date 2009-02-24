@@ -172,7 +172,8 @@ public class ContentServlet extends ZimbraServlet {
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         if (iid.hasSubpart()) {
                             MimeMessage mm = appt.getSubpartMessage(iid.getSubpartId());
-                            mm.writeTo(resp.getOutputStream());
+                            if (mm != null)
+                                mm.writeTo(resp.getOutputStream());
                         } else { 
 //                            Invite[] invites = appt.getInvites();
 //                            for (int i = 0; i < invites.length; i++)
@@ -183,19 +184,21 @@ public class ContentServlet extends ZimbraServlet {
 //                            }
                             
                             InputStream is = appt.getRawMessage();
-                            ByteUtil.copy(is, true, resp.getOutputStream(), false);
+                            if (is != null)
+                                ByteUtil.copy(is, true, resp.getOutputStream(), false);
                         }
                     }
                     return;
                 } else {
-                    MimePart mp;
+                    MimePart mp = null;
                     if (item instanceof Message) {
                         mp = getMimePart((Message) item, part); 
                     } else {
                         Appointment appt = (Appointment) item;
                         if (iid.hasSubpart()) {
                             MimeMessage mbp = appt.getSubpartMessage(iid.getSubpartId());
-                            mp = Mime.getMimePart(mbp, part);
+                            if (mbp != null)
+                                mp = Mime.getMimePart(mbp, part);
                         } else {
                             mp = getMimePart(appt, part);
                         }

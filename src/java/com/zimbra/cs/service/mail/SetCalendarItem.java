@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.service.mail.ParseMimeMessage.InviteParserResult;
@@ -156,8 +157,15 @@ public class SetCalendarItem extends CalendarRequest {
             ipr = parser.getResult();
         }
 
-        if (ipr == null && msgElem.getOptionalElement(MailConstants.E_INVITE) != null)
+        if (ipr == null && msgElem.getOptionalElement(MailConstants.E_INVITE) != null) {
             ipr = parser.parse(zsc, octxt, mbox.getAccount(), msgElem.getElement(MailConstants.E_INVITE));
+            // Get description texts out of the MimeMessage and set in the parsed invite.
+            if (ipr != null && ipr.mInvite != null && mm != null) {
+                String desc = Invite.getDescription(mm, Mime.CT_TEXT_PLAIN);
+                String descHtml = Invite.getDescription(mm, Mime.CT_TEXT_HTML);
+                ipr.mInvite.setDescription(desc, descHtml);
+            }
+        }
 
         ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
 

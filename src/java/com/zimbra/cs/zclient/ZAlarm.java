@@ -153,12 +153,12 @@ public class ZAlarm {
 
         Element descElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
         if (descElem != null) {
-            description = descElem.getTextTrim();
+            description = descElem.getText();
         }
 
         Element summaryElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_SUMMARY);
         if (summaryElem != null) {
-            summary = summaryElem.getTextTrim();
+            summary = summaryElem.getText();
         }
 
         Element attachElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ATTACH);
@@ -267,10 +267,9 @@ public class ZAlarm {
             Element repeat = mRepeatDuration.toXml(alarm, MailConstants.E_CAL_ALARM_REPEAT);
             repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, mRepeatCount);
         }
-        if (!ZAction.AUDIO.equals(mAction)) {
+        if (!ZAction.AUDIO.equals(mAction) && mDescription != null) {
             Element desc = alarm.addElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
-            if (mDescription != null)
-                desc.setText(mDescription);
+            desc.setText(mDescription);
         }
         if (mAttach != null)
             mAttach.toXml(alarm);

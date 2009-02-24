@@ -86,7 +86,7 @@ import com.zimbra.common.util.LogFactory;
 /**
  * An APPOINTMENT consists of one or more INVITES in the same series -- ie that
  * have the same UID. From the appointment you can get the INSTANCES which are
- * the start/end times of each occurence.
+ * the start/end times of each occurrence.
  * 
  * Sample Appointment: APPOINTMENT UID=1234 (two INVITES above) ...Instances on
  * every monday with name "Gorilla Discussion" EXCEPT for the 21st, where we
@@ -439,7 +439,8 @@ public abstract class CalendarItem extends MailItem {
         item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
         item.finishCreation(null);
 
-        item.createBlob(pm, firstInvite, volumeId);
+        if (pm != null)
+            item.createBlob(pm, firstInvite, volumeId);
 
         item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
@@ -1287,6 +1288,21 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
+        // If newInvite doesn't require a blob part, check if there's an existing blob part with
+        // the same invId.  If so, it needs to be removed.
+        boolean hadBlobPart = false;
+        if (!newInvite.hasBlobPart()) {
+            Invite[] oldInvs = getInvites(newInvite.getMailItemId());
+            if (oldInvs != null) {
+                for (Invite oldInv : oldInvs) {
+                    if (oldInv.hasBlobPart()) {
+                        hadBlobPart = true;
+                        break;
+                    }
+                }
+            }
+        }
+
         // If modifying recurrence series (rather than an instance) and the
         // start time (HH:MM:SS) is changing, we need to update the time
         // component of RECURRENCE-ID in all exception instances.
@@ -1645,16 +1661,26 @@ public abstract class CalendarItem extends MailItem {
                     } else {
                         mData.flags &= ~Flag.BITMASK_ATTACHED;
                     }
-                    
-                    if (addNewOne) 
-                        modifyBlob(toRemove, discardExistingInvites, toUpdate, pm, newInvite, volumeId,
-                                   isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
-                    else 
-                        modifyBlob(toRemove, discardExistingInvites, toUpdate, null, null, volumeId,
-                                   isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
 
-                    // TIM: modifyBlob will save the metadata for us as a side-effect
-//                    saveMetadata();
+                    // Update blob if adding a new ParsedMessage or if there is already a blob, in which
+                    // case we may have to delete a section from it.
+                    boolean newInvHasBlobPart = newInvite.hasBlobPart();
+                    if (hadBlobPart || newInvHasBlobPart) {
+                        if (addNewOne && newInvHasBlobPart) {
+                            modifyBlob(toRemove, discardExistingInvites, toUpdate, pm, newInvite, volumeId,
+                                       isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
+                        } else {
+                            if (!newInvHasBlobPart)
+                                toRemove.add(newInvite);  // force existing MIME part to be removed
+                            modifyBlob(toRemove, discardExistingInvites, toUpdate, null, null, volumeId,
+                                       isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
+                        }
+                        // TIM: modifyBlob will save the metadata for us as a side-effect
+//                      saveMetadata();
+                    } else {
+                        markItemModified(Change.MODIFIED_INVITE);
+                        saveMetadata();
+                    }
 
                     Callback cb = getCallback();
                     if (cb != null)
@@ -1883,6 +1909,10 @@ public abstract class CalendarItem extends MailItem {
      */
     private void createBlob(ParsedMessage invPm, Invite firstInvite, short volumeId)
     throws ServiceException {
+        // Create blob only if there's an attachment or DESCRIPTION is too big to be stored in metadata.
+        if (!firstInvite.hasAttachment()
+            && (invPm == null || firstInvite.descInMeta()))
+            return;
         try { 
             // create the toplevel multipart/digest...
             MimeMessage mm = new MimeMessage(JMSession.getSession());            
@@ -1944,14 +1974,17 @@ public abstract class CalendarItem extends MailItem {
         //         if a single incoming Message has multiple invites in it, all for this CalendarItem)
         try { 
             // now, make sure the message is in our blob already...
-            MimeMessage mm;
-            
-            try {
-                mm = getMimeMessage();
-            } catch (ServiceException e) {
-                ZimbraLog.calendar.error("Error reading blob for calendar item " + getId() +
-                                         " in mailbox " + getMailboxId(), e);
-                if (newInv != null) {
+            MimeMessage mm = null;
+            if (getSize() > 0) {
+                try {
+                    mm = getMimeMessage();
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Error reading blob for calendar item " + getId() +
+                                            " in mailbox " + getMailboxId(), e);
+                }
+            }
+            if (mm == null) {
+                if (newInv != null && invPm != null) {
                     // if the blob isn't already there, and we're going to add one, then
                     // just go into create
                     createBlob(invPm, newInv, volumeId);
@@ -2078,10 +2111,8 @@ public abstract class CalendarItem extends MailItem {
             }
             
             if (mmp.getCount() == 0) {
-                if (!isCancel)
-                    ZimbraLog.calendar.warn("Invalid state: deleting blob for calendar item " + getId() +
-                            " in mailbox " + getMailboxId() + " while processing a non-cancel request");
                 markBlobForDeletion();
+                setContent(null, null, volumeId, null);
                 if (forceSave)
                     saveMetadata();
             } else {
@@ -2637,6 +2668,8 @@ public abstract class CalendarItem extends MailItem {
         MimeMessage mm = null;
         try {
             is = getRawMessage();
+            if (is == null)
+                return null;
             mm = new MimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 
@@ -2690,10 +2723,14 @@ public abstract class CalendarItem extends MailItem {
     }
 
     private MimeBodyPart findBodyBySubId(int subId) throws ServiceException {
+        if (getSize() <= 0)
+            return null;
         InputStream is = null;
         MimeMessage mm = null;
         try {
             is = getRawMessage();
+            if (is == null)
+                return null;
             mm = new MimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 

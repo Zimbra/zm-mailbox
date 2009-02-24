@@ -114,6 +114,7 @@
             [percentComplete="num (integer)"]  // percent complete for VTODO (0 - 100; default = 0)
             [completed="yyyyMMddThhmmssZ"]  // VTODO COMPLETED DATE-TIME
             [url="url"]         // URL
+            [noBlob="1"]        // set if invite has no blob data, i.e. all data is in db metadata
         >
 
            <s DATETIME> // Start date-time (required)
@@ -124,7 +125,8 @@
               <dur DURATION>   //<dur [neg="1|0"] [w="weeks"] [d="days"] [h="hours"] [m="mins"] [s="secs"]>  
            )   // one is required
 
-           [<desc>DESCRIPTION</desc>]  // used in responses only
+           [<desc>DESCRIPTION</desc>]               // present if noBlob=1 and invite has plain text description
+           [<descHtml>HTML description</descHtml>]  // present if noBlob=1 and invite has html description
 
            // organizer
            <or a="address"         // email address (without "MAILTO:")

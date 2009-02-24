@@ -178,7 +178,7 @@ public class SendInviteReply extends CalendarRequest {
 
                 // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
                 MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
-                ParsedMessage pm = new ParsedMessage(mmInv, false);
+                ParsedMessage pm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
 
                 mbox.addInvite(octxt, localException, calItem.getFolderId(), pm, true, false, true);
 
@@ -216,7 +216,8 @@ public class SendInviteReply extends CalendarRequest {
                 Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
                 if (msgElem != null) {
                     String text = ParseMimeMessage.getTextPlainContent(msgElem);
-                    iCal.addDescription(text);
+                    String html = ParseMimeMessage.getTextHtmlContent(msgElem);
+                    iCal.addDescription(text, html);
 
                     MimeBodyPart[] mbps = new MimeBodyPart[1];
                     mbps[0] = CalendarMailSender.makeICalIntoMimePart(oldInv.getUid(), iCal);

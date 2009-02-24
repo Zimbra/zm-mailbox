@@ -768,13 +768,13 @@ public class CalendarUtils {
 
         // CATEGORIES
         for (Iterator<Element> catIter = element.elementIterator(MailConstants.E_CAL_CATEGORY); catIter.hasNext(); ) {
-            String cat = catIter.next().getTextTrim();
+            String cat = catIter.next().getText();
             newInv.addCategory(cat);
         }
 
         // COMMENTs
         for (Iterator<Element> cmtIter = element.elementIterator(MailConstants.E_CAL_COMMENT); cmtIter.hasNext(); ) {
-            String cmt = cmtIter.next().getTextTrim();
+            String cmt = cmtIter.next().getText();
             newInv.addComment(cmt);
         }
 
@@ -801,6 +801,13 @@ public class CalendarUtils {
 
         // SUMMARY (aka Name or Subject)
         newInv.setName(name);
+
+        // DESCRIPTION
+        Element descElem = element.getOptionalElement(MailConstants.E_CAL_DESCRIPTION);
+        String desc = descElem != null ? descElem.getText() : null;
+        Element descHtmlElem = element.getOptionalElement(MailConstants.E_CAL_DESC_HTML);
+        String descHtml = descHtmlElem != null ? descHtmlElem.getText() : null;
+        newInv.setDescription(desc, descHtml);
 
         boolean allDay = element.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
         newInv.setIsAllDayEvent(allDay);

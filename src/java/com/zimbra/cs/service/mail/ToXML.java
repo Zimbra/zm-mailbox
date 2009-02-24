@@ -752,7 +752,7 @@ public class ToXML {
                 m.addAttribute(MailConstants.A_SENT_DATE, sent.getTime());
 
             if (msg.isInvite() && msg.hasCalendarItemInfos())
-                encodeInvitesForMessage(m, ifmt, octxt, msg, NOTIFY_FIELDS);
+                encodeInvitesForMessage(m, ifmt, octxt, msg, NOTIFY_FIELDS, neuter);
 
             if (headers != null) {
                 for (String name : headers) {
@@ -788,7 +788,8 @@ public class ToXML {
      */
     public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt,
                                              OperationContext octxt, CalendarItem calItem,
-                                             int fields, boolean encodeInvites, boolean includeContent)
+                                             int fields, boolean encodeInvites, boolean includeContent,
+                                             boolean neuter)
     throws ServiceException {
         recordItemTags(calItemElem, calItem, fields);
 
@@ -813,7 +814,7 @@ public class ToXML {
             boolean isPublic = true;
             for (int i = 0; i < calItem.numInvites(); i++) {
                 Invite inv = calItem.getInvite(i);
-                encodeInvite(calItemElem, ifmt, octxt, calItem, calItem.getInvite(i), includeContent);
+                encodeInvite(calItemElem, ifmt, octxt, calItem, calItem.getInvite(i), includeContent, neuter);
                 if (!inv.isPublic())
                     isPublic = false;
             }
@@ -826,20 +827,20 @@ public class ToXML {
 
     public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt,
                                              OperationContext octxt, CalendarItem calItem,
-                                             int fields, boolean encodeInvites)
+                                             int fields, boolean encodeInvites, boolean neuter)
     throws ServiceException {
-        setCalendarItemFields(calItemElem, ifmt, octxt, calItem, fields, encodeInvites, false);
+        setCalendarItemFields(calItemElem, ifmt, octxt, calItem, fields, encodeInvites, false, neuter);
     }
 
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt,
-                                       OperationContext octxt, CalendarItem cal, Invite inv)
+                                       OperationContext octxt, CalendarItem cal, Invite inv, boolean neuter)
     throws ServiceException {
-        return encodeInvite(parent, ifmt, octxt, cal, inv, false);
+        return encodeInvite(parent, ifmt, octxt, cal, inv, false, neuter);
     }
 
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt,
                                        OperationContext octxt, CalendarItem cal, Invite inv,
-                                       boolean includeContent)
+                                       boolean includeContent, boolean neuter)
     throws ServiceException {
         Element ie = parent.addElement(MailConstants.E_INVITE);
         setCalendarItemType(ie, cal);
@@ -853,23 +854,23 @@ public class ToXML {
         if (inv.hasRecurId())
             ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
 
-        encodeInviteComponent(ie, ifmt, octxt, cal, inv, NOTIFY_FIELDS);
+        encodeInviteComponent(ie, ifmt, octxt, cal, inv, NOTIFY_FIELDS, neuter);
 
         if (includeContent && (inv.isPublic() || allowPrivateAccess(octxt, cal))) {
             int invId = inv.getMailItemId();
             MimeMessage mm = cal.getSubpartMessage(invId);
-            if (mm == null)
-                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + ifmt.formatItemId(cal.getId(), invId));
-            List<MPartInfo> parts;
-            try {
-                parts = Mime.getParts(mm);
-            } catch (IOException ex) {
-                throw ServiceException.FAILURE(ex.getMessage(), ex);
-            } catch (MessagingException ex) {
-                throw ServiceException.FAILURE(ex.getMessage(), ex);
+            if (mm != null) {
+                List<MPartInfo> parts;
+                try {
+                    parts = Mime.getParts(mm);
+                } catch (IOException ex) {
+                    throw ServiceException.FAILURE(ex.getMessage(), ex);
+                } catch (MessagingException ex) {
+                    throw ServiceException.FAILURE(ex.getMessage(), ex);
+                }
+                if (parts != null && !parts.isEmpty())
+                    addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal));
             }
-            if (parts != null && !parts.isEmpty())
-                addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal));
         }
 
         return ie;
@@ -906,7 +907,7 @@ public class ToXML {
         else
             calItemElem = parent.addElement(MailConstants.E_TASK);
         
-        setCalendarItemFields(calItemElem, ifmt, octxt, calItem, fields, includeInvites, includeContent);
+        setCalendarItemFields(calItemElem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
         
         return calItemElem;
     }
@@ -995,40 +996,40 @@ public class ToXML {
 
         try {
             MimeMessage mm = calItem.getSubpartMessage(invId);
-            if (mm == null)
-                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + ifmt.formatItemId(iid));
-            if (!wholeMessage) {
-                MimePart mp = Mime.getMimePart(mm, part);
-                if (mp == null)
-                    throw MailServiceException.NO_SUCH_PART(part);
-                Object content = Mime.getMessageContent(mp);
-                if (!(content instanceof MimeMessage))
-                    throw MailServiceException.NO_SUCH_PART(part);
-                mm = (MimeMessage) content;
-            } else
-                part = "";
-
-            if (showAll) {
-                addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
-                addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
-                addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
-                addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
-                addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
-                addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+            if (mm != null) {
+                if (!wholeMessage) {
+                    MimePart mp = Mime.getMimePart(mm, part);
+                    if (mp == null)
+                        throw MailServiceException.NO_SUCH_PART(part);
+                    Object content = Mime.getMessageContent(mp);
+                    if (!(content instanceof MimeMessage))
+                        throw MailServiceException.NO_SUCH_PART(part);
+                    mm = (MimeMessage) content;
+                } else
+                    part = "";
     
-                String subject = mm.getSubject();
-                if (subject != null)
-                    m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
-                String messageID = mm.getMessageID();
-                if (messageID != null && !messageID.trim().equals(""))
-                    m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
-    
-                if (!wholeMessage)
-                    m.addAttribute(MailConstants.A_SIZE, mm.getSize());
-    
-                java.util.Date sent = mm.getSentDate();
-                if (sent != null)
-                    m.addAttribute(MailConstants.A_SENT_DATE, sent.getTime());
+                if (showAll) {
+                    addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+                    addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
+                    addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
+                    addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
+                    addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
+                    addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+        
+                    String subject = mm.getSubject();
+                    if (subject != null)
+                        m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
+                    String messageID = mm.getMessageID();
+                    if (messageID != null && !messageID.trim().equals(""))
+                        m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
+        
+                    if (!wholeMessage)
+                        m.addAttribute(MailConstants.A_SIZE, mm.getSize());
+        
+                    java.util.Date sent = mm.getSentDate();
+                    if (sent != null)
+                        m.addAttribute(MailConstants.A_SENT_DATE, sent.getTime());
+                }
             }
 
             Element invElt = m.addElement(MailConstants.E_INVITE);
@@ -1038,12 +1039,12 @@ public class ToXML {
                 if (showAll)
                     encodeCalendarReplies(invElt, calItem, invites[0], recurIdZ);
                 for (Invite inv : invites)
-                    encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS);
+                    encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS, neuter);
             }
 
             //encodeAlarmTimes(invElt, calItem);
 
-            if (showAll) {
+            if (mm != null && showAll) {
                 if (headers != null) {
                     for (String name : headers) {
                         String[] values = mm.getHeader(name);
@@ -1148,7 +1149,7 @@ public class ToXML {
 
         if (msg.isInvite() && msg.hasCalendarItemInfos()) {
             try {
-                encodeInvitesForMessage(e, ifmt, octxt, msg, fields);
+                encodeInvitesForMessage(e, ifmt, octxt, msg, fields, true);
             } catch (ServiceException ex) {
                 mLog.debug("Caught exception while encoding Invites for msg " + msg.getId(), ex);
             }
@@ -1236,12 +1237,9 @@ public class ToXML {
         return calItem.allowPrivateAccess(authAccount, asAdmin);
     }
 
-    public static Element encodeInviteComponent(Element parent,
-                                                ItemIdFormatter ifmt,
-                                                OperationContext octxt,
-                                                CalendarItem calItem,
-                                                Invite invite,
-                                                int fields)
+    public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+                                                CalendarItem calItem, Invite invite,
+                                                int fields, boolean neuter)
     throws ServiceException {
         boolean allFields = true;
 
@@ -1257,7 +1255,7 @@ public class ToXML {
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
 
         e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
-        
+
         if (allFields) {
             if (invite.isPublic() || allowPrivateAccess(octxt, calItem)) {
                 String priority = invite.getPriority();
@@ -1323,11 +1321,31 @@ public class ToXML {
                     e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
                 }
 
-                // Description
-                String desc = invite.getDescription();
-                if (desc != null) {
-                    Element descElem = e.addElement(MailConstants.E_CAL_DESCRIPTION);
-                    descElem.setText(desc);
+                // If there's a blob for this invite, don't send desc/descHtml attributes.  The body text
+                // should be sent in the MIME parts.  If there's no blob, send desc/descHtml data from
+                // invite's metadata.  Even in no-blob case, desc and descHtml elements are present only
+                // when there are non-null values.
+                boolean noBlob = !invite.hasBlobPart();
+                if (noBlob) {
+                    e.addAttribute(MailConstants.A_CAL_NO_BLOB, true);
+
+                    // Description (plain and html)
+                    String desc = invite.getDescription();
+                    if (desc != null) {
+                        Element descElem = e.addElement(MailConstants.E_CAL_DESCRIPTION);
+                        descElem.setText(desc);
+                    }
+                    String descHtml = invite.getDescriptionHtml();
+                    if (descHtml != null) {
+                        try {
+                            descHtml = StringUtil.stripControlCharacters(descHtml);
+                            descHtml = HtmlDefang.defang(descHtml, neuter);
+                            Element descHtmlElem = e.addElement(MailConstants.E_CAL_DESC_HTML);
+                            descHtmlElem.setText(descHtml);
+                        } catch (IOException ex) {
+                            ZimbraLog.calendar.warn("Unable to defang HTML for SetAppointmentRequest", ex);
+                        }
+                    }
                 }
 
                 if (invite.isEvent()) {
@@ -1484,7 +1502,7 @@ public class ToXML {
     }
 
     private static Element encodeInvitesForMessage(Element parent, ItemIdFormatter ifmt,
-                                                   OperationContext octxt, Message msg, int fields)
+                                                   OperationContext octxt, Message msg, int fields, boolean neuter)
     throws ServiceException {
         if (fields != NOTIFY_FIELDS)
             if (!needToOutput(fields, Change.MODIFIED_INVITE))
@@ -1521,7 +1539,7 @@ public class ToXML {
                         addedMethod = true;
                     }
                     encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
-                    encodeInviteComponent(ie, ifmt, octxt, calItem, inv, fields);
+                    encodeInviteComponent(ie, ifmt, octxt, calItem, inv, fields, neuter);
                 } else {
                     // invite not in this appointment anymore
                 }

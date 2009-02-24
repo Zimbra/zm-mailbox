@@ -41,6 +41,8 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.AuthProvider;
@@ -176,19 +178,27 @@ public class ParseMimeMessage {
         return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
     }
 
-    // Recursively find and return the content of the first text/plain part.
     public static String getTextPlainContent(Element elem) {
+        return getFirstContentByType(elem, Mime.CT_TEXT_PLAIN);
+    }
+
+    public static String getTextHtmlContent(Element elem) {
+        return getFirstContentByType(elem, Mime.CT_TEXT_HTML);
+    }
+
+    // Recursively find and return the content of the first part with the specified content type.
+    private static String getFirstContentByType(Element elem, String contentType) {
         if (elem == null) return null;
         if (MailConstants.E_MSG.equals(elem.getName())) {
             elem = elem.getOptionalElement(MailConstants.E_MIMEPART);
             if (elem == null) return null;
         }
-        String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim().toLowerCase();
-        if (type.equals(Mime.CT_DEFAULT)) {
+        String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, contentType).trim().toLowerCase();
+        if (type.equals(contentType)) {
             return elem.getAttribute(MailConstants.E_CONTENT, null);
         } else if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
             for (Element childElem : elem.listElements(MailConstants.E_MIMEPART)) {
-                String text = getTextPlainContent(childElem);
+                String text = getFirstContentByType(childElem, contentType);
                 if (text != null)
                     return text;
             }
@@ -295,10 +305,13 @@ public class ParseMimeMessage {
                     // displays the DESCRIPTION specified in the iCalendar part.
                     // (e.g. MS Entourage for Mac)
                     String desc = getTextPlainContent(partElem);
-                    if (desc != null && desc.length() > 0) {
-                        result.mCal.addDescription(desc);
-                        if (result.mInvite != null)
+                    String html = getTextHtmlContent(partElem);
+                    result.mCal.addDescription(desc, html);
+                    if (result.mInvite != null) {
+                        result.mInvite.setDescription(desc, html);
+                        if (desc != null && desc.length() > 0) {
                             result.mInvite.setFragment(Fragment.getFragment(desc, true));
+                        }
                     }
                 }
                 MimeBodyPart mbp = CalendarMailSender.makeICalIntoMimePart(result.mUid, result.mCal);
