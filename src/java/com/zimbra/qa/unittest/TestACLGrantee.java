@@ -563,7 +563,7 @@ public class TestACLGrantee extends TestACL {
         verify(user, target, User.R_loginAs, ALLOW, via);
         
         // verify user can access target's account
-        boolean canAccessAccount = mAM.canAccessAccount(user, target);
+        boolean canAccessAccount = mAM.canAccessAccount(user, target, false);
         assertTrue(canAccessAccount);
         
     }
