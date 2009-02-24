@@ -454,6 +454,7 @@ public class MailConstants {
     public static final String E_INVITE = "inv";
     public static final String E_INVITE_COMPONENT = "comp";
     public static final String E_CAL_DESCRIPTION = "desc";
+    public static final String E_CAL_DESC_HTML = "descHtml";
     public static final String E_INSTANCE = "inst";
     public static final String E_FREEBUSY_USER = "usr";
     public static final String E_FREEBUSY_FREE = "f";
@@ -551,6 +552,7 @@ public class MailConstants {
     public static final String A_APPT_TRANSPARENCY = "transp";
     public static final String A_CAL_CLASS = "class";
     public static final String A_CAL_ALLDAY = "allDay";
+    public static final String A_CAL_NO_BLOB = "noBlob";
     public static final String A_CAL_LOCATION = "loc";
     public static final String A_CAL_NEEDS_REPLY = "needsReply";
     public static final String A_CAL_SENDUPDATE = "sendUpd";
