@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +79,7 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
+import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
@@ -277,6 +279,7 @@ public class TarFormatter extends Formatter {
         ServiceException {
         String charset = context.params.get("charset");
         String ext = null, name = null;
+        String extra = null;
         Integer fid = mi.getFolderId();
         String fldr;
         InputStream is = null;
@@ -327,6 +330,21 @@ public class TarFormatter extends Formatter {
                 name = mi.getName();
             break;
         case MailItem.TYPE_MESSAGE:
+            Message msg = (Message)mi;
+            
+            if (msg.hasCalendarItemInfos()) {
+                Set<Integer> calItems = new HashSet<Integer>();
+                
+                for (Iterator<CalendarItemInfo> it = msg.getCalendarItemInfoIterator();
+                    it.hasNext(); )
+                    calItems.add(it.next().getCalendarItemId());
+                for (Integer i : calItems) {
+                    if (extra == null)
+                        extra = "calendar=" + i.toString();
+                    else
+                        extra += ',' + i.toString();
+                }
+            }
             ext = "eml";
             break;
         case MailItem.TYPE_NOTE:
@@ -392,7 +410,7 @@ public class TarFormatter extends Formatter {
                     context.resp.getOutputStream()), charset);
             tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
             if (meta) {
-                byte[] metaData = new ItemData(mi).encode();
+                byte[] metaData = new ItemData(mi, extra).encode();
                 
                 entry.setSize(metaData.length);
                 tos.putNextEntry(entry);

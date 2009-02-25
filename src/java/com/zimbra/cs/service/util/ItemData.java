@@ -26,18 +26,23 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
 public class ItemData {
-    public String flags, path, tags;
+    public String extra, flags, path, tags;
     public MailItem.UnderlyingData ud;
     
     private static enum Keys {
         id, type, parent_id, folder_id, index_id, imap_id, date, size,
         volume_id, blob_digest, unread, flags, tags, sender, subject, name,
         metadata, mod_metadata, change_date, mod_content,
-        FlagStr, Path, TagStr, Ver
+        ExtraStr, FlagStr, Path, TagStr, Ver
     }
     
     public ItemData(MailItem mi) throws IOException {
+        this(mi, null);
+    }
+    
+    public ItemData(MailItem mi, String userData) throws IOException {
         try {
+            extra = userData;
             flags = mi.getFlagString();
             path = mi.getPath();
             tags = mi.getTagString();
@@ -76,6 +81,7 @@ public class ItemData {
             ud.modMetadata = json.getInt(Keys.mod_metadata.toString());
             ud.dateChanged = json.getInt(Keys.change_date.toString());
             ud.modContent = json.getInt(Keys.mod_content.toString());
+            extra = json.optString(Keys.ExtraStr.toString());
             flags = json.optString(Keys.FlagStr.toString());
             path = json.optString(Keys.Path.toString());
             tags = json.optString(Keys.TagStr.toString());
@@ -111,6 +117,7 @@ public class ItemData {
                 put(Keys.mod_metadata.toString(), ud.modMetadata).
                 put(Keys.change_date.toString(), ud.dateChanged).
                 put(Keys.mod_content.toString(), ud.modContent).
+                putOpt(Keys.ExtraStr.toString(), extra).
                 putOpt(Keys.FlagStr.toString(), flags).
                 put(Keys.Path.toString(), path).
                 putOpt(Keys.TagStr.toString(), tags).
