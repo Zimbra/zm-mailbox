@@ -145,17 +145,22 @@ implements Callable<Void> {
             writeHeader = true;
         }
         FileWriter writer = new FileWriter(file, true);
+        String header = mDataSource.getHeader();
         if (writeHeader) {
             if (mDataSource.hasTimestampColumn()) {
                 writer.write("timestamp,");
             }
-            writer.write(mDataSource.getHeader());
+            writer.write(header);
             writer.write("\n");
         }
         
         // Write data and close
         writer.write(buf.toString());
         writer.close();
+        for (String line : lines) {
+            ZimbraLog.slogger.info(mDataSource.getFilename() +
+                    ": " + header + ":: " + timestamp + "," + line);
+        }
         return null;
     }
 }

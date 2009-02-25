@@ -343,6 +343,11 @@ public class ZimbraLog {
     public static final Log mailop = LogFactory.getLog("zimbra.mailop");
     
     /**
+     * "zimbra.slogger" logger.  Used for "logger service", publishes stats events to syslog
+     */
+    public static final Log slogger = LogFactory.getLog("zimbra.slogger");
+    
+    /**
      * the "zimbra.mbxmgr" logger is used to track mailbox loading/maintenance mode
      */
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
