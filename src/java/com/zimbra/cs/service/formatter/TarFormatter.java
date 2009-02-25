@@ -458,16 +458,21 @@ public class TarFormatter extends Formatter {
                         tos.write(buf, 0, remain < in ? (int)remain : in);
                         remain -= in;
                     }
-                    if (remain != 0)
+                    if (remain != 0) {
                         ZimbraLog.misc.error("mismatched blob size for item %d: expected %d",
                              mi.getId(), miSize);
-                    if (remain > 0) {
-                        Arrays.fill(buf, (byte)' ');
-                        while (remain > 0) {
-                            tos.write(buf, 0, remain < buf.length ?
-                                (int)remain : buf.length);
-                            remain -= buf.length;
+                        if (remain > 0) {
+                            Arrays.fill(buf, (byte)' ');
+                            while (remain > 0) {
+                                tos.write(buf, 0, remain < buf.length ?
+                                    (int)remain : buf.length);
+                                remain -= buf.length;
+                            }
                         }
+                        tos.closeEntry();
+                        entry.setName(path + ".err");
+                        entry.setSize(miSize);
+                        tos.putNextEntry(entry);
                     }
                 } else {
                     // Read headers into memory, since we need to write the size first.
@@ -642,7 +647,10 @@ public class TarFormatter extends Formatter {
                         id = new ItemData(readTarEntry(tis, te));
                         continue;
                     }
-                    if (id == null) {
+                    if (te.getName().endsWith(".err")) {
+                        addError(errs, te.getName(),
+                            "ignored item data size mismatch");
+                    } else if (id == null) {
                         if (meta)
                             addError(errs, te.getName(),
                                 "item content missing meta information");
