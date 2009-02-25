@@ -2141,35 +2141,35 @@ public class SoapProvisioning extends Provisioning {
     }
     
     
-    private void toXML(Element req, ShareInfo.Publishing si) {
+    private void toXML(Element req, ShareInfo.Publishing.Action action, String ownerAcctId, String folderIdOrPath) {
         Element eShare = req.addElement(AdminConstants.E_SHARE);
-        eShare.addAttribute(AdminConstants.A_ACTION, si.getAction().name());
+        eShare.addAttribute(AdminConstants.A_ACTION, action.name());
         
-        eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(si.getOwnerAcctId());
-        eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, si.getFolderIdOrPath());
+        eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcctId);
+        eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, folderIdOrPath);
     }
     
     @Override
-    public void modifyShareInfo(Account acct, ShareInfo.Publishing shareInfo) throws ServiceException {
+    public void modifyShareInfo(Account acct, ShareInfo.Publishing.Action action, String ownerAcctId, String folderIdOrPath) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
         
         Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
         eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
         eAcct.setText(acct.getId());
         
-        toXML(req, shareInfo);
+        toXML(req, action, ownerAcctId, folderIdOrPath);
         invoke(req);
     }
     
     @Override
-    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing shareInfo) throws ServiceException {
+    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, String ownerAcctId, String folderIdOrPath) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
         
         Element eDL = req.addElement(AdminConstants.E_DL);
         eDL.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
         eDL.setText(dl.getId());
         
-        toXML(req, shareInfo);
+        toXML(req, action, ownerAcctId, folderIdOrPath);
         invoke(req);
     }
     

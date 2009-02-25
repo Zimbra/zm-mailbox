@@ -64,6 +64,9 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.mail.GetFolder;
+import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -175,7 +178,7 @@ public class ShareInfo {
         mGrants = new MetadataList(encodedMetadata);
     }
 
-
+    
     
     /*
      * ===========================
@@ -183,6 +186,53 @@ public class ShareInfo {
      * ===========================
      */
     public static class Publishing extends ShareInfo {
+        
+        public static List<ShareInfo.Publishing> publish(Provisioning prov, OperationContext octxt, 
+                NamedEntry publishingOnEntry, Publishing.Action action, String ownerAcctId, 
+                Folder folder) throws ServiceException {
+            
+            List<ShareInfo.Publishing> siList = new ArrayList<ShareInfo.Publishing>();
+            ShareInfo.Publishing si;
+            
+            if (folder == null) {
+                // no folder descriptor, do the entire folder tree
+                
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcctId, false);
+                if (mbox == null)
+                    throw ServiceException.FAILURE("mailbox not found for account " + ownerAcctId, null);
+                
+                GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mbox, null, false);
+                doPublish(siList, prov, octxt, publishingOnEntry, action, ownerAcctId, root);
+            } else {
+                si = doPublish(prov, octxt, publishingOnEntry, action, ownerAcctId, folder);
+                siList.add(si);
+            }
+            
+            return siList;
+        }
+        
+        private static void doPublish(List<ShareInfo.Publishing> siList, 
+                Provisioning prov, OperationContext octxt, 
+                NamedEntry publishingOnEntry, Publishing.Action action, String ownerAcctId, 
+                GetFolder.FolderNode node) throws ServiceException  {
+            
+            if (node.mFolder != null) {
+                ShareInfo.Publishing si = doPublish(prov, octxt, 
+                        publishingOnEntry, action, ownerAcctId, node.mFolder);
+                siList.add(si);
+            }
+            for (FolderNode subNode : node.mSubfolders)
+                doPublish(siList, prov, octxt, publishingOnEntry, action, ownerAcctId, subNode);
+        }
+        
+        private static ShareInfo.Publishing doPublish(Provisioning prov, OperationContext octxt, 
+                NamedEntry publishingOnEntry, Publishing.Action action, String ownerAcctId, 
+                Folder folder) throws ServiceException {
+            ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcctId, folder);
+            if (si.validateAndDiscoverGrants(octxt, publishingOnEntry, folder))
+                si.persist(prov, publishingOnEntry);
+            return si;
+        }
         
         public static enum Action {
             add,
@@ -198,23 +248,16 @@ public class ShareInfo {
         }
     
         private Action mAction;
-        private String mFolderIdOrPath; // folder id or path as input by soap/zmprov
-        private Boolean mIsFolderId;    // if mFolderIdOrPath is a folder id or path as input by soap/zmprov, null means unknown yet
-        public Publishing(Action action, String ownerAcctId, String folderIdOrPath, Boolean isFolderId) {
-            setOwnerAcctId(ownerAcctId);
-            
+        private Publishing(Action action, String ownerAcctId, Folder folder) {
             mAction = action;
-            mFolderIdOrPath = folderIdOrPath;
-            mIsFolderId = isFolderId;
+            setOwnerAcctId(ownerAcctId);
+            setFolderId(folder.getId());
         }
             
         public Action getAction() {
             return mAction;
         }
-            
-        public String getFolderIdOrPath() {
-            return mFolderIdOrPath;
-        }
+
 
 
         /**
@@ -228,7 +271,7 @@ public class ShareInfo {
          *         false otherwise. 
          * @throws ServiceException
          */
-        public boolean validateAndDiscoverGrants(OperationContext octxt, NamedEntry publishingOnEntry) 
+        public boolean validateAndDiscoverGrants(OperationContext octxt, NamedEntry publishingOnEntry, Folder folder) 
             throws ServiceException {
             
             // validate
@@ -245,9 +288,6 @@ public class ShareInfo {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcctId, false);
             if (mbox == null)
                 throw ServiceException.FAILURE("mailbox not found for account " + ownerAcctId, null);
-            
-            Folder folder = getFolder(octxt, mbox);
-            setFolderId(folder.getId());
             
             // done validating, owner OK, folder OK
             // now, discover grants
@@ -380,49 +420,7 @@ public class ShareInfo {
             }
             return false;
         }
-    
-        // Folder returned is guaranteed to be not null
-        private Folder getFolder(OperationContext octxt, Mailbox mbox) throws ServiceException {
-            
-            if (mIsFolderId == Boolean.TRUE) {
-                return getFolderById(octxt, mbox);
-            } else if (mIsFolderId == Boolean.FALSE)
-                return getFolderByPath(octxt, mbox);
-            else {
-                // getFolderById is null
-                // try to get by path first
-                try {
-                    return getFolderByPath(octxt, mbox);
-                } catch (MailServiceException e) {
-                    if (MailServiceException.NO_SUCH_FOLDER.equals(e.getCode())) {
-                        // folder not found by path, try getting it by id
-                        return getFolderById(octxt, mbox);
-                    } else
-                        throw e;
-                }
-            }
-        }
-    
-        private Folder getFolderById(OperationContext octxt, Mailbox mbox) throws ServiceException {
-            String folderIdOrPath = getFolderIdOrPath();
-            int folderId = Integer.parseInt(folderIdOrPath);
-            Folder folder = mbox.getFolderById(octxt, folderId);
-            
-            if (folder == null)
-                throw MailServiceException.NO_SUCH_FOLDER(folderId);
-            
-            return folder;
-        }
         
-        private Folder getFolderByPath(OperationContext octxt, Mailbox mbox) throws ServiceException {
-            String folderPath = getFolderIdOrPath();
-            Folder folder = mbox.getFolderByPath(octxt, folderPath);
-            
-            if (folder == null)
-                throw MailServiceException.NO_SUCH_FOLDER(folderPath);
-            
-            return folder;
-        }
     
         /**
          * persists shareInfo in LDAP on the publishingOnEntry entry
@@ -495,6 +493,7 @@ public class ShareInfo {
             si.mOwnerAcctEmail = eShare.getAttribute(AccountConstants.A_OWNER_NAME, null);
             si.setFolderId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
             si.mFolderPath = eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null);
+            si.mFolderDefaultView = MailItem.getTypeForName(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null));
             si.mRights = ACL.stringToRights(eShare.getAttribute(AccountConstants.A_RIGHTS));
             si.mGranteeType = ACL.stringToType(eShare.getAttribute(AccountConstants.A_GRANTEE_TYPE));
             si.mGranteeId = eShare.getAttribute(AccountConstants.A_GRANTEE_ID, null);
@@ -508,6 +507,7 @@ public class ShareInfo {
             eShare.addAttribute(AccountConstants.A_OWNER_NAME,   getOwnerAcctEmail());
             eShare.addAttribute(AccountConstants.A_FOLDER_ID,    getFolderId());
             eShare.addAttribute(AccountConstants.A_FOLDER_PATH,  getFolderPath());
+            eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,    getFolderDefaultView());
             eShare.addAttribute(AccountConstants.A_RIGHTS,       getRights());
             eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE, getGranteeType());
             eShare.addAttribute(AccountConstants.A_GRANTEE_ID,   getGranteeId());
@@ -688,7 +688,7 @@ public class ShareInfo {
                 getShares(visitor, dl, owner, visited);
                 
             } else {
-                getShares(visitor, dl, owner,visited);
+                getShares(visitor, dl, owner, visited);
                 
                 // call prov.getAclGroups instead of prov.getDistributionLists
                 // because getAclGroups returns cached data, while getDistributionLists
@@ -771,6 +771,7 @@ public class ShareInfo {
                         visited.add(si.getDigest());
                     }
                     
+                    
                 } catch (ServiceException e) {
                     // probably encountered malformed share info, log and ignore
                     // should remove the value from LDAP?
@@ -779,9 +780,7 @@ public class ShareInfo {
             }
         }
     }
-    
-    
-    
+
     /*
      * ===========================
      *          Published

@@ -18,6 +18,10 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ShareInfo.Published;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -219,8 +223,7 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        ShareInfo.Publishing si = new ShareInfo.Publishing(ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath, null);
-        mProv.modifyShareInfo(publishingEntry, si);
+        mProv.modifyShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath);
         
         VerifyPublishedVisitor visitor;
         
@@ -237,8 +240,7 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        ShareInfo.Publishing si = new ShareInfo.Publishing(ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath, null);
-        mProv.modifyShareInfo(publishingEntry, si);
+        mProv.modifyShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath);
         
         VerifyPublishedVisitor visitor;
         
@@ -251,110 +253,7 @@ public class TestShareInfo extends TestCase {
         expectedDirectOnly.OK();
     }
     
-    public void testGrantOnTheFolder() throws Exception {
-        String testName = getName();
-        
-        /*
-         * owner account
-         */
-        String ownerEmail = getEmail("owner", testName);
-        Account owner = mProv.createAccount(ownerEmail, PASSWORD, null);
-        
-        /*
-         * grantee account
-         */
-        String granteeEmail = getEmail("grantee", testName);
-        Account grantee = mProv.createAccount(granteeEmail, PASSWORD, null);
-        
-        /*
-         * other account
-         */
-        String otherEmail = getEmail("other", testName);
-        Account otherAcct = mProv.createAccount(otherEmail, PASSWORD, null);
-        
-        /*
-         * create a folder in owner's mailbox and grant rights to the grantee account
-         */
-        String folderPath = "/test";
-        short rights = ACL.RIGHT_READ | ACL.RIGHT_WRITE;
-        int folderId = createFolderAndGrantRight(owner, grantee, folderPath, ACL.rightsToString(rights));
-        
-        Expected expectedDirectOnly;
-        Expected expectedAll;
-        
-        Expected.ExpectedShareInfo esi = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), folderId, folderPath, rights, ACL.GRANTEE_USER, grantee.getId(), grantee.getName());
 
-        expectedDirectOnly = new Expected();
-        expectedDirectOnly.add(esi);
-        expectedAll = new Expected();
-        expectedAll.add(esi);
-        doTestPublishShareInfo(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
-        
-        // should not find any
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        doTestPublishShareInfo(otherAcct, owner, owner, folderPath, expectedDirectOnly, expectedAll);
-        
-        // publishing ones own folder to himself, no share info should be published
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        doTestPublishShareInfo(owner, owner, owner, folderPath, expectedDirectOnly, expectedAll);
-    }
-    
-    public void testGrantOnParentFolder() throws Exception {
-        String testName = getName();
-        
-        /*
-         * owner account
-         */
-        String ownerEmail = getEmail("owner", testName);
-        Account owner = mProv.createAccount(ownerEmail, PASSWORD, null);
-        
-        /*
-         * grantee account
-         */
-        String granteeEmail = getEmail("grantee", testName);
-        Account grantee = mProv.createAccount(granteeEmail, PASSWORD, null);
-        
-        /*
-         * other account
-         */
-        String otherEmail = getEmail("other", testName);
-        Account otherAcct = mProv.createAccount(otherEmail, PASSWORD, null);
-        
-        /*
-         * create a folder in owner's mailbox and grant rights to the grantee account
-         */
-        String folderPath = "/test";
-        short rights = ACL.RIGHT_READ | ACL.RIGHT_WRITE;
-        int folderId = createFolderAndGrantRight(owner, grantee, folderPath, ACL.rightsToString(rights));
-        
-        // create a sub folder
-        String subFolderPath = "/test/sub";
-        ZFolder subFolder = createFolder(owner, subFolderPath);
-        int subFolderId = Integer.valueOf(subFolder.getId());
-        
-        Expected expectedDirectOnly;
-        Expected expectedAll;
-        
-        Expected.ExpectedShareInfo esi = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), subFolderId, subFolderPath, rights, ACL.GRANTEE_USER, grantee.getId(), grantee.getName());
-        
-        expectedDirectOnly = new Expected();
-        expectedDirectOnly.add(esi);
-        expectedAll = new Expected();
-        expectedAll.add(esi);
-        doTestPublishShareInfo(grantee, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
-        
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        doTestPublishShareInfo(otherAcct, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
-        
-        // publishing ones own folder to himself, no share info should be published
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        doTestPublishShareInfo(owner, owner, owner, folderPath, expectedDirectOnly, expectedAll);
-    }
-    
     public void testDLShareInfoGrantToDL() throws Exception {
         String testName = getName();
         
@@ -565,6 +464,39 @@ public class TestShareInfo extends TestCase {
         mProv.getShareInfo(acctInDl, false, owner1, visitor);
         expectedDirectOnly.OK(); 
     }
+    
+    /*
+zmprov cdl dl@phoebe.mac
+
+zmmailbox -z -m user1 cf /Inbox/foo
+zmmailbox -z -m user1 cf /Inbox/foo/bar
+
+zmmailbox -z -m user1 mfg /Inbox group dl@phoebe.mac rw
+zmmailbox -z -m user1 mfg /Inbox/foo group dl@phoebe.mac r
+zmmailbox -z -m user1 mfg /Inbox/foo/bar group dl@phoebe.mac r
+zmmailbox -z -m user1 mfg /Calendar group dl@phoebe.mac a
+
+zmprov mdlsi + dl@phoebe.mac user1@phoebe.mac
+zmprov gdlsi dl@phoebe.mac 0
+
+
+
+zmmailbox -z -m user1 cf /Inbox/foo
+zmmailbox -z -m user1 cf /Inbox/foo/bar
+
+zmmailbox -z -m user1 mfg /Inbox         account user2 rw
+zmmailbox -z -m user1 mfg /Inbox/foo/bar account user2 rw
+zmmailbox -z -m user1 mfg /Sent          account user2 rw
+
+zmprov masi + user2 user1
+
+zmprov masi + user2 user1 /Inbox
+zmprov masi + user2 user1 /Inbox/foo/bar
+zmprov masi + user2 user1 /Sent
+
+zmprov gasi user2 0
+
+    */
 
     public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();  // will set SoapProvisioning

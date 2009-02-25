@@ -1836,11 +1836,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // do nothing by default
     }
 
-    public void modifyShareInfo(Account acct, ShareInfo.Publishing shareInfo) throws ServiceException {
+    public void modifyShareInfo(Account acct, ShareInfo.Publishing.Action action, String ownerAcctid, String folderIdOrPath) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing shareInfo) throws ServiceException {
+    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, String ownerAcctid, String folderIdOrPath) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     

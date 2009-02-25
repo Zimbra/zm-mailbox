@@ -31,6 +31,10 @@ import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -61,25 +65,73 @@ public class ModifyShareInfo extends ShareInfoHandler {
         String folderId = eFolder.getAttribute(AdminConstants.A_FOLDER, null);
         String folderIdOrPath = eFolder.getAttribute(AdminConstants.A_PATH_OR_ID, null);
             
-        ShareInfo.Publishing si = null;
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcctId, false);
+        if (mbox == null)
+            throw ServiceException.FAILURE("mailbox not found for account " + ownerAcctId, null);
+        
+        Folder folder = null;
             
         if (folderPath != null) {
             ensureOtherFolderDescriptorsAreNotPresent(folderId, folderIdOrPath);
-            si = new ShareInfo.Publishing(action, ownerAcctId, folderPath, Boolean.FALSE);
+            folder = getFolderByPath(octxt, mbox, folderPath);
         } else if (folderId != null) {
             ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderIdOrPath);
-            si = new ShareInfo.Publishing(action, ownerAcctId, folderId, Boolean.TRUE);
+            folder = getFolderByPath(octxt, mbox, folderId);
         } else if (folderIdOrPath != null) {
             ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderId);
-            si = new ShareInfo.Publishing(action, ownerAcctId, folderIdOrPath, null);
-        } else
-            throw ServiceException.INVALID_REQUEST("missing folder descriptor", null);
-
-        if (si.validateAndDiscoverGrants(octxt, publishingOnEntry))
-            si.persist(prov, publishingOnEntry);
+            folder = getFolder(octxt, mbox, folderIdOrPath);
+        } else {
+            // no folder is given, iterate through all folders
+            folder = null;
+        }
+        
+        List<ShareInfo.Publishing> si = ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry,
+                action, ownerAcctId, folder);
         
         Element response = zsc.createElement(AdminConstants.MODIFY_SHARE_INFO_RESPONSE);
         return response;
+    }
+    
+    // Folder returned is guaranteed to be not null
+    private  Folder getFolder(OperationContext octxt, Mailbox mbox, String folderIdOrPath) 
+        throws ServiceException {
+
+        // try to get by path first
+        try {
+            return getFolderByPath(octxt, mbox, folderIdOrPath);
+        } catch (MailServiceException e) {
+            if (MailServiceException.NO_SUCH_FOLDER.equals(e.getCode())) {
+                // folder not found by path, try getting it by id
+                return getFolderById(octxt, mbox, folderIdOrPath);
+            } else
+                throw e;
+        }
+    }
+    
+    private Folder getFolderById(OperationContext octxt, Mailbox mbox, String folderId) throws ServiceException {
+        
+        int fid;
+        try {
+            fid = Integer.parseInt(folderId);
+        } catch (NumberFormatException e) {
+            throw MailServiceException.NO_SUCH_FOLDER(folderId);
+        }
+        
+        Folder folder = mbox.getFolderById(octxt, fid);
+        
+        if (folder == null)
+            throw MailServiceException.NO_SUCH_FOLDER(folderId);
+        
+        return folder;
+    }
+    
+    private Folder getFolderByPath(OperationContext octxt, Mailbox mbox, String folderPath) throws ServiceException {
+        Folder folder = mbox.getFolderByPath(octxt, folderPath);
+        
+        if (folder == null)
+            throw MailServiceException.NO_SUCH_FOLDER(folderPath);
+        
+        return folder;
     }
     
     private void ensureOtherFolderDescriptorsAreNotPresent(String other1, String other2) throws ServiceException {

@@ -386,13 +386,13 @@ public class ProvUtil implements DebugListener {
         INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{domain} [{name@domain}]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"), 
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
-        MODIFY_ACCOUNT_SHARE_INFO("modifyAccountShareInfo", "masi", "{+|-} {account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
+        MODIFY_ACCOUNT_SHARE_INFO("modifyAccountShareInfo", "masi", "{+|-} {account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 4),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
         MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
         MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
-        MODIFY_DISTRIBUTION_LIST_SHARE_INFO("modifyDistribtionListShareInfo", "mdlsi", "{+|-} {dl-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 4, 4),
+        MODIFY_DISTRIBUTION_LIST_SHARE_INFO("modifyDistribtionListShareInfo", "mdlsi", "{+|-} {dl-name@domain|id} {owner-name|owner-id} [{folder-path|folder-id}]", Category.SHARE, 3, 4),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
@@ -1267,8 +1267,8 @@ public class ProvUtil implements DebugListener {
         String key = args[2];
         Account acct = lookupAccount(key);
         
-        ShareInfo.Publishing si = parseModifyShareInfo(isAdd, args);
-        mProv.modifyShareInfo(acct, si); 
+        ShareInfoArgs siArgs = parseModifyShareInfo(isAdd, args);
+        mProv.modifyShareInfo(acct, siArgs.mAction, siArgs.mOwnerAcctId, siArgs.mFolderPathOrId); 
     }
     
     private void doModifyDistributionListShareInfo(String[] args) throws ServiceException {
@@ -1279,16 +1279,32 @@ public class ProvUtil implements DebugListener {
         String key = args[2];
         DistributionList dl = lookupDistributionList(key);
         
-        ShareInfo.Publishing si = parseModifyShareInfo(isAdd, args);
-        mProv.modifyShareInfo(dl, si); 
+        ShareInfoArgs siArgs = parseModifyShareInfo(isAdd, args);
+        mProv.modifyShareInfo(dl, siArgs.mAction, siArgs.mOwnerAcctId, siArgs.mFolderPathOrId); 
     }
     
-    private ShareInfo.Publishing parseModifyShareInfo(boolean isAdd, String[] args) throws ServiceException {
+    private static class ShareInfoArgs {
+        
+        ShareInfo.Publishing.Action mAction;
+        String mOwnerAcctId;
+        String mFolderPathOrId;
+        
+        ShareInfoArgs(ShareInfo.Publishing.Action action,
+                String ownerAcctId, String folderPathOrId) {
+            mAction = action;
+            mOwnerAcctId = ownerAcctId;
+            mFolderPathOrId = folderPathOrId;
+        }
+    }
+    
+    private ShareInfoArgs parseModifyShareInfo(boolean isAdd, String[] args) throws ServiceException {
         int idx = 3;
         String owner = args[idx++];
         String ownerAcctId = lookupAccount(owner).getId();
         
-        String folderPathOrId = args[idx++];
+        String folderPathOrId = null;
+        if (args.length == 5)
+            folderPathOrId = args[idx++];
         
         ShareInfo.Publishing.Action action;
         // String desc;  not supported for now
@@ -1301,15 +1317,12 @@ public class ProvUtil implements DebugListener {
             // desc = null;
         }
         
-        ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcctId, folderPathOrId, null);
-        List<ShareInfo.Publishing> shareInfo = new ArrayList<ShareInfo.Publishing>();
-        
-        return si;
+        return new ShareInfoArgs(action, ownerAcctId, folderPathOrId);
     }
     
     private static class ShareInfoVisitor implements ShareInfo.Published.Visitor {
         
-        private static final String mFormat = "%-36.36s %-20.20s %-5.5s %-20.20s %-10.10s %-5.5s %-36.36s %-20.20s\n";
+        private static final String mFormat = "%-36.36s %-20.20s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-36.36s %-20.20s\n";
         
         private static void printHeadings() {
             System.out.printf(mFormat, 
@@ -1317,6 +1330,7 @@ public class ProvUtil implements DebugListener {
                               "owner name",
                               "fid",
                               "folder path",
+                              "view",
                               "rights",
                               "gt",
                               "grantee id",
@@ -1327,6 +1341,7 @@ public class ProvUtil implements DebugListener {
                               "--------------------",
                               "-----",
                               "--------------------",
+                              "----------",
                               "----------",
                               "-----",
                               "------------------------------------",
@@ -1339,6 +1354,7 @@ public class ProvUtil implements DebugListener {
                     shareInfo.getOwnerAcctEmail(),
                     String.valueOf(shareInfo.getFolderId()),
                     shareInfo.getFolderPath(),
+                    shareInfo.getFolderDefaultView(),
                     shareInfo.getRights(),
                     shareInfo.getGranteeType(),
                     shareInfo.getGranteeId(),
