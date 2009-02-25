@@ -2290,7 +2290,7 @@ public class Invite {
         for (ZAttendee at : mAttendees) {
             attendees.add(new ZAttendee(at));  // add a copy of attendee
         }
-        ZOrganizer org = new ZOrganizer(mOrganizer);
+        ZOrganizer org = mOrganizer != null ? new ZOrganizer(mOrganizer) : null;
         Invite inv = new Invite(
                 mItemType, mMethod != null ? mMethod.toString() : null,
                 mTzMap,
