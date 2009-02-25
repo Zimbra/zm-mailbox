@@ -159,11 +159,14 @@ public class SetCalendarItem extends CalendarRequest {
 
         if (ipr == null && msgElem.getOptionalElement(MailConstants.E_INVITE) != null) {
             ipr = parser.parse(zsc, octxt, mbox.getAccount(), msgElem.getElement(MailConstants.E_INVITE));
-            // Get description texts out of the MimeMessage and set in the parsed invite.
+            // Get description texts out of the MimeMessage and set in the parsed invite.  Do it only if
+            // the MimeMessage has text parts.  This prevents discarding texts when they're specified only
+            // in the <inv> but not in mime parts.
             if (ipr != null && ipr.mInvite != null && mm != null) {
                 String desc = Invite.getDescription(mm, Mime.CT_TEXT_PLAIN);
                 String descHtml = Invite.getDescription(mm, Mime.CT_TEXT_HTML);
-                ipr.mInvite.setDescription(desc, descHtml);
+                if ((desc != null && desc.length() > 0) || (descHtml != null && descHtml.length() > 0))
+                    ipr.mInvite.setDescription(desc, descHtml);
             }
         }
 

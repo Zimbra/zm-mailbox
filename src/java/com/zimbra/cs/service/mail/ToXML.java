@@ -1321,30 +1321,24 @@ public class ToXML {
                     e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
                 }
 
-                // If there's a blob for this invite, don't send desc/descHtml attributes.  The body text
-                // should be sent in the MIME parts.  If there's no blob, send desc/descHtml data from
-                // invite's metadata.  Even in no-blob case, desc and descHtml elements are present only
-                // when there are non-null values.
-                boolean noBlob = !invite.hasBlobPart();
-                if (noBlob) {
+                if (!invite.hasBlobPart())
                     e.addAttribute(MailConstants.A_CAL_NO_BLOB, true);
 
-                    // Description (plain and html)
-                    String desc = invite.getDescription();
-                    if (desc != null) {
-                        Element descElem = e.addElement(MailConstants.E_CAL_DESCRIPTION);
-                        descElem.setText(desc);
-                    }
-                    String descHtml = invite.getDescriptionHtml();
-                    if (descHtml != null) {
-                        try {
-                            descHtml = StringUtil.stripControlCharacters(descHtml);
-                            descHtml = HtmlDefang.defang(descHtml, neuter);
-                            Element descHtmlElem = e.addElement(MailConstants.E_CAL_DESC_HTML);
-                            descHtmlElem.setText(descHtml);
-                        } catch (IOException ex) {
-                            ZimbraLog.calendar.warn("Unable to defang HTML for SetAppointmentRequest", ex);
-                        }
+                // Description (plain and html)
+                String desc = invite.getDescription();
+                if (desc != null) {
+                    Element descElem = e.addElement(MailConstants.E_CAL_DESCRIPTION);
+                    descElem.setText(desc);
+                }
+                String descHtml = invite.getDescriptionHtml();
+                if (descHtml != null) {
+                    try {
+                        descHtml = StringUtil.stripControlCharacters(descHtml);
+                        descHtml = HtmlDefang.defang(descHtml, neuter);
+                        Element descHtmlElem = e.addElement(MailConstants.E_CAL_DESC_HTML);
+                        descHtmlElem.setText(descHtml);
+                    } catch (IOException ex) {
+                        ZimbraLog.calendar.warn("Unable to defang HTML for SetAppointmentRequest", ex);
                     }
                 }
 

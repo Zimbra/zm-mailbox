@@ -308,9 +308,13 @@ public class ParseMimeMessage {
                     String html = getTextHtmlContent(partElem);
                     result.mCal.addDescription(desc, html);
                     if (result.mInvite != null) {
-                        result.mInvite.setDescription(desc, html);
-                        if (desc != null && desc.length() > 0) {
-                            result.mInvite.setFragment(Fragment.getFragment(desc, true));
+                        // Only use the desc/html from MIME parts if at least one of them is non-empty.
+                        // It's possible the notes were given in <inv> node only, with no corresponding MIME parts.
+                        if ((desc != null && desc.length() > 0) || (html != null && html.length() > 0)) {
+                            result.mInvite.setDescription(desc, html);
+                            if (desc != null && desc.length() > 0) {
+                                result.mInvite.setFragment(Fragment.getFragment(desc, true));
+                            }
                         }
                     }
                 }
