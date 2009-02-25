@@ -2088,7 +2088,7 @@ public class SoapProvisioning extends Provisioning {
     public void revokeRight(String targetType, TargetBy targetBy, String target,
                             String granteeType, GranteeBy granteeBy, String grantee,
                             String right, RightModifier rightModifier)  throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GRANT_RIGHT_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.REVOKE_RIGHT_REQUEST);
         toXML(req, targetType, targetBy, target);
         toXML(req, granteeType, granteeBy, grantee);
         toXML(req, right, rightModifier);

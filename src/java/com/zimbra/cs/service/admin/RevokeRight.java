@@ -49,7 +49,7 @@ public class RevokeRight extends RightDocumentHandler {
                                  granteeType, granteeBy, grantee,
                                  right, rightModifier);
         
-        Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.REVOKE_RIGHT_RESPONSE);
         return response;
     }
 
