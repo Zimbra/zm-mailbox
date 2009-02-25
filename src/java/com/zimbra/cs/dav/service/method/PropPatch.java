@@ -67,6 +67,9 @@ public class PropPatch extends DavMethod {
 			Element e = (Element)obj;
 			boolean isSet = e.getName().equals(DavElements.P_SET);
 			e = e.element(DavElements.E_PROP);
+			if (e == null)
+				throw new DavException("missing <D:prop> in PROPPATCH", HttpServletResponse.SC_BAD_REQUEST, null);
+				
 			for (Object propObj : e.elements()) {
 				if (propObj instanceof Element) {
 					Element propElem = (Element)propObj;

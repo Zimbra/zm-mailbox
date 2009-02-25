@@ -16,24 +16,34 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.dom4j.Element;
+import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 
 public class ScheduleInbox extends Collection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -41,7 +51,7 @@ public class ScheduleInbox extends Collection {
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
         String user = getOwner();
         Mailbox mbox = getMailbox(ctxt);
-        addProperty(CalDavProperty.getCalendarFreeBusySet(user, mbox.getFolderList(ctxt.getOperationContext(), DbSearch.SORT_NONE)));
+        addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
@@ -81,5 +91,69 @@ public class ScheduleInbox extends Collection {
 				} catch (ServiceException e) {}
 		}
 		return result;
+	}
+	
+	@Override
+    public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException, IOException {
+		ArrayList<Element> newSet = null;
+		for (Element el : set) {
+			if (el.getQName().equals(DavElements.E_CALENDAR_FREE_BUSY_SET)) {
+				Iterator hrefs = el.elementIterator(DavElements.E_HREF);
+				ArrayList<String> urls = new ArrayList<String>();
+				while (hrefs.hasNext())
+					urls.add(((Element)hrefs.next()).getText());
+				try {
+					updateCalendarFreeBusySet(ctxt, urls);
+				} catch (Exception e) {
+					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, e);
+				}
+				if (newSet == null) {
+					newSet = new ArrayList<Element>(set);
+				}
+				newSet.remove(el);
+			}
+		}
+		if (newSet != null)
+			set = newSet;
+		super.patchProperties(ctxt, set, remove);
+	}
+	
+	private void updateCalendarFreeBusySet(DavContext ctxt, ArrayList<String> urls) throws ServiceException, DavException {
+		String prefix = DavServlet.DAV_PATH + "/" + getOwner();
+		Mailbox mbox = getMailbox(ctxt);
+		HashMap<String,Folder> folders = new HashMap<String,Folder>();
+		for (Folder f : getCalendarFolders(ctxt))
+			folders.put(f.getPath(), f);
+		for (String url : urls) {
+			if (!url.startsWith(prefix))
+				continue;
+			String path = url.substring(prefix.length());
+			if (path.endsWith("/"))
+				path = path.substring(0, path.length()-1);
+			Folder f = folders.remove(path);
+			if (f == null)
+				throw new DavException("folder not found "+url, DavProtocol.STATUS_FAILED_DEPENDENCY);
+            if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) == 0)
+                continue;
+			ZimbraLog.dav.debug("clearing EXCLUDE_FREEBUSY for "+path);
+            mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, false);
+		}
+		if (!folders.isEmpty()) {
+			for (Folder f : folders.values()) {
+				ZimbraLog.dav.debug("setting EXCLUDE_FREEBUSY for "+f.getPath());
+	            mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, true);
+			}
+		}
+	}
+	
+	private java.util.Collection<Folder> getCalendarFolders(DavContext ctxt) throws ServiceException, DavException {
+		ArrayList<Folder> calendars = new ArrayList<Folder>();
+		Mailbox mbox = getMailbox(ctxt);
+		for (Folder f : mbox.getFolderList(ctxt.getOperationContext(), DbSearch.SORT_NONE))
+			if (!(f instanceof Mountpoint) &&
+					(f.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
+					 f.getDefaultView() == MailItem.TYPE_TASK))
+				calendars.add(f);
+		return calendars;
 	}
 }
