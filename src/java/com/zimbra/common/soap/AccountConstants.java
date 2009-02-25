@@ -173,7 +173,7 @@ public class AccountConstants {
     // share info
     public static final String A_FOLDER_ID = "folderId";
     public static final String A_FOLDER_PATH = "folderPath";
-    public static final String A_GRANTEE_ID = "ganteeId";
+    public static final String A_GRANTEE_ID = "granteeId";
     public static final String A_GRANTEE_NAME = "granteeName";
     public static final String A_GRANTEE_TYPE = "granteeType";
     public static final String A_OWNER_ID = "ownerId";
