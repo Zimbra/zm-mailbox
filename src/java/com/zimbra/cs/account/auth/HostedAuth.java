@@ -35,7 +35,7 @@ public class HostedAuth extends ZimbraCustomAuth {
 	//public static String HEADER_AUTH_METHOD = "Auth-Method";
 	public static String HEADER_AUTH_USER = "Auth-User";
 	public static String HEADER_AUTH_PASSWORD = "Auth-Pass";
-	//public static String HEADER_AUTH_PROTOCOL = "Auth-Protocol";
+	public static String HEADER_AUTH_PROTOCOL = "Auth-Protocol";
 	//public static String HEADER_AUTH_LOGIN_ATTEMPT = "Auth-Login-Attempt";
 	public static String HEADER_CLIENT_IP = "Client-IP";
 	public static String HEADER_AUTH_STATUS = "Auth-Status";
@@ -54,8 +54,6 @@ public class HostedAuth extends ZimbraCustomAuth {
 		HttpClient client = new HttpClient();
 		HttpMethod method = null;
 		
-		/*String authMethod = "plain";
-		String authProtocol = "imap";*/
 		String targetURL = args.get(0);
 		/*
 		if (args.size()>2) {
@@ -79,7 +77,12 @@ public class HostedAuth extends ZimbraCustomAuth {
 		
 		method.addRequestHeader(HEADER_AUTH_USER,acct.getName());
 		method.addRequestHeader(HEADER_AUTH_PASSWORD,password);
-		//method.addRequestHeader(HEADER_AUTH_PROTOCOL,authProtocol);
+		
+		AuthContext.Protocol proto =
+		    (AuthContext.Protocol)context.get(AuthContext.AC_PROTOCOL);
+		if (proto != null)
+		    method.addRequestHeader(HEADER_AUTH_PROTOCOL,proto.toString());
+		
         try {
             client.executeMethod(method);
         } catch (HttpException ex) {
