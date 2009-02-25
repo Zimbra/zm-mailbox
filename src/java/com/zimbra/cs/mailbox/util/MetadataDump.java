@@ -89,7 +89,7 @@ public class MetadataDump {
         private Map<String, String> mMap = new LinkedHashMap<String, String>();
 
         public void addColumn(String colName, String value) {
-            mMap.put(colName, value);
+            mMap.put(colName.toLowerCase(), value);
         }
 
         public Iterator<Entry<String, String>> iterator() {
@@ -97,7 +97,7 @@ public class MetadataDump {
         }
 
         public String get(String colName) {
-            return mMap.get(colName);
+            return mMap.get(colName.toLowerCase());
         }
 
         public void print(PrintStream ps) throws ServiceException {
