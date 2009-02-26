@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -41,8 +42,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.AuthProvider;
@@ -171,6 +174,7 @@ public interface CalendarObject {
                 buf.append(wr.toCharArray());
                 wr.close();
             }
+            Account acct = ctxt.getAuthAccount();
             for (Invite inv : mInvites) {
                 CharArrayWriter wr = new CharArrayWriter();
                 try {
@@ -179,6 +183,12 @@ public interface CalendarObject {
                     Folder folder = mbox.getFolderById(octxt, mFolderId);
                     boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(
                             folder, ctxt.getAuthAccount(), octxt.isUsingAdminPrivileges());
+                    ZAttendee attendee = inv.getMatchingAttendee(acct);
+                    if (attendee != null && attendee.hasRsvp() && attendee.getRsvp() && IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(attendee.getPartStat())) {
+                    	ZCalendar.ZProperty prop = new ZCalendar.ZProperty("X-APPLE-NEEDS-REPLY");
+                    	prop.setValue("TRUE");
+                    	inv.addXProp(prop);
+                    }
                     ZCalendar.ZComponent vcomp = inv.newToVComponent(false, allowPrivateAccess);
                     if (filter != null && !filter.match(vcomp))
                         continue;
