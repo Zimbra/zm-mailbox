@@ -423,6 +423,7 @@ public class MailConstants {
     public static final String A_ITEM_TYPE = "t";
     public static final String A_FIELD = "field";
     public static final String A_INCLUDE_TAG_DELETED = "includeTagDeleted"; //
+    public static final String A_ALLOWABLE_TASK_STATUS = "allowableTaskStatus";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
