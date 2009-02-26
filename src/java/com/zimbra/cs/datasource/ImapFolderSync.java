@@ -347,7 +347,7 @@ class ImapFolderSync {
         for (int id : deletedIds) {
             clearError(id);
             Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
-            if (pair != null) {
+            if (pair != null && pair.getSecond() == folderId) {
                 DbImapMessage.deleteImapMessage(mailbox, folderId, id);
                 long uid = pair.getFirst().getUid();
                 try {

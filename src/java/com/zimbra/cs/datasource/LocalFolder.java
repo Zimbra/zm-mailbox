@@ -102,10 +102,13 @@ final class LocalFolder {
     
     public Message getMessage(int id) throws ServiceException {
         try {
-            return mbox.getMessageById(null, id);
+            Message msg = mbox.getMessageById(null, id);
+            if (msg.getFolderId() == getFolder().getId()) {
+                return msg;
+            }
         } catch (MailServiceException.NoSuchItemException e) {
-            return null;
         }
+        return null;
     }
 
     public void deleteMessage(int id) throws ServiceException {
