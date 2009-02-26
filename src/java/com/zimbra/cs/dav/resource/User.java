@@ -42,7 +42,10 @@ public class User extends DavResource {
         addProperty(CalDavProperty.getScheduleOutboxURL(user));
         
         ArrayList<String> addrs = new ArrayList<String>();
-        addrs.add(owner.getAttr(Provisioning.A_zimbraMailDeliveryAddress));
+        for (String addr : owner.getMailDeliveryAddress())
+            addrs.add(addr);
+        for (String alias : owner.getMailAlias())
+            addrs.add(alias);
         addrs.add(mainUrl);
         addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
         setProperty(DavElements.E_HREF, mainUrl);
