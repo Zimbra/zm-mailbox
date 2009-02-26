@@ -15,12 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Oct 29, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.index;
 
 import java.io.IOException;
@@ -48,11 +42,6 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
     boolean noHits = false;
     private static Log mLog = LogFactory.getLog(IntersectionQueryOperation.class);
 
-    /***************************************************************************
-     * 
-     * Hits iteration
-     *  
-     **************************************************************************/
     public void resetIterator() throws ServiceException {
         if (mLog.isDebugEnabled()) {
             mLog.debug("Intersection.resetIterator()");
@@ -200,8 +189,6 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
     }
 
     /**
-     * @author tim
-     * 
      * Responsible for grouping sub-results with the same sort value into a chunk
      * so that they can then be combined
      * 
@@ -553,11 +540,11 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
     }
 
     void addQueryOp(QueryOperation op) {
-        assert(op!=null);
+        assert(op!=null); 
         mQueryOperations.add(op);
     }
 
-    void addQueryOps(List<QueryOperation>ops) {
+    private void addQueryOps(List<QueryOperation>ops) {
         mQueryOperations.addAll(ops);
     }
 
@@ -597,7 +584,10 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
      * ops.  TODO, maybe.
      * 
      * tim 1/2008: SortBy="none" requires this setting, and so if you want to disable it you will
-     *      need to pass down and check the requested Sort.  
+     *      need to pass down and check the requested Sort.
+     *      
+     * tim:1/2009 convinced this is always the best choice.  The # ops is less important than
+     * the number of rows evaluated.  Pushing the AND down lowers the total # rows.  
      */
     private static final boolean ALWAYS_DISTRIBUTE_AND_OVER_OR = true;
     

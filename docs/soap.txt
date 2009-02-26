@@ -1166,6 +1166,7 @@ Tags:
                [types="{types}"] [recip="*0|1"] [fetch="1|all|{item-id}"] [read="*0|1"]
                [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [field={default_field}]
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
+               [allowableTaskStatus="need,inprogress,completed,canceled"]
                >
   *(<header n="{header-name}/>)
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] 

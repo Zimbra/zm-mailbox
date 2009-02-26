@@ -12,7 +12,7 @@
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * 
- * ***** END LICENSE BLOCK *****
+ * ***** END LICENSE BLOCK ***** 
  */
 
 /*
@@ -67,18 +67,20 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 
 /**
- * @author tim
- *
  * Represents a search query.  Flow is simple:
  * 
  *    -- Constructor() 
- *       1) Parse the query string, turn it into a list of BaseQuery's
+ *       1) Parse the query string, turn it into a list of BaseQuery's.  This is
+ *          done by the JavaCC-generated QueryParser in the index.queryparser package
  *       2) Push "not's" down to the leaves, so that we never have to invert
- *           result sets
- *       3) Generate a list of QueryOperations from the BaseQuery list, then 
- *           optimize the QueryOperations in preparation to run the query.
+ *           result sets.  See the internal ParseTree class
+ *       3) Generate a QueryOperation (which is usually a tree of QueryOperation objects)
+ *           from the ParseTree, then optimize them QueryOperations in preparation to run 
+ *           the query.
  *               
  *    -- execute() -- Begin the search, get the ZimbraQueryResults iterator
+ *    
+ *  long-standing TODO is to move BaseQuery classes and ParseTree classes out of this class
  */
 public final class ZimbraQuery {
     /**
@@ -114,7 +116,6 @@ public final class ZimbraQuery {
         String getQueryOperatorString() {
             return ZimbraQuery.unquotedTokenImage[mQueryType];
         }
-
 
         /**
          * Used by the QueryParser when building up the list of Query terms.
@@ -2011,7 +2012,7 @@ public final class ZimbraQuery {
 
         private static final boolean SPEW = false;
 
-        public static abstract class Node {
+        static abstract class Node {
             boolean mTruthFlag = true;
 
             protected Node() {}
@@ -2028,7 +2029,7 @@ public final class ZimbraQuery {
             public abstract QueryOperation getQueryOperation();
         }
 
-        public static class OperatorNode extends Node {
+        static class OperatorNode extends Node {
             int mKind;
             boolean mTruthFlag = true;
             public ArrayList<Node> mNodes = new ArrayList<Node>();
@@ -2169,7 +2170,7 @@ public final class ZimbraQuery {
 
         }
 
-        public static class ThingNode extends Node {
+        static class ThingNode extends Node {
             BaseQuery mThing;
 
             // used so that we can uniquely identify each permutation with an integer
@@ -2202,7 +2203,7 @@ public final class ZimbraQuery {
             }
         }
 
-        public static Node build(AbstractList clauses)
+        static Node build(AbstractList clauses)
         {
             OperatorNode top = new OperatorNode(STATE_OR);
 
@@ -2233,7 +2234,6 @@ public final class ZimbraQuery {
             return top;
         }
     }
-
 
     /**
      * the query string can OPTIONALLY have a "sortby:" element which will override 
@@ -2792,9 +2792,14 @@ public final class ZimbraQuery {
             
             mResults = HitIdGrouper.Create(mResults, mParams.getSortBy());
             
-            if (!mParams.getIncludeTagDeleted()) {
+            if (!mParams.getIncludeTagDeleted() || mParams.getAllowableTaskStatuses()!=null) {
+                // we have to do some filtering of the result set 
                 FilteredQueryResults filtered = new FilteredQueryResults(mResults);
-                filtered.setFilterTagDeleted(true);
+                
+                if (!mParams.getIncludeTagDeleted()) 
+                    filtered.setFilterTagDeleted(true);
+                if (mParams.getAllowableTaskStatuses()!=null)
+                    filtered.setAllowedTaskStatuses(mParams.getAllowableTaskStatuses());
                 mResults = filtered;
             }
             

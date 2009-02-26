@@ -30,14 +30,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 /************************************************************************
  * 
- * QueryOperation
- *
- * A QueryOperation is a part of a Search request -- there are potentially 
+ * <p>A QueryOperation is a part of a Search request -- there are potentially 
  * mutliple query operations in a search.  QueryOperations return 
  * ZimbraQueryResultsImpl sets -- which can be iterated over to get ZimbraHit
  * objects.  
  * 
- * The difference between a QueryOperation and a simple ZimbraQueryResultsImpl
+ * <p>The difference between a QueryOperation and a simple ZimbraQueryResultsImpl
  * set is that a QueryOperation knows how to Optimize and Execute itself -- 
  * whereas a QueryResults set is just a set of results and can only be iterated.  
  * 
@@ -241,9 +239,19 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      */
     abstract void forceHasSpamTrashSetting();
 
+    /**
+     * @return TRUE if this QueryOperation definitely has no results.  Note that this API might
+     * return FALSE in some cases where there really aren't any results available -- it is only 
+     * guaranteed to catch "trivial-reject" cases useful during the query optimization process
+     */
     abstract boolean hasNoResults();
+    
+    /**
+     * @return TRUE if this QueryOperation returns *all* hits.  Note that this API might return
+     * FALSE in cases where this operation returns all results -- this API is only intended
+     * to catch trivial cases and is useful during the query optimization process 
+     */
     abstract boolean hasAllResults();
-
     
     /**
      * Expand "is:local" and "is:remote" queries into in:(folder OR folder OR folder) as appropriate
@@ -275,11 +283,20 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * not be combined.
      */
     protected abstract QueryOperation combineOps(QueryOperation other, boolean union);
-    
+
+    /**
+     * Callback for {@link com.zimbra.cs.index.QueryOperation#depthFirstRecurse(RecurseCallback)}
+     */
     interface RecurseCallback {
         void recurseCallback(QueryOperation op); 
     }
     
+    /**
+     *
+     * Walk the tree of QueryOperations in a depth-first manner calling {@link RecurseCallback}
+     * 
+     * @param cb - The callback
+     */
     protected abstract void depthFirstRecurse(RecurseCallback cb);
     
 }

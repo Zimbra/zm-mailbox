@@ -69,10 +69,13 @@ public class TaskHit extends CalendarItemHit {
     }
     
     static enum Status {
-        NEED(0),
+        // these names correspond to the iCal data values.  Don't change!
+        // The number corresponds to sort-precidence when sorting by completion status 
+        NEED(0), 
         INPR(1),
-        COMP(2),
-        CANC(3),
+        WAITING(2),
+        DEFERRED(3), 
+        COMP(4), 
         ;
         
         Status(int sortVal) { mSortVal = sortVal; }
@@ -85,12 +88,14 @@ public class TaskHit extends CalendarItemHit {
         Invite inv = task.getDefaultInviteOrNull();
         if (inv != null) { 
             String status = inv.getStatus();
-            for (Status s : Status.values()) {
-                if (s.name().equalsIgnoreCase(status)) 
-                    return s;
+            try {
+                Status s = Status.valueOf(status.toUpperCase());
+                return s;
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.index.debug("Unknown Task Status value: "+status.toUpperCase());
             }
         }
-        return Status.CANC;
+        return Status.DEFERRED;
     }
     
     public Object getSortField(SortBy sortOrder) throws ServiceException {
@@ -144,7 +149,7 @@ public class TaskHit extends CalendarItemHit {
         }
     }
     
-    private static int getCompletionPercentage(ZimbraHit zh) throws ServiceException {
+    static int getCompletionPercentage(ZimbraHit zh) throws ServiceException {
         if (zh instanceof ProxiedHit) 
             return (int)(((ProxiedHit)zh).getElement().getAttributeLong(MailConstants.A_TASK_PERCENT_COMPLETE));
         else

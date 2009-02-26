@@ -23,9 +23,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
- * A QueryOperation that filters results out of the result set
+ * <p>A QueryOperation that filters results out of the result set.  The base class is a nop
+ * (passes through all hits)
  * 
- * Currently used only as a base class for other QueryOps that have to do passthrough/filtering
+ * <p>Currently used only as a base class for other QueryOps that have to do passthrough/filtering
  */
 public abstract class FilterQueryOperation extends QueryOperation {
     

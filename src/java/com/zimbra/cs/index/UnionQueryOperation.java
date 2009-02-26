@@ -40,7 +40,7 @@ import com.zimbra.common.util.LogFactory;
  * 
  * UnionQueryOperation
  *
- *
+ * 
  * -- a list of query operations which are unioned together.
  * 
  ***********************************************************************/
@@ -226,103 +226,6 @@ class UnionQueryOperation extends CombiningQueryOperation
             }
         }
     }
-    
-//    QueryOperation prepareRemoteSearches(SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, SearchParams params) 
-//    throws ServiceException, IOException {
-//
-//        boolean hasRemoteOps = false;
-//        
-//        Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
-//
-//        // Since optimize() has already been run, we know that each of our ops
-//        // only has one target (or none).  Find those operations which have
-//        // an external target and wrap them in RemoteQueryOperations
-//        for (int i = mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
-//            QueryOperation op = mQueryOperations.get(i);
-//
-//            QueryTargetSet targets = op.getQueryTargets();
-//            
-//            // this assertion OK because we have already distributed multi-target query ops
-//            // during the optimize() step
-//            assert(targets.countExplicitTargets() <= 1);
-//            
-//            // the assertion above is critical: the code below all assumes
-//            // that we only have ONE target (ie we've already distributed if necessary)
-//
-//            if (targets.hasExternalTargets()) {
-//                mQueryOperations.remove(i);   
-//
-//                hasRemoteOps = true;
-//                boolean foundOne = false;
-//
-//                // find a remoteOp to add this one to
-//                for (QueryOperation tryIt : mQueryOperations) {
-//                    if (tryIt instanceof RemoteQueryOperation) {
-//                        if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
-//                            foundOne = true;
-//                            break;
-//                        }
-//                    }
-//                }
-//
-//                if (!foundOne) {
-//                    RemoteQueryOperation remoteOp = new RemoteQueryOperation();
-//                    remoteOp.tryAddOredOperation(op);
-//                    mQueryOperations.add(i, remoteOp);
-//                }
-//            } else {
-//                // local target
-//                if (visibleFolders != null) {
-//                    if (visibleFolders.size() == 0) {
-//                        mQueryOperations.remove(i);
-//                        ZimbraLog.index.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
-//                        mQueryOperations.add(i, new NullQueryOperation());
-//                    } else {
-//                        mQueryOperations.remove(i);
-//                        
-//                        // build a "and (in:visible1 or in:visible2 or in:visible3...)" query tree here!
-//                        IntersectionQueryOperation intersect = new IntersectionQueryOperation();
-//                        intersect.addQueryOp(op);
-//                        
-//                        UnionQueryOperation union = new UnionQueryOperation();
-//                        intersect.addQueryOp(union);
-//                        
-//                        for (Folder f : visibleFolders) {
-//                            DBQueryOperation newOp = DBQueryOperation.Create();
-//                            union.add(newOp);
-//                            newOp.addInClause(f, true);
-//                        }
-//                        
-//                        mQueryOperations.add(i, intersect);
-//                    }
-//                }
-//            }
-//        }
-//        
-//        if (hasRemoteOps) {
-//            // if we actually have remote operations, then we need to call setup() on each
-//            for (QueryOperation toSetup : mQueryOperations) {
-//                if (toSetup instanceof RemoteQueryOperation) {
-//                    try {
-//                        RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-//                        remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
-//                    } catch(Exception e) {
-//                        ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+this.toString());
-//                    }
-//                }
-//            }
-//        }
-//        
-//        assert(mQueryOperations.size() > 0);
-//        
-//        if (mQueryOperations.size() == 1) {
-//            // this can happen if we replaced ALL of our operations with a single remote op...
-//            return mQueryOperations.get(0).optimize(mbox);
-//        }
-//        
-//        return optimize(mbox);
-//    }
-
 
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         restartSubOpt:

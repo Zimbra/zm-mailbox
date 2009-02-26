@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -122,6 +123,7 @@ public final class SearchParams implements Cloneable {
     public boolean getEstimateSize() { return mEstimateSize; }
     public String getDefaultField() { return mDefaultField; }
     public final boolean getIncludeTagDeleted() { return mIncludeTagDeleted; }
+    public Set<TaskHit.Status> getAllowableTaskStatuses() { return mAllowableTaskStatuses; } 
 
     // offset,limit 
     public int getLimit() { return mLimit; }
@@ -148,6 +150,7 @@ public final class SearchParams implements Cloneable {
         mDefaultField = field; 
     }
     public final void setIncludeTagDeleted(boolean includeTagDeleted) { mIncludeTagDeleted = includeTagDeleted; }
+    public void setAllowableTaskStatuses(Set<TaskHit.Status> statuses) { mAllowableTaskStatuses = statuses; } 
     
     /**Set the range of dates over which we want to expand out the 
      * instances of any returned CalendarItem objects.
@@ -266,6 +269,15 @@ public final class SearchParams implements Cloneable {
      *            This object's parameters are added as attributes (or sub-elements) of this parameter
      */
     public void encodeParams(Element searchElt) {
+        if (mAllowableTaskStatuses != null) {
+            StringBuilder taskStatusStr = new StringBuilder();
+            for (TaskHit.Status s : mAllowableTaskStatuses) {
+                if (taskStatusStr.length() > 0)
+                    taskStatusStr.append(",");
+                taskStatusStr.append(s.name());
+            }
+            searchElt.addAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, taskStatusStr.toString());
+        }
         searchElt.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED, getIncludeTagDeleted());
         searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
         searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
@@ -320,6 +332,21 @@ public final class SearchParams implements Cloneable {
         params.mRequestContext = zsc;
         params.setHopCount(zsc.getHopCount());
         params.setIncludeTagDeleted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_DELETED, false));
+        String allowableTasks = request.getAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, null);
+        if (allowableTasks != null) {
+            params.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
+            String[] split = allowableTasks.split(",");
+            if (split != null) {
+                for (String s : split) {
+                    try {
+                        TaskHit.Status status = TaskHit.Status.valueOf(s.toUpperCase());
+                        params.mAllowableTaskStatuses.add(status);
+                    } catch (IllegalArgumentException e) {
+                        ZimbraLog.index.debug("Skipping unknown task completion status: "+s);
+                    }
+                }
+            }
+        }
         params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
         params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
         String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
@@ -539,6 +566,10 @@ public final class SearchParams implements Cloneable {
         o.mPrefetch = mPrefetch;
         o.mMode = mMode;
         o.mEstimateSize = mEstimateSize;
+        if (mAllowableTaskStatuses != null) {
+            o.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
+            o.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
+        } 
         
         return o;
     }
@@ -560,6 +591,7 @@ public final class SearchParams implements Cloneable {
     private long mCalItemExpandStart = -1;
     private long mCalItemExpandEnd = -1;
     private boolean mIncludeTagDeleted = false; // if FALSE, then items with the /Deleted tag set are not returned
+    private Set<TaskHit.Status> mAllowableTaskStatuses = null; // if NULL, allow all
     
     
     private TimeZone mTimeZone = null; // timezone that the query should be parsed in (for date/time queries)

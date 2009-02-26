@@ -29,6 +29,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 
+/**
+ * A wrapper around a remote search (a search on data in another account)
+ */
 class RemoteQueryOperation extends FilterQueryOperation {
     RemoteQueryOperation() {}
 

@@ -17,6 +17,7 @@
 package com.zimbra.cs.index;
 
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -24,15 +25,20 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 
 /** 
- * Result set that does filtering. 
- * 
- * Currently only supports filtering by the \DELETED tag
- * (enable it by calling setFilterTagDeleted API)
+ * Result set that does filtering.of the results. 
+ * <ul>
+ *   <li>Supports filtering by the \DELETED tag
+ *       (enable it by calling setFilterTagDeleted API)</li>
+ *   <li>Supports filtering by allowable Task-status
+ *        (e.g. only show Completed tasks) see 
+ *        setAllowableTaskStatus(Set<TaskHit.Status>) API)</li>
+ * </ul>           
  */
 public class FilteredQueryResults implements ZimbraQueryResults {
     ZimbraQueryResults mResults;
     
     private boolean mFilterTagDeleted = false;
+    private Set<TaskHit.Status> mAllowedTaskStatuses = null;
     
     FilteredQueryResults(ZimbraQueryResults other) {
         mResults = other;
@@ -46,6 +52,10 @@ public class FilteredQueryResults implements ZimbraQueryResults {
      */
     void setFilterTagDeleted(boolean truthiness) {
         mFilterTagDeleted = truthiness;
+    }
+    
+    void setAllowedTaskStatuses(Set<TaskHit.Status> allowed) {
+        mAllowedTaskStatuses = allowed;
     }
     
     public void doneWithSearchResults() throws ServiceException {
@@ -100,6 +110,13 @@ public class FilteredQueryResults implements ZimbraQueryResults {
      * the result set
      */
     private boolean shouldFilter(ZimbraHit hit) throws ServiceException {
+        if (mAllowedTaskStatuses != null) {
+            if (hit instanceof TaskHit) {
+                if (!mAllowedTaskStatuses.contains(((TaskHit)hit).getStatus()))
+                    return true;
+            }
+        }
+        
         if (mFilterTagDeleted) {
             if (hit.isLocal()) {
                 MailItem item = hit.getMailItem();
