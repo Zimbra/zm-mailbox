@@ -798,14 +798,24 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         FilenameTokenFilter(TokenFilter in) {
             super(in);
             mIncludeSeparatorChar = true;
+            mMaxSplits = 100;
         }
         FilenameTokenFilter(TokenStream in) {
             super(in);
             mIncludeSeparatorChar = true;
+            mMaxSplits = 100;
         }
 
         protected int getNextSplit(String s) {
-            return s.lastIndexOf(".");
+            int dotIndex = s.lastIndexOf(".");
+            int spaceIndex = s.indexOf(' ');
+            if (dotIndex < 0 && spaceIndex < 0)
+                return -1;
+            if (dotIndex < 0)
+                return spaceIndex;
+            if (spaceIndex < 0)
+                return dotIndex;
+            return Math.min(dotIndex, spaceIndex);
         }
     }
 
@@ -1000,6 +1010,13 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             } while(tok != null);
         }        
 
+        {
+            String src = "This is my-filename.test.pdf";
+            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, src);
+
+            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
+        }
+        
     }
 }
 
