@@ -1243,6 +1243,17 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
             SOAP handlers that are domainAuthSufficient and spitting out the rights 
             they need.  Please let me know if you find any issues with them.
 
+      (C) enable the UIs for the domain admin
+       The domain admin UI is now 
+            zimbraAdminConsoleUIComponents: accountListView
+            zimbraAdminConsoleUIComponents: DLListView
+            zimbraAdminConsoleUIComponents: resourceListView
+            zimbraAdminConsoleUIComponents: aliasListView
+            zimbraAdminConsoleUIComponents: domainListView
+            zimbraAdminConsoleUIComponents: saveSearch
+            
+
+
 9.3 Reference and Documentations
 
 (1) ZimbraServer/docs/rights.txt
