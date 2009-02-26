@@ -35,9 +35,6 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -69,10 +66,6 @@ public abstract class DavResource {
 	protected Map<QName,ResourceProperty> mProps;
 	protected Collection<Compliance> mDavCompliance;
 	protected boolean mNewlyCreated;
-	
-	public DavResource(String uri, Account acct) throws ServiceException {
-		this(uri, getOwner(acct));
-	}
 	
 	public DavResource(String uri, String owner) {
 		mNewlyCreated = false;
@@ -116,16 +109,6 @@ public abstract class DavResource {
 	
 	public boolean isNewlyCreated() {
 		return mNewlyCreated;
-	}
-	
-	protected static String getOwner(Account acct) throws ServiceException {
-		String owner = acct.getName();
-		Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
-        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(acct.getDomainName()))
-        	owner = owner.substring(0, owner.indexOf('@'));
-        return owner;
 	}
 	
 	public boolean equals(Object another) {

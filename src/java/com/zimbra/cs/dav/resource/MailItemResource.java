@@ -98,11 +98,11 @@ public abstract class MailItemResource extends DavResource {
     }
     
 	public MailItemResource(DavContext ctxt, MailItem item) throws ServiceException {
-		this(ctxt, getItemPath(item), item);
+		this(ctxt, ctxt.getPath() + item.getName(), item);
 	}
 	
 	public MailItemResource(DavContext ctxt, String path, MailItem item) throws ServiceException {
-		super(path, item.getAccount());
+		super(path, ctxt.getUser());
 		mFolderId = item.getFolderId();
 		mId = item.getId();
 		mType = item.getType();
@@ -125,13 +125,6 @@ public abstract class MailItemResource extends DavResource {
 		super(path, acct);
 	}
 	
-	private static String getItemPath(MailItem item) throws ServiceException {
-		String path = item.getPath();
-		if ((item.getType() == MailItem.TYPE_FOLDER || item.getType() == MailItem.TYPE_MOUNTPOINT) && !path.endsWith("/"))
-			return path + "/";
-		return path;
-	}
-
 	public boolean hasEtag() {
 		return true;
 	}

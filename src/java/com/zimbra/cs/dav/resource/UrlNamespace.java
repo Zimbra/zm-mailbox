@@ -193,12 +193,8 @@ public class UrlNamespace {
 
 	/* Returns URL to the resource. */
 	public static String getResourceUrl(DavResource rs) {
-		return getResourceUrl(rs.getOwner(), rs.getUri());
-	}
-
-	public static String getResourceUrl(String user, String resourcePath) {
 	    //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
-        return URLUtil.urlEscape(DavServlet.DAV_PATH + "/" + user + resourcePath);
+        return URLUtil.urlEscape(DavServlet.DAV_PATH + "/" + rs.getOwner() + rs.getUri());
 	}
     
     public static String getPrincipalUrl(String user) {

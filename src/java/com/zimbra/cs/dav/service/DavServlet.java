@@ -148,7 +148,9 @@ public class DavServlet extends ZimbraServlet {
             else if (at == null && (rtype == RequestType.both || rtype == RequestType.password))
     			authUser = basicAuthRequest(req, resp, true);
 			if (authUser == null) {
-				resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+				try {
+					resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+				} catch (Exception e) {}
 				return;
 			}
 			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
