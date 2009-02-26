@@ -50,12 +50,14 @@ public class ScheduleInbox extends Collection {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
         String user = getOwner();
-        Mailbox mbox = getMailbox(ctxt);
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+		return getChildren(ctxt, null);
+	}
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
 		try {
-			return getScheduleMessages(ctxt);
+			return getScheduleMessages(ctxt, hrefs);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get schedule messages in folder "+getId(), se);
 			return Collections.emptyList();
@@ -64,7 +66,7 @@ public class ScheduleInbox extends Collection {
 
 	protected static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 	
-	protected java.util.Collection<DavResource> getScheduleMessages(DavContext ctxt) throws ServiceException, DavException {
+	protected java.util.Collection<DavResource> getScheduleMessages(DavContext ctxt, java.util.Collection<String> hrefs) throws ServiceException, DavException {
 		ArrayList<DavResource> result = new ArrayList<DavResource>();
         if (!ctxt.isSchedulingEnabled())
         	return result;
@@ -78,8 +80,11 @@ public class ScheduleInbox extends Collection {
                 if (hit instanceof MessageHit) {
                 	Message msg = ((MessageHit)hit).getMessage();
                 	DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
-                	if (rs != null)
-                		result.add(rs);
+                	if (rs != null) {
+                    	String href = UrlNamespace.getResourceUrl(rs);
+                    	if (hrefs != null && hrefs.contains(href))
+                    		result.add(rs);
+                	}
                 }
 			}
 		} catch (Exception e) {
