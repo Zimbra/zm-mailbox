@@ -194,19 +194,19 @@ public class IMMessage {
         {
             if (mBody != null) {
                 Element e = parent.addElement("body");
-//                try {
-//                    e.setText(HtmlDefang.defang(mBody.toString(), true));
-                if (mBody.hasXHTML()) {
+                try {
+                    if (mBody.hasXHTML()) {
+                        e.addAttribute("html", true);
+                        e.setText(HtmlDefang.defang(mBody.getXHTMLAsString(), true));
+                    } else {
+                        e.addAttribute("html", false);
+                        e.setText(mBody.getPlainText());
+                    }
+                } catch(IOException ex) {
                     e.addAttribute("html", true);
-                    e.setText(mBody.getXHTMLAsString());
-                } else {
-                    e.addAttribute("html", false);
-                    e.setText(mBody.getPlainText());
+                    e.setText("Unable to encode text: "+ex);
+                    ZimbraLog.im.warn("Caught exception while HtmlDefang-ing IM message: \""+mBody.toString()+"\"", ex);
                 }
-                e.setText(mBody.toString());
-//                } catch(IOException ex) {
-//                    ZimbraLog.im.warn("Caught exception while HtmlDefang-ing IM message: \""+mBody.toString()+"\"", ex);
-//                }
             }
         }
         return parent;
