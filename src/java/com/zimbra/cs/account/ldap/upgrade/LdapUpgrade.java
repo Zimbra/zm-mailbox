@@ -145,10 +145,13 @@ abstract class LdapUpgrade {
         String bug = cl.getOptionValue(O_BUG);
         LdapUpgrade upgrade = null;
         
-        if ("27075".equalsIgnoreCase(bug)) {
-            upgrade = new SetCosAndGlobalConfigDefault(bug, verbose);
+        if ("18277".equalsIgnoreCase(bug)) {
+            upgrade = new MigrateDomainAdmins(bug, verbose);
         } else if ("22033".equalsIgnoreCase(bug)) {
             upgrade = new SetZimbraCreateTimestamp(bug, verbose);
+        } else if ("27075".equalsIgnoreCase(bug)) {
+            // e.g. -b 27075 5.0.12
+            upgrade = new SetCosAndGlobalConfigDefault(bug, verbose);
         } else if ("29978".equalsIgnoreCase(bug)) {
             upgrade = new DomainPublicServiceProtocolAndPort(bug, verbose);
         } else if ("32557".equalsIgnoreCase(bug)) {
