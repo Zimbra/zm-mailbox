@@ -238,7 +238,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * 
      * Need to fix those callsite to call one of the check*** methods.
      */
-    public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
+    protected boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
         return canAccessDomain(zsc, getDomainFromEmail(email));
     }
     

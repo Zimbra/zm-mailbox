@@ -39,7 +39,7 @@ public class DomainAccessManager extends AccessManager {
         if (!at.isZimbraUser())
             return false;
         
-        accessDomain(target);
+        checkDomainStatus(target);
         
         if (asAdmin && at.isAdmin()) return true;
         if (isParentOf(at, target)) return true;
@@ -67,7 +67,7 @@ public class DomainAccessManager extends AccessManager {
         if (credentials == null)
             return false;
         
-        accessDomain(target);
+        checkDomainStatus(target);
         
         // admin auth account will always succeed
         if (asAdmin && credentials.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
@@ -101,14 +101,14 @@ public class DomainAccessManager extends AccessManager {
     public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {
         if (!at.isZimbraUser())
             return false;
-        accessDomain(domainName);
+        checkDomainStatus(domainName);
         return canAccessDomainInternal(at, domainName);
     }
 
     public boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException {
         if (!at.isZimbraUser())
             return false;
-        accessDomain(domain);
+        checkDomainStatus(domain);
         return canAccessDomainInternal(at, domain.getName());
     }
     
@@ -155,61 +155,6 @@ public class DomainAccessManager extends AccessManager {
         if (at.isAdmin()) return true;
         
         return canSetMailQuota(at, targetAccount, mailQuota);
-    }
-    
-    private boolean isParentOf(AuthToken at, Account target) throws ServiceException {
-        
-        /*
-         * first, try using the admin account in the token
-         */
-        /*  uncomment after we allow the parent to grab a delegated auth token.
-        try {
-            Account adminAcct = getAdminAccount(at);
-            if (adminAcct != null) {
-                if (isParentOf(adminAcct, target))
-                    return true;
-            }
-        } catch (ServiceException e) {
-            // not an admin account 
-        }
-        */
-        Account acct = getAccount(at);
-        return isParentOf(acct, target);
-    }
-    
-    /** Returns whether the specified account's credentials indicationg that 
-     *  it is the parent account of the target account. 
-     *  <i>Note: This method checks only for family parent account access, 
-     *  and passing the same account for <code>credentials</code> and
-     *  <code>target</code> will not succeed for non-parent accounts.</i>
-     * @param credentials  The authenticated account performing the action. 
-     * @param target       The target account for the proposed action. */
-    private boolean isParentOf(Account credentials, Account target) {
-        
-        Set<String> childAccts = credentials.getMultiAttrSet(Provisioning.A_zimbraChildAccount);
-        String targetId = target.getId();
-        
-        if (childAccts.contains(targetId))
-            return true;
-
-        return false;
-    }
-    
-    protected void accessDomain(Account acct) throws ServiceException {
-        Domain domain = Provisioning.getInstance().getDomain(acct);
-        accessDomain(domain);
-    }
-    
-    private void accessDomain(String domainName) throws ServiceException {
-        Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
-        accessDomain(domain);
-    }
-    
-    private void accessDomain(Domain domain) throws ServiceException {
-        if (domain != null) {
-            if (domain.isSuspended() || domain.isShutdown())
-                throw ServiceException.PERM_DENIED("domain is " + domain.getDomainStatusAsString());
-        }
     }
     
     

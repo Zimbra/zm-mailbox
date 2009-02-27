@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -62,6 +63,12 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
+        
+        checkDomainStatus(target);
+        
+        if (isParentOf(at, target))
+            return true;
+        
         if (asAdmin)
             return canDo(at, target, Admin.R_adminLoginAs, asAdmin, false);
         else
@@ -77,6 +84,12 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(Account credentials, Account target,
             boolean asAdmin) throws ServiceException {
+        
+        checkDomainStatus(target);
+        
+        if (isParentOf(credentials, target))
+            return true;
+        
         if (asAdmin)
             return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin, false);
         else
@@ -100,21 +113,26 @@ public class ACLAccessManager extends AccessManager {
     public boolean canAccessDomain(AuthToken at, String domainName)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return false;
+        // return false;
+        
+        throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
 
     @Override
     public boolean canAccessDomain(AuthToken at, Domain domain)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return false;
+        // return false;
+        
+        throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
 
     @Override
     public boolean canAccessEmail(AuthToken at, String email)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return false;
+        // return false;
+        throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
 
     @Override
