@@ -43,6 +43,7 @@ import org.dom4j.ElementHandler;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  */
@@ -56,6 +57,7 @@ public class SoapHttpTransport extends SoapTransport {
     private int mTimeout;
     private String mUri;
 	private HttpClient mClient;
+    private Map<String, String> mCustomHeaders;
     
     public String toString() { 
         return "SoapHTTPTransport(uri="+mUri+")";
@@ -212,6 +214,13 @@ public class SoapHttpTransport extends SoapTransport {
         return mTimeout;
     }
 
+    public Map<String, String> getCustomHeaders() {
+        if (mCustomHeaders == null) {
+            mCustomHeaders = new HashMap<String, String>();
+        }
+        return mCustomHeaders;
+    }
+    
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
     throws SoapFaultException, IOException, HttpException {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
@@ -237,6 +246,12 @@ public class SoapHttpTransport extends SoapTransport {
             if (getRequestProtocol().hasSOAPActionHeader())
                 method.setRequestHeader("SOAPAction", mUri);
 
+            if (mCustomHeaders != null) {
+                for (Map.Entry<String, String> entry : mCustomHeaders.entrySet()) {
+                    method.setRequestHeader(entry.getKey(), entry.getValue());
+                }
+            }
+            
             for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
                 try {
                     // execute the method.

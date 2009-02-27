@@ -58,10 +58,12 @@ public class SoapFaultException extends ServiceException {
         mIsReceiversFault = isReceiversFault;
         mDetail = detail;
         mFault = fault;
-        Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
-        if (error != null) {
-            String traceId = error.getAttribute(ZimbraNamespace.E_TRACE.getName(), null);
-            if (traceId != null) setId(traceId);
+        if (detail != null) {
+            Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
+            if (error != null) {
+                String traceId = error.getAttribute(ZimbraNamespace.E_TRACE.getName(), null);
+                if (traceId != null) setId(traceId);
+            }
         }
     }
 
@@ -79,9 +81,11 @@ public class SoapFaultException extends ServiceException {
 
 
     private static String getCode(Element detail) {
-        Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
-        if (error != null)
-            return error.getAttribute(ZimbraNamespace.E_CODE.getName(), UNKNOWN);
+        if (detail != null) {
+            Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
+            if (error != null)
+                return error.getAttribute(ZimbraNamespace.E_CODE.getName(), UNKNOWN);
+        }
         return UNKNOWN;
     }
 
