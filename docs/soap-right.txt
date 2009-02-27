@@ -12,7 +12,7 @@
   <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
 </GrantRightRequest>    
 
-{target-type} = account | resource | distributionlist | domain | cos | server | xmppcomponent | zimlet | config | global 
+{target-type} = account | calresource | dl | domain | cos | server | xmppcomponent | zimlet | config | global 
 
 {target-by}   = name | id
   
@@ -204,6 +204,9 @@ if <grantee> is omitted, it means the account identified by the auth token.
                </default>]
           </a>+
       </getAttrs>
+      [<adminCosoleUIComp>
+          <a>...<a>+
+      <adminCosoleUIComp>]
   </target>
 </GetEffectiveRightsResponse>   
 
@@ -320,6 +323,16 @@ e.g. 2 creating a server:
     </setAttrs>
 </GetCreateObjectAttrsResponse>
          
+         
+----------------------------------------------------------
+      returns the union of the authed admin account's zimbraAdminConsoleUIComponents 
+      values and the values on all admin groups the admin account belongs.
+                    
+<GetAdminCosoleUICompRequest/>
+
+<GetAdminCosoleUICompResponse>
+  <a>...</a>+
+</GetAdminCosoleUICompResponse>
          
 ----------------------------------------------------------
 

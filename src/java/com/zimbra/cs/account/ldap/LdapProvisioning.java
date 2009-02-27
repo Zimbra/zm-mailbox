@@ -155,7 +155,8 @@ public class LdapProvisioning extends Provisioning {
             Provisioning.A_zimbraId,
             Provisioning.A_uid,
             Provisioning.A_zimbraACE,
-            Provisioning.A_zimbraIsAdminGroup
+            Provisioning.A_zimbraIsAdminGroup,
+            Provisioning.A_zimbraAdminConsoleUIComponents
     };
 
 

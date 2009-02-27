@@ -3772,7 +3772,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="761" name="zimbraAdminConsoleUIComponents" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="6.0.0">
+<attr id="761" name="zimbraAdminConsoleUIComponents" type="string" cardinality="multi" optionalIn="account,distributionList" flags="accountInfo" since="6.0.0">
   <desc>UI components available for the authed admin in admin console</desc>
 </attr>
 
