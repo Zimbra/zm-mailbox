@@ -37,11 +37,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.MemberOf;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -63,7 +58,6 @@ import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
@@ -5887,18 +5881,6 @@ public class LdapProvisioning extends Provisioning {
                       0);
 
         return visitor.getResult();
-    }
-    
-    @Override
-    public void getShareInfo(Account acct, boolean directOnly, Account owner, 
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
-        ShareInfo.Published.get(acct, directOnly, owner, visitor);
-    }
-    
-    @Override
-    public void getShareInfo(DistributionList dl, boolean directOnly, Account owner,
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
-        ShareInfo.Published.get(dl, directOnly, owner, visitor);
     }
     
     public static void testAuthDN(String args[]) {

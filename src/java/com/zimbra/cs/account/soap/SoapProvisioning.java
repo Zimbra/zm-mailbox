@@ -2174,7 +2174,7 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void getShareInfo(Account acct, boolean directOnly, Account owner, 
+    public void getShareInfo(Account acct, String granteeType, Account owner, 
             ShareInfo.Published.Visitor visitor) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
         
@@ -2182,21 +2182,23 @@ public class SoapProvisioning extends Provisioning {
         eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
         eAcct.setText(acct.getId());
         
-        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
-        eGrantee.addAttribute(AdminConstants.A_DIRECT_ONLY, directOnly ? "1" : "0");
+        if (granteeType != null) {
+            Element eGrantee = req.addElement(AccountConstants.E_GRANTEE);
+            eGrantee.addAttribute(AccountConstants.A_TYPE, granteeType);
+        }
         
         if (owner != null)
             req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(owner.getId());
 
         Element resp = invoke(req);
         for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
-            ShareInfo.Published si = ShareInfo.Published.fromXML(eShare);
+            ShareInfo si = ShareInfo.fromXML(eShare);
             visitor.visit(si);
         }
     }
     
     @Override
-    public void getShareInfo(DistributionList dl, boolean directOnly, Account owner,
+    public void getShareInfo(DistributionList dl, String granteeType, Account owner,
             ShareInfo.Published.Visitor visitor) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
         
@@ -2204,15 +2206,17 @@ public class SoapProvisioning extends Provisioning {
         eDL.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
         eDL.setText(dl.getId());
         
-        Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
-        eGrantee.addAttribute(AdminConstants.A_DIRECT_ONLY, directOnly ? "1" : "0");
+        if (granteeType != null) {
+            Element eGrantee = req.addElement(AccountConstants.E_GRANTEE);
+            eGrantee.addAttribute(AccountConstants.A_TYPE, granteeType);
+        }
         
         if (owner != null)
             req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(owner.getId());
 
         Element resp = invoke(req);
         for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
-            ShareInfo.Published si = ShareInfo.Published.fromXML(eShare);
+            ShareInfo si = ShareInfo.fromXML(eShare);
             visitor.visit(si);
         }
     }

@@ -2957,16 +2957,31 @@ Note:
 </GetShareInfoRequest>
 
 {grantee_type} = usr | grp
+                 Filters the result by the specified grantee type, only shares granted to 
+                 the grantee type will be returned.  If omitted, server will return shares 
+                 granted to all grantee types. 
 
-{owner-by} = name | id
-             Note: In order to defend against harvest attacks this SOAP call will
+{owner-by}     = name | id
+                 Note: In order to defend against harvest attacks this SOAP call will
                    return "no shares" instead of error when an invalid user name/id is used.
 
-- If both <grantee> and <owner> are specified, the conditions are ANDed together.
+Notes:
+- if <owner> is *not* specified, server will retrieve previously published (can only be done 
+  by admin) share info from entries the authed account can inherit shares from.  
+  e.g. all direct and indirect distribution lists the account belongs.  Currently share info 
+  can only be published on distribution lists.   Publishing of cos/domain/all/pub shares 
+  are not supported.  Therefore those shares cannot be discovered if we go this route.
 
-- If neither <grantee> nor <owner> is specified, all published sharesapplicable to the 
-  authed user: including those shared with any of the groups the authed user is belongs to, 
-  and those shared directly with the authed user, from any owner, are returned.
+- if <owner> *is* specified, server will iterate through the owner's mailbox to discover all  
+  shares applicable to the authed user, instead of looking at any of the published share info.
+  All applicable shares will be returned, including any shares that are:
+        - shared with the account directly
+        - shared with any group(and parent groups) the account belongs. (*is* supported)
+        - shared with the cos assigned to the account.                  (*is* supported)
+        - shared with the domain this account is in.                    (*is* supported)
+        - shared with all authed users (i.e. all Zimbra users)          (*is* supported)
+        - shared with the public                                        (*is* supported)
+
 
     e.g. 
     1. What folders are shared with any of the groups I belong to?
@@ -2983,8 +2998,8 @@ Note:
                 </GetShareInfoRequest>
 
     2. What folders does a particular user share with me?
-        2a. include both folders directly shared with me and folders  
-            shared with any of the groups I belong to.
+        2a. include all folders directly shared with me and shared 
+            with an entry I can inherit shares from:
                 <GetShareInfoRequest>
                     <owner by="name">user1@example.com</owner> 
                 </GetShareInfoRequest>
@@ -2996,14 +3011,17 @@ Note:
                 </GetShareInfoRequest>
 
     3. Show me all folders shared directly with me by any one.
-           <GetShareInfoRequest>
-               <grantee type="usr">
-           </GetShareInfoRequest>
+           Not yet supported.
     
     
 <GetShareInfoResponse>
     [<share ownerId="{owner-id}" ownerName="{owner-name}" 
-            folderId="{folder-id}" folderPath="{folder-path}" 
+            folderId="{folder-id}" folderPath="{folder-path}" view="{default-type}" [mid="{mountpoint-id}"]
             rights="{rights}"
             granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
 </GetShareInfoResponse>
+
+mid="{mountpoint-id}" : returned if the share is already mounted.  
+                        It contain the folder id of the mountpoint in the local mailbox.  
+                        
+                        

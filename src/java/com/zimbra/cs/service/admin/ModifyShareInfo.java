@@ -58,16 +58,16 @@ public class ModifyShareInfo extends ShareInfoHandler {
         Element eShare = request.getElement(AdminConstants.E_SHARE);
         ShareInfo.Publishing.Action action = ShareInfo.Publishing.Action.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
             
-        String ownerAcctId = getOwner(zsc, eShare, prov, true).getId();
+        Account ownerAcct = getOwner(zsc, eShare, prov, true);
             
         Element eFolder = eShare.getElement(AdminConstants.E_FOLDER);
         String folderPath = eFolder.getAttribute(AdminConstants.A_PATH, null);
         String folderId = eFolder.getAttribute(AdminConstants.A_FOLDER, null);
         String folderIdOrPath = eFolder.getAttribute(AdminConstants.A_PATH_OR_ID, null);
             
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcctId, false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
         if (mbox == null)
-            throw ServiceException.FAILURE("mailbox not found for account " + ownerAcctId, null);
+            throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
         
         Folder folder = null;
             
@@ -85,8 +85,8 @@ public class ModifyShareInfo extends ShareInfoHandler {
             folder = null;
         }
         
-        List<ShareInfo.Publishing> si = ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry,
-                action, ownerAcctId, folder);
+        ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry,
+                action, ownerAcct, folder);
         
         Element response = zsc.createElement(AdminConstants.MODIFY_SHARE_INFO_RESPONSE);
         return response;

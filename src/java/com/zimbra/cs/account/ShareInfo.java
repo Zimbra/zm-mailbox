@@ -52,21 +52,23 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.mail.GetFolder;
-import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.mail.GetFolder.FolderNode;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -80,15 +82,49 @@ public class ShareInfo {
     private static final String MD_FOLDER_PATH  = "f";
     private static final String MD_FOLDER_DEFAULT_VIEW  = "v";
     
-    // note: this ket is set on the same Metadata object as 
+    // note: this key is set on the same Metadata object as the
     //       one set by ACL.  make sure name is not clashed.
-    private static final String MD_GRANTEE_NAME = "sign";  
+    private static final String MD_GRANTEE_NAME = "gn";  
     
-    // owner's zimbra id
+    // owner
     private String mOwnerAcctId;
+    private String mOwnerAcctEmail;
     
-    // folder id of shared folder
+    // folder 
     private int mFolderId;
+    private String mFolderPath;
+    private byte mFolderDefaultView;
+    
+    // rights
+    private short mRights;
+    
+    // grantee
+    private byte mGranteeType;
+    private String mGranteeId;
+    private String mGranteeName;
+    
+    // mountpointid
+    // Note: 
+    //    only used by zmprov/SoapProvisioning  to construct a 
+    //    ShareInfo from SOAP response to pass back just to be displayed
+    //  
+    //    NOT used by the any of the ShareInfo code on the server side  
+    //    On the server side, the mountpoint id is not part of the ShareInfo,
+    //    it is a property of the target account, and is encoded in the 
+    //    SOAP response by the visitor.
+    //    
+    private String mMountpointId_zmprov_only;
+    private void setMountpointId_zmprov_only(String mptId) {
+        mMountpointId_zmprov_only = mptId;
+    }
+    public String getMountpointId_zmprov_only() {
+        if (mMountpointId_zmprov_only == null)
+            return "";
+        else
+            return mMountpointId_zmprov_only;
+    }
+    ////////////////////////////////////
+    
     
     //
     // Grants that are applicable to the entry the share info is for.
@@ -96,14 +132,16 @@ public class ShareInfo {
     // It is a list(MetadataList) instead of a single object(Metadata) because the entry we are 
     // publishing share info for could belong to multiple groups, and each group can have different 
     // rights(e.g. r, w, a, ...) on the folder.  The effective folder rights is union of all grants. 
-    // But when we publish share info we probably need to state where is right from, thus we keep 
+    // But when we publish share info we probably want to record where a right is from.   Ee keep 
     // a list of all grants that apply to the entry we are publishing share info for.   In the future 
     // when we support share info from cos/domain/all authed users, they will be added in the list too.
     //
     // e.g. 
     //    - group dl2 is a member of group dl1
-    //    - owner shares /inbox to dl2 for rw rights 
-    //    - owner shares /inbox to dl1 for aid rights
+    //    - owner shares /Inbox to dl2 for rw rights 
+    //    - owner shares /Inbox to dl1 for aid rights
+    //    
+    //    If we are publishing share info on dl2, the mGrants will contain two shares for /Inbox
     //
     protected MetadataList mGrants;
     
@@ -118,6 +156,14 @@ public class ShareInfo {
         return mOwnerAcctId;
     }
     
+    protected void setOwnerAcctEmail(String ownerAcctEmail) {
+        mOwnerAcctEmail = ownerAcctEmail;
+    }
+
+    public String getOwnerAcctEmail() {
+        return mOwnerAcctEmail;
+    }
+    
     protected void setFolderId(int folderId) {
         mFolderId = folderId;
     }
@@ -126,6 +172,63 @@ public class ShareInfo {
         return mFolderId;
     }
 
+    protected void setFolderPath(String folderPath) {
+        mFolderPath = folderPath;
+    }
+    
+    public String getFolderPath() {
+        return mFolderPath;
+    }
+    
+    // returns the leaf folder name
+    public String getFolderName() {
+        String[] fn = mFolderPath.split("/");
+        return fn[fn.length - 1];
+    }
+            
+    protected void setFolderDefaultView(byte folderDefaultView) {
+        mFolderDefaultView = folderDefaultView;
+    }
+    
+    public String getFolderDefaultView() {
+        return MailItem.getNameForType(mFolderDefaultView);
+    }
+    
+    protected void setRights(short rights) {
+        mRights = rights;
+    }
+    
+    public String getRights() {
+        return ACL.rightsToString(mRights);
+    }
+    
+    public short getRightsCode() {
+        return mRights;
+    }
+    
+    protected void setGranteeType(byte granteeType) {
+        mGranteeType = granteeType;
+    }
+    
+    public String getGranteeType() {
+        return ACL.typeToString(mGranteeType);
+    }
+    
+    protected void setGranteeId(String granteeId) {
+        mGranteeId = granteeId;
+    }
+    
+    public String getGranteeId() {
+        return mGranteeId;
+    }
+    
+    protected void setGranteeName(String granteeName) {
+        mGranteeName = granteeName;
+    }
+    
+    public String getGranteeName() {
+        return mGranteeName;
+    }
     
     public boolean hasGrant() {
         return (mGrants != null);
@@ -178,7 +281,263 @@ public class ShareInfo {
         mGrants = new MetadataList(encodedMetadata);
     }
 
+    private static boolean matchesGranteeType(byte onTheGrant, byte wanted) {
+        return (wanted == 0 ) || (onTheGrant == wanted);
+    }
     
+    /*
+     * a convenient method to get the grantee name since Mailbox.ACL.Grant does not set 
+     * it.  This method is not meant to validate the grant.  If the grantee cannot be found
+     * just return empty string.
+     */
+    private static String granteeName(Provisioning prov, ACL.Grant grant) throws ServiceException {
+        String granteeId = grant.getGranteeId();
+        byte granteeType = grant.getGranteeType();
+        
+        String granteeName = "";
+        if (granteeType == ACL.GRANTEE_USER) {
+            Account acct = prov.get(AccountBy.id, granteeId);
+            if (acct != null)
+                granteeName = acct.getName();
+        } else if (granteeType == ACL.GRANTEE_GROUP) {
+            DistributionList dl = prov.get(DistributionListBy.id, granteeId);
+            if (dl != null)
+                granteeName = dl.getName();
+        } else if (granteeType == ACL.GRANTEE_COS) {
+            Cos cos = prov.get(CosBy.id, granteeId);
+            if (cos != null)
+                granteeName = cos.getName();
+        } else if (granteeType == ACL.GRANTEE_DOMAIN) {
+            Domain domain = prov.get(DomainBy.id, granteeId);
+            if (domain != null)
+                granteeName = domain.getName();
+        } else {
+            // GRANTEE_AUTHUSER, GRANTEE_PUBLIC, GRANTEE_GUEST
+            granteeName = ACL.typeToString(granteeType);  // good enough
+        }
+        return granteeName;
+    }
+
+    public static ShareInfo fromXML(Element eShare) throws ServiceException {
+        ShareInfo si = new ShareInfo();
+        
+        si.setOwnerAcctId(eShare.getAttribute(AccountConstants.A_OWNER_ID, null));
+        si.setOwnerAcctEmail(eShare.getAttribute(AccountConstants.A_OWNER_NAME, null));
+        si.setFolderId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
+        si.setFolderPath(eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null));
+        si.setFolderDefaultView(MailItem.getTypeForName(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null)));
+        si.setRights(ACL.stringToRights(eShare.getAttribute(AccountConstants.A_RIGHTS)));
+        si.setGranteeType(ACL.stringToType(eShare.getAttribute(AccountConstants.A_GRANTEE_TYPE)));
+        si.setGranteeId(eShare.getAttribute(AccountConstants.A_GRANTEE_ID, null));
+        si.setGranteeName(eShare.getAttribute(AccountConstants.A_GRANTEE_NAME, null));
+        
+        // and this ugly thing
+        si.setMountpointId_zmprov_only(eShare.getAttribute(AccountConstants.A_MOUNTPOINT_ID, null));
+        
+        return si;
+    }
+    
+    public void toXML(Element eShare, Integer mptId) {
+        eShare.addAttribute(AccountConstants.A_OWNER_ID,     getOwnerAcctId());
+        eShare.addAttribute(AccountConstants.A_OWNER_NAME,   getOwnerAcctEmail());
+        eShare.addAttribute(AccountConstants.A_FOLDER_ID,    getFolderId());
+        eShare.addAttribute(AccountConstants.A_FOLDER_PATH,  getFolderPath());
+        eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,    getFolderDefaultView());
+        eShare.addAttribute(AccountConstants.A_RIGHTS,       getRights());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE, getGranteeType());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_ID,   getGranteeId());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_NAME, getGranteeName());
+        
+        if (mptId != null)
+            eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
+    }
+    
+    private static Set<Folder> getVisibleFolders(OperationContext octxt, Mailbox mbox) throws ServiceException {
+        
+        // use the easy one first
+        Set<Folder> folders = mbox.getVisibleFolders(octxt);
+        
+        // if an admin  is doing this, it can see the entire mailbox of the owner, 
+        // and mbox.getVisibleFolders will return null
+        // in this case get the entire folder tree
+        
+        if (folders == null) {
+            GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mbox, null, false);
+            // flatten it
+            folders = flattenAndSortFolderTree(root);
+        } 
+        return folders;
+    }
+    
+    private static Set<Folder> flattenAndSortFolderTree(GetFolder.FolderNode root) {
+        Set<Folder> folders = new HashSet<Folder>();
+        flattenAndSortFolderTree(root, folders);
+        return folders;
+    }
+    
+    private static void flattenAndSortFolderTree(GetFolder.FolderNode node, Set<Folder> flattened) {
+        if (node.mFolder != null)
+            flattened.add(node.mFolder);
+        for (FolderNode subNode : node.mSubfolders)
+            flattenAndSortFolderTree(subNode, flattened);
+    }
+    
+    /*
+     * ================================
+     *          Visitor interface 
+     * ================================
+     */
+    public static interface Visitor {
+        public void visit(ShareInfo shareInfo) throws ServiceException;
+    }
+    
+    /*
+     * ===========================
+     *          MountedFolders
+     * ===========================
+     */
+    public static class MountedFolders {
+        
+        /*
+         * a map of mounted folders of the account(passed to the ctor) with:
+         *     key: {owner-acct-id}:{remote-folder-id}
+         *     value: {local-folder-id}
+         */
+        private Map<String, Integer> mMountedFolders;
+        
+        public MountedFolders(OperationContext octxt, Account acct) throws ServiceException {
+            mMountedFolders = getLocalMountpoints(octxt, acct);
+        }
+        
+        public Integer getLocalFolderId(String ownerAcctId, int remoteFolderId) {
+            if (mMountedFolders == null)
+                return null;
+            else {
+                String key = getKey(ownerAcctId, remoteFolderId);
+                return mMountedFolders.get(key);
+            }
+        }
+        
+        private String getKey(String ownerAcctId, int remoteFolderId) {
+            return ownerAcctId + ":" + remoteFolderId;
+        }
+        
+        /**
+         * returns a map of:
+         *     key: {owner-acct-id}:{remote-folder-id}
+         *     value: {local-folder-id}
+         *     
+         * @param octxt
+         * @param mbox
+         * @return
+         * @throws ServiceException
+         */
+        private Map<String, Integer> getLocalMountpoints(OperationContext octxt, Account acct) throws ServiceException {
+            if (octxt == null)
+                return null;
+            
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+            if (mbox == null)
+                throw ServiceException.FAILURE("mailbox not found for account " + acct.getId(), null);
+            
+            return getLocalMountpoints(octxt, mbox);
+            
+        }
+        
+        private Map<String, Integer> getLocalMountpoints(OperationContext octxt, Mailbox mbox) throws ServiceException {
+           
+            Map<String, Integer> mountpoints = new HashMap<String, Integer>();
+            
+            synchronized (mbox) {
+                // get the root node...
+                int folderId = Mailbox.ID_FOLDER_USER_ROOT;
+                Folder folder = mbox.getFolderById(octxt, folderId);
+
+                // for each subNode...
+                Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
+                getLocalMountpoints(folder, visibleFolders, mountpoints);
+            }
+            
+            return mountpoints;
+        }
+        
+        private void getLocalMountpoints(Folder folder, Set<Folder> visible, Map<String, Integer> mountpoints) throws ServiceException {
+            boolean isVisible = visible == null || visible.remove(folder);
+            if (!isVisible)
+                return;
+
+            // short-circuit if we know that this won't be in the output
+            List<Folder> subfolders = folder.getSubfolders(null);
+            if (!isVisible && subfolders.isEmpty())
+                return;
+
+            if (folder instanceof Mountpoint) {
+                Mountpoint mpt = (Mountpoint)folder;
+                String mid =  getKey(mpt.getOwnerId(), mpt.getRemoteId());
+                mountpoints.put(mid, mpt.getId());
+            }
+            
+            // if this was the last visible folder overall, no need to look at children
+            if (isVisible && visible != null && visible.isEmpty())
+                return;
+
+            // write the subfolders' data to the response
+            for (Folder subfolder : subfolders) {
+                getLocalMountpoints(subfolder, visible, mountpoints);
+            }
+        }
+    }
+    
+    
+    /*
+     * ===========================
+     *          Discover
+     * ===========================
+     */
+    public static class Discover extends ShareInfo {
+        
+        public static void discover(OperationContext octxt, Provisioning prov, Account targetAcct, 
+                byte granteeType, Account ownerAcct, Visitor visitor) throws ServiceException {
+
+            Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
+            if (ownerMbox == null)
+                throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
+               
+            Set<Folder> folders = getVisibleFolders(octxt, ownerMbox);
+            for (Folder folder : folders)
+                doDiscover(prov, targetAcct, granteeType, ownerAcct, folder, visitor);
+        }
+        
+        private static void doDiscover(Provisioning prov, Account targetAcct,
+                byte granteeType, Account ownerAcct, Folder folder, Visitor visitor) 
+            throws ServiceException {
+            
+            ACL acl = folder.getEffectiveACL();
+            
+            if (acl == null)
+                return;
+            
+            for (ACL.Grant grant : acl.getGrants()) {
+                if (grant.matches(targetAcct) && 
+                    matchesGranteeType(grant.getGranteeType(), granteeType)) {
+                    ShareInfo si = new ShareInfo();
+                    
+                    si.setOwnerAcctId(ownerAcct.getId());
+                    si.setOwnerAcctEmail(ownerAcct.getName());
+                    si.setFolderId(folder.getId());
+                    si.setFolderPath(folder.getPath());
+                    si.setFolderDefaultView(folder.getDefaultView());
+                    si.setRights(grant.getGrantedRights());
+                    si.setGranteeType(grant.getGranteeType());
+                    si.setGranteeId(grant.getGranteeId());
+                    si.setGranteeName(granteeName(prov, grant));
+
+                    visitor.visit(si);
+                }
+            }
+        }
+    }
+
     
     /*
      * ===========================
@@ -187,51 +546,33 @@ public class ShareInfo {
      */
     public static class Publishing extends ShareInfo {
         
-        public static List<ShareInfo.Publishing> publish(Provisioning prov, OperationContext octxt, 
-                NamedEntry publishingOnEntry, Publishing.Action action, String ownerAcctId, 
+        public static void publish(Provisioning prov, OperationContext octxt, 
+                NamedEntry publishingOnEntry, Publishing.Action action, Account ownerAcct, 
                 Folder folder) throws ServiceException {
-            
-            List<ShareInfo.Publishing> siList = new ArrayList<ShareInfo.Publishing>();
-            ShareInfo.Publishing si;
             
             if (folder == null) {
                 // no folder descriptor, do the entire folder tree
                 
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcctId, false);
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
                 if (mbox == null)
-                    throw ServiceException.FAILURE("mailbox not found for account " + ownerAcctId, null);
+                    throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
                 
-                GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mbox, null, false);
-                doPublish(siList, prov, octxt, publishingOnEntry, action, ownerAcctId, root);
+                Set<Folder> folders = getVisibleFolders(octxt, mbox);
+                for (Folder f : folders)
+                    doPublish(prov, publishingOnEntry, action, ownerAcct, f);
             } else {
-                si = doPublish(prov, octxt, publishingOnEntry, action, ownerAcctId, folder);
-                siList.add(si);
+                doPublish(prov, publishingOnEntry, action, ownerAcct, folder);
             }
-            
-            return siList;
         }
         
-        private static void doPublish(List<ShareInfo.Publishing> siList, 
-                Provisioning prov, OperationContext octxt, 
-                NamedEntry publishingOnEntry, Publishing.Action action, String ownerAcctId, 
-                GetFolder.FolderNode node) throws ServiceException  {
-            
-            if (node.mFolder != null) {
-                ShareInfo.Publishing si = doPublish(prov, octxt, 
-                        publishingOnEntry, action, ownerAcctId, node.mFolder);
-                siList.add(si);
-            }
-            for (FolderNode subNode : node.mSubfolders)
-                doPublish(siList, prov, octxt, publishingOnEntry, action, ownerAcctId, subNode);
-        }
-        
-        private static ShareInfo.Publishing doPublish(Provisioning prov, OperationContext octxt, 
-                NamedEntry publishingOnEntry, Publishing.Action action, String ownerAcctId, 
+        private static void doPublish(Provisioning prov, 
+                NamedEntry publishingOnEntry, Publishing.Action action, Account ownerAcct, 
                 Folder folder) throws ServiceException {
-            ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcctId, folder);
-            if (si.validateAndDiscoverGrants(octxt, publishingOnEntry, folder))
+            
+            ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcct, folder);
+            si.discoverGrants(folder, publishingOnEntry);
+            if (si.hasGrant())
                 si.persist(prov, publishingOnEntry);
-            return si;
         }
         
         public static enum Action {
@@ -248,52 +589,15 @@ public class ShareInfo {
         }
     
         private Action mAction;
-        private Publishing(Action action, String ownerAcctId, Folder folder) {
+        private Publishing(Action action, Account ownerAcct, Folder folder) {
             mAction = action;
-            setOwnerAcctId(ownerAcctId);
+            setOwnerAcctId(ownerAcct.getId());
+            setOwnerAcctEmail(ownerAcct.getName());
             setFolderId(folder.getId());
         }
             
         public Action getAction() {
             return mAction;
-        }
-
-
-
-        /**
-         * validate ownerId and folder, and if all is well discover all grants of the owner/folder that 
-         * match (i.e. are applicable to) the publishingOnEntry.
-         * 
-         * @param octxt operation context carrying the authed admin account credential
-         * @param publishingOnEntry
-         * @return true if the owner of the folder has any effective grant (note, a grant can be inherited 
-         *         from a super folder) that matches the entry we are publishing share info for,
-         *         false otherwise. 
-         * @throws ServiceException
-         */
-        public boolean validateAndDiscoverGrants(OperationContext octxt, NamedEntry publishingOnEntry, Folder folder) 
-            throws ServiceException {
-            
-            // validate
-            String ownerAcctId = getOwnerAcctId();
-            Account ownerAcct = Provisioning.getInstance().get(AccountBy.id, ownerAcctId);
-            
-            // sanity check, should not have come to here if owner does not exist
-            // note: to defned against harvest attak, do not throw NO_SUCH_ACCOUNT here 
-            if (ownerAcct == null)
-                throw ServiceException.FAILURE("internal error", null); 
-            
-            String ownerAcctEmail = ownerAcct.getName();
-            
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcctId, false);
-            if (mbox == null)
-                throw ServiceException.FAILURE("mailbox not found for account " + ownerAcctId, null);
-            
-            // done validating, owner OK, folder OK
-            // now, discover grants
-            discoverGrants(ownerAcctEmail, folder, publishingOnEntry);
-            
-            return hasGrant();
         }
     
         /**
@@ -304,7 +608,7 @@ public class ShareInfo {
          * @param publishingOnEntry
          * @throws ServiceException
          */
-        private void discoverGrants(String ownerAcctEmail, Folder folder, NamedEntry publishingOnEntry) throws ServiceException {
+        private void discoverGrants(Folder folder, NamedEntry publishingOnEntry) throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
             
             ACL acl = folder.getEffectiveACL();
@@ -313,7 +617,7 @@ public class ShareInfo {
                 return;
             
             for (ACL.Grant grant : acl.getGrants()) {
-                if (grantMatchesEntry(grant, publishingOnEntry)) {
+                if (matches(grant, publishingOnEntry)) {
                     if (mGrants == null) {
                         mGrants = new MetadataList();
                         
@@ -338,7 +642,7 @@ public class ShareInfo {
                          *       proxying to other host just to find the folder from folder id. 
                          */
                         Metadata md = new Metadata();
-                        md.put(MD_OWNER_EMAIL, ownerAcctEmail);
+                        md.put(MD_OWNER_EMAIL, getOwnerAcctEmail());
                         
                         // We record the folder path of the folder we are discovering shars for.
                         // It would be nice if we can know the folder id/path on the folder of 
@@ -346,7 +650,7 @@ public class ShareInfo {
                         // of the folder of the grant), but there is no convenient way to get it.
                         md.put(MD_FOLDER_PATH, folder.getPath());
                         
-                        // for the same reason, we encode the default view for the fodler in our metadata
+                        // for the same reason, we encode the default view for the folder in our metadata
                         md.put(MD_FOLDER_DEFAULT_VIEW, folder.getDefaultView());
                         
                         mGrants.add(md);
@@ -354,73 +658,33 @@ public class ShareInfo {
                     
                     Metadata metadata = grant.encode();
                     
-                    // yuck, ACL.Grant does *never* set the grantee name even there is an API.
+                    // ouch, ACL.Grant does not set the grantee name
                     // we do our own here
-                    metadata.put(MD_GRANTEE_NAME, getGranteeName(prov, grant));
+                    metadata.put(MD_GRANTEE_NAME, granteeName(prov, grant));
                     
                     mGrants.add(metadata);
                 }
             }
         }
+
         
-        /*
-         * just a courtesy method to get the grantee name since Mailbox.ACL.Grant does not set 
-         * it.  This method is not meant to validate the grant.  If the grantee cannot be found
-         * just return empty string.
-         */
-        private String getGranteeName(Provisioning prov, Grant grant) throws ServiceException {
+        private boolean matches(ACL.Grant grant, NamedEntry publishingOnEntry) throws ServiceException {
             String granteeId = grant.getGranteeId();
             byte granteeType = grant.getGranteeType();
             
-            String granteeName = "";
-            if (granteeType == ACL.GRANTEE_USER) {
-                Account acct = prov.get(AccountBy.id, granteeId);
-                if (acct != null)
-                    granteeName = acct.getName();
-            } else if (granteeType == ACL.GRANTEE_GROUP) {
-                DistributionList dl = prov.get(DistributionListBy.id, granteeId);
-                if (dl != null)
-                    granteeName = dl.getName();
-            } else {
-                // should never be here 
-                throw ServiceException.FAILURE("internale error", null);
-            }
-            return granteeName;
+            if (publishingOnEntry instanceof DistributionList) {
+                return (granteeId.equals(publishingOnEntry.getId()) ||
+                        Provisioning.getInstance().inDistributionList((DistributionList)publishingOnEntry, granteeId));
+            } else
+                throw ServiceException.FAILURE("internal", null); // can only publish on group for now
+
+            /*
+             * else if (publishingOnEntry instanceof Cos)
+             *     return grant.getGranteeId().equals(cos.getId());
+             * else if (publishingOnEntry instanceof domain)    
+             *     return grant.getGranteeId().equals(domain.getId());
+             */
         }
-    
-        /**
-         * returns if a grant matches the entry we are publishing share info for
-         * 
-         * a grant matches the publishingOnEntry if one of the conditions meet:
-         * 1. the grantee is the publishingOnEntry
-         * 2. the grantee is a group the publishingOnEntry is a member of
-         * 
-         * We do *not* support cos/domain/all authed users grantees for now.
-         * 
-         * @param grant
-         * @param publishingOnEntry
-         * @return
-         * @throws ServiceException
-         */
-        private boolean grantMatchesEntry(ACL.Grant grant, NamedEntry publishingOnEntry) 
-            throws ServiceException {
-            String granteeId = grant.getGranteeId();
-            byte granteeType = grant.getGranteeType();
-            
-            // for now, only user and group grantees are supported
-            if (granteeType == ACL.GRANTEE_USER)
-                return granteeId.equals(publishingOnEntry.getId());
-            else if (granteeType == ACL.GRANTEE_GROUP) {
-                if (publishingOnEntry instanceof Account)
-                    return Provisioning.getInstance().inDistributionList((Account)publishingOnEntry, granteeId);
-                else if (publishingOnEntry instanceof DistributionList) {
-                    return (granteeId.equals(publishingOnEntry.getId()) ||
-                           Provisioning.getInstance().inDistributionList((DistributionList)publishingOnEntry, granteeId));
-                }
-            }
-            return false;
-        }
-        
     
         /**
          * persists shareInfo in LDAP on the publishingOnEntry entry
@@ -471,48 +735,10 @@ public class ShareInfo {
      * ===========================
      */
     public static class Published extends ShareInfo { 
-        
-        private String mOwnerAcctEmail;
-        private String mFolderPath;
-        private byte mFolderDefaultView;
-        private short mRights;
-        private byte mGranteeType;
-        private String mGranteeId;
-        private String mGranteeName;
+
         
         private String mDigest; // for deduping
-        
-        public static interface Visitor {
-            public void visit(Published shareInfo) throws ServiceException;
-        }
-        
-        public static Published fromXML(Element eShare) throws ServiceException {
-            Published si = new Published();
-            
-            si.setOwnerAcctId(eShare.getAttribute(AccountConstants.A_OWNER_ID, null));
-            si.mOwnerAcctEmail = eShare.getAttribute(AccountConstants.A_OWNER_NAME, null);
-            si.setFolderId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
-            si.mFolderPath = eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null);
-            si.mFolderDefaultView = MailItem.getTypeForName(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null));
-            si.mRights = ACL.stringToRights(eShare.getAttribute(AccountConstants.A_RIGHTS));
-            si.mGranteeType = ACL.stringToType(eShare.getAttribute(AccountConstants.A_GRANTEE_TYPE));
-            si.mGranteeId = eShare.getAttribute(AccountConstants.A_GRANTEE_ID, null);
-            si.mGranteeName = eShare.getAttribute(AccountConstants.A_GRANTEE_NAME, null);
-            
-            return si;
-        }
-        
-        public void toXML(Element eShare) {
-            eShare.addAttribute(AccountConstants.A_OWNER_ID,     getOwnerAcctId());
-            eShare.addAttribute(AccountConstants.A_OWNER_NAME,   getOwnerAcctEmail());
-            eShare.addAttribute(AccountConstants.A_FOLDER_ID,    getFolderId());
-            eShare.addAttribute(AccountConstants.A_FOLDER_PATH,  getFolderPath());
-            eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,    getFolderDefaultView());
-            eShare.addAttribute(AccountConstants.A_RIGHTS,       getRights());
-            eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE, getGranteeType());
-            eShare.addAttribute(AccountConstants.A_GRANTEE_ID,   getGranteeId());
-            eShare.addAttribute(AccountConstants.A_GRANTEE_NAME, getGranteeName());
-        }
+
         
         private static List<Published> decodeMetadata(String encoded) throws ServiceException {
             List<Published> siList = new ArrayList<Published>();
@@ -521,7 +747,8 @@ public class ShareInfo {
             Published si = new Published(encoded);
             
             //
-            // split the dummy to multiple
+            // split the dummy to multiple, see comments on 
+            // "It is a list(MetadataList) instead of a single object(Metadata) because ..."
             //
             
             // data not btencoded in metadata
@@ -571,96 +798,63 @@ public class ShareInfo {
                 String granteeId, String granteeName) {
             
             setOwnerAcctId(ownerAcctId);
+            setOwnerAcctEmail(ownerAcctEmail);
             setFolderId(folderId);
-            mOwnerAcctEmail = ownerAcctEmail;
-            mFolderPath = folderPath;
-            mFolderDefaultView = folderDefaultView;
-            mRights = rights;
-            mGranteeType = granteeType;
-            mGranteeId = granteeId;
-            mGranteeName = granteeName;
+            setFolderPath(folderPath);
+            setFolderDefaultView(folderDefaultView);
+            setRights(rights);
+            setGranteeType(granteeType);
+            setGranteeId(granteeId);
+            setGranteeName(granteeName);
             
-            mDigest = mOwnerAcctEmail +
-                      mFolderPath +
-                      mRights + 
-                      ACL.typeToString(mGranteeType) +
-                      mGranteeId +
-                      mGranteeName;
+            mDigest = getOwnerAcctEmail() +
+                      getFolderPath() +
+                      getRightsCode() + 
+                      getGranteeType() +
+                      getGranteeId() +
+                      getGranteeName();
         }
-        
-        public String getOwnerAcctEmail() {
-            return mOwnerAcctEmail;
-        }
-        
-        public String getFolderPath() {
-            return mFolderPath;
-        }
-        
-        // returns the leave folder name
-        public String getFolderName() {
-            String[] fn = mFolderPath.split("/");
-            return fn[fn.length - 1];
-        }
-                
-        public String getFolderDefaultView() {
-            return MailItem.getNameForType(mFolderDefaultView);
-        }
-        
-        public String getRights() {
-            return ACL.rightsToString(mRights);
-        }
-        
-        public short getRightsCode() {
-            return mRights;
-        }
-        
-        public String getGranteeType() {
-            return ACL.typeToString(mGranteeType);
-        }
-        
-        public String getGranteeId() {
-            return mGranteeId;
-        }
-        
-        public String getGranteeName() {
-            return mGranteeName;
-        }
+
 
         
         private String getDigest() {
             return mDigest;
         }
         
-        public static void get(Account acct, String granteeType, Account owner, Visitor visitor) 
+        /**
+         * 
+         * @param acct
+         * @param granteeType  if not null, return only shares granted to the granteeType
+         * @param owner        if not null, return only shares granted to the owner
+         * @param visitor
+         * @throws ServiceException
+         */
+        public static void get(Provisioning prov, Account acct, byte granteeType, Account owner, Visitor visitor) 
             throws ServiceException {
             
             Set<String> visited = new HashSet<String>();
-            
-            byte gt;
-            if (granteeType == null)
-                gt = 0;
-            else {
-                gt = ACL.stringToType(granteeType);
-                if (gt != ACL.GRANTEE_USER && gt != ACL.GRANTEE_GROUP)
-                    throw ServiceException.INVALID_REQUEST("unsupported grantee type", null);
-            }
-            
-            Provisioning prov = Provisioning.getInstance();
     
-            if (gt == 0) {
-                // no grantee type specified, return both folders shared with the 
-                // account and all groups this account belongs to.
-                getShares(visitor, acct, owner, visited);
+            if (granteeType == 0) {
+                // no grantee type specified, return all published shares
                 
-                // call prov.getAclGroups instead of prov.getDistributionLists to be 
-                // consistant with get() for DL
+                // only group shares can be published for now, so just 
+                // retrieve the group shares
                 AclGroups aclGroups = prov.getAclGroups(acct, false); 
                 getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
                 
-            } else if (gt == ACL.GRANTEE_USER) {
-                getShares(visitor, acct, owner, visited);
+                /*
+                 * if we support publishing cos and domain shares, include them here
+                 */
+                // cos
+                // getSharesGrantedToGroupsCos(...);
                 
-            } else if (gt == ACL.GRANTEE_GROUP) {
+                // domain
+                // getSharesGrantedToDomain(...);
+                
+            } else if (granteeType == ACL.GRANTEE_USER) {
+                // cannot publish on account, be tolerant just return instead of throw
+                
+            } else if (granteeType == ACL.GRANTEE_GROUP) {
                 AclGroups aclGroups = prov.getAclGroups(acct, false); 
                 getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
                 
@@ -669,41 +863,28 @@ public class ShareInfo {
             }
         }
         
-        // for admin only
-        public static void get(Account acct, boolean directOnly, Account owner, Visitor visitor) 
-            throws ServiceException {
-            String granteeType = directOnly?"usr":null;
-            get(acct, granteeType, owner, visitor);
-        }
-        
-        // for admin only
-        public static void get(DistributionList dl, boolean directOnly, Account owner, Visitor visitor) 
+        // for admin only, like the above, also called for sending emails 
+        public static void get(Provisioning prov, DistributionList dl, Account owner, Visitor visitor) 
             throws ServiceException {
             
             Set<String> visited = new HashSet<String>();
-            
-            Provisioning prov = Provisioning.getInstance();
 
-            if (directOnly) {
-                getShares(visitor, dl, owner, visited);
+            // get shares published on the dl 
+            getShares(visitor, dl, owner, visited);
                 
-            } else {
-                getShares(visitor, dl, owner, visited);
+            // call prov.getAclGroups instead of prov.getDistributionLists
+            // because getAclGroups returns cached data, while getDistributionLists
+            // does LDAP searches each time
                 
-                // call prov.getAclGroups instead of prov.getDistributionLists
-                // because getAclGroups returns cached data, while getDistributionLists
-                // does LDAP searches each time
-                
-                if (!dl.isAclGroup())
-                    dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
-                AclGroups aclGroups = prov.getAclGroups(dl); 
-                getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
-                
-            } 
+            // get shares published on parents of this dl
+            if (!dl.isAclGroup())
+                dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
+            AclGroups aclGroups = prov.getAclGroups(dl); 
+            getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
         }
-    
-        private static void getSharesGrantedToGroups(Provisioning prov, Visitor visitor, AclGroups aclGroups, Account owner,
-                Set<String> visited) 
+
+        private static void getSharesGrantedToGroups(Provisioning prov, Visitor visitor, 
+                AclGroups aclGroups, Account owner, Set<String> visited) 
             throws ServiceException {
             
             /*
@@ -761,8 +942,8 @@ public class ShareInfo {
                          * dedup
                          * 
                          * It is possible that the same share is published on a group, and 
-                         * again on a sub group, and again on an account.  We return only 
-                         * one instance of all the identical published shares.
+                         * again on a sub group.  We return only  one instance of all the 
+                         * identical shares.
                          */
                         if (visited.contains(si.getDigest()))
                             continue;
@@ -770,7 +951,6 @@ public class ShareInfo {
                         visitor.visit(si);
                         visited.add(si.getDigest());
                     }
-                    
                     
                 } catch (ServiceException e) {
                     // probably encountered malformed share info, log and ignore
@@ -783,16 +963,16 @@ public class ShareInfo {
 
     /*
      * ===========================
-     *          Published
+     *      NotificationSender
      * ===========================
      */
     public static class NotificationSender {
         
-        private static class MailSenderVisitor implements Published.Visitor {
+        private static class MailSenderVisitor implements ShareInfo.Visitor {
             
-            List<Published> mShares = new ArrayList<Published>();
+            List<ShareInfo> mShares = new ArrayList<ShareInfo>();
             
-            public void visit(Published shareInfo) throws ServiceException {
+            public void visit(ShareInfo shareInfo) throws ServiceException {
                 mShares.add(shareInfo);
             }
             
@@ -806,7 +986,7 @@ public class ShareInfo {
                 sb.append(s);
             }
             
-            private String getRightsText(Published si, Locale locale) {
+            private String getRightsText(ShareInfo si, Locale locale) {
                 short rights = si.getRightsCode();
                 StringBuffer r = new StringBuffer();
                 if ((rights & ACL.RIGHT_READ) != 0)      appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionRead, locale));
@@ -822,7 +1002,7 @@ public class ShareInfo {
                 return r.toString();
             }
             
-            private String formatFolderDesc(Locale locale, Published si) {
+            private String formatFolderDesc(Locale locale, ShareInfo si) {
                 return "(" + L10nUtil.getMessage(MsgKey.shareInfoBodyFolder, locale, si.getFolderDefaultView()) + ")";
             }
             
@@ -830,7 +1010,7 @@ public class ShareInfo {
                 return L10nUtil.getMessage(key, locale) + ": " + value + (extra==null?"":" "+extra) + "\n";
             }
             
-            private void formatTextShare(StringBuilder sb, Locale locale, Published si) {
+            private void formatTextShare(StringBuilder sb, Locale locale, ShareInfo si) {
                 sb.append(formatTextShareInfo(MsgKey.shareInfoBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
                 sb.append(formatTextShareInfo(MsgKey.shareInfoBodyOwner, si.getOwnerAcctEmail(), locale, null));
                 sb.append(formatTextShareInfo(MsgKey.shareInfoBodyGrantee, si.getGranteeName(), locale, null));
@@ -848,7 +1028,7 @@ public class ShareInfo {
                 sb.append("\n\n");
                 
                 if (idx == null) {
-                    for (Published si : mShares) {
+                    for (ShareInfo si : mShares) {
                         formatTextShare(sb, locale, si);
                     }
                 } else 
@@ -865,7 +1045,7 @@ public class ShareInfo {
                        "</tr>\n";
             }
             
-            private void formatHtmlShare(StringBuilder sb, Locale locale, Published si) {
+            private void formatHtmlShare(StringBuilder sb, Locale locale, ShareInfo si) {
                 sb.append("<p>\n");
                 sb.append("<table border=\"0\">\n");
                 sb.append(formatHtmlShareInfo(MsgKey.shareInfoBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
@@ -886,7 +1066,7 @@ public class ShareInfo {
                 sb.append("\n");
                 
                 if (idx == null) {
-                    for (Published si : mShares) {
+                    for (ShareInfo si : mShares) {
                         formatHtmlShare(sb, locale, si);
                     }
                 } else
@@ -904,7 +1084,7 @@ public class ShareInfo {
                 </share>
                 
             */
-            private void formatXmlShare(StringBuilder sb, Locale locale, Published si) {
+            private void formatXmlShare(StringBuilder sb, Locale locale, ShareInfo si) {
                 
                 /* 
                  * from ZimbraWebClient/WebRoot/js/zimbraMail/share/model/ZmShare.js
@@ -928,7 +1108,7 @@ public class ShareInfo {
                 StringBuilder sb = new StringBuilder();
                 
                  if (idx == null) {
-                    for (Published si : mShares) {
+                    for (ShareInfo si : mShares) {
                         formatXmlShare(sb, locale, si);
                     }
                 } else
@@ -956,7 +1136,7 @@ public class ShareInfo {
             
             MailSenderVisitor visitor = new MailSenderVisitor();
             try {
-                Published.get(dl, false, null, visitor);
+                Published.get(prov, dl, null, visitor);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("failed to retrieve share info for dl: " + dl.getName(), e);
                 return;

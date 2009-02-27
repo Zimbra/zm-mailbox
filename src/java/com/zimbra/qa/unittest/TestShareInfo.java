@@ -119,7 +119,7 @@ public class TestShareInfo extends TestCase {
             mExpected.remove(esi);
         }
         
-        void verify(ShareInfo.Published shareInfo) throws ServiceException {
+        void verify(ShareInfo shareInfo) throws ServiceException {
             for (ExpectedShareInfo esi : mExpected) {
                 if (esi.isTheSame(shareInfo)) {
                     mExpected.remove(esi);
@@ -166,7 +166,7 @@ public class TestShareInfo extends TestCase {
                      copy.mGranteeName);
             }
             
-            boolean isTheSame(ShareInfo.Published shareInfo) throws ServiceException {
+            boolean isTheSame(ShareInfo shareInfo) throws ServiceException {
                 
                 if (!mOwnerAcctId.equals(shareInfo.getOwnerAcctId()))
                     return false;
@@ -206,14 +206,14 @@ public class TestShareInfo extends TestCase {
         }
     }
     
-    private static class VerifyPublishedVisitor implements ShareInfo.Published.Visitor {
+    private static class VerifyPublishedVisitor implements ShareInfo.Visitor {
         Expected mExpected;
         
         VerifyPublishedVisitor(Expected expected) {
             mExpected = expected;
         }
         
-        public void visit(ShareInfo.Published shareInfo) throws ServiceException {
+        public void visit(ShareInfo shareInfo) throws ServiceException {
             mExpected.verify(shareInfo);
         }
 
@@ -228,11 +228,11 @@ public class TestShareInfo extends TestCase {
         VerifyPublishedVisitor visitor;
         
         visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        mProv.getShareInfo(publishingEntry, true, ownerForGet, visitor);
+        mProv.getShareInfo(publishingEntry, "usr", ownerForGet, visitor);
         expectedDirectOnly.OK();
         
         visitor = new VerifyPublishedVisitor(expectedIncludeAll);
-        mProv.getShareInfo(publishingEntry, false, ownerForGet, visitor);
+        mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
         expectedDirectOnly.OK();
     }
     
@@ -244,12 +244,8 @@ public class TestShareInfo extends TestCase {
         
         VerifyPublishedVisitor visitor;
         
-        visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        mProv.getShareInfo(publishingEntry, true, ownerForGet, visitor);
-        expectedDirectOnly.OK();
-        
         visitor = new VerifyPublishedVisitor(expectedIncludeAll);
-        mProv.getShareInfo(publishingEntry, false, ownerForGet, visitor);
+        mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
         expectedDirectOnly.OK();
     }
     
@@ -457,27 +453,42 @@ public class TestShareInfo extends TestCase {
         VerifyPublishedVisitor visitor;
         
         visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        mProv.getShareInfo(acctInDl, true, owner1, visitor);
+        mProv.getShareInfo(acctInDl, "usr", owner1, visitor);
         expectedDirectOnly.OK();
         
         visitor = new VerifyPublishedVisitor(expectedAll);
-        mProv.getShareInfo(acctInDl, false, owner1, visitor);
+        mProv.getShareInfo(acctInDl, null, owner1, visitor);
         expectedDirectOnly.OK(); 
     }
-    
-    /*
-zmprov cdl dl@phoebe.mac
 
+    public static void main(String[] args) throws Exception {
+        TestUtil.cliSetup();  // will set SoapProvisioning
+        
+        init();
+
+        TestUtil.runTest(TestShareInfo.class);
+    }
+}
+
+
+/*
+ * 
+ * 
 zmmailbox -z -m user1 cf /Inbox/foo
 zmmailbox -z -m user1 cf /Inbox/foo/bar
 
-zmmailbox -z -m user1 mfg /Inbox group dl@phoebe.mac rw
-zmmailbox -z -m user1 mfg /Inbox/foo group dl@phoebe.mac r
-zmmailbox -z -m user1 mfg /Inbox/foo/bar group dl@phoebe.mac r
-zmmailbox -z -m user1 mfg /Calendar group dl@phoebe.mac a
+zmprov cdl dl@phoebe.mac
+zmprov adlm dl@phoebe.mac user2@phoebe.mac
+
+zmmailbox -z -m user1 mfg /Inbox         group dl@phoebe.mac rw
+zmmailbox -z -m user1 mfg /Calendar      group dl@phoebe.mac arw
+zmmailbox -z -m user1 mfg /Sent          account user2@phoebe.mac ar
+zmmailbox -z -m user1 mfg /Inbox/foo/bar account user3@phoebe.mac cdwr
+
+zmmailbox -z -m user2 cm /user1s-cal user1 /Calendar
 
 zmprov mdlsi + dl@phoebe.mac user1@phoebe.mac
-zmprov gdlsi dl@phoebe.mac 0
+zmprov gasi user2@phoebe.mac 0
 
 
 
@@ -496,13 +507,5 @@ zmprov masi + user2 user1 /Sent
 
 zmprov gasi user2 0
 
-    */
+*/
 
-    public static void main(String[] args) throws Exception {
-        TestUtil.cliSetup();  // will set SoapProvisioning
-        
-        init();
-
-        TestUtil.runTest(TestShareInfo.class);
-    }
-}

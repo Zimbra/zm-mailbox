@@ -211,7 +211,7 @@ public class ACL {
         /** Returns whether this grant applies to the given {@link Account}.
          *  If <tt>acct</tt> is <tt>null</tt>, only return
          *  <tt>true</tt> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
-        private boolean matches(Account acct) throws ServiceException {
+        public boolean matches(Account acct) throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
             if (acct == null)
                 return mType == ACL.GRANTEE_PUBLIC;

@@ -1844,12 +1844,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public void getShareInfo(Account acct, boolean directOnly, Account owner, 
+    public void getShareInfo(Account acct, String granteeType, Account owner, 
             ShareInfo.Published.Visitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public void getShareInfo(DistributionList dl, boolean directOnly, Account owner,
+    public void getShareInfo(DistributionList dl, String granteeType, Account owner,
             ShareInfo.Published.Visitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }

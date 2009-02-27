@@ -16,18 +16,21 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -49,20 +52,34 @@ public class GetShareInfo extends ShareInfoHandler {
         
         checkShareInfoRight(zsc, prov, taregtEntry);
         
-        Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
-        boolean directOnly = eGrantee.getAttributeBool(AdminConstants.A_DIRECT_ONLY);
-        
-        Account ownerAcct = getOwner(zsc, request, prov, false);
-        
         Element response = zsc.createElement(AdminConstants.GET_SHARE_INFO_RESPONSE);
-        ShareInfoVisitor visitor = new com.zimbra.cs.service.account.GetShareInfo.ShareInfoVisitor(prov, response);
-        
+
+        // just call the account namepspace method
         if (taregtEntry instanceof Account)
-            prov.getShareInfo((Account)taregtEntry, directOnly, ownerAcct, visitor);
-        else if (taregtEntry instanceof DistributionList)
-            prov.getShareInfo((DistributionList)taregtEntry, directOnly, ownerAcct, visitor);
-        else
-            throw ServiceException.INVALID_REQUEST("unsupported target type", null);
+            com.zimbra.cs.service.account.GetShareInfo.doGetShareInfo(zsc, context, (Account)taregtEntry, request, response);
+        
+        else if (taregtEntry instanceof DistributionList) {
+            Account owner = null;
+            Element eOwner = request.getOptionalElement(AccountConstants.E_OWNER);
+            if (eOwner != null) {
+                AccountBy acctBy = AccountBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
+                String key = eOwner.getText();
+                owner = prov.get(acctBy, key);
+                
+                // in the account namespace GetShareInfo
+                // to defend against harvest attacks return "no shares" instead of error 
+                // when an invalid user name/id is used.
+                //
+                // this is the admin namespace GetShareInfo, we want to let the admin know if 
+                // the owner name is bad
+                if (owner == null)
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(key);
+            }
+            
+            ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, null);
+            ShareInfo.Published.get(prov, (DistributionList)taregtEntry, owner, visitor);
+            visitor.finish();
+        }
         
         return response;
     }

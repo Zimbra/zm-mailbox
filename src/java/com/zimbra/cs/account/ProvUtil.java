@@ -340,7 +340,7 @@ public class ProvUtil implements DebugListener {
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
-        GET_ACCOUNT_SHARE_INFO("getAccountShareInfo", "gasi", "{account-name@domain|id} {0|1 (direct only - whether to return only shares directly published on this account entry or also shares published on all groups this account belongs to)} [{owner-name|owner-id}]", Category.SHARE, 2, 3),
+        GET_ACCOUNT_SHARE_INFO("getAccountShareInfo", "gasi", "{account-name@domain|id} [{grantee-type} (usr|grp|cos|dom|all|pub, if '' return shares granted to too any grantee types)] [{owner-name|owner-id}]", Category.SHARE, 1, 3),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -363,7 +363,7 @@ public class ProvUtil implements DebugListener {
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
-        GET_DISTRIBUTION_LIST_SHARE_INFO("getDistributionListShareInfo", "gdlsi", "{dl-name@domain|id} {0|1 (direct only - whether to return only shares directly published on this dl entry or also shares published on all groups this dl belongs to)} [{owner-name|owner-id}]", Category.SHARE, 2, 3),
+        GET_DISTRIBUTION_LIST_SHARE_INFO("getDistributionListShareInfo", "gdlsi", "{dl-name@domain|id} [{owner-name|owner-id}]", Category.SHARE, 1, 2),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
         GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5),
@@ -386,7 +386,7 @@ public class ProvUtil implements DebugListener {
         INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{domain} [{name@domain}]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"), 
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
-        MODIFY_ACCOUNT_SHARE_INFO("modifyAccountShareInfo", "masi", "{+|-} {account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 4),
+        // MODIFY_ACCOUNT_SHARE_INFO("modifyAccountShareInfo", "masi", "{+|-} {account-name@domain|id} {owner-name|owner-id} {folder-path|folder-id}", Category.SHARE, 3, 4),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
         MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
@@ -930,9 +930,11 @@ public class ProvUtil implements DebugListener {
         case SEARCH_CALENDAR_RESOURCES:
             doSearchCalendarResources(args);
             break;
+        /*    
         case MODIFY_ACCOUNT_SHARE_INFO:
             doModifyAccountShareInfo(args);
             break;
+        */    
         case MODIFY_DISTRIBUTION_LIST_SHARE_INFO:
             doModifyDistributionListShareInfo(args);
             break;
@@ -1320,9 +1322,9 @@ public class ProvUtil implements DebugListener {
         return new ShareInfoArgs(action, ownerAcctId, folderPathOrId);
     }
     
-    private static class ShareInfoVisitor implements ShareInfo.Published.Visitor {
+    private static class ShareInfoVisitor implements ShareInfo.Visitor {
         
-        private static final String mFormat = "%-36.36s %-20.20s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-36.36s %-20.20s\n";
+        private static final String mFormat = "%-36.36s %-20.20s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-20.20s\n";
         
         private static void printHeadings() {
             System.out.printf(mFormat, 
@@ -1332,23 +1334,25 @@ public class ProvUtil implements DebugListener {
                               "folder path",
                               "view",
                               "rights",
+                              "mid",
                               "gt",
                               "grantee id",
                               "grantee name");
             
             System.out.printf(mFormat,
-                              "------------------------------------",
-                              "--------------------",
-                              "-----",
-                              "--------------------",
-                              "----------",
-                              "----------",
-                              "-----",
-                              "------------------------------------",
-                              "--------------------");
+                              "------------------------------------",      // owner id
+                              "--------------------",                      // owner name
+                              "-----",                                     // folder id
+                              "--------------------",                      // folder path
+                              "----------",                                // default view
+                              "----------",                                // rights
+                              "-----",                                     // mountpoint id if mounted
+                              "-----",                                     // grantee type 
+                              "------------------------------------",      // grantee id
+                              "--------------------");                     // grantee name
         }
         
-        public void visit(ShareInfo.Published shareInfo) throws ServiceException {
+        public void visit(ShareInfo shareInfo) throws ServiceException {
             System.out.printf(mFormat, 
                     shareInfo.getOwnerAcctId(),
                     shareInfo.getOwnerAcctEmail(),
@@ -1356,51 +1360,48 @@ public class ProvUtil implements DebugListener {
                     shareInfo.getFolderPath(),
                     shareInfo.getFolderDefaultView(),
                     shareInfo.getRights(),
+                    shareInfo.getMountpointId_zmprov_only(),
                     shareInfo.getGranteeType(),
                     shareInfo.getGranteeId(),
                     shareInfo.getGranteeName());                        
         }
     };
     
-    /*
-     * "0" -> false
-     * "1" -> true
-     */
-    private boolean parseZeroOne(String zeroOne) throws ServiceException {
-        if (zeroOne.equals("0"))
-            return false;
-        else if (zeroOne.equals("1"))
-            return true;
-        else
-            throw ServiceException.INVALID_REQUEST("invalid arg for the directOnly flag", null);
-    }
-    
     private void doGetAccountShareInfo(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        
         String key = args[1];
         Account acct = lookupAccount(key);
         
-        boolean directOnly = parseZeroOne(args[2]);
+        String granteeType = null;
+        if (args.length > 2) {
+            granteeType = args[2];
+            if (granteeType.length() == 0)
+                granteeType = null;
+        }
         
         Account owner = null;
-        if (args.length == 4)
+        if (args.length > 3)
             owner = lookupAccount(args[3]);
         
         ShareInfoVisitor.printHeadings();
-        mProv.getShareInfo(acct, directOnly, owner, new ShareInfoVisitor()); 
+        mProv.getShareInfo(acct, granteeType, owner, new ShareInfoVisitor()); 
     }
     
     private void doGetDistributionListShareInfo(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        
         String key = args[1];
         DistributionList dl = lookupDistributionList(key);
         
-        boolean directOnly = parseZeroOne(args[2]);
-        
         Account owner = null;
-        if (args.length == 4)
-            owner = lookupAccount(args[3]);
+        if (args.length > 2)
+            owner = lookupAccount(args[2]);
         
         ShareInfoVisitor.printHeadings();
-        mProv.getShareInfo(dl, directOnly, owner, new ShareInfoVisitor()); 
+        mProv.getShareInfo(dl, null, owner, new ShareInfoVisitor()); 
     }
     
     

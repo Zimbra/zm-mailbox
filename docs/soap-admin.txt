@@ -2176,22 +2176,23 @@ note: this request is by default proxied to the owner's home server
 <GetShareInfoRequest>
     [<account by="id|name|foreignPrincipal">...</account>]
     [<dl by="id|name">...</dl>]
-    [<grantee directOnly="{direct-only}">]
+    [<grantee type="{grantee_type}">]
     [<owner by="{owner-by}">...</owner>]
 </GetShareInfoRequest>
 
 Notes:
     - only one of <account> or <dl> can be present
-    - {direct-only} = 0 | 1 
-                      whether to return only shares directly published on this entry or also shares published on all groups this entry belongs to
-                      0 - return shares directly published on this entry and shares published on all groups this entry belongs to
-                      1 - return only shares directly published on this entry
-                      
-    - if <owner> is specified, returns only shares owned by the owner
+    - if <account> is specified, this command is equivalent to the account namespace GetShareInfoRequest
+    - see GetShareInfoRequest in soap.txt
     
 <GetShareInfoResponse>
     [<share ownerId="{owner-id}" ownerName="{owner-name}" 
-            folderId="{folder-id}" folderPath="{folder-path}" 
+            folderId="{folder-id}" folderPath="{folder-path}" view="{default-type}" [mid="{mountpoint-id}"]
             rights="{rights}"
             granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
 </GetShareInfoResponse>
+
+mid="{mountpoint-id}" : returned if the share is already mounted.  
+                        It contain the folder id of the mountpoint in the local mailbox.  
+                        
+                        
