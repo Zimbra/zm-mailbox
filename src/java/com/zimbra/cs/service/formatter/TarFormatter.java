@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -86,11 +87,14 @@ import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.mail.ImportContacts;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.wiki.Wiki;
 
@@ -1195,6 +1199,7 @@ public class TarFormatter extends Formatter {
             int idx = name.lastIndexOf('/');
             MailItem newItem = null, oldItem;
             OperationContext oc = context.opContext;
+            BufferedReader reader;
             byte type, view;
 
             if (idx == -1) {
@@ -1204,7 +1209,11 @@ public class TarFormatter extends Formatter {
                 file = name.substring(idx + 1);
                 dir = name.substring(0, idx + 1);
             }
-            if (file.endsWith(".eml")) {
+            if (file.endsWith(".csv") || file.endsWith(".vcf")) {
+                defaultFldr = Mailbox.ID_FOLDER_CONTACTS;
+                type = MailItem.TYPE_CONTACT;
+                view = Folder.TYPE_CONTACT;
+            } else if (file.endsWith(".eml")) {
                 defaultFldr = Mailbox.ID_FOLDER_INBOX;
                 type = MailItem.TYPE_MESSAGE;
                 view = Folder.TYPE_MESSAGE;
@@ -1218,10 +1227,6 @@ public class TarFormatter extends Formatter {
                     type = MailItem.TYPE_APPOINTMENT;
                     view = Folder.TYPE_APPOINTMENT;
                 }
-            } else if (file.endsWith(".vcf")) {
-                defaultFldr = Mailbox.ID_FOLDER_CONTACTS;
-                type = MailItem.TYPE_CONTACT;
-                view = Folder.TYPE_CONTACT;
             } else if (file.endsWith(".wiki")) {
                 defaultFldr = Mailbox.ID_FOLDER_NOTEBOOK;
                 type = MailItem.TYPE_WIKI;
@@ -1248,8 +1253,8 @@ public class TarFormatter extends Formatter {
             case MailItem.TYPE_TASK:
                 boolean continueOnError = context.ignoreAndContinueOnError();
                 boolean preserveExistingAlarms = context.preserveAlarms();
-                Reader reader = new InputStreamReader(tis, UTF8);
                 
+                reader = new BufferedReader(new InputStreamReader(tis, UTF8));
                 try {
                     if (te.getSize() <=
                         LC.calendar_ics_import_full_parse_max_size.intValue()) {
@@ -1270,19 +1275,25 @@ public class TarFormatter extends Formatter {
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                List<VCard> cards = VCard.parseVCard(new String(
-                    readTarEntry(tis, te), UTF8));
-                
-                if (cards == null || cards.size() == 0 ||
-                    (cards.size() == 1 && cards.get(0).fields.isEmpty())) {
-                    addError(errs, name, "no contact fields found in vcard");
-                    return;
-                }
-                for (VCard vcf : cards) {
-                    if (vcf.fields.isEmpty())
-                        continue;
-                    mbox.createContact(oc, vcf.asParsedContact(), fldr.getId(),
-                        null);
+                if (file.endsWith(".csv")) {
+                    reader = new BufferedReader(new InputStreamReader(tis, UTF8));
+                    ImportContacts.ImportCsvContacts(oc, context.targetMailbox,
+                        new ItemId(fldr), ContactCSV.getContacts(reader, null));
+                } else {
+                    List<VCard> cards = VCard.parseVCard(new String(
+                        readTarEntry(tis, te), UTF8));
+                    
+                    if (cards == null || cards.size() == 0 ||
+                        (cards.size() == 1 && cards.get(0).fields.isEmpty())) {
+                        addError(errs, name, "no contact fields found in vcard");
+                        return;
+                    }
+                    for (VCard vcf : cards) {
+                        if (vcf.fields.isEmpty())
+                            continue;
+                        mbox.createContact(oc, vcf.asParsedContact(),
+                            fldr.getId(), null);
+                    }
                 }
                 break;
             case MailItem.TYPE_DOCUMENT:
