@@ -219,6 +219,8 @@ public class NativeFormatter extends Formatter {
     public static void sendbackOriginalDoc(MimePart mp, String contentType, String defaultCharset, HttpServletRequest req, HttpServletResponse resp)
     throws IOException, MessagingException {
         String enc = mp.getEncoding();
+        if (enc != null)
+            enc = enc.toLowerCase();
         long size = enc == null || enc.equals("7bit") || enc.equals("8bit") || enc.equals("binary") ? mp.getSize() : 0;
         sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), size, req, resp);
     }
