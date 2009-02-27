@@ -460,7 +460,6 @@ public class AdminConstants {
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
-    public static final String A_DIRECT_ONLY = "directOnly";
     public static final String A_ID = "id";
     public static final String A_MAX_RESULTS = "maxResults";
     public static final String A_LIMIT = "limit";

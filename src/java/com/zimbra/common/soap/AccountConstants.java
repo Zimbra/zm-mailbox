@@ -179,6 +179,7 @@ public class AccountConstants {
     public static final String A_OWNER_ID = "ownerId";
     public static final String A_OWNER_NAME = "ownerName";
     public static final String A_RIGHTS = "rights";
+    public static final String A_MOUNTPOINT_ID = "mid";
 
     // calendar resource search
     public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
