@@ -16,6 +16,7 @@ yahoo-csv
 thunderbird-csv
 outlook-2000-csv
 outlook-2003-csv
+gmail-csv
 
 type attribute:
 
@@ -289,6 +290,7 @@ translate the value of into Zimbra tag.
         <column name="Middle Name" field="middleName"/>
         <column name="Last Name" field="lastName"/>
         <column name="Suffix" field="nameSuffix"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
         <column name="Company" field="company"/>
         <column name="Department" field="department"/>
         <column name="Job Title" field="jobTitle"/>
@@ -474,7 +476,7 @@ translate the value of into Zimbra tag.
         <column name="Other Fax" field="otherFax"/>
         <column name="Other Phone" field="otherPhone"/>
         <column name="Pager" field="pager"/>
-        <column name="E-mail Address" field="email"/>
+        <column name="E-mail" field="email"/>
         <column name="E-mail 2" field="email2"/>
         <column name="E-mail 3" field="email3"/>
         <column name="Notes" field="notes"/>
