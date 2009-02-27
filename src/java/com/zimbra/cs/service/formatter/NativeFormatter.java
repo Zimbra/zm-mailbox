@@ -112,6 +112,9 @@ public class NativeFormatter extends Formatter {
             handleMessagePart(context, mp, msg);
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+            long size = msg.getSize();
+            if (size > 0)
+                context.resp.setContentLength((int)size);
             InputStream is = msg.getContentStream();
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
@@ -184,9 +187,9 @@ public class NativeFormatter extends Formatter {
             String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
             if (neuter)
-            	sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, context.req, context.resp);
+            	sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
             else
-            	sendbackBinaryData(context.req, context.resp, is, null, doc.getName());
+            	sendbackBinaryData(context.req, context.resp, is, null, doc.getName(), doc.getSize());
         }
     }
     
@@ -215,12 +218,18 @@ public class NativeFormatter extends Formatter {
 
     public static void sendbackOriginalDoc(MimePart mp, String contentType, String defaultCharset, HttpServletRequest req, HttpServletResponse resp)
     throws IOException, MessagingException {
-        sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), req, resp);
+        String enc = mp.getEncoding();
+        long size = enc == null || enc.equals("7bit") || enc.equals("8bit") || enc.equals("binary") ? mp.getSize() : 0;
+        sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), size, req, resp);
     }
 
     public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc,
-                                           HttpServletRequest req, HttpServletResponse resp)
-    throws IOException {
+        HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        sendbackOriginalDoc(is, contentType, defaultCharset, filename, desc, 0, req, resp);
+    }
+    
+    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc, long size,
+        HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
         disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
 
@@ -240,9 +249,11 @@ public class NativeFormatter extends Formatter {
             } else {
                 content = HtmlDefang.defang(is, false);
             }
+            if (content.length() > 0)
+                resp.setContentLength(content.length());
             resp.getWriter().write(content);
         } else {
-            sendbackBinaryData(req, resp, is, disp, filename);
+            sendbackBinaryData(req, resp, is, disp, filename, size);
         }
     }
 
@@ -299,7 +310,7 @@ public class NativeFormatter extends Formatter {
         { '<', 'S', 'C', 'R', 'I', 'P', 'T' } 
     };
 
-    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename) throws IOException {
+    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename, long size) throws IOException {
     	if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
@@ -340,6 +351,8 @@ public class NativeFormatter extends Formatter {
             String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd);
         }
+        if (size > 0)
+            resp.setContentLength((int)size);
         ByteUtil.copy(pis, true, resp.getOutputStream(), false);
     }
 }
