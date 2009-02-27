@@ -109,8 +109,11 @@ public class PreAuthServlet extends ZimbraServlet {
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
             String rawAuthToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);
             AuthToken authToken = null;
-            if (rawAuthToken != null)
+            if (rawAuthToken != null) {
                 authToken = AuthProvider.getAuthToken(rawAuthToken);
+                if (authToken == null)
+                    throw new AuthTokenException("unable to get auth token from " + PARAM_AUTHTOKEN);
+            }
 
             if (isRedirect.equals("1") && rawAuthToken != null) {
                 setCookieAndRedirect(req, resp, authToken);

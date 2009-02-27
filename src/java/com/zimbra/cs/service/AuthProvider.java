@@ -360,7 +360,7 @@ public abstract class AuthProvider {
             } catch (AuthProviderException e) {
                 // if there is no auth data for this provider, log and continue with next provider
                 if (e.canIgnore())
-                    logger().debug(ap.getName() + ":" + e.getMessage());
+                    logger().warn(ap.getName() + ":" + e.getMessage());
                 else
                     throw new AuthTokenException("auth provider error", e);
             } catch (AuthTokenException e) {
@@ -371,6 +371,7 @@ public abstract class AuthProvider {
         }
         
         // there is no auth data for any of the enabled providers
+        logger().error("unable to get AuthToken from encoded " + encoded);
         return null;
     }
     
