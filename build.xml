@@ -1733,27 +1733,28 @@
         <antcall target="server2-provision-ldap"/>
     </target>
 	
+	
+	<!-- ========================================================= -->
+	<!--                          rights                           -->
+	<!-- ========================================================= -->
+	
     <target name="generate-rights-xml" depends="set-buildinfo-vars,compile">
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
-            failonerror="true">
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
         </java>
     </target>
 	
     <target name="generate-rights-java" depends="set-buildinfo-vars,compile">
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
-            failonerror="true">
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
         </java>
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
-            failonerror="true">
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genAdminRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/AdminRights.java"/>
         </java>
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path"
-            failonerror="true">
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/UserRights.java"/>
         </java>
@@ -1763,6 +1764,13 @@
 		<antcall target="generate-rights-xml"/>
 		<antcall target="generate-rights-java"/>
     </target>
+	
+	<target name="generate-rights-txt">
+        <antcall target="zmprov"> 
+            <param name="args" value="grd"/>
+	        <param name="output" value="docs/rights.txt"/>
+        </antcall>
+	</target>
 	
 	<target name="refresh-rights">
 		<antcall target="stop-webserver"/>
@@ -1779,13 +1787,7 @@
         </copy>
 		
 		<antcall target="start-webserver"/>
-	</target>
-	
-	<target name="zmprov">
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="${args}"/>
-        </java>
-    </target>	
+	</target>	
 	
 	<property name="admin-name" value="admin@${defaultdomain.name}"/>
 	
@@ -1831,5 +1833,12 @@
             <param name="args" value="ca ${admin-name} test123 zimbraIsAdminAccount TRUE"/>
         </antcall>
     </target>
+	
+    <target name="zmprov">
+    	<echo>zmprov ${args}  (output=${output})</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${output}">
+            <arg line="${args}"/>
+        </java>
+	</target>
 	
 </project>

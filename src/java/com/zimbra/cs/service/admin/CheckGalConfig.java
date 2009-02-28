@@ -85,7 +85,7 @@ public class CheckGalConfig extends AdminDocumentHandler {
         relatedRights.add(Admin.R_checkExternalGALConfig);
         notes.add(Admin.R_checkExternalGALConfig.getName() + 
                 " is a domain right.  However CheckExchangeAuth does not take a " + 
-                "domain, thus the right has to be granted on the globla grant " +
+                "domain, thus the right has to be granted on the global grant " +
                 "to be effective.");
     }
 }

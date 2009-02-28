@@ -133,7 +133,7 @@ public class InitNotebook extends AdminDocumentHandler {
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_createAccount);
         notes.add("Needs rigths to set " + Provisioning.A_zimbraNotebookAccount +
-                "on domain/global confif.  If needs to create the wiki account, " +
+                "on domain/global config.  If needs to create the wiki account, " +
                 "need the " + Admin.R_createAccount.getName() + " for the domain in" + 
                 "which the wiki account is to be created; and needs rights to set " +
                 Provisioning.A_zimbraHideInGal + " and " + Provisioning.A_zimbraIsSystemResource +

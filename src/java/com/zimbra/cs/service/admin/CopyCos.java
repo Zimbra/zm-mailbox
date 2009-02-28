@@ -69,6 +69,6 @@ public class CopyCos extends AdminDocumentHandler {
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_createCos);
         relatedRights.add(Admin.R_getCos);
-        notes.add("Need the " + Admin.R_getCos + " right on the source cos");
+        notes.add("Need the " + Admin.R_getCos + " right on the source cos.");
     }
 }

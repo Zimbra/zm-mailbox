@@ -204,9 +204,6 @@ if <grantee> is omitted, it means the account identified by the auth token.
                </default>]
           </a>+
       </getAttrs>
-      [<adminCosoleUIComp>
-          <a>...<a>+
-      <adminCosoleUIComp>]
   </target>
 </GetEffectiveRightsResponse>   
 
@@ -328,11 +325,11 @@ e.g. 2 creating a server:
       returns the union of the authed admin account's zimbraAdminConsoleUIComponents 
       values and the values on all admin groups the admin account belongs.
                     
-<GetAdminCosoleUICompRequest/>
+<GetAdminConsoleUICompRequest/>
 
-<GetAdminCosoleUICompResponse>
+<GetAdminConsoleUICompResponse>
   <a>...</a>+
-</GetAdminCosoleUICompResponse>
+</GetAdminConsoleUICompResponse>
          
 ----------------------------------------------------------
 

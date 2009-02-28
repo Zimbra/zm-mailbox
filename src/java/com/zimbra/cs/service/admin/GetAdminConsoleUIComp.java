@@ -1,5 +1,6 @@
 package com.zimbra.cs.service.admin;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,23 +24,29 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
         
         Element resp = zsc.createElement(AdminConstants.GET_ADMIN_CONSOLE_UI_COMP_RESPONSE);
         
+        Set<String> added = new HashSet<String>();
+        
         Account acct = getAuthenticatedAccount(zsc);
-        addValues(acct, resp);
+        addValues(acct, resp, added);
         
         Provisioning prov = Provisioning.getInstance();
         AclGroups aclGroups = prov.getAclGroups(acct, true);
         for (String groupId : aclGroups.groupIds()) {
             DistributionList dl = prov.get(DistributionListBy.id, groupId);
-            addValues(dl, resp);
+            addValues(dl, resp, added);
         }
         
         return resp;
     }
     
-    private void addValues(NamedEntry entry, Element resp) {
+    private void addValues(NamedEntry entry, Element resp, Set<String> added) {
         Set<String> values = entry.getMultiAttrSet(Provisioning.A_zimbraAdminConsoleUIComponents);
-        for (String value: values)
-            resp.addElement(AdminConstants.E_A).setText(value);
+        for (String value: values) {
+            if (!added.contains(value)) {
+                resp.addElement(AdminConstants.E_A).setText(value);
+                added.add(value);
+            }
+        }
     }
     
     @Override
