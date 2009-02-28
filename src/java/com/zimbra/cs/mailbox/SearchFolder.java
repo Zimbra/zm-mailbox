@@ -136,7 +136,7 @@ public class SearchFolder extends Folder {
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
             name, data.id, parent.getId(), parent.getName());
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, null);
         
         SearchFolder search = new SearchFolder(mbox, data);
         search.finishCreation(parent);

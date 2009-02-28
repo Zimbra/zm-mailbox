@@ -196,7 +196,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    unreadCount;
         public int    flags;
         public long   tags;
-        public String sender;
         public String subject;
         public String name;
         public String metadata;

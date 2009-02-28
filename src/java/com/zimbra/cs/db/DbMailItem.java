@@ -104,7 +104,7 @@ public class DbMailItem {
     }
 
 
-    public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    public static void create(Mailbox mbox, UnderlyingData data, String sender) throws ServiceException {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item create", null);
 
@@ -152,7 +152,7 @@ public class DbMailItem {
                 stmt.setNull(pos++, Types.BOOLEAN);
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
-            stmt.setString(pos++, checkSenderLength(data.sender));
+            stmt.setString(pos++, checkSenderLength(sender));
             stmt.setString(pos++, checkSubjectLength(data.subject));
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkMetadataLength(data.metadata));
@@ -3029,10 +3029,10 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("consistency check failed: " + MailItem.getNameForType(item) + " " + item.getId() + " not found in DB", null);
 
             UnderlyingData dbdata = constructItem(rs, 1);
-            dbdata.sender = rs.getString(1);
+            String dbsender = rs.getString(1);
 
             String dataBlobDigest = data.getBlobDigest(), dbdataBlobDigest = dbdata.getBlobDigest();
-            String dataSender = item.getSortSender(), dbdataSender = dbdata.sender == null ? "" : dbdata.sender;
+            String dataSender = item.getSortSender(), dbdataSender = dbsender == null ? "" : dbsender;
             String failures = "";
 
             if (data.id != dbdata.id)                    failures += " ID";

@@ -345,7 +345,7 @@ public class Conversation extends MailItem {
             ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.",
                 data.id, msgIds);
         }
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, null);
 
         Conversation conv = new Conversation(mbox, data);
         conv.finishCreation(null);

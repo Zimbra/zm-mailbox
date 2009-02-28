@@ -143,7 +143,7 @@ public class Note extends MailItem {
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
             data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, null);
         
         Note note = new Note(mbox, data);
         note.finishCreation(null);

@@ -43,7 +43,7 @@ public class WikiItem extends Document {
 		data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding WikiItem %s: id=%d, folderId=%d, folderName=%s.",
             wikiword, data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, null);
 
         WikiItem wiki = new WikiItem(mbox, data);
         wiki.finishCreation(null);

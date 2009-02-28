@@ -389,7 +389,6 @@ public class Message extends MailItem {
         data.setBlobDigest(digest);
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
-        data.sender      = pm.getParsedSender().getSortString();
         data.subject     = pm.getNormalizedSubject();
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
@@ -397,7 +396,7 @@ public class Message extends MailItem {
 
         ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
             data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, pm.getParsedSender().getSortString());
         Message msg = fact.create(mbox, data);
 
         // process the components in this invite (must do this last so blob is created, etc)

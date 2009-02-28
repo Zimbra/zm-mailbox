@@ -155,7 +155,7 @@ public class Tag extends MailItem {
         data.metadata    = encodeMetadata(color, 1);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, null);
 
         Tag tag = new Tag(mbox, data);
         tag.finishCreation(null);

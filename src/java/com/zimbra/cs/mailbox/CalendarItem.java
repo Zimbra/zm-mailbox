@@ -425,7 +425,6 @@ public abstract class CalendarItem extends MailItem {
         data.date     = mbox.getOperationTimestamp();
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
-        data.sender   = sender;
         data.subject  = subject;
         data.metadata = encodeMetadata(DEFAULT_COLOR, 1, uid, startTime, endTime,
                                        recur, invites, firstInvite.getTimeZoneMap(),
@@ -433,7 +432,7 @@ public abstract class CalendarItem extends MailItem {
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding CalendarItem: id=%d, Message-ID=%s, folderId=%d, folderName=%s, invite=%s.",
             data.id, pm != null ? pm.getMessageID() : "none", folder.getId(), folder.getName(), firstInvite.getName());
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, sender);
 
         CalendarItem item = type == TYPE_APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
         item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);

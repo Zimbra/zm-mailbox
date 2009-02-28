@@ -26,22 +26,23 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
 public class ItemData {
-    public String extra, flags, path, tags;
+    public String sender, extra, flags, path, tags;
     public MailItem.UnderlyingData ud;
     
     private static enum Keys {
         id, type, parent_id, folder_id, index_id, imap_id, date, size,
-        volume_id, blob_digest, unread, flags, tags, sender, subject, name,
+        volume_id, blob_digest, unread, flags, tags, subject, name,
         metadata, mod_metadata, change_date, mod_content,
-        ExtraStr, FlagStr, Path, TagStr, Ver
+        sender, ExtraStr, FlagStr, Path, TagStr, Ver
     }
-    
+
     public ItemData(MailItem mi) throws IOException {
         this(mi, null);
     }
-    
+
     public ItemData(MailItem mi, String userData) throws IOException {
         try {
+            sender = mi.getSender();
             extra = userData;
             flags = mi.getFlagString();
             path = mi.getPath();
@@ -74,13 +75,13 @@ public class ItemData {
             ud.flags = json.getInt(Keys.flags.toString()) |
                 Flag.BITMASK_UNCACHED;
             ud.tags = json.getLong(Keys.tags.toString());
-            ud.sender = json.optString(Keys.sender.toString());
             ud.subject = json.optString(Keys.subject.toString());
             ud.name = json.optString(Keys.name.toString());
             ud.metadata = json.optString(Keys.metadata.toString());
             ud.modMetadata = json.getInt(Keys.mod_metadata.toString());
             ud.dateChanged = json.getInt(Keys.change_date.toString());
             ud.modContent = json.getInt(Keys.mod_content.toString());
+            sender = json.optString(Keys.sender.toString());
             extra = json.optString(Keys.ExtraStr.toString());
             flags = json.optString(Keys.FlagStr.toString());
             path = json.optString(Keys.Path.toString());
@@ -110,13 +111,13 @@ public class ItemData {
                 put(Keys.unread.toString(), ud.unreadCount).
                 put(Keys.flags.toString(), ud.flags).
                 put(Keys.tags.toString(), ud.tags).
-                putOpt(Keys.sender.toString(), ud.sender).
                 putOpt(Keys.subject.toString(), ud.subject).
                 putOpt(Keys.name.toString(), ud.name).
                 putOpt(Keys.metadata.toString(), ud.metadata).
                 put(Keys.mod_metadata.toString(), ud.modMetadata).
                 put(Keys.change_date.toString(), ud.dateChanged).
                 put(Keys.mod_content.toString(), ud.modContent).
+                putOpt(Keys.sender.toString(), sender).
                 putOpt(Keys.ExtraStr.toString(), extra).
                 putOpt(Keys.FlagStr.toString(), flags).
                 put(Keys.Path.toString(), path).

@@ -702,7 +702,7 @@ public class Folder extends MailItem {
         data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, null);
 
         Folder folder = new Folder(mbox, data);
         folder.finishCreation(parent);

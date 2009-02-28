@@ -642,7 +642,6 @@ public class Contact extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
         data.tags        = Tag.tagsToBitmask(tags);
-        data.sender      = getFileAsString(pc.getFields());
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
         
@@ -655,7 +654,7 @@ public class Contact extends MailItem {
                 email, data.id, folder.getId(), folder.getName());
         }
         
-        DbMailItem.create(mbox, data);
+        DbMailItem.create(mbox, data, getFileAsString(pc.getFields()));
 
         Contact con = new Contact(mbox, data);
         con.finishCreation(null);
