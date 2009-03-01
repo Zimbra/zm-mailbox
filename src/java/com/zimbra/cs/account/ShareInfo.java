@@ -68,7 +68,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.GetFolder.FolderNode;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -102,6 +101,14 @@ public class ShareInfo {
     private byte mGranteeType;
     private String mGranteeId;
     private String mGranteeName;
+    
+    // URL for accessing the share
+    // only used for guest share 
+    private String mUrl;
+    
+    // password (for guest grantee)
+    // only used for sending 
+    private String mGuestPassword;
     
     // mountpointid
     // Note: 
@@ -145,10 +152,10 @@ public class ShareInfo {
     //
     protected MetadataList mGrants;
     
-    protected ShareInfo() {
+    public ShareInfo() {
     }
     
-    protected void setOwnerAcctId(String ownerAcctId) {
+    public void setOwnerAcctId(String ownerAcctId) {
         mOwnerAcctId = ownerAcctId;
     }
     
@@ -156,7 +163,7 @@ public class ShareInfo {
         return mOwnerAcctId;
     }
     
-    protected void setOwnerAcctEmail(String ownerAcctEmail) {
+    public void setOwnerAcctEmail(String ownerAcctEmail) {
         mOwnerAcctEmail = ownerAcctEmail;
     }
 
@@ -164,7 +171,7 @@ public class ShareInfo {
         return mOwnerAcctEmail;
     }
     
-    protected void setFolderId(int folderId) {
+    public void setFolderId(int folderId) {
         mFolderId = folderId;
     }
     
@@ -172,7 +179,7 @@ public class ShareInfo {
         return mFolderId;
     }
 
-    protected void setFolderPath(String folderPath) {
+    public void setFolderPath(String folderPath) {
         mFolderPath = folderPath;
     }
     
@@ -186,7 +193,7 @@ public class ShareInfo {
         return fn[fn.length - 1];
     }
             
-    protected void setFolderDefaultView(byte folderDefaultView) {
+    public void setFolderDefaultView(byte folderDefaultView) {
         mFolderDefaultView = folderDefaultView;
     }
     
@@ -194,7 +201,11 @@ public class ShareInfo {
         return MailItem.getNameForType(mFolderDefaultView);
     }
     
-    protected void setRights(short rights) {
+    public byte getFolderDefaultViewCode() {
+        return mFolderDefaultView;
+    }
+    
+    public void setRights(short rights) {
         mRights = rights;
     }
     
@@ -206,7 +217,7 @@ public class ShareInfo {
         return mRights;
     }
     
-    protected void setGranteeType(byte granteeType) {
+    public void setGranteeType(byte granteeType) {
         mGranteeType = granteeType;
     }
     
@@ -214,7 +225,7 @@ public class ShareInfo {
         return ACL.typeToString(mGranteeType);
     }
     
-    protected void setGranteeId(String granteeId) {
+    public void setGranteeId(String granteeId) {
         mGranteeId = granteeId;
     }
     
@@ -222,12 +233,28 @@ public class ShareInfo {
         return mGranteeId;
     }
     
-    protected void setGranteeName(String granteeName) {
+    public void setGranteeName(String granteeName) {
         mGranteeName = granteeName;
     }
     
     public String getGranteeName() {
         return mGranteeName;
+    }
+    
+    public void setUrl(String url) {
+        mUrl = url;
+    }
+    
+    public String getUrl() {
+        return mUrl;
+    }
+    
+    public void setGuestPassword(String guestPassword) {
+        mGuestPassword = guestPassword;
+    }
+    
+    public String getGuestPassword() {
+        return mGuestPassword;
     }
     
     public boolean hasGrant() {
@@ -968,6 +995,225 @@ public class ShareInfo {
      */
     public static class NotificationSender {
         
+        private static final short ROLE_VIEW  = ACL.RIGHT_READ;
+        private static final short ROLE_ADMIN = ACL.RIGHT_READ | 
+                                                ACL.RIGHT_WRITE | 
+                                                ACL.RIGHT_INSERT | 
+                                                ACL.RIGHT_DELETE | 
+                                                ACL.RIGHT_ACTION | 
+                                                ACL.RIGHT_ADMIN;
+        private static final short ROLE_MANAGER = ACL.RIGHT_READ | 
+                                                  ACL.RIGHT_WRITE | 
+                                                  ACL.RIGHT_INSERT |
+                                                  ACL.RIGHT_DELETE | 
+                                                  ACL.RIGHT_ACTION;
+
+        
+        public static MimeMultipart genNotifBody(ShareInfo si, MsgKey intro, String notes, Locale locale) throws MessagingException {
+        
+            // Body
+            MimeMultipart mmp = new MimeMultipart("alternative");
+    
+            // TEXT part (add me first!)
+            MimeBodyPart textPart = new MimeBodyPart();
+            textPart.setText(genTextPart(si, intro, notes, locale, null), Mime.P_CHARSET_UTF8);
+            mmp.addBodyPart(textPart);
+    
+            // HTML part 
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(genHtmlPart(si, intro, notes, locale, null))));
+            mmp.addBodyPart(htmlPart);
+            
+            // XML part 
+            MimeBodyPart xmlPart = new MimeBodyPart();
+            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(genXmlPart(si, notes, locale, null))));
+            mmp.addBodyPart(xmlPart);
+            
+            return mmp;
+        }
+     
+        
+        private static String genTextPart(ShareInfo si, MsgKey intro, String senderNotes, Locale locale, StringBuilder sb) {
+            if (sb == null)
+                sb = new StringBuilder();
+            
+            sb.append("\n");
+            if (intro != null) {
+                sb.append(L10nUtil.getMessage(intro, locale));
+                sb.append("\n\n");
+            }
+            
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyOwner, si.getOwnerAcctEmail(), locale, null));
+            sb.append("\n");
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyGrantee, si.getGranteeName(), locale, null));
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyRole, getRoleFromRights(si, locale), locale, null));
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyAllowedActions, getRightsText(si, locale), locale, null));
+            sb.append("\n");
+            
+            String notes = null;
+            if (si.mGranteeType == ACL.GRANTEE_GUEST) {
+                StringBuilder guestNotes = new StringBuilder();
+                guestNotes.append("URL: " + si.getUrl() + "\n");
+                guestNotes.append("Username: " + si.getGranteeName() + "\n");
+                guestNotes.append("Password: " + si.getGuestPassword() + "\n");
+                guestNotes.append("\n");
+                notes = guestNotes + (senderNotes==null?"":senderNotes) + "\n"; 
+            } else 
+                notes = senderNotes;
+            
+            if (notes != null) {
+                sb.append("*~*~*~*~*~*~*~*~*~*\n");
+                sb.append(notes +  "\n");
+            }
+            
+            return sb.toString();
+        }
+        
+        private static String genHtmlPart(ShareInfo si, MsgKey intro, String senderNotes, Locale locale, StringBuilder sb) {
+            if (sb == null)
+                sb = new StringBuilder();
+            
+            if (intro != null) {
+                sb.append("<h3>" + L10nUtil.getMessage(intro, locale) + "</h3>\n");
+            }
+            
+            sb.append("<p>\n");
+            sb.append("<table border=\"0\">\n");
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyOwner, si.getOwnerAcctEmail(), locale, null));
+            sb.append("</table>\n");
+            sb.append("</p>\n");
+            
+            sb.append("<table border=\"0\">\n");
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyGrantee, si.getGranteeName(), locale, null));
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyRole, getRoleFromRights(si, locale), locale, null));
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyAllowedActions, getRightsText(si, locale), locale, null));
+            sb.append("</table>\n");
+
+            if (si.mGranteeType == ACL.GRANTEE_GUEST) {
+                sb.append("<p>\n");
+                sb.append("<table border=\"0\">\n");
+                sb.append("<tr valign=\"top\"><th align=\"left\">" + 
+                        L10nUtil.getMessage(MsgKey.shareNotifBodyNotes) + ":" + "</th><td>" + 
+                        "URL: " + si.getUrl() + "<br>" +
+                        "Username: " + si.getGranteeName() + "<br>" +
+                        "Password: " + si.getGuestPassword() + "<br><br>");
+                if (senderNotes != null)
+                    sb.append(senderNotes);
+                sb.append("</td></tr></table>\n");
+                sb.append("</p>\n");
+            } else if (senderNotes != null) {
+                sb.append("<p>\n");
+                sb.append("<table border=\"0\">\n");
+                sb.append("<tr valign=\"top\"><th align=\"left\">" + 
+                        L10nUtil.getMessage(MsgKey.shareNotifBodyNotes) + ":" + "</th><td>" + 
+                        senderNotes + "</td></tr></table>\n");
+                sb.append("</p>\n");
+            }
+            
+            return sb.toString();
+        }
+        
+        private static String genXmlPart(ShareInfo si, String senderNotes, Locale locale, StringBuilder sb) {
+            if (sb == null)
+                sb = new StringBuilder();
+            /* 
+             * from ZimbraWebClient/WebRoot/js/zimbraMail/share/model/ZmShare.js
+
+               ZmShare.URI = "urn:zimbraShare";
+               ZmShare.VERSION = "0.1";
+               ZmShare.NEW     = "new";
+            */
+            final String URI = "urn:zimbraShare";
+            final String VERSION = "0.1";
+            
+            String notes = null;
+            if (si.mGranteeType == ACL.GRANTEE_GUEST) {
+                StringBuilder guestNotes = new StringBuilder();
+                guestNotes.append("URL: " + si.getUrl() + "\n");
+                guestNotes.append("Username: " + si.getGranteeName() + "\n");
+                guestNotes.append("Password: " + si.getGuestPassword() + "\n");
+                guestNotes.append("\n");
+                notes = guestNotes + (senderNotes==null?"":senderNotes) + "\n";   
+            } else 
+                notes = senderNotes;
+            
+            sb.append("<share xmlns=\"" + URI + "\" version=\"" + VERSION + "\" action=\"new\">\n");
+            sb.append("  <grantee id=\"" + si.getGranteeId() + "\" email=\"" + si.getGranteeName() + "\" name=\"" + si.getGranteeName() +"\"/>\n");
+            sb.append("  <grantor id=\"" + si.getOwnerAcctId() + "\" email=\"" + si.getOwnerAcctEmail() + "\" name=\"" + si.getOwnerAcctEmail() +"\"/>\n");
+            sb.append("  <link id=\"" + si.getFolderId() + "\" name=\"" + si.getFolderName() + "\" view=\"" + si.getFolderDefaultView() + "\" perm=\"" + ACL.rightsToString(si.getRightsCode()) + "\"/>\n");
+            sb.append("  <notes>" + (notes==null?"":notes) + "</notes>\n");
+            sb.append("</share>\n");
+            
+            return sb.toString();
+        }
+        
+        private static String formatTextShareInfo(MsgKey key, String value, Locale locale, String extra) {
+            return L10nUtil.getMessage(key, locale) + ": " + value + (extra==null?"":" "+extra) + "\n";
+        }
+        
+        private static String formatHtmlShareInfo(MsgKey key, String value, Locale locale, String extra) {
+            return "<tr>" +
+                   "<th align=\"left\">" + L10nUtil.getMessage(key, locale) + ":" + "</th>" +
+                   "<td align=\"left\">" + value + (extra==null?"":" "+extra) + "</td>" +
+                   "</tr>\n";
+        }
+        
+        private static void appendCommaSeparated(StringBuffer sb, String s) {
+            if (sb.length() > 0)
+                sb.append(", ");
+            sb.append(s);
+        }
+        
+        private static String getRoleFromRights(ShareInfo si, Locale locale) {
+            short rights = si.getRightsCode();
+            if (ROLE_VIEW == rights)
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleViewer, locale);
+            else if (ROLE_ADMIN == rights)
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleAdmin, locale);
+            else if (ROLE_MANAGER == rights)
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleManager, locale);
+            else
+                return "";
+        }
+        
+        private static String getRightsText(ShareInfo si, Locale locale) {
+            short rights = si.getRightsCode();
+            StringBuffer r = new StringBuffer();
+            if ((rights & ACL.RIGHT_READ) != 0)      appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionRead, locale));
+            if ((rights & ACL.RIGHT_WRITE) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionWrite, locale));
+            if ((rights & ACL.RIGHT_INSERT) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionInsert, locale));
+            if ((rights & ACL.RIGHT_DELETE) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionDelete, locale));
+            if ((rights & ACL.RIGHT_ACTION) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionAction, locale));
+            if ((rights & ACL.RIGHT_ADMIN) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionAdmin, locale));
+            if ((rights & ACL.RIGHT_PRIVATE) != 0)   appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionPrivate, locale));
+            if ((rights & ACL.RIGHT_FREEBUSY) != 0)  appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionFreebusy, locale));
+            if ((rights & ACL.RIGHT_SUBFOLDER) != 0) appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionSubfolder, locale));
+          
+            return r.toString();
+        }
+        
+        private static String formatFolderDesc(Locale locale, ShareInfo si) {
+            byte view = si.getFolderDefaultViewCode();
+            
+            String folderView;  // need to L10N these?
+            if (view == MailItem.TYPE_MESSAGE)
+                folderView = "Mail";
+            else if (view == MailItem.TYPE_APPOINTMENT)
+                folderView = "Calendar";
+            else if (view == MailItem.TYPE_TASK)
+                folderView = "Task";
+            else if (view == MailItem.TYPE_CONTACT)
+                folderView = "Addres";
+            else if (view == MailItem.TYPE_WIKI)
+                folderView = "Notebook";
+            else
+                folderView = si.getFolderDefaultView();
+            
+            return L10nUtil.getMessage(MsgKey.shareNotifBodyFolderDesc, locale, folderView);
+        }
+        
         private static class MailSenderVisitor implements ShareInfo.Visitor {
             
             List<ShareInfo> mShares = new ArrayList<ShareInfo>();
@@ -980,139 +1226,55 @@ public class ShareInfo {
                 return mShares.size();
             }
             
-            private void appendCommaSeparated(StringBuffer sb, String s) {
-                if (sb.length() > 0)
-                    sb.append(", ");
-                sb.append(s);
-            }
-            
-            private String getRightsText(ShareInfo si, Locale locale) {
-                short rights = si.getRightsCode();
-                StringBuffer r = new StringBuffer();
-                if ((rights & ACL.RIGHT_READ) != 0)      appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionRead, locale));
-                if ((rights & ACL.RIGHT_WRITE) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionWrite, locale));
-                if ((rights & ACL.RIGHT_INSERT) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionInsert, locale));
-                if ((rights & ACL.RIGHT_DELETE) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionDelete, locale));
-                if ((rights & ACL.RIGHT_ACTION) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionAction, locale));
-                if ((rights & ACL.RIGHT_ADMIN) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionAdmin, locale));
-                if ((rights & ACL.RIGHT_PRIVATE) != 0)   appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionPrivate, locale));
-                if ((rights & ACL.RIGHT_FREEBUSY) != 0)  appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionFreebusy, locale));
-                if ((rights & ACL.RIGHT_SUBFOLDER) != 0) appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareInfoActionCreateFolder, locale));
-              
-                return r.toString();
-            }
-            
-            private String formatFolderDesc(Locale locale, ShareInfo si) {
-                return "(" + L10nUtil.getMessage(MsgKey.shareInfoBodyFolder, locale, si.getFolderDefaultView()) + ")";
-            }
-            
-            private String formatTextShareInfo(MsgKey key, String value, Locale locale, String extra) {
-                return L10nUtil.getMessage(key, locale) + ": " + value + (extra==null?"":" "+extra) + "\n";
-            }
-            
-            private void formatTextShare(StringBuilder sb, Locale locale, ShareInfo si) {
-                sb.append(formatTextShareInfo(MsgKey.shareInfoBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
-                sb.append(formatTextShareInfo(MsgKey.shareInfoBodyOwner, si.getOwnerAcctEmail(), locale, null));
-                sb.append(formatTextShareInfo(MsgKey.shareInfoBodyGrantee, si.getGranteeName(), locale, null));
-                sb.append(formatTextShareInfo(MsgKey.shareInfoBodyAllowedActions, getRightsText(si, locale), locale, null));
-                sb.append("\n");
-            }
-            
-            private String formatText(String dlName, Locale locale, Integer idx) {
+            private String genText(String dlName, Locale locale, Integer idx) {
                 StringBuilder sb = new StringBuilder();
                 
                 sb.append("\n");
-                sb.append(L10nUtil.getMessage(MsgKey.shareInfoBodyAddedToGroup, locale, dlName));
+                sb.append(L10nUtil.getMessage(MsgKey.shareNotifBodyAddedToGroup1, locale, dlName));
                 sb.append("\n\n");
-                sb.append(L10nUtil.getMessage(MsgKey.shareInfoBodyIntroduction, locale, dlName));
+                sb.append(L10nUtil.getMessage(MsgKey.shareNotifBodyAddedToGroup2, locale, dlName));
                 sb.append("\n\n");
                 
                 if (idx == null) {
                     for (ShareInfo si : mShares) {
-                        formatTextShare(sb, locale, si);
+                        genTextPart(si, null, null, locale, sb);
                     }
                 } else 
-                    formatTextShare(sb, locale, mShares.get(idx.intValue()));
+                    genTextPart(mShares.get(idx.intValue()), null, null, locale, sb);
                 
                 sb.append("\n\n");
                 return sb.toString();
             }
+
             
-            private String formatHtmlShareInfo(MsgKey key, String value, Locale locale, String extra) {
-                return "<tr>" +
-                       "<th align=\"left\">" + L10nUtil.getMessage(key, locale) + ":" + "</th>" +
-                       "<td align=\"left\">" + value + (extra==null?"":extra) + "</td>" +
-                       "</tr>\n";
-            }
-            
-            private void formatHtmlShare(StringBuilder sb, Locale locale, ShareInfo si) {
-                sb.append("<p>\n");
-                sb.append("<table border=\"0\">\n");
-                sb.append(formatHtmlShareInfo(MsgKey.shareInfoBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
-                sb.append(formatHtmlShareInfo(MsgKey.shareInfoBodyOwner, si.getOwnerAcctEmail(), locale, null));
-                sb.append(formatHtmlShareInfo(MsgKey.shareInfoBodyGrantee, si.getGranteeName(), locale, null));
-                sb.append(formatHtmlShareInfo(MsgKey.shareInfoBodyAllowedActions, getRightsText(si, locale), locale, null));
-                sb.append("</table>\n");
-                sb.append("</p>\n");
-            }
-            
-            private String formatHtml(String dlName, Locale locale, Integer idx) {
+            private String genHtml(String dlName, Locale locale, Integer idx) {
                 StringBuilder sb = new StringBuilder();
                 
                 sb.append("<h4>\n");
-                sb.append("<p>" + L10nUtil.getMessage(MsgKey.shareInfoBodyAddedToGroup, locale, dlName) + "</p>\n");
-                sb.append("<p>" + L10nUtil.getMessage(MsgKey.shareInfoBodyIntroduction, locale, dlName) + "</p>\n");
+                sb.append("<p>" + L10nUtil.getMessage(MsgKey.shareNotifBodyAddedToGroup1, locale, dlName) + "</p>\n");
+                sb.append("<p>" + L10nUtil.getMessage(MsgKey.shareNotifBodyAddedToGroup2, locale, dlName) + "</p>\n");
                 sb.append("</h4>\n");
                 sb.append("\n");
                 
                 if (idx == null) {
                     for (ShareInfo si : mShares) {
-                        formatHtmlShare(sb, locale, si);
+                        genHtmlPart(si, null, null, locale, sb);
                     }
                 } else
-                    formatHtmlShare(sb, locale, mShares.get(idx.intValue()));
+                    genHtmlPart(mShares.get(idx.intValue()), null, null, locale, sb);
                     
                 return sb.toString();
             }
             
-            /*
-                <share xmlns="urn:zimbraShare" version="0.1" action="new">
-                    <grantee id="569e4a9d-752f-4083-a43b-469e89e468bd" email="engineering@example.com" name="engineering"/>
-                    <grantor id="16e4f67c-fc2f-405b-bba5-929f9964a62c" email="user1@example.com" name="Demo User One"/>
-                    <link id="2" name="Inbox" view="message" perm="r"/>
-                    <notes></notes>
-                </share>
-                
-            */
-            private void formatXmlShare(StringBuilder sb, Locale locale, ShareInfo si) {
-                
-                /* 
-                 * from ZimbraWebClient/WebRoot/js/zimbraMail/share/model/ZmShare.js
- 
-                   ZmShare.URI = "urn:zimbraShare";
-                   ZmShare.VERSION = "0.1";
-                   ZmShare.NEW     = "new";
-                */
-                final String URI = "urn:zimbraShare";
-                final String VERSION = "0.1";
-                
-                sb.append("<share xmlns=\"" + URI + "\" version=\"" + VERSION + "\" action=\"new\">\n");
-                sb.append("  <grantee id=\"" + si.getGranteeId() + "\" email=\"" + si.getGranteeName() + "\" name=\"" + si.getGranteeName() +"\"/>\n");
-                sb.append("  <grantor id=\"" + si.getOwnerAcctId() + "\" email=\"" + si.getOwnerAcctEmail() + "\" name=\"" + si.getOwnerAcctEmail() +"\"/>\n");
-                sb.append("  <link id=\"" + si.getFolderId() + "\" name=\"" + si.getFolderName() + "\" view=\"" + si.getFolderDefaultView() + "\" perm=\"" + ACL.rightsToString(si.getRightsCode()) + "\"/>\n");
-                sb.append("  <notes></notes>\n");
-                sb.append("</share>\n");
-            }
-            
-            private String formatXml(String dlName, Locale locale, Integer idx) {
+            private String genXml(String dlName, Locale locale, Integer idx) {
                 StringBuilder sb = new StringBuilder();
                 
                  if (idx == null) {
                     for (ShareInfo si : mShares) {
-                        formatXmlShare(sb, locale, si);
+                        genXmlPart(si, null, locale, sb);
                     }
                 } else
-                    formatXmlShare(sb, locale, mShares.get(idx.intValue()));
+                    genXmlPart(mShares.get(idx.intValue()), null, locale, sb);
                     
                 return sb.toString();
             }
@@ -1216,28 +1378,25 @@ public class ShareInfo {
         private static MimeMultipart buildMailContent(DistributionList dl, MailSenderVisitor visitor, Locale locale, Integer idx) 
             throws MessagingException {
             
-            String shareInfoText = visitor.formatText(dl.getName(), locale, idx);
-            String shareInfoHtml = visitor.formatHtml(dl.getName(), locale, idx);
+            String shareInfoText = visitor.genText(dl.getName(), locale, idx);
+            String shareInfoHtml = visitor.genHtml(dl.getName(), locale, idx);
             String shareInfoXml = null;
             if (idx != null)
-                shareInfoXml = visitor.formatXml(dl.getName(), locale, idx);
+                shareInfoXml = visitor.genXml(dl.getName(), locale, idx);
             
             // Body
-            MimeMultipart mmp = new MimeMultipart("alternative");  // todo, verify alternative?
+            MimeMultipart mmp = new MimeMultipart("alternative");
 
-            // ///////
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();
             textPart.setText(shareInfoText, Mime.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
-            // ///////
             // HTML part 
             MimeBodyPart htmlPart = new MimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
             mmp.addBodyPart(htmlPart);
             
-            // ///////
             // XML part 
             if (shareInfoXml != null) {
                 MimeBodyPart xmlPart = new MimeBodyPart();
@@ -1287,9 +1446,8 @@ public class ShareInfo {
                 
                 // Subject
                 Locale locale = getLocale(prov, fromAcct, toAddr);
-                String subject = L10nUtil.getMessage(MsgKey.shareInfoSubject, locale);
+                String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
                 out.setSubject(subject);
-                
                 
                 if (sendOneMailPerShare()) {
                     // send a separate message per share

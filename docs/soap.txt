@@ -3016,12 +3016,28 @@ Notes:
     
 <GetShareInfoResponse>
     [<share ownerId="{owner-id}" ownerName="{owner-name}" 
-            folderId="{folder-id}" folderPath="{folder-path}" view="{default-type}" [mid="{mountpoint-id}"]
-            rights="{rights}"
+            folderId="{folder-id}" folderPath="{fully-qualified-path}" 
+            view="{default-type}" [mid="{mountpoint-id}"] rights="{rights}"
             granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
 </GetShareInfoResponse>
 
 mid="{mountpoint-id}" : returned if the share is already mounted.  
-                        It contain the folder id of the mountpoint in the local mailbox.  
+                        contains the folder id of the mountpoint in the local mailbox.  
                         
-                        
+---------------------------- 
+
+<SendShareNotificationRequest>
+    <share [l="{folder-id}"] [path="{fully-qualified-path}"]
+           gt="{grantee-type}" [zid="{grantee-id}"] [d="{grantee-display-name}"]/>
+    [<notes>{notes}</notes>]       
+</SendShareNotificationRequest>
+
+granteeType = usr | grp | guest
+
+- either a l or a path must be specified
+
+- if gt is usr or grp, either a zid or d must be specified.
+  if gt is guest, d must be specified, zid is ignored.
+
+<SendShareNotificationResponse/>
+                       

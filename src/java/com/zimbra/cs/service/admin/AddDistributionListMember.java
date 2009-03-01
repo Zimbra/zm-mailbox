@@ -71,12 +71,10 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
         
-        // send share info email
-        /* disable for now
+        // send share notification email
         boolean sendShareInfoMsg = dl.getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, true);
         if (sendShareInfoMsg)
             ShareInfo.NotificationSender.sendShareInfoMessage(octxt, dl, members);
-        */
         
         Element response = zsc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;
