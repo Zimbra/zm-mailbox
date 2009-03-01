@@ -59,6 +59,8 @@ public class MailConstants {
     public static final QName SEND_MSG_RESPONSE = QName.get("SendMsgResponse", NAMESPACE);
     public static final QName SEND_REPORT_REQUEST = QName.get("SendDeliveryReportRequest", NAMESPACE);
     public static final QName SEND_REPORT_RESPONSE = QName.get("SendDeliveryReportResponse", NAMESPACE);
+    public static final QName SEND_SHARE_NOTIFICATION_REQUEST = QName.get("SendShareNotificationRequest", NAMESPACE);
+    public static final QName SEND_SHARE_NOTIFICATION_RESPONSE = QName.get("SendShareNotificationResponse", NAMESPACE);
     public static final QName ADD_MSG_REQUEST = QName.get("AddMsgRequest", NAMESPACE);
     public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get("SaveDraftRequest", NAMESPACE);
@@ -288,9 +290,11 @@ public class MailConstants {
     public static final String A_TAG_NAME = "tagName";
     public static final String A_INDEX = "index";
 
-    // grants
+    // grants and shares
     public static final String E_ACL = "acl";
     public static final String E_GRANT = "grant";
+    public static final String E_NOTES = "notes";
+    public static final String E_SHARE = "share";
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";

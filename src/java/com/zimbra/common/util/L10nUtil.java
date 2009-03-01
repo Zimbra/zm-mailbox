@@ -83,26 +83,36 @@ public class L10nUtil {
         // caldav messages
         caldavCalendarDescription,
         
-        // share info
-        shareInfoSubject,
-        shareInfoBodyAddedToGroup,
-        shareInfoBodyIntroduction,
+        // share notification
+        shareNotifSubject,
 
-        shareInfoBodySharedItem,
-        shareInfoBodyFolder,
-        shareInfoBodyOwner,
-        shareInfoBodyGrantee,
-        shareInfoBodyAllowedActions,
+        shareNotifBodyIntro,
 
-        shareInfoActionRead,
-        shareInfoActionWrite,
-        shareInfoActionInsert,
-        shareInfoActionDelete,
-        shareInfoActionAction,
-        shareInfoActionAdmin,
-        shareInfoActionPrivate,
-        shareInfoActionFreebusy,
-        shareInfoActionCreateFolder,
+        shareNotifBodyAddedToGroup1,
+        shareNotifBodyAddedToGroup2,
+
+        shareNotifBodyGranteeRoleViewer,
+        shareNotifBodyGranteeRoleManager,
+        shareNotifBodyGranteeRoleAdmin,
+
+        shareNotifBodySharedItem,
+        shareNotifBodyFolderDesc,
+        shareNotifBodyOwner,
+        shareNotifBodyGrantee,
+        shareNotifBodyRole,
+        shareNotifBodyAllowedActions,
+        shareNotifBodyNotes,
+
+        shareNotifBodyActionRead,
+        shareNotifBodyActionWrite,
+        shareNotifBodyActionInsert,
+        shareNotifBodyActionDelete,
+        shareNotifBodyActionAction,
+        shareNotifBodyActionAdmin,
+        shareNotifBodyActionPrivate,
+        shareNotifBodyActionFreebusy,
+        shareNotifBodyActionSubfolder,
+        //////////////////////
 
         // read-receipt notification body
         readReceiptNotification,
