@@ -49,6 +49,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMountpoint;
@@ -498,6 +499,8 @@ public class ItemActionHelper {
                 try {
                     SpamHandler.getInstance().handle(mMailbox, item.getId(), item.getType(), toSpam);
                     ZimbraLog.mailop.info("sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam): " + new ItemId(item).toString());
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable t) {
                     ZimbraLog.mailop.info("could not train spam filter: " + new ItemId(item).toString(), t);
                 }

@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -452,6 +453,8 @@ public class VCard {
                         String encoded = new String(Base64.encodeBase64Chunked(attach.getContent(con))).trim().replace("\r\n", "\r\n ");
                         sb.append(field).append(":\r\n ").append(encoded).append("\r\n");
                     }
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable t) {
                     ZimbraLog.misc.info("error fetching attachment content: " + attach.getName(), t);
                 }

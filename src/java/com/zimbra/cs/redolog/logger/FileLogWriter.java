@@ -594,6 +594,8 @@ public class FileLogWriter implements LogWriter {
                 assert(cb != null);
                 try {
                     cb.callback(notif.getCommitId());
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable t) {
                     ZimbraLog.misc.error("Error while making commit callback", t);
                 }

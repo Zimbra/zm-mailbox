@@ -137,6 +137,8 @@ public abstract class ProtocolHandler implements Runnable {
         } catch (SocketTimeoutException e) {
             mLog.debug("Idle timeout: " + e);
             notifyIdleConnection();
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("out of memory", e);
         } catch (Error e) {
             Zimbra.halt("Fatal error occurred while handling connection", e);
         } catch (Throwable e) {

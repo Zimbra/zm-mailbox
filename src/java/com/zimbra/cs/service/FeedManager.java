@@ -66,6 +66,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.NetUtil;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author dkarp
@@ -125,6 +126,8 @@ public class FeedManager {
                         if (user.indexOf('%') != -1) {
                             try {
                                 user = URLDecoder.decode(httpurl.getUser());
+                            } catch (OutOfMemoryError e) {
+                                Zimbra.halt("out of memory", e);
                             } catch (Throwable t) { }
                         }
                         UsernamePasswordCredentials creds = new UsernamePasswordCredentials(user, httpurl.getPassword());
@@ -136,6 +139,8 @@ public class FeedManager {
 
                 try {
                     get = new GetMethod(url);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable t) {
                     throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, t);
                 }

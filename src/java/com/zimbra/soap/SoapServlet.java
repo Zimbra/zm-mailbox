@@ -119,6 +119,8 @@ public class SoapServlet extends ZimbraServlet {
 
         try {
             Zimbra.startup();
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("out of memory", e);
         } catch (Throwable t) {
             ZimbraLog.soap.fatal("Unable to start servlet", t);
         	throw new UnavailableException(t.getMessage());
@@ -145,11 +147,13 @@ public class SoapServlet extends ZimbraServlet {
     }
 
     private void loadHandler(String cname) throws ServletException {
-        Class dispatcherClass;
+        Class dispatcherClass = null;
         try {
             dispatcherClass = Class.forName(cname);
         } catch (ClassNotFoundException cnfe) {
             throw new ServletException("can't find handler initializer class " + cname, cnfe);
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("out of memory", e);
         } catch (Throwable t) {
             throw new ServletException("can't find handler initializer class " + cname, t);
         }

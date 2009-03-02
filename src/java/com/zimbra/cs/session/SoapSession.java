@@ -64,6 +64,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -228,6 +229,8 @@ public class SoapSession extends Session {
             } else {
                 try {
                     filtered.recordModified(mbox.getConversationById(null, convId), changeMask);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable t) { }
             }
         }
@@ -421,6 +424,8 @@ public class SoapSession extends Session {
         if (mLastWrite != -1 && mbox != null) {
             try {
                 mbox.recordLastSoapAccessTime(mLastWrite);
+            } catch (OutOfMemoryError e) {
+                Zimbra.halt("out of memory", e);
             } catch (Throwable t) {
                 ZimbraLog.session.warn("exception recording unloaded session's last access time", t);
             }

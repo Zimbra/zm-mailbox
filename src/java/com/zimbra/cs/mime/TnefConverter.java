@@ -173,10 +173,9 @@ public class TnefConverter extends MimeVisitor {
         try {
             TNEFInputStream tnefis = new TNEFInputStream(is = bp.getInputStream());
             converted = TNEFMime.convert(JMSession.getSession(), tnefis);
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("Ran out of memory while expanding TNEF attachment", e);
         } catch (Throwable t) {
-            if (t instanceof OutOfMemoryError) {
-                Zimbra.halt("Ran out of memory while expanding TNEF attachment", t);
-            }
             ZimbraLog.extensions.warn("Conversion failed.  TNEF attachment will not be expanded.", t);
             return null;
         } finally {

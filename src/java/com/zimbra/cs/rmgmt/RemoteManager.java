@@ -29,6 +29,7 @@ import ch.ethz.ssh2.StreamGobbler;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -98,6 +99,8 @@ public class RemoteManager {
             InputStream stdout = new StreamGobbler(s.getStdout());
             InputStream stderr = new StreamGobbler(s.getStderr());
             handler.read(stdout, stderr);
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("out of memory", e);
         } catch (Throwable t) {
             handler.error(t);
         } finally {

@@ -41,6 +41,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -737,6 +738,8 @@ public class MailboxManager {
                 // the original exception will be lost.
                 ZimbraLog.mailbox.error("Error during mailbox creation", e);
                 throw e;
+            } catch (OutOfMemoryError e) {
+                Zimbra.halt("out of memory", e);
             } catch (Throwable t) {
                 ZimbraLog.mailbox.error("Error during mailbox creation", t);
                 throw ServiceException.FAILURE("createMailbox", t);

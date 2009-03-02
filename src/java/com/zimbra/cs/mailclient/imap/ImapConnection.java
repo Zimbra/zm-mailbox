@@ -23,6 +23,7 @@ import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.cs.util.Zimbra;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -587,6 +588,8 @@ public final class ImapConnection extends MailConnection {
                     while (!isClosed()) {
                         setResponse(nextResponse());
                     }
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable e) {
                     readerError(e);
                 }
@@ -673,6 +676,8 @@ public final class ImapConnection extends MailConnection {
                     if (handler.handleResponse(res)) {
                         return true; // Handler processed response
                     }
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable e) {
                     throw new MailException("Exception in response handler", e);
                 }

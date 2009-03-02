@@ -486,6 +486,8 @@ public class RedoLogManager {
                     //
 
                     signalFatalError(e);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("out of memory", e);
                 } catch (Throwable e) {
 					mLog.error("Redo logging to logger " + mLogWriter.getClass().getName() + " failed", e);
 					signalFatalError(e);

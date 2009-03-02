@@ -60,6 +60,8 @@ public abstract class RedoLogProvider {
                                      providerClass.getName());
             }
             provider = (RedoLogProvider) providerClass.newInstance();
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("out of memory", e);
         } catch (Throwable e) {
         	throw ServiceException.FAILURE("Unable to load redolog provider " + className, e);
         }
