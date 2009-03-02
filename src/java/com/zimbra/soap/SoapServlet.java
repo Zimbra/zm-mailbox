@@ -61,8 +61,12 @@ public class SoapServlet extends ZimbraServlet {
 
     /** context name of auth token extracted from cookie */
     public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";    
+    /** context name of servlet context */
+    public static final String SERVLET_CONTEXT = "servlet.context";
     /** context name of servlet HTTP request */
     public static final String SERVLET_REQUEST = "servlet.request";
+    /** context name of servlet HTTP response */
+    public static final String SERVLET_RESPONSE = "servlet.response";
     /** If this is set, then this a RESUMED servlet request (Jetty Continuation) */
     public static final String IS_RESUMED_REQUEST = "zimbra.resumedRequest";
 
@@ -246,8 +250,10 @@ public class SoapServlet extends ZimbraServlet {
         }
 
         HashMap<String, Object> context = new HashMap<String, Object>();
+        context.put(SERVLET_CONTEXT, getServletContext());
         context.put(SERVLET_REQUEST, req);
-        
+        context.put(SERVLET_RESPONSE, resp);
+
         // Set the requester IP.  If the request was made by the HTML client,
         // set it to the value of the X-Originating-IP header.
         String remoteAddr = req.getRemoteAddr();
