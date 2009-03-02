@@ -471,11 +471,14 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
 
         assert(!(folder instanceof Mountpoint) || ((Mountpoint)folder).isLocal()); 
-//        ((Mountpoint)folder).getOwnerId().equals(folder.getMailbox().getAccountId()));
         
-        if (!mQueryTarget.isCompatibleLocal()) 
-            throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
-        mQueryTarget = QueryTarget.LOCAL;
+        if (truth) {
+            // EG: -in:trash is not necessarily a "local" target -- we only imply
+            // a target when we're positive
+            if (!mQueryTarget.isCompatibleLocal()) 
+                throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
+            mQueryTarget = QueryTarget.LOCAL;
+        }
         
         topLevelAndedConstraint().addInClause(folder, truth);
     }
