@@ -259,9 +259,9 @@ public class SoapSession extends Session {
             if ((eSection = eNotify.getOptionalElement(ZimbraNamespace.E_DELETED)) != null)
                 deleted = eSection.getAttribute(A_ID, null);
             if ((eSection = eNotify.getOptionalElement(ZimbraNamespace.E_CREATED)) != null)
-                created = eSection.listElements();
+                created = new ArrayList<Element>(eSection.listElements());
             if ((eSection = eNotify.getOptionalElement(ZimbraNamespace.E_MODIFIED)) != null)
-                modified = eSection.listElements();
+                modified = new ArrayList<Element>(eSection.listElements());
         }
 
         RemoteNotifications add(RemoteNotifications rns) {
