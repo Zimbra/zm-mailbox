@@ -47,8 +47,8 @@ public final class ResultsPager
         // request and used something else...
         params.setSortBy(results.getSortBy());
         
-        // bug: 23427 -- TASK sorts are incompatible with CURSORS, since cursors require
-        //               real (db-visible) sort fields
+        // bug: 23427 -- TASK sorts are incompatible with cursors here so don't use the cursor
+        //               at all
         boolean dontUseCursor = false;
         switch (params.getSortBy()) {
             case TASK_DUE_ASCENDING:
@@ -154,6 +154,14 @@ public final class ResultsPager
                         return hit;
                 }
                 // keep looking...
+                hit = mResults.getNext();
+            } else if (comp < 0) {
+                // oops, we haven't gotten to the cursor-specified sort field yet...this happens
+                // when we use a cursor without doing adding a range constraint to specify
+                // the sort ranges....e.g. when using a Cursor with Conversation search
+                // we skip the range b/c we need to force the search code to iterate over all
+                // results (to build the conversations and hit them into the right spot
+                // in the results)
                 hit = mResults.getNext();
             } else {
                 return hit;

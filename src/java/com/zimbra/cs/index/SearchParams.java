@@ -394,6 +394,39 @@ public final class SearchParams implements Cloneable {
         params.setOffset(parseOffset(request));
         
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
+        
+        boolean useCursorToNarrowDbQuery = false;
+        
+        // in some cases we cannot use cursors, even if they are requested.
+        //
+        //  -- Task-sorts cannot be used with cursors (bug 23427) at all
+        //
+        //  -- Conversation mode can use cursors to find the right location in the
+        //     hits, but we *can't* use a constrained-offset query to find the right place
+        //     in the search results....in Conv mode we need to walk through all the results
+        //     so that we can guarantee that we only return each Conversation once in 
+        //     a given results set
+        // 
+        {
+            // bug: 23427 -- TASK sorts are incompatible with CURSORS, since cursors require
+            //               real (db-visible) sort fields
+            switch (params.getSortBy()) {
+                case TASK_DUE_ASCENDING:
+                case TASK_DUE_DESCENDING:
+                case TASK_PERCENT_COMPLETE_ASCENDING:
+                case TASK_PERCENT_COMPLETE_DESCENDING:
+                case TASK_STATUS_ASCENDING:
+                case TASK_STATUS_DESCENDING:
+                    useCursorToNarrowDbQuery = false;
+            }
+            
+            // bug 35039 - using cursors with conversation-coalescing leads to convs 
+            //             appearing on multiple pages
+            for (byte b : params.getTypes()) 
+                if (b == MailItem.TYPE_CONVERSATION)
+                    useCursorToNarrowDbQuery = false; 
+        }
+        
         if (cursor != null) {
             String cursorStr = cursor.getAttribute(MailConstants.A_ID);
             ItemId prevMailItemId = null;
@@ -407,28 +440,30 @@ public final class SearchParams implements Cloneable {
             params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
             
             String addedPart = null;
-            
-            switch (params.getSortBy()) {
-                case NONE:
-                    throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
-                case DATE_ASCENDING:
-                    addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
-                    break;
-                case DATE_DESCENDING:
-                    addedPart = "date:"+quote("<=",sortVal)+(endSortVal!=null ? " date:"+quote(">", endSortVal) : "");
-                    break;
-                case SUBJ_ASCENDING:
-                    addedPart = "subject:"+quote(">=", sortVal)+(endSortVal!=null ? " subject:"+quote("<", endSortVal) : "");
-                    break;
-                case SUBJ_DESCENDING:
-                    addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
-                    break;
-                case NAME_ASCENDING:
-                    addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
-                    break;
-                case NAME_DESCENDING:
-                    addedPart = "from:"+quote("<=", sortVal)+(endSortVal!=null ? " from:"+quote(">", endSortVal) : "");
-                    break;
+
+            if (useCursorToNarrowDbQuery) {
+                switch (params.getSortBy()) {
+                    case NONE:
+                        throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
+                    case DATE_ASCENDING:
+                        addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
+                        break;
+                    case DATE_DESCENDING:
+                        addedPart = "date:"+quote("<=",sortVal)+(endSortVal!=null ? " date:"+quote(">", endSortVal) : "");
+                        break;
+                    case SUBJ_ASCENDING:
+                        addedPart = "subject:"+quote(">=", sortVal)+(endSortVal!=null ? " subject:"+quote("<", endSortVal) : "");
+                        break;
+                    case SUBJ_DESCENDING:
+                        addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
+                        break;
+                    case NAME_ASCENDING:
+                        addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
+                        break;
+                    case NAME_DESCENDING:
+                        addedPart = "from:"+quote("<=", sortVal)+(endSortVal!=null ? " from:"+quote(">", endSortVal) : "");
+                        break;
+                }
             }
             
             if (addedPart != null)
