@@ -65,7 +65,7 @@ public class FlushCache extends AdminDocumentHandler {
         if (type.equals("zimlet")) {
             FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
         }
-        if (type.equals("skin"))
+        if (type.equals("skin")) {
             SkinUtil.flushSkinCache();
             FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
         }
