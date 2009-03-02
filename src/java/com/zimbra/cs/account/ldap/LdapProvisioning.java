@@ -3058,7 +3058,9 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private void preAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
+    
+    private void verifyPreAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, 
+            String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
         
         checkAccountStatus(acct, authCtxt);
         if (preAuth == null || preAuth.length() == 0)
@@ -3077,7 +3079,7 @@ public class LdapProvisioning extends Provisioning {
             Date nowDate = new Date(now);
             Date preauthDate = new Date(timestamp);
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), 
-        	    "preauth timestamp is too old, server time: " + nowDate.toString() + ", preauth timestamp: " + preauthDate.toString());
+                "preauth timestamp is too old, server time: " + nowDate.toString() + ", preauth timestamp: " + preauthDate.toString());
         }
         
         // compute expected preAuth
@@ -3090,6 +3092,26 @@ public class LdapProvisioning extends Provisioning {
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
         if (!computedPreAuth.equalsIgnoreCase(preAuth))
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "preauth mismatch");
+
+    }
+    
+    private void preAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, 
+            String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
+        
+        LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
+        try {
+            if (lockoutPolicy.isLockedOut())
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account lockout");
+
+            // attempt to verify the preauth
+            verifyPreAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, admin, authCtxt);
+
+            lockoutPolicy.successfulLogin();
+        } catch (AccountServiceException e) {
+            lockoutPolicy.failedLogin();
+            // re-throw original exception
+            throw e;
+        }
         
         // update/check last logon
         updateLastLogon(acct);
@@ -3253,6 +3275,25 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private void verifyPassword(Account acct, String password, AuthMechanism authMech, Map<String, Object> authCtxt) throws ServiceException {
+        
+        LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
+        try {
+            if (lockoutPolicy.isLockedOut())
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account lockout");
+
+            // attempt to verify the password
+            verifyPasswordInternal(acct, password, authMech, authCtxt);
+
+            lockoutPolicy.successfulLogin();
+        } catch (AccountServiceException e) {
+            // TODO: only consider it failed if exception was due to password-mismatch
+            lockoutPolicy.failedLogin();
+            // re-throw original exception
+            throw e;
+        }
+    }
+    
+    private void pppaaa(Account acct, String password, AuthMechanism authMech, Map<String, Object> authCtxt) throws ServiceException {
         
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
         try {
