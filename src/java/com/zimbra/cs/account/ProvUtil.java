@@ -1044,7 +1044,12 @@ public class ProvUtil implements DebugListener {
             throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         DomainBy by = DomainBy.fromString(args[1]);
-        dumpDomain(sp.getDomainInfo(by, args[2]), getArgNameSet(args, 3));
+        String key = args[2];
+        Domain domain = sp.getDomainInfo(by, key);
+        if (domain == null)
+            throw AccountServiceException.NO_SUCH_DOMAIN(key);
+        else
+            dumpDomain(domain, getArgNameSet(args, 3));
     }
     
     private void doRenameDomain(String[] args) throws ServiceException {
