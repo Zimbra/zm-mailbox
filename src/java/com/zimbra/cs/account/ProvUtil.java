@@ -314,6 +314,7 @@ public class ProvUtil implements DebugListener {
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
+        CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
         CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
@@ -594,7 +595,10 @@ public class ProvUtil implements DebugListener {
             break;  
         case CREATE_ACCOUNT:
             System.out.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMap(args, 3)).getId());
-            break;                        
+            break;       
+        case CREATE_ALIAS_DOMAIN:
+            System.out.println(doCreateAliasDomain(args[1], args[2], getMap(args, 3)).getId());
+            break;
         case CREATE_COS:
             System.out.println(mProv.createCos(args[1], getMap(args, 2)).getId());
             break;        
@@ -1203,6 +1207,18 @@ public class ProvUtil implements DebugListener {
                 System.out.println(account.getId());
            }
         }
+    }
+    
+    private Domain doCreateAliasDomain(String aliasDomain, String localDoamin, Map<String, Object> attrs) throws ServiceException {
+        Domain local = lookupDomain(localDoamin);
+        
+        String localType = local.getAttr(Provisioning.A_zimbraDomainType);
+        if (!LdapProvisioning.DOMAIN_TYPE_LOCAL.equals(localType))
+            throw ServiceException.INVALID_REQUEST("target domain must be a local domain", null);
+        
+        attrs.put(Provisioning.A_zimbraDomainType, LdapProvisioning.DOMAIN_TYPE_ALIAS);
+        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, local.getId());
+        return mProv.createDomain(aliasDomain, attrs);
     }
     
     private void doGetAccount(String[] args) throws ServiceException {
