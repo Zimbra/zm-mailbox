@@ -593,7 +593,7 @@ public class MailSender {
     	HashSet<Address> sentAddresses = new HashSet<Address>();
         try {
             Address[] rcptAddresses = mm.getAllRecipients();
-            while (rcptAddresses != null) {
+            while (rcptAddresses != null && rcptAddresses.length > 0) {
             	try {
                     Transport.send(mm, rcptAddresses);
                     sentAddresses.addAll(Arrays.asList(rcptAddresses));
@@ -601,9 +601,10 @@ public class MailSender {
                 } catch (SendFailedException sfe) {
                 	if (!ignoreFailedAddresses)
                 		throw sfe;
-                	rcptAddresses = sfe.getValidSentAddresses();
-                	sentAddresses.removeAll(Arrays.asList(sfe.getInvalidAddresses()));
-                	sentAddresses.removeAll(Arrays.asList(sfe.getValidUnsentAddresses()));
+                    rcptAddresses = sfe.getValidUnsentAddresses();
+                    Address[] sent = sfe.getValidSentAddresses();
+                    if (sent != null && sent.length > 0)
+                        sentAddresses.addAll(Arrays.asList(sent));
                 }
             }
         } catch (SendFailedException e) {
