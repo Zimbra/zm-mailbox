@@ -26,6 +26,8 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
 	protected static final int DEFAULT_CACHE_SIZE = 1000;
 
+	protected static final String EXT_COMPRESSED = ".gz";
+
 	//
 	// Data
 	//
@@ -113,6 +115,11 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 		if (deleteFiles) {
 			for (File file : this.cache.values()) {
 				file.delete();
+				// attempt to delete compressed version of file
+				File gzfile = new File(file.getParentFile(), file.getName()+EXT_COMPRESSED);
+				if (gzfile.exists()) {
+					gzfile.delete();
+				}
 			}
 		}
 		this.cache.clear();
@@ -231,7 +238,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 	 * location as the original file, appending ".gz" extension.
 	 */
 	protected void compress(File src) throws IOException {
-		File dest = new File(src.getParentFile(), src.getName()+".gz");
+		File dest = new File(src.getParentFile(), src.getName()+EXT_COMPRESSED);
 		GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(dest));
 		copy(src, out);
 		out.finish();
@@ -252,7 +259,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 		try {
             OutputStream out = resp.getOutputStream();
 			if (compress) {
-				File gzSrc = new File(src.getParentFile(), src.getName()+".gz");
+				File gzSrc = new File(src.getParentFile(), src.getName()+EXT_COMPRESSED);
 				if (gzSrc.exists()) {
 					src = gzSrc;
 					compress = false;
