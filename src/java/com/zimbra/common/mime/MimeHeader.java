@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class MimeHeader {
     protected final String mName;
@@ -206,6 +207,12 @@ public class MimeHeader {
             byte[] content = null;
             try {
                 content = value.getBytes(charset);
+            } catch (OutOfMemoryError e) {
+                try {
+                    ZimbraLog.system.fatal("out of memory", e);
+                } finally {
+                    Runtime.getRuntime().halt(1);
+                }
             } catch (Throwable t) {
                 content = value.getBytes();
                 charset = Charset.defaultCharset().displayName();

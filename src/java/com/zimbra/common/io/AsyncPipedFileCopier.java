@@ -282,6 +282,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                             done = true;
                             break;
                         }
+                    } catch (OutOfMemoryError e) {
+                        try {
+                            ZimbraLog.system.fatal("out of memory", e);
+                        } finally {
+                            Runtime.getRuntime().halt(1);
+                        }
                     } catch (Throwable t) {
                         err = t;
                     } finally {
@@ -342,6 +348,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                         }
                     } finally {
                         ByteUtil.closeStream(fin);
+                    }
+                } catch (OutOfMemoryError e) {
+                    try {
+                        ZimbraLog.system.fatal("out of memory", e);
+                    } finally {
+                        Runtime.getRuntime().halt(1);
                     }
                 } catch (Throwable t) {
                     if (callbackId != -1)
@@ -424,6 +436,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                                 Throwable err = null;
                                 try {
                                     receiveFile(readOnly);
+                                } catch (OutOfMemoryError e) {
+                                    try {
+                                        ZimbraLog.system.fatal("out of memory", e);
+                                    } finally {
+                                        Runtime.getRuntime().halt(1);
+                                    }
                                 } catch (Throwable t) {
                                     err = t;
                                 } finally {
@@ -440,6 +458,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 } catch (IOException ioe) {
                     System.err.println("IOException in WriterThread: " + ioe.getMessage());
                     ioe.printStackTrace(System.err);
+                } catch (OutOfMemoryError e) {
+                    try {
+                        ZimbraLog.system.fatal("out of memory", e);
+                    } finally {
+                        Runtime.getRuntime().halt(1);
+                    }
                 }
             }
 

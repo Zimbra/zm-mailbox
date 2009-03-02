@@ -131,6 +131,12 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
                         done = true;
                         break;
                     }
+                } catch (OutOfMemoryError e) {
+                    try {
+                        ZimbraLog.system.fatal("out of memory", e);
+                    } finally {
+                        Runtime.getRuntime().halt(1);
+                    }
                 } catch (Throwable t) {
                     err = t;
                 } finally {
