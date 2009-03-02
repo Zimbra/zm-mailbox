@@ -32,24 +32,17 @@ import com.zimbra.cs.account.Provisioning;
  
 public class MailCharset extends AttributeCallback {
 
-    /**
-     * check to make sure zimbraPrefMailSignature is shorter than the limit
-     */
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
         String charset = null;
         SingleValueMod mod = singleValueMod(attrName, value);
-        if (mod.unsetting()) {
-            if (entry instanceof Cos)
-                throw ServiceException.INVALID_REQUEST("cannot unset " + Provisioning.A_zimbraPrefMailDefaultCharset + " on cos", null);
-            else
-                return;
-        } else
+        if (mod.unsetting())
+            return;
+        else
             charset = mod.value();
         
-        
-        try {
+         try {
             Charset.forName(charset);
         } catch (IllegalCharsetNameException e) {
             throw ServiceException.INVALID_REQUEST("charset name " + charset + " is illegal", e);
