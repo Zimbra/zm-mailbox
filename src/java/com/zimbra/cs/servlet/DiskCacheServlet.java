@@ -8,6 +8,9 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import org.apache.commons.collections.LRUMap;
 
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.service.admin.FlushCache;
+
 /**
  * Base class for servlets that cache resources to disk.
  */
@@ -49,6 +52,24 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 		super.init(config);
 		createCache();
 		createCacheDir();
+	}
+
+	//
+	// Servlet methods
+	//
+
+	public void service(ServletRequest req, ServletResponse resp)
+	throws IOException, ServletException {
+		Boolean flushCache = (Boolean)req.getAttribute(FlushCache.FLUSH_CACHE);
+		if (flushCache != null && flushCache.booleanValue()) {
+			if (ZimbraLog.misc.isDebugEnabled()) {
+				ZimbraLog.misc.debug("flushing "+getClass().getName()+" cache");
+			}
+			boolean deleteFiles = true; // TODO: Should we skip the delete?
+			clearCache(deleteFiles);
+			return;
+		}
+		super.service(req, resp);
 	}
 
 	//

@@ -20,6 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -30,10 +35,14 @@ import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.SkinUtil;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class FlushCache extends AdminDocumentHandler {
+
+	public static final String FLUSH_CACHE = "flushCache";
     
     /**
      * must be careful and only allow deletes domain admin has access to
@@ -51,8 +60,13 @@ public class FlushCache extends AdminDocumentHandler {
         Element eCache = request.getElement(AdminConstants.E_CACHE);
         String type = eCache.getAttribute(AdminConstants.A_TYPE);
         
-        if (type.equals("skin"))
+	    if (type.equals("zimlet")) {
+	        FlushCache.sendFlushRequest(context, "/service", "/zimlet/all.js");
+	    }
+        if (type.equals("skin")) {
             SkinUtil.flushSkinCache();
+            FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
+        }
         else if (type.equals("locale"))
             L10nUtil.flushLocaleCache();
         else {
@@ -77,5 +91,40 @@ public class FlushCache extends AdminDocumentHandler {
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_flushCache);
     }
+
+	static void sendFlushRequest(Map<String,Object> context,
+	                             String appContext, String resourceUri) throws ServiceException {
+		ServletContext containerContext = (ServletContext)context.get(SoapServlet.SERVLET_CONTEXT);
+		if (containerContext == null) {
+			if (ZimbraLog.misc.isDebugEnabled()) {
+				ZimbraLog.misc.debug("flushCache: no container context");
+			}
+			return;
+		}
+		ServletContext webappContext = containerContext.getContext(appContext);
+		RequestDispatcher dispatcher = webappContext.getRequestDispatcher(resourceUri);
+		if (dispatcher == null) {
+			if (ZimbraLog.misc.isDebugEnabled()) {
+				ZimbraLog.misc.debug("flushCache: no dispatcher for "+resourceUri);
+			}
+			return;
+		}
+
+		try {
+			if (ZimbraLog.misc.isDebugEnabled()) {
+				ZimbraLog.misc.debug("flushCache: sending flush request");
+			}
+			ServletRequest request = (ServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
+			request.setAttribute(FLUSH_CACHE, Boolean.TRUE);
+			ServletResponse response = (ServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
+			dispatcher.include(request, response);
+		}
+		catch (Throwable t) {
+			// ignore error
+			if (ZimbraLog.misc.isDebugEnabled()) {
+				ZimbraLog.misc.debug("flushCache: "+t.getMessage());
+			}
+		}
+	}
 
 }
