@@ -23,40 +23,70 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class FlushCache extends AdminDocumentHandler {
     
+    /**
+     * must be careful and only allow deletes domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         Element eCache = request.getElement(AdminConstants.E_CACHE);
         String type = eCache.getAttribute(AdminConstants.A_TYPE);
+        
+        if (isDomainAdminOnly(zsc)) {
+            if (!CacheEntryType.account.name().equals(type))
+                throw ServiceException.PERM_DENIED("cannot flush cache");
+        }
         
         if (type.equals("skin"))
             SkinUtil.flushSkinCache();
         else if (type.equals("locale"))
             L10nUtil.flushLocaleCache();
         else {
+            Provisioning prov = Provisioning.getInstance();
             List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
             CacheEntry[] entries = null;
             if (eEntries.size() > 0) {
                 entries = new CacheEntry[eEntries.size()];
                 int i = 0;
                 for (Element eEntry : eEntries) {
-                    entries[i++] = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
+                    CacheEntry ce = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
                                                   eEntry.getText());
+                    
+                    if (isDomainAdminOnly(zsc)) {
+                        // must be flushing account 
+                        AccountBy accountBy = (ce.mEntryBy==CacheEntryBy.id)? AccountBy.id : AccountBy.name;
+                        Account account = prov.getFromCache(accountBy, ce.mEntryIdentity);
+                        if (account != null && !canAccessEmail(zsc, account.getName()))
+                            throw ServiceException.PERM_DENIED("cannot flush cache");
+                    }
+                    entries[i++] = ce;
                 }
             }
-            Provisioning.getInstance().flushCache(type, entries);
+            
+            // domain admin cannot flush cache on all accounts
+            if (isDomainAdminOnly(zsc) && entries == null)
+                throw ServiceException.PERM_DENIED("cannot flush cache");
+            
+            prov.flushCache(type, entries);
         }
 
-        Element response = lc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
         return response;
     }
 

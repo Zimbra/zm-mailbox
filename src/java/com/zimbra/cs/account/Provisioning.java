@@ -2762,6 +2762,9 @@ public abstract class Provisioning {
      */
     public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
     
+    public Account getFromCache(AccountBy keyType, String key) throws ServiceException {
+        return null;
+    }
     
     public static enum CacheEntryType {
         account,
