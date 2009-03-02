@@ -14,8 +14,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-
+import com.zimbra.cs.account.ldap.LdapUtil;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -32,7 +33,7 @@ public class TestPreAuthServlet extends TestCase {
         return preAuthKey;
     }
     
-    String genPreAuthUrl(String preAuthKey, String user) throws Exception {
+    String genPreAuthUrl(String preAuthKey, String user, boolean shouldFail) throws Exception {
         
         HashMap<String,String> params = new HashMap<String,String>();
         String acctName = TestUtil.getAddress(user);
@@ -49,7 +50,14 @@ public class TestPreAuthServlet extends TestCase {
         StringBuffer url = new StringBuffer("/service/preauth?");
         url.append("account=" + acctName);
         url.append("&by=" + authBy);
-        url.append("&timestamp=" + timestamp);
+        if (shouldFail) {
+            // if doing negative testing, mess up with the timestamp so
+            // it won't be computed to the same value at the server and 
+            // the preauth will fail
+            long timestampBad = timestamp + 10;
+            url.append("&timestamp=" + timestampBad);
+        } else    
+            url.append("&timestamp=" + timestamp);
         url.append("&expires=" + expires);
         url.append("&preauth=" + preAuth);
         
@@ -72,6 +80,7 @@ public class TestPreAuthServlet extends TestCase {
             System.out.println("statusCode=" + statusCode);
             System.out.println("statusLine=" + statusLine);
             
+            /*
             System.out.println("Headers");
             Header[] respHeaders = method.getResponseHeaders();
             for (int i=0; i < respHeaders.length; i++) {
@@ -81,6 +90,7 @@ public class TestPreAuthServlet extends TestCase {
             
             String respBody = method.getResponseBodyAsString();
             // System.out.println("respBody=" + respBody);
+            */
             
         } catch (HttpException e) {
             throw e;
@@ -91,14 +101,94 @@ public class TestPreAuthServlet extends TestCase {
         }
     }
     
-    public void testPreAuthServlet() throws Exception {
+    private void doPreAuth(String userLocalPart, boolean shouldFail) throws Exception {
         String preAuthKey = setUpDomain();
-        String preAuthUrl = genPreAuthUrl(preAuthKey, "user1");
+        String preAuthUrl = genPreAuthUrl(preAuthKey, userLocalPart, shouldFail);
         
         System.out.println("preAuthKey=" + preAuthKey);
         System.out.println("preAuth=" + preAuthUrl);
         
         doPreAuthServletRequest(preAuthUrl);
+    }
+    
+    public void disable_testPreAuthServlet() throws Exception {
+        doPreAuth("user1", false);
+    }
+    
+    private Account dumpLockoutAttrs(String user) throws Exception {
+        Account acct = Provisioning.getInstance().get(AccountBy.name, user);
+        
+        System.out.println();
+        System.out.println(Provisioning.A_zimbraAccountStatus + ": " + acct.getAttr(Provisioning.A_zimbraAccountStatus));
+        System.out.println(Provisioning.A_zimbraPasswordLockoutLockedTime + ": " + acct.getAttr(Provisioning.A_zimbraPasswordLockoutLockedTime));
+
+        System.out.println(Provisioning.A_zimbraPasswordLockoutFailureTime + ": ");
+        String[] failureTime = acct.getMultiAttr(Provisioning.A_zimbraPasswordLockoutFailureTime);
+        for (String ft : failureTime)
+            System.out.println("    " + acct.getAttr(Provisioning.A_zimbraPasswordLockoutFailureTime));
+        
+        return acct;
+    }
+    
+    public void testPreAuthLockout() throws Exception {
+        String user = "user4";
+        Account acct = TestUtil.getAccount(user);
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        
+        int lockoutAfterNumFailures = 3;
+        
+        // setup lockout config attrs
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LdapUtil.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "1m");
+        attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, lockoutAfterNumFailures+"");
+        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "30s");
+        
+        // put the account in active mode, clean all lockout attrs that might have been set 
+        // in previous test
+        attrs.put(Provisioning.A_zimbraAccountStatus, "active");
+        attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, "");
+        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, "");
+        
+        prov.modifyAttrs(acct, attrs);
+        
+        System.out.println("Before the test:");
+        dumpLockoutAttrs(user);
+        System.out.println();
+        
+        // the account should be locked out at the last iteration
+        for (int i=0; i<=lockoutAfterNumFailures; i++) {
+            System.out.println("======================");
+            System.out.println("Iteration: " + i);
+            
+            doPreAuth(user, true);
+            Account a = dumpLockoutAttrs(user);
+            System.out.println("\n\n");
+            
+            if (i >= lockoutAfterNumFailures-1)
+                assertEquals("lockout", a.getAttr(Provisioning.A_zimbraAccountStatus));
+            else
+                assertEquals("active", a.getAttr(Provisioning.A_zimbraAccountStatus));
+            
+            // sleep two seconds
+            Thread.sleep(2000);
+        }
+        
+        /*
+        zimbraPasswordLockoutDuration: 3m
+        zimbraPasswordLockoutEnabled: TRUE
+        zimbraPasswordLockoutFailureLifetime: 1m
+        zimbraPasswordLockoutMaxFailures: 5
+
+        <attr id="378" name="zimbraPasswordLockoutEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+        <attr id="379" name="zimbraPasswordLockoutDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+        <attr id="380" name="zimbraPasswordLockoutMaxFailures" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+        <attr id="381" name="zimbraPasswordLockoutFailureLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+        <attr id="382" name="zimbraPasswordLockoutLockedTime" type="gentime" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+        <attr id="383" name="zimbraPasswordLockoutFailureTime" type="gentime" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+        */
     }
     
     /**
