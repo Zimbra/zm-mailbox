@@ -20,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -43,6 +42,7 @@ import java.util.zip.GZIPOutputStream;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.localconfig.LC;
@@ -282,6 +282,7 @@ public class TarFormatter extends Formatter {
         Set<String> names, boolean version, TarOutputStream tos) throws
         ServiceException {
         String charset = context.params.get("charset");
+        int cnt = 1;
         String ext = null, name = null;
         String extra = null;
         Integer fid = mi.getFolderId();
@@ -372,24 +373,23 @@ public class TarFormatter extends Formatter {
         if (fldr == null) {
             Folder f = mi.getMailbox().getFolderById(context.opContext, fid);
             
+            cnts.put(fid, 1);
             fldr = f.getPath();
             if (fldr.startsWith("/"))
                 fldr = fldr.substring(1);
             fldr = ILLEGAL_FOLDER_CHARS.matcher(fldr).replaceAll("_");
             fldrs.put(fid, fldr);
-            cnts.put(fid, 1);
         } else if (!(mi instanceof Folder)) {
             final int BATCH = 500;
-            int cnt = cnts.get(fid) + 1;
             
+            cnt = cnts.get(fid) + 1;
             cnts.put(fid, cnt);
-            cnt /= BATCH;
-            if (cnt > 0)
-                fldr = fldr + '!' + cnt; 
+            if (cnt / BATCH > 0)
+                fldr = fldr + '!' + (cnt / BATCH); 
         }
         try {
-            String path = getEntryName(mi, fldr, name, ext, names);
             byte data[] = null;
+            String path = getEntryName(mi, fldr, name, ext, names);
             TarEntry entry = new TarEntry(path + ".meta");
             long miSize = mi.getSize();
 
@@ -443,6 +443,39 @@ public class TarFormatter extends Formatter {
                 VCard vcf = VCard.formatContact((Contact)mi);
                 
                 data = vcf.formatted.getBytes(charset);
+            } else if (mi instanceof Message) {
+                if (context.hasPart()) {
+                    MimeMessage mm = ((Message)mi).getMimeMessage();
+                    
+                    for (String part : context.getPart().split(",")) {
+                        MimePart mp = Mime.getMimePart(mm, part);
+                        int sz;
+                        
+                        if (mp == null)
+                            throw MailServiceException.NO_SUCH_PART(part);
+                        name = Mime.getFilename(mp);
+                        sz = mp.getSize();
+                        if (sz == -1)
+                            sz = (int)miSize;
+                        if (name == null) {
+                            name = "attachment";
+                        } else {
+                            int dot = name.lastIndexOf('.');
+                            
+                            if (dot != -1 && dot < name.length() - 1) {
+                                ext = name.substring(dot);
+                                name = name.substring(0, dot);
+                            }
+                        }
+                        entry.setName(getEntryName(mi, fldr, name, ext, names));
+                        data = ByteUtil.readInput(mp.getInputStream(), sz, -1);
+                        entry.setSize(data.length);
+                        tos.putNextEntry(entry);
+                        tos.write(data);
+                        tos.closeEntry();
+                    }
+                    return tos;
+                }
             }
             entry.setName(path);
             if (data != null) {
