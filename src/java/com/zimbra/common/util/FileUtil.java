@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -92,38 +93,39 @@ public class FileUtil {
             }
         }
     }
-    
+
     /**
-     * GZIP uncompress file src into file dest.
+     * GZip uncompresses the data stored in <tt>src</tt> and writes the uncompressed
+     * data to <tt>dest</tt>.
+     * @param src compressed file
+     * @param dest uncompressed output file
+     * @sync <tt>true</tt> to fsync writes
      */
     public static void uncompress(File src, File dest, boolean sync) throws IOException {
-        GZIPInputStream fin = null;
+        uncompress(new GZIPInputStream(new FileInputStream(src)), dest, sync);
+    }
+
+    /**
+     * GZip uncompresses the data returned by <tt>in</tt> and writes the uncompressed
+     * data to <tt>dest</tt>.  Closes the <tt>in</tt> automatically. 
+     * @param in gzip-compressed data stream
+     * @param dest output file
+     * @sync <tt>true</tt> to fsync writes
+     */
+    public static void uncompress(InputStream in, File dest, boolean sync) throws IOException {
         FileOutputStream fout = null;
         try {
-            fin = new GZIPInputStream(new BufferedInputStream(new FileInputStream(src)));
             fout = new FileOutputStream(dest);
             byte[] buf = new byte[COPYBUFLEN];
             int byteRead;
-            while ((byteRead = fin.read(buf)) != -1) {
+            while ((byteRead = in.read(buf)) != -1) {
                 fout.write(buf, 0, byteRead);
             }
             if (sync)
                 fout.getChannel().force(true);
         } finally {
-            if (fin != null) {
-                try {
-                    fin.close();
-                } catch (IOException ioe) {
-                    ZimbraLog.misc.warn("FileUtil.uncompress(" + src + "," + dest + "): ignoring exception while closing input channel", ioe);
-                }
-            }
-            if (fout != null) {
-                try {
-                    fout.close();
-                } catch (IOException ioe) {
-                    ZimbraLog.misc.warn("FileUtil.uncompress(" + src + "," + dest + "): ignoring exception while closing output channel", ioe);
-                }
-            }
+            ByteUtil.closeStream(in);
+            ByteUtil.closeStream(fout);
         }
     }
 
@@ -134,7 +136,7 @@ public class FileUtil {
         InputStream in = null;
         try {
             FileInputStream fin = new FileInputStream(file);
-            in = new BufferedInputStream(fin);
+            in = new BufferedInputStream(fin, 2);
             return ByteUtil.isGzipped(in);
         } finally {
             ByteUtil.closeStream(in);
@@ -344,15 +346,13 @@ public class FileUtil {
 		return fmt.format(new Date());
 	}
 
-	private static class MTimeComparator implements Comparator {
+	private static class MTimeComparator implements Comparator<File> {
         private boolean mReverse;
         
         private MTimeComparator(boolean reverse) {
             mReverse = reverse;
         }
-		public int compare(Object o1, Object o2) {
-			File f1 = (File) o1;
-			File f2 = (File) o2;
+		public int compare(File f1, File f2) {
 			long diff = mReverse ? 
                     f2.lastModified() - f1.lastModified() : f1.lastModified() - f2.lastModified();
 			if (diff < 0)

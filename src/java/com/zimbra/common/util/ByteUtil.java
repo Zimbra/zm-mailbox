@@ -486,7 +486,6 @@ public class ByteUtil {
 	            md.update(buffer, 0, numBytes);
 	        }
 	        byte[] digest = md.digest();
-	        in.close();
 	        if (base64)
 	            return encodeFSSafeBase64(digest);
 	        else
@@ -495,6 +494,8 @@ public class ByteUtil {
             // this should never happen unless the JDK is foobar
             //  e.printStackTrace();
             throw new RuntimeException(e);
+        } finally {
+            ByteUtil.closeStream(in);
         }
 	}
 
