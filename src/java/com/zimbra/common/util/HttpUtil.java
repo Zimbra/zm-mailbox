@@ -125,7 +125,7 @@ public class HttpUtil {
      * @param req
      * @return the original request hostname 
      */
-    public static String getVirtulaHost(HttpServletRequest req) {
+    public static String getVirtualHost(HttpServletRequest req) {
         String virtualHost = req.getHeader("X-Forwarded-Host");
         if (virtualHost != null)
             return virtualHost;
