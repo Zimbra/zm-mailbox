@@ -51,18 +51,21 @@ public class SendShareNotification extends MailDocumentHandler {
         Account authAccount = getAuthenticatedAccount(zsc);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(authAccount.getId(), false);
         
-        ShareInfo shareInfo = parseRequest(zsc, context, octxt, authAccount, mbox, request);
+        // validate the share shecpfied in the request and build a share info if all is valid 
+        ShareInfo shareInfo = validateRequest(zsc, context, octxt, authAccount, mbox, request);
         
+        // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
         String notes = (eNotes==null)?null:eNotes.getText();
         
+        // send the message
         sendShareNotif(octxt, authAccount, mbox, shareInfo, notes);
 
         Element response = zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
         return response;
     }
     
-    private ShareInfo parseRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
+    private ShareInfo validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
             Account authAccount, Mailbox mbox, Element req) throws ServiceException {
         
         Provisioning prov = Provisioning.getInstance();
@@ -70,7 +73,7 @@ public class SendShareNotification extends MailDocumentHandler {
         Element eShare = req.getElement(MailConstants.E_SHARE);
 
         //
-        // validate grantee 
+        // grantee
         //
         byte granteeType = ACL.stringToType(eShare.getAttribute(MailConstants.A_GRANT_TYPE)); 
         String granteeId = eShare.getAttribute(MailConstants.A_ZIMBRA_ID, null); 
@@ -93,7 +96,7 @@ public class SendShareNotification extends MailDocumentHandler {
         }
 
         //
-        // validate folder
+        // folder
         //
         Folder folder = getFolder(octxt, authAccount, mbox, eShare);
         
@@ -109,6 +112,7 @@ public class SendShareNotification extends MailDocumentHandler {
         
         MatchingGrant matchingGrant;
         
+        // see if the share specified in the request is real
         if (Provisioning.onLocalServer(ownerAcct))
             matchingGrant = getMatchingGrant(octxt, prov, folder, granteeType, matchingId, ownerAcct);
         else
@@ -134,8 +138,7 @@ public class SendShareNotification extends MailDocumentHandler {
         
         //
         // just a display name for the shared folder for the grantee to see.
-        // the mountpoint will be created using the folder id in the owner's
-        // mailbox.
+        // the mountpoint will be created using the folder id.
         //
         // if user2 is sharing with user3 a mountpoint that belongs to user1,
         // we should show user3 the folder(mountpoint) name in user2's mailbox,
@@ -162,7 +165,7 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     /*
-     * convenient class for passing grant info back
+     * utility class for passing grant info back from getMatchingGrant/getMatchingGrantRemote
      */
     private static class MatchingGrant {
         
