@@ -225,14 +225,14 @@ public class DateUtil {
     private static final Map<String, Integer> MONTH_NUMBER = new HashMap<String, Integer>(16);
         static {
             for (int i = 0; i < MONTH_NAME.length; i++)
-                MONTH_NUMBER.put(MONTH_NAME[i], i);
+                MONTH_NUMBER.put(MONTH_NAME[i].toUpperCase(), i);
         }
 
     private static int readCalendarMonth(String encoded, int start, Calendar cal) throws ParseException {
         int i = skipText(encoded, start, true);
         String monthabbr = encoded.substring(start, i);
 
-        Integer month = MONTH_NUMBER.get(monthabbr);
+        Integer month = MONTH_NUMBER.get(monthabbr.toUpperCase());
         if (month == null) {
             try {
                 month = Integer.valueOf(monthabbr) - 1;
@@ -600,7 +600,7 @@ public class DateUtil {
         System.out.println(parseRFC2822Date("Tue,  1 May 2007 09:41(() )():(() )()26 -0700", new Date()));
 
         System.out.println(parseRFC2822Date("21 Nov 97 09::06 GMT", new Date()));
-        System.out.println(parseRFC2822Date("21 Nov 97 09:55:06 R", new Date()));
+        System.out.println(parseRFC2822Date("21 nOV 97 09:55:06 R", new Date()));
         System.out.println(parseRFC2822Date("21 11 06 09:55:06 GMT", new Date()));
 
         /*
