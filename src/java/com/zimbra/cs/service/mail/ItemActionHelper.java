@@ -496,7 +496,7 @@ public class ItemActionHelper {
             boolean fromSpam = item.inSpam();
             if ((fromSpam && toMailbox) || (!fromSpam && toSpam)) {
                 try {
-                    SpamHandler.getInstance().handle(mMailbox, item.getId(), item.getType(), toSpam);
+                    SpamHandler.getInstance().handle(mOpCtxt, mMailbox, item.getId(), item.getType(), toSpam);
                     ZimbraLog.mailop.info("sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam): " + new ItemId(item).toString());
                 } catch (Throwable t) {
                     ZimbraLog.mailop.info("could not train spam filter: " + new ItemId(item).toString(), t);
