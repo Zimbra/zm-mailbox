@@ -25,11 +25,12 @@
 // of each version, such as by who and when the version was edited, and the
 // fragment of each version.
 //
-// When updating an existing Document or Wiki, the client must supply last known
-// version of the document in 'ver' attribute.  This is used to prevent
-// blindly overwriting someone else's change made at the same time.  The update
+// When updating an existing Document or Wiki, the client must supply the id
+// of Document or Wiki, and the last known version of the document in 
+// 'ver' attribute.  This is used to prevent blindly overwriting 
+// someone else's change made between the update.  The update
 // will succeed only when the last known version supplied by the client matches
-// the current version in the server.
+// the current version of the item identified by item-id.
 //
 // Saving a new document, as opposed to adding a revision of existing document, should leave
 // the id and ver fields empty in the request.  Then the server checks and see if the named
