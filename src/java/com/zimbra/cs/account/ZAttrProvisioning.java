@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090227-1033 */
+    /* build: 5.0 pshao 20090303-1408 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3662,6 +3662,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=104)
     public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
+
+    /**
+     * max number of bytes stored in the uncompressed blob cache on disk
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=825)
+    public static final String A_zimbraMailUncompressedCacheMaxBytes = "zimbraMailUncompressedCacheMaxBytes";
+
+    /**
+     * max number of files in the uncompressed blob cache on disk
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=824)
+    public static final String A_zimbraMailUncompressedCacheMaxFiles = "zimbraMailUncompressedCacheMaxFiles";
 
     /**
      * URL prefix for where the zimbra app resides on this server

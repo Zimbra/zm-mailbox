@@ -4134,5 +4134,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="824" name="zimbraMailUncompressedCacheMaxFiles" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>max number of files in the uncompressed blob cache on disk</desc>
+</attr>
+
+<attr id="825" name="zimbraMailUncompressedCacheMaxBytes" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0">
+  <globalConfigValue>1073741824</globalConfigValue>
+  <desc>max number of bytes stored in the uncompressed blob cache on disk</desc>
+</attr>
+
 
 </attrs>

@@ -41,7 +41,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090227-1033 */
+    /* build: 5.0 pshao 20090303-1408 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -5953,6 +5953,150 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailURL, "");
+        return attrs;
+    }
+
+    /**
+     * max number of bytes stored in the uncompressed blob cache on disk
+     *
+     * @return zimbraMailUncompressedCacheMaxBytes, or 1073741824 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=825)
+    public int getMailUncompressedCacheMaxBytes() {
+        return getIntAttr(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, 1073741824);
+    }
+
+    /**
+     * max number of bytes stored in the uncompressed blob cache on disk
+     *
+     * @param zimbraMailUncompressedCacheMaxBytes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=825)
+    public void setMailUncompressedCacheMaxBytes(int zimbraMailUncompressedCacheMaxBytes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, Integer.toString(zimbraMailUncompressedCacheMaxBytes));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of bytes stored in the uncompressed blob cache on disk
+     *
+     * @param zimbraMailUncompressedCacheMaxBytes new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=825)
+    public Map<String,Object> setMailUncompressedCacheMaxBytes(int zimbraMailUncompressedCacheMaxBytes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, Integer.toString(zimbraMailUncompressedCacheMaxBytes));
+        return attrs;
+    }
+
+    /**
+     * max number of bytes stored in the uncompressed blob cache on disk
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=825)
+    public void unsetMailUncompressedCacheMaxBytes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of bytes stored in the uncompressed blob cache on disk
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=825)
+    public Map<String,Object> unsetMailUncompressedCacheMaxBytes(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, "");
+        return attrs;
+    }
+
+    /**
+     * max number of files in the uncompressed blob cache on disk
+     *
+     * @return zimbraMailUncompressedCacheMaxFiles, or 5000 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=824)
+    public int getMailUncompressedCacheMaxFiles() {
+        return getIntAttr(Provisioning.A_zimbraMailUncompressedCacheMaxFiles, 5000);
+    }
+
+    /**
+     * max number of files in the uncompressed blob cache on disk
+     *
+     * @param zimbraMailUncompressedCacheMaxFiles new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=824)
+    public void setMailUncompressedCacheMaxFiles(int zimbraMailUncompressedCacheMaxFiles) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxFiles, Integer.toString(zimbraMailUncompressedCacheMaxFiles));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of files in the uncompressed blob cache on disk
+     *
+     * @param zimbraMailUncompressedCacheMaxFiles new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=824)
+    public Map<String,Object> setMailUncompressedCacheMaxFiles(int zimbraMailUncompressedCacheMaxFiles, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxFiles, Integer.toString(zimbraMailUncompressedCacheMaxFiles));
+        return attrs;
+    }
+
+    /**
+     * max number of files in the uncompressed blob cache on disk
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=824)
+    public void unsetMailUncompressedCacheMaxFiles() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxFiles, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of files in the uncompressed blob cache on disk
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=824)
+    public Map<String,Object> unsetMailUncompressedCacheMaxFiles(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxFiles, "");
         return attrs;
     }
 
