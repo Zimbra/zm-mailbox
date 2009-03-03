@@ -433,12 +433,7 @@ public class LiveImport extends MailItemImport {
                         ld = new LiveData(ds, localMsg.getId(), folderId,
                             localMsg.getChangeDate(), remoteMsg.getMessageID(),
                             remoteFolder.getUID(), remoteDate.getTime(), remoteFlags);
-                        try {
-                            ld.add();
-                        } catch (Exception ee) {
-                            ld.delete();
-                            ld.add();
-                        }
+                        ld.set();
                         numAddedLocally++;
                     }
                     continue;
@@ -448,9 +443,9 @@ public class LiveImport extends MailItemImport {
                 } catch (Exception e) {
                     ZimbraLog.datasource.debug("Message was deleted locally. Deleting remote copy with UID %s.",
                         remoteMsg.getMessageID());
+                    localIds.remove(localId);
                     remoteMsg.setFlag(Flags.Flag.DELETED, true);
                     ld.delete();
-                    localIds.remove(localId);
                     numDeletedRemotely++;
                     continue;
                 }
@@ -523,6 +518,10 @@ public class LiveImport extends MailItemImport {
             } catch (Exception e) {
                 ZimbraLog.datasource.error("Error creating/modifying local copy of new remote message %s.",
                     remoteMsg.getMessageID(), e);
+                if (e instanceof IOException) {
+                    remoteFolder.close(true);
+                    return;
+                }
             }
         }
         // Remaining local ID's are messages that were not found on the remote server
@@ -554,12 +553,7 @@ public class LiveImport extends MailItemImport {
                         localMsg.getChangeDate(), newUids[0],
                         remoteFolder.getUID(), remoteDate.getTime(),
                         getZimbraFlags(remoteMsg));
-                    try {
-                        ld.add();
-                    } catch (Exception e) {
-                        ld.delete();
-                        ld.add();
-                    }
+                    ld.set();
                     numAddedRemotely++;
                 } else {
                     String remoteId = ld.getDataSourceItem().remoteId;
@@ -620,6 +614,8 @@ public class LiveImport extends MailItemImport {
             } catch (Exception e) {
                 ZimbraLog.datasource.error("Error creating remote copy of new local message %d.",
                     localId, e);
+                if (e instanceof IOException)
+                    break;
             }
         }
         remoteFolder.close(true);
@@ -815,12 +811,7 @@ public class LiveImport extends MailItemImport {
                     remoteContact.getUID(), contactFolder.getURI().toString(),
                     remoteContact.getModifiedDate().getTime(), 0);
 
-                try {
-                    ld.add();
-                } catch (Exception e) {
-                    ld.delete();
-                    ld.add();
-                }
+                ld.set();
                 numAddedLocally++;
             } catch (Exception e) {
                 ZimbraLog.datasource.warn("Creating local contact %s failed: %s",
@@ -846,12 +837,7 @@ public class LiveImport extends MailItemImport {
     
                 ZimbraLog.datasource.debug("Found new remote group %s. Creating local copy.",
                     remoteGroup.getName());
-                try {
-                    ld.add();
-                } catch (Exception e) {
-                    ld.delete();
-                    ld.add();
-                }
+                ld.set();
                 numAddedLocally++;
             } catch (Exception e) {
                 ZimbraLog.datasource.warn("Creating local group %s failed: %s",
@@ -897,12 +883,7 @@ public class LiveImport extends MailItemImport {
                             newUids[0], contactFolder.getURI().toString(),
                             remoteContact.getModifiedDate().getTime(), 0);
 
-                        try {
-                            ld.add();
-                        } catch (Exception e) {
-                            ld.delete();
-                            ld.add();
-                        }
+                        ld.set();
                         numAddedRemotely++;
                     }
                 } else {

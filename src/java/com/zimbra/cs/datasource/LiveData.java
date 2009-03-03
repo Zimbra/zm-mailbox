@@ -113,6 +113,15 @@ public class LiveData {
         DbDataSource.deleteMappings(ds, toDelete);
     }
     
+    public void set() throws ServiceException {
+        try {
+            DbDataSource.addMapping(ds, dsi);
+        } catch (Exception e) {
+            delete();
+            DbDataSource.addMapping(ds, dsi);
+        }
+    }
+    
     public void update() throws ServiceException {
         DbDataSource.updateMapping(ds, dsi);
     }
