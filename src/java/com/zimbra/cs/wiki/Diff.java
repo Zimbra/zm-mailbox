@@ -26,7 +26,7 @@ import com.zimbra.common.util.ByteUtil;
 /*************************************************************************
  *
  * http://www.cs.princeton.edu/introcs/96optimization/
- * Copyright © 2007, Robert Sedgewick and Kevin Wayne. 
+ * Copyright 2007, Robert Sedgewick and Kevin Wayne. 
  *
  *    Longest common subsequence. Now we consider a more sophisticated 
  *    application of dynamic programming to a central problem arising in 
