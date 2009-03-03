@@ -135,13 +135,16 @@ public class DataSourceManager {
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
+            if (ds.getMailbox().getMailboxLock() != null) {
+                ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
+                return;
+            }            
             importStatus.mHasRun = true;
             importStatus.mIsRunning = true;
             importStatus.mSuccess = false;
             importStatus.mError = null;
         }
-        
-        
+                
         boolean success = false;
         String error = null;
 

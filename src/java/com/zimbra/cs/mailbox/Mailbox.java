@@ -582,7 +582,7 @@ public class Mailbox {
         return mData.indexVolumeId;
     }
 
-    MailboxLock getMailboxLock() {
+    public MailboxLock getMailboxLock() {
         return mMaintenance;
     }
 
