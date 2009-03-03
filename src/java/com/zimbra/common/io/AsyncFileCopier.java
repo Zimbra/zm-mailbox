@@ -131,12 +131,6 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
                         done = true;
                         break;
                     }
-                } catch (OutOfMemoryError e) {
-                    try {
-                        ZimbraLog.system.fatal("out of memory", e);
-                    } finally {
-                        Runtime.getRuntime().halt(1);
-                    }
                 } catch (Throwable t) {
                     err = t;
                 } finally {
@@ -170,7 +164,7 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
             oldPath.renameTo(newPath);
         }
 
-        private void delete(File file) {
+        private void delete(File file) throws IOException {
             file.delete();
         }
     }

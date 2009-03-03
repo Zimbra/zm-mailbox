@@ -83,40 +83,6 @@ public class L10nUtil {
         // caldav messages
         caldavCalendarDescription,
         
-        // share notification
-        shareNotifSubject,
-
-        shareNotifBodyIntro,
-
-        shareNotifBodyAddedToGroup1,
-        shareNotifBodyAddedToGroup2,
-
-        shareNotifBodyGranteeRoleViewer,
-        shareNotifBodyGranteeRoleManager,
-        shareNotifBodyGranteeRoleAdmin,
-
-        shareNotifBodySharedItem,
-        shareNotifBodyFolderDesc,
-        shareNotifBodyOwner,
-        shareNotifBodyGrantee,
-        shareNotifBodyRole,
-        shareNotifBodyAllowedActions,
-        shareNotifBodyNotes,
-
-        shareNotifBodyActionRead,
-        shareNotifBodyActionWrite,
-        shareNotifBodyActionInsert,
-        shareNotifBodyActionDelete,
-        shareNotifBodyActionAction,
-        shareNotifBodyActionAdmin,
-        shareNotifBodyActionPrivate,
-        shareNotifBodyActionFreebusy,
-        shareNotifBodyActionSubfolder,
-        //////////////////////
-
-        // read-receipt notification body
-        readReceiptNotification,
-
         // ZimbraSync client invitation text
         zsApptNew,
         zsApptModified,

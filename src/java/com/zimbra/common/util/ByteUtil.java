@@ -94,8 +94,8 @@ public class ByteUtil {
     /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
      *  array.  Closes the stream, regardless of whether an error occurs.
      * @param is        The stream to read from.
-     * @param sizeHint  A (non-binding) hint as to the size of the resulting
-     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint. */
+     * @param sizeHint  A (no-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array. */
     public static byte[] getContent(InputStream is, int sizeHint) throws IOException {
         return getContent(is, sizeHint, -1);
     }
@@ -106,10 +106,9 @@ public class ByteUtil {
      *  larger than that limit, an <code>IOException</code> is thrown.
      * @param is        The stream to read from.
      * @param sizeHint  A (non-binding) hint as to the size of the resulting
-     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint.
+     *                  <tt>byte[]</tt> array.
      * @param sizeLimit The maximum number of bytes that can be copied from the
-     *                  stream before an <code>IOException</code> is thrown,
-     *                  or <tt>-1</tt> for no limit. */
+     *                  stream before an <code>IOException</code> is thrown. */
     public static byte[] getContent(InputStream is, int sizeHint, long sizeLimit) throws IOException {
         return getContent(is, -1, sizeHint, sizeLimit);
     }
@@ -123,7 +122,7 @@ public class ByteUtil {
      * @param length    The maximum number of bytes that will be copied from
      *                  the stream.
      * @param sizeHint  A (non-binding) hint as to the size of the resulting
-     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint. */
+     *                  <tt>byte[]</tt> array. */
     public static byte[] getPartialContent(InputStream is, int length, int sizeHint) throws IOException {
         return getContent(is, length, sizeHint, -1);
     }
@@ -160,10 +159,6 @@ public class ByteUtil {
      * Reads a <tt>String</tt> from the given <tt>Reader</tt>.  Reads
      * until the either end of the stream is hit or until <tt>length</tt> characters
      * are read.
-     * 
-     * @param reader the content source
-     * @param length number of characters to read, or <tt>-1</tt> for no limit
-     * @param close <tt>true</tt> to close the <tt>Reader</tt> when done
      * @return the content or an empty <tt>String</tt> if no content is available
      */
     public static String getContent(Reader reader, int length, boolean close)
@@ -260,21 +255,6 @@ public class ByteUtil {
             os.close();
         } catch (Exception e) {
             ZimbraLog.misc.debug("ignoring exception while closing output stream", e);
-        }
-    }
-    
-    /**
-     * Closes the given reader and ignores any exceptions.
-     * @param r the <tt>Reader</tt>, may be <tt>null</tt>
-     */
-    public static void closeReader(Reader r) {
-        if (r == null) {
-            return;
-        }
-        try {
-            r.close();
-        } catch (IOException e) {
-            ZimbraLog.misc.debug("ignoring exception while closing reader", e);
         }
     }
 
@@ -389,41 +369,6 @@ public class ByteUtil {
 	    int byte1 = data[0];
 	    int byte2 = data[1] & 0xff; // Remove sign, since bytes are signed in Java.
 	    return (byte1 | (byte2 << 8)) == GZIPInputStream.GZIP_MAGIC;
-	}
-	
-	/**
-	 * Determines if the data in the given stream is gzipped.
-	 * Requires that the <tt>InputStream</tt> supports mark/reset.
-	 */
-	public static boolean isGzipped(InputStream in)
-	throws IOException {
-        in.mark(2);
-        int header = in.read() | (in.read() << 8);
-        in.reset();
-        if (header == GZIPInputStream.GZIP_MAGIC) {
-            return true;
-        }
-        return false;
-	}
-	
-	/**
-	 * Returns the length of the data returned by an <tt>InputStream</tt>
-	 * Reads the stream in its entirety and closes the stream when done reading.
-	 */
-	public static long getDataLength(InputStream in)
-	throws IOException {
-	    byte[] buf = new byte[8192];
-	    int dataLength = 0;
-	    int bytesRead = 0;
-	    try {
-	        while ((bytesRead = in.read(buf)) >= 0) {
-	            dataLength += bytesRead;
-	        }
-	    } finally {
-	        closeStream(in);
-	    }
-	    
-	    return dataLength;
 	}
 	
     public static String encodeFSSafeBase64(byte[] data) {
@@ -616,7 +561,7 @@ public class ByteUtil {
                 closeStream(out);
         }
     }
-    
+
     /**
      * Reads up to <tt>limit</tt> bytes from the <tt>InputStream</tt>.
      * @param in the data stream

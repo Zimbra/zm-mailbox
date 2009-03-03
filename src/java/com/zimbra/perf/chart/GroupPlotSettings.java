@@ -17,16 +17,10 @@
 
 package com.zimbra.perf.chart;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 public class GroupPlotSettings extends PlotSettings {
 
     private final String mGroupBy;
-    private final String mIgnore;
-    private final Set<String> mIgnoreSet;
-    public GroupPlotSettings(String groupBy, String ignore, String infile,
+    public GroupPlotSettings(String groupBy, String infile,
             String dataCol, boolean showRaw,
             boolean showMovingAvg, int movingAvgPoints,
             double multiplier, double divisor,
@@ -37,25 +31,10 @@ public class GroupPlotSettings extends PlotSettings {
                 movingAvgPoints, multiplier, divisor, nonNegative,
                 percentTime, dataFunction, aggFunction, optional, null, null);
         mGroupBy = groupBy;
-        mIgnore = ignore;
-        mIgnoreSet = new HashSet<String>();
-        if (mIgnore != null) {
-            String[] ignores = mIgnore.split("\\s*,\\s*");
-            if (ignores.length > 0)
-                mIgnoreSet.addAll(Arrays.asList(ignores));
-        }
     }
 
     public String getGroupBy() {
         return mGroupBy;
-    }
-    
-    public String getIgnore() {
-        return mIgnore;
-    }
-    
-    public Set<String> getIgnoreSet() {
-        return mIgnoreSet;
     }
 
 
@@ -77,7 +56,6 @@ public class GroupPlotSettings extends PlotSettings {
         sb.append("  ").append("aggregateFunction=\"").append(getAggregateFunction()).append("\"\n");
         sb.append("  ").append("optional=\"").append(getOptional()).append("\"\n");
         sb.append("  ").append("groupBy=\"").append(mGroupBy).append("\"\n");
-        sb.append("  ").append("ignore=\"").append(mIgnore).append("\"\n");
         sb.append("/>\n");
         return sb.toString();
     }
