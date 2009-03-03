@@ -62,7 +62,7 @@ public class DbOutOfOffice {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
-                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "AND sent_to = ? AND sent_on > ?");
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "sent_to = ? AND sent_on > ?");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
