@@ -529,7 +529,7 @@ public class DbMailbox {
                 } catch (SQLException e) {
                     if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                         stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_METADATA) +
-                                "SET metadata = ? WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "section = ?");
+                                " SET metadata = ? WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "section = ?");
                         int pos = 1;
                         stmt.setString(pos++, config.toString());
                         if (!DebugConfig.disableMailboxGroups)
