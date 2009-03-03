@@ -1730,7 +1730,11 @@ public class Mailbox {
 
         public void run() {
             try {
-            	reIndex(mOctxt, mTypes, mItemIds, false);
+                ZimbraLog.addMboxToContext(Mailbox.this.getId());
+                ZimbraLog.addAccountNameToContext(Mailbox.this.getAccount().getName());
+                reIndex(mOctxt, mTypes, mItemIds, false);
+                ZimbraLog.removeMboxFromContext();
+                ZimbraLog.removeAccountFromContext();
             } catch (ServiceException e) {
             	if (!e.getCode().equals(ServiceException.INTERRUPTED)) { 
             		ZimbraLog.mailbox.warn("Background reindexing failed for Mailbox "+this.getId()+" reindexing will not be completed.  " +
