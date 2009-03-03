@@ -506,18 +506,22 @@ public class MailSender {
         }
     }
 
-    private static final String X_ORIGINATING_IP = "X-Originating-IP";
+    public static final String X_ORIGINATING_IP = "X-Originating-IP";
     private static final String X_MAILER = "X-Mailer";
     public static final String X_AUTHENTICATED_USER = "X-Authenticated-User"; 
+    
+    public static String formatXOrigIpHeader(String origIp) {
+        return "[" + origIp + "]";
+    }
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
     throws MessagingException, ServiceException {
 	
-	Provisioning prov = Provisioning.getInstance();
+	    Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
             boolean addOriginatingIP = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
             if (addOriginatingIP)
-                mm.addHeader(X_ORIGINATING_IP, "[" + originIP + "]");
+                mm.addHeader(X_ORIGINATING_IP, formatXOrigIpHeader(originIP));
         }
         
         boolean addMailer = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddMailer, true);

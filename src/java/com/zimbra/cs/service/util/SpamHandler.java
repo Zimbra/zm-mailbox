@@ -42,9 +42,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
@@ -78,6 +80,7 @@ public class SpamHandler {
     private String mTypeHeader;
     private String mTypeSpam;
     private String mTypeHam;
+    private boolean mAddOrigIp;
     
     public SpamHandler() {
         Config config;
@@ -119,6 +122,7 @@ public class SpamHandler {
         mTypeHeader = config.getAttr(Provisioning.A_zimbraSpamReportTypeHeader, "X-Zimbra-Spam-Report-Type");
         mTypeSpam = config.getAttr(Provisioning.A_zimbraSpamReportTypeSpam, "spam");
         mTypeHam = config.getAttr(Provisioning.A_zimbraSpamReportTypeHam, "ham");
+        mAddOrigIp = config.getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
         
         if (mIsSpamAddress != null || mIsNotSpamAddress != null) {
             Runnable r = new Runnable() {
@@ -163,6 +167,10 @@ public class SpamHandler {
         
         out.addHeader(mSenderHeader, sr.mAccountName);
         out.addHeader(mTypeHeader, isSpamString);
+        
+        if (mAddOrigIp && sr.mOrigIp != null)
+            out.addHeader(MailSender.X_ORIGINATING_IP, MailSender.formatXOrigIpHeader(sr.mOrigIp));
+        
         out.setRecipient(javax.mail.Message.RecipientType.TO, toAddress);
         out.setEnvelopeFrom("<>");
         out.setSubject("zimbra-spam-report: " + sr.mAccountName + ": " + isSpamString);
@@ -176,19 +184,23 @@ public class SpamHandler {
         final int mMailboxId;
         final int mMessageId;
         final boolean mIsSpam;
+        final String mOrigIp;
         private String mDescString;
         
-        SpamReport(String accountName, int mailboxId, int messageId, boolean isSpam) {
+        SpamReport(String accountName, int mailboxId, int messageId, boolean isSpam, String origIp) {
             mAccountName = accountName;
             mMailboxId = mailboxId;
             mMessageId = messageId;
             mIsSpam = isSpam;
-            
+            mOrigIp = origIp;
         }
         
         public String toString() {
             if (mDescString == null) {
-                mDescString = "spamreport: acct=" + mAccountName + " mbox=" + mMailboxId + " id=" + mMessageId + " report=" + (!mIsSpam ? "!" : "") + "spam"; 
+                mDescString = "spamreport: acct=" + mAccountName + 
+                " mbox=" + mMailboxId + " id=" + mMessageId + 
+                " report=" + (!mIsSpam ? "!" : "") + "spam" +
+                " origIp=" + mOrigIp; 
             }
             return mDescString;
         }
@@ -230,10 +242,13 @@ public class SpamHandler {
         }
     }
 
-    private void enqueue(String accountName, Mailbox mbox, List<Message> msgs, boolean isSpam) {
+    private void enqueue(OperationContext octxt, String accountName, Mailbox mbox, List<Message> msgs, boolean isSpam) {
+        
+        String origIp = octxt == null ? null : octxt.getRequestIP();
+        
         synchronized (mSpamReportQueueLock) {
             for (Message msg : msgs) {
-                SpamReport sr = new SpamReport(accountName, mbox.getId(), msg.getId(), isSpam);
+                SpamReport sr = new SpamReport(accountName, mbox.getId(), msg.getId(), isSpam, origIp);
                 if (mSpamReportQueue.size() > mSpamReportQueueSize) {
                     ZimbraLog.misc.warn("SpamHandler queue size " + mSpamReportQueue.size() + " too large, ignored " + sr);
                     continue;
@@ -245,7 +260,7 @@ public class SpamHandler {
         }
     }
         
-    public void handle(Mailbox mbox, int id, byte type, boolean isSpam) throws ServiceException {
+    public void handle(OperationContext octxt, Mailbox mbox, int id, byte type, boolean isSpam) throws ServiceException {
         if (isSpam && mIsSpamAddress == null) {
             if (mLog.isDebugEnabled()) mLog.debug("isSpam, but isSpamAddress is null, nothing to do");
             return;
@@ -268,7 +283,7 @@ public class SpamHandler {
             return;
         }
 
-        enqueue(accountName, mbox, msgs, isSpam);
+        enqueue(octxt, accountName, mbox, msgs, isSpam);
     }
     
     /**

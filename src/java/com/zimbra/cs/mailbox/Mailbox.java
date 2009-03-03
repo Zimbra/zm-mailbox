@@ -5309,7 +5309,7 @@ public class Mailbox {
                 int srcId = item.getId();
                 int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
                 
-                trainSpamFilter(item, target);
+                trainSpamFilter(octxt, item, target);
 
                 MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
                 result.add(copy);
@@ -5323,7 +5323,7 @@ public class Mailbox {
         }
     }
 
-    private <T extends MailItem> T trainSpamFilter(T item, Folder target) {
+    private <T extends MailItem> T trainSpamFilter(OperationContext octxt, T item, Folder target) {
         // don't re-train filter on replayed operation
         if (mCurrentChange.getRedoPlayer() != null)
             return item;
@@ -5351,7 +5351,7 @@ public class Mailbox {
                     continue;
 
                 try {
-                    SpamHandler.getInstance().handle(this, candidate.getId(), candidate.getType(), toSpam);
+                    SpamHandler.getInstance().handle(octxt, this, candidate.getId(), candidate.getType(), toSpam);
                     ZimbraLog.mailop.info(MailItem.getMailopContext(candidate) + " sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam)");
                 } catch (Exception e) {
                     ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(candidate), e);
@@ -5430,7 +5430,7 @@ public class Mailbox {
                     oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
                 }
                 // train the spam filter if necessary...
-                trainSpamFilter(item, target);
+                trainSpamFilter(octxt, item, target);
                 
                 // ...do the move...
                 boolean moved = item.move(target);
@@ -5484,7 +5484,7 @@ public class Mailbox {
                 folderId = item.getFolderId();
             
             Folder target = getFolderById(folderId);
-            trainSpamFilter(item, target);
+            trainSpamFilter(octxt, item, target);
 
             String oldName = item.getName();
             item.rename(name, target);
@@ -5550,7 +5550,7 @@ public class Mailbox {
             }
             redoRecorder.setParentIds(recorderParentIds);
             
-            trainSpamFilter(item, parent);
+            trainSpamFilter(octxt, item, parent);
             
             String name = parts[parts.length - 1];
             if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId())) {
