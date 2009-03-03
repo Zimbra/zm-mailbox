@@ -18,6 +18,8 @@
 package com.zimbra.qa.unittest;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -31,6 +33,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
@@ -269,7 +272,7 @@ public class TestUtilCode extends TestCase
     }
     
     /**
-     * Tests the Gzip methods in {@link ByteUtil}.
+     * Tests the Gzip methods in {@link ByteUtil} and {@link FileUtil}.
      */
     public void testGzip()
     throws Exception {
@@ -282,6 +285,22 @@ public class TestUtilCode extends TestCase
         assertTrue(ByteUtil.isGzipped(compressed));
         assertFalse(ByteUtil.isGzipped(uncompressed));
         assertEquals(s, new String(uncompressed));
+        
+        // Test uncompressed file on disk.
+        File file = File.createTempFile("TestUtilCode.testGzip-uncompressed", null);
+        FileOutputStream out = new FileOutputStream(file);
+        out.write(original);
+        out.close();
+        assertFalse(FileUtil.isGzipped(file));
+        file.delete();
+        
+        // Test compressed file on disk.
+        file = File.createTempFile("TestUtilCode.testGzip-compressed", null);
+        out = new FileOutputStream(file);
+        out.write(compressed);
+        out.close();
+        assertTrue(FileUtil.isGzipped(file));
+        file.delete();
     }
     
     /**

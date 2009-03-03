@@ -33,9 +33,10 @@ import java.util.Random;
 import javax.mail.internet.SharedInputStream;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.SharedFile;
+import com.zimbra.cs.store.StoreManager;
 
 
 public class TestBlobInputStream extends TestCase {
@@ -53,7 +54,7 @@ public class TestBlobInputStream extends TestCase {
     throws Exception {
         int[] bufferSizes = new int[] { 1, 4, 5, 9, 10, 99, 999, 1000, 2000 }; 
         for (int bufferSize : bufferSizes) {
-            BlobInputStream.setBufferSize(bufferSize);
+            SharedFile.setBufferSize(bufferSize);
             runBlobInputStreamTest();
             runLargeFileTest();
         }
@@ -120,14 +121,39 @@ public class TestBlobInputStream extends TestCase {
         assertFalse("reset() should not have succeeded", success);
         in.close();
         
-        // Test reading a byte array
+        // Test reading a byte array with an offset.
         in = new BlobInputStream(mFile);
         byte[] buf = new byte[5];
-        assertEquals(2, in.read(buf, 3, 2));
-        assertEquals((byte) '0', buf[3]);
-        assertEquals((byte) '1', buf[4]);
-        assertEquals(5, in.read(buf));
-        assertEquals("23456", new String(buf));
+        for (int i = 0; i < 5; i++) {
+            buf[i] = 57;
+        }
+        int numRead = in.read(buf, 3, 2);
+        assertTrue("Unexpected number of bytes read: " + numRead, numRead == 1 || numRead == 2);
+        int[] untouchedIndexes = null;
+        if (numRead == 1) {
+            assertEquals((byte) '0', buf[3]);
+            untouchedIndexes = new int[] { 0, 1, 2, 4 };
+        }
+        if (numRead == 2) {
+            assertEquals((byte) '0', buf[3]);
+            assertEquals((byte) '1', buf[4]);
+            untouchedIndexes = new int[] { 0, 1, 2 };
+        }
+        for (int i : untouchedIndexes) {
+            assertEquals("Unexpected value at index " + i, 57, buf[i]);
+        }
+        in.close();
+        
+        // Test reading into a byte array.
+        in = new BlobInputStream(mFile);
+        in.read();
+        in.read();
+        numRead = in.read(buf);
+        assertTrue(numRead > 0);
+        assertTrue(numRead <= 5);
+        byte[] test = new byte[numRead];
+        System.arraycopy(buf, 0, test, 0, numRead);
+        assertTrue("23456".startsWith(new String(test)));
         in.close();
         
         // Test substream - all content
@@ -180,6 +206,15 @@ public class TestBlobInputStream extends TestCase {
         in.read();
         assertEquals(1, in.getPosition());
         in.close();
+
+        // Test reading byte arrays until the end of the file
+        in = new BlobInputStream(mFile);
+        buf = new byte[4];
+        while ((numRead = in.read(buf)) >= 0) {
+        }
+        in.close();
+        
+        mFile.delete();
     }
 
     /**
@@ -198,17 +233,23 @@ public class TestBlobInputStream extends TestCase {
     	in = new BlobInputStream(mFile);
     	String firstChunk = getContent(in, 1000);
     	assertEquals(content.substring(0, 1000), firstChunk);
+    	
     	byte[] secondChunk = new byte[2000];
     	int numRead = in.read(secondChunk);
-        assertEquals(2000, numRead);
-    	assertEquals(content.substring(1000, 3000), new String(secondChunk));
+    	assertTrue(numRead > 0);
+    	byte[] test = new byte[numRead];
+    	System.arraycopy(secondChunk, 0, test, 0, numRead);
+    	assertEquals(content.substring(1000, 1000 + numRead), new String(test));
+    	int thirdChunkStartPos = 1000 + numRead;
         
         // Test bug 24715.  Make sure that we don't get IndexOutOfBoundsException
         // when reading another byte[]
         byte[] thirdChunk = new byte[2000];
         numRead = in.read(thirdChunk);
-        assertEquals(2000, numRead);
-        assertEquals(content.substring(3000, 5000), new String(thirdChunk));
+        assertTrue(numRead > 0);
+        test = new byte[numRead];
+        System.arraycopy(thirdChunk, 0, test, 0, numRead);
+        assertEquals(content.substring(thirdChunkStartPos, thirdChunkStartPos + numRead), new String(thirdChunk));
         
         mFile.delete();
         in.close();
@@ -267,6 +308,7 @@ public class TestBlobInputStream extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
+        StoreManager.getInstance().startup();
         TestUtil.runTest(TestBlobInputStream.class);
     }
 }

@@ -20,7 +20,6 @@
  */
 package com.zimbra.cs.store;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -55,6 +54,7 @@ public class FileBlobStore extends StoreManager {
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
     private static final int DEFAULT_DISK_STREAMING_THRESHOLD = 32 * 1024 * 1024;
     private static final int sDiskStreamingThreshold;
+    private UncompressedFileCache<String> mUncompressedFileCache;
 
     static {
         int threshold = DEFAULT_DISK_STREAMING_THRESHOLD;
@@ -74,12 +74,23 @@ public class FileBlobStore extends StoreManager {
         mUniqueFilenameGenerator = new UniqueFileNameGenerator();
 	}
 
-	@Override public void startup() {
+	@Override public void startup()
+	throws IOException {
         long sweepMaxAgeMS =
             LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
         mSweeper = new IncomingDirectorySweeper(SWEEP_INTERVAL_MS,
                                                 sweepMaxAgeMS);
         mSweeper.start();
+        
+        // Initialize uncompressed file cache.
+        String uncompressedPath = LC.zimbra_home.value() + "/uncompressed";
+        FileUtil.ensureDirExists(uncompressedPath);
+        mUncompressedFileCache = new UncompressedFileCache<String>(uncompressedPath);
+
+        // TODO bburtin: create attrs for cache sizes
+        mUncompressedFileCache.setMaxBytes(10 * 1024l * 1024);
+        mUncompressedFileCache.setMaxFiles(1000);
+        mUncompressedFileCache.startup();
 	}
 
 	@Override public void shutdown() {
@@ -104,6 +115,10 @@ public class FileBlobStore extends StoreManager {
      */
     public static int getDiskStreamingThreshold() {
         return sDiskStreamingThreshold;
+    }
+    
+    public UncompressedFileCache<String> getUncompressedFileCache() {
+        return mUncompressedFileCache;
     }
 
     @Override public String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException {
@@ -218,13 +233,7 @@ public class FileBlobStore extends StoreManager {
 
         Volume volume = Volume.getById(destVolumeId);
         
-        InputStream srcStream = getContent(src);
-        if (srcStream == null)
-            throw new IOException("MailboxBlob.copy(" + srcPath + "," + destPath + "): unable to read content from " + srcPath);
-
-        boolean srcCompressed = srcStream instanceof GZIPInputStream;
-        ByteUtil.closeStream(srcStream);
-        
+        boolean srcCompressed = FileUtil.isGzipped(src.getFile());
         boolean destCompressed = false;
         if (volume.getCompressBlobs()) {
             if (srcCompressed || src.getFile().length() <= volume.getCompressionThreshold()) {
@@ -401,17 +410,7 @@ public class FileBlobStore extends StoreManager {
     public InputStream getContent(Blob blob) throws IOException {
         if (blob == null)
             return null;
-        InputStream is = new BufferedInputStream(new FileInputStream(blob.getFile()));
-        
-        if (ByteUtil.isGzipped(is)){
-        	is = new GZIPInputStream(is);
-        } else {
-            if (blob.getFile().length() > getDiskStreamingThreshold()) {
-                is.close();
-                is = new BlobInputStream(blob.getFile());
-            }
-        }
-        return is;
+        return new BlobInputStream(blob.getFile());
     }
 
 	public boolean deleteStore(Mailbox mbox)
@@ -430,7 +429,7 @@ public class FileBlobStore extends StoreManager {
             file = new File(getBlobPath(mbox, msgId, -1, volumeId));
         return (!check || file.exists() ? file : null);
     }
-
+    
 	private static String getBlobPath(Mailbox mbox,
                                       int msgId, int revision,
                                       short volumeId)
@@ -458,6 +457,8 @@ public class FileBlobStore extends StoreManager {
         File dir = file.getParentFile();
         ensureDirExists(dir);
     }
+    
+    
 
     private static class UniqueFileNameGenerator {
     	private long mTime;

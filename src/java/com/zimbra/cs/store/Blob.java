@@ -70,10 +70,7 @@ public class Blob {
     	return mVolumeId;
     }
     
-    /**
-     * Returns an <tt>InputStream</tt> to this blob's uncompressed data.
-     */
-    public InputStream getInputStream()
+    private InputStream getInputStream()
     throws IOException {
         InputStream in = new FileInputStream(mFile);
         if (isCompressed()) {
@@ -121,6 +118,8 @@ public class Blob {
     throws IOException {
         InputStream in = null;
         try {
+            // Get the stream using the local method.  FileBlobStore.getContent()
+            // can call getDigest(), which could result in an infinite loop.
             in = getInputStream();
             MessageDigest md = MessageDigest.getInstance("SHA1");
             byte[] buffer = new byte[1024];
@@ -138,10 +137,7 @@ public class Blob {
             //  e.printStackTrace();
             throw new RuntimeException(e);
         } finally {
-            try {
-                in.close();
-            } catch (IOException e) {
-            }
+            ByteUtil.closeStream(in);
         }
     }
     

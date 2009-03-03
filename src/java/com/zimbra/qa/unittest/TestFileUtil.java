@@ -104,18 +104,21 @@ public class TestFileUtil extends TestCase {
         // compress it
         File compressed = newFile("junk.compressed");
         FileUtil.compress(orig, compressed, true);
-        byte[] compressedBytes = ByteUtil.getContent(compressed);
         assertTrue(isGzip(compressed));
         
         // uncompress it
         File uncompressed = newFile("junk.uncompressed");
         FileUtil.uncompress(compressed, uncompressed, true);
         
-        // uncompressed file shpuld be identical to the original file
+        // uncompressed file should be identical to the original file
         byte[] origBytes = ByteUtil.getContent(orig);
         byte[] uncompressedBytes = ByteUtil.getContent(uncompressed);
         assertTrue(Arrays.equals(origBytes, uncompressedBytes));
     }
     
-    
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestFileUtil.class);
+    }
 }

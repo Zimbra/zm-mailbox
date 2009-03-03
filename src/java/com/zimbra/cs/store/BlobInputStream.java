@@ -33,15 +33,33 @@ import javax.mail.internet.SharedInputStream;
 
 import org.jivesoftware.util.ConcurrentHashSet;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ZimbraLog;
-
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.localconfig.DebugConfig;
 
 public class BlobInputStream extends InputStream
 implements SharedInputStream {
     
-    private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
+    private Log sLog = LogFactory.getLog(BlobInputStream.class);
 
+    /**
+     * The file that stores the content of this stream.  Only the parent
+     * stream stores the file.  All child objects get the path from the top-level
+     * parent.
+     */
+    private File mFile;
+    
+    /**
+     * <tt>true</tt> if {@link #mFile} is gzip-compressed.  Only set on the
+     * root stream.
+     */
+    private Boolean mIsGzipped;
+
+    /**
+     * The <tt>SharedFile</tt> object for this stream group.  Only set on
+     * the root stream.
+     */
     private SharedFile mSharedFile;
     
     // All indexes are relative to the file, not relative to mStart/mEnd.
@@ -73,26 +91,12 @@ implements SharedInputStream {
     
     /**
      * Contains this stream and all related streams created with {@link #newStream}.
-     * This set is shared between the original stream and all substreams.
+     * This set is shared between the original stream and all other streams in its
+     * group.
      */
-    private Set<BlobInputStream> mSubStreams;
-
-    /**
-     * Read buffer.
-     */
-    private byte[] mBuf = new byte[BUFFER_SIZE];
+    private Set<BlobInputStream> mGroup;
     
-    /**
-     * Position of the start of the read buffer, relative to the file
-     * on disk.
-     */
-    private long mBufStartPos = 0;
-    
-    /**
-     * Read buffer size (may be less than <tt>mBuf.length</tt>).  A value of
-     * 0 means that the buffer is not initialized.
-     */
-    private int mBufSize = 0;
+    private BlobInputStream mRoot;
     
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
@@ -123,9 +127,19 @@ implements SharedInputStream {
      */
     private BlobInputStream(File file, Long start, Long end, BlobInputStream parent)
     throws IOException {
-        if (parent != null) {
-            file = parent.mSharedFile.getFile();
+        if (parent == null) {
+            // Top-level stream.
+            mFile = file;
+            mIsGzipped = FileUtil.isGzipped(file);
+            mGroup = new ConcurrentHashSet<BlobInputStream>();
+            mRoot = this;
+        } else {
+            // New stream.  Get settings from the parent and add this stream to the group.
+            mRoot = parent.mRoot;
+            mGroup = parent.mGroup;
+            file = mRoot.mFile;
         }
+        mGroup.add(this);
         
         if (!file.exists()) {
             throw new IOException(file.getPath() + " does not exist.");
@@ -141,40 +155,66 @@ implements SharedInputStream {
             mStart = start;
             mPos = start;
         }
+        long dataLength = getSharedFile().getLength();
         if (end == null) {
-            mEnd = file.length();
+            mEnd = dataLength;
         } else {
-            if (end > file.length()) {
-                String msg = String.format("End index %d for file %s exceeded file size %d", end, file.getPath(), file.length());
+            if (end > dataLength) {
+                String msg = String.format("End index %d for %s exceeded file size %d", end, file.getPath(), dataLength);
                 throw new IOException(msg);
             }
             mEnd = end;
         }
-        if (parent == null) {
-            mSharedFile = new SharedFile(file);
-            mSubStreams = new ConcurrentHashSet<BlobInputStream>();
-        } else {
-            mSharedFile = parent.mSharedFile;
-            mSubStreams = parent.mSubStreams;
+
+        sLog.debug("Created %s: file=%s, length=%d, uncompressed length=%d, start=%d, end=%d, parent=%s, mStart=%d, mEnd=%d.",
+            this, file.getPath(), file.length(), dataLength, start, end, parent, mStart, mEnd);
+    }
+    
+    private boolean isGzipped() {
+        return mRoot.mIsGzipped;
+    }
+    
+    /**
+     * Gets the <tt>SharedFile</tt> or creates a new one.
+     */
+    private SharedFile getSharedFile()
+    throws IOException {
+        if (mRoot.mSharedFile == null) {
+            if (isGzipped()) {
+                mRoot.mSharedFile = getUncompressedCache().get(mRoot.mFile.getPath(), mRoot.mFile, !DebugConfig.disableMessageStoreFsync);
+            } else {
+                mRoot.mSharedFile = new SharedFile(mRoot.mFile);
+            }
+        }
+        return mRoot.mSharedFile;
+    }
+    
+    private UncompressedFileCache<String> getUncompressedCache() {
+        return ((FileBlobStore) StoreManager.getInstance()).getUncompressedFileCache();
+    }
+    
+    /**
+     * Closes the file descriptor used by this stream group.
+     */
+    public void closeFile() {
+        if (mRoot.mSharedFile != null) {
+            try {
+                mRoot.mSharedFile.close();
+            } catch (IOException e) {
+                sLog.warn("Unable to close SharedFile " + mRoot.mFile.getPath(), e);
+            }
+            mRoot.mSharedFile = null;
         }
     }
-    
+
     /**
-     * Closes the file descriptors used by this stream and its substreams.
-     * If someone continues to read from this stream, the file descriptor
-     * is automatically reopened. 
-     */
-    public void closeFile()
-    throws IOException {
-        mSharedFile.close();
-    }
-    
-    /**
-     * Updates this stream and all substreams with a new file location.
+     * Updates this stream group with a new file location.
      */
     public void fileMoved(File newFile)
     throws IOException {
-        mSharedFile.fileMoved(newFile);
+        closeFile();
+        mRoot.mFile = newFile;
+        mRoot.mIsGzipped = FileUtil.isGzipped(mRoot.mFile);
     }
     
     ////////////// InputStream methods //////////////
@@ -185,10 +225,10 @@ implements SharedInputStream {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         mPos = mEnd;
-        mSubStreams.remove(this);
-        if (mSubStreams.size() == 0) {
+        mGroup.remove(this);
+        if (mGroup.size() == 0) {
             closeFile();
         }
     }
@@ -209,23 +249,11 @@ implements SharedInputStream {
         if (mPos >= mEnd) {
             return -1;
         }
-        
-        // Return data from the read buffer if we're in the range.
-        int bufIndex = getBufferIndex();
-        if (bufIndex >= 0) {
-            byte b = mBuf[bufIndex];
+        int retVal = getSharedFile().read(mPos);
+        if (retVal >= 0) {
             mPos++;
-            return b;
         }
-        
-        // Read next byte from file.
-        int numRead = readNextChunkIntoBuffer();
-        if (numRead < 0) {
-            return numRead;
-        }
-        
-        mPos++;
-        return mBuf[0];
+        return retVal;
     }
     
     @Override
@@ -239,85 +267,13 @@ implements SharedInputStream {
         
         // Make sure we don't read past the endpoint passed to the constructor
         len = (int) Math.min(len, mEnd - mPos);
-
-        // Copy from buffer first
-        int numReadFromBuffer = 0;
-        int bufIndex = getBufferIndex();
-        if (bufIndex >= 0) {
-            numReadFromBuffer = Math.min(mBufSize - bufIndex, len);
-            if (numReadFromBuffer > 0) {
-                System.arraycopy(mBuf, bufIndex, b, off, numReadFromBuffer);
-                mPos += numReadFromBuffer;
-            }
-            if (numReadFromBuffer == len) {
-                // Got all data from buffer
-                return numReadFromBuffer;
-            }
-        }
-
-        // Need to read the rest from the file
-        int numToReadFromFile = len - numReadFromBuffer;
-        int numReadFromFile = 0;
-        if (numToReadFromFile <= mBuf.length) {
-            // Buffer if we're reading a small number of bytes. 
-            numReadFromFile = readNextChunkIntoBuffer();
-            if (numReadFromFile > 0) {
-                numReadFromFile = Math.min(numReadFromFile, numToReadFromFile);
-                System.arraycopy(mBuf, 0, b, off + numReadFromBuffer, numReadFromFile);
-                mPos += numReadFromFile;
-            }
-        } else {
-            // Number of bytes requested is greater than the buffer size, so
-            // read the next chunk without buffering.
-        	numReadFromFile = mSharedFile.read(mPos, b, off + numReadFromBuffer, numToReadFromFile);
-        	if (numReadFromFile >= 0) {
-        		mPos += numReadFromFile;
-        	}
-        }
-
-        if (numReadFromFile >= 0) {
-        	// Read from file, possibly from buffer too.
-        	return numReadFromBuffer + numToReadFromFile;
-        } else {
-        	if (numReadFromBuffer > 0) {
-        		// Read from buffer, hit EOF in file.
-        		return numReadFromBuffer;
-        	} else {
-        		// Didn't read from buffer, hit EOF in file.
-        		return numReadFromFile;
-        	}
-        }
-    }
-
-    /**
-     * Returns the current buffer index, or <tt>-1</tt> if the
-     * current position is outside the buffer.
-     */
-    private int getBufferIndex() {
-        if (mBufSize > 0 &&                     // Buffer has been initialized
-            mPos >= mBufStartPos &&             // Position is past the beginning of the buffer
-            mPos < (mBufStartPos + mBufSize)) { // Position is not past the end of the buffer
-            return (int) (mPos - mBufStartPos);
-        } else {
-            return -1;
-        }
-    }
-    
-    /**
-     * Fills the read buffer with data from the file on disk, starting
-     * at position {@link #mPos}.
-     */
-    private int readNextChunkIntoBuffer()
-    throws IOException {
-        int numRead = mSharedFile.read(mPos, mBuf, 0, mBuf.length);
-        if (numRead >= 0) {
-            // Read something.  Update the indexes.
-            mBufStartPos = mPos;
-            mBufSize = numRead;
+        int numRead = getSharedFile().read(mPos, b, off, len);
+        if (numRead > 0) {
+            mPos += numRead;
         }
         return numRead;
     }
-    
+
     @Override
     public synchronized void reset() throws IOException {
         if (mMarkPos == null) {
@@ -348,9 +304,7 @@ implements SharedInputStream {
      */
     protected void finalize() throws Throwable {
         super.finalize();
-        if (mSubStreams.size() == 0) {
-            closeFile();
-        }
+        close();
     }
 
     ////////////// SharedInputStream methods //////////////
@@ -376,24 +330,12 @@ implements SharedInputStream {
         }
         
         BlobInputStream newStream = null;
-        File file = mSharedFile.getFile();
         try {
-            newStream = new BlobInputStream(file, start, end, this);
+            newStream = new BlobInputStream(null, start, end, this);
         } catch (IOException e) {
-            ZimbraLog.misc.warn("Unable to create substream for %s", file.getPath(), e);
+            sLog.warn("Unable to create substream for %s", mRoot.mFile.getPath(), e);
         }
         
         return newStream;
-    }
-    
-    /**
-     * Sets the the size of the read buffer used by <tt>BlobInputStream</tt>.
-     * To be used for unit testing only.
-     */
-    public static void setBufferSize(int bufferSize) {
-        if (bufferSize < 1) {
-            throw new IllegalArgumentException("Buffer size " + bufferSize + " must be at least 1");
-        }
-        BUFFER_SIZE = bufferSize;
     }
 }

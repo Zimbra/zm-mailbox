@@ -18,6 +18,7 @@
 package com.zimbra.cs.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
@@ -195,8 +196,13 @@ public class Zimbra {
         else
             redoLog.initRedoLogManager();
 
-        if (sIsMailboxd)
-            StoreManager.getInstance().startup();
+        if (sIsMailboxd) {
+            try {
+                StoreManager.getInstance().startup();
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
+            }
+        }
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
 

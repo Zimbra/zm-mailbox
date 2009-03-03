@@ -51,7 +51,7 @@ public abstract class StoreManager {
 	/**
 	 * Starts the blob store.
 	 */
-	public abstract void startup();
+	public abstract void startup() throws IOException;
 
 	/**
      * Shutdown the blob store.

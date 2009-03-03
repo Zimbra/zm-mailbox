@@ -1,0 +1,249 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.store;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+
+/**
+ * Caches uncompressed versions of compressed files on disk.  Uses the digest
+ * of the file internally to dedupe multiple copies of the same data.  The cache size
+ * can be limited by the number of files or the total size.
+ *
+ * @param <K> the type of key used to look up files in the cache 
+ */
+public class UncompressedFileCache<K> {
+
+    private static final Log sLog = LogFactory.getLog(UncompressedFileCache.class);
+    
+    private long mMaxBytes = 100 * 1024 * 1024; // 100MB default
+    private int mMaxFiles = 10 * 1024; // 10k files default
+    private File mCacheDir;
+    
+    /** Maps the key to the cache to the uncompressed file digest. */
+    private LinkedHashMap<K, String> mKeyToDigest;
+    
+    /** All the files in the cache, indexed by digest. */
+    private Map<String, File> mDigestToFile;
+    private long mNumBytes = 0;
+    
+    public UncompressedFileCache(String path) {
+        if (path == null) {
+            throw new NullPointerException("Path cannot be null.");
+        }
+        mCacheDir = new File(path);
+    }
+
+    /**
+     * Sets the limit for the total size of all files in the cache.
+     * @param maxBytes the limit, or <tt>null</tt> for no limit
+     */
+    public synchronized UncompressedFileCache<K> setMaxBytes(Long maxBytes) {
+        if (maxBytes != null) {
+            mMaxBytes = maxBytes;
+        } else {
+            mMaxBytes = Long.MAX_VALUE;
+        }
+        pruneIfNecessary();
+        return this;
+    }
+    
+    /**
+     * Sets the limit for the total number of files in the cache.
+     * @param maxFiles the limit, or <tt>null</tt> for no limit
+     */
+    public synchronized UncompressedFileCache<K> setMaxFiles(Integer maxFiles) {
+        if (maxFiles != null) {
+            mMaxFiles = maxFiles;
+        } else {
+            mMaxFiles = Integer.MAX_VALUE;
+        }
+        pruneIfNecessary();
+        return this;
+    }
+
+    /**
+     * Initializes the cache and deletes any existing files.  Call this method before
+     * using the cache.
+     */
+    public synchronized void startup()
+    throws IOException {
+        ZimbraLog.store.info("Starting up %s with maxBytes=%d, maxFiles=%d.",
+            UncompressedFileCache.class.getSimpleName(), mMaxBytes, mMaxFiles);
+        
+        if (!mCacheDir.exists()) {
+            throw new IOException(String.format("%s does not exist.", mCacheDir));
+        }
+        if (!mCacheDir.isDirectory()) {
+            throw new IOException(String.format("%s is not a directory", mCacheDir));
+        }
+        
+        // Create the file cache with default LinkedHashMap values, but sorted by last access time.
+        mKeyToDigest = new LinkedHashMap<K, String>(16, 0.75f, true);
+        mDigestToFile = new HashMap<String, File>();
+        
+        // Clear out the cache on disk.
+        for (File file : mCacheDir.listFiles()) {
+            sLog.debug("Deleting %s.", file.getPath());
+            if (!file.delete()) {
+                ZimbraLog.store.warn("Unable to delete %s from the uncompressed file cache.", file.getPath());
+            }
+        }
+    }
+
+    private class UncompressedFile {
+        String digest;
+        File file;
+    }
+    
+    /**
+     * Returns the uncompressed version of the given file.  If the uncompressed
+     * file is not in the cache, uncompresses it and adds it to the cache.
+     * 
+     * @param key the key used to look up the uncompressed data
+     * @param compressedFile the compressed file.  This file is read, if necessary,
+     * to write the uncompressed file.
+     * @param sync <tt>true</tt> to use fsync
+     */
+    public SharedFile get(K key, File compressedFile, boolean sync)
+    throws IOException {
+        File uncompressedFile = null;
+        
+        sLog.debug("Looking up SharedFile for key %s, path %s.", key, compressedFile.getPath());
+        
+        synchronized (this) {
+            String digest = mKeyToDigest.get(key);
+            if (digest != null) {
+                uncompressedFile = mDigestToFile.get(digest);
+                if (uncompressedFile != null) {
+                    sLog.debug("Found existing uncompressed file.  Returning new SharedFile.");
+                    return new SharedFile(uncompressedFile);
+                }
+            }
+        }
+
+        // Uncompress the file outside of the synchronized block.
+        UncompressedFile temp = uncompressToTempFile(compressedFile, sync);
+        SharedFile shared = null;
+        
+        synchronized (this) {
+            uncompressedFile = mDigestToFile.get(temp.digest);
+            
+            if (uncompressedFile != null) {
+                sLog.debug("Found existing uncompressed file for digest %s.  Deleting %s.", temp.digest, temp.file.getPath());
+                mKeyToDigest.put(key, temp.digest);
+                temp.file.delete();
+                shared = new SharedFile(uncompressedFile);
+            } else {
+                String oldPath = temp.file.getPath();
+                uncompressedFile = new File(mCacheDir, temp.digest);
+                if (!temp.file.renameTo(uncompressedFile)) {
+                    throw new IOException("Cannot move " + oldPath + " to " + uncompressedFile.getPath());
+                }
+                shared = new SharedFile(uncompressedFile); // Opens the file implicitly.
+                put(key, temp.digest, uncompressedFile);
+            }
+        }
+        
+        return shared;
+    }
+    
+    private UncompressedFile uncompressToTempFile(File compressedFile, boolean sync)
+    throws IOException {
+        // Initialize streams and digest calculator.
+        MessageDigest digestCalculator;
+        try {
+            digestCalculator = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to calculate digest for " + compressedFile.getPath(), e);
+        }
+        
+        // Write the uncompressed file and calculate the digest.
+        InputStream in = new GZIPInputStream(new FileInputStream(compressedFile));
+        in  = new DigestInputStream(in, digestCalculator);
+        File tempFile = File.createTempFile(UncompressedFileCache.class.getSimpleName(), null);
+        FileUtil.uncompress(in, tempFile,  sync);
+        String digest = ByteUtil.encodeFSSafeBase64(digestCalculator.digest());
+        sLog.debug("Uncompressed %s to %s, digest=%s.", compressedFile.getPath(), tempFile.getPath(), digest);
+        
+        UncompressedFile result = new UncompressedFile();
+        result.file = tempFile;
+        result.digest = digest;
+        return result;
+    }
+    
+    private synchronized void put(K key, String digest, File file) {
+        long fileSize = file.length();
+        sLog.debug("Adding file to the uncompressed cache: key=%s, size=%d, path=%s.",
+            key, fileSize, file.getPath());
+        mKeyToDigest.put(key, digest);
+        mDigestToFile.put(digest, file);
+        mNumBytes += fileSize;
+        pruneIfNecessary();
+    }
+    
+    /**
+     * Removes the least recently accessed files from the cache and deletes them
+     * from disk so that the cache size doesn't exceed {@link #mMaxFiles} and
+     * {@link #mMaxBytes}.
+     */
+    private synchronized void pruneIfNecessary() {
+        if (mKeyToDigest == null || (mNumBytes < mMaxBytes && mDigestToFile.size() < mMaxFiles)) {
+            return;
+        }
+        
+        Iterator<Map.Entry<K, String>> iEntries = mKeyToDigest.entrySet().iterator();
+        
+        while (iEntries.hasNext()) {
+            // Remove key.
+            Map.Entry<K, String> entry = iEntries.next();
+            K key = entry.getKey();
+            String digest = entry.getValue();
+            iEntries.remove();
+            
+            // Remove file.
+            File file = mDigestToFile.remove(digest);
+            if (file != null) {
+                sLog.debug("Deleting %s: key=%s, digest=%s.", file.getPath(), key, digest);
+                mNumBytes -= file.length();
+                if (!file.delete()) {
+                    sLog.warn("Unable to delete %s.", file.getPath());
+                }
+            }
+            
+            if (mNumBytes < mMaxBytes && mDigestToFile.size() < mMaxFiles) {
+                break;
+            }
+        }
+    }
+}
