@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090303-1550 */
+    /* build: 5.0 pshao 20090304-1004 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1755,6 +1755,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=760)
     public static final String A_zimbraContactAutoCompleteEmailFields = "zimbraContactAutoCompleteEmailFields";
+
+    /**
+     * maximum number of contact entries to return from an auto complete
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=827)
+    public static final String A_zimbraContactAutoCompleteMaxResults = "zimbraContactAutoCompleteMaxResults";
 
     /**
      * Maximum number of contacts allowed in mailbox. 0 means no limit.

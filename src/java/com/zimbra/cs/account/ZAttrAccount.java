@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090303-1550 */
+    /* build: 5.0 pshao 20090304-1004 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4178,6 +4178,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetContactAutoCompleteEmailFields(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAutoCompleteEmailFields, "");
+        return attrs;
+    }
+
+    /**
+     * maximum number of contact entries to return from an auto complete
+     *
+     * @return zimbraContactAutoCompleteMaxResults, or 20 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=827)
+    public int getContactAutoCompleteMaxResults() {
+        return getIntAttr(Provisioning.A_zimbraContactAutoCompleteMaxResults, 20);
+    }
+
+    /**
+     * maximum number of contact entries to return from an auto complete
+     *
+     * @param zimbraContactAutoCompleteMaxResults new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=827)
+    public void setContactAutoCompleteMaxResults(int zimbraContactAutoCompleteMaxResults) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteMaxResults, Integer.toString(zimbraContactAutoCompleteMaxResults));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of contact entries to return from an auto complete
+     *
+     * @param zimbraContactAutoCompleteMaxResults new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=827)
+    public Map<String,Object> setContactAutoCompleteMaxResults(int zimbraContactAutoCompleteMaxResults, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteMaxResults, Integer.toString(zimbraContactAutoCompleteMaxResults));
+        return attrs;
+    }
+
+    /**
+     * maximum number of contact entries to return from an auto complete
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=827)
+    public void unsetContactAutoCompleteMaxResults() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteMaxResults, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of contact entries to return from an auto complete
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=827)
+    public Map<String,Object> unsetContactAutoCompleteMaxResults(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAutoCompleteMaxResults, "");
         return attrs;
     }
 

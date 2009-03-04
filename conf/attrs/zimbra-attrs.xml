@@ -4151,4 +4151,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="827" name="zimbraContactAutoCompleteMaxResults" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
+  <defaultCOSValue>20</defaultCOSValue>
+  <desc>maximum number of contact entries to return from an auto complete</desc>
+</attr>
+
 </attrs>
