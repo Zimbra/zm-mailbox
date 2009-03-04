@@ -1243,16 +1243,42 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
             SOAP handlers that are domainAuthSufficient and spitting out the rights 
             they need.  Please let me know if you find any issues with them.
 
-      (C) enable the UIs for the domain admin
-       The domain admin UI is now 
-            zimbraAdminConsoleUIComponents: accountListView
-            zimbraAdminConsoleUIComponents: DLListView
-            zimbraAdminConsoleUIComponents: resourceListView
-            zimbraAdminConsoleUIComponents: aliasListView
-            zimbraAdminConsoleUIComponents: domainListView
-            zimbraAdminConsoleUIComponents: saveSearch
-            
+      (C) enable the UIs for the domain admin, the following zimbraAdminConsoleUIComponents
+            should be set for regular domain admin:
 
+             zimbraAdminConsoleUIComponents: accountListView
+             zimbraAdminConsoleUIComponents: aliasListView
+             zimbraAdminConsoleUIComponents: DLListView
+             zimbraAdminConsoleUIComponents: resourceListView
+             zimbraAdminConsoleUIComponents: saveSearch
+             zimbraAdminConsoleUIComponents: accountsContactTab
+             zimbraAdminConsoleUIComponents: accountsMemberOfTab
+             zimbraAdminConsoleUIComponents: accountsAliasesTab
+             zimbraAdminConsoleUIComponents: accountsForwardingTab
+             zimbraAdminConsoleUIComponents: dlMembersTab
+             zimbraAdminConsoleUIComponents: dlAliasesTab
+             zimbraAdminConsoleUIComponents: dlMemberOfTab
+             zimbraAdminConsoleUIComponents: dlNotesOfTab
+             zimbraAdminConsoleUIComponents: resourcePropertiesTab
+             zimbraAdminConsoleUIComponents: resourceContactTab
+
+            Since 5.0, some domain admin has the ability to view the domain information.
+            When either of the following attributes are set:
+
+            zimbraAdminConsoleCatchAllAddressEnabled
+            zimbraAdminConsoleCatchAllAddressEnabled
+            zimbraAdminConsoleSkinEnabled
+            zimbraAdminConsoleDNSCheckEnabled
+            zimbraAdminConsoleLDAPAuthEnabled
+
+            The upgrade script should add the following UIComponents for domain admin:
+            zimbraAdminConsoleUIComponents: domainListView
+            zimbraAdminConsoleUIComponents: domainGeneralTab
+
+            If zimbraAdminConsoleSkinEnabled is TRUE, the following should also be set:
+            zimbraAdminConsoleUIComponents: domainSkinsTab
+
+            
 
 9.3 Reference and Documentations
 
