@@ -757,6 +757,24 @@ public class AttributeManager {
                         mClassToAttrsMap.get(AttributeClass.pop3DataSource));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
+            case rssDataSource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.rssDataSource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case liveDataSource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.liveDataSource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
+            case galDataSource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.galDataSource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
             case domain:
                 attrs = SetUtil.union(new HashSet<String>(),
                         mClassToAttrsMap.get(AttributeClass.mailRecipient), 
@@ -768,6 +786,7 @@ public class AttributeManager {
             }
         }
     }
+    
 
     /*
      * Support for lookup by flag

@@ -421,23 +421,23 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>should be internal (query internal only), external (external only), or both</desc>
 </attr>
 
-<attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain">
+<attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain,galDataSource">
   <desc>LDAP URL for external GAL queries</desc>
 </attr>
 
-<attr id="48" name="zimbraGalLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="48" name="zimbraGalLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain,galDataSource">
   <desc>LDAP search base for external GAL queries</desc>
 </attr>
 
-<attr id="49" name="zimbraGalLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="49" name="zimbraGalLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource">
   <desc>LDAP bind dn for external GAL queries</desc>
 </attr>
 
-<attr id="50" name="zimbraGalLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="50" name="zimbraGalLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource">
   <desc>LDAP bind password for external GAL queries</desc>
 </attr>
 
-<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain">
+<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain,galDataSource">
   <desc>LDAP search filter for external GAL search queries</desc>
 </attr>
 
@@ -782,7 +782,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>template used to construct the body of an email notification message</desc>
 </attr>
 
-<attr id="153" name="zimbraGalLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="153" name="zimbraGalLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited">
   <globalConfigValue>co=workCountry</globalConfigValue>
   <globalConfigValue>company=company</globalConfigValue>
   <globalConfigValue>givenName,gn=firstName</globalConfigValue>
@@ -2693,7 +2693,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>kerberos5 realm for kerberos5 auth mech</desc>
 </attr>
 
-<attr id="549" name="zimbraGalLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain" since="5.0.0">
+<attr id="549" name="zimbraGalLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain,galDataSource" since="5.0.0">
   <desc>external LDAP GAL authentication mechanism
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
@@ -2701,11 +2701,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.0">
+<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.0">
   <desc>kerberos5 principal for external GAL queries</desc>
 </attr>
 
-<attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.0">
+<attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.0">
   <desc>kerberos5 keytab file path for external GAL queries</desc>
 </attr>
 
@@ -3258,7 +3258,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to use startTLS for external LDAP auth</desc>
 </attr>
 
-<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="5.0.6">
+<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain,galDataSource" since="5.0.6">
   <desc>whether to use startTLS for external GAL.
         startTLS will be used for external GAL access only if this attribute is true and zimbraGalLdapURL(or zimbraGalSyncLdapURL for sync) does not contain a ldaps URL.
   </desc>
@@ -4144,5 +4144,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>max number of bytes stored in the uncompressed blob cache on disk</desc>
 </attr>
 
+<attr id="826" name="zimbraDataSourceGalPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0">
+  <desc>
+    The time interval between automated data imports for a GAL data source.
+    If unset or 0, the data source will not be scheduled for automated polling.
+  </desc>
+</attr>
 
 </attrs>

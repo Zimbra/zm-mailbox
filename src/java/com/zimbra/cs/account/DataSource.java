@@ -62,7 +62,7 @@ public class DataSource extends AccountProperty {
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
     public enum Type {
-        pop3, imap, caldav, live, yab, rss, cal;
+        pop3, imap, caldav, live, yab, rss, cal, gal;
         
         public static Type fromString(String s) throws ServiceException {
             try {
@@ -209,6 +209,9 @@ public class DataSource extends AccountProperty {
                 break;
             case cal:
                 interval = account.getDataSourceCalendarPollingInterval();
+                break;
+            case gal:
+                interval = account.getDataSourceGalPollingInterval();
                 break;
             default:
                 return 0;

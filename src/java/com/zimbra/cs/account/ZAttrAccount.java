@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090303-1408 */
+    /* build: 5.0 pshao 20090303-1550 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4718,6 +4718,106 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetDataSourceCalendarPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceCalendarPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * <p>Use getDataSourceGalPollingIntervalAsString to access value as a string.
+     *
+     * @see #getDataSourceGalPollingIntervalAsString()
+     *
+     * @return zimbraDataSourceGalPollingInterval in millseconds, or -1 if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public long getDataSourceGalPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraDataSourceGalPollingInterval, -1L);
+    }
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @return zimbraDataSourceGalPollingInterval, or null if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public String getDataSourceGalPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraDataSourceGalPollingInterval, null);
+    }
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceGalPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public void setDataSourceGalPollingInterval(String zimbraDataSourceGalPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceGalPollingInterval, zimbraDataSourceGalPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param zimbraDataSourceGalPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public Map<String,Object> setDataSourceGalPollingInterval(String zimbraDataSourceGalPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceGalPollingInterval, zimbraDataSourceGalPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public void unsetDataSourceGalPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceGalPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public Map<String,Object> unsetDataSourceGalPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceGalPollingInterval, "");
         return attrs;
     }
 

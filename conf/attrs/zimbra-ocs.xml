@@ -233,4 +233,12 @@
   </comment>
 </objectclass>
 
+<objectclass id="26" name="zimbraGalDataSource" type="STRUCTURAL">
+  <sup>zimbraDataSource</sup>
+  <desc>GAL data source object</desc>
+  <comment>
+    Represents a GAL data source.
+  </comment>
+</objectclass>
+
 </objectclasses>

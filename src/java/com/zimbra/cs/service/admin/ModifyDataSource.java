@@ -98,6 +98,8 @@ public class ModifyDataSource extends AdminDocumentHandler {
             return AttributeClass.rssDataSource;
         else if (type == DataSource.Type.live)
             return AttributeClass.liveDataSource;
+        else if (type == DataSource.Type.gal)
+            return AttributeClass.galDataSource;
         else
             return AttributeClass.dataSource;
     }

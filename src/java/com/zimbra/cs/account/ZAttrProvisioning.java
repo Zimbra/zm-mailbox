@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090303-1408 */
+    /* build: 5.0 pshao 20090303-1550 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1876,6 +1876,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=424)
     public static final String A_zimbraDataSourceFolderId = "zimbraDataSourceFolderId";
+
+    /**
+     * The time interval between automated data imports for a GAL data
+     * source. If unset or 0, the data source will not be scheduled for
+     * automated polling.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=826)
+    public static final String A_zimbraDataSourceGalPollingInterval = "zimbraDataSourceGalPollingInterval";
 
     /**
      * Host name of server

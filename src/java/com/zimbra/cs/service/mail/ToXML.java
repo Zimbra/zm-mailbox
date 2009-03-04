@@ -1967,6 +1967,8 @@ public class ToXML {
             return MailConstants.E_DS_YAB;
         case rss:
             return MailConstants.E_DS_RSS;
+        case gal:
+            return MailConstants.E_DS_GAL;
         default:
             return MailConstants.E_DS_UNKNOWN;
         }

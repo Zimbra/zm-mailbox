@@ -38,6 +38,7 @@ class LdapDataSource extends DataSource implements LdapEntry {
 		case imap: return "zimbraImapDataSource";
 		case rss:  return "zimbraRssDataSource";
 		case live: return "zimbraLiveDataSource";
+		case gal:  return "zimbraGalDataSource";
 		default: return null;
 		}
 	}
@@ -59,6 +60,8 @@ class LdapDataSource extends DataSource implements LdapEntry {
 		    return Type.rss;
 		else if (attr.contains("zimbraLiveDataSource"))
 		    return Type.live;
+		else if (attr.contains("zimbraGalDataSource"))
+            return Type.gal;
 		else
 			throw ServiceException.FAILURE("unable to determine data source type from object class", null);
 	}
