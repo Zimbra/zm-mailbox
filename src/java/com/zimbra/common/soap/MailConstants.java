@@ -649,6 +649,7 @@ public class MailConstants {
     public static final String E_DS_CALDAV = "caldav";
     public static final String E_DS_YAB = "yab";
     public static final String E_DS_RSS = "rss";
+    public static final String E_DS_GAL = "gal";
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
