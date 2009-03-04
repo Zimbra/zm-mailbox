@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090304-1004 */
+    /* build: 5.0 pshao 20090304-1258 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -246,6 +246,20 @@ public class ZAttrProvisioning {
         public boolean isZimbra() { return this == zimbra;}
         public boolean isLdap() { return this == ldap;}
         public boolean isBoth() { return this == both;}
+    }
+
+    public static enum GalStatus {
+        active("active");
+        private String mValue;
+        private GalStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalStatus fromString(String s) throws ServiceException {
+            for (GalStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isActive() { return this == active;}
     }
 
     public static enum GalSyncLdapAuthMech {
@@ -2742,6 +2756,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFreebusyLocalMailboxNotActive = "zimbraFreebusyLocalMailboxNotActive";
 
     /**
+     * zimbraId of GAL sync accounts
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public static final String A_zimbraGalAccountId = "zimbraGalAccountId";
+
+    /**
      * LDAP search filter for external GAL auto-complete queries
      */
     @ZAttr(id=360)
@@ -2754,6 +2776,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=358)
     public static final String A_zimbraGalInternalSearchBase = "zimbraGalInternalSearchBase";
+
+    /**
+     * the last time at which a syncing attempt failed
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=829)
+    public static final String A_zimbraGalLastFailedSyncTimestamp = "zimbraGalLastFailedSyncTimestamp";
+
+    /**
+     * the last time at which this GAL data source was successfully synced
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=828)
+    public static final String A_zimbraGalLastSuccessfulSyncTimestamp = "zimbraGalLastSuccessfulSyncTimestamp";
 
     /**
      * LDAP Gal attribute to contact attr mapping
@@ -2857,6 +2895,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=46)
     public static final String A_zimbraGalMode = "zimbraGalMode";
+
+    /**
+     * GAL data source status
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=830)
+    public static final String A_zimbraGalStatus = "zimbraGalStatus";
 
     /**
      * LDAP search base for internal GAL sync (special values:

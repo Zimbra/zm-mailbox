@@ -42,7 +42,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090304-1004 */
+    /* build: 5.0 pshao 20090304-1258 */
 
     /**
      * RFC2256: descriptive information
@@ -4191,6 +4191,140 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFreebusyExchangeUserOrg(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeUserOrg, "");
+        return attrs;
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @return zimbraGalAccountId, or ampty array if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public String[] getGalAccountId() {
+        return getMultiAttr(Provisioning.A_zimbraGalAccountId);
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param zimbraGalAccountId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public void setGalAccountId(String[] zimbraGalAccountId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalAccountId, zimbraGalAccountId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param zimbraGalAccountId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public Map<String,Object> setGalAccountId(String[] zimbraGalAccountId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalAccountId, zimbraGalAccountId);
+        return attrs;
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param zimbraGalAccountId new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public void addGalAccountId(String zimbraGalAccountId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalAccountId, zimbraGalAccountId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param zimbraGalAccountId new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public Map<String,Object> addGalAccountId(String zimbraGalAccountId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalAccountId, zimbraGalAccountId);
+        return attrs;
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param zimbraGalAccountId existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public void removeGalAccountId(String zimbraGalAccountId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalAccountId, zimbraGalAccountId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param zimbraGalAccountId existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public Map<String,Object> removeGalAccountId(String zimbraGalAccountId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalAccountId, zimbraGalAccountId);
+        return attrs;
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public void unsetGalAccountId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalAccountId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbraId of GAL sync accounts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=831)
+    public Map<String,Object> unsetGalAccountId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalAccountId, "");
         return attrs;
     }
 

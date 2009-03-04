@@ -4156,4 +4156,20 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of contact entries to return from an auto complete</desc>
 </attr>
 
+<attr id="828" name="zimbraGalLastSuccessfulSyncTimestamp"  type="gentime" cardinality="single" optionalIn="galDataSource" since="6.0.0">
+  <desc>the last time at which this GAL data source was successfully synced</desc>
+</attr>
+
+<attr id="829" name="zimbraGalLastFailedSyncTimestamp"  type="gentime" cardinality="single" optionalIn="galDataSource" since="6.0.0">
+  <desc>the last time at which a syncing attempt failed</desc>
+</attr>
+
+<attr id="830" name="zimbraGalStatus" type="enum" value="active" cardinality="single" requiredIn="galDataSource" since="6.0.0">
+  <desc>GAL data source status</desc>
+</attr>
+
+<attr id="831" name="zimbraGalAccountId"  type="id" cardinality="multi" optionalIn="globalConfig,domain" since="6.0.0">
+  <desc>zimbraId of GAL sync accounts</desc>
+</attr>
+
 </attrs>
