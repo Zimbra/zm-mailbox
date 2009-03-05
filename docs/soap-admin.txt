@@ -2147,24 +2147,29 @@ Access: domain admin sufficient
 
 ----------------------------------------
 
-<ModifyShareInfoRequest>
-  [<account by="id|name|foreignPrincipal">...</account>]
-  [<dl by="id|name">...</dl>]
+<PublishShareInfoRequest>
+  <dl by="id|name">...</dl>
   <share action="{add|remove}">
       <owner by="id|name|foreignPrincipal">...</owner>
-      <folder [l="{base-folder-id}"] [path="{fully-qualified-path}"] [pathOrId="{folder-path-or-id}"]/>
+      [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"] [pathOrId="{folder-path-or-id}"]/>]
   </share>
-</ModifyShareInfoRequest>
+</PublishShareInfoRequest>
+
+Publish share info on the specified DL shared by an owner.  
+Folders shared by the <owner> with the DL or any of the DL's parent group can be published.
+
+e.g. if owner O shares /Inbox with DL-A, and DL-B is a member of DL-A,
+     the share can be published on DL-A and/or DL-B.
 
 Notes:
-    - only one of <account> or <dl> can be present
     - in <folder>, only one of l, path, or pathOrId can be specified.
       If pathOrId is specified, server will first treat {folder-path-or-id} as a path and try to 
-      find the folder by path; if there is not such folder, server will ten treat {folder-path-or-id} 
-      as a folder id and try to find the folder by id.
+      find the folder by path; if there is no such folder, server will then treat {folder-path-or-id} 
+      as a folder id and try to find the folder by id.  If <folder> is omitted, server will 
+      iterate through all folders of the owner and publish any shares granted to the DL or any of the 
+      DL's parent DL.
 
-
-<ModifyShareInfoResponse/>
+<PublishShareInfoResponse/>
 
 Notes:
 
@@ -2173,27 +2178,48 @@ note: this request is by default proxied to the owner's home server
    
 ----------------------------------------
 
-<GetShareInfoRequest>
-    [<account by="id|name|foreignPrincipal">...</account>]
-    [<dl by="id|name">...</dl>]
-    [<grantee type="{grantee_type}">]
+<GetPublishedShareInfoRequest>
+    <dl by="id|name">...</dl>
     [<owner by="{owner-by}">...</owner>]
+</GetPublishedShareInfoRequest>
+
+Get share info published on the <dl>.
+If <owner> is specified, returns only shares owned by the owner.  Otherwise returns all 
+shares published on the <dl>.
+
+<GetPublishedShareInfoResponse>
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"] 
+            folderId="{folder-id}" folderPath="{fully-qualified-path}" 
+            view="{default-type}" rights="{rights}"
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
+</GetPublishedShareInfoResponse>
+
+----------------------------------------
+
+<GetShareInfoRequest>
+    [<grantee type="{grantee_type}" [id="{grantee-id}"] [name="{grantee-name}"]/>]
+    <owner by="{owner-by}">...</owner>
 </GetShareInfoRequest>
 
-Notes:
-    - only one of <account> or <dl> can be present
-    - if <account> is specified, this command is equivalent to the account namespace GetShareInfoRequest
-    - see GetShareInfoRequest in soap.txt
+Iterate through all folders of the owner's mailbox and return shares that match  
+grantees specified by the <grantee> specifier.
+
+e.g. 
+
+<GetShareInfoRequest>
+    <grantee name="dl@test.com"/>]
+    <owner by="name">user1@test.com</owner>
+</GetShareInfoRequest>
+
+returns all shares owned by user1@test.com that are shared with dl@test.com.
     
 <GetShareInfoResponse>
-    [<share ownerId="{owner-id}" ownerName="{owner-name}" 
-            folderId="{folder-id}" folderPath="{folder-path}" view="{default-type}" [mid="{mountpoint-id}"]
-            rights="{rights}"
-            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"] 
+            folderId="{folder-id}" folderPath="{fully-qualified-path}" 
+            view="{default-type}" rights="{rights}"
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
 </GetShareInfoResponse>
 
-mid="{mountpoint-id}" : returned if the share is already mounted.  
-                        It contain the folder id of the mountpoint in the local mailbox.  
                         
 ----------------------------
  

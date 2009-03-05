@@ -831,7 +831,7 @@ public class ShareInfo {
                 
             /*
              * if adding, replace existing share info for the same owner:folder
-             * if removing, delete all(there should be only one) share info for the same owner:folder
+             * if removing, delete all(there should be only one) share info of the same owner:folder
              * 
              * for both case, we remove any value that starts with the same owner:folder
              * 
@@ -841,7 +841,8 @@ public class ShareInfo {
              */
             String ownerAndFoler = serializeOwnerAndFolder();
             for (String curSi : curShareInfo) {
-                if (curSi.startsWith(ownerAndFoler) && !curSi.equals(value)) {
+                if (curSi.startsWith(ownerAndFoler) && 
+                        (getAction() == Publishing.Action.remove || !curSi.equals(value))) {
                     attrs.put(removeKey, curSi);
                 }
             }

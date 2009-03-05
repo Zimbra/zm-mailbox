@@ -53,8 +53,6 @@ public class PublishShareInfo extends ShareInfoHandler {
         // entry to modify the share info for 
         NamedEntry publishingOnEntry = getPublishableTargetEntry(zsc, request, prov);
         
-        
-        
         Element eShare = request.getElement(AdminConstants.E_SHARE);
         ShareInfo.Publishing.Action action = ShareInfo.Publishing.Action.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
             
