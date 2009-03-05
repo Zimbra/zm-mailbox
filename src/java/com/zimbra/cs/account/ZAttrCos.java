@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20090305-1108 */
+    /* build: 5.0 pshao 20090305-1223 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11795,6 +11795,145 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefCalendarApptReminderWarningTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, "");
+        return attrs;
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @return zimbraPrefCalendarApptVisibility, or ZAttrProvisioning.PrefCalendarApptVisibility._public if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public ZAttrProvisioning.PrefCalendarApptVisibility getPrefCalendarApptVisibility() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarApptVisibility); return v == null ? ZAttrProvisioning.PrefCalendarApptVisibility._public : ZAttrProvisioning.PrefCalendarApptVisibility.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalendarApptVisibility._public; }
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @return zimbraPrefCalendarApptVisibility, or "public" if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public String getPrefCalendarApptVisibilityAsString() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarApptVisibility, "public");
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @param zimbraPrefCalendarApptVisibility new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public void setPrefCalendarApptVisibility(ZAttrProvisioning.PrefCalendarApptVisibility zimbraPrefCalendarApptVisibility) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptVisibility, zimbraPrefCalendarApptVisibility.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @param zimbraPrefCalendarApptVisibility new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public Map<String,Object> setPrefCalendarApptVisibility(ZAttrProvisioning.PrefCalendarApptVisibility zimbraPrefCalendarApptVisibility, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptVisibility, zimbraPrefCalendarApptVisibility.toString());
+        return attrs;
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @param zimbraPrefCalendarApptVisibility new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public void setPrefCalendarApptVisibilityAsString(String zimbraPrefCalendarApptVisibility) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptVisibility, zimbraPrefCalendarApptVisibility);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @param zimbraPrefCalendarApptVisibility new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public Map<String,Object> setPrefCalendarApptVisibilityAsString(String zimbraPrefCalendarApptVisibility, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptVisibility, zimbraPrefCalendarApptVisibility);
+        return attrs;
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public void unsetPrefCalendarApptVisibility() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptVisibility, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * <p>Valid values: [public, private]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public Map<String,Object> unsetPrefCalendarApptVisibility(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptVisibility, "");
         return attrs;
     }
 

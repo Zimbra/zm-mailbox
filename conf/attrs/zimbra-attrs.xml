@@ -4172,4 +4172,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimbraId of GAL sync accounts</desc>
 </attr>
 
+<attr id="832" name="zimbraPrefCalendarApptVisibility" type="enum" value="public,private" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0">
+  <defaultCOSValue>public</defaultCOSValue>
+  <desc>default visibility of the appointment when starting a new appointment in the UI</desc>
+</attr>
+
 </attrs>

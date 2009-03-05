@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 boris 20090305-1108 */
+    /* build: 5.0 pshao 20090305-1223 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -398,6 +398,22 @@ public class ZAttrProvisioning {
         }
         public boolean isMay() { return this == may;}
         public boolean isNone() { return this == none;}
+    }
+
+    public static enum PrefCalendarApptVisibility {
+        _public("public"),
+        _private("private");
+        private String mValue;
+        private PrefCalendarApptVisibility(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefCalendarApptVisibility fromString(String s) throws ServiceException {
+            for (PrefCalendarApptVisibility value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean is_public() { return this == _public;}
+        public boolean is_private() { return this == _private;}
     }
 
     public static enum PrefCalendarInitialView {
@@ -4444,6 +4460,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=341)
     public static final String A_zimbraPrefCalendarApptReminderWarningTime = "zimbraPrefCalendarApptReminderWarningTime";
+
+    /**
+     * default visibility of the appointment when starting a new appointment
+     * in the UI
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=832)
+    public static final String A_zimbraPrefCalendarApptVisibility = "zimbraPrefCalendarApptVisibility";
 
     /**
      * hour of day that the day view should end at, non-inclusive (16=4pm, 24
