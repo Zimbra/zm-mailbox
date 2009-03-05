@@ -40,6 +40,8 @@ public class AdminConstants {
     public static final QName CREATE_ACCOUNT_RESPONSE = QName.get("CreateAccountResponse", NAMESPACE);
     public static final QName CREATE_ADMIN_ACCOUNT_REQUEST = QName.get("CreateAdminAccountRequest", NAMESPACE);
     public static final QName CREATE_ADMIN_ACCOUNT_RESPONSE = QName.get("CreateAdminAccountResponse", NAMESPACE);
+    public static final QName CREATE_GAL_SYNC_ACCOUNT_REQUEST = QName.get("CreateGalSyncAccountRequest", NAMESPACE);
+    public static final QName CREATE_GAL_SYNC_ACCOUNT_RESPONSE = QName.get("CreateGalSyncAccountResponse", NAMESPACE);
     public static final QName DELEGATE_AUTH_REQUEST = QName.get("DelegateAuthRequest", NAMESPACE);
     public static final QName DELEGATE_AUTH_RESPONSE = QName.get("DelegateAuthResponse", NAMESPACE);
     public static final QName GET_ACCOUNT_REQUEST = QName.get("GetAccountRequest", NAMESPACE);
