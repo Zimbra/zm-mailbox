@@ -39,7 +39,6 @@ public interface JmxServerStatsMBean
     long getMailboxGetMs();
     long getMailboxGetsPerMinute();
     long getMessageAddMs();
-    long getMessageCacheBytes();
     long getMessageCacheSize();
     long getMessageCacheHitRate();
     long getMessagesAddedPerMinute();

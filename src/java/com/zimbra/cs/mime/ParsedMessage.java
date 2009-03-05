@@ -296,7 +296,15 @@ public class ParsedMessage {
             }
         }
         
-        runMimeConverters();
+        ExpandMimeMessage expand = new ExpandMimeMessage(mMimeMessage);
+        try {
+            expand.expand();
+            mExpandedMessage = expand.getExpanded();
+        } catch (Exception e) {
+            // roll back if necessary
+            mExpandedMessage = mMimeMessage;
+            sLog.warn("exception while converting message; message will be analyzed unconverted", e);
+        }
 
         // must set received-date before Lucene document is initialized
         if (receivedDate == null) {
@@ -430,58 +438,6 @@ public class ParsedMessage {
     }
     
     /**
-     * Copies the <tt>MimeMessage</tt> if a converter would want 
-     * to make a change, but doesn't alter the original MimeMessage.
-     */
-    private class ForkMimeMessage implements MimeVisitor.ModificationCallback {
-        private boolean mForked = false;
-
-        public boolean onModification() {
-            if (mForked)
-                return false;
-
-            try {
-                mForked = true;
-                mExpandedMessage = new Mime.FixedMimeMessage(mMimeMessage);
-            } catch (Exception e) {
-                sLog.warn("Unable to fork MimeMessage.", e);
-            }
-            return false;
-        }
-    }
-
-    /** Applies all registered on-the-fly MIME converters to a copy of the
-     *  encapsulated message, forking it from the original MimeMessage if any
-     *  changes are made.  Thus {@link #mMimeMessage} should always contain
-     *  the original message content, while {@link #mExpandedMessage} may
-     *  point to a version altered by the converters.
-     *   
-     * @return <code>true</code> if a converter forked and altered the encapsulated
-     * message, <code>false</code> if the encapsulated message is unchanged.
-     *         
-     * @see MimeVisitor#registerConverter */
-    private boolean runMimeConverters() {
-        try {
-            MimeVisitor.ModificationCallback forkCallback = new ForkMimeMessage();
-            
-            // first, find out if *any* of the converters would be triggered (but don't change the message)
-            for (Class<? extends MimeVisitor> vclass : MimeVisitor.getConverters()) {
-                if (mExpandedMessage == mMimeMessage)
-                    vclass.newInstance().setCallback(forkCallback).accept(mMimeMessage);
-                // if there are attachments to be expanded, expand them in the MimeMessage *copy*
-                if (mExpandedMessage != mMimeMessage)
-                    vclass.newInstance().accept(mExpandedMessage);
-            }
-        } catch (Exception e) {
-            // roll back if necessary
-            mExpandedMessage = mMimeMessage;
-            sLog.warn("exception while converting message; message will be analyzed unconverted", e);
-        }
-
-        return mExpandedMessage != mMimeMessage;
-    }
-
-    /**
      * Analyze and extract text from all the "body" (non-attachment) parts of the message.
      * This step is required to properly generate the message fragment.
      * 
@@ -586,6 +542,14 @@ public class ParsedMessage {
      */
     public MimeMessage getMimeMessage() {
         return mExpandedMessage;
+    }
+    
+    /**
+     * Returns the original <tt>MimeMessage</tt>.  Affected by mutation but not
+     * conversion.
+     */
+    public MimeMessage getOriginalMessage() {
+        return mMimeMessage;
     }
 
     /**

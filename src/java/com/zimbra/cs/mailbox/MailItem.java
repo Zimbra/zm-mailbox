@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -764,12 +765,23 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  postprocessing has been performed to make opaque attachments (e.g.
      *  TNEF) visible.
      * 
-     * @return The InputStream fetched from the {@link MessageCache}.
+     * @return The data stream, or <tt>null</tt> if the item has no blob
      * @throws ServiceException when the message file does not exist.
      * @see #getMimeMessage()
      * @see #getContent() */
     public InputStream getContentStream() throws ServiceException {
-        return getDigest() == null ? null : MessageCache.getRawContent(this);
+        if (getDigest() == null) {
+            return null;
+        }
+        try {
+            MailboxBlob msgBlob = getBlob();
+            if (msgBlob == null)
+                throw ServiceException.FAILURE("missing blob for id: " + getId() + ", change: " + getModifiedSequence(), null);
+            return StoreManager.getInstance().getContent(msgBlob);
+        } catch (IOException e) {
+            String msg = String.format("Unable to get content for %s %d", getClass().getSimpleName(), getId());
+            throw ServiceException.FAILURE(msg, e);
+        }
     }
 
     /** Returns the raw, uncompressed content of the item's blob as a byte
@@ -782,9 +794,15 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see #getMimeMessage()
      * @see #getContentStream() */
     public byte[] getContent() throws ServiceException {
-        return getDigest() == null ? null : MessageCache.getItemContent(this);
+        if (getDigest() == null) {
+            return null;
+        }
+        try {
+            return ByteUtil.getContent(getContentStream(), (int) getSize());
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to get content for item " + getId(), e);
+        }
     }
-
 
     public int compareTo(MailItem that) {
         if (this == that)

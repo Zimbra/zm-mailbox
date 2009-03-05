@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090304-1258 */
+    /* build: 5.0 boris 20090305-1108 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3784,7 +3784,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMemcachedBindPort = "zimbraMemcachedBindPort";
 
     /**
-     * Size limit in number of bytes on the message cache.
+     * Maximum number of JavaMail MimeMessage objects in the message cache.
      */
     @ZAttr(id=297)
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";

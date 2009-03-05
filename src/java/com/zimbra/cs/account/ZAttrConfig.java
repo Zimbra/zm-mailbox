@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090304-1258 */
+    /* build: 5.0 boris 20090305-1108 */
 
     /**
      * RFC2256: descriptive information
@@ -10980,17 +10980,17 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Size limit in number of bytes on the message cache.
+     * Maximum number of JavaMail MimeMessage objects in the message cache.
      *
-     * @return zimbraMessageCacheSize, or 1671168 if unset
+     * @return zimbraMessageCacheSize, or 2000 if unset
      */
     @ZAttr(id=297)
     public int getMessageCacheSize() {
-        return getIntAttr(Provisioning.A_zimbraMessageCacheSize, 1671168);
+        return getIntAttr(Provisioning.A_zimbraMessageCacheSize, 2000);
     }
 
     /**
-     * Size limit in number of bytes on the message cache.
+     * Maximum number of JavaMail MimeMessage objects in the message cache.
      *
      * @param zimbraMessageCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11003,7 +11003,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Size limit in number of bytes on the message cache.
+     * Maximum number of JavaMail MimeMessage objects in the message cache.
      *
      * @param zimbraMessageCacheSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11017,7 +11017,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Size limit in number of bytes on the message cache.
+     * Maximum number of JavaMail MimeMessage objects in the message cache.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11029,7 +11029,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Size limit in number of bytes on the message cache.
+     * Maximum number of JavaMail MimeMessage objects in the message cache.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

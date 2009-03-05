@@ -2639,7 +2639,7 @@ public abstract class CalendarItem extends MailItem {
     }
     
     public InputStream getRawMessage() throws ServiceException {
-        return MessageCache.getRawContent(this);
+        return getContentStream();
     }
 
     void appendRawCalendarData(ZVCalendar cal,

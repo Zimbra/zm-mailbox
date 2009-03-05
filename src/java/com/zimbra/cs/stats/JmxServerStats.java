@@ -90,10 +90,6 @@ public class JmxServerStats implements JmxServerStatsMBean {
         return (long) ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.getAverage();
     }
 
-    public long getMessageCacheBytes() {
-        return MessageCache.getDataSize();
-    }
-    
     public long getMessageCacheSize() {
         return MessageCache.getSize();
     }
