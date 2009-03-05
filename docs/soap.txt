@@ -3027,10 +3027,10 @@ Notes:
     
     
 <GetShareInfoResponse>
-    [<share ownerId="{owner-id}" ownerEmail={owner-email} ownerName="{owner-display-name}" 
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"] 
             folderId="{folder-id}" folderPath="{fully-qualified-path}" 
             view="{default-type}" [mid="{mountpoint-id}"] rights="{rights}"
-            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeEmail="{grantee-email}" granteeName="{grantee-display-name}">]+
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
 </GetShareInfoResponse>
 
 mid="{mountpoint-id}" : returned if the share is already mounted.  
