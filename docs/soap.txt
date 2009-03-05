@@ -2956,7 +2956,7 @@ Note:
     [<owner by="{owner-by}">...</owner>]
 </GetShareInfoRequest>
 
-{grantee_type} = if <owner> is not specified: usr | grp
+{grantee_type} = if <owner> is not specified: grp
                  if <owner> is specified: usr | grp | pub | all | cos | dom | guest | key
                  
                  Filters the result by the specified grantee type, only shares granted to 

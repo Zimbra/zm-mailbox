@@ -72,7 +72,9 @@ public class GetShareInfo  extends AccountDocumentHandler {
         ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, mountedFolders, resultFilter);
         
         if (owner == null) {
-            // retrieve from published share info
+            // retrieve from published share info, 
+            if (granteeType != 0 && granteeType != ACL.GRANTEE_GROUP)
+                throw ServiceException.INVALID_REQUEST("invalid grantee type for retrieving published share info", null);
             ShareInfo.Published.get(prov, targetAcct, granteeType, owner, visitor);
         } else {
             // iterate all folders of the owner
@@ -84,7 +86,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
         visitor.finish();
     }
 
-    private static byte getGranteeType(Element eGrantee) throws ServiceException {
+    public static byte getGranteeType(Element eGrantee) throws ServiceException {
         String granteeType = null;
         if (eGrantee != null)
             granteeType = eGrantee.getAttribute(AccountConstants.A_TYPE, null);
@@ -94,10 +96,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
             gt = 0;
         else {
             gt = ACL.stringToType(granteeType);
-            if (gt != ACL.GRANTEE_USER && gt != ACL.GRANTEE_GROUP)
-                throw ServiceException.INVALID_REQUEST("unsupported grantee type", null);
         }
-        
         return gt;
     }
     

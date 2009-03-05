@@ -1835,23 +1835,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void purgeAccountCalendarCache(String accountId) throws ServiceException {
         // do nothing by default
     }
+    
+    public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
+            Account ownerAcct, String folderIdOrPath) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void getPublishedShareInfo(DistributionList dl, Account ownerAcct, 
+            ShareInfo.Published.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void getShareInfo(Account ownerAcct, ShareInfo.Published.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
-    public void modifyShareInfo(Account acct, ShareInfo.Publishing.Action action, String ownerAcctid, String folderIdOrPath) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
-    
-    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, String ownerAcctid, String folderIdOrPath) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
-    
-    public void getShareInfo(Account acct, String granteeType, Account owner, 
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
-    
-    public void getShareInfo(DistributionList dl, String granteeType, Account owner,
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
     
 }

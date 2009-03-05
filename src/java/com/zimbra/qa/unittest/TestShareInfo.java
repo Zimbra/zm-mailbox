@@ -223,16 +223,16 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        mProv.modifyShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath);
+        // Prov.publishShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing, folderPath);
         
         VerifyPublishedVisitor visitor;
         
         visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        mProv.getShareInfo(publishingEntry, "usr", ownerForGet, visitor);
+        // mProv.getShareInfo(publishingEntry, "usr", ownerForGet, visitor);
         expectedDirectOnly.OK();
         
         visitor = new VerifyPublishedVisitor(expectedIncludeAll);
-        mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
+        // mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
         expectedDirectOnly.OK();
     }
     
@@ -240,12 +240,12 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        mProv.modifyShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing.getId(), folderPath);
+        mProv.publishShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing, folderPath);
         
         VerifyPublishedVisitor visitor;
         
         visitor = new VerifyPublishedVisitor(expectedIncludeAll);
-        mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
+        // mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
         expectedDirectOnly.OK();
     }
     
@@ -453,11 +453,11 @@ public class TestShareInfo extends TestCase {
         VerifyPublishedVisitor visitor;
         
         visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        mProv.getShareInfo(acctInDl, "usr", owner1, visitor);
+        // mProv.getShareInfo(acctInDl, "usr", owner1, visitor);
         expectedDirectOnly.OK();
         
         visitor = new VerifyPublishedVisitor(expectedAll);
-        mProv.getShareInfo(acctInDl, null, owner1, visitor);
+        // mProv.getShareInfo(acctInDl, null, owner1, visitor);
         expectedDirectOnly.OK(); 
     }
 

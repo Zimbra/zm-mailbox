@@ -26,37 +26,24 @@ public abstract class ShareInfoHandler extends AdminDocumentHandler {
         return true;
     }
     
-    protected NamedEntry getTargetEntry(ZimbraSoapContext zsc, Element request, Provisioning prov) throws ServiceException {
-        Element eAcct = request.getOptionalElement(AdminConstants.E_ACCOUNT);
-        Element eDl = request.getOptionalElement(AdminConstants.E_DL);
-        
-        if (eAcct != null && eDl != null)
-            throw ServiceException.INVALID_REQUEST("only one of " + AdminConstants.E_ACCOUNT + " or " +
-                                                   AdminConstants.E_DL + " can be specified", null);
+    /*
+     * DL only for now
+     */
+    protected NamedEntry getPublishableTargetEntry(ZimbraSoapContext zsc, Element request, Provisioning prov) throws ServiceException {
+        Element eDl = request.getElement(AdminConstants.E_DL);
         
         NamedEntry entry = null;
-        if (eAcct != null) {
-            String key = eAcct.getAttribute(AdminConstants.A_BY);
-            String value = eAcct.getText();
-    
-            Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
-    
-            if (account == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(value);
-            
-            entry = account;
-        } else {
-            String key = eDl.getAttribute(AdminConstants.A_BY);
-            String value = eDl.getText();
-    
-            DistributionList dl = prov.get(DistributionListBy.fromString(key), value);
-            
-            if (dl == null)
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
-            
-            entry = dl;
-        }
         
+        String key = eDl.getAttribute(AdminConstants.A_BY);
+        String value = eDl.getText();
+    
+        DistributionList dl = prov.get(DistributionListBy.fromString(key), value);
+            
+        if (dl == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+            
+        entry = dl;
+       
         return entry;
     }
     

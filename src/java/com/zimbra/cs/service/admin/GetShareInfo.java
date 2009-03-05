@@ -35,6 +35,8 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.account.GetShareInfo.ResultFilter;
+import com.zimbra.cs.service.account.GetShareInfo.ResultFilterByTarget;
 import com.zimbra.cs.service.account.GetShareInfo.ShareInfoVisitor;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -47,64 +49,42 @@ public class GetShareInfo extends ShareInfoHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         Provisioning prov = Provisioning.getInstance();
         
-        // entry to get the share info for 
-        NamedEntry taregtEntry = getTargetEntry(zsc, request, prov);
+        Element eGrantee = request.getOptionalElement(AccountConstants.E_GRANTEE);
+        byte granteeType = com.zimbra.cs.service.account.GetShareInfo.getGranteeType(eGrantee);
+        String granteeId = eGrantee == null? null : eGrantee.getAttribute(AccountConstants.A_ID, null);
+        String granteeName = eGrantee == null? null : eGrantee.getAttribute(AccountConstants.A_NAME, null);
         
-        checkShareInfoRight(zsc, prov, taregtEntry);
+        Element eOwner = request.getElement(AccountConstants.E_OWNER);
+        Account ownerAcct = null;
+        AccountBy acctBy = AccountBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
+        String key = eOwner.getText();
+        ownerAcct = prov.get(acctBy, key);
+            
+        // in the account namespace GetShareInfo
+        // to defend against harvest attacks return "no shares" instead of error 
+        // when an invalid user name/id is used.
+        //
+        // this is the admin namespace GetShareInfo, we want to let the admin know if 
+        // the owner name is bad
+        if (ownerAcct == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(key);
+        
+        checkAccountRight(zsc, ownerAcct, Admin.R_adminLoginAs);
         
         Element response = zsc.createElement(AdminConstants.GET_SHARE_INFO_RESPONSE);
-
-        // just call the account namepspace method
-        if (taregtEntry instanceof Account)
-            com.zimbra.cs.service.account.GetShareInfo.doGetShareInfo(zsc, context, (Account)taregtEntry, request, response);
         
-        else if (taregtEntry instanceof DistributionList) {
-            Account owner = null;
-            Element eOwner = request.getOptionalElement(AccountConstants.E_OWNER);
-            if (eOwner != null) {
-                AccountBy acctBy = AccountBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
-                String key = eOwner.getText();
-                owner = prov.get(acctBy, key);
-                
-                // in the account namespace GetShareInfo
-                // to defend against harvest attacks return "no shares" instead of error 
-                // when an invalid user name/id is used.
-                //
-                // this is the admin namespace GetShareInfo, we want to let the admin know if 
-                // the owner name is bad
-                if (owner == null)
-                    throw AccountServiceException.NO_SUCH_ACCOUNT(key);
-            }
-            
-            ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, null, null);
-            ShareInfo.Published.get(prov, (DistributionList)taregtEntry, owner, visitor);
-            visitor.finish();
-        }
+        ResultFilter resultFilter = new ResultFilterByTarget(granteeId, granteeName);
+        ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, null, resultFilter);
+        ShareInfo.Discover.discover(octxt, prov, null, granteeType, ownerAcct, visitor);
+        visitor.finish();
         
         return response;
     }
     
-    private void checkShareInfoRight(ZimbraSoapContext zsc, Provisioning prov, NamedEntry taregtEntry) 
-        throws ServiceException {
-        
-        if (taregtEntry instanceof Account) {
-            Account acct = (Account)taregtEntry;
-            
-            if (acct.isCalendarResource()) {
-                // need a CalendarResource instance for RightChecker
-                CalendarResource resource = prov.get(CalendarResourceBy.id, acct.getId());
-                checkCalendarResourceRight(zsc, resource, Admin.R_getCalendarResourceShareInfo);
-            } else
-                checkAccountRight(zsc, acct, Admin.R_getAccountShareInfo);
-        } else if (taregtEntry instanceof DistributionList) {
-            checkDistributionListRight(zsc, (DistributionList)taregtEntry, Admin.R_getDistributionListShareInfo);
-        }
-    }
-    
     @Override
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_getAccountShareInfo);
-        relatedRights.add(Admin.R_getCalendarResourceShareInfo);
-        relatedRights.add(Admin.R_getDistributionListShareInfo);
+        relatedRights.add(Admin.R_adminLoginAs);
+
+        notes.add("Needs the " + Admin.R_adminLoginAs.getName() + " right on the owner account.");
     }
 }

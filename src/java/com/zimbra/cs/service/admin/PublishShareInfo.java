@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ModifyShareInfo extends ShareInfoHandler {
+public class PublishShareInfo extends ShareInfoHandler {
 
     private static final String[] OWNER_ACCOUNT_PATH = new String[] { AdminConstants.E_SHARE, AdminConstants.E_OWNER};
     protected String[] getProxiedAccountElementPath()  { return OWNER_ACCOUNT_PATH; }
@@ -51,14 +51,17 @@ public class ModifyShareInfo extends ShareInfoHandler {
         Provisioning prov = Provisioning.getInstance();
         
         // entry to modify the share info for 
-        NamedEntry publishingOnEntry = getTargetEntry(zsc, request, prov);
+        NamedEntry publishingOnEntry = getPublishableTargetEntry(zsc, request, prov);
         
-        checkShareInfoRight(zsc, prov, publishingOnEntry);
+        
         
         Element eShare = request.getElement(AdminConstants.E_SHARE);
         ShareInfo.Publishing.Action action = ShareInfo.Publishing.Action.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
             
         Account ownerAcct = getOwner(zsc, eShare, prov, true);
+        
+        checkDistributionListRight(zsc, (DistributionList)publishingOnEntry, Admin.R_publishDistributionListShareInfo);
+        checkAccountRight(zsc, ownerAcct, Admin.R_adminLoginAs);
             
         Element eFolder = eShare.getElement(AdminConstants.E_FOLDER);
         String folderPath = eFolder.getAttribute(AdminConstants.A_PATH, null);
@@ -88,7 +91,7 @@ public class ModifyShareInfo extends ShareInfoHandler {
         ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry,
                 action, ownerAcct, folder);
         
-        Element response = zsc.createElement(AdminConstants.MODIFY_SHARE_INFO_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.PUBLISH_SHARE_INFO_RESPONSE);
         return response;
     }
     
@@ -142,27 +145,13 @@ public class ModifyShareInfo extends ShareInfoHandler {
                                                    AdminConstants.A_PATH_OR_ID, null);
     }
     
-    private void checkShareInfoRight(ZimbraSoapContext zsc, Provisioning prov, NamedEntry publishingOnEntry) 
-        throws ServiceException {
-        
-        if (publishingOnEntry instanceof Account) {
-            Account acct = (Account)publishingOnEntry;
-            
-            if (acct.isCalendarResource()) {
-                // need a CalendarResource instance for RightChecker
-                CalendarResource resource = prov.get(CalendarResourceBy.id, acct.getId());
-                checkCalendarResourceRight(zsc, resource, Admin.R_publishCalendarResourceShareInfo);
-            } else
-                checkAccountRight(zsc, acct, Admin.R_publishAccountShareInfo);
-        } else if (publishingOnEntry instanceof DistributionList) {
-            checkDistributionListRight(zsc, (DistributionList)publishingOnEntry, Admin.R_publishDistributionListShareInfo);
-        }
-    }
-    
     @Override
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_publishAccountShareInfo);
-        relatedRights.add(Admin.R_publishCalendarResourceShareInfo);
+        relatedRights.add(Admin.R_adminLoginAs);
         relatedRights.add(Admin.R_publishDistributionListShareInfo);
+        
+        notes.add("Needs the " + Admin.R_publishDistributionListShareInfo.getName() + 
+                " right on the distribution list entry to publish; and the " + 
+                Admin.R_adminLoginAs.getName() + " right on the owner account.");
     }
 }

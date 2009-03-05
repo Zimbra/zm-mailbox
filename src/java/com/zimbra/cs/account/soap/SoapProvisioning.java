@@ -2148,47 +2148,37 @@ public class SoapProvisioning extends Provisioning {
         eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcctId);
         eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, folderIdOrPath);
     }
+
     
     @Override
-    public void modifyShareInfo(Account acct, ShareInfo.Publishing.Action action, String ownerAcctId, String folderIdOrPath) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
-        
-        Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
-        eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
-        eAcct.setText(acct.getId());
-        
-        toXML(req, action, ownerAcctId, folderIdOrPath);
-        invoke(req);
-    }
-    
-    @Override
-    public void modifyShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, String ownerAcctId, String folderIdOrPath) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.MODIFY_SHARE_INFO_REQUEST);
+    public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
+            Account ownerAcct, String folderIdOrPath) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.PUBLISH_SHARE_INFO_REQUEST);
         
         Element eDL = req.addElement(AdminConstants.E_DL);
-        eDL.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        eDL.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
         eDL.setText(dl.getId());
         
-        toXML(req, action, ownerAcctId, folderIdOrPath);
+        Element eShare = req.addElement(AdminConstants.E_SHARE);
+        eShare.addAttribute(AdminConstants.A_ACTION, action.name());
+        
+        eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
+        eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, folderIdOrPath);
+        
         invoke(req);
     }
     
     @Override
-    public void getShareInfo(Account acct, String granteeType, Account owner, 
+    public void getPublishedShareInfo(DistributionList dl, Account ownerAcct, 
             ShareInfo.Published.Visitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_PUBLISHED_SHARE_INFO_REQUEST);
         
-        Element eAcct = req.addElement(AdminConstants.E_ACCOUNT);
-        eAcct.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
-        eAcct.setText(acct.getId());
+        Element eDL = req.addElement(AdminConstants.E_DL);
+        eDL.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
+        eDL.setText(dl.getId());
         
-        if (granteeType != null) {
-            Element eGrantee = req.addElement(AccountConstants.E_GRANTEE);
-            eGrantee.addAttribute(AccountConstants.A_TYPE, granteeType);
-        }
-        
-        if (owner != null)
-            req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(owner.getId());
+        if (ownerAcct != null)
+            req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
 
         Element resp = invoke(req);
         for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
@@ -2198,21 +2188,10 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void getShareInfo(DistributionList dl, String granteeType, Account owner,
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
+    public void getShareInfo(Account ownerAcct, ShareInfo.Published.Visitor visitor) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
         
-        Element eDL = req.addElement(AdminConstants.E_DL);
-        eDL.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
-        eDL.setText(dl.getId());
-        
-        if (granteeType != null) {
-            Element eGrantee = req.addElement(AccountConstants.E_GRANTEE);
-            eGrantee.addAttribute(AccountConstants.A_TYPE, granteeType);
-        }
-        
-        if (owner != null)
-            req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(owner.getId());
+        req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
 
         Element resp = invoke(req);
         for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
@@ -2220,7 +2199,6 @@ public class SoapProvisioning extends Provisioning {
             visitor.visit(si);
         }
     }
-    
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();

@@ -631,7 +631,7 @@ public class ShareInfo {
                 return;
             
             for (ACL.Grant grant : acl.getGrants()) {
-                if (grant.matches(targetAcct) && 
+                if ((targetAcct == null || grant.matches(targetAcct)) && 
                     matchesGranteeType(grant.getGranteeType(), granteeType)) {
                     ShareInfo si = new ShareInfo();
                     
@@ -966,23 +966,23 @@ public class ShareInfo {
                 // only group shares can be published for now, so just 
                 // retrieve the group shares
                 AclGroups aclGroups = prov.getAclGroups(acct, false); 
-                getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
+                getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
                 
                 /*
                  * if we support publishing cos and domain shares, include them here
                  */
                 // cos
-                // getSharesGrantedToGroupsCos(...);
+                // getSharesPublishedOnCos(...);
                 
                 // domain
-                // getSharesGrantedToDomain(...);
+                // getSharesPublishedOnDomain(...);
                 
             } else if (granteeType == ACL.GRANTEE_USER) {
                 // cannot publish on account, be tolerant just return instead of throw
                 
             } else if (granteeType == ACL.GRANTEE_GROUP) {
                 AclGroups aclGroups = prov.getAclGroups(acct, false); 
-                getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
+                getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
                 
             } else {
                 throw ServiceException.INVALID_REQUEST("unsupported grantee type", null);
@@ -990,26 +990,28 @@ public class ShareInfo {
         }
         
         // for admin only, like the above, also called for sending emails 
-        public static void get(Provisioning prov, DistributionList dl, Account owner, Visitor visitor) 
+        public static void getPublished(Provisioning prov, DistributionList dl, boolean directOnly, Account owner, Visitor visitor) 
             throws ServiceException {
             
             Set<String> visited = new HashSet<String>();
 
             // get shares published on the dl 
-            getShares(visitor, dl, owner, visited);
+            getPublishedShares(visitor, dl, owner, visited);
                 
-            // call prov.getAclGroups instead of prov.getDistributionLists
-            // because getAclGroups returns cached data, while getDistributionLists
-            // does LDAP searches each time
-                
-            // get shares published on parents of this dl
-            if (!dl.isAclGroup())
-                dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
-            AclGroups aclGroups = prov.getAclGroups(dl); 
-            getSharesGrantedToGroups(prov, visitor, aclGroups, owner, visited);
+            if (!directOnly) {
+                // call prov.getAclGroups instead of prov.getDistributionLists
+                // because getAclGroups returns cached data, while getDistributionLists
+                // does LDAP searches each time
+                    
+                // get shares published on parents of this dl
+                if (!dl.isAclGroup())
+                    dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
+                AclGroups aclGroups = prov.getAclGroups(dl); 
+                getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
+            }
         }
-
-        private static void getSharesGrantedToGroups(Provisioning prov, Visitor visitor, 
+        
+        private static void getSharesPublishedOnGroups(Provisioning prov, Visitor visitor, 
                 AclGroups aclGroups, Account owner, Set<String> visited) 
             throws ServiceException {
             
@@ -1031,7 +1033,7 @@ public class ShareInfo {
              */
             for (String groupId : aclGroups.groupIds()) {
                 DistributionList group = prov.get(DistributionListBy.id, groupId);
-                getShares(visitor, group, owner, visited);
+                getPublishedShares(visitor, group, owner, visited);
             }
         }
     
@@ -1043,7 +1045,7 @@ public class ShareInfo {
          * @param owner if not null, include only shares owned by the owner
          *              if null, include all shares published on the entry 
          */
-        private static void getShares(Visitor visitor, NamedEntry entry, Account owner, Set<String> visited) {
+        private static void getPublishedShares(Visitor visitor, NamedEntry entry, Account owner, Set<String> visited) {
             Set<String> publishedShareInfo = entry.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
             
             for (String psi : publishedShareInfo) {
@@ -1397,7 +1399,8 @@ public class ShareInfo {
             
             MailSenderVisitor visitor = new MailSenderVisitor();
             try {
-                Published.get(prov, dl, null, visitor);
+                // get all shares published on the DL and all parent DLs 
+                Published.getPublished(prov, dl, false, null, visitor);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("failed to retrieve share info for dl: " + dl.getName(), e);
                 return;
