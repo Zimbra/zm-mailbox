@@ -309,8 +309,10 @@ public class AdminConstants {
     
     public static final QName GET_SHARE_INFO_REQUEST = QName.get("GetShareInfoRequest", NAMESPACE);
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get("GetShareInfoResponse", NAMESPACE);
-    public static final QName MODIFY_SHARE_INFO_REQUEST = QName.get("ModifyShareInfoRequest", NAMESPACE);
-    public static final QName MODIFY_SHARE_INFO_RESPONSE = QName.get("ModifyShareInfoResponse", NAMESPACE);
+    public static final QName GET_PUBLISHED_SHARE_INFO_REQUEST = QName.get("GetPublishedShareInfoRequest", NAMESPACE);
+    public static final QName GET_PUBLISHED_SHARE_INFO_RESPONSE = QName.get("GetPublishedShareInfoResponse", NAMESPACE);
+    public static final QName PUBLISH_SHARE_INFO_REQUEST = QName.get("PublishShareInfoRequest", NAMESPACE);
+    public static final QName PUBLISH_SHARE_INFO_RESPONSE = QName.get("PublishShareInfoResponse", NAMESPACE);
     
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
