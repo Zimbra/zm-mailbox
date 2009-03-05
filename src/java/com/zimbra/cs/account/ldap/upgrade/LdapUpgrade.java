@@ -154,6 +154,8 @@ abstract class LdapUpgrade {
             upgrade = new SetCosAndGlobalConfigDefault(bug, verbose);
         } else if ("29978".equalsIgnoreCase(bug)) {
             upgrade = new DomainPublicServiceProtocolAndPort(bug, verbose);
+        } else if ("31694".equalsIgnoreCase(bug)) {
+            upgrade = new MigrateZimbraMessageCacheSize(bug, verbose);
         } else if ("32557".equalsIgnoreCase(bug)) {
             upgrade = new DomainObjectClassAmavisAccount(bug, verbose);
         } else if ("33814".equalsIgnoreCase(bug)) {
