@@ -76,7 +76,7 @@ public class GetShareInfo extends ShareInfoHandler {
                     throw AccountServiceException.NO_SUCH_ACCOUNT(key);
             }
             
-            ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, null);
+            ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, null, null);
             ShareInfo.Published.get(prov, (DistributionList)taregtEntry, owner, visitor);
             visitor.finish();
         }

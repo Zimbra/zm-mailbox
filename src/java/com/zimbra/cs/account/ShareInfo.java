@@ -78,16 +78,26 @@ public class ShareInfo {
     
     // these two keys are set on our owne Metadata object
     private static final String MD_OWNER_EMAIL = "e";
+    private static final String MD_OWNER_DISPLAY_NAME = "d";
     private static final String MD_FOLDER_PATH  = "f";
     private static final String MD_FOLDER_DEFAULT_VIEW  = "v";
     
-    // note: this key is set on the same Metadata object as the
-    //       one set by ACL.  make sure name is not clashed.
+    /*
+     * note: these two keys are set on the same Metadata object as the
+     *       one set by ACL.  make sure name is not clashed.
+     */
+    // for usr/group/guest grantees, this would be the email, 
+    // for other grantees e.g. cos, domain, this would be name of the cos/domain
+    // currently, we can only publish on DL(group), so MD_GRANTEE_NAME will 
+    // contain the email address of the DL, and MD_GRANTEE_DISPLAY_NAME will
+    // contain the displayName of the DL if set, otherwise empty.
     private static final String MD_GRANTEE_NAME = "gn";  
+    private static final String MD_GRANTEE_DISPLAY_NAME = "gd";  
     
     // owner
     private String mOwnerAcctId;
     private String mOwnerAcctEmail;
+    private String mOwnerAcctDisplayName;
     
     // folder 
     private int mFolderId;
@@ -101,6 +111,7 @@ public class ShareInfo {
     private byte mGranteeType;
     private String mGranteeId;
     private String mGranteeName;
+    private String mGranteeDisplayName;
     
     // URL for accessing the share
     // only used for guest share 
@@ -171,6 +182,41 @@ public class ShareInfo {
         return mOwnerAcctEmail;
     }
     
+    public void setOwnerAcctDisplayName(String ownerAcctDisplayName) {
+        mOwnerAcctDisplayName = ownerAcctDisplayName;
+    }
+
+    public String getOwnerAcctDisplayName() {
+        return mOwnerAcctDisplayName;
+    }
+    
+    /*
+     * name shown in notification message, must have a value
+     * return display name if it is set, otherwise return 
+     * the owner's email
+     */
+    public String getOwnerNotifName() {
+        String notifName = getOwnerAcctDisplayName();
+        if (notifName != null)
+            return notifName;
+        else
+            return getOwnerAcctEmail();
+    }
+    
+    /*
+     * name shown in notification message, must have a value
+     * return display name if it is set, otherwise return 
+     * the grantee name
+     */
+    public String getGranteeNotifName() {
+        String notifName = getGranteeDisplayName();
+        if (notifName != null)
+            return notifName;
+        else
+            return getGranteeName();
+    }
+    
+    
     public void setFolderId(int folderId) {
         mFolderId = folderId;
     }
@@ -239,6 +285,14 @@ public class ShareInfo {
     
     public String getGranteeName() {
         return mGranteeName;
+    }
+    
+    public void setGranteeDisplayName(String granteeDisplayName) {
+        mGranteeDisplayName = granteeDisplayName;
+    }
+    
+    public String getGranteeDisplayName() {
+        return mGranteeDisplayName;
     }
     
     public void setUrl(String url) {
@@ -344,12 +398,41 @@ public class ShareInfo {
         }
         return granteeName;
     }
+    
+    private static String granteeDisplay(Provisioning prov, ACL.Grant grant) throws ServiceException {
+        String granteeId = grant.getGranteeId();
+        byte granteeType = grant.getGranteeType();
+        
+        String granteeDisplay = "";
+        if (granteeType == ACL.GRANTEE_USER) {
+            Account acct = prov.get(AccountBy.id, granteeId);
+            if (acct != null)
+                granteeDisplay = acct.getDisplayName();
+        } else if (granteeType == ACL.GRANTEE_GROUP) {
+            DistributionList dl = prov.get(DistributionListBy.id, granteeId);
+            if (dl != null)
+                granteeDisplay = dl.getDisplayName();
+        } else if (granteeType == ACL.GRANTEE_COS) {
+            Cos cos = prov.get(CosBy.id, granteeId);
+            if (cos != null)
+                granteeDisplay = cos.getName();
+        } else if (granteeType == ACL.GRANTEE_DOMAIN) {
+            Domain domain = prov.get(DomainBy.id, granteeId);
+            if (domain != null)
+                granteeDisplay = domain.getName();
+        } else {
+            // GRANTEE_AUTHUSER, GRANTEE_PUBLIC, GRANTEE_GUEST
+            granteeDisplay = ACL.typeToString(granteeType);  // good enough
+        }
+        return granteeDisplay;
+    }
 
     public static ShareInfo fromXML(Element eShare) throws ServiceException {
         ShareInfo si = new ShareInfo();
         
         si.setOwnerAcctId(eShare.getAttribute(AccountConstants.A_OWNER_ID, null));
-        si.setOwnerAcctEmail(eShare.getAttribute(AccountConstants.A_OWNER_NAME, null));
+        si.setOwnerAcctEmail(eShare.getAttribute(AccountConstants.A_OWNER_EMAIL, null));
+        si.setOwnerAcctDisplayName(eShare.getAttribute(AccountConstants.A_OWNER_DISPLAY_NAME, null));
         si.setFolderId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
         si.setFolderPath(eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null));
         si.setFolderDefaultView(MailItem.getTypeForName(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null)));
@@ -357,6 +440,7 @@ public class ShareInfo {
         si.setGranteeType(ACL.stringToType(eShare.getAttribute(AccountConstants.A_GRANTEE_TYPE)));
         si.setGranteeId(eShare.getAttribute(AccountConstants.A_GRANTEE_ID, null));
         si.setGranteeName(eShare.getAttribute(AccountConstants.A_GRANTEE_NAME, null));
+        si.setGranteeDisplayName(eShare.getAttribute(AccountConstants.A_GRANTEE_DISPLAY_NAME, null));
         
         // and this ugly thing
         si.setMountpointId_zmprov_only(eShare.getAttribute(AccountConstants.A_MOUNTPOINT_ID, null));
@@ -365,15 +449,17 @@ public class ShareInfo {
     }
     
     public void toXML(Element eShare, Integer mptId) {
-        eShare.addAttribute(AccountConstants.A_OWNER_ID,     getOwnerAcctId());
-        eShare.addAttribute(AccountConstants.A_OWNER_NAME,   getOwnerAcctEmail());
-        eShare.addAttribute(AccountConstants.A_FOLDER_ID,    getFolderId());
-        eShare.addAttribute(AccountConstants.A_FOLDER_PATH,  getFolderPath());
-        eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,    getFolderDefaultView());
-        eShare.addAttribute(AccountConstants.A_RIGHTS,       getRights());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE, getGranteeType());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_ID,   getGranteeId());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_NAME, getGranteeName());
+        eShare.addAttribute(AccountConstants.A_OWNER_ID,             getOwnerAcctId());
+        eShare.addAttribute(AccountConstants.A_OWNER_EMAIL,          getOwnerAcctEmail());
+        eShare.addAttribute(AccountConstants.A_OWNER_DISPLAY_NAME,   getOwnerAcctDisplayName());
+        eShare.addAttribute(AccountConstants.A_FOLDER_ID,            getFolderId());
+        eShare.addAttribute(AccountConstants.A_FOLDER_PATH,          getFolderPath());
+        eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,            getFolderDefaultView());
+        eShare.addAttribute(AccountConstants.A_RIGHTS,               getRights());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE,         getGranteeType());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_ID,           getGranteeId());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_NAME,         getGranteeName());
+        eShare.addAttribute(AccountConstants.A_GRANTEE_DISPLAY_NAME, getGranteeDisplayName());
         
         if (mptId != null)
             eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
@@ -551,6 +637,7 @@ public class ShareInfo {
                     
                     si.setOwnerAcctId(ownerAcct.getId());
                     si.setOwnerAcctEmail(ownerAcct.getName());
+                    si.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
                     si.setFolderId(folder.getId());
                     si.setFolderPath(folder.getPath());
                     si.setFolderDefaultView(folder.getDefaultView());
@@ -558,6 +645,7 @@ public class ShareInfo {
                     si.setGranteeType(grant.getGranteeType());
                     si.setGranteeId(grant.getGranteeId());
                     si.setGranteeName(granteeName(prov, grant));
+                    si.setGranteeDisplayName(granteeDisplay(prov, grant));
 
                     visitor.visit(si);
                 }
@@ -620,6 +708,7 @@ public class ShareInfo {
             mAction = action;
             setOwnerAcctId(ownerAcct.getId());
             setOwnerAcctEmail(ownerAcct.getName());
+            setOwnerAcctDisplayName(ownerAcct.getDisplayName());
             setFolderId(folder.getId());
         }
             
@@ -654,15 +743,19 @@ public class ShareInfo {
                          *     folder id
                          *
                          * when reporting the share info, we will need:
-                         *     owner name
+                         *     owner email
+                         *     owner displayName
                          *     folder path
                          *   
-                         * we put owner name and folder path in the first item of our metadata list, 
-                         * because it is not convenient to get owner name from owner id and get 
-                         * folder path from folder id when we need them.
+                         * we put owner email/displayName and folder path in the first item of our metadata list, 
+                         * because it is not convenient (too much LDAP hits if there are lots of published shares 
+                         * on the entry, and owner accounts are no in cache; for folder name, will need a GetFoler 
+                         * if the owner mailbox is on differernt server) to get owner name/display from owner id 
+                         * and get folder path from folder id when we need them.
                          *  
-                         * cons: if the owner name/folder path is renamed, we will have
-                         *       stale metadata.  
+                         * cons: if the owner email/display or folder path is renamed, we will have
+                         *       stale metadata, but taht be be fixed by letting the admin know and re-publish 
+                         *       for the owner.  
                          *
                          * pros: we save excessive LDAP searches for finding the owner 
                          *       name from owner id if the owner is not in cache; and saves 
@@ -670,6 +763,7 @@ public class ShareInfo {
                          */
                         Metadata md = new Metadata();
                         md.put(MD_OWNER_EMAIL, getOwnerAcctEmail());
+                        md.put(MD_OWNER_DISPLAY_NAME, getOwnerAcctDisplayName());
                         
                         // We record the folder path of the folder we are discovering shars for.
                         // It would be nice if we can know the folder id/path on the folder of 
@@ -688,6 +782,7 @@ public class ShareInfo {
                     // ouch, ACL.Grant does not set the grantee name
                     // we do our own here
                     metadata.put(MD_GRANTEE_NAME, granteeName(prov, grant));
+                    metadata.put(MD_GRANTEE_DISPLAY_NAME, granteeDisplay(prov, grant));
                     
                     mGrants.add(metadata);
                 }
@@ -785,6 +880,7 @@ public class ShareInfo {
             // data btencoded in metadata by us (ShareInfo.Publishing)
             Metadata metadata = si.mGrants.getMap(0);
             String ownerAcctEmail = metadata.get(MD_OWNER_EMAIL);
+            String ownerAcctDisplayName = metadata.get(MD_OWNER_DISPLAY_NAME, null);
             String folderPath = metadata.get(MD_FOLDER_PATH);
             byte folderDefaultView = (byte)metadata.getLong(MD_FOLDER_DEFAULT_VIEW);
                 
@@ -801,10 +897,12 @@ public class ShareInfo {
                 // Mailbox.ACL never sets it, get it from our key in the metadata
                 String granteeName = metadata.get(MD_GRANTEE_NAME);
                 
-                Published p = new Published(ownerAcctId, folderId,
-                                            ownerAcctEmail, folderPath, folderDefaultView,
-                                            rights, granteeType,
-                                            granteeId, granteeName);
+                // get display name from our metadata too
+                String granteeDisplayName = metadata.get(MD_GRANTEE_DISPLAY_NAME, null);
+                
+                Published p = new Published(ownerAcctId, ownerAcctEmail, ownerAcctDisplayName, 
+                                            folderId, folderPath, folderDefaultView,
+                                            rights, granteeType, granteeId, granteeName, granteeDisplayName);
                 siList.add(p);
             }
            
@@ -819,13 +917,13 @@ public class ShareInfo {
         private Published() {
         }
         
-        private Published(String ownerAcctId, int folderId,
-                String ownerAcctEmail, String folderPath, byte folderDefaultView,
-                short rights, byte granteeType,
-                String granteeId, String granteeName) {
+        private Published(String ownerAcctId, String ownerAcctEmail, String ownerAcctDisplayName, 
+                int folderId, String folderPath, byte folderDefaultView,
+                short rights, byte granteeType, String granteeId, String granteeName, String granteeDisplayName) {
             
             setOwnerAcctId(ownerAcctId);
             setOwnerAcctEmail(ownerAcctEmail);
+            setOwnerAcctDisplayName(ownerAcctDisplayName);
             setFolderId(folderId);
             setFolderPath(folderPath);
             setFolderDefaultView(folderDefaultView);
@@ -833,6 +931,7 @@ public class ShareInfo {
             setGranteeType(granteeType);
             setGranteeId(granteeId);
             setGranteeName(granteeName);
+            setGranteeDisplayName(granteeDisplayName);
             
             mDigest = getOwnerAcctEmail() +
                       getFolderPath() +
@@ -1044,9 +1143,9 @@ public class ShareInfo {
             }
             
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
-            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyOwner, si.getOwnerAcctEmail(), locale, null));
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyOwner, si.getOwnerNotifName(), locale, null));
             sb.append("\n");
-            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyGrantee, si.getGranteeName(), locale, null));
+            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyGrantee, si.getGranteeNotifName(), locale, null));
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyRole, getRoleFromRights(si, locale), locale, null));
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyAllowedActions, getRightsText(si, locale), locale, null));
             sb.append("\n");
@@ -1081,12 +1180,12 @@ public class ShareInfo {
             sb.append("<p>\n");
             sb.append("<table border=\"0\">\n");
             sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodySharedItem, si.getFolderName(), locale, formatFolderDesc(locale, si)));
-            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyOwner, si.getOwnerAcctEmail(), locale, null));
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyOwner, si.getOwnerNotifName(), locale, null));
             sb.append("</table>\n");
             sb.append("</p>\n");
             
             sb.append("<table border=\"0\">\n");
-            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyGrantee, si.getGranteeName(), locale, null));
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyGrantee, si.getGranteeNotifName(), locale, null));
             sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyRole, getRoleFromRights(si, locale), locale, null));
             sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyAllowedActions, getRightsText(si, locale), locale, null));
             sb.append("</table>\n");
@@ -1140,8 +1239,8 @@ public class ShareInfo {
                 notes = senderNotes;
             
             sb.append("<share xmlns=\"" + URI + "\" version=\"" + VERSION + "\" action=\"new\">\n");
-            sb.append("  <grantee id=\"" + si.getGranteeId() + "\" email=\"" + si.getGranteeName() + "\" name=\"" + si.getGranteeName() +"\"/>\n");
-            sb.append("  <grantor id=\"" + si.getOwnerAcctId() + "\" email=\"" + si.getOwnerAcctEmail() + "\" name=\"" + si.getOwnerAcctEmail() +"\"/>\n");
+            sb.append("  <grantee id=\"" + si.getGranteeId() + "\" email=\"" + si.getGranteeName() + "\" name=\"" + si.getGranteeNotifName() +"\"/>\n");
+            sb.append("  <grantor id=\"" + si.getOwnerAcctId() + "\" email=\"" + si.getOwnerAcctEmail() + "\" name=\"" + si.getOwnerNotifName() +"\"/>\n");
             sb.append("  <link id=\"" + si.getFolderId() + "\" name=\"" + si.getFolderName() + "\" view=\"" + si.getFolderDefaultView() + "\" perm=\"" + ACL.rightsToString(si.getRightsCode()) + "\"/>\n");
             sb.append("  <notes>" + (notes==null?"":notes) + "</notes>\n");
             sb.append("</share>\n");

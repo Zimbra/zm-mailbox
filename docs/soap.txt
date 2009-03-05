@@ -2952,22 +2952,34 @@ Note:
 
 ----------------------------
 <GetShareInfoRequest>
-    [<grantee type="{grantee_type}">]
+    [<grantee type="{grantee_type}" [id="{grantee-id}"] [name="{grantee-name}"]/>]
     [<owner by="{owner-by}">...</owner>]
 </GetShareInfoRequest>
 
-{grantee_type} = usr | grp
+{grantee_type} = if <owner> is not specified: usr | grp
+                 if <owner> is specified: usr | grp | pub | all | cos | dom | guest | key
+                 
                  Filters the result by the specified grantee type, only shares granted to 
                  the grantee type will be returned.  If omitted, server will return shares 
                  granted to all grantee types. 
 
+{grantee-id}   = if specified, filters the result by the specified grantee id.  
+
+{grantee-name} = if specified, filters the result by the specified grantee name. 
+
+Notes on {grantee_type}, {grantee-id}, {grantee-name}:
+  - it's recommended that only one of {grantee_type}, {grantee-id}, {grantee-name} is specified.
+  - if multiple are specified and they conflict, e.g. {grantee-type} is grp but 
+    {grantee-id} contains an account id, obviously no result will be returned because 
+    no grant will be matching that condition.
+
 {owner-by}     = name | id
                  Note: In order to defend against harvest attacks this SOAP call will
-                   return "no shares" instead of error when an invalid user name/id is used.
+                 return "no shares" instead of error when an invalid user name/id is used.
 
 Notes:
 - if <owner> is *not* specified, server will retrieve previously published (can only be done 
-  by admin) share info from entries the authed account can inherit shares from.  
+  by admins) share info from entries the authed account can inherit shares from.  
   e.g. all direct and indirect distribution lists the account belongs.  Currently share info 
   can only be published on distribution lists.   Publishing of cos/domain/all/pub shares 
   are not supported.  Therefore those shares cannot be discovered if we go this route.
@@ -3015,14 +3027,15 @@ Notes:
     
     
 <GetShareInfoResponse>
-    [<share ownerId="{owner-id}" ownerName="{owner-name}" 
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} ownerName="{owner-display-name}" 
             folderId="{folder-id}" folderPath="{fully-qualified-path}" 
             view="{default-type}" [mid="{mountpoint-id}"] rights="{rights}"
-            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}">]+
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeEmail="{grantee-email}" granteeName="{grantee-display-name}">]+
 </GetShareInfoResponse>
 
 mid="{mountpoint-id}" : returned if the share is already mounted.  
                         contains the folder id of the mountpoint in the local mailbox.  
+                        
                         
 ---------------------------- 
 

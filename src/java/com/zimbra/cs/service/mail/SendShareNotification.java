@@ -19,6 +19,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
@@ -79,8 +80,9 @@ public class SendShareNotification extends MailDocumentHandler {
         String granteeId = eShare.getAttribute(MailConstants.A_ZIMBRA_ID, null); 
         String granteeName = eShare.getAttribute(MailConstants.A_DISPLAY, null); 
         
-        String matchingId;   // grantee id to match grant
-        String granteeEmail; // email of the grantee, will be he recipient or the share notif message
+        String matchingId;         // grantee id to match grant
+        String granteeEmail;       // email of the grantee, will be he recipient or the share notif message
+        String granteeDisplayName; // display name, if set, of the grantee
         
         if (granteeType == ACL.GRANTEE_GUEST) {
             if (granteeName == null)
@@ -88,11 +90,14 @@ public class SendShareNotification extends MailDocumentHandler {
             
             matchingId = granteeName;
             granteeEmail = granteeName;
+            granteeDisplayName = granteeEmail;
         } else {
-            NamedEntry grantee = getGrantee(zsc, granteeType, granteeId, granteeName);  
+            Pair<NamedEntry, String> grantee = getGrantee(zsc, granteeType, granteeId, granteeName);  
             
-            matchingId = grantee.getId();
-            granteeEmail = grantee.getName();
+            NamedEntry granteeEntry = grantee.getFirst();
+            matchingId = granteeEntry.getId();
+            granteeEmail = granteeEntry.getName();
+            granteeDisplayName = grantee.getSecond();
         }
 
         //
@@ -121,17 +126,14 @@ public class SendShareNotification extends MailDocumentHandler {
         if (matchingGrant == null)
             throw ServiceException.INVALID_REQUEST("no matching grant", null);
         
-        String ownerName = ownerAcct.getDisplayName();
-        if (ownerName == null)
-            ownerName = ownerAcct.getName();
-        
         //
         // all is well, setup out ShareInfo object 
         //
         ShareInfo shareInfo = new ShareInfo();
         
         shareInfo.setOwnerAcctId(ownerAcct.getId());
-        shareInfo.setOwnerAcctEmail(ownerName);
+        shareInfo.setOwnerAcctEmail(ownerAcct.getName());
+        shareInfo.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
         
         // folder id used for mounting
         shareInfo.setFolderId(ownerFolderId);
@@ -153,6 +155,7 @@ public class SendShareNotification extends MailDocumentHandler {
         shareInfo.setGranteeType(granteeType);
         shareInfo.setGranteeId(matchingId);    // if guest, matchingId is the same as granteeEmail 
         shareInfo.setGranteeName(granteeEmail);
+        shareInfo.setGranteeDisplayName(granteeDisplayName);
         
         // if the grantee is a guest, set URL and password
         if (granteeType == ACL.GRANTEE_GUEST) {
@@ -287,7 +290,17 @@ public class SendShareNotification extends MailDocumentHandler {
         return remote;
     }
     
-    private NamedEntry getGrantee(ZimbraSoapContext zsc, byte granteeType, String granteeId, String granteeName) 
+    /**
+     * returns the grantee entry and displayName if there is one
+     * 
+     * @param zsc
+     * @param granteeType
+     * @param granteeId
+     * @param granteeName
+     * @return
+     * @throws ServiceException
+     */
+    private Pair<NamedEntry, String> getGrantee(ZimbraSoapContext zsc, byte granteeType, String granteeId, String granteeName) 
     throws ServiceException {
         
         NamedEntry entryById = null;
@@ -314,10 +327,15 @@ public class SendShareNotification extends MailDocumentHandler {
             
         NamedEntry grantee = (entryById != null)? entryById : entryByName;          
         
-        if (!(grantee instanceof Account || grantee instanceof DistributionList))
+        String displayName;
+        if (grantee instanceof Account)
+            displayName = ((Account)grantee).getDisplayName();
+        else if (grantee instanceof DistributionList)
+            displayName = ((DistributionList)grantee).getDisplayName();
+        else
             throw ServiceException.INVALID_REQUEST("unsupported grantee type for sending share notification email", null);
-    
-        return grantee;
+        
+        return new Pair<NamedEntry, String>(grantee, displayName);
     }
     
     private Folder getFolder(OperationContext octxt, Account authAccount, Mailbox mbox, Element eShare) throws ServiceException {

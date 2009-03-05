@@ -1345,12 +1345,14 @@ public class ProvUtil implements DebugListener {
     
     private static class ShareInfoVisitor implements ShareInfo.Visitor {
         
-        private static final String mFormat = "%-36.36s %-20.20s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-20.20s\n";
+        private static final String mFormat = 
+            "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
         
         private static void printHeadings() {
             System.out.printf(mFormat, 
                               "owner id",
-                              "owner name",
+                              "owner email",
+                              "owner display",
                               "fid",
                               "folder path",
                               "view",
@@ -1358,11 +1360,13 @@ public class ProvUtil implements DebugListener {
                               "mid",
                               "gt",
                               "grantee id",
-                              "grantee name");
+                              "grantee name",
+                              "grantee display");
             
             System.out.printf(mFormat,
                               "------------------------------------",      // owner id
-                              "--------------------",                      // owner name
+                              "---------------",                           // owner email
+                              "---------------",                           // owner display
                               "-----",                                     // folder id
                               "--------------------",                      // folder path
                               "----------",                                // default view
@@ -1370,13 +1374,15 @@ public class ProvUtil implements DebugListener {
                               "-----",                                     // mountpoint id if mounted
                               "-----",                                     // grantee type 
                               "------------------------------------",      // grantee id
-                              "--------------------");                     // grantee name
+                              "---------------",                           // grantee name
+                              "---------------");                          // grantee display
         }
         
         public void visit(ShareInfo shareInfo) throws ServiceException {
             System.out.printf(mFormat, 
                     shareInfo.getOwnerAcctId(),
                     shareInfo.getOwnerAcctEmail(),
+                    shareInfo.getOwnerAcctDisplayName(),
                     String.valueOf(shareInfo.getFolderId()),
                     shareInfo.getFolderPath(),
                     shareInfo.getFolderDefaultView(),
@@ -1384,7 +1390,8 @@ public class ProvUtil implements DebugListener {
                     shareInfo.getMountpointId_zmprov_only(),
                     shareInfo.getGranteeType(),
                     shareInfo.getGranteeId(),
-                    shareInfo.getGranteeName());                        
+                    shareInfo.getGranteeName(),
+                    shareInfo.getGranteeDisplayName());                        
         }
     };
     
