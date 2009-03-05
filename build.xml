@@ -701,11 +701,6 @@
         <copy todir="${dist.dir}/wiki" overwrite="true">
             <fileset dir="data/wiki" includes="**"/>
         </copy>
-    	
-    	<!-- unit test -->
-    	<copy todir="${dist.dir}/unittest" overwrite="true">
-    	    <fileset dir="data/unittest" includes="**"/>
-        </copy>
     </target>
 
     <target name="dev-dist-unix" if="is-unix">
@@ -803,7 +798,7 @@
 
     <target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped."/>
 
-    <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates"
+    <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,init-unittest"
             description="Run when web server is running.">
         <antcall target="inject">
             <param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
@@ -867,6 +862,12 @@
         </java>
     </target>
 
+	<target name="init-unittest">
+    	<copy todir="${zimbra.home.dir}/unittest" overwrite="true">
+    	    <fileset dir="data/unittest" includes="**"/>
+        </copy>
+	</target>
+	
     <target name="init-wiki">
         <echo>Initializing wiki@${zimbra.server.hostname}</echo>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
