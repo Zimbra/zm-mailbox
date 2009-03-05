@@ -2195,4 +2195,50 @@ Notes:
 mid="{mountpoint-id}" : returned if the share is already mounted.  
                         It contain the folder id of the mountpoint in the local mailbox.  
                         
+----------------------------
+ 
+<CreateGalSyncAccountRequest name="{identifier}" [domain="{domain}"] [folder="{contact-folder-name}"] >
+  <account by="id|name">...</account>
+  <a n="attr-name">...</a>+
+</CreateGalSyncAccountRequest>
+
+<CreateGalSyncAccountResponse>
+  <name>...</name>
+  <account name="{name}" id="{id}"/>
+</CreateGalSyncAccountResponse>
+
+Notes:
+
+    - the identifier used in name attr is used for SyncGal and SearchGal
+    - if domain attr is not present it'll set up gal sync account for Zimbra LDAP server.
+    - if folder attr is not present it'll default to Contacts folder.
+    - passed in attrs are used to initialize the gal data source.
+      for domain gal sync account use <a/> to pass in the gal configuration.
+
+
+example for creating gal sync account for Zimbra LDAP server.
+
+    <CreateGalSyncAccountRequest name="zimbra">
+      <account by="name">zimbragal@domain.com</account>
+    </CreateGalSyncAccountRequest>
+
+example for creating domain gal sync account.
+
+    <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com">
+      <account by="name">gal@mydomain.com</account>
+      <a n="zimbraGalLdapURL">ldap://ldap.mydomain.com</a>
+      <a n="zimbraGalLdapStartTlsEnabled">TRUE</a>
+      <a n="zimbraGalLdapSearchBase">cn=users</a>
+      <a n="zimbraGalLdapAuthMech">simple</a>
+      <a n="zimbraGalLdapBindDn">uid=admin,cn=users</a>
+      <a n="zimbraGalLdapBindPassword">password</a>
+      <a n="zimbraGalLdapFilter">(&amp;(mail=*)(objectClass=user))</a>
+      <a n="zimbraGalLdapAttrMap">whenChanged,modifyTimeStamp=modifyTimeStamp</a>
+      <a n="zimbraGalLdapAttrMap">whenCreated,createTimeStamp=createTimeStamp</a>
+      <a n="zimbraGalLdapAttrMap">zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16</a>
+    </CreateGalSyncAccountRequest>
+
+Access: domain admin sufficient
+
+                        
                         

@@ -40,6 +40,7 @@ public class AdminService implements DocumentService {
 
         dispatcher.registerHandler(AdminConstants.AUTH_REQUEST, new Auth());
         dispatcher.registerHandler(AdminConstants.CREATE_ACCOUNT_REQUEST, new CreateAccount());
+        dispatcher.registerHandler(AdminConstants.CREATE_GAL_SYNC_ACCOUNT_REQUEST, new CreateGalSyncAccount());
         dispatcher.registerHandler(AdminConstants.DELEGATE_AUTH_REQUEST, new DelegateAuth());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_REQUEST, new GetAccount());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());

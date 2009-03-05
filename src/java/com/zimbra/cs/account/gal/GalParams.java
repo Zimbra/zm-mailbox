@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapGalCredential;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
@@ -14,22 +15,22 @@ public abstract class GalParams {
     String mTokenizeAutoCompleteKey;
     String mTokenizeSearchKey;
     
-    GalParams(Domain domain, GalOp galOp) throws ServiceException {
+    GalParams(Entry ldapEntry, GalOp galOp) throws ServiceException {
         
         String pageSize = null;
         if (galOp == GalOp.sync) {
-            pageSize = domain.getAttr(Provisioning.A_zimbraGalSyncLdapPageSize);
+            pageSize = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapPageSize);
             
             if (pageSize == null)
-                pageSize = domain.getAttr(Provisioning.A_zimbraGalLdapPageSize);
+                pageSize = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapPageSize);
         } else {
-            pageSize = domain.getAttr(Provisioning.A_zimbraGalLdapPageSize);
+            pageSize = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapPageSize);
         }
         
         setPageSize(pageSize);
         
-        mTokenizeAutoCompleteKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey);
-        mTokenizeSearchKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey);
+        mTokenizeAutoCompleteKey = ldapEntry.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey);
+        mTokenizeSearchKey = ldapEntry.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey);
         
     }
     
@@ -95,8 +96,8 @@ public abstract class GalParams {
         String mFilter;
         LdapGalCredential mCredential;
         
-        public ExternalGalParams(Domain domain, GalOp galOp) throws ServiceException {
-            super(domain, galOp);
+        public ExternalGalParams(Entry ldapEntry, GalOp galOp) throws ServiceException {
+            super(ldapEntry, galOp);
             
             String startTlsEnabled;
             String authMech;
@@ -106,53 +107,53 @@ public abstract class GalParams {
             String krb5Keytab;
             
             if (galOp == GalOp.sync) {
-                mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
-                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase);
-                mFilter = domain.getAttr(Provisioning.A_zimbraGalSyncLdapFilter);
+                mUrl = ldapEntry.getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
+                mSearchBase = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase);
+                mFilter = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapFilter);
                 
-                startTlsEnabled = domain.getAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled);
-                authMech = domain.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech);
-                bindDn = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn);
-                bindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
-                krb5Principal = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
-                krb5Keytab = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
+                startTlsEnabled = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled);
+                authMech = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech);
+                bindDn = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn);
+                bindPassword = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
+                krb5Principal = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
+                krb5Keytab = ldapEntry.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
                 
                 // fallback to zimbraGalLdap attrs is sync specific params are not set
                 if (mUrl == null || mUrl.length == 0)
-                    mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+                    mUrl = ldapEntry.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
                 if (mSearchBase == null)
-                    mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
+                    mSearchBase = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
                 if (mFilter == null)
-                    mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
+                    mFilter = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapFilter);
                 
                 if (startTlsEnabled == null)
-                    startTlsEnabled = domain.getAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled);
+                    startTlsEnabled = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled);
                 if (authMech == null)
-                    authMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
+                    authMech = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
                 if (bindDn == null)
-                    bindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
+                    bindDn = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapBindDn);
                 if (bindPassword == null)
-                    bindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
+                    bindPassword = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
                 if (krb5Principal == null)
-                    krb5Principal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
+                    krb5Principal = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
                 if (krb5Keytab == null)
-                    krb5Keytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
+                    krb5Keytab = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
                 
             } else {
-                mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
-                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
+                mUrl = ldapEntry.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+                mSearchBase = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
                 
                 if (galOp == GalOp.autocomplete)
-                    mFilter = domain.getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter);
+                    mFilter = ldapEntry.getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter);
                 else
-                    mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
+                    mFilter = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapFilter);
             
-                startTlsEnabled = domain.getAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled);
-                authMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
-                bindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
-                bindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
-                krb5Principal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
-                krb5Keytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
+                startTlsEnabled = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled);
+                authMech = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
+                bindDn = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapBindDn);
+                bindPassword = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
+                krb5Principal = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
+                krb5Keytab = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             }
             
             boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
