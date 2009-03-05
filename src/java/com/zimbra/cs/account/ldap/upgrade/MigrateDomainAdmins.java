@@ -2,7 +2,12 @@ package com.zimbra.cs.account.ldap.upgrade;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.naming.NamingEnumeration;
@@ -30,6 +35,29 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.upgrade.DomainObjectClassAmavisAccount.AddDomainObjectClassAmavisAccountVisitor;
 
 public class MigrateDomainAdmins extends LdapUpgrade {
+    
+    private static String[] sAdminUICompForAllDomainAdmins = new String[] {
+        "accountListView",
+        "aliasListView",
+        "DLListView",
+        "resourceListView",
+        "saveSearch",
+        "accountsContactTab",
+        "accountsMemberOfTab",
+        "accountsAliasesTab",
+        "accountsForwardingTab",
+        "dlMembersTab",
+        "dlAliasesTab",
+        "dlMemberOfTab",
+        "dlNotesOfTab",
+        "resourcePropertiesTab",
+        "resourceContactTab",
+        
+        "domainListView",
+        "domainGeneralTab",
+        
+        "domainSkinsTab"
+    };
 
     MigrateDomainAdmins(String bug, boolean verbose) throws ServiceException {
         super(bug, verbose);
@@ -157,6 +185,11 @@ public class MigrateDomainAdmins extends LdapUpgrade {
         mProv.grantRight(TargetType.global.getCode(), null, null, 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
                 RightConsts.RT_getZimlet, null);
+        
+        //
+        // admin UI components
+        //
+        setAdminUIComp(domainAdmin);
     }
     
     private void grantCosRights(Domain domain, Account domainAdmin) throws ServiceException {
@@ -184,6 +217,42 @@ public class MigrateDomainAdmins extends LdapUpgrade {
                     RightConsts.RT_getCos, null);
         }
         
+    }
+    
+    private void setAdminUIComp(Account domainAdmin) throws ServiceException {
+        
+        String attrName = Provisioning.A_zimbraAdminConsoleUIComponents;
+        
+        /*
+         * admin UI components should not be sensitive to feature enabling attrs
+         * They should really be determined by rights.
+         * 
+         * Just add them all in sAdminUICompForAllDomainAdmins
+         * 
+        List<String> values = new ArrayList<String>(Arrays.asList(sAdminUICompForAllDomainAdmins));
+        
+        boolean canViewDomainInfo = 
+            domainAdmin.getBooleanAttr(Provisioning.A_zimbraAdminConsoleCatchAllAddressEnabled, false) ||
+            domainAdmin.getBooleanAttr(Provisioning.A_zimbraAdminConsoleSkinEnabled, false) ||
+            domainAdmin.getBooleanAttr(Provisioning.A_zimbraAdminConsoleDNSCheckEnabled, false) ||
+            domainAdmin.getBooleanAttr(Provisioning.A_zimbraAdminConsoleLDAPAuthEnabled, false);
+            
+        if (canViewDomainInfo) {
+            values.add("domainListView");
+            values.add("domainGeneralTab");
+        }
+        
+        boolean canViewSkinTab = 
+            domainAdmin.getBooleanAttr(Provisioning.A_zimbraAdminConsoleSkinEnabled, false);
+        
+        if (canViewSkinTab)
+            values.add("domainSkinsTab");
+        */
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put("+" + attrName, sAdminUICompForAllDomainAdmins);
+        
+        mProv.modifyAttrs(domainAdmin, attrs);
     }
 
 }
