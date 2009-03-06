@@ -72,7 +72,7 @@ class RenameDomain {
         
         RenameInfo renameInfo = beginRenameDomain();
         RenamePhase startingPhase = renameInfo.phase();
-        RenamePhase phase = RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS;
+        RenamePhase phase = RenamePhase.FIX_FOREIGN_DL_MEMBERS;
             
         /*
          * 1. create the new domain
@@ -88,7 +88,7 @@ class RenameDomain {
         int flags = 0;
             
         // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
-        phase = RenamePhase.PHASE_RENAME_ENTRIES;
+        phase = RenamePhase.RENAME_ENTRIES;
         if (phase.ordinal() >= startingPhase.ordinal()) {
             debug("Entering phase " + phase.toString());
             // don't need to setPhase for the first first, it was set or got from beginRenameDomain
@@ -98,7 +98,7 @@ class RenameDomain {
         }
             
         // second phase, go thru aliases that have not been moved yet, by now aliases left in the domain should be aliases with target in other domains
-        phase = RenamePhase.PHASE_FIX_FOREIGN_ALIASES;
+        phase = RenamePhase.FIX_FOREIGN_ALIASES;
         if (phase.ordinal() >= startingPhase.ordinal()) {
             debug("Entering phase " + phase.toString());
             renameInfo.setPhase(phase);
@@ -112,7 +112,7 @@ class RenameDomain {
         //     - the addresses to be renamed are: the DL/account's main address and all the aliases that were moved to the new domain
         //     - by now the DLs to modify should be those in other domains, because members of DLs in the old domain (now new domain) 
         //       have been updated in first pass.
-        phase = RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS;
+        phase = RenamePhase.FIX_FOREIGN_DL_MEMBERS;
         if (phase.ordinal() >= startingPhase.ordinal()) {
             debug("Entering phase " + phase.toString());
             renameInfo.setPhase(phase);
@@ -146,9 +146,9 @@ class RenameDomain {
         /*
          * Note: the following text is written in zimbraDomainRenameInfo - change would require migration!!
          */
-        PHASE_RENAME_ENTRIES,
-        PHASE_FIX_FOREIGN_ALIASES,
-        PHASE_FIX_FOREIGN_DL_MEMBERS;
+        RENAME_ENTRIES,
+        FIX_FOREIGN_ALIASES,
+        FIX_FOREIGN_DL_MEMBERS;
         
         public static RenamePhase fromString(String s) throws ServiceException {
             try {
@@ -156,10 +156,6 @@ class RenameDomain {
             } catch (IllegalArgumentException e) {
                 throw ServiceException.FAILURE("unknown phase: "+s, e);
             }
-        }
-        
-        public String toString() {
-            return name().substring(6);  // skip the "PHASE_"
         }
     }
         
@@ -210,7 +206,7 @@ class RenameDomain {
              * rename info is stored in zimbraDomainRenameInfo. 
              * The format is:
              *     On the source(old) domain:
-             *         SOURCE,{phase}:{destination-domain-name}
+             *         SRC,{phase}:{destination-domain-name}
              *     On the destination(new) domain:
              *         DEST:{source-domain-name}
              */
@@ -226,7 +222,7 @@ class RenameDomain {
             if (idx == -1)
                 throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing " + COLON, null);
             String statusPart = renameInfo.substring(0, idx);
-            String domainName = renameInfo.substring(idx);
+            String domainName = renameInfo.substring(idx+1);
             if (StringUtil.isNullOrEmpty(domainName))
                 throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing domain name", null);
             
@@ -235,7 +231,7 @@ class RenameDomain {
             RenamePhase phase = null;
             if (idx != -1) {
                 srcOrDest = statusPart.substring(0, idx);
-                phase = RenamePhase.fromString(statusPart.substring(idx));
+                phase = RenamePhase.fromString(statusPart.substring(idx+1));
             }
                 
             if (srcOrDest.equals(SRC)) {
@@ -291,7 +287,7 @@ class RenameDomain {
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         mProv.modifyAttrs(mOldDomain, attrs, false, false);  // skip callback
                 
-        RenamePhase phase = RenamePhase.PHASE_RENAME_ENTRIES;
+        RenamePhase phase = RenamePhase.RENAME_ENTRIES;
         
         if (renameInfo == null) {
             // new rename
@@ -321,6 +317,10 @@ class RenameDomain {
         domainAttrs.remove(Provisioning.A_zimbraId);  // use a new zimbraId so getDomainById of the old domain will not return this half baked domain
         domainAttrs.remove(Provisioning.A_zimbraDomainName);
         domainAttrs.remove(Provisioning.A_zimbraMailStatus);
+        
+        // will the new domain get a new create timestamp? or should it inherit the 
+        // old domain's timestamp?  use new timestamp seems more right.
+        domainAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
         
         // the new domain is created shutdown and rejecting mails
         domainAttrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
@@ -433,17 +433,17 @@ class RenameDomain {
         public void visit(NamedEntry entry) throws ServiceException {
             debug("(" + mPhase.toString() + ") visiting " + entry.getName());
         
-            if (mPhase == RenamePhase.PHASE_RENAME_ENTRIES) {
+            if (mPhase == RenamePhase.RENAME_ENTRIES) {
                 if (entry instanceof DistributionList)
                     handleEntry(entry, true);  // PHASE_RENAME_ENTRIES
                 else if (entry instanceof Account)
                     handleEntry(entry, false); // PHASE_RENAME_ENTRIES
-            } else if (mPhase == RenamePhase.PHASE_FIX_FOREIGN_ALIASES) {
+            } else if (mPhase == RenamePhase.FIX_FOREIGN_ALIASES) {
                 if (entry instanceof Alias)
                     handleForeignAlias(entry); // PHASE_FIX_FOREIGN_ALIASES
                 else
                     assert(false);  // by now there should only be foreign aliases in the old domain
-            } else if (mPhase == RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS) {
+            } else if (mPhase == RenamePhase.FIX_FOREIGN_DL_MEMBERS) {
                 handleForeignDLMembers(entry);
             }
         }
