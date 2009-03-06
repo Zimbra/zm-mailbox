@@ -395,7 +395,7 @@ public final class SearchParams implements Cloneable {
         
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
         
-        boolean useCursorToNarrowDbQuery = false;
+        boolean useCursorToNarrowDbQuery = true;
         
         // in some cases we cannot use cursors, even if they are requested.
         //

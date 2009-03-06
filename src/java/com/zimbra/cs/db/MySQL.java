@@ -67,6 +67,7 @@ public class MySQL extends Db {
             case READ_COMMITTED_ISOLATION:   return true;
             case REPLACE_INTO:               return false;
             case UNIQUE_NAME_INDEX:          return true;
+            case REQUEST_UTF8_UNICODE_COLLATION: return true;            
         }
         return false;
     }

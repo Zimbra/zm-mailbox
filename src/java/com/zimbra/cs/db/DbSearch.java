@@ -208,7 +208,7 @@ public class DbSearch {
                         colNameAfterPeriod.equals("name")); 
     }
 
-    private static String sortField(byte sort, boolean useAlias) {
+    private static String sortField(byte sort, boolean useAlias, boolean includeCollation) {
         String str;
         boolean stringVal = false;
         switch (sort & SORT_FIELD_MASK) {
@@ -221,15 +221,27 @@ public class DbSearch {
             default:               str = "mi.date";  break; 
             case SORT_NONE:        return null;
         }
-
-        if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
-            str = "UPPER(" + str + ")";
+        
+        if (useAlias) {
+            str = SORT_COLUMN_ALIAS; // still need the stringVal setting above!
+        } else {
+            if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
+                str = "UPPER(" + str + ")";
+        }
+        
+        if (Db.supports(Db.Capability.REQUEST_UTF8_UNICODE_COLLATION) && stringVal && includeCollation) 
+            str += " COLLATE utf8_unicode_ci";
 
         return str;
     }
-
+    
+    /**
+     * generate a column-reference for the sort-by column.  This column reference
+     * goes at the beginning of the SELECT statement (the ORDER BY part is generated
+     * by sortQuery() below)
+     */
     static String sortKey(byte sort) {
-        String field = sortField(sort, true);
+        String field = sortField(sort, false, false);
         // note that there's no sort column in the result set for SORT_NONE
         if (field == null)
             return "";
@@ -240,13 +252,16 @@ public class DbSearch {
         return sortQuery(sort, false);
     }
 
+    /**
+     * Generate the ORDER BY part that goes at the end of the select
+     */
     static String sortQuery(byte sort, boolean useAlias) {
         // note that there's no need for an ORDER BY clause for SORT_NONE
         if ((sort & SORT_FIELD_MASK) == SORT_NONE)
             return "";
 
         StringBuilder statement = new StringBuilder(" ORDER BY ");
-        statement.append(useAlias ? SORT_COLUMN_ALIAS : sortField(sort, false));
+        statement.append(sortField(sort, useAlias, true));
         if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
             statement.append(" DESC");
         return statement.toString();

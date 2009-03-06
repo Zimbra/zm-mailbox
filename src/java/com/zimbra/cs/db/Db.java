@@ -64,6 +64,7 @@ public abstract class Db {
         REPLACE_INTO,
         UNIQUE_NAME_INDEX,
         AVOID_OR_IN_WHERE_CLAUSE, // if set, then try to avoid ORs in WHERE clauses, run them as separate queries and mergesort in memory
+        REQUEST_UTF8_UNICODE_COLLATION, // for mysql
         ;
     }
 
