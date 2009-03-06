@@ -22,6 +22,7 @@ package com.zimbra.cs.mime;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.activation.DataSource;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -234,8 +236,12 @@ public abstract class MimeHandler {
         doc.add(new Field(LuceneFields.L_PARTNAME, mPartName, Field.Store.YES, Field.Index.UN_TOKENIZED)); 
 
         String name = mDataSource.getName();
-        if (name != null) 
+        if (name != null) {
+            try {
+                name = MimeUtility.decodeText(name);
+            } catch (UnsupportedEncodingException e) { }
             doc.add(new Field(LuceneFields.L_FILENAME, name, Field.Store.YES, Field.Index.TOKENIZED));
+        }
         return doc;
     }
 
