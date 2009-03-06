@@ -90,22 +90,25 @@ public class MimeHeader {
         return mName;
     }
 
-    byte[] getRawHeader() {
+    public byte[] getRawHeader() {
         reserialize();
         return mContent;
     }
 
-    String getValue(String charset) {
+    public String getValue(String charset) {
         reserialize();
-        return decode(mContent, mValueStart, mContent.length - mValueStart, charset);
+        int end = mContent.length, c;
+        while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r'))
+            end--;
+        return decode(mContent, mValueStart, end - mValueStart, charset);
     }
 
-    String getEncoded() {
+    public String getEncoded() {
         reserialize();
         return unfold(new String(mContent, mValueStart, mContent.length - mValueStart));
     }
 
-    String getEncoded(String charset) {
+    public String getEncoded(String charset) {
         if (charset == null || charset.equals(""))
             return getEncoded();
 

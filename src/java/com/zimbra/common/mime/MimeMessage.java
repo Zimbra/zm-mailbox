@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,11 +48,11 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
         setContent(file, false);
-        FileInputStream fis = new FileInputStream(file);
+        InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
         try {
-            readContent(new PeekAheadInputStream(fis));
+            readContent(new ParseState(new PeekAheadInputStream(is)));
         } finally {
-            ByteUtil.closeStream(fis);
+            ByteUtil.closeStream(is);
         }
     }
 
@@ -70,7 +71,7 @@ public class MimeMessage extends MimePart {
         mProperties = props;
         setContent(body, false);
         try {
-            readContent(new PeekAheadInputStream(new ByteArrayInputStream(body)));
+            readContent(new ParseState(new PeekAheadInputStream(new ByteArrayInputStream(body))));
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
         }
@@ -104,7 +105,9 @@ public class MimeMessage extends MimePart {
     public static MimeMessage readStructure(InputStream is, Properties props) throws IOException {
         MimeMessage mm = new MimeMessage(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mm.mProperties = props;
-        mm.readContent(new PeekAheadInputStream(is));
+        if (!is.markSupported())
+            is = new BufferedInputStream(is, 8192);
+        mm.readContent(new ParseState(new PeekAheadInputStream(is)));
         return mm;
     }
 
@@ -228,15 +231,15 @@ public class MimeMessage extends MimePart {
     }
 
 
-    @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
-        mBody = MimePart.parse(pais, this, ContentType.TEXT_PLAIN);
+    @Override MimePart readContent(ParseState pstate) throws IOException {
+        mBody = MimePart.parse(pstate, this, ContentType.TEXT_PLAIN);
         recordEndpoint(mBody.getEndOffset());
         return this;
     }
 
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        MimeMessage mm = new MimeMessage(new File("C:\\Temp\\mail\\nested"));
+        MimeMessage mm = new MimeMessage(new File("C:\\Temp\\mail\\24250"));
 //        dumpParts(mm);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
 //        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);

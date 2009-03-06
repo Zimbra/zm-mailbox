@@ -198,9 +198,10 @@ public class MimeBodyPart extends MimePart {
     }
 
 
-    @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
+    @Override MimePart readContent(ParseState pstate) throws IOException {
+        PeekAheadInputStream pais = pstate.getInputStream();
         List<String> boundaries = getActiveBoundaries();
-        pais.clearBoundary();
+        pstate.clearBoundary();
 
         // if there's no pending multipart, we can just consume the remainder of the input
         if (boundaries == null) {
@@ -223,7 +224,7 @@ public class MimeBodyPart extends MimePart {
             // we're at the start of a line
             if ((c = pais.read()) == '-' && (c = pais.read()) == '-') {
                 // found a leading "--", so check to see if the rest of the line matches an active MIME boundary
-                if (checkBoundary(pais, pais, boundaries, linestart)) {
+                if (checkBoundary(pais, pstate, boundaries, linestart)) {
                     recordEndpoint(linestart);
                     return this;
                 }
@@ -244,11 +245,11 @@ public class MimeBodyPart extends MimePart {
         return this;
     }
 
-    static boolean checkBoundary(byte[] content, int offset, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
-        return checkBoundary(new ByteArrayInputStream(content, offset, content.length - offset), pais, boundaries, linestart);
+    static boolean checkBoundary(byte[] content, int offset, ParseState pstate, List<String> boundaries, long linestart) throws IOException {
+        return checkBoundary(new ByteArrayInputStream(content, offset, content.length - offset), pstate, boundaries, linestart);
     }
 
-    static boolean checkBoundary(InputStream is, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
+    static boolean checkBoundary(InputStream is, ParseState pstate, List<String> boundaries, long linestart) throws IOException {
         // found a leading "--", so check to see if the rest of the line matches an active MIME boundary
         is.mark(1024);
 
@@ -279,7 +280,7 @@ public class MimeBodyPart extends MimePart {
                             if (is.read() != '\n')
                                 is.reset();
                         }
-                        pais.recordBoundary(boundary, isEndBoundary, linestart);
+                        pstate.recordBoundary(boundary, isEndBoundary, linestart);
                         return true;
                     } else if (!Character.isWhitespace(c)) {
                         break;
