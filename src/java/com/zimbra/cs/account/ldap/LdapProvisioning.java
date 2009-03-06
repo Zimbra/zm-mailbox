@@ -876,7 +876,7 @@ public class LdapProvisioning extends Provisioning {
 
     private boolean addDefaultMailHost(Attributes attrs, Server server)  throws ServiceException {
         String localMailHost = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
         if (hasMailboxService && localMailHost != null) {
             attrs.put(Provisioning.A_zimbraMailHost, localMailHost);
             int lmtpPort = getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
@@ -916,11 +916,15 @@ public class LdapProvisioning extends Provisioning {
             if (s != null) {
                 String mailHost = s.getAttr(Provisioning.A_zimbraServiceHostname);
                 if (mailHost != null) {
-                    attrs.put(Provisioning.A_zimbraMailHost, mailHost);
-                    int lmtpPort = s.getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
-                    String transport = "lmtp:" + mailHost + ":" + lmtpPort;
-                    attrs.put(Provisioning.A_zimbraMailTransport, transport);
-                    return mailHost;
+                    boolean hasMailboxService = s.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
+                    if (hasMailboxService) {
+                        attrs.put(Provisioning.A_zimbraMailHost, mailHost);
+                        int lmtpPort = s.getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
+                        String transport = "lmtp:" + mailHost + ":" + lmtpPort;
+                        attrs.put(Provisioning.A_zimbraMailTransport, transport);
+                        return mailHost;
+                    } else
+                        ZimbraLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") is not enabled for mailbox service");
                 } else {
                     ZimbraLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") has no service hostname");
                 }
