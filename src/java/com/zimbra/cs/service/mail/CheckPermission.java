@@ -20,24 +20,22 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CheckPermission extends MailDocumentHandler {
@@ -46,38 +44,48 @@ public class CheckPermission extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        if (true)
-            throw ServiceException.INVALID_REQUEST("disabled for now, ome back soon", null);
-
         Element eTarget = request.getElement(MailConstants.E_TARGET);
         String targetType = eTarget.getAttribute(MailConstants.A_TARGET_TYPE);
+        
+        TargetType tt = TargetType.fromString(targetType);
         String targetBy = eTarget.getAttribute(MailConstants.A_TARGET_BY);
         String targetValue = eTarget.getText();
         
         NamedEntry entry = null;
-        if (targetType.equals(MailConstants.A_ACCOUNT)) {
+        
+        //
+        // Note, to defend against harvest attack, if the target is not found, return "not allowed"
+        // instead of NO_SUCH_XXX.
+        //
+        
+        if (TargetType.account == tt) {
             entry = prov.get(AccountBy.fromString(targetBy), targetValue, zsc.getAuthToken());
             if (entry == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(targetValue);
-        } else if (targetType.equals(MailConstants.A_CALENDAR_RESOURCE)) {
+                return returnResponse(zsc, false);
+        } else if (TargetType.calresource == tt) {
             entry = prov.get(CalendarResourceBy.fromString(targetBy), targetValue);
             if (entry == null)
-                throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(targetValue);
-        } else if (targetType.equals(MailConstants.A_DISTRIBUTION_LIST)) {
-            entry = prov.get(DistributionListBy.fromString(targetBy), targetValue);
-            if (entry == null)
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(targetValue);
+                return returnResponse(zsc, false);
         } else
             throw ServiceException.INVALID_REQUEST("invalid target type: " + targetType, null);
         
-        Element r = request.getElement(MailConstants.E_RIGHT);
-        Right right = RightManager.getInstance().getUserRight(r.getText());
+        List<UserRight> rights = new ArrayList<UserRight>();
+        for (Element eRight : request.listElements(MailConstants.E_RIGHT)) {
+            UserRight r = RightManager.getInstance().getUserRight(eRight.getText());
+            rights.add(r); 
+        }
         
-        if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), entry, right, false, false))
-            throw ServiceException.PERM_DENIED("credential " + zsc.getAuthtokenAccountId() + " is not allowed for right " + right.getName() + " on target " + entry.getName());
-
+        for (UserRight right : rights) {
+            if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), entry, right, false, false))
+                return returnResponse(zsc, false);
+        }
+            
+        return returnResponse(zsc, true);
+    }
+    
+    private Element returnResponse(ZimbraSoapContext zsc, boolean allow) {
         Element response = zsc.createElement(MailConstants.CHECK_PERMISSION_RESPONSE);
-
+        response.addAttribute(MailConstants.A_ALLOW, allow);
         return response;
     }
 }

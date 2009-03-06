@@ -2850,18 +2850,32 @@ RevokePermissionResponse returns permissions that are successfully revoked.
 
 <CheckPermissionRequest>
   <target type="{target-type}" by="id|name">...</target>
-  <right>...</right>
+  <right>...</right>+
 </CheckPermissionRequest>
 
-{target-type} = account|calresource|distributionlist 
+{target-type} = account | calresource
 
-    Check if the authed user has the specified right on target.
+    Check if the authed user has the specified right(s) on a target.
+    To defend against harvest attack, the the specified target does not exist, 
+    server will return <CheckRightResponse allow="0"/> instead of NO_SUCH_XXX.
+    
+e.g.   
+With user1's auth token, the following checks if user1 can invite user2 and 
+view user2's free/busy.
  
-<CheckPermissionResponse/>
+<CheckPermissionRequest>
+  <target type="account" by="name">user2@test.com</target>
+  <right>invite</right>
+  <right>viewFreeBusy</right>
+</CheckPermissionRequest>
 
-    A successful return means the authed user is allowed for the specified right on the 
-    target object.  If ServerException.PERM_DENIED is thrown, it indicates the authed user 
-    dose not have the specified right on the target object.
+
+<CheckRightResponse allow="{1|0}"/>
+
+allow = 1 | 0
+        1: the authed user has the right on the target
+        0: the authed user does not have the right on the target
+
     
 ---------------------------
     
