@@ -1485,6 +1485,10 @@ public class ProvUtil implements DebugListener {
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
+        
+        if (!(mProv instanceof LdapProvisioning))
+            throwLdapOnly();
+        
         boolean verbose = false;
         boolean applyDefault = true;
         String d = null;
