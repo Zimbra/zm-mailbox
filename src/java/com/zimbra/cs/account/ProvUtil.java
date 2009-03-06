@@ -2554,6 +2554,10 @@ public class ProvUtil implements DebugListener {
             err = true;
         }
         
+        if (err || cl.hasOption('h')) {
+            pu.usage();
+        }
+        
         if (cl.hasOption('l') && cl.hasOption('s')) {
             printError("error: cannot specify both -l and -s at the same time");
             System.exit(2);
@@ -2563,9 +2567,7 @@ public class ProvUtil implements DebugListener {
         if (cl.hasOption('l'))
             pu.setUseLdap(true, cl.hasOption('m'));
         
-        if (err || cl.hasOption('h')) {
-            pu.usage();
-        }
+
         
         if (cl.hasOption('L')) {
             if (cl.hasOption('l'))
