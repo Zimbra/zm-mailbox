@@ -305,13 +305,11 @@ public class MailConstants {
     public static final String E_ACE = "ace";
     public static final String E_RIGHT = "right";
     public static final String E_TARGET = "target";
+    public static final String A_ALLOW = "allow";
     public static final String A_DENY = "deny";
     public static final String A_RIGHT = "right";
     public static final String A_TARGET_BY = "by";
     public static final String A_TARGET_TYPE = "type";
-    public static final String A_ACCOUNT = "account";
-    public static final String A_CALENDAR_RESOURCE = "calresource";
-    public static final String A_DISTRIBUTION_LIST = "distributionlist";
 
     // email addresses
     public static final String E_EMAIL = "e";
@@ -699,6 +697,7 @@ public class MailConstants {
     public static final String E_WAITSET_UPDATE = "update";
     public static final String E_WAITSET_REMOVE = "remove";
     public static final String E_ERROR = "error";
+    public static final String A_ACCOUNT = "account";
     public static final String A_WAITSET_ID = "waitSet";
     public static final String A_SEQ = "seq";
     public static final String A_BLOCK = "block";
