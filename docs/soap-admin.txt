@@ -773,21 +773,6 @@ Notes:
   an empty attribute value removes the specified attr
 
 -----------------------------
-
-<GetServerAggregateStatsRequest>
- <statName>...</statName>
- <startTime>{date-time}</startTime>
- <endTime>{date-time}</endTime>
- <period>...</period>
-</GetServerAggregateStatsRequest>
-
-<GetServerAggregateStatsResponse>
-  <s n="..." t="{date-time}">{stat-value}</s>*
-</GetServerAggregateStatsResponse>
-
-{date-time} format is number of seconds in 1970, utc time.
-
------------------------------
 <GetServiceStatusRequest/>
 
 <GetServiceStatusResponse>
