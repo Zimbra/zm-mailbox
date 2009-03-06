@@ -77,6 +77,8 @@ public class DataSourceManager {
             return NEW_SYNC_ENABLED ? new Pop3Sync(ds) : new Pop3Import(ds);
         case rss:
             return new RssImport(ds);
+        case gal:
+            return new GalImport(ds);
         default:
             throw new IllegalArgumentException(
                 "Unknown data import type: " + ds.getType());
