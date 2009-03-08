@@ -224,7 +224,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // store the fetched file as a normal upload
             ServletFileUpload upload = getUploader(false);
             fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
-            int size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
+            long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
             if (size > upload.getSizeMax())
                 throw MailServiceException.UPLOAD_REJECTED(filename, "upload too large");
 
@@ -458,7 +458,7 @@ public class FileUploadServlet extends ZimbraServlet {
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
-            int size = ByteUtil.copy(req.getInputStream(), false, fi.getOutputStream(), true, upload.getSizeMax() * 3);
+            long size = ByteUtil.copy(req.getInputStream(), false, fi.getOutputStream(), true, upload.getSizeMax() * 3);
             if (size > upload.getSizeMax()) {
                 fi.delete();
                 mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);

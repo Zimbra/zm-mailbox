@@ -135,7 +135,7 @@ class ImapPartSpecifier {
                 ps.print(binary ? "~{" : "{");  ps.print(length);  ps.write('}');
                 if (os != null) {
                     os.write(ImapHandler.LINE_SEPARATOR_BYTES);
-                    int written = ByteUtil.copy(is, false, os, false);
+                    long written = ByteUtil.copy(is, false, os, false);
                     assert(written == length);
                 }
             }
