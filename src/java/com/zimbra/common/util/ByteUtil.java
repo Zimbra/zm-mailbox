@@ -581,7 +581,7 @@ public class ByteUtil {
      * @return the number of bytes copied
      * @throws IOException
      */
-    public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut) throws IOException {
+    public static long copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut) throws IOException {
         return copy(in, closeIn, out, closeOut, -1L);
     }
 
@@ -597,17 +597,22 @@ public class ByteUtil {
      * @return the number of bytes copied
      * @throws IOException
      */
-    public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
+    public static long copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
         try {
-            byte buffer[] = new byte[8192];
-            int numRead;
-            int transferred = 0;
-            while ((numRead = in.read(buffer)) >= 0) {
-                out.write(buffer, 0, numRead);
-                transferred += numRead;
+            long transferred = 0;
+            if (maxLength != 0) {
+                byte buffer[] = new byte[8192];
+                int numRead;
+                do {
+                    int readMax = buffer.length;
+                    if (maxLength > 0 && maxLength - transferred < readMax)
+                        readMax = (int) (maxLength - transferred);
 
-                if (maxLength >= 0 && transferred > maxLength)
-                	return transferred;
+                    if ((numRead = in.read(buffer, 0, readMax)) < 0)
+                        break;
+                    out.write(buffer, 0, numRead);
+                    transferred += numRead;
+                } while (maxLength < 0 || transferred < maxLength);
             }
             return transferred;
         } finally {
