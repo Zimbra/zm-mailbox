@@ -169,7 +169,7 @@ public abstract class AttributeCallback {
         return (mvm.mMod == null)? null : mvm;
     }
 
-    private List<String> getMultiValue(Object value) throws ServiceException {
+    protected List<String> getMultiValue(Object value) throws ServiceException {
         
         List<String> list = null;
         
