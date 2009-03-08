@@ -5791,8 +5791,28 @@ public class LdapProvisioning extends Provisioning {
                 for (CacheEntry entry : entries) {
                     AccountBy accountBy = (entry.mEntryBy==CacheEntryBy.id)? AccountBy.id : AccountBy.name;
                     Account account = getFromCache(accountBy, entry.mEntryIdentity);
+                    /*
+                     * We now call removeFromCache instead of reload for flushing an account 
+                     * from cache.   This change was originally for bug 25028, but that would still 
+                     * need an extrat step to flush cache after the account's zimbraCOSId changed.
+                     * (if we call reload insteasd of removeFromCache, flush cache of the account would 
+                     * not clear the mDefaults for inherited attrs, that was the bug.)
+                     * Bug 25028 is now taken care of by the callback.  We still call removeFromCache
+                     * for flushing account cache, because that does a cleaner flush. 
+                     * 
+                     * Note, we only call removeFromCache for account.  
+                     * We should *NOT* do removeFromCache when flushing global config and cos caches.  
+                     * 
+                     * Because the "mDefaults" Map(contains a ref to the old instance of COS.mAccountDefaults for 
+                     * all the accountInherited COS attrs) stored in all the cached accounts.   Same for the 
+                     * inherited attrs of server/domain from global config.  If we do removeFromCache for flushing 
+                     * cos/global config, then after FlushCache(cos) if you do a ga on a cached account, it still 
+                     * shows the old COS value for values that are inherited from COS.   Although, for newly loaded 
+                     * accounts or when a cached account is going thru auth(that'll trigger a reload) they will get 
+                     * the new COS values(refreshed as a result of FlushCache(cos)).
+                     */
                     if (account != null)
-                        reload(account);
+                        removeFromCache(account);
                 }
             } else
                 sAccountCache.clear();
