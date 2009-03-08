@@ -97,6 +97,8 @@ public class AttributeInfo {
     
     private BuildInfo.Version mSince;
     
+    private BuildInfo.Version mDeprecatedSince;
+    
     private static Integer parseInt(String value) {
         try {
             return Integer.parseInt(value);
@@ -133,7 +135,7 @@ public class AttributeInfo {
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
                    List<String> globalConfigValues, List<String> defaultCOSValues, 
                    List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade, 
-                   String description, BuildInfo.Version since)
+                   String description, BuildInfo.Version since, BuildInfo.Version deprecatedSince)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -154,6 +156,7 @@ public class AttributeInfo {
         mDefaultCOSValuesUpgrade = defaultCOSValuesUpgrade;
         mDescription = description;
         mSince = since;
+        mDeprecatedSince = deprecatedSince;
         
         mMin = parseLong(attrName, AttributeManager.A_MIN, min, Long.MIN_VALUE);
         mMax = parseLong(attrName, AttributeManager.A_MAX, max, Long.MAX_VALUE);
@@ -433,6 +436,10 @@ public class AttributeInfo {
     long getMax() {
         return mMax;
     }
+    
+    long getMin() {
+        return mMin;
+    }
    
     boolean requiredInClass(AttributeClass cls) {
         return mRequiredInClasses != null && mRequiredInClasses.contains(cls);
@@ -440,6 +447,14 @@ public class AttributeInfo {
 
     boolean optionalInClass(AttributeClass cls) {
         return mOptionalInClasses != null && mOptionalInClasses.contains(cls);
+    }
+    
+    Set<AttributeClass> getRequiredIn() {
+        return mRequiredInClasses;
+    }
+    
+    Set<AttributeClass> getOptionalIn() {
+        return mOptionalInClasses;
     }
 
     public AttributeCardinality getCardinality() {
@@ -466,7 +481,15 @@ public class AttributeInfo {
         return mImmutable;
     }
     
+    String getValue() {
+        return mValue;
+    }
+    
     public BuildInfo.Version getSince() {
         return mSince;
+    }
+    
+    public BuildInfo.Version getDeprecatedSince() {
+        return mDeprecatedSince;
     }
 }

@@ -42,11 +42,17 @@ public enum AttributeType {
         static Map<String, AttributeType> sTypeMap = new HashMap<String, AttributeType>();
     }
     
+    private String mName; 
     AttributeType(String name) {
+        mName = name;
         TM.sTypeMap.put(name, this);
     }
     
     public static AttributeType getType(String name) {
         return TM.sTypeMap.get(name);
+    }
+    
+    String getName() {
+        return mName;
     }
 }

@@ -30,7 +30,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090306-1348 */
+    /* build: 5.0 pshao 20090307-2029 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1745,7 +1745,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChildAccount = "zimbraChildAccount";
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      */

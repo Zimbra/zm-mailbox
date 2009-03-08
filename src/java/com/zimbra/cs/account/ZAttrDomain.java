@@ -42,7 +42,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090306-1348 */
+    /* build: 5.0 pshao 20090307-2029 */
 
     /**
      * RFC2256: descriptive information

@@ -36,7 +36,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090306-1348 */
+    /* build: 5.0 pshao 20090307-2029 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3956,7 +3956,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -3968,7 +3968,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -3983,7 +3983,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -3999,7 +3999,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -4014,7 +4014,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -4030,7 +4030,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -4045,7 +4045,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -4061,7 +4061,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
@@ -4075,7 +4075,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 5.0 D4. deprecated in favor of user-settable
+     * Deprecated since: 5.0.0. deprecated in favor of user-settable
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *

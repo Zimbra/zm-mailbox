@@ -260,7 +260,7 @@ public class AttributeManager {
             }
             canonicalName = name.toLowerCase();
 
-            String deprecatedSince = null;
+            BuildInfo.Version deprecatedSinceVer = null;
             BuildInfo.Version sinceVer = null;
 
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
@@ -316,7 +316,15 @@ public class AttributeManager {
                         error(name, file, aname + " is not valid: " + attr.getValue());
                 	}
                 } else if (aname.equals(A_DEPRECATED_SINCE)) {  
-                    deprecatedSince = attr.getValue();
+                    String depreSince = attr.getValue();
+                    if (depreSince != null) {
+                        try {
+                            deprecatedSinceVer = new BuildInfo.Version(depreSince);
+                        } catch (ServiceException e) {
+                            error(name, file, aname + " is not valid: " + attr.getValue() + " (" + e.getMessage() + ")");
+                        }
+                    }
+                    
                 } else if (aname.equals(A_SINCE)) {  
                     String since = attr.getValue();
                     if (since != null) {
@@ -367,13 +375,13 @@ public class AttributeManager {
                 }
             }
             
-            if (deprecatedSince != null && deprecateDesc == null)
+            if (deprecatedSinceVer != null && deprecateDesc == null)
                 error(name, file, "missing attr " + A_DEPRECATED_SINCE);
-            else if (deprecatedSince == null && deprecateDesc != null)
+            else if (deprecatedSinceVer == null && deprecateDesc != null)
                 error(name, file, "missing element " + E_DEPRECATE_DESC);
             
-            if (deprecatedSince != null) {
-                String deprecateInfo = "Deprecated since: " + deprecatedSince + ".  " + deprecateDesc; 
+            if (deprecatedSinceVer != null) {
+                String deprecateInfo = "Deprecated since: " + deprecatedSinceVer.toString() + ".  " + deprecateDesc; 
                 if (description == null)
                     description = deprecateInfo;
                 else
@@ -423,7 +431,7 @@ public class AttributeManager {
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
-                    description, sinceVer);
+                    description, sinceVer, deprecatedSinceVer);
             
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
@@ -873,6 +881,10 @@ public class AttributeManager {
         return mClassToAllAttrsMap.get(klass);
     }
 
+    Set<String> getAllAttrs() {
+        return mAttrs.keySet();
+    }
+    
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {
         return mClassToLowerCaseAttrsMap.get(klass);
     }

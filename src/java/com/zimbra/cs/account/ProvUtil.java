@@ -37,7 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -53,6 +56,8 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ShareInfo;
@@ -335,6 +340,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{domain}", Category.CONFIG, 1, 1),
+        DESCRIBE("describe", "desc", "[-v] [-f[width] field1 [-f[width] field2] ...] [-ni] [{entry-type}]", Category.MISC, 0, Integer.MAX_VALUE),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
@@ -506,7 +512,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private boolean needsAuth(Command command) {
-        if (command == Command.HELP)
+        if (command == Command.HELP || command == Command.DESCRIBE)
             return false;
         else
             return true;
@@ -617,6 +623,9 @@ public class ProvUtil implements DebugListener {
             break;
         case CREATE_XMPP_COMPONENT:
             doCreateXMPPComponent(args);
+            break;
+        case DESCRIBE:
+            doDescribe(args);
             break;
         case EXIT:
             System.exit(0);
@@ -2547,7 +2556,6 @@ public class ProvUtil implements DebugListener {
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
         
-        
         CommandLine cl = null;
         boolean err = false;
         
@@ -2570,8 +2578,6 @@ public class ProvUtil implements DebugListener {
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('l'))
             pu.setUseLdap(true, cl.hasOption('m'));
-        
-
         
         if (cl.hasOption('L')) {
             if (cl.hasOption('l'))
@@ -2652,6 +2658,413 @@ public class ProvUtil implements DebugListener {
     class ArgException extends Exception {
         ArgException(String msg) {
             super(msg);
+        }
+    }
+    
+    private static class DescribeArgs {
+        
+        enum Field {
+            type(10, "attribute type"),
+            value(10, "value for enum or regex attributes"),
+            callback(10, "class name of AttributeCallback object to invoke on changes to attribute."),
+            immutable(10, "whether this attribute can be modified directly"),
+            cardinality(10, "single or multi"),
+            requiredIn(10, "comma-seperated list containing classes in which this attribute is required"),
+            optionalIn(10, "comma-seperated list containing classes in which this attribute can appear"),
+            flags(10, "attribute flags"),
+            defaults(10, "default value on global config or default COS(for new install) and all upgraded COS's"),
+            min(6, "min value for integers and durations. defaults to Integer.MIN_VALUE"),
+            max(6, "max value for integers and durations, max length for strings/email, defaults to Integer.MAX_VALUE"),
+            id(6, "leaf OID of the attribute"),
+            since(8, "version since which the attribute had been introduced"),
+            depreSince(8, "version since which the attribute had been deprecaed"),
+            desc(36, "description");
+            
+            String mDesc;
+            int mDefaultWidth;
+            
+            Field(int defaultWidth, String desc) {
+                mDesc = desc;
+                mDefaultWidth = defaultWidth;
+            }
+            
+            String getDesc() {
+                return mDesc;
+            }
+            
+            static Field fromString(String s) throws ServiceException {
+                try {
+                    return Field.valueOf(s);
+                } catch (IllegalArgumentException e) {
+                    throw ServiceException.INVALID_REQUEST("unknown field: " + s, e);
+                }
+            }
+            
+            static String formatDefaults(AttributeInfo ai) {
+                StringBuilder sb = new StringBuilder();
+                for (String d : ai.getDefaultCosValues())
+                    sb.append(d + ",");
+                for (String d : ai.getGlobalConfigValues())
+                    sb.append(d + ",");
+                
+                return sb.length()==0 ? "" : sb.substring(0, sb.length()-1); // trim the ending , 
+            }
+            
+            static String formatRequiredIn(AttributeInfo ai) {
+                Set<AttributeClass> requiredIn = ai.getRequiredIn();
+                if (requiredIn == null)
+                    return "";
+                
+                StringBuilder sb = new StringBuilder();
+                    
+                for (AttributeClass ac : requiredIn)
+                    sb.append(ac.name() + ",");
+                return sb.substring(0, sb.length()-1); // trim the ending , 
+            }
+            
+            static String formatOptionalIn(AttributeInfo ai) {
+                Set<AttributeClass> optionalIn = ai.getOptionalIn();
+                if (optionalIn == null)
+                    return "";
+                
+                StringBuilder sb = new StringBuilder();
+                for (AttributeClass ac : optionalIn)
+                    sb.append(ac.name() + ",");
+                return sb.substring(0, sb.length()-1); // trim the ending , 
+            }
+            
+            static String formatFlags(AttributeInfo ai) {
+                StringBuilder sb = new StringBuilder();
+                for (AttributeFlag f : AttributeFlag.values()) {
+                    if (ai.hasFlag(f))
+                        sb.append(f.name() + ",");
+                }
+                return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending , 
+            }
+            
+            static String print(Field field, Integer preferredWidth, AttributeInfo ai) {
+                String out = null;
+                
+                switch (field) {
+                case type:
+                    out = ai.getType().getName();
+                    break;
+                case value:
+                    out = ai.getValue();
+                    break;
+                case callback:
+                    AttributeCallback acb = ai.getCallback();
+                    if (acb != null)
+                        out = acb.getClass().getSimpleName();
+                    break;
+                case immutable:
+                    out = Boolean.toString(ai.isImmutable());
+                    break;
+                case cardinality:
+                    AttributeCardinality card = ai.getCardinality();
+                    if (card != null)
+                        out = card.name();
+                    break;
+                case requiredIn:
+                    out = formatRequiredIn(ai);
+                    break;
+                case optionalIn:
+                    out = formatOptionalIn(ai);
+                    break;
+                case flags:
+                    out = formatFlags(ai);
+                    break;
+                case defaults:
+                    out = formatDefaults(ai);
+                    break;
+                case min:
+                    long min = ai.getMin();
+                    if (min != Long.MIN_VALUE && min != Integer.MIN_VALUE)
+                        out = Long.toString(min);
+                    break;
+                case max:
+                    long max = ai.getMax();
+                    if (max != Long.MAX_VALUE && max != Integer.MAX_VALUE)
+                        out = Long.toString(max);
+                    break;
+                case id:
+                    int id = ai.getId();
+                    if (id != -1)
+                        out = Integer.toString(ai.getId());
+                    break;
+                case since:
+                    BuildInfo.Version since = ai.getSince();
+                    if (since != null)
+                        out = since.toString();
+                    break;
+                case depreSince:
+                    BuildInfo.Version depreSince = ai.getDeprecatedSince();
+                    if (depreSince != null)
+                        out = depreSince.toString();
+                    break;
+                case desc:
+                    String desc = ai.getDescription();
+                    if (desc == null)
+                        desc = "";
+                    out = FileGenUtil.wrapComments((desc==null?"":desc), field.mDefaultWidth, "    ") + "\n";
+                    return out;
+                }
+                
+                if (out == null)
+                    out = "";
+                
+                int width = field.mDefaultWidth;
+                if (preferredWidth != null)
+                    width = preferredWidth.intValue();
+                return formatString(out, width);
+            }
+            
+        }
+        
+        boolean mNonInheritedOnly;
+        AttributeClass mAttrClass;
+        boolean mVerbose;
+        List<Pair<Field, Integer>> mFields;
+        
+        Pair<Field, Integer> getField(Field field) {
+            if (mFields == null)
+                return null;
+            
+            for (Pair<Field, Integer> p : mFields) {
+                if (field == p.getFirst())
+                    return p;
+            }
+            return null;
+        }
+    }
+    
+    static String formatString(String s, int width) {
+        String format = "%-" + width + "." + width + "s";
+        return String.format(format, s);
+    }
+    
+    static String formatLine(int width) {
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i< width; i++)
+            sb.append("-");
+        return sb.toString();
+    }
+    
+    private String formatAllEntryTypes() {
+        StringBuilder sb = new StringBuilder();
+        for (AttributeClass ac : AttributeClass.values()) {
+            if (ac.isProvisionable())
+                sb.append(ac.name() + ",");
+        }
+        return sb.substring(0, sb.length()-1); // trim the ending , 
+    }
+    
+    private String formatAllFields() {
+        StringBuilder sb = new StringBuilder();
+        for (DescribeArgs.Field field : DescribeArgs.Field.values()) {
+            sb.append(String.format("    %-12.12s : %s", field.name(),field.getDesc()) + "\n");
+        }
+        return sb.substring(0, sb.length()-1); // trim the ending , 
+    }
+    
+    /*
+     * zmprov desc [-v] [-f[width] field1 [-f[width] field2] ...] [-ni] {entry-type}]
+     * 
+     * e.g. zmprov desc -v
+     *      zmprov desc -v account
+     *      zmprov desc account -f10 callback -f optionalIn -f max
+     *      zmprov desc -ni -v server
+     */ 
+    private void descAttrsUsage(Exception e) {
+        System.out.println(e.getMessage() + "\n");
+        
+        System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+        
+        System.out.println();
+        System.out.println("Valid entry types: " + formatAllEntryTypes() + "\n");
+        System.out.println("Valid fields: \n" + formatAllFields() + "\n");
+        
+        System.out.println("Examples:");
+        
+        System.out.println("zmprov desc");
+        System.out.println("    print attribute name of all attributes" + "\n");
+        
+        System.out.println("zmprov desc -v");
+        System.out.println("    print all fields of all attributes" + "\n");
+        
+        System.out.println("zmprov desc account");
+        System.out.println("    print attribute name of all account attributes" + "\n");
+        
+        System.out.println("zmprov desc -ni -v account");
+        System.out.println("    print all fields of all non-inherited account attributes, ");
+        System.out.println("    that is, attributes that are on account but not on cos"+ "\n");
+        
+        System.out.println("zmprov desc -ni -domain");
+        System.out.println("    print attribute name of all non-inherited domain attributes, ");
+        System.out.println("    that is, attributes that are on domain but not on global config"+ "\n");
+        
+        System.out.println("zmprov desc server -f type -f15 max -f30 optionalIn");
+        System.out.println("    print attribute name , type, max, optionalIn fields of all server attributes,");
+        System.out.println("    using default width for the type filed, 15 chars for the max field, ");
+        System.out.println("    and 30 chars for the optionalIn field" + "\n");
+        
+        System.out.println("zmprov desc -f20 defaults -f since cos");
+        System.out.println("    print attribute name, default, and since fields of all cos attributes,");
+        System.out.println("    using 20 chars for the defaults filed, default width for the since field"+ "\n");
+        
+        usage();
+    }
+
+    
+    private DescribeArgs parseDescribeArgs(String[] args) throws ServiceException {
+        DescribeArgs descArgs = new DescribeArgs();
+        
+        int i = 1;
+        while (i < args.length) {
+            if ("-v".equals(args[i])) {
+                descArgs.mVerbose = true;
+                if (descArgs.mFields != null)
+                    throw ServiceException.INVALID_REQUEST("cannot specify both -v and -f", null);
+                
+                // fill fields with all fields
+                descArgs.mFields = new ArrayList<Pair<DescribeArgs.Field, Integer>>();
+                for (DescribeArgs.Field f : DescribeArgs.Field.values())
+                    descArgs.mFields.add(new Pair<DescribeArgs.Field, Integer>(f, null));
+
+            } else if (args[i].startsWith("-f")) {
+                if (i == args.length-1)
+                    throw ServiceException.INVALID_REQUEST("not enough args", null);
+                if (descArgs.mVerbose == true)
+                    throw ServiceException.INVALID_REQUEST("cannot specify both -v and -f", null);
+                if (descArgs.mFields == null)
+                    descArgs.mFields = new ArrayList<Pair<DescribeArgs.Field, Integer>>();
+                
+                Integer preferredWidth = null;
+                if (args[i].length() > 2)
+                    preferredWidth = Integer.valueOf(args[i].substring(2));
+
+                i++;
+                descArgs.mFields.add(new Pair<DescribeArgs.Field, Integer>(DescribeArgs.Field.fromString(args[i]), preferredWidth));
+                
+            } else if (args[i].startsWith("-ni")) {
+                descArgs.mNonInheritedOnly = true;
+                
+            } else {
+                if (descArgs.mAttrClass != null)
+                    throw ServiceException.INVALID_REQUEST("entry type is already specified as " + descArgs.mAttrClass, null);
+                AttributeClass ac = AttributeClass.fromString(args[i]);
+                if (ac == null || !ac.isProvisionable())
+                    throw ServiceException.INVALID_REQUEST("invalid entry type " + ac.name(), null);
+                descArgs.mAttrClass = ac;
+            }
+            i++;
+        }
+        
+        if (descArgs.mNonInheritedOnly == true && descArgs.mAttrClass == null)
+            throw ServiceException.INVALID_REQUEST("-ni must be specified with an entry type", null);
+        
+        if (descArgs.mFields == null)
+            descArgs.mFields = new ArrayList<Pair<DescribeArgs.Field, Integer>>();
+        
+        return descArgs;
+    }
+    
+    private void doDescribe(String[] args) throws ServiceException {
+        // never use SOAP
+        /*
+        if (!(mProv instanceof LdapProvisioning))
+            throwLdapOnly();
+        */
+
+        DescribeArgs descArgs = null;
+        try {
+            descArgs = parseDescribeArgs(args);
+        } catch (ServiceException e) {
+            descAttrsUsage(e);
+            return;
+        } catch (NumberFormatException e) {
+            descAttrsUsage(e);
+            return;
+        }
+        
+        SortedSet<String> attrs  = null;
+            
+        AttributeManager am = AttributeManager.getInstance();
+        
+        if (descArgs.mAttrClass != null) {
+            attrs = new TreeSet<String>(am.getAllAttrsInClass(descArgs.mAttrClass));
+            if (descArgs.mNonInheritedOnly) {
+                Set<String> inheritFrom = null;
+                Set<String> netAttrs = null;
+                switch (descArgs.mAttrClass) {
+                case account:
+                    netAttrs = new HashSet<String>(attrs);
+                    inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.cos));
+                    netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
+                    inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.domain)); // for accountCosDomainInherited
+                    netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
+                    break;
+                case domain:
+                case server:
+                    netAttrs = new HashSet<String>(attrs);
+                    inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.globalConfig));
+                    netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
+                    break;
+                }
+                
+                if (netAttrs != null)
+                    attrs = new TreeSet<String>(netAttrs);
+            }
+        } else {
+            attrs = new TreeSet<String>(am.getAllAttrs());
+        }
+        
+        String PADDING = "  "; // padding between fields
+        int nameWidth = 40;
+        
+        // print heading
+        StringBuilder heading = new StringBuilder();
+        StringBuilder line = new StringBuilder();
+        
+        heading.append(formatString("attribute name", nameWidth) + PADDING);
+        line.append(formatLine(nameWidth) + PADDING);
+
+        for (Pair<DescribeArgs.Field, Integer> field : descArgs.mFields) {   
+            DescribeArgs.Field f = field.getFirst();
+            if (f == DescribeArgs.Field.desc)
+                continue; // will print on a separate line
+            else {
+                int width = f.mDefaultWidth;
+                if (field.getSecond() != null)
+                    width = field.getSecond().intValue();
+                heading.append(formatString(f.name(), width) + PADDING);
+                line.append(formatLine(width) + PADDING);
+            }
+        }
+        
+        
+        System.out.println(heading);
+        System.out.println(line);
+        
+        for (String attr : attrs) {
+            AttributeInfo ai = am.getAttributeInfo(attr);
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append(formatString(attr, nameWidth) + PADDING);
+            
+            for (Pair<DescribeArgs.Field, Integer> field : descArgs.mFields) { 
+                DescribeArgs.Field f = field.getFirst();
+                if (f == DescribeArgs.Field.desc)
+                    continue; // will print on a separate line
+                else
+                    sb.append(DescribeArgs.Field.print(f, field.getSecond(), ai) + PADDING);
+            }
+            System.out.println(sb);
+            
+            // print desc if wanted
+            Pair<DescribeArgs.Field, Integer> field = descArgs.getField(DescribeArgs.Field.desc);
+            if (field != null)
+                System.out.println(DescribeArgs.Field.print(DescribeArgs.Field.desc, field.getSecond(), ai));
         }
     }
     
