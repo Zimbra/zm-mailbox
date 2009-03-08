@@ -1387,7 +1387,7 @@ public class ZMailboxUtil implements DebugListener {
         GranteeType type = getGranteeType(args[1]);
         String grantee = null;
         String perms = null;
-        String arg = null;
+        String password = null;
         switch (type) {
         case usr:
         case grp:
@@ -1405,16 +1405,21 @@ public class ZMailboxUtil implements DebugListener {
             perms = args[2];
             break;
         case guest:
-            if (args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            if (args.length != 4 && args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);
             grantee = args[2];
-            arg = args[3];
-            perms = args[4];
+            if (args.length == 5) {
+                password = args[3];
+                perms = args[4];
+            } else {
+                password = null;
+                perms = args[3];
+            }
             break;
         case key:
             if (args.length != 4 && args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);
             grantee = args[2];
             if (args.length == 5) {
-                arg = args[3];
+                password = args[3];
                 perms = args[4];
             } else {
                 perms = args[3];
@@ -1444,7 +1449,11 @@ public class ZMailboxUtil implements DebugListener {
 
             mMbox.modifyFolderRevokeGrant(folderId, grantee);
         } else {
-            mMbox.modifyFolderGrant(folderId, type, grantee, perms, arg);
+            // need a password for guest if granting
+            if (type == GranteeType.guest && password == null)
+                throw ZClientException.CLIENT_ERROR("password is required for guest grantee", null);
+            
+            mMbox.modifyFolderGrant(folderId, type, grantee, perms, password);
         }
     }
 
