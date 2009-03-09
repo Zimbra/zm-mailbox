@@ -3006,6 +3006,46 @@ public class DbMailItem {
         }
     }
 
+    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder f, long start, long end) throws ServiceException {
+    	Mailbox mbox = f.getMailbox();
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        ArrayList<CalendarItem.CalendarMetadata> result = new ArrayList<CalendarItem.CalendarMetadata>();
+        try {
+            String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
+            String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
+            String folderConstraint = f != null ? " AND mi.folder_id = ?" : "";
+            String typeConstraint = " AND type = 11";
+            stmt = conn.prepareStatement("SELECT mi.id, ci.uid, mi.mod_metadata, mi.mod_content" + 
+                        " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
+                        " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ? ") + 
+                        startConstraint + endConstraint + folderConstraint + typeConstraint);
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            if (start > 0)
+                stmt.setTimestamp(pos++, new Timestamp(start));
+            if (end > 0)
+                stmt.setTimestamp(pos++, new Timestamp(end));
+            if (f != null)
+            	stmt.setInt(pos++, f.getId());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	result.add(new CalendarItem.CalendarMetadata(
+            			rs.getInt(1),
+            			rs.getString(2),
+            			rs.getString(3),
+            			rs.getInt(4)));
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching CalendarItem Metadata for mbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return result;
+    }
 
     public static void consistencyCheck(MailItem item, UnderlyingData data, String metadata) throws ServiceException {
         if (item.getId() <= 0)

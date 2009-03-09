@@ -140,6 +140,7 @@ public class ZAppointmentHit implements ZSearchHit {
     private String mUid;
     private long mModifiedSeq;
     private long mModifiedDate;
+    private long mSavedSeq;
 
     private boolean mIsFromFreeBusy;
 
@@ -218,6 +219,7 @@ public class ZAppointmentHit implements ZSearchHit {
         String uid = e.getAttribute(MailConstants.A_UID, null);
         long ms = e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
         long md = e.getAttributeLong(MailConstants.A_DATE, 0);
+        long ss = e.getAttributeLong(MailConstants.A_REVISION, 0);
 
         List<Element> instances = e.listElements(MailConstants.E_INSTANCE);
         // if empty, add self as only instance
@@ -301,6 +303,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mUid = inst.getAttribute(MailConstants.A_UID, uid);
             appt.mModifiedSeq = inst.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, ms);
             appt.mModifiedDate = inst.getAttributeLong(MailConstants.A_MODIFIED_DATE, md);
+            appt.mSavedSeq = inst.getAttributeLong(MailConstants.A_REVISION, ss);
             appts.add(appt);
         }
     }
@@ -524,6 +527,8 @@ public class ZAppointmentHit implements ZSearchHit {
     public long getModifiedSeq() { return mModifiedSeq; }
     
     public long getModifiedDate() { return mModifiedDate; }
+    
+    public long getSavedSeq() { return mSavedSeq; }
 
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;

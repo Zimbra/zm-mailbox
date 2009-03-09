@@ -47,7 +47,6 @@ import com.zimbra.cs.service.FileUploadServlet;
  */
 public class Collection extends MailItemResource {
 
-	protected int mId;
 	protected byte mView;
 	protected byte mType;
 	
@@ -92,6 +91,7 @@ public class Collection extends MailItemResource {
 		ArrayList<DavResource> children = new ArrayList<DavResource>();
 
 		try {
+			ctxt.setCollectionPath(getUri());
 			List<MailItem> items = getChildrenMailItem(ctxt);
 			for (MailItem item : items) {
 				DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, item);

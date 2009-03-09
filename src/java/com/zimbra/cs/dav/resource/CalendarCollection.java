@@ -23,6 +23,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +32,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.dom4j.QName;
 
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
@@ -175,14 +178,38 @@ public class CalendarCollection extends Collection {
 		return getAppointmentMap(ctxt, range).values();
 	}
 	
+	private static final HashSet<QName> sMetaProps;
+	static {
+		sMetaProps = new HashSet<QName>();
+		sMetaProps.add(DavElements.E_GETETAG);
+		sMetaProps.add(DavElements.E_RESOURCETYPE);
+		sMetaProps.add(DavElements.E_DISPLAYNAME);
+	}
 	protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
 		if (range == null)
 			range = new TimeRange(getOwner());
-		java.util.Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
+		
+		// see if the request is only for the metadata, for which case we have a shortcut
+		// to prevent scanning and improve performance.
+		boolean metadataOnly = true;
+		for (QName prop : ctxt.getRequestProp().getProps()) {
+			if (!sMetaProps.contains(prop)) {
+				metadataOnly = false;
+				break;
+			}
+		}
+
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
-        for (CalendarItem calItem : calItems)
-            appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
+        ctxt.setCollectionPath(getUri());
+        if (metadataOnly) {
+        	ZimbraLog.dav.debug("METADATA only");
+        	for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), mId, range.getStart(), range.getEnd()))
+        		appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
+        } else {
+            for (CalendarItem calItem : mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null))
+                appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
+        }
         return appts;
 	}
 	

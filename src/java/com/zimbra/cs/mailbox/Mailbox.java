@@ -3110,6 +3110,19 @@ public class Mailbox {
         return docs;
     }
 
+    public synchronized Collection<CalendarItem.CalendarMetadata> getCalendarItemMetadata(OperationContext octxt, int folderId, long start, long end) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getCalendarItemMetadata", null);
+            Folder f = getFolderById(folderId);
+            if (!f.canAccess(ACL.RIGHT_READ))
+            	throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            success = true;
+            return DbMailItem.getCalendarItemMetadata(f, start, end);
+        } finally {
+        	endTransaction(success);
+        }
+    }
 
     private void checkCalendarType(MailItem item) throws ServiceException {
         byte type = item.getType();

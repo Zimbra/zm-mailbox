@@ -98,7 +98,7 @@ public abstract class MailItemResource extends DavResource {
     }
     
 	public MailItemResource(DavContext ctxt, MailItem item) throws ServiceException {
-		this(ctxt, ctxt.getPath() + item.getName(), item);
+		this(ctxt, getItemPath(ctxt, item), item);
 	}
 	
 	public MailItemResource(DavContext ctxt, String path, MailItem item) throws ServiceException {
@@ -125,6 +125,17 @@ public abstract class MailItemResource extends DavResource {
 		super(path, acct);
 	}
 	
+	private static String getItemPath(DavContext ctxt, MailItem item) throws ServiceException {
+		String path = ctxt.getCollectionPath();
+		if (path != null)
+			path += item.getName();
+		else
+			path = ctxt.getPath();
+		if ((item.getType() == MailItem.TYPE_FOLDER || item.getType() == MailItem.TYPE_MOUNTPOINT) && !path.endsWith("/"))
+			return path + "/";
+		return path;
+	}
+
 	public boolean hasEtag() {
 		return true;
 	}
@@ -375,7 +386,10 @@ public abstract class MailItemResource extends DavResource {
 	}
 	
 	public static String getEtag(MailItem item) {
-		return "\""+Long.toString(item.getModifiedSequence())+"-"+Long.toString(item.getChangeDate())+"\"";
+		return getEtag(Long.toString(item.getModifiedSequence()), Long.toString(item.getSavedSequence()));
+	}
+	public static String getEtag(String modMetadata, String modContent) {
+		return "\""+modMetadata+"-"+modContent+"\"";
 	}
 	
 	public boolean isLocal() {

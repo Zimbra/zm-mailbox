@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -66,7 +68,9 @@ public interface CalendarObject {
     public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;    
 
     public static class CalendarPath {
-        public static String generate(String itemPath, String uid, int extra) {
+        public static String generate(DavContext ctxt, String itemPath, String uid, int extra) {
+        	if (ctxt != null && ctxt.getCollectionPath() != null)
+        		itemPath = ctxt.getCollectionPath();
             // escape uid
             StringBuilder path = new StringBuilder();
             path.append(itemPath);
@@ -79,6 +83,57 @@ public interface CalendarObject {
             return path.toString();
         }
     }
+    public static class LightWeightCalendarObject extends DavResource implements CalendarObject {
+    	private int mId;
+    	private String mUid;
+    	private String mEtag;
+    	
+    	public LightWeightCalendarObject(String path, String owner, CalendarItem.CalendarMetadata data) {
+    		super(CalendarPath.generate(null, path, data.uid, -1), owner);
+    		mId = data.itemId;
+    		mUid = data.uid;
+    		mEtag = MailItemResource.getEtag(data.mod_metadata, Integer.toString(data.mod_content));
+    		setProperty(DavElements.P_GETETAG, mEtag);
+    	}
+        public String getUid() {
+        	return mUid;
+        }
+        public boolean match(Filter filter) {
+        	return true;
+        }
+        public String getEtag() {
+    		return mEtag;
+    	}
+        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
+            ZimbraLog.dav.debug("constructing full resource");
+    		return getFullResource(ctxt).getVcalendar(ctxt, filter);
+        }
+    	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+    		return null;
+    	}
+    	public boolean isCollection() {
+    		return false;
+    	}
+    	public void delete(DavContext ctxt) throws DavException {
+    	}
+    	private CalendarObject getFullResource(DavContext ctxt) throws DavException {
+    		String user = null;
+    		Account acct = ctxt.getOperationContext().getAuthenticatedUser();
+    		if (acct != null)
+    			user = acct.getName();
+    		try {
+    			DavResource rs = UrlNamespace.getResourceByItemId(ctxt, user, mId);
+    			if (rs instanceof LocalCalendarObject)
+    				return (LocalCalendarObject)rs;
+    			else if (rs instanceof RemoteCalendarObject)
+    				return (RemoteCalendarObject)rs;
+    			else
+        			throw new DavException("not a calendar item", HttpServletResponse.SC_BAD_REQUEST);
+    		} catch (ServiceException se) {
+    			throw new DavException("can't fetch item", se);
+    		}
+    	}
+    }
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {
 
         public LocalCalendarObject(DavContext ctxt, CalendarItem calItem) throws ServiceException {
@@ -86,7 +141,7 @@ public interface CalendarObject {
         }
 
         public LocalCalendarObject(DavContext ctxt, CalendarItem calItem, boolean newItem) throws ServiceException {
-            this(ctxt, getCalendarPath(calItem), calItem);
+            this(ctxt, CalendarPath.generate(ctxt, calItem.getPath(), calItem.getUid(), -1), calItem);
             mNewlyCreated = newItem;
         }
 
@@ -131,10 +186,6 @@ public interface CalendarObject {
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
         private boolean isSchedulingMessage;
-
-        protected static String getCalendarPath(CalendarItem calItem) throws ServiceException {
-            return CalendarPath.generate(calItem.getPath(), calItem.getUid(), -1);
-        }
 
         /* Returns true if the supplied Filter matches this calendar object. */
         public boolean match(Filter filter) {
@@ -221,7 +272,7 @@ public interface CalendarObject {
 	public static class RemoteCalendarObject extends DavResource implements CalendarObject {
 
 	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt, RemoteCalendarCollection parent) {
-	        super(CalendarPath.generate(uri, appt.getUid(), -1), owner);
+	        super(CalendarPath.generate(null, uri, appt.getUid(), -1), owner);
 	        mParent = parent;
 	        mUid = appt.getUid();
             ItemId iid;
@@ -255,7 +306,7 @@ public interface CalendarObject {
 	    }
 	    
         public static String getEtag(ZAppointmentHit item) {
-            return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getModifiedDate())+"000\"";
+            return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getSavedSeq())+"\"";
         }
 		private RemoteCalendarCollection mParent;
 	    private String mRemoteId;

@@ -265,7 +265,7 @@ public class CalDavProperty extends ResourceProperty {
 	            if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
 	                continue;
 				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-				e.setText(DavServlet.DAV_PATH + "/" + user + f.getPath());
+				e.setText(DavServlet.DAV_PATH + "/" + user + f.getPath() + "/");
 				mChildren.add(e);
 			}
 		}

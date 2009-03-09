@@ -128,6 +128,20 @@ public abstract class CalendarItem extends MailItem {
 
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
+    public static class CalendarMetadata {
+    	public int itemId;
+    	public String uid;
+    	public String mod_metadata;
+    	public int mod_content;
+    	
+    	public CalendarMetadata(int itemId, String uid, String mod_metadata, int mod_content) {
+    		this.itemId = itemId;
+    		this.uid = uid;
+    		this.mod_metadata = mod_metadata;
+    		this.mod_content = mod_content;
+    	}
+    }
+    
     protected CalendarItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
         if (mData.type != TYPE_APPOINTMENT && mData.type != TYPE_TASK)
