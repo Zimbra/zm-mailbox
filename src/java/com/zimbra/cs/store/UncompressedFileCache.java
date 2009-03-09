@@ -98,9 +98,6 @@ public class UncompressedFileCache<K> {
      */
     public synchronized void startup()
     throws IOException {
-        ZimbraLog.store.info("Starting up %s with maxBytes=%d, maxFiles=%d.",
-            UncompressedFileCache.class.getSimpleName(), mMaxBytes, mMaxFiles);
-        
         if (!mCacheDir.exists()) {
             throw new IOException(String.format("%s does not exist.", mCacheDir));
         }

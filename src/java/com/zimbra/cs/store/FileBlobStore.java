@@ -41,6 +41,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -52,21 +53,8 @@ import com.zimbra.znative.IO;
 public class FileBlobStore extends StoreManager {
 
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
-    private static final int DEFAULT_DISK_STREAMING_THRESHOLD = 32 * 1024 * 1024;
-    private static final int sDiskStreamingThreshold;
+    private static int sDiskStreamingThreshold;
     private UncompressedFileCache<String> mUncompressedFileCache;
-
-    static {
-        int threshold = DEFAULT_DISK_STREAMING_THRESHOLD;
-        try {
-            threshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-                Provisioning.A_zimbraMailDiskStreamingThreshold, DEFAULT_DISK_STREAMING_THRESHOLD);
-        } catch (ServiceException e) {
-            ZimbraLog.store.warn("Unable to determine disk streaming threshold.  Using default of %d.",
-                DEFAULT_DISK_STREAMING_THRESHOLD);
-        }
-        sDiskStreamingThreshold = threshold;
-    }
 
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
@@ -75,7 +63,7 @@ public class FileBlobStore extends StoreManager {
 	}
 
 	@Override public void startup()
-	throws IOException {
+	throws IOException, ServiceException {
         long sweepMaxAgeMS =
             LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
         mSweeper = new IncomingDirectorySweeper(SWEEP_INTERVAL_MS,
@@ -88,10 +76,9 @@ public class FileBlobStore extends StoreManager {
         FileUtil.ensureDirExists(uncompressedPath);
         mUncompressedFileCache = new UncompressedFileCache<String>(uncompressedPath);
 
-        // TODO bburtin: create attrs for cache sizes
-        mUncompressedFileCache.setMaxBytes(10 * 1024l * 1024);
-        mUncompressedFileCache.setMaxFiles(1000);
+        loadSettings();
         mUncompressedFileCache.startup();
+        
 	}
 
 	@Override public void shutdown() {
@@ -110,12 +97,25 @@ public class FileBlobStore extends StoreManager {
     
     private static final boolean sOnWindows = onWindows();
     
-    /**
-     * Returns either the value of {@link Provisioning#A_zimbraMailDiskStreamingThreshold}
-     * or <tt>32MB</tt>, if the attribute is not set.
-     */
     public static int getDiskStreamingThreshold() {
         return sDiskStreamingThreshold;
+    }
+    
+    public static void loadSettings()
+    throws ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer(); 
+        sDiskStreamingThreshold = server.getMailDiskStreamingThreshold();
+        int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
+        long uncompressedMaxBytes = server.getMailUncompressedCacheMaxBytes();
+        
+        ZimbraLog.store.info("Loading %s settings: %s=%d, %s=%d, %s=%d.", FileBlobStore.class.getSimpleName(),
+            Provisioning.A_zimbraMailDiskStreamingThreshold, sDiskStreamingThreshold,
+            Provisioning.A_zimbraMailUncompressedCacheMaxFiles, uncompressedMaxFiles,
+            Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes);
+            
+        FileBlobStore store = (FileBlobStore) getInstance();
+        store.mUncompressedFileCache.setMaxBytes(uncompressedMaxBytes);
+        store.mUncompressedFileCache.setMaxFiles(uncompressedMaxFiles);
     }
     
     public UncompressedFileCache<String> getUncompressedFileCache() {

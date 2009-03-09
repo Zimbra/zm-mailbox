@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
@@ -53,10 +54,16 @@ public class MessageCache {
     private static int sMaxCacheSize;
     static {
         try {
-            sMaxCacheSize = Provisioning.getInstance().getLocalServer().getMessageCacheSize();
+            loadSettings();
         } catch (ServiceException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public static void loadSettings()
+    throws ServiceException {
+        sMaxCacheSize = Provisioning.getInstance().getLocalServer().getMessageCacheSize();
+        ZimbraLog.cache.info("Setting message cache size to %d.", sMaxCacheSize);
     }
     
     /** Returns the number of messages in the cache. */

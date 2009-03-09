@@ -14,10 +14,6 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on 2004. 10. 12.
- */
 package com.zimbra.cs.store;
 
 import java.io.ByteArrayInputStream;
@@ -51,7 +47,7 @@ public abstract class StoreManager {
 	/**
 	 * Starts the blob store.
 	 */
-	public abstract void startup() throws IOException;
+	public abstract void startup() throws IOException, ServiceException;
 
 	/**
      * Shutdown the blob store.
