@@ -24,8 +24,10 @@ import java.util.Random;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -76,9 +78,12 @@ public class JMSession {
         props.setProperty("mail.smtp.port", getValue(server, domain, Provisioning.A_zimbraSmtpPort));
         props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
 
-        String timeout = getValue(server, domain, Provisioning.A_zimbraSmtpTimeout);
-        props.setProperty("mail.smtp.connectiontimeout", timeout);
-        props.setProperty("mail.smtp.timeout", timeout);
+        // Get timeout value in seconds from LDAP, convert to millis, and set on the session.
+        String sTimeout = getValue(server, domain, Provisioning.A_zimbraSmtpTimeout);
+        long timeout = (sTimeout == null ? 60 : Long.parseLong(sTimeout));
+        sTimeout = Long.toString(timeout * Constants.MILLIS_PER_SECOND);
+        props.setProperty("mail.smtp.connectiontimeout", sTimeout);
+        props.setProperty("mail.smtp.timeout", sTimeout);
         
         Boolean sendPartial = Boolean.parseBoolean(getValue(server, domain, Provisioning.A_zimbraSmtpSendPartial));
         props.setProperty("mail.smtp.sendpartial", sendPartial.toString());
