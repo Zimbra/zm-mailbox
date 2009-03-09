@@ -1804,7 +1804,7 @@
 
 	<target name="upgrade-domain-admin">
 		<echo>Upgrading domain admin</echo>
-        <java classname="com.zimbra.cs.account.ldap.upgrade.LdapUpgrade" fork="true" classpathref="class.path" failonerror="true" output="${output}">
+        <java classname="com.zimbra.cs.account.ldap.upgrade.LdapUpgrade" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-b 18277"/>
         </java>
 	</target>
