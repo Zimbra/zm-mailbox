@@ -1198,7 +1198,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="235" name="zimbraPrefTimeZoneId" type="string" max="256" cardinality="multi" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable">
-  <defaultCOSValue>(GMT-08.00) Pacific Time (US &amp; Canada)</defaultCOSValue>
+  <defaultCOSValue>America/Los_Angeles</defaultCOSValue>
   <desc>time zone of user or COS</desc>
 </attr>
 

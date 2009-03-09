@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -97,8 +98,12 @@ public class GetDomain extends AdminDocumentHandler {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
                     domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
-            } else if (value instanceof String)
+            } else if (value instanceof String) {
+                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
+                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
+                    value = TZIDMapper.canonicalize((String) value);
                 domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
+            }
         }
     }
     

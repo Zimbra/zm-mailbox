@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -90,11 +91,14 @@ public class GetCos extends AdminDocumentHandler {
                         attr.addAttribute(AdminConstants.A_C, "1");
                     attr.setText(sv[i]);
                 }
-            } else if (value instanceof String){
+            } else if (value instanceof String) {
                 Element attr = cos.addElement(AdminConstants.E_A);
                 attr.addAttribute(AdminConstants.A_N, name);
                 if (isCosAttr) 
                     attr.addAttribute(AdminConstants.A_C, "1");
+                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
+                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
+                    value = TZIDMapper.canonicalize((String) value);
                 attr.setText((String) value);
             }
         }

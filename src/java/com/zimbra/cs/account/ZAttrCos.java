@@ -41,7 +41,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090308-1449 */
+    /* build: 5.0 jhahm 20090309-1412 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -19077,7 +19077,7 @@ public class ZAttrCos extends NamedEntry {
      */
     @ZAttr(id=235)
     public String[] getPrefTimeZoneId() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraPrefTimeZoneId); return value.length > 0 ? value : new String[] {"(GMT-08.00) Pacific Time (US & Canada)"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraPrefTimeZoneId); return value.length > 0 ? value : new String[] {"America/Los_Angeles"};
     }
 
     /**
