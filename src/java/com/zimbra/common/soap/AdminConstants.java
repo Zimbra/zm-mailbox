@@ -378,6 +378,10 @@ public class AdminConstants {
     public static final QName CHECK_RIGHT_REQUEST = QName.get("CheckRightRequest", NAMESPACE);
     public static final QName CHECK_RIGHT_RESPONSE = QName.get("CheckRightResponse", NAMESPACE);
     
+    // Monitoring
+    public static final QName GET_SERVER_STATS_REQUEST = QName.get("GetServerStatsRequest", NAMESPACE);
+    public static final QName GET_SERVER_STATS_RESPONSE = QName.get("GetServerStatsResponse", NAMESPACE);
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -632,4 +636,7 @@ public class AdminConstants {
     public static final String A_TARGET_TYPE = "targetType";
     
     public static final String E_WAITSET = "waitSet";
+    
+    // Monitoring
+    public static final String E_STAT = "stat";
 }

@@ -20,21 +20,10 @@ package com.zimbra.common.stats;
 /**
  * A <code>Counter</code> that supports <code>start()</code>
  * and <code>stop()</code> methods for conveniently timing events.
- * By default, the count and average times are logged and the
- * total is not.
- * 
- * @author bburtin
  */
 public class StopWatch
 extends Counter {
     
-    public StopWatch(String name) {
-        super(name, "ms");
-        setShowCount(true);
-        setShowAverage(true);
-        setShowTotal(false);
-    }
-
     public long start() {
         return System.currentTimeMillis();
     }
