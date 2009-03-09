@@ -89,6 +89,7 @@ public class DavContext {
 	private boolean mResponseSent;
 	private DavResource mRequestedResource;
     private RequestType mRequestType;
+    private String mCollectionPath;
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
@@ -264,6 +265,13 @@ public class DavContext {
 		return null;
 	}
 
+	public String getCollectionPath() {
+		return mCollectionPath;
+	}
+	public void setCollectionPath(String collPath) {
+		mCollectionPath = collPath;
+	}
+	
 	/* Status is HTTP response code that is set by DAV methods in case of
 	 * exceptional conditions.
 	 */
