@@ -78,7 +78,7 @@ public class ZSearchResult implements ToZJSONObject {
             } else if (h.getName().equals(MailConstants.E_DOC)) {
                 mHits.add(new ZDocumentHit(h));
             } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {
-                mHits.add(new ZDocumentHit(h));
+                mHits.add(new ZWikiHit(h));
 	        } else if (h.getName().equals(VoiceConstants.E_VOICEMSG)) {
 	        	mHits.add(new ZVoiceMailItemHit(h));
 	        } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {

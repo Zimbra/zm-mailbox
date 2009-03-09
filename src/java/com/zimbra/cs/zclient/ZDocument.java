@@ -19,6 +19,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.soap.Element;
 import org.json.JSONException;
 
@@ -52,7 +53,11 @@ public class ZDocument implements ZItem, ToZJSONObject {
     	mModifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
     	mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mSize = e.getAttributeLong(MailConstants.A_SIZE,0);
-        mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
+        if(mIsWiki){
+            mContentType = Mime.CT_TEXT_HTML; //"text/html";
+        }else{
+            mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
+        }
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
     }
 
