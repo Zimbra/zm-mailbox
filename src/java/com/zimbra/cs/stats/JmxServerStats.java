@@ -17,17 +17,55 @@
 
 package com.zimbra.cs.stats;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import com.zimbra.common.stats.Accumulator;
+import com.zimbra.common.stats.DeltaCalculator;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.mailbox.MessageCache;
 
 public class JmxServerStats implements JmxServerStatsMBean {
 
-    public long getDatabaseConnectionGetsPerMinute() {
-        return ZimbraPerf.STOPWATCH_DB_CONN.getPreviousCount();
+    private DeltaCalculator mDbConn = new DeltaCalculator(ZimbraPerf.STOPWATCH_DB_CONN);
+    private DeltaCalculator mLdapConn = new DeltaCalculator(ZimbraPerf.STOPWATCH_LDAP_DC);
+    private DeltaCalculator mItemCache = new DeltaCalculator(ZimbraPerf.COUNTER_MBOX_ITEM_CACHE);
+    private DeltaCalculator mMailboxCache = new DeltaCalculator(ZimbraPerf.COUNTER_MBOX_CACHE);
+    private DeltaCalculator mMessageCache = new DeltaCalculator(ZimbraPerf.COUNTER_MBOX_MSG_CACHE);
+    
+    private DeltaCalculator mAddMessage = new DeltaCalculator(ZimbraPerf.STOPWATCH_MBOX_ADD_MSG);
+    private DeltaCalculator mImap = new DeltaCalculator(ZimbraPerf.STOPWATCH_IMAP);
+    private DeltaCalculator mPop = new DeltaCalculator(ZimbraPerf.STOPWATCH_POP);
+    private DeltaCalculator mSoap = new DeltaCalculator(ZimbraPerf.STOPWATCH_SOAP);
+    private DeltaCalculator mBisSeek = new DeltaCalculator(ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_SEEK_RATE); 
+    
+    private final List<Accumulator> mAccumulators;
+    
+    JmxServerStats() {
+        List<Accumulator> accumulators = new ArrayList<Accumulator>();
+        
+        accumulators.add(mDbConn);
+        accumulators.add(mLdapConn);
+        accumulators.add(mItemCache);
+        accumulators.add(mMailboxCache);
+        accumulators.add(mMessageCache);
+        
+        accumulators.add(mAddMessage);
+        accumulators.add(mImap);
+        accumulators.add(mPop);
+        accumulators.add(mSoap);
+        accumulators.add(mBisSeek);
+        
+        mAccumulators = Collections.unmodifiableList(accumulators);
+    }
+    
+    public long getDatabaseConnectionGets() {
+        return ZimbraPerf.STOPWATCH_DB_CONN.getCount();
     }
 
     public long getDatabaseConnectionGetMs() {
-        return (long) ZimbraPerf.STOPWATCH_DB_CONN.getAverage();
+        return (long) mDbConn.getRealtimeAverage();
     }
 
     public long getDatabaseConnectionsInUse() {
@@ -35,59 +73,59 @@ public class JmxServerStats implements JmxServerStatsMBean {
     }
 
     public long getLdapDirectoryContextGetMs() {
-        return (long) ZimbraPerf.STOPWATCH_LDAP_DC.getAverage();
+        return (long) mLdapConn.getRealtimeAverage();
     }
     
-    public long getLdapDirectoryContextGetsPerMinute() {
-        return ZimbraPerf.STOPWATCH_LDAP_DC.getPreviousCount();
+    public long getLdapDirectoryContextGets() {
+        return ZimbraPerf.STOPWATCH_LDAP_DC.getCount();
     }
 
-    public long getLmtpDeliveredBytesPerMinute() {
-        return ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.getPreviousTotal();
+    public long getLmtpDeliveredBytes() {
+        return ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.getTotal();
     }
 
-    public long getLmtpReceivedBytesPerMinute() {
-        return ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.getPreviousTotal();
+    public long getLmtpReceivedBytes() {
+        return ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.getTotal();
     }
 
-    public long getLmtpDeliveredMessagesPerMinute() {
-        return ZimbraPerf.COUNTER_LMTP_DLVD_MSGS.getPreviousTotal();
+    public long getLmtpDeliveredMessages() {
+        return ZimbraPerf.COUNTER_LMTP_DLVD_MSGS.getTotal();
     }
 
-    public long getLmtpReceivedMessagesPerMinute() {
-        return ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.getPreviousTotal();
+    public long getLmtpReceivedMessages() {
+        return ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.getTotal();
     }
 
-    public long getLmtpRecipientsPerMinute() {
-        return ZimbraPerf.COUNTER_LMTP_RCVD_RCPT.getPreviousTotal();
+    public long getLmtpRecipients() {
+        return ZimbraPerf.COUNTER_LMTP_RCVD_RCPT.getTotal();
     }
 
-    public long getImapRequestsPerMinute() {
-        return ZimbraPerf.STOPWATCH_IMAP.getPreviousCount();
+    public long getImapRequests() {
+        return ZimbraPerf.STOPWATCH_IMAP.getCount();
     }
 
     public long getItemCacheHitRate() {
-        return (long) ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.getAverage();
+        return (long) mItemCache.getRealtimeAverage();
     }
 
     public long getMailboxCacheHitRate() {
-        return (long) ZimbraPerf.COUNTER_MBOX_CACHE.getAverage();
+        return (long) mMailboxCache.getRealtimeAverage();
     }
 
     public long getMailboxCacheSize() {
         return ZimbraPerf.getMailboxCacheSize();
     }
 
-    public long getMailboxGetsPerMinute() {
-        return ZimbraPerf.STOPWATCH_MBOX_GET.getPreviousCount();
+    public long getMailboxGets() {
+        return ZimbraPerf.STOPWATCH_MBOX_GET.getCount();
     }
 
     public long getMailboxGetMs() {
-        return (long) ZimbraPerf.STOPWATCH_MBOX_GET.getAverage();
+        return (long) mMailboxCache.getRealtimeAverage();
     }
 
     public long getMessageAddMs() {
-        return (long) ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.getAverage();
+        return (long) mAddMessage.getRealtimeAverage();
     }
 
     public long getMessageCacheSize() {
@@ -95,38 +133,44 @@ public class JmxServerStats implements JmxServerStatsMBean {
     }
 
     public long getMessageCacheHitRate() {
-        return (long) ZimbraPerf.COUNTER_MBOX_MSG_CACHE.getAverage();
+        return (long) mMessageCache.getRealtimeAverage();
     }
 
-    public long getMessagesAddedPerMinute() {
-        return ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.getPreviousCount();
+    public long getMessagesAdded() {
+        return ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.getCount();
     }
 
-    public long getSoapRequestsPerMinute() {
-        return ZimbraPerf.STOPWATCH_SOAP.getPreviousCount();
+    public long getSoapRequests() {
+        return ZimbraPerf.STOPWATCH_SOAP.getCount();
     }
 
     public long getSoapResponseMs() {
-        return (long) ZimbraPerf.STOPWATCH_SOAP.getAverage();
+        return (long) mSoap.getRealtimeAverage();
     }
 
-    public long getBlobInputStreamReadsPerMinute() {
-        return ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_READ.getPreviousCount();
+    public long getBlobInputStreamReads() {
+        return ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_READ.getCount();
     }
 
     public long getBlobInputStreamSeekRate() {
-        return (long) ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.getAverage();
+        return (long) mBisSeek.getRealtimeAverage();
     }
 
     public long getImapResponseMs() {
-        return (long) ZimbraPerf.STOPWATCH_IMAP.getAverage();
+        return (long) mImap.getRealtimeAverage();
     }
 
-    public long getPopRequestsPerMinute() {
-        return ZimbraPerf.STOPWATCH_POP.getPreviousCount();
+    public long getPopRequests() {
+        return ZimbraPerf.STOPWATCH_POP.getCount();
     }
 
     public long getPopResponseMs() {
-        return (long) ZimbraPerf.STOPWATCH_POP.getAverage();
+        return (long) mPop.getRealtimeAverage();
+    }
+    
+    public void reset() {
+        for (Accumulator accum : mAccumulators) {
+            accum.reset();
+        }
     }
 }

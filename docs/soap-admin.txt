@@ -773,6 +773,19 @@ Notes:
   an empty attribute value removes the specified attr
 
 -----------------------------
+<GetServerStatsRequest>
+  <stat name="{stat-name}"/>*
+</GetServerStatsRequest>
+
+<GetServerStatsResponse>
+  <stat name="{stat-name}"/>{stat-value}</stat>+
+</GetServerStatsResponse>
+
+Returns server monitoring stats.  These are the same stats that are available
+over JMX in ZCS 6.0.  If no <stat> element is specified, all server stats
+are returned.  If the stat name is invalid, returns a SOAP fault.
+
+-----------------------------
 <GetServiceStatusRequest/>
 
 <GetServiceStatusResponse>

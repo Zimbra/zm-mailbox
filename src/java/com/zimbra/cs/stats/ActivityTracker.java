@@ -48,10 +48,7 @@ implements StatsDumperDataSource {
     private Counter getCounter(String commandName) {
         Counter counter = mCounterMap.get(commandName);
         if (counter == null) {
-            counter = new Counter(commandName, "ms");
-            counter.setShowAverage(true);
-            counter.setShowCount(true);
-            counter.setShowTotal(false);
+            counter = new Counter();
             
             Counter previousCounter = mCounterMap.putIfAbsent(commandName, counter);
             if (previousCounter != null) {

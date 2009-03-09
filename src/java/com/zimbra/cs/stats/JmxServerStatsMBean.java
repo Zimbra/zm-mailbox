@@ -19,31 +19,31 @@ package com.zimbra.cs.stats;
 
 public interface JmxServerStatsMBean
 {
-    long getBlobInputStreamReadsPerMinute();
+    long getBlobInputStreamReads();
     long getBlobInputStreamSeekRate();
-    long getDatabaseConnectionGetsPerMinute();
+    long getDatabaseConnectionGets();
     long getDatabaseConnectionGetMs();
     long getDatabaseConnectionsInUse();
-    long getImapRequestsPerMinute();
+    long getImapRequests();
     long getImapResponseMs();
     long getItemCacheHitRate();
     long getLdapDirectoryContextGetMs();
-    long getLdapDirectoryContextGetsPerMinute();
-    long getLmtpDeliveredBytesPerMinute();
-    long getLmtpDeliveredMessagesPerMinute();
-    long getLmtpReceivedBytesPerMinute();
-    long getLmtpReceivedMessagesPerMinute();
-    long getLmtpRecipientsPerMinute();
+    long getLdapDirectoryContextGets();
+    long getLmtpDeliveredBytes();
+    long getLmtpDeliveredMessages();
+    long getLmtpReceivedBytes();
+    long getLmtpReceivedMessages();
+    long getLmtpRecipients();
     long getMailboxCacheHitRate();
     long getMailboxCacheSize();
     long getMailboxGetMs();
-    long getMailboxGetsPerMinute();
+    long getMailboxGets();
     long getMessageAddMs();
     long getMessageCacheSize();
     long getMessageCacheHitRate();
-    long getMessagesAddedPerMinute();
-    long getPopRequestsPerMinute();
+    long getMessagesAdded();
+    long getPopRequests();
     long getPopResponseMs();
-    long getSoapRequestsPerMinute();
+    long getSoapRequests();
     long getSoapResponseMs();
 }

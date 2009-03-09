@@ -29,6 +29,7 @@ import javax.management.ObjectName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Accumulator;
 import com.zimbra.common.stats.Counter;
+import com.zimbra.common.stats.DeltaCalculator;
 import com.zimbra.common.stats.RealtimeStats;
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.common.stats.StatsDumper;
@@ -64,31 +65,31 @@ public class ZimbraPerf {
     // Accumulators.  To add a new accumulator, create a static instance here,
     // add it to the CORE_ACCUMULATORS array and if necessary, set options
     // in the static init code below.
-    public static final Counter COUNTER_LMTP_RCVD_MSGS = new Counter("lmtp_rcvd_msgs");
-    public static final Counter COUNTER_LMTP_RCVD_BYTES = new Counter("lmtp_rcvd_bytes");
-    public static final Counter COUNTER_LMTP_RCVD_RCPT = new Counter("lmtp_rcvd_rcpt");
-    public static final Counter COUNTER_LMTP_DLVD_MSGS = new Counter("lmtp_dlvd_msgs");
-    public static final Counter COUNTER_LMTP_DLVD_BYTES = new Counter("lmtp_dlvd_bytes");
-    public static final StopWatch STOPWATCH_DB_CONN = new StopWatch("db_conn");
-    public static final StopWatch STOPWATCH_LDAP_DC = new StopWatch("ldap_dc");
-    public static final StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
-    public static final StopWatch STOPWATCH_MBOX_GET = new StopWatch("mbox_get");         // Mailbox accessor response time
-    public static final Counter COUNTER_MBOX_CACHE = new Counter("mbox_cache");           // Mailbox cache hit rate
-    public static final Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
-    public static final Counter COUNTER_MBOX_ITEM_CACHE = new Counter("mbox_item_cache");
-    public static final StopWatch STOPWATCH_SOAP = new StopWatch("soap");
-    public static final StopWatch STOPWATCH_IMAP = new StopWatch("imap");
-    public static final StopWatch STOPWATCH_POP = new StopWatch("pop");
-    public static final Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
-    public static final Counter COUNTER_IDX_WRT_OPENED = new Counter("idx_wrt_opened");
-    public static final Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
-    public static final Counter COUNTER_CALENDAR_CACHE_HIT = new Counter("calcache_hit");
-    public static final Counter COUNTER_CALENDAR_CACHE_MEM_HIT = new Counter("calcache_mem_hit");
-    public static final Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter("calcache_lru_size");
-    public static final Counter COUNTER_IDX_BYTES_WRITTEN = new Counter("idx_bytes_written");
-    public static final Counter COUNTER_IDX_BYTES_READ = new Counter("idx_bytes_read");
-    public static final Counter COUNTER_BLOB_INPUT_STREAM_READ = new Counter("bis_read");
-    public static final Counter COUNTER_BLOB_INPUT_STREAM_SEEK_RATE = new Counter("bis_seek_rate");
+    public static final Counter COUNTER_LMTP_RCVD_MSGS = new Counter();
+    public static final Counter COUNTER_LMTP_RCVD_BYTES = new Counter();
+    public static final Counter COUNTER_LMTP_RCVD_RCPT = new Counter();
+    public static final Counter COUNTER_LMTP_DLVD_MSGS = new Counter();
+    public static final Counter COUNTER_LMTP_DLVD_BYTES = new Counter();
+    public static final StopWatch STOPWATCH_DB_CONN = new StopWatch();
+    public static final StopWatch STOPWATCH_LDAP_DC = new StopWatch();
+    public static final StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch();
+    public static final StopWatch STOPWATCH_MBOX_GET = new StopWatch();         // Mailbox accessor response time
+    public static final Counter COUNTER_MBOX_CACHE = new Counter();           // Mailbox cache hit rate
+    public static final Counter COUNTER_MBOX_MSG_CACHE = new Counter(); 
+    public static final Counter COUNTER_MBOX_ITEM_CACHE = new Counter();
+    public static final StopWatch STOPWATCH_SOAP = new StopWatch();
+    public static final StopWatch STOPWATCH_IMAP = new StopWatch();
+    public static final StopWatch STOPWATCH_POP = new StopWatch();
+    public static final Counter COUNTER_IDX_WRT = new Counter();
+    public static final Counter COUNTER_IDX_WRT_OPENED = new Counter();
+    public static final Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter();
+    public static final Counter COUNTER_CALENDAR_CACHE_HIT = new Counter();
+    public static final Counter COUNTER_CALENDAR_CACHE_MEM_HIT = new Counter();
+    public static final Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter();
+    public static final Counter COUNTER_IDX_BYTES_WRITTEN = new Counter();
+    public static final Counter COUNTER_IDX_BYTES_READ = new Counter();
+    public static final Counter COUNTER_BLOB_INPUT_STREAM_READ = new Counter();
+    public static final Counter COUNTER_BLOB_INPUT_STREAM_SEEK_RATE = new Counter();
     
     public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
@@ -96,6 +97,7 @@ public class ZimbraPerf {
     
     private static int sMailboxCacheSize;
     private static long sMailboxCacheSizeTimestamp = 0;
+    private static JmxServerStats sJmxServerStats;
     
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
@@ -107,23 +109,31 @@ public class ZimbraPerf {
     private static CopyOnWriteArrayList<Accumulator> sAccumulators = 
         new CopyOnWriteArrayList<Accumulator>(
                     new Accumulator[] {
-                        COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
-                        COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
-                        STOPWATCH_DB_CONN,
-                        STOPWATCH_LDAP_DC,
-                        STOPWATCH_MBOX_ADD_MSG, STOPWATCH_MBOX_GET, COUNTER_MBOX_CACHE,
-                        COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
-                        STOPWATCH_SOAP,
-                        STOPWATCH_IMAP,
-                        STOPWATCH_POP,
-                        COUNTER_IDX_WRT,
-                        COUNTER_IDX_WRT_OPENED,
-                        COUNTER_IDX_WRT_OPENED_CACHE_HIT,
-                        COUNTER_CALENDAR_CACHE_HIT, COUNTER_CALENDAR_CACHE_MEM_HIT, 
-                        COUNTER_CALENDAR_CACHE_LRU_SIZE,
-                        COUNTER_IDX_BYTES_WRITTEN,
-                        COUNTER_IDX_BYTES_READ,
-                        COUNTER_BLOB_INPUT_STREAM_READ, COUNTER_BLOB_INPUT_STREAM_SEEK_RATE,
+                        new DeltaCalculator(COUNTER_LMTP_RCVD_MSGS).setTotalName("lmtp_rcvd_msgs"),
+                        new DeltaCalculator(COUNTER_LMTP_RCVD_BYTES).setTotalName("lmtp_rcvd_bytes"),
+                        new DeltaCalculator(COUNTER_LMTP_RCVD_RCPT).setTotalName("lmtp_rcvd_rcpt"),
+                        new DeltaCalculator(COUNTER_LMTP_DLVD_MSGS).setTotalName("lmtp_dlvd_msgs"),
+                        new DeltaCalculator(COUNTER_LMTP_DLVD_BYTES).setTotalName("lmtp_dlvd_bytes"),
+                        new DeltaCalculator(STOPWATCH_DB_CONN).setCountName("db_conn_count").setAverageName("db_conn_ms_avg"),
+                        new DeltaCalculator(STOPWATCH_LDAP_DC).setCountName("ldap_dc_count").setAverageName("ldap_dc_ms_avg"),
+                        new DeltaCalculator(STOPWATCH_MBOX_ADD_MSG).setCountName("mbox_add_msg_count").setAverageName("mbox_add_msg_ms_avg"),
+                        new DeltaCalculator(STOPWATCH_MBOX_GET).setCountName("mbox_get_count").setAverageName("mbox_get_ms_avg"),
+                        new DeltaCalculator(COUNTER_MBOX_CACHE).setAverageName("mbox_cache"),
+                        new DeltaCalculator(COUNTER_MBOX_MSG_CACHE).setAverageName("mbox_msg_cache"),
+                        new DeltaCalculator(COUNTER_MBOX_ITEM_CACHE).setAverageName("mbox_item_cache"),
+                        new DeltaCalculator(STOPWATCH_SOAP).setCountName("soap_count").setAverageName("soap_ms_avg"),
+                        new DeltaCalculator(STOPWATCH_IMAP).setCountName("imap_count").setAverageName("imap_ms_avg"),
+                        new DeltaCalculator(STOPWATCH_POP).setCountName("pop_count").setAverageName("pop_ms_avg"),
+                        new DeltaCalculator(COUNTER_IDX_WRT).setAverageName("idx_wrt_avg"),
+                        new DeltaCalculator(COUNTER_IDX_WRT_OPENED).setTotalName("idx_wrt_opened"),
+                        new DeltaCalculator(COUNTER_IDX_WRT_OPENED_CACHE_HIT).setTotalName("idx_wrt_opened_cache_hit"),
+                        new DeltaCalculator(COUNTER_CALENDAR_CACHE_HIT).setAverageName("calcache_hit"),
+                        new DeltaCalculator(COUNTER_CALENDAR_CACHE_MEM_HIT).setAverageName("calcache_mem_hit"),
+                        new DeltaCalculator(COUNTER_CALENDAR_CACHE_LRU_SIZE).setAverageName("calcache_lru_size"),
+                        new DeltaCalculator(COUNTER_IDX_BYTES_WRITTEN).setTotalName("idx_bytes_written").setAverageName("idx_bytes_written_avg"),
+                        new DeltaCalculator(COUNTER_IDX_BYTES_READ).setTotalName("idx_bytes_read").setAverageName("idx_bytes_read_avg"),
+                        new DeltaCalculator(COUNTER_BLOB_INPUT_STREAM_READ).setTotalName("bis_read"),
+                        new DeltaCalculator(COUNTER_BLOB_INPUT_STREAM_SEEK_RATE).setAverageName("bis_seek_rate"),
                         sRealtimeStats
                     }
         );
@@ -146,6 +156,10 @@ public class ZimbraPerf {
         if (sIsInitialized)
             throw new IllegalStateException("Cannot add stat name after ZimbraPerf.initialize() is called");
         sAccumulators.add(toAdd);
+    }
+    
+    public static JmxServerStatsMBean getMonitoringStats() {
+        return sJmxServerStats;
     }
     
     /**
@@ -181,54 +195,6 @@ public class ZimbraPerf {
         
         addStatsCallback(new ServerStatsCallback());
         
-        // Only the average is interesting for these counters
-        COUNTER_MBOX_CACHE.setShowAverage(true);
-        COUNTER_MBOX_CACHE.setAverageName("mbox_cache");
-        COUNTER_MBOX_CACHE.setShowCount(false);
-        COUNTER_MBOX_CACHE.setShowTotal(false);
-        
-        COUNTER_MBOX_MSG_CACHE.setShowAverage(true);
-        COUNTER_MBOX_MSG_CACHE.setAverageName("mbox_msg_cache");
-        COUNTER_MBOX_MSG_CACHE.setShowCount(false);
-        COUNTER_MBOX_MSG_CACHE.setShowTotal(false);
-        
-        COUNTER_MBOX_ITEM_CACHE.setShowAverage(true);
-        COUNTER_MBOX_ITEM_CACHE.setAverageName("mbox_item_cache");
-        COUNTER_MBOX_ITEM_CACHE.setShowCount(false);
-        COUNTER_MBOX_ITEM_CACHE.setShowTotal(false);
-
-        COUNTER_CALENDAR_CACHE_HIT.setShowAverage(true);
-        COUNTER_CALENDAR_CACHE_HIT.setAverageName("calcache_hit");
-        COUNTER_CALENDAR_CACHE_HIT.setShowCount(false);
-        COUNTER_CALENDAR_CACHE_HIT.setShowTotal(false);
-
-        COUNTER_CALENDAR_CACHE_MEM_HIT.setShowAverage(true);
-        COUNTER_CALENDAR_CACHE_MEM_HIT.setAverageName("calcache_mem_hit");
-        COUNTER_CALENDAR_CACHE_MEM_HIT.setShowCount(false);
-        COUNTER_CALENDAR_CACHE_MEM_HIT.setShowTotal(false);
-
-        COUNTER_CALENDAR_CACHE_LRU_SIZE.setShowAverage(true);
-        COUNTER_CALENDAR_CACHE_LRU_SIZE.setAverageName("calcache_lru_size");
-        COUNTER_CALENDAR_CACHE_LRU_SIZE.setShowCount(false);
-        COUNTER_CALENDAR_CACHE_LRU_SIZE.setShowTotal(false);
-
-        COUNTER_IDX_WRT.setShowAverage(true);
-        COUNTER_IDX_WRT.setShowCount(false);
-        COUNTER_IDX_WRT.setShowTotal(false);
-        
-        COUNTER_IDX_BYTES_WRITTEN.setShowAverage(true);
-        COUNTER_IDX_BYTES_WRITTEN.setShowCount(false);
-        COUNTER_IDX_BYTES_WRITTEN.setShowTotal(true);
-
-        COUNTER_IDX_BYTES_READ.setShowAverage(true);
-        COUNTER_IDX_BYTES_READ.setShowCount(false);
-        COUNTER_IDX_BYTES_READ.setShowTotal(true);
-        
-        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowAverage(true);
-        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setAverageName("bis_seek_rate");
-        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowCount(false);
-        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowTotal(false);
-        
         StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
 
         StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
@@ -240,9 +206,9 @@ public class ZimbraPerf {
         
         // Initialize JMX
         MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
-        JmxServerStats jmxServerStats = new JmxServerStats();
+        sJmxServerStats = new JmxServerStats();
         try {
-            jmxServer.registerMBean(jmxServerStats, new ObjectName("ZimbraCollaborationSuite:type=ServerStats"));
+            jmxServer.registerMBean(sJmxServerStats, new ObjectName("ZimbraCollaborationSuite:type=ServerStats"));
         } catch (Exception e) {
             ZimbraLog.perf.warn("Unable to register JMX interface.", e);
         }
@@ -308,6 +274,10 @@ public class ZimbraPerf {
             String line = StringUtil.join(",", data);
             List<String> retVal = new ArrayList<String>(1);
             retVal.add(line);
+            
+            // Piggyback off timer to reset realtime stats.
+            sJmxServerStats.reset();
+            
             return retVal;
         }
 
