@@ -147,6 +147,11 @@ public class RawAuth implements Auth {
         if (rc == 200 && error == null) {
             return res;
         }
+        if (rc == 999) {
+            // Yahoo service temporarily unavailable (error code text not included)
+            throw new AuthenticationException(
+                ErrorCode.TEMP_ERROR, "Unable to process request at this time");
+        }
         ErrorCode code = error != null ?
             ErrorCode.get(error) : ErrorCode.GENERIC_ERROR;
         String description = res.getField(ERROR_DESCRIPTION);
