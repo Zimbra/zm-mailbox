@@ -42,7 +42,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090309-1412 */
+    /* build: 5.0 pshao 20090309-1526 */
 
     /**
      * RFC2256: descriptive information
@@ -10771,8 +10771,8 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 6.0.0
      */
     @ZAttr(id=825)
-    public int getMailUncompressedCacheMaxBytes() {
-        return getIntAttr(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, 1073741824);
+    public long getMailUncompressedCacheMaxBytes() {
+        return getLongAttr(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, 1073741824L);
     }
 
     /**
@@ -10784,9 +10784,9 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 6.0.0
      */
     @ZAttr(id=825)
-    public void setMailUncompressedCacheMaxBytes(int zimbraMailUncompressedCacheMaxBytes) throws com.zimbra.common.service.ServiceException {
+    public void setMailUncompressedCacheMaxBytes(long zimbraMailUncompressedCacheMaxBytes) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, Integer.toString(zimbraMailUncompressedCacheMaxBytes));
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, Long.toString(zimbraMailUncompressedCacheMaxBytes));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -10800,9 +10800,9 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 6.0.0
      */
     @ZAttr(id=825)
-    public Map<String,Object> setMailUncompressedCacheMaxBytes(int zimbraMailUncompressedCacheMaxBytes, Map<String,Object> attrs) {
+    public Map<String,Object> setMailUncompressedCacheMaxBytes(long zimbraMailUncompressedCacheMaxBytes, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, Integer.toString(zimbraMailUncompressedCacheMaxBytes));
+        attrs.put(Provisioning.A_zimbraMailUncompressedCacheMaxBytes, Long.toString(zimbraMailUncompressedCacheMaxBytes));
         return attrs;
     }
 
