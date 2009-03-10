@@ -26,7 +26,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090223-2014 */
+    /* build: 5.0 pshao 20090310-0049 */
 
 
     /*
@@ -317,6 +317,11 @@ public class RightConsts {
      * domain admin rights
      */
     public static final String RT_domainAdminRights = "domainAdminRights";
+
+    /**
+     * domain admin server right
+     */
+    public static final String RT_domainAdminServerRights = "domainAdminServerRights";
 
     /**
      * domain admin zimlet right

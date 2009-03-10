@@ -144,9 +144,7 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         Cos cos = prov.get(CosBy.id, newCosId);
         if (cos == null) {
-            // will just use the default cos, let it through
-            ZimbraLog.account.warn("no such cos " + newCosId + ", will use system default COS");
-            return;  // or should we throw?
+            throw AccountServiceException.NO_SUCH_COS(newCosId);
         }
         
         // call checkRight instead of checkCosRight, because:
@@ -205,9 +203,6 @@ public class ModifyAccount extends AdminDocumentHandler {
                 "If setting " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 
                 " right on the cos." + 
                 "If removing " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 
-                " right on the domain default cos. (in domain attribute " + Provisioning.A_zimbraDomainDefaultCOSId +")." +
-                "If there is no such cos (either specified by the new cos id value or from the domain default cos id value, " +
-                "will fallback to use the system default cos, and ACL is not check, because the system default cos " +
-                "is available to all.");
+                " right on the domain default cos. (in domain attribute " + Provisioning.A_zimbraDomainDefaultCOSId +").");
     }
 }

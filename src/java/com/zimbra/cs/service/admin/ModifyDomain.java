@@ -93,7 +93,7 @@ public class ModifyDomain extends AdminDocumentHandler {
 
         Cos cos = prov.get(CosBy.id, newDomainCosId);
         if (cos == null) {
-            throw AccountServiceException.NO_SUCH_COS("newDomainCosId");
+            throw AccountServiceException.NO_SUCH_COS(newDomainCosId);
         }
         
         // call checkRight instead of checkCosRight, because:

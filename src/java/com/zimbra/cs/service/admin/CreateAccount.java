@@ -25,7 +25,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -59,7 +62,8 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    checkDomainRightByEmail(zsc, name, Admin.R_createAccount);
 	    checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
-
+	    checkCos(zsc, attrs);
+        
 	    Account account = prov.createAccount(name, password, attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -72,9 +76,32 @@ public class CreateAccount extends AdminDocumentHandler {
 	    return response;
 	}
 	
+	private void checkCos(ZimbraSoapContext zsc, Map<String, Object> attrs) throws ServiceException {
+        String cosId = ModifyAccount.getStringAttrNewValue(Provisioning.A_zimbraCOSId, attrs);
+        if (cosId == null)
+            return;  // not setting it
+        
+        Provisioning prov = Provisioning.getInstance();
+
+        Cos cos = prov.get(CosBy.id, cosId);
+        if (cos == null) {
+            throw AccountServiceException.NO_SUCH_COS(cosId);
+        }
+        
+        // call checkRight instead of checkCosRight, because:
+        // 1. no domain based access manager backward compatibility issue
+        // 2. we only want to check right if we are using pure ACL based access manager. 
+        checkRight(zsc, cos, Admin.R_assignCos);
+    }
+	
     @Override
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_createAccount);
+        
         notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
+        
+        notes.add("Notes on " + Provisioning.A_zimbraCOSId + ": " +
+                "If setting " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 
+                " right on the cos.");
     }
 }

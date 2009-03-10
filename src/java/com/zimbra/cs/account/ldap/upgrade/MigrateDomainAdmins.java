@@ -215,6 +215,10 @@ public class MigrateDomainAdmins extends LdapUpgrade {
             mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
                     RightConsts.RT_getCos, null);
+            
+            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
+                    GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
+                    RightConsts.RT_assignCos, null);
         }
         
     }

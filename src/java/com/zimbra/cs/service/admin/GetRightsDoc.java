@@ -110,12 +110,16 @@ public class GetRightsDoc extends AdminDocumentHandler {
     }
 
     private void genDomainAdminRights(Map<String, Object> context, Element response) throws ServiceException {
+        Element eDomainAdmin = response.addElement("domainAdmin-copypaste-to-zimbra-rights-domainadmin-xml-template");
+        
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         DocumentDispatcher dispatcher = engine.getDocumentDispatcher();
         
         Map<QName, DocumentHandler> handlers = dispatcher.getHandlers();
         
-        Map<TargetType, TreeSet<String>> rights = new HashMap<TargetType, TreeSet<String>>();
+        // keys are sorted by targetType
+        // values are sets sorted by attr name
+        Map<TargetType, TreeSet<String>> rights = new TreeMap<TargetType, TreeSet<String>>();
         for (TargetType tt : TargetType.values())
             rights.put(tt, new TreeSet<String>());
         
@@ -149,12 +153,11 @@ public class GetRightsDoc extends AdminDocumentHandler {
             }
         }
 
-        
         for (Map.Entry<TargetType, TreeSet<String>> entry : rights.entrySet()) {
             TargetType tt = entry.getKey();
             
             if (entry.getValue().size() > 0) {
-                Element eRight = response.addElement("right").addAttribute("name", "domainAdmin"+tt.getPrettyName()+"Rights").addAttribute("type", "combo");
+                Element eRight = eDomainAdmin.addElement("right").addAttribute("name", "domainAdmin"+tt.getPrettyName()+"Rights").addAttribute("type", "combo");
                 eRight.addElement("desc").setText("domain admin " + tt.getCode()+ " right");
                 Element eRights = eRight.addElement("rights");
                 for (String r : entry.getValue()) {

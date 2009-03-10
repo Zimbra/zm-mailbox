@@ -32,7 +32,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090223-2014 */
+    /* build: 5.0 pshao 20090310-0049 */
 
 
     public static AdminRight R_accessGAL;
@@ -84,6 +84,7 @@ public class AdminRights {
     public static AdminRight R_domainAdminDistributionListRights;
     public static AdminRight R_domainAdminDomainRights;
     public static AdminRight R_domainAdminRights;
+    public static AdminRight R_domainAdminServerRights;
     public static AdminRight R_domainAdminZimletRights;
     public static AdminRight R_flushCache;
     public static AdminRight R_getAccount;
@@ -203,6 +204,7 @@ public class AdminRights {
         R_domainAdminDistributionListRights    = rm.getAdminRight(Right.RT_domainAdminDistributionListRights);
         R_domainAdminDomainRights              = rm.getAdminRight(Right.RT_domainAdminDomainRights);
         R_domainAdminRights                    = rm.getAdminRight(Right.RT_domainAdminRights);
+        R_domainAdminServerRights              = rm.getAdminRight(Right.RT_domainAdminServerRights);
         R_domainAdminZimletRights              = rm.getAdminRight(Right.RT_domainAdminZimletRights);
         R_flushCache                           = rm.getAdminRight(Right.RT_flushCache);
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
