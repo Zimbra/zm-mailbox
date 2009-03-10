@@ -148,29 +148,24 @@ public class PreAuthServlet extends ZimbraServlet {
                     if (!ok)
                         throw ServiceException.PERM_DENIED("not an admin account");
                 }
-
-                Map<String, Object> authCtxt = new HashMap<String, Object>();
-                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, getRemoteIp(req));
-                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
-                prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, admin, authCtxt);
-            
-                AuthToken at;
-
-                if (admin) {
-                    at = (expires ==  0) ? AuthProvider.getAuthToken(acct, admin) : AuthProvider.getAuthToken(acct, expires, admin, null);
-                } else {
-                    at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
-                }
-
-                try {
-                    rawAuthToken = at.getEncoded();
-                    if (admin || !needReferral(acct, referMode)) {
-                        setCookieAndRedirect(req, resp, at);
+                
+                if (admin || !needReferral(acct, referMode)) {
+                    Map<String, Object> authCtxt = new HashMap<String, Object>();
+                    authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, getRemoteIp(req));
+                    authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
+                    prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, admin, authCtxt);
+                
+                    AuthToken at;
+    
+                    if (admin) {
+                        at = (expires ==  0) ? AuthProvider.getAuthToken(acct, admin) : AuthProvider.getAuthToken(acct, expires, admin, null);
                     } else {
-                        redirectToCorrectServer(req, resp, acct, rawAuthToken);
+                        at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
                     }
-                } catch (AuthTokenException e) {
-                    throw  ServiceException.FAILURE("unable to encode auth token", e);
+                    setCookieAndRedirect(req, resp, at);
+                    
+                } else {
+                    redirectToCorrectServer(req, resp, acct);
                 }
             }
         } catch (ServiceException e) {
@@ -185,11 +180,14 @@ public class PreAuthServlet extends ZimbraServlet {
                 (Provisioning.MAIL_REFER_MODE_WRONGHOST.equals(referMode) && !Provisioning.onLocalServer(acct)));
     }
 
-    private void addNonPreAuthParams(HttpServletRequest req, StringBuilder sb, boolean first) {
+    private void addQueryParams(HttpServletRequest req, StringBuilder sb, boolean first, boolean nonPreAuthParamsOnly) {
         Enumeration names = req.getParameterNames();
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement();
-            if (sPreAuthParams.contains(name)) continue;
+            
+            if (nonPreAuthParamsOnly && sPreAuthParams.contains(name)) 
+                continue;
+            
             String values[] = req.getParameterValues(name);
             if (values != null) {
                 for (String value : values) {
@@ -209,13 +207,37 @@ public class PreAuthServlet extends ZimbraServlet {
         }
     }
     
+    /* 
+     * As a fix for bug 35088, the preauth handler(servlet) will no longer send the authtoken 
+     * over when it needs to redirect to the correct server, it now send the original 
+     * preauth params insteads. 
+     * 
+     * Although we no longer pass authtoken, some existing customers might be using it 
+     * as a way to inject an authtoken from a URL into a cookie so we might need to leave it. 
+     *
+     * This method is for the case when authtoken came in to the preauth servlet in the query param.
+     */
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
         Provisioning prov = Provisioning.getInstance();        
         sb.append(URLUtil.getServiceURL(prov.getServer(acct), req.getRequestURI(), true));
         sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
         sb.append('&').append(PARAM_AUTHTOKEN).append('=').append(token);
-        addNonPreAuthParams(req, sb, false);
+        addQueryParams(req, sb, false, true);
+        resp.sendRedirect(sb.toString());
+    }
+    
+    /*
+     * bug: 35088
+     * redirect to correct server with all the preauth parameters, validating of the preauth will happen 
+     * on the home server
+     */
+    private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct) throws ServiceException, IOException {
+        StringBuilder sb = new StringBuilder();
+        Provisioning prov = Provisioning.getInstance();        
+        sb.append(URLUtil.getServiceURL(prov.getServer(acct), req.getRequestURI(), true));
+        sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
+        addQueryParams(req, sb, false, false);
         resp.sendRedirect(sb.toString());
     }
 
@@ -232,7 +254,7 @@ public class PreAuthServlet extends ZimbraServlet {
             resp.sendRedirect(redirectURL);
         } else {
             StringBuilder sb = new StringBuilder();
-            addNonPreAuthParams(req, sb, true);
+            addQueryParams(req, sb, true, true);
             Provisioning prov = Provisioning.getInstance();
             Server server = prov.getLocalServer();
             String redirectUrl;
