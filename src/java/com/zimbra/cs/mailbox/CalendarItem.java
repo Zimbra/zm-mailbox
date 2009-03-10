@@ -131,10 +131,10 @@ public abstract class CalendarItem extends MailItem {
     public static class CalendarMetadata {
     	public int itemId;
     	public String uid;
-    	public String mod_metadata;
+    	public int mod_metadata;
     	public int mod_content;
     	
-    	public CalendarMetadata(int itemId, String uid, String mod_metadata, int mod_content) {
+    	public CalendarMetadata(int itemId, String uid, int mod_metadata, int mod_content) {
     		this.itemId = itemId;
     		this.uid = uid;
     		this.mod_metadata = mod_metadata;

@@ -92,7 +92,7 @@ public interface CalendarObject {
     		super(CalendarPath.generate(null, path, data.uid, -1), owner);
     		mId = data.itemId;
     		mUid = data.uid;
-    		mEtag = MailItemResource.getEtag(data.mod_metadata, Integer.toString(data.mod_content));
+    		mEtag = MailItemResource.getEtag(Integer.toString(data.mod_metadata), Integer.toString(data.mod_content));
     		setProperty(DavElements.P_GETETAG, mEtag);
     	}
         public String getUid() {

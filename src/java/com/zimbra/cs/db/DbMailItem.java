@@ -3019,7 +3019,7 @@ public class DbMailItem {
             String typeConstraint = " AND type = 11";
             stmt = conn.prepareStatement("SELECT mi.id, ci.uid, mi.mod_metadata, mi.mod_content" + 
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
-                        " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ? ") + 
+                        " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ? ") + " AND mi.id = ci.item_id" +
                         startConstraint + endConstraint + folderConstraint + typeConstraint);
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
@@ -3035,7 +3035,7 @@ public class DbMailItem {
             	result.add(new CalendarItem.CalendarMetadata(
             			rs.getInt(1),
             			rs.getString(2),
-            			rs.getString(3),
+            			rs.getInt(3),
             			rs.getInt(4)));
             }
         } catch (SQLException e) {
