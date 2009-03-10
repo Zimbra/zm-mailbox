@@ -29,11 +29,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.TaskScheduler;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -158,8 +158,25 @@ implements Callable<Void> {
         writer.write(buf.toString());
         writer.close();
         for (String line : lines) {
-            ZimbraLog.slogger.info(mDataSource.getFilename() +
-                    ": " + header + ":: " + timestamp + "," + line);
+            String logLine = mDataSource.getFilename() + ": " +
+                    (mDataSource.hasTimestampColumn() ? "timestamp," : "") +
+                    header + ":: " + timestamp + "," + line;
+            if (logLine.length() < 900) {
+                ZimbraLog.slogger.info(logLine);
+            } else {
+                StringBuilder b = new StringBuilder(logLine);
+                String lastUuid = null;
+                do {
+                    String sub = b.substring(0, 900);
+                    b.delete(0, 900);
+                    if (lastUuid != null) {
+                        sub = ":::" + lastUuid + ":::" + sub;
+                    }
+                    lastUuid = UUID.randomUUID().toString();
+                    ZimbraLog.slogger.info(sub + ":::" + lastUuid + ":::");
+                } while (b.length() > 900);
+                ZimbraLog.slogger.info(":::" + lastUuid + ":::" + b.toString());
+            }
         }
         return null;
     }

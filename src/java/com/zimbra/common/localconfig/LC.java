@@ -244,6 +244,7 @@ public class LC {
 
     public static final KnownKey derby_properties;
 
+    public final static KnownKey logger_data_directory;
     public static final KnownKey logger_mysql_directory;
     public static final KnownKey logger_mysql_data_directory;
     public static final KnownKey logger_mysql_socket;
@@ -896,6 +897,9 @@ public class LC {
         zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
         zimbra_logger_mysql_password.setDefault("zimbra");
         zimbra_logger_mysql_password.setForceToEdit(true);
+
+        logger_data_directory = new KnownKey("logger_data_directory");
+        logger_data_directory.setDefault("${zimbra_home}" + FS + "logger");
 
         logger_mysql_directory = new KnownKey("logger_mysql_directory");
         logger_mysql_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "mysql");
