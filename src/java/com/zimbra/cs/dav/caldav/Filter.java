@@ -105,6 +105,25 @@ public abstract class Filter {
 			matched &= tm.match(text);
 		return matched;
 	}
+	
+	public TimeRange getTimeRange() {
+		if (mTimeRange != null)
+			return mTimeRange;
+		
+		for (Filter f : mComps) {
+			TimeRange tr = f.getTimeRange();
+			if (tr != null)
+				return tr;
+		}
+		for (Filter f : mProps) {
+			TimeRange tr = f.getTimeRange();
+			if (tr != null)
+				return tr;
+		}
+			
+		return null;
+	}
+	
 	protected boolean canHaveCompFilter()  { return true; }
 	protected boolean canHavePropFilter()  { return true; }
 	protected boolean canHaveParamFilter() { return true; }
@@ -205,10 +224,6 @@ public abstract class Filter {
 		}
 		
 		protected boolean canHaveParamFilter() { return false; }
-		
-		public TimeRange getTimeRange() {
-			return mTimeRange;
-		}
 		
 		public Collection<PropFilter> getPropFilters() {
 			return mProps;
