@@ -49,9 +49,7 @@ public class GetConfig extends AdminDocumentHandler {
 
         Config config = prov.getConfig();
         
-        Set<String> attrsNeeded = new HashSet<String>();
-        attrsNeeded.add(name);
-        checkRight(zsc, context, config, attrsNeeded);
+        checkRight(zsc, context, config, needGetAttrsRight(name));
         
         String value[] = config.getMultiAttr(name);
 
@@ -60,7 +58,7 @@ public class GetConfig extends AdminDocumentHandler {
 
         return response;
 	}
-
+	
 	public static void doConfig(Element e, String name, String[] value) {
         if (value == null)
             return;
@@ -72,6 +70,12 @@ public class GetConfig extends AdminDocumentHandler {
         if (value == null)
             return;
         e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value);
+    }
+	
+    private Set<String> needGetAttrsRight(String attrName) {
+        Set<String> attrsNeeded = new HashSet<String>();
+        attrsNeeded.add(attrName);
+        return attrsNeeded;
     }
 	
     @Override

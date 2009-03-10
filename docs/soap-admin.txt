@@ -127,7 +127,9 @@ Access: domain admin sufficient
 </GetAccountMembershipRequest>  
 
 <GetAccountMembershipResponse>
-    <dl name="{name}" id="{id}"  via="{via-dl-name}" />+
+    <dl name="{name}" id="{id}"  via="{via-dl-name}">
+      <a n="zimbraIsAdminGroup">...</a>+
+    </dl>+
 </GetAccountMembershipResponse>    
 
 {via-dl-name} = is present if the account is a member of the returned list because they are either a direct

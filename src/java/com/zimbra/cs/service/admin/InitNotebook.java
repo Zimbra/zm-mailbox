@@ -74,7 +74,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	if (domain == null)
         		throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-        	checkDomainRight(zsc, domain, getConfigureWikiAccountAttrs(username));
+        	checkDomainRight(zsc, domain, needGetAttrsRightConfigureWikiAccount(username));
 
         	// initialize domain wiki
         	createWikiAccount(zsc, username, password, domain);
@@ -84,7 +84,7 @@ public class InitNotebook extends AdminDocumentHandler {
          	// initialize global wiki
             Config config = prov.getConfig();
             
-            checkRight(zsc, context, config, getConfigureWikiAccountAttrs(username));
+            checkRight(zsc, context, config, needGetAttrsRightConfigureWikiAccount(username));
             
         	createWikiAccount(zsc, username, password, config);
         	wiki = WikiUtil.getInstance();
@@ -107,7 +107,7 @@ public class InitNotebook extends AdminDocumentHandler {
     		username = entry.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 
     	if (username != null && prov.get(AccountBy.name, username) == null) {
-    	    Map<String,Object> attrs = getCreateWikiAccountAttrs();
+    	    Map<String,Object> attrs = needGetAttrsRightCreateWikiAccount();
     	    
     	    checkDomainRightByEmail(zsc, username, Admin.R_createAccount);
             checkSetAttrsOnCreate(zsc, TargetType.account, username, attrs);
@@ -116,14 +116,14 @@ public class InitNotebook extends AdminDocumentHandler {
     	}
 	}
 	
-	private Map<String, Object> getCreateWikiAccountAttrs() {
+	private Map<String, Object> needGetAttrsRightCreateWikiAccount() {
 	    Map<String,Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
         attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
         return attrs;
 	}
 	
-	private Map<String, Object> getConfigureWikiAccountAttrs(String wikiAcctName) {
+	private Map<String, Object> needGetAttrsRightConfigureWikiAccount(String wikiAcctName) {
 	    Map<String, Object> attrsNeeds = new HashMap<String, Object>();
 	    attrsNeeds.put(Provisioning.A_zimbraNotebookAccount, wikiAcctName);
 	    return attrsNeeds;

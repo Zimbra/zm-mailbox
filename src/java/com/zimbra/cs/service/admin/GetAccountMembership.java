@@ -21,12 +21,16 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
@@ -74,12 +78,31 @@ public class GetAccountMembership extends AdminDocumentHandler {
             distributionList.addAttribute(AdminConstants.A_ID,dl.getId());
             String viaDl = via.get(dl.getName());
             if (viaDl != null) distributionList.addAttribute(AdminConstants.A_VIA, viaDl);
+            
+            try {
+                checkDistributionListRight(zsc, dl, needGetAttrsRight());
+                
+                String isAdminGroup = dl.getAttr(Provisioning.A_zimbraIsAdminGroup);
+                if (isAdminGroup != null)
+                    distributionList.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsAdminGroup).setText(isAdminGroup);
+            } catch (ServiceException e) {
+                if (ServiceException.PERM_DENIED.equals(e.getCode()))
+                    ZimbraLog.acl.warn("no permission to view " + Provisioning.A_zimbraIsAdminGroup + " of dl " + dl.getName());
+            }
         }
         return response;
+    }
+    
+    private Set<String> needGetAttrsRight() {
+        Set<String> attrsNeeded = new HashSet<String>();
+        attrsNeeded.add(Provisioning.A_zimbraIsAdminGroup);
+        return attrsNeeded;
     }
     
     @Override
     protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccountMembership);
+        notes.add("If the authed admin has get attr right on  distribution list attr " + 
+                Provisioning.A_zimbraIsAdminGroup + ", it is returned in the response if set.");
     }
 }
