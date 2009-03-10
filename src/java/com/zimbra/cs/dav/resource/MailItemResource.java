@@ -143,7 +143,7 @@ public abstract class MailItemResource extends DavResource {
 		return mEtag;
 	}
 	
-	protected static Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
+	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
 		String user = ctxt.getUser();
 		if (user == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -207,7 +207,7 @@ public abstract class MailItemResource extends DavResource {
 		return mId;
 	}
 	
-	private static Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws DocumentException, IOException, DavException, ServiceException {
+	private Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws DocumentException, IOException, DavException, ServiceException {
 		HashMap<QName,Element> props = new HashMap<QName,Element>();
 		Mailbox mbox = getMailbox(ctxt);
 		Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
