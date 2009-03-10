@@ -18,7 +18,6 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -44,6 +44,8 @@ import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.client.CalDavClient;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
@@ -60,8 +62,6 @@ public class RemoteCalendarCollection extends CalendarCollection {
 
     private String mRemoteId;
     private int mItemId;
-    private ArrayList<DavResource> mChildren;
-    private HashMap<String,DavResource> mAppointments;
     private HashMap<String,String> mCalendarData;
     
     public RemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
@@ -80,8 +80,14 @@ public class RemoteCalendarCollection extends CalendarCollection {
         return true;
     }
     
-    @Override
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
+        try {
+            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            if (target != null && Provisioning.onLocalServer(target))
+            	return super.getChildren(ctxt, hrefs, range);
+        } catch (ServiceException se) {
+	        ZimbraLog.dav.warn("cannot determine shared folder for "+ctxt.getAuthAccount().getName(), se);
+        }
     	boolean needCalendarData = false;
 		for (QName prop : ctxt.getRequestProp().getProps()) {
 			if (prop.equals(DavElements.E_CALENDAR_DATA)) {
@@ -92,23 +98,15 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		
 		Map<String,String> uidmap = getHrefUidMap(hrefs, false);
 		
-		if (needCalendarData)
+		if (needCalendarData) {
 			try {
 				getCalendarData(ctxt, uidmap.values());
 			} catch (Exception e) {
 		        ZimbraLog.dav.warn("can't proxy calendar data for "+ctxt.getAuthAccount().getName(), e);
 			}
-		
-		get(ctxt, null);
-		ArrayList<DavResource> resp = new ArrayList<DavResource>();
-		for (String href : uidmap.keySet()) {
-			String uid = uidmap.get(href);
-			DavResource rs = mAppointments.get(uid);
-			if (rs == null)
-				rs = new DavResource.InvalidResource(href, getOwner());
-			resp.add(rs);
 		}
-		return resp;
+
+		return super.getChildren(ctxt, hrefs, range);
 	}
 	
     String getCalendarData(String uid) {
@@ -147,28 +145,29 @@ public class RemoteCalendarCollection extends CalendarCollection {
         	mCalendarData.put(hrefmap.get(appt.href), appt.data);
     }
     
-    @Override
-    public java.util.Collection<DavResource> get(DavContext ctxt, TimeRange range) throws DavException {
-        if (mChildren != null)
-            return mChildren;
-        
-        mAppointments = new HashMap<String,DavResource>();
+    protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws DavException {
+        HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         ZAuthToken zat = null;
         try {
             zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
         } catch (ServiceException e) {
-            ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
-            return Collections.emptyList();
+            ZimbraLog.dav.warn("can't get auth token for "+ctxt.getAuthAccount().getName(), e);
+            return appts;
         }
 
         List<ZApptSummaryResult> results;
         
         try {
-            ZMailbox zmbx = getRemoteMailbox(zat);
-            if (zmbx == null) {
-                ZimbraLog.dav.warn("remote account not found: "+mRemoteId);
-                return Collections.emptyList();
-            }
+            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            if (target == null)
+            	return appts;
+            if (Provisioning.onLocalServer(target))
+            	return super.getAppointmentMap(ctxt, range);
+            ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
+            zoptions.setNoSession(true);
+            zoptions.setTargetAccount(mRemoteId);
+            zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
             String folderId = Integer.toString(mItemId);
         	long start = 0;
         	long end = 0;
@@ -188,20 +187,13 @@ public class RemoteCalendarCollection extends CalendarCollection {
             results = zmbx.getApptSummaries(null, start, end, new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
         } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't proxy the request for "+ctxt.getAuthAccount().getName(), e);
-            return Collections.emptyList();
+            return appts;
         }
         
-        mChildren = new ArrayList<DavResource>();
-        for (ZAppointmentHit appt : results.get(0).getAppointments()) {
-            DavResource res = mAppointments.get(appt.getUid());
-            if (res != null)
-                continue;
-            res = new CalendarObject.RemoteCalendarObject(mUri, mOwner, appt, this);
-            mChildren.add(res);
-            mAppointments.put(appt.getUid(), res);
-        }
+        for (ZAppointmentHit appt : results.get(0).getAppointments())
+            appts.put(appt.getUid(), new CalendarObject.RemoteCalendarObject(mUri, mOwner, appt, this));
         
-        return mChildren;
+        return appts;
     }
     
     @Override
@@ -247,10 +239,8 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
     
     public DavResource getAppointment(DavContext ctxt, String uid) throws DavException {
-        if (mAppointments == null) {
-            getChildren(ctxt);
-        }
-        return mAppointments.get(uid.toLowerCase());
+    	getChildren(ctxt);
+        return mAppts.get(uid);
     }
     
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
@@ -265,6 +255,20 @@ public class RemoteCalendarCollection extends CalendarCollection {
         }
     }
     
+    protected int getId() {
+    	return mItemId;
+    }
+    
+	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
+		Provisioning prov = Provisioning.getInstance();
+		Account account = prov.get(AccountBy.id, mRemoteId);
+		if (account == null)
+			return super.getMailbox(ctxt);
+		if (Provisioning.onLocalServer(account))
+			return MailboxManager.getInstance().getMailboxByAccount(account);
+		return null;
+	}
+	
     private ZMailbox getRemoteMailbox(ZAuthToken zat) throws ServiceException {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
         if (target == null)

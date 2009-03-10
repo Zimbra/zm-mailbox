@@ -213,7 +213,7 @@ public abstract class MailItemResource extends DavResource {
 		return mId;
 	}
 	
-	private static Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws DocumentException, IOException, DavException, ServiceException {
+	private Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws DocumentException, IOException, DavException, ServiceException {
 		HashMap<QName,Element> props = new HashMap<QName,Element>();
 		Mailbox mbox = item.getMailbox();
 		Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);

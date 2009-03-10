@@ -222,10 +222,6 @@ public abstract class DavResource {
 		return Collections.emptyList();
 	}
 	
-	public Collection<DavResource> getChildren(DavContext ctxt, Collection<String> hrefs) throws DavException {
-		return Collections.emptyList();
-	}
-	
 	public boolean hasEtag() {
 		return false;
 	}

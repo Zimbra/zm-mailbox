@@ -30,6 +30,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.resource.CalendarCollection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavResponse;
 
@@ -62,10 +63,13 @@ public class CalendarMultiget extends Report {
 		}
 		long ts = System.currentTimeMillis();
 		DavResource reqResource = ctxt.getRequestedResource();
+		if (!(reqResource instanceof CalendarCollection))
+			throw new DavException("requested resource is not a calendar collection", HttpServletResponse.SC_BAD_REQUEST, null);
+		CalendarCollection calResource = (CalendarCollection) reqResource;
 		long now = System.currentTimeMillis();
 		ZimbraLog.dav.debug("GetRequestedResource: "+(now - ts)+"ms");
 		RequestProp reqProp = ctxt.getRequestProp();
-		for (DavResource rs : reqResource.getChildren(ctxt, hrefs)) {
+		for (DavResource rs : calResource.getChildren(ctxt, hrefs, null)) {
 			resp.addResource(ctxt, rs, reqProp, false);
 			ts = now;
 			now = System.currentTimeMillis();
