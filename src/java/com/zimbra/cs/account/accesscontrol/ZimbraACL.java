@@ -95,34 +95,17 @@ public class ZimbraACL {
     }
     
     /**
-     * Negative grants are inserted in the front, followed by positive non-delegable grants,
-     * followed by positive delegable grants.
-     * 
-     * The ACL checking code in RightChecker relies on this order to work correctly.
-     * 
-     * 1. Grant on the same right/grantee should not have "conflicting" grants, like:
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr createAccount
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +createAccount
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +createAccount
-     *    because ZimbraACL code will not allow it.   But they can appear by direct 
-     *    LdapModify.  Sorting grants in this order is a safety net for that.
-     * 
-     * 2. For "partial" rights, like
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +domainAdmin (a combo right)
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr createAccount
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr -modifyAccount
      *        
-     *        It is a bad practice to do the above grant(grant big and reduce some rights)
-     *        By sorting the grants in the order of:
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr -modifyAccount
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr createAccount
-     *        ba512b78-6f5b-4192-a160-77ae28896c68 usr +domainAdmin
+     * 1. Negative grants are inserted in the front, 
+     * 2. followed by positive delegable grants,
+     * 3. followed by positive non-delegable grants.
      * 
-     *        we will get behaviors:
-     *        - cannot modify any account attribute
-     *        - can create account, but cannot delegate the createAccount right
-     *        - can execute and delegate any right contained by the domainAdmin combo
-     *          right, except for modifyAccount and createAccount, to other admins.
+     * Negative grants must be put in the front.
+     * Order of 2 and 3 does not matter.  Putting 
+     * delegables in front of non-delegables is a 
+     * little more efficient when we are checking 
+     * for delegable grants, because non-delegable 
+     * grants will be ignored if encountered.
      * 
      * @param aceToGrant
      */
@@ -130,12 +113,12 @@ public class ZimbraACL {
         if (aceToGrant.deny()) {
             mAces.add(0, aceToGrant);  // add in the front
             mDenied.add(aceToGrant);
-        } else if (aceToGrant.canDelegate()) {
+        } else if (!aceToGrant.canDelegate()) {
             mAces.add(aceToGrant);     // add in the rear
-            mAllowedDelegable.add(aceToGrant);
-        } else {
-            mAces.add(mDenied.size(), aceToGrant);     // add in the middle, between denied and delegable
             mAllowedNotDelegable.add(aceToGrant);
+        } else {
+            mAces.add(mDenied.size(), aceToGrant);  // add in the middle, between denied and non-delegable
+            mAllowedDelegable.add(aceToGrant);
         }
         mContainsRight.add(aceToGrant.getRight());
     }

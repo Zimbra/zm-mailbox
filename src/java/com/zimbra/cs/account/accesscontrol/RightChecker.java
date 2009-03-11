@@ -108,6 +108,9 @@ public class RightChecker {
         return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
     }
     
+    static class GrantableAttrs {
+        private Map<TargetType, AllowedAttrs> mGrantableAttrs;
+    }
     
     private static class SeenRight {
         private boolean mSeenRight;
@@ -154,8 +157,8 @@ public class RightChecker {
         
         /*
          * put all denied and allowed grants into one list, as if they are granted 
-         * on the same entry.   We put denied in the front, followed by allowed but 
-         * not delegable, followed by allowed and delegable, so it is consistent with 
+         * on the same entry.   We put denied in the front, followed by allowed and 
+         * delegable, followed by allowed but not delegable, so it is consistent with 
          * ZimbraACL.getAllACEs
          */
         List<ZimbraACE> getAllACLs() {
@@ -165,8 +168,8 @@ public class RightChecker {
                     
                 List<ZimbraACE> aclsOnGroupTargets = new ArrayList<ZimbraACE>();
                 aclsOnGroupTargets.addAll(aclsOnGroupTargetsDenied);
-                aclsOnGroupTargets.addAll(aclsOnGroupTargetsAllowedNotDelegable);
                 aclsOnGroupTargets.addAll(aclsOnGroupTargetsAllowedDelegable);
+                aclsOnGroupTargets.addAll(aclsOnGroupTargetsAllowedNotDelegable);
                     
                 return aclsOnGroupTargets;
             } else
@@ -327,7 +330,7 @@ public class RightChecker {
             if (!rightNeeded.grantableOnTargetType(targetType))
                 return false;
         } else {
-            // check if the right is applicable(executable) on the target
+            // check if the right is executable on the target
             if (!rightNeeded.executableOnTargetType(targetType))
                 return false;
         }
@@ -339,19 +342,13 @@ public class RightChecker {
      *     - if the grant matches required granteeFlags
      *     - if the granted right is applicable to the entry on which it is granted
      *     - if the granted right matches the requested right
-     *       Note: ace.canDelegate() is not checked in this method, even if 
-     *             canDelegateNeeded is true.   We return matched as long as the 
-     *             right is seen.  If canDelegateNeeded is true but the ace is not
-     *             delegable, it will be denied in getResult.  
-     *             
-     *             Doing so will deny the case when a "super right" is delegable 
-     *             but a "sub-right" of the "super-right" is only executable:
-     *                 {id} usr +superRight
-     *                 {id} usr subRight
-     *             For such grants:
-     *                 delegating superRight is denied
-     *                 delegating subRight is denied
-     *                 delegating another sub right of the super right is allowed
+     *     
+     *     Note: if canDelegateNeeded is true but the granted right is not delegable,
+     *           we skip the grant (i.e. by returning false) and let the flow continue 
+     *           to check other grants, instead of denying the granting attempt.
+     *            
+     *           That is, a more relevant executable only grant will *not* take away
+     *           the grantable property of a less relevant grantable grant.
      *                 
      */
     private static boolean matchesPresetRight(ZimbraACE ace, TargetType targetType, 
@@ -362,6 +359,9 @@ public class RightChecker {
             return false;
             
         if (!rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded))
+            return false;
+        
+        if (canDelegateNeeded && ace.canExecuteOnly())
             return false;
             
         Right rightGranted = ace.getRight();
@@ -415,7 +415,7 @@ public class RightChecker {
     }
     
     private static Boolean gotResult(ZimbraACE ace, Account grantee, Right right, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
-        if (shouldDeny(ace, canDelegateNeeded)) {
+        if (ace.deny()) {
             if (sLog.isDebugEnabled())
                 sLog.debug("Right " + "[" + right.getName() + "]" + " DENIED to " + grantee.getName() + 
                            " via grant: " + ace.dump() + " on: " + ace.getTargetType().getCode() + ace.getTargetName());
@@ -476,7 +476,7 @@ public class RightChecker {
         }
         
         if (!car.isAll()) {
-            // check grants granted on entries from which the target entry can inherit from
+            // check grants granted on entries from which the target entry can inherit
             TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), target);
             Entry grantedOn;
             
@@ -644,48 +644,59 @@ public class RightChecker {
         // rights of the combo right will be passed in as the attrRight arg.
         //
         
-        // check if get/set matches
+        /*
+         * if the grant is executable only and canDelegateNeeded is true,
+         * skip the grant and let the flow continue to check other grants, 
+         * instead of denying the granting attempt.
+         */
+        if (canDelegateNeeded && ace.canExecuteOnly())
+            return null; // just ignore the grant
+        
+        /*
+         * check if get/set matches
+         */
         if (!attrRightGranted.suitableFor(rightTypeNeeded))
             return null;
         
-        //
-        // check if the granted attrs right is indeed applicable on the target type
-        // this is a sanity check mainly for the case when checking for execution
-        // permission (i.e. canDelegateNeeded == false), in case someone somehow 
-        // sneak in a zimbraACE on the wrong target.  e.g. put a setAttrs server
-        // right on a cos entry.  This should not happen if the grant is done via
-        // RightCommand.grantRight.
-        //
+        /*
+         * check if the granted attrs right is indeed applicable on the target type
+         * this is a sanity check in case someone somehow sneaked in a zimbraACE on 
+         * the wrong target.  e.g. put a setAttrs server right on a cos entry.  
+         * This should not happen if the grant is done via RightCommand.grantRight.
+         */
         if (!rightApplicableOnTargetType(targetType, attrRightGranted, canDelegateNeeded))
             return null;
         
         if (attrRightGranted.allAttrs()) {
             // all attrs, return if we hit a grant with all attrs
-            if (shouldDeny(ace, canDelegateNeeded)) {
+            if (ace.deny()) {
                 /*
                  * if the grant is setAttrs and the needed right is getAttrs:
-                 *    - negative setAttrs grant does *not* negate any attrs explicitly allowed for getAttrs grants
+                 *    - negative setAttrs grant does *not* negate any attrs explicitly 
+                 *      allowed for getAttrs grants
                  *    - positive setAttrs grant *does* automatically give getAttrs right
                  */
                 if (attrRightGranted.getRightType() == rightTypeNeeded)
                     return CollectAttrsResult.DENY_ALL;  // right type granted === right type needed
-                // else just ignore the grant
+                else
+                    return null;  // just ignore the grant
             } else {
                 return CollectAttrsResult.ALLOW_ALL;
             }
         } else {
             // some attrs
-            for (String attrName : attrRightGranted.getAttrs()) {
-                if (shouldDeny(ace, canDelegateNeeded)) {
-                    if (attrRightGranted.getRightType() == rightTypeNeeded)
+            if (ace.deny()) {
+                if (attrRightGranted.getRightType() == rightTypeNeeded) {
+                    for (String attrName : attrRightGranted.getAttrs())
                         denySome.put(attrName, relativity);  // right type granted === right type needed
-                    // else just ignore the grant
-                } else {
+                } else
+                    return null;  // just ignore the grant
+            } else {
+                for (String attrName : attrRightGranted.getAttrs())
                     allowSome.put(attrName, relativity);
-                }
             }
+            return CollectAttrsResult.SOME;
         }
-        return CollectAttrsResult.SOME;
     }
     
     /**
@@ -759,9 +770,10 @@ public class RightChecker {
                 
                 /*
                  * denied grants appear before allowed grants
-                 * - if we see a deny all, return, because on the same target/grantee-relativity deny take precedent allowed.
-                 * - if we see an allow all, return, because all deny-some grants have been processed, and put in the denySome map,
-                 *   those will be remove from the allowed ones.
+                 * - if we see a deny all, return, because on the same target/grantee-relativity deny 
+                 *   take precedence over allowed.
+                 * - if we see an allow all, return, because all deny-some grants have been processed, 
+                 *   and have been put in the denySome map, those will be remove from the allowed ones.
                  */
                 if (result != null && result.isAll())
                     return result;
@@ -770,7 +782,7 @@ public class RightChecker {
                 ComboRight comboRight = (ComboRight)rightGranted;
                 for (AttrRight attrRight : comboRight.getAttrRights()) {
                     result = expandAttrsGrantToAttrs(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
-                    // return if we see an allow-all/deny-all, same reasom as above.
+                    // return if we see an allow-all/deny-all, same reason as above.
                     if (result != null && result.isAll())
                         return result;
                 }
@@ -1301,11 +1313,6 @@ public class RightChecker {
 
     static boolean isSystemAdmin(Account acct, boolean asAdmin) {
         return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsSystemAdminAccount, false));
-    }
-    
-    private static boolean shouldDeny(ZimbraACE ace, boolean canDelegateNeeded) {
-        return (ace.deny() ||
-                (canDelegateNeeded && !ace.canDelegate()));
     }
     
     static class PseudoZimbraId {

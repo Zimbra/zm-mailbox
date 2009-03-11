@@ -253,6 +253,10 @@ public class ZimbraACE {
         return mRightModifier == RightModifier.RM_CAN_DELEGATE;
     }
     
+    public boolean canExecuteOnly() {
+        return !canDelegate() && !deny();
+    }
+    
     public String getSecret() {
         return mSecret;
     }
