@@ -141,7 +141,7 @@ public class ZimbraACL {
     private boolean grant(ZimbraACE aceToGrant) {
         for (ZimbraACE ace : mAces) {
             if (ace.isGrantee(aceToGrant.getGrantee()) &&
-                ace.getRight() == aceToGrant.getRight()) {
+                ace.getRight().isTheSameRight(aceToGrant.getRight())) {
                 
                 boolean changed = false;
                 

@@ -64,4 +64,9 @@ public class InlineAttrRight extends AttrRight {
     private InlineAttrRight(String name, RightType rightType) {
         super(name, rightType);
     }
+    
+    @Override
+    boolean isTheSameRight(Right other) {
+        return getName().equals(other.getName());
+    }
 }

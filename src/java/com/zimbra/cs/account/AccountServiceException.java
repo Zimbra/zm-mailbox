@@ -45,7 +45,8 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_ACCOUNT    = "account.NO_SUCH_ACCOUNT";
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
     public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";    
-    public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
+    public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";
+    public static final String NO_SUCH_GRANT      = "account.NO_SUCH_GRANT";
     public static final String NO_SUCH_IDENTITY   = "account.NO_SUCH_IDENTITY";
     public static final String NO_SUCH_SIGNATURE   = "account.NO_SUCH_SIGNATURE";
     public static final String NO_SUCH_DATA_SOURCE = "account.NO_SUCH_DATA_SOURCE";
@@ -192,7 +193,11 @@ public class AccountServiceException extends ServiceException {
     
     public static AccountServiceException NO_SUCH_COS(String name) {
         return new AccountServiceException("no such cos: "+name, NO_SUCH_COS, SENDERS_FAULT, null);
-    }    
+    }
+    
+    public static AccountServiceException NO_SUCH_GRANT(String grant) {
+        return new AccountServiceException("no such grant: "+grant, NO_SUCH_GRANT, SENDERS_FAULT, null);
+    }   
     
     public static AccountServiceException NO_SUCH_RIGHT(String name) {
         return new AccountServiceException("no such right: "+name, NO_SUCH_RIGHT, SENDERS_FAULT, null);

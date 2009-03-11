@@ -138,6 +138,13 @@ public abstract class Right extends RightConsts {
     }
     
     /*
+     * overriden only in InlineAttrRight
+     */
+    boolean isTheSameRight(Right other) {
+        return this == other;
+    }
+    
+    /*
      * for reporting granting error
      */
     final String reportGrantableTargetTypes() {

@@ -28,8 +28,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
@@ -698,7 +699,9 @@ public class RightCommand {
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
         aces.add(ace);
         
-        RightUtil.revokeRight(prov, targetEntry, aces);
+        List<ZimbraACE> revoked = RightUtil.revokeRight(prov, targetEntry, aces);
+        if (revoked.isEmpty())
+            throw AccountServiceException.NO_SUCH_GRANT(ace.dump());
     }
 
     public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts) throws ServiceException {
