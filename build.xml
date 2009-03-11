@@ -509,7 +509,7 @@
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
     <property name="war.include" value="slf4j*.jar, *jsieve*.jar, lucene*.jar, ant-tar*.jar"/>
 
-    <target name="war" depends="jar">
+   <target name="war" depends="jar">
         <echo>war.include=${war.include}</echo>
         <war warfile="${warfile}" webxml="${war.web.xml}">
             <fileset dir="WebRoot"/>
@@ -529,12 +529,17 @@
         <antcall target="start-jetty"/>
     </target>
 
-    <target name="copy-war" depends="stop-jetty,war">
+    <target name="copy-war-internal">
+        <!-- do all the work for the copy-war target, without the dependencies -->
         <delete dir="${jetty.home.dir}/webapps/service"/>
         <delete file="${jetty.home.dir}/webapps/service.war"/>
         <copy file="${warfile}" todir="${jetty.home.dir}/webapps"/>
         <mkdir dir='${jetty.home.dir}/webapps/service'/>
         <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
+    </target>
+
+    <target name="copy-war" depends="stop-jetty,war">
+        <antcall target="copy-war-internal"/>
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
@@ -761,7 +766,7 @@
         </exec>
     </target>
 
-    <target name="reset-all" description="Reset the world plus jetty">
+    <target name="clean-all" description="Clean everything in prep for reset-all">
         <if>
             <isset property="jetty.start.jar.exists"/>
             <then>
@@ -776,6 +781,9 @@
         <antcall target="reset-open-ldap"/>
         <delete dir="${zimbra.home.dir}/lib"/>
         <antcall target="reset-jetty"/>
+    </target>    
+
+    <target name="reset-all" description="Reset the world plus jetty" depends="clean-all">
         <antcall target="reset-the-world"/>
         <ant dir="../Zimlet" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
@@ -808,14 +816,19 @@
     </target>
 
     <target name="init" depends="stop-servers,dir-init,init-opt-zimbra,db-init,start-ldap,ldap-load"/>
-
+    
     <target name="inject" depends="compile">
-        <echo>Inserting default contacts: ${account-to-inject.email}</echo>
-        <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
-              failonerror="true">
-            <sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
-            <arg line="-s -f data/soap/samplecontacts.xml"/>
-        </java>
+        <if>
+            <not><isset property="email-only"/></not>
+            <then>
+                <echo>Inserting default contacts: ${account-to-inject.email}</echo>
+                <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
+                    <arg line="-s -f data/soap/samplecontacts.xml"/>
+                </java>
+            </then>
+        </if>
         <echo>Creating default search folders: ${account-to-inject.email}</echo>
         <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
               failonerror="true">
@@ -837,18 +850,23 @@
               failonerror="true">
             <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
             <arg path="data/TestMailSpam"/>
-        	<arg line="--noValidation"/>
+            <arg line="--noValidation"/>
         </java>
-        <echo>Importing Wiki documents for ${account-to-inject.email}</echo>
-        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="impn ${account-to-inject.email} data/wiki/user1 /"/>
-        </java>
-        <echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
-        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase"/>
-        </java>
+        <if>
+            <not><isset property="email-only"/></not>
+            <then>
+                <echo>Importing Wiki documents for ${account-to-inject.email}</echo>
+                <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+                    <arg line="impn ${account-to-inject.email} data/wiki/user1 /"/>
+                </java>
+                <echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
+                <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+                    <arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase"/>
+                </java>
+            </then>
+        </if>
     </target>
-
+    
     <target name="inject-npscontacts" depends="compile">
         <echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
         <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
@@ -1143,6 +1161,14 @@
         </java>
         <echo>Running zmprov commands</echo>
     	<antcall target="run-zmprov-commands"/>
+    </target>
+
+    <target name="zmlocalconfig">
+        <echo> Running localconfig with with argument: ${localconfig-args}</echo>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="${localconfig-args}"/>
+        </java>
+        
     </target>
 
 	<target name="run-zmprov-commands" depends="zmprov-commands">
