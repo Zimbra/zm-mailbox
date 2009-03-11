@@ -495,15 +495,16 @@
         <ant dir="${common.dir}" target="clean" inheritAll="false"/>
         <ant dir="${im.dir}" target="clean" inheritAll="false"/>
         <delete dir="${build.dir}"/>
-    	
+    </target>
+	
+	<target name="clean-opt-zimbra">
 		<!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
     	<delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
 		<delete failonerror="false">
             <fileset dir="${jetty.home.dir}/common/lib"
         		includes="${ical4j.jar},${ziputil.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,jdavmail*,json.jar,testng*.jar"/>
 		</delete>
-
-    </target>
+	</target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
     <property name="war.include" value="slf4j*.jar, *jsieve*.jar, lucene*.jar, ant-tar*.jar"/>
@@ -769,6 +770,7 @@
         </if>
     	<antcall target="stop-ldap"/>
     	<antcall target="clean"/>
+    	<antcall target="clean-opt-zimbra"/>
         <mkdir dir="${build.dir}"/>
 
         <antcall target="reset-open-ldap"/>
