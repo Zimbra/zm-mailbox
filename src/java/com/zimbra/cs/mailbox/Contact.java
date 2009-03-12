@@ -45,6 +45,10 @@ import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * @author dkarp
  */
@@ -780,5 +784,26 @@ public class Contact extends MailItem {
             sb.append(", ").append(entry.getKey()).append(": ").append(entry.getValue());
         sb.append("}");
         return sb.toString();
+    }
+    
+    private static final String ZMVAL = "ZMVAL";
+    private static final String ZMVALENCODED = "{\"ZMVAL\":";
+
+    public static String encodeMultiValueAttr(String[] attrs) throws JSONException {
+		JSONObject jsonobj = new JSONObject();
+		for (String s : attrs)
+			jsonobj.append(ZMVAL, s);
+		return jsonobj.toString();
+    }
+    public static boolean isMultiValueAttr(String attr) {
+    	return attr.startsWith(ZMVALENCODED);
+    }
+    public static String[] parseMultiValueAttr(String attr) throws JSONException {
+    	JSONObject jsonobj = new JSONObject(attr);
+    	JSONArray array = jsonobj.getJSONArray(ZMVAL);
+    	String[] mv = new String[array.length()];
+    	for (int i = 0; i < mv.length; i++)
+    		mv[i] = array.getString(i);
+    	return mv;
     }
 }

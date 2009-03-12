@@ -52,9 +52,22 @@ public class SyncGal extends AccountDocumentHandler {
         }
         
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
-        
         Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
 
+        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, tokenAttr, null, response);
+        if (!galAccountSearchSucceeded) {
+        	response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
+        	doLdapSearch(account, tokenAttr, response);
+        }
+        return response;
+    }
+
+    @Override
+    public boolean needsAuth(Map<String, Object> context) {
+        return true;
+    }
+
+    private void doLdapSearch(Account account, String tokenAttr, Element response) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Domain d = prov.getDomain(account);
         
@@ -68,13 +81,5 @@ public class SyncGal extends AccountDocumentHandler {
             response.addAttribute(MailConstants.A_TOKEN, result.getToken());
         
         com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
-        
-        return response;
     }
-
-    @Override
-    public boolean needsAuth(Map<String, Object> context) {
-        return true;
-    }
-
 }

@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.json.JSONException;
 
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
@@ -57,29 +59,41 @@ public class ParsedContact {
     private String mDigest;
 
     private List<Document> mLuceneDocuments;
-
-    public ParsedContact(Map<String, String> fields) throws ServiceException {
+    
+    public ParsedContact(Map<String, ? extends Object> fields) throws ServiceException {
+    	HashMap<String,String> strMap = new HashMap<String,String>();
         // prune out the empty and blank fields
         if (fields == null)
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
-        for (Iterator<Map.Entry<String, String>> it = fields.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry<String, String> entry = it.next();
-            String key   = StringUtil.stripControlCharacters(entry.getKey());
-            String value = StringUtil.stripControlCharacters(entry.getValue());
-            if (key == null || key.trim().equals("") || value == null || value.equals(""))
-                it.remove();
+        for (String key : fields.keySet()) {
+            Object value = fields.get(key);
+            String strValue = null;
+        	key = StringUtil.stripControlCharacters(key);
+        	// encode multi value attributes as JSONObject
+        	if (value instanceof String[]) {
+        		try {
+            		strValue = Contact.encodeMultiValueAttr((String[])value);
+        		} catch (JSONException e) {
+                    ZimbraLog.index.warn("Error encoding multi valued attribute " + key, e);
+        		}
+        	} else if (value instanceof String) {
+                strValue = StringUtil.stripControlCharacters((String)value);
+        	}
+            
+            if (key != null && !key.trim().equals("") && strValue != null && !strValue.equals(""))
+                strMap.put(key, strValue);
         }
 
-        if (fields.isEmpty())
+        if (strMap.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
-        addNicknameAndTypeIfPDL(fields);
+        addNicknameAndTypeIfPDL(strMap);
 
-        mFields = fields;
+        mFields = strMap;
     }
 
-    public ParsedContact(Map<String, String> fields, byte[] blob) throws ServiceException {
+    public ParsedContact(Map<String, ? extends Object> fields, byte[] blob) throws ServiceException {
         this(fields);
 
         if (blob != null && blob.length > 0) {
@@ -100,7 +114,7 @@ public class ParsedContact {
         }
     }
 
-    public ParsedContact(Map<String, String> fields, List<Attachment> attachments) throws ServiceException {
+    public ParsedContact(Map<String, ? extends Object> fields, List<Attachment> attachments) throws ServiceException {
         this(fields);
 
         if (attachments != null && !attachments.isEmpty()) {

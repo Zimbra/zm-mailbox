@@ -20,20 +20,39 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
+import com.zimbra.cs.index.ContactHit;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.soap.ProxyTarget;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -70,11 +89,14 @@ public class SearchGal extends AccountDocumentHandler {
 
         Element response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
         
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(account);
-        SearchGalResult result = prov.searchGal(d, n, type, null);
-        toXML(response, result);
-        
+        String query = null;
+        if (n.compareTo(".") != 0)
+        	query = n + "*";
+        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, null, query, response);
+        if (!galAccountSearchSucceeded) {
+        	response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
+        	doLdapSearch(account, n, type, response);
+        }
         return response;
     }
 
@@ -83,6 +105,13 @@ public class SearchGal extends AccountDocumentHandler {
         return true;
     }
 
+    private void doLdapSearch(Account account, String n, Provisioning.GAL_SEARCH_TYPE type, Element response) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Domain d = prov.getDomain(account);
+        SearchGalResult result = prov.searchGal(d, n, type, null);
+        toXML(response, result);
+    }
+    
     public static void toXML(Element response, SearchGalResult result) throws ServiceException {
         response.addAttribute(AccountConstants.A_MORE, result.getHadMore());
         response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.getTokenizeKey());
@@ -156,5 +185,98 @@ public class SearchGal extends AccountDocumentHandler {
         public void visit(GalContact gc) {
             addContact(mResponse, gc);
         }
+    }
+    
+    public static boolean doGalAccountSearch(Map<String, Object> context, Account account, String tokenAttr, String query, Element response) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Provisioning prov = Provisioning.getInstance();
+        Domain d = prov.getDomain(account);
+        ArrayList<String> accountIds = new ArrayList<String>();
+        String[] galAccountIds = prov.getConfig().getGalAccountId();
+        String[] domainGalAccountIds = d.getGalAccountId();
+        GalMode galMode = d.getGalMode();
+        if ((galMode == GalMode.both || galMode == GalMode.zimbra)
+        	&& galAccountIds.length > 0) {
+        	accountIds.addAll(Arrays.asList(galAccountIds));
+        }
+        if ((galMode == GalMode.both || galMode == GalMode.ldap)
+           	&& domainGalAccountIds.length > 0) {
+        	accountIds.addAll(Arrays.asList(domainGalAccountIds));
+        }
+        if (query == null)
+        	query = "";
+        else
+        	query = "\""+query+"\"";
+    	for (String galAccountId : galAccountIds) {
+    		Account galAcct = prov.getAccountById(galAccountId);
+    		if (galAcct == null) {
+    			ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
+    			return false;
+    		}
+    		if (!galAcct.getAccountStatus().isActive()) {
+    			ZimbraLog.gal.info("GalSync account "+galAccountId+" is in "+galAcct.getAccountStatus().name());
+    			return false;
+    		}
+    		String searchQuery = null;
+    		for (DataSource ds : galAcct.getAllDataSources()) {
+    			if (ds.getType() != DataSource.Type.gal)
+    				continue;
+    			if (searchQuery == null)
+    				searchQuery = query;
+    			searchQuery += " inid:" + ds.getFolderId();
+    		}
+    		if (searchQuery == null)
+    			continue;
+			if (Provisioning.onLocalServer(galAcct)) {
+		        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+		        if (!doLocalGalAccountSearch(searchQuery, galAcct, ifmt, response))
+		        	return false;
+			} else {
+	    		String serverId = prov.getServerByName(galAcct.getMailHost()).getId();
+	            HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+				ProxyTarget proxy = new ProxyTarget(serverId, zsc.getAuthToken(), httpreq);
+				if (!doRemoteGalAccountSearch(searchQuery, galAcct, proxy, zsc, response))
+					return false;
+			}
+    	}
+    	return true;
+    }
+    private static boolean doLocalGalAccountSearch(String query, Account galAcct, ItemIdFormatter ifmt, Element response) {
+		ZimbraQueryResults zqr = null;
+		try {
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
+			zqr = mbox.search(new Mailbox.OperationContext(mbox), query, new byte[] { MailItem.TYPE_CONTACT }, MailboxIndex.SortBy.NAME_ASCENDING, 100);
+			while (zqr.hasNext()) {
+                ZimbraHit hit = zqr.getNext();
+                if (hit instanceof ContactHit)
+    				ToXML.encodeContact(response, ifmt, ((ContactHit)hit).getContact(), true, null);
+			}
+		} catch (Exception e) {
+			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
+			return false;
+		} finally {
+			if (zqr != null) 
+				try {zqr.doneWithSearchResults(); } catch (ServiceException e) {}
+		}
+		return true;
+    }
+    private static boolean doRemoteGalAccountSearch(String query, Account galAcct, ProxyTarget proxy, ZimbraSoapContext zsc, Element response) {
+		XMLElement req = new XMLElement(MailConstants.SEARCH_REQUEST);
+		req.addAttribute(MailConstants.A_TYPES, "contact");
+		req.addAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.NAME_ASCENDING.toString());
+		req.addElement(MailConstants.E_QUERY).setText(query);
+		try {
+			Element resp = proxy.execute(req, zsc).getSecond();
+			Iterator<Element> iter = resp.elementIterator(MailConstants.SEARCH_RESPONSE.getName());
+			while (iter.hasNext()) {
+				Element cn = iter.next();
+				if (cn.getName().compareTo(MailConstants.E_CONTACT) == 0)
+					response.addElement(cn.detach());
+			}
+		} catch (ServiceException e) {
+			ZimbraLog.gal.warn("remote search on GalSync account failed for"+galAcct.getId(), e);
+			return false;
+		}
+		return true;
     }
 }

@@ -89,6 +89,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.httpclient.HttpURL;
+import org.json.JSONException;
 
 /**
  * @author jhahm
@@ -440,8 +441,16 @@ public class ToXML {
             for (Map.Entry<String, String> me : attrs.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
-                if (name != null && !name.trim().equals("") && value != null && !value.equals(""))
-                    elem.addKeyValuePair(name, value);
+                if (name != null && !name.trim().equals("") && value != null && !value.equals("")) {
+                	if (Contact.isMultiValueAttr(value)) {
+                		try {
+                    		for (String v : Contact.parseMultiValueAttr(value))
+                    			elem.addKeyValuePair(name, v);
+                    		continue;
+                		} catch (JSONException e) {}
+                	}
+                	elem.addKeyValuePair(name, value);
+                }
             }
             if (attachments != null) {
                 for (Attachment attach : attachments)
