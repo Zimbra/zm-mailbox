@@ -48,11 +48,11 @@ public class ImapCapabilities {
     private ImapCapabilities() {}
 
     private void readCapabilities(ImapInputStream is) throws IOException {
-        do {
+        while (is.match(' ')) {
             addCapability(is.readAtom().getName());
-        } while (is.match(' '));
+        }
     }
-    
+
     private void addCapability(String cap) {
         capabilities.add(new Atom(cap));
     }
