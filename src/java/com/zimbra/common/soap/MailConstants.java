@@ -164,6 +164,10 @@ public class MailConstants {
     public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get("DismissCalendarItemAlarmRequest", NAMESPACE);
     public static final QName GET_MINI_CAL_REQUEST = QName.get("GetMiniCalRequest", NAMESPACE);
 
+    public static final QName GET_RECUR_REQUEST = QName.get("GetRecurRequest", NAMESPACE);
+    public static final QName EXPAND_RECUR_REQUEST = QName.get("ExpandRecurRequest", NAMESPACE);
+    public static final QName CHECK_RECUR_CONFLICTS_REQUEST = QName.get("CheckRecurConflictsRequest", NAMESPACE);
+
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get("CheckSpellingResponse", NAMESPACE);
@@ -552,8 +556,10 @@ public class MailConstants {
     public static final String A_CAL_PARTSTAT = "ptst";
     public static final String A_APPT_FREEBUSY = "fb";
     public static final String A_APPT_FREEBUSY_ACTUAL = "fba";
+    public static final String A_APPT_FREEBUSY_EXCLUDE_UID = "excludeUid";
     public static final String A_APPT_TRANSPARENCY = "transp";
     public static final String A_CAL_CLASS = "class";
+    public static final String A_CAL_ALL = "all";
     public static final String A_CAL_ALLDAY = "allDay";
     public static final String A_CAL_NO_BLOB = "noBlob";
     public static final String A_CAL_LOCATION = "loc";
