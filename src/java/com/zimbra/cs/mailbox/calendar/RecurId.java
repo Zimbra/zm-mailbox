@@ -90,13 +90,15 @@ public class RecurId
     }
     
     public RecurId(ParsedDateTime dt, String rangeStr) {
-        if (rangeStr.equals("THISANDFUTURE")) {
-            mRange = RANGE_THISANDFUTURE;
-        } else if (rangeStr.equals("THISANDPRIOR")) {
-            mRange = RANGE_THISANDPRIOR;
-        } else {
-            mRange = RANGE_NONE;
+        int range = RANGE_NONE;
+        if (rangeStr != null) {
+            if (rangeStr.equals("THISANDFUTURE")) {
+                range = RANGE_THISANDFUTURE;
+            } else if (rangeStr.equals("THISANDPRIOR")) {
+                range = RANGE_THISANDPRIOR;
+            }
         }
+        mRange = range;
         mDateTime = dt;
     }
     

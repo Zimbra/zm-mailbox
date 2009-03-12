@@ -1160,7 +1160,7 @@ public class Invite {
 
     public String getEffectivePartStat() throws ServiceException {
         if (mCalItem == null) return getPartStat();
-        Instance inst = Instance.fromInvite(mCalItem, this);
+        Instance inst = Instance.fromInvite(mCalItem.getId(), this);
         return mCalItem.getEffectivePartStat(this, inst);
     }
 
@@ -1600,7 +1600,7 @@ public class Invite {
         
         // timezones
         ICalTimeZone local = mTzMap.getLocalTimeZone();
-        if (!mTzMap.contains(local)) {
+        if (local != null && !mTzMap.contains(local)) {
             vcal.addComponent(local.newToVTimeZone());
         }
         

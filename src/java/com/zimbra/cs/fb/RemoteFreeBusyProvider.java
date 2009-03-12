@@ -50,13 +50,15 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	
-	public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc, long start, long end) {
+	public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc,
+	                              long start, long end, String exApptUid) {
 		mRemoteAccountMap = new HashMap<String,StringBuilder>();
 		mRequestList = new ArrayList<Request>();
 		mHttpReq = httpReq;
 		mSoapCtxt = zsc;
 		mStart = start;
 		mEnd = end;
+		mExApptUid = exApptUid;
 	}
 	
 	public FreeBusyProvider getInstance() {
@@ -94,14 +96,14 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                 StringBuilder targetUrl = new StringBuilder();
                 targetUrl.append(UserServlet.getRestUrl(acct));
                 targetUrl.append("/Calendar?fmt=ifb");
-                targetUrl.append("&start=");
-                targetUrl.append(mStart);
-                targetUrl.append("&end=");
-                if (req.folder != FreeBusyQuery.CALENDAR_FOLDER_ALL) {
-                    targetUrl.append("&").append(UserServlet.QP_FREEBUSY_CALENDAR).append("=");
-                    targetUrl.append(req.folder);
-                }
-                targetUrl.append(mEnd);
+                targetUrl.append("&start=").append(mStart);
+                targetUrl.append("&end=").append(mEnd);
+                if (req.folder != FreeBusyQuery.CALENDAR_FOLDER_ALL)
+                    targetUrl.append("&").append(UserServlet.QP_FREEBUSY_CALENDAR).append("=").append(req.folder);
+                try {
+                    if (mExApptUid != null)
+                        targetUrl.append("&").append(UserServlet.QP_EXUID).append("=").append(URLEncoder.encode(mExApptUid, "UTF-8"));
+                } catch (UnsupportedEncodingException e) {}
                 String authToken = null;
                 try {
                     if (mSoapCtxt != null)
@@ -202,6 +204,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	private ZimbraSoapContext mSoapCtxt;
 	private long mStart;
 	private long mEnd;
+	private String mExApptUid;  // UID of appointment to exclude from free/busy search
 	
 	private void addFailedAccounts(Element response, String[] idStrs) {
 		for (String id : idStrs) {

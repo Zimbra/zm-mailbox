@@ -82,7 +82,7 @@ public class CancelCalendarItem extends CalendarRequest {
                     tz = CalendarUtils.parseTzElement(tzElem);
                     tzmap.add(tz);
                 }
-                RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap, inv);
+                RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap);
                 cancelInstance(zsc, octxt, request, acct, mbox, calItem, inv, recurId);
             } else {
                 // if recur is not set, then we're canceling the entire calendar item...

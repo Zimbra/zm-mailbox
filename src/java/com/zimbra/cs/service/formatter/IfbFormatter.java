@@ -24,16 +24,18 @@ import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 
 public class IfbFormatter extends Formatter {
    
-    private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
-    
     private static final long ONE_MONTH = Constants.MILLIS_PER_DAY*31;
     
     public String getType() {
@@ -59,15 +61,23 @@ public class IfbFormatter extends Formatter {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "End time must be after Start time");
         
         long days = (rangeEnd-rangeStart)/Constants.MILLIS_PER_DAY;
-        if (days > MAX_PERIOD_SIZE_IN_DAYS)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)");
+        long maxDays = LC.calendar_freebusy_max_days.longValueWithinRange(0, 36600);
+        if (days > maxDays)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (Maximum " + maxDays + " days)");
 
         String url = context.req.getRequestURL() + "?" + context.req.getQueryString();
         String acctName = null;
         FreeBusy fb = null;
         if (context.targetMailbox != null) {
-            fb = context.targetMailbox.getFreeBusy(context.opContext, rangeStart, rangeEnd, context.getFreeBusyCalendar());
+            String exuid = context.params.get(UserServlet.QP_EXUID);
+            Appointment exAppt = null;
+            if (exuid != null) {
+                CalendarItem ci = context.targetMailbox.getCalendarItemByUid(context.opContext, exuid);
+                if (ci instanceof Appointment)
+                    exAppt = (Appointment) ci;
+            }
             acctName = context.targetMailbox.getAccount().getName();
+            fb = context.targetMailbox.getFreeBusy(context.opContext, acctName, rangeStart, rangeEnd, context.getFreeBusyCalendar(), exAppt);
         } else {
             // Unknown mailbox.  Fake an always-free response, to avoid harvest attacks.
             acctName = fixupAccountName(context.accountPath);

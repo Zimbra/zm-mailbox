@@ -28,6 +28,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -40,6 +42,7 @@ public class FreeBusyQuery {
 	private Account mRequestor;
 	private long mStart;
 	private long mEnd;
+	private String mExApptUid;
 	
 	private HashMap<String,Account> mTargets;
 	private HashMap<String, Integer> mTargetFolder;  // optional calendar folder id for each target
@@ -48,16 +51,17 @@ public class FreeBusyQuery {
 	private HttpServletRequest mReq;
 	private ZimbraSoapContext mCtxt;
 	
-	public FreeBusyQuery(HttpServletRequest httpReq, ZimbraSoapContext zsc, Account requestor, long start, long end) {
-		this(httpReq, requestor, start, end);
+	public FreeBusyQuery(HttpServletRequest httpReq, ZimbraSoapContext zsc, Account requestor, long start, long end, String exApptUid) {
+		this(httpReq, requestor, start, end, exApptUid);
 		mCtxt = zsc;
 	}
 	
-	public FreeBusyQuery(HttpServletRequest httpReq, Account requestor, long start, long end) {
+	public FreeBusyQuery(HttpServletRequest httpReq, Account requestor, long start, long end, String exApptUid) {
 		mReq = httpReq;
 		mRequestor = requestor;
 		mStart = start;
 		mEnd = end;
+		mExApptUid = exApptUid;
 		mTargets = new HashMap<String,Account>();
 		mTargetFolder = new HashMap<String, Integer>();
 	}
@@ -124,7 +128,13 @@ public class FreeBusyQuery {
         		        octxt = new OperationContext(mCtxt.getAuthToken());
         		    else if (mRequestor != null)
         		        octxt = new OperationContext(mRequestor);
-        		    local.add(mbox.getFreeBusy(octxt, id, mStart, mEnd, folder));
+                    Appointment exAppt = null;
+                    if (mExApptUid != null) {
+                        CalendarItem ci = mbox.getCalendarItemByUid(octxt, mExApptUid);
+                        if (ci instanceof Appointment)
+                            exAppt = (Appointment) ci;
+                    }
+        		    local.add(mbox.getFreeBusy(octxt, id, mStart, mEnd, folder, exAppt));
         		} else {
         			remote.addFreeBusyRequest(mRequestor, acct, id, mStart, mEnd, folder);
         		}
@@ -135,7 +145,7 @@ public class FreeBusyQuery {
     }
     
     public Collection<FreeBusy> getResults() {
-    	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider(mReq, mCtxt, mStart, mEnd);
+    	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider(mReq, mCtxt, mStart, mEnd, mExApptUid);
     	ArrayList<String> external = new ArrayList<String>();
     	ArrayList<FreeBusy> fbList = new ArrayList<FreeBusy>();
     	prepareRequests(fbList, remote, external);
@@ -147,7 +157,7 @@ public class FreeBusyQuery {
     }
     
 	public void getResults(Element response) {
-    	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider(mReq, mCtxt, mStart, mEnd);
+    	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider(mReq, mCtxt, mStart, mEnd, mExApptUid);
     	ArrayList<String> external = new ArrayList<String>();
     	ArrayList<FreeBusy> fbList = new ArrayList<FreeBusy>();
     	prepareRequests(fbList, remote, external);

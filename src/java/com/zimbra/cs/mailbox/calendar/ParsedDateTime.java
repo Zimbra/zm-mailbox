@@ -597,4 +597,10 @@ public final class ParsedDateTime {
     void forceDateOnly() {
         mHasTime = false;
     }
+
+    public int getOffset() {
+        if (mICalTimeZone == null)
+            return 0;
+        return mICalTimeZone.getOffset(getUtcTime());
+    }
 }
