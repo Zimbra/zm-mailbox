@@ -26,7 +26,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090310-0049 */
+    /* build: 5.0 pshao 20090311-1354 */
 
 
     /*
@@ -237,6 +237,11 @@ public class RightConsts {
      * create zimlet
      */
     public static final String RT_createZimlet = "createZimlet";
+
+    /**
+     * cross domain admin right
+     */
+    public static final String RT_crossDomainAdmin = "crossDomainAdmin";
 
     /**
      * delete account

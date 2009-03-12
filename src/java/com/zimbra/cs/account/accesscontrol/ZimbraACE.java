@@ -17,11 +17,14 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.GuestAccount;
 
@@ -137,6 +140,7 @@ public class ZimbraACE {
         switch (mGranteeType) {
         case GT_USER:
         case GT_GROUP:
+        case GT_DOMAIN:    
         case GT_AUTHUSER:
         case GT_PUBLIC: 
             if (!Provisioning.isUUID(grantee))
@@ -151,6 +155,8 @@ public class ZimbraACE {
             mGrantee = decodeGrantee(externalParts[0]);
             mSecret = decodeSecret(externalParts[1]);
             break;
+        default:
+            throw ServiceException.PARSE_ERROR("invalid grantee type " + mGranteeType, null);
         }
         
         mRightModifier = RightModifier.fromChar(right.charAt(0));
@@ -336,10 +342,17 @@ public class ZimbraACE {
                 Account acct = Provisioning.getInstance().get(AccountBy.id, mGrantee);
                 if (acct != null)
                     return acct.getName();
+                break;
             case GT_GROUP:
                 DistributionList group = Provisioning.getInstance().get(DistributionListBy.id, mGrantee);
                 if (group != null)
                     return group.getName();
+                break;
+            case GT_DOMAIN:
+                Domain domain = Provisioning.getInstance().get(DomainBy.id, mGrantee);
+                if (domain != null)
+                    return domain.getName();
+                break;
             case GT_GUEST:
             case GT_KEY:    
                 return mGrantee;
@@ -349,8 +362,9 @@ public class ZimbraACE {
                 return null;
             }
         } catch (ServiceException e) {
-            return null;
+            ZimbraLog.acl.warn("cannot get grantee name for " + mGrantee, e);
         }
+        return null;
     }
     
     // serialize to the format for storing in LDAP

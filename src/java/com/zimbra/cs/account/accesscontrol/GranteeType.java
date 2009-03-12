@@ -25,6 +25,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 
 public enum GranteeType {
@@ -32,6 +33,7 @@ public enum GranteeType {
     GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL)),
     GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
     GT_AUTHUSER("all", GranteeFlag.F_AUTHUSER),
+    GT_DOMAIN("dom",   GranteeFlag.F_ADMIN),  // only for the crossDomainAdmin right
     GT_GUEST("gst",    GranteeFlag.F_INDIVIDUAL),
     GT_KEY("key",      GranteeFlag.F_INDIVIDUAL),
     GT_PUBLIC("pub",   GranteeFlag.F_PUBLIC);
@@ -103,6 +105,11 @@ public enum GranteeType {
             granteeEntry = prov.getAclGroup(DistributionListBy.fromString(granteeBy.name()), grantee);
             if (granteeEntry == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
+            break;
+        case GT_DOMAIN:
+            granteeEntry = prov.get(DomainBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null)
+                throw AccountServiceException.NO_SUCH_DOMAIN(grantee); 
             break;
         default:
             ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + granteeType.getCode(), null);

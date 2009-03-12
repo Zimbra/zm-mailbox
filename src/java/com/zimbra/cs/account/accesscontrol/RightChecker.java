@@ -31,6 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -51,6 +52,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 public class RightChecker {
 
@@ -133,7 +135,7 @@ public class RightChecker {
         private Set<ZimbraACE> aclsOnGroupTargetsAllowedDelegable = null;
         private Set<ZimbraACE> aclsOnGroupTargetsDenied = null;
         
-        void collectACL(Entry grantedOn) throws ServiceException {
+        void collectACL(Entry grantedOn, boolean skipPositiveGrants) throws ServiceException {
             if (aclsOnGroupTargetsAllowedNotDelegable == null)
                 aclsOnGroupTargetsAllowedNotDelegable = new HashSet<ZimbraACE>();
             if (aclsOnGroupTargetsAllowedDelegable == null)
@@ -145,10 +147,10 @@ public class RightChecker {
             Set<ZimbraACE> allowedDelegable = RightUtil.getAllowedDelegableACEs(grantedOn);
             Set<ZimbraACE> denied = RightUtil.getDeniedACEs(grantedOn);
             
-            if (allowedNotDelegable != null)
+            if (allowedNotDelegable != null && !skipPositiveGrants)
                 aclsOnGroupTargetsAllowedNotDelegable.addAll(allowedNotDelegable);
             
-            if (allowedDelegable != null)
+            if (allowedDelegable != null && !skipPositiveGrants)
                 aclsOnGroupTargetsAllowedDelegable.addAll(allowedDelegable);
             
             if (denied != null)
@@ -177,6 +179,19 @@ public class RightChecker {
         }
     }
 
+    private static boolean crossDomainOK(Provisioning prov, Account grantee, Domain granteeDomain, 
+            Domain targetDomain, DistributionList grantedOn) throws ServiceException {
+        
+       if (!CrossDomain.checkCrossDomain(prov, granteeDomain, targetDomain, 
+                (DistributionList)grantedOn)) {
+            sLog.info("No cross domain right for " + grantee.getName() + " on domain " +
+                    targetDomain.getName() + 
+                    ", skipping positive grants on dl " + ((DistributionList)grantedOn).getName());
+            
+            return false;
+        } else
+            return true;
+    }
     
     /**
      * Check if grantee is allowed for rightNeeded on target entry.
@@ -194,7 +209,7 @@ public class RightChecker {
                                     ViaGrant via) throws ServiceException {
         if (!rightNeeded.isPresetRight())
             throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
-                                                   rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
+                    rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
         
         boolean granteeMustBeAdmin = !rightNeeded.isUserRight();
         
@@ -204,10 +219,19 @@ public class RightChecker {
                 return null;
         }
         
+        Provisioning prov = Provisioning.getInstance();
+        
+        Domain granteeDomain = prov.getDomain(grantee);
+        // if we ever get here, the grantee must have a domain
+        if (granteeDomain == null)
+            throw ServiceException.FAILURE("internal error", null);
+        
+        // should only come from granting/revoking check
+        if (rightNeeded == Admin.R_crossDomainAdmin)
+            return CrossDomain.checkCrossDomainAdminRight(prov, granteeDomain, target, canDelegateNeeded);
+        
         Boolean result = null;
         SeenRight seenRight = new SeenRight();
-        
-        Provisioning prov = Provisioning.getInstance();
         
         // only get admin groups 
         AclGroups granteeGroups = prov.getAclGroups(grantee, granteeMustBeAdmin);
@@ -227,10 +251,17 @@ public class RightChecker {
         // the actual target separately
         List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         if (acl != null) {
-            result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, rightNeeded, canDelegateNeeded, via, seenRight);
+            result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, 
+                    rightNeeded, canDelegateNeeded, via, seenRight);
             if (result != null) 
                 return result;
         }
+        
+        //
+        // if the target is a domain-ed entry, get the domain of the target.
+        // It is need for checking the cross domain right.
+        //
+        Domain targetDomain = TargetType.getTargetDomain(prov, target);
         
         // check grants granted on entries from which the target entry can inherit from
         TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), target);
@@ -245,10 +276,13 @@ public class RightChecker {
                 if (acl == null)
                     continue;
                 
+                boolean skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
+                        targetDomain, (DistributionList)grantedOn);
+                
                 // don't check yet, collect all acls on all target groups
                 if (groupACLs == null)
                     groupACLs = new GroupACLs();
-                groupACLs.collectACL(grantedOn);
+                groupACLs.collectACL(grantedOn, skipPositiveGrants);
                 
             } else {
                 // end of group targets, put all collected denied and allowed grants into one list, as if 
@@ -257,7 +291,8 @@ public class RightChecker {
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null)
-                        result = checkTargetPresetRight(aclsOnGroupTargets, targetType, grantee, granteeGroups, rightNeeded, canDelegateNeeded, via, seenRight);
+                        result = checkTargetPresetRight(aclsOnGroupTargets, targetType, grantee, granteeGroups, 
+                                rightNeeded, canDelegateNeeded, via, seenRight);
                     if (result != null) 
                         return result;
                     
@@ -268,7 +303,8 @@ public class RightChecker {
                 // didn't encounter any group grantedOn, or none of them matches, just check this grantedOn entry
                 if (acl == null)
                     continue;
-                result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, rightNeeded, canDelegateNeeded, via, seenRight);
+                result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, 
+                        rightNeeded, canDelegateNeeded, via, seenRight);
                 if (result != null) 
                     return result;
             }
@@ -351,7 +387,8 @@ public class RightChecker {
      *           the grantable property of a less relevant grantable grant.
      *                 
      */
-    private static boolean matchesPresetRight(ZimbraACE ace, TargetType targetType, 
+    private static boolean matchesPresetRight(ZimbraACE ace, 
+                                              TargetType targetType,
                                               Right rightNeeded, boolean canDelegateNeeded,
                                               short granteeFlags) throws ServiceException {
         GranteeType granteeType = ace.getGranteeType();
@@ -373,6 +410,38 @@ public class RightChecker {
         return false;
     }
     
+    /**
+     * go through each grant in the ACL
+     *     - checks if the right/target of the grant matches the right/target of the grant
+     *       and 
+     *       if the grantee type(specified by granteeFlags) is one of the grantee type 
+     *       we are interested in this call.
+     *       
+     *     - if so marks the right "seen" (so callsite default(only used by user right callsites) 
+     *       won't be honored)
+     *     - check if the Account (the grantee parameter) matches the grantee of the grant
+     *       
+     * @param acl
+     * @param targetType
+     * @param grantee
+     * @param rightNeeded
+     * @param canDelegateNeeded
+     * @param granteeFlags       For admin rights, because of negative grants and the more "specific" 
+     *                           grantee takes precedence over the less "specific" grantee, we can't 
+     *                           just do a single ZimbraACE.match to see if a grantee matches the grant.
+     *                           Instead, we need to check more specific grantee types first, then 
+     *                           go on the the less specific ones.  granteeFlags specifies the 
+     *                           grantee type(s) we are checking for this call.
+     *                           e.g. an ACL has:
+     *                                       adminA deny  rightR  - grant1
+     *                                       groupG allow rightR  - grant2
+     *                                and adminA is in groupG, we want to check grant1 before grant2.
+     *                                       
+     * @param via
+     * @param seenRight
+     * @return
+     * @throws ServiceException
+     */
     private static Boolean checkPresetRight(List<ZimbraACE> acl, TargetType targetType, 
                                             Account grantee, 
                                             Right rightNeeded, boolean canDelegateNeeded,
@@ -394,6 +463,18 @@ public class RightChecker {
         return result;
     }
     
+    /*
+     * Like checkPresetRight, but checks group grantees.  Instead of calling ZimbraACE.match, 
+     * which checks group grants by call inDistributionList, we do it the other way around 
+     * by passing in an AclGroups object that contains all the groups the account is in that 
+     * are "eligible" for the grant.   We check if the grantee of the grant is one of the 
+     * "eligible" group the account is in.  
+     *
+     * Eligible:
+     *   - for admin rights granted to a group, the grant iseffective only if the group has
+     *     zimbraIsAdminGroup=TRUE.  The the group's zimbraIsAdminGroup is set to false after 
+     *     if grant is made, the grant is still there on the targe entry, but becomes useless.
+     */
     private static Boolean checkGroupPresetRight(List<ZimbraACE> acl, TargetType targetType, 
                                                  AclGroups granteeGroups, Account grantee, 
                                                  Right rightNeeded, boolean canDelegateNeeded,
@@ -456,6 +537,13 @@ public class RightChecker {
         if (rightNeeded != AdminRight.R_PSEUDO_GET_ATTRS && rightNeeded != AdminRight.R_PSEUDO_SET_ATTRS)
             throw ServiceException.FAILURE("internal error", null); 
         
+        Provisioning prov = Provisioning.getInstance();
+        
+        Domain granteeDomain = prov.getDomain(grantee);
+        // if we ever get here, the grantee must have a domain
+        if (granteeDomain == null)
+            throw ServiceException.FAILURE("internal error", null);
+        
         Set<String> granteeIds = setupGranteeIds(grantee);
         TargetType targetType = TargetType.getTargetType(target);
         
@@ -475,9 +563,15 @@ public class RightChecker {
             relativity += 2;
         }
         
+        //
+        // if the target is a domain-ed entry, get the domain of the target.
+        // It is need for checking the cross domain right.
+        //
+        Domain targetDomain = TargetType.getTargetDomain(prov, target);
+        
         if (!car.isAll()) {
             // check grants granted on entries from which the target entry can inherit
-            TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), target);
+            TargetIterator iter = TargetIterator.getTargetIeterator(prov, target);
             Entry grantedOn;
             
             GroupACLs groupACLs = null;
@@ -489,10 +583,13 @@ public class RightChecker {
                     if (acl == null)
                         continue;
                     
+                    boolean skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
+                            targetDomain, (DistributionList)grantedOn);
+                    
                     // don't check yet, collect all acls on all target groups
                     if (groupACLs == null)
                         groupACLs = new GroupACLs();
-                    groupACLs.collectACL(grantedOn);
+                    groupACLs.collectACL(grantedOn, skipPositiveGrants);
                     
                 } else {
                     // end of group targets, put all collected denied and allowed grants into one list, as if 
@@ -920,6 +1017,13 @@ public class RightChecker {
     
     private static Set<Right> getEffectivePresetRights(Account grantee, Entry target) throws ServiceException {
         
+       Provisioning prov = Provisioning.getInstance();
+        
+        Domain granteeDomain = prov.getDomain(grantee);
+        // if we ever get here, the grantee must have a domain
+        if (granteeDomain == null)
+            throw ServiceException.FAILURE("internal error", null);
+        
         Set<String> granteeIds = setupGranteeIds(grantee);
         TargetType targetType = TargetType.getTargetType(target);
         
@@ -939,8 +1043,14 @@ public class RightChecker {
             relativity += 2;
         }
         
+        //
+        // if the target is a domain-ed entry, get the domain of the target.
+        // It is need for checking the cross domain right.
+        //
+        Domain targetDomain = TargetType.getTargetDomain(prov, target);
+        
         // check grants granted on entries from which the target entry can inherit from
-        TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), target);
+        TargetIterator iter = TargetIterator.getTargetIeterator(prov, target);
         Entry grantedOn;
             
         GroupACLs groupACLs = null;
@@ -952,10 +1062,13 @@ public class RightChecker {
                 if (acl == null)
                     continue;
                     
+                boolean skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
+                        targetDomain, (DistributionList)grantedOn);
+                
                 // don't check yet, collect all acls on all target groups
                 if (groupACLs == null)
                     groupACLs = new GroupACLs();
-                groupACLs.collectACL(grantedOn);
+                groupACLs.collectACL(grantedOn, skipPositiveGrants);
                     
             } else {
                 // end of group targets, put all collected denied and allowed grants into one list, as if 

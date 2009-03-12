@@ -24,6 +24,7 @@ import java.util.Set;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
 
@@ -58,8 +59,12 @@ public class ZimbraACL {
     ZimbraACL(String[] aces, TargetType targetType, String targetName) throws ServiceException {
         RightManager rm = RightManager.getInstance();
         for (String aceStr : aces) {
-            ZimbraACE ace = new ZimbraACE(aceStr, rm, targetType, targetName);
-            addACE(ace);
+            try {
+                ZimbraACE ace = new ZimbraACE(aceStr, rm, targetType, targetName);
+                addACE(ace);
+            } catch (ServiceException e) {
+                ZimbraLog.acl.warn("cannot parse ACE: " + aceStr + ", skipped", e);
+            }
         }
     }
     

@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 public class RightCommand {
     
@@ -607,7 +608,9 @@ public class RightCommand {
              * The grantee could have been taken away the admin privilege.
              */ 
             if (!revoking) {
-                if (!RightChecker.isValidGranteeForAdminRights(granteeType, granteeEntry))
+                boolean isCDARight = CrossDomain.validateCrossDomainAdminGrant(right, granteeType);
+                if (!isCDARight &&
+                    !RightChecker.isValidGranteeForAdminRights(granteeType, granteeEntry))
                     throw ServiceException.INVALID_REQUEST("grantee must be an admin account or group", null);
             }
         }

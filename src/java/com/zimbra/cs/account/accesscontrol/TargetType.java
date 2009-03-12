@@ -294,5 +294,18 @@ public enum TargetType {
             throw ServiceException.FAILURE("internal error", null);
     }
 
-
+    static Domain getTargetDomain(Provisioning prov, Entry target) throws ServiceException{
+        
+        if (target instanceof CalendarResource) {
+            CalendarResource cr = (CalendarResource)target;
+            return prov.getDomain(cr);
+        } else if (target instanceof Account) {
+            Account acct = (Account)target;
+            return prov.getDomain(acct);
+        } else if (target instanceof DistributionList) {
+            DistributionList dl = (DistributionList)target;
+            return prov.getDomain(dl);
+        } else
+            return null;
+    }
 }

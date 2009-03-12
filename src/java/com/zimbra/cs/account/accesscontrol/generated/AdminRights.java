@@ -32,7 +32,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090310-0049 */
+    /* build: 5.0 pshao 20090311-1354 */
 
 
     public static AdminRight R_accessGAL;
@@ -68,6 +68,7 @@ public class AdminRights {
     public static AdminRight R_createTopDomain;
     public static AdminRight R_createXMPPComponent;
     public static AdminRight R_createZimlet;
+    public static AdminRight R_crossDomainAdmin;
     public static AdminRight R_deleteAccount;
     public static AdminRight R_deleteAlias;
     public static AdminRight R_deleteCalendarResource;
@@ -188,6 +189,7 @@ public class AdminRights {
         R_createTopDomain                      = rm.getAdminRight(Right.RT_createTopDomain);
         R_createXMPPComponent                  = rm.getAdminRight(Right.RT_createXMPPComponent);
         R_createZimlet                         = rm.getAdminRight(Right.RT_createZimlet);
+        R_crossDomainAdmin                     = rm.getAdminRight(Right.RT_crossDomainAdmin);
         R_deleteAccount                        = rm.getAdminRight(Right.RT_deleteAccount);
         R_deleteAlias                          = rm.getAdminRight(Right.RT_deleteAlias);
         R_deleteCalendarResource               = rm.getAdminRight(Right.RT_deleteCalendarResource);
