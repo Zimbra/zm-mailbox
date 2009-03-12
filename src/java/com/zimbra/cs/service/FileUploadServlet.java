@@ -48,6 +48,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
@@ -91,11 +92,12 @@ public class FileUploadServlet extends ZimbraServlet {
 
     public static final class Upload {
         final String   accountId;
+        String         contentType;
         final String   uuid;
         final String   name;
         final FileItem file;
         long time;
-
+        
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
         }
@@ -107,11 +109,25 @@ public class FileUploadServlet extends ZimbraServlet {
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             name      = FileUtil.trimFilename(filename);
             file      = attachment;
+            if (file == null) {
+                contentType = Mime.CT_TEXT_PLAIN;
+            } else {
+                try {
+                    contentType = MimeDetect.getMimeDetect().detect(
+                        file.getInputStream(), name);
+                } catch (Exception e) {
+                    contentType = null;
+                }
+                if (contentType == null)
+                    contentType = file.getContentType();
+                if (contentType == null)
+                    contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            }
         }
 
         public String getName()         { return name; }
         public String getId()           { return uuid; }
-        public String getContentType()  { return file == null ? Mime.CT_TEXT_PLAIN : file.getContentType(); }
+        public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
         public InputStream getInputStream() throws IOException {
             return file == null ? new ByteArrayInputStream(new byte[0]) : file.getInputStream();

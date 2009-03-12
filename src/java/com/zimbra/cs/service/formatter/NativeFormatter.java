@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServletException;
@@ -158,8 +159,12 @@ public class NativeFormatter extends Formatter {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
         } else {
             String contentType = mp.getContentType();
-            if (contentType == null)
-                contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            if (contentType == null) {
+                contentType = Mime.CT_TEXT_PLAIN;
+            } else if (contentType.equals(Mime.CT_APPLICATION_OCTET_STREAM)) {
+                if ((contentType = MimeDetect.getMimeDetect().detect(mp.getInputStream(), Mime.getFilename(mp))) == null)
+                    contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            }
             // CR or LF in Content-Type causes Chrome to barf, unfortunately
             contentType = contentType.replace('\r', ' ').replace('\n', ' ');
 
@@ -169,7 +174,7 @@ public class NativeFormatter extends Formatter {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             	sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
-            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), mp.getContentType(), item.getDigest(), -1 * mp.getSize());
+            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), -1 * mp.getSize());
             }
         }
     }

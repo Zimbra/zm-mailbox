@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -109,7 +110,7 @@ public class UUEncodeConverter extends MimeVisitor {
             mmp = new MimeMultipart("mixed");
             for (UUDecodedFile uu : uufiles) {
                 MimeBodyPart mbp = new MimeBodyPart();
-                mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
+                mbp.setHeader("Content-Type", uu.getContentType());
                 mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", uu.getFilename()).toString());
                 mbp.setDataHandler(new DataHandler(uu.getDataSource()));
                 mmp.addBodyPart(mbp);
@@ -155,7 +156,7 @@ public class UUEncodeConverter extends MimeVisitor {
     }
 
     private static class UUDecodedFile {
-        private String mFilename;
+        private String mFilename, mContentType;
         private long mStartOffset, mEndOffset;
         private byte[] mContent;
 
@@ -199,12 +200,17 @@ public class UUEncodeConverter extends MimeVisitor {
             }
 
             mContent = baos.toByteArray();
+            mContentType = MimeDetect.getMimeDetect().detect(mContent, mFilename);
+            if (mContentType == null)
+                mContentType = Mime.CT_APPLICATION_OCTET_STREAM;
+
             mEndOffset = is.getPosition();
         }
 
         long getStartOffset()  { return mStartOffset; }
         long getEndOffset()    { return mEndOffset; }
         byte[] getContent()    { return mContent; }
+        String getContentType() { return mContentType; }
         String getFilename()   { return mFilename; }
 
         DataSource getDataSource() {
