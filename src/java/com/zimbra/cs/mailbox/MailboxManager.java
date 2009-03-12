@@ -423,7 +423,7 @@ public class MailboxManager {
             // avoid the race condition by re-checking the cache and using that data (if any)
             Object cached = retrieveFromCache(mailboxId, false);
             if (cached instanceof Mailbox) {
-            	mbox = (Mailbox)cached;
+            	mbox = (Mailbox) cached;
             } else {
                 // cache the newly-created Mailbox object
                 if (cached instanceof MailboxLock)
@@ -513,6 +513,10 @@ public class MailboxManager {
         return new Mailbox(data);
     }
 
+    protected synchronized void cacheAccount(String accountId, int mailboxId) {
+        mMailboxIds.put(accountId.toLowerCase(), new Integer(mailboxId));
+    }
+
     private Mailbox cacheMailbox(Mailbox mailbox) {
         mMailboxCache.put(mailbox.getId(), mailbox);
         return mailbox;
@@ -559,7 +563,7 @@ public class MailboxManager {
             Mailbox mbox = lock.getMailbox();
             if (success) {
                 // XXX: don't recall the rationale for re-setting this...
-                mMailboxIds.put(lock.getAccountId().toLowerCase(), lock.getMailboxId());
+                cacheAccount(lock.getAccountId(), lock.getMailboxId());
 
                 if (mbox != null) {
                     assert(lock == mbox.getMailboxLock() ||
@@ -728,7 +732,7 @@ public class MailboxManager {
                 mbox.initialize();
 
                 // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
-                mMailboxIds.put(data.accountId.toLowerCase(), new Integer(data.id));
+                cacheAccount(data.accountId, data.id);
                 cacheMailbox(mbox);
                 redoRecorder.setMailboxId(mbox.getId());
 
@@ -770,7 +774,7 @@ public class MailboxManager {
         return mbox;
     }
 
-    void markMailboxDeleted(Mailbox mailbox) {
+    protected void markMailboxDeleted(Mailbox mailbox) {
         String accountId = mailbox.getAccountId().toLowerCase(); 
         synchronized (this) {
             mMailboxIds.remove(accountId);

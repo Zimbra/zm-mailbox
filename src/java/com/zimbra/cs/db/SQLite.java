@@ -179,7 +179,7 @@ public class SQLite extends Db {
         }
     }
 
-    @Override void registerDatabaseInterest(Connection conn, String dbname) throws SQLException {
+    @Override public void registerDatabaseInterest(Connection conn, String dbname) throws SQLException {
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
             return;
@@ -281,7 +281,7 @@ public class SQLite extends Db {
     }
 
 
-    static String getDatabaseFilename(String dbname) {
+    public static String getDatabaseFilename(String dbname) {
         return LC.zimbra_home.value() + File.separator + "sqlite" + File.separator + dbname + ".db";
     }
 

@@ -23,6 +23,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.util.*;
@@ -152,7 +153,7 @@ public class Mailbox {
     public static final int HIGHEST_SYSTEM_ID = 16;
     public static final int FIRST_USER_ID     = 256;
 
-    private static final String MD_CONFIG_VERSION = "ver";
+    static final String MD_CONFIG_VERSION = "ver";
 
 
     public static final class MailboxData implements Cloneable {
@@ -4920,7 +4921,13 @@ public class Mailbox {
     }
     
     public static String getHash(String subject) {
-        return ByteUtil.getSHA1Digest(subject.getBytes(), true);
+        if (subject == null)
+            subject = "";
+        try {
+            return ByteUtil.getSHA1Digest(subject.getBytes("utf-8"), true);
+        } catch (UnsupportedEncodingException uee) {
+            return ByteUtil.getSHA1Digest(subject.getBytes(), true);
+        }
     }
 
     // please keep this package-visible but not public

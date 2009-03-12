@@ -55,9 +55,6 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.store.StoreManager;
 
-/**
- * @author dkarp
- */
 public class DbMailItem {
 
     public static final String TABLE_MAIL_ITEM = "mail_item";
@@ -3116,7 +3113,7 @@ public class DbMailItem {
      * 
      * @param sender  The string to check (can be null).
      * @return The passed-in String, truncated to 128 chars. */
-    static String checkSenderLength(String sender) {
+    public static String checkSenderLength(String sender) {
         if (sender == null || sender.length() <= MAX_SENDER_LENGTH)
             return sender;
         return sender.substring(0, MAX_SENDER_LENGTH);
@@ -3129,7 +3126,7 @@ public class DbMailItem {
      * @return The passed-in String.
      * @throws ServiceException <code>service.FAILURE</code> if the
      *         parameter would be silently truncated when inserted. */
-    static String checkSubjectLength(String subject) throws ServiceException {
+    public static String checkSubjectLength(String subject) throws ServiceException {
         if (subject == null || subject.length() <= MAX_SUBJECT_LENGTH)
             return subject;
         throw ServiceException.FAILURE("subject too long", null);
@@ -3142,7 +3139,7 @@ public class DbMailItem {
      * @return The passed-in String.
      * @throws ServiceException <code>service.FAILURE</code> if the
      *         parameter would be silently truncated when inserted. */
-    static String checkMetadataLength(String metadata) throws ServiceException {
+    public static String checkMetadataLength(String metadata) throws ServiceException {
         if (metadata == null)
             return null;
         int len = metadata.length();

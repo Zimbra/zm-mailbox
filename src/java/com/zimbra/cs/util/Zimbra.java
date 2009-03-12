@@ -181,6 +181,7 @@ public class Zimbra {
         MailboxManager.getInstance();
 
         ZimbraApplication app = ZimbraApplication.getInstance();
+        app.startup();
         	
         if (app.supports(ExtensionUtil.class.getName())) {
 	    	ExtensionUtil.initAll();

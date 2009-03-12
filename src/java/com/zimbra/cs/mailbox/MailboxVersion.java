@@ -58,9 +58,10 @@ public class MailboxVersion {
         return new MailboxVersion(majorVer, minorVer);
     }
 
-    void writeToMetadata(Metadata md) {
+    Metadata writeToMetadata(Metadata md) {
         md.put("vmaj", mMajorVer);
         md.put("vmin", mMinorVer);
+        return md;
     }
     
     /**
