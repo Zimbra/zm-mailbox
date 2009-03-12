@@ -46,6 +46,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraHit;
@@ -156,113 +157,6 @@ public class MailSender {
                     zmbox.deleteMessage("" + msgId);
             } catch (ServiceException e) {
                 ZimbraLog.smtp.warn("ignoring error while deleting saved sent message: " + msgId, e);
-            }
-        }
-    }
-
-    private List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
-    	if (contacts.isEmpty())
-    		return Collections.emptyList();
-
-    	TreeMap<String,InternetAddress> newContacts = new TreeMap<String,InternetAddress>();
-    	Collection<String> emailKeys = new ContactAutoComplete(authuser.getId()).getEmailKeys();
-		StringBuilder buf = new StringBuilder();
-		boolean first = true;
-		for (Address addr : contacts) {
-			if (addr instanceof InternetAddress) {
-				InternetAddress iaddr = (InternetAddress)addr;
-				String email = iaddr.getAddress();
-				newContacts.put(email, iaddr);
-				for (String emailKey : emailKeys) {
-					if (first)
-						first = false;
-					else
-						buf.append(" OR ");
-					buf.append("#").append(emailKey).append(":").append(email);
-				}
-			}
-		}
-		
-		byte[] types = { MailItem.TYPE_CONTACT };
-		String query = buf.toString();
-		try {
-			if (authmbox instanceof Mailbox) {
-				Mailbox mbox = (Mailbox) authmbox;
-				ZimbraQueryResults qres = null;
-				try {
-					qres = mbox.search(octxt, query, types, MailboxIndex.SortBy.NONE, contacts.size());
-		            while (qres.hasNext()) {
-		                ZimbraHit hit = qres.getNext();
-		                if (hit instanceof ContactHit) {
-		                    Contact c = ((ContactHit) hit).getContact();
-		        			for (String emailKey : emailKeys) {
-		        				String v = c.get(emailKey);
-		        				if (v != null)
-		        					newContacts.remove(v);
-		        			}
-		                }
-		            }
-				} finally {
-					if (qres != null)
-						try { qres.doneWithSearchResults(); } catch (Exception e) {}
-				}
-			} else if (authmbox instanceof ZMailbox) {
-				ZMailbox zmbox = (ZMailbox) authmbox;
-				ZSearchResult res = zmbox.search(new ZSearchParams(query));
-	            for (ZSearchHit hit: res.getHits()) {
-	            	if (hit instanceof ZContactHit) {
-	            		ZContactHit c = (ZContactHit)hit;
-	            		String v = c.getEmail();
-	            		if (v != null)
-	            			newContacts.remove(v);
-	            		v = c.getEmail2();
-	            		if (v != null)
-	            			newContacts.remove(v);
-	            		v = c.getEmail3();
-	            		if (v != null)
-	            			newContacts.remove(v);
-	            		v = c.getWorkEmail1();
-	            		if (v != null)
-	            			newContacts.remove(v);
-	            		v = c.getWorkEmail2();
-	            		if (v != null)
-	            			newContacts.remove(v);
-	            		v = c.getWorkEmail3();
-	            		if (v != null)
-	            			newContacts.remove(v);
-	            	}
-	            }
-			}
-		} catch (ServiceException e) {
-			ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-			newContacts.clear();
-		} catch (IOException e) {
-			ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-			newContacts.clear();
-        } catch (ParseException e) {
-			ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-			newContacts.clear();
-        }
-        
-    	ArrayList<InternetAddress> ret = new ArrayList<InternetAddress>();
-        if (!newContacts.isEmpty())
-        	ret.addAll(newContacts.values());
-    	return ret;
-    }
-    
-    private void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
-        for (InternetAddress inetaddr : newContacts) {
-        	ZimbraLog.smtp.debug("adding new contact "+inetaddr);
-            Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
-            try {
-                if (authMailbox instanceof Mailbox) {
-                    ParsedContact pc = new ParsedContact(fields);
-                    ((Mailbox) authMailbox).createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
-                } else if (authMailbox instanceof ZMailbox) {
-                    ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
             }
         }
     }
@@ -516,7 +410,6 @@ public class MailSender {
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
     throws MessagingException, ServiceException {
-	
 	    Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
             boolean addOriginatingIP = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
@@ -527,13 +420,12 @@ public class MailSender {
         boolean addMailer = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddMailer, true);
         if (addMailer) {
             String ua = octxt != null ? octxt.getUserAgent() : null;
-            String mailer = "Zimbra " + BuildInfo.VERSION + ((ua==null)?"":" (" + ua + ")");
+            String mailer = "Zimbra " + BuildInfo.VERSION + (ua == null ? "" : " (" + ua + ")");
             mm.addHeader(X_MAILER, mailer);
         }
-        
-        if (prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, false)) {
+
+        if (prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, false))
             mm.addHeader(X_AUTHENTICATED_USER, authuser.getName());
-        }
 
         boolean overrideFromHeader = true;
         try {
@@ -548,11 +440,11 @@ public class MailSender {
         // we need to set the Sender to the authenticated user for delegated sends by non-admins
         boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
         boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
-        boolean noSenderRequired = !isDelegatedRequest || AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
-        InternetAddress sender = noSenderRequired ? null : AccountUtil.getFriendlyEmailAddress(authuser);
+        boolean canSendAs = !isDelegatedRequest || AccessManager.getInstance().canDo(authuser, acct, User.R_sendAs, isAdminRequest, false);
 
-        // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
-        if (noSenderRequired) {
+        InternetAddress sender = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
+        if (canSendAs) {
+            // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
             Address addr = mm.getSender();
             if (addr != null && addr instanceof InternetAddress) {
                 if (AccountUtil.addressMatchesAccount(authuser, ((InternetAddress) addr).getAddress()))
@@ -591,6 +483,7 @@ public class MailSender {
     /*
      * returns a Collection of successfully sent recipient Addresses
      */
+    @SuppressWarnings("unused")
     protected Collection<Address> sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
@@ -628,6 +521,114 @@ public class MailSender {
             throw e;
         }
         return sentAddresses;
+    }
+
+
+    private List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
+        if (contacts.isEmpty())
+            return Collections.emptyList();
+
+        TreeMap<String,InternetAddress> newContacts = new TreeMap<String,InternetAddress>();
+        Collection<String> emailKeys = new ContactAutoComplete(authuser.getId()).getEmailKeys();
+        StringBuilder buf = new StringBuilder();
+        boolean first = true;
+        for (Address addr : contacts) {
+            if (addr instanceof InternetAddress) {
+                InternetAddress iaddr = (InternetAddress)addr;
+                String email = iaddr.getAddress();
+                newContacts.put(email, iaddr);
+                for (String emailKey : emailKeys) {
+                    if (first)
+                        first = false;
+                    else
+                        buf.append(" OR ");
+                    buf.append("#").append(emailKey).append(":").append(email);
+                }
+            }
+        }
+        
+        byte[] types = { MailItem.TYPE_CONTACT };
+        String query = buf.toString();
+        try {
+            if (authmbox instanceof Mailbox) {
+                Mailbox mbox = (Mailbox) authmbox;
+                ZimbraQueryResults qres = null;
+                try {
+                    qres = mbox.search(octxt, query, types, MailboxIndex.SortBy.NONE, contacts.size());
+                    while (qres.hasNext()) {
+                        ZimbraHit hit = qres.getNext();
+                        if (hit instanceof ContactHit) {
+                            Contact c = ((ContactHit) hit).getContact();
+                            for (String emailKey : emailKeys) {
+                                String v = c.get(emailKey);
+                                if (v != null)
+                                    newContacts.remove(v);
+                            }
+                        }
+                    }
+                } finally {
+                    if (qres != null)
+                        try { qres.doneWithSearchResults(); } catch (Exception e) {}
+                }
+            } else if (authmbox instanceof ZMailbox) {
+                ZMailbox zmbox = (ZMailbox) authmbox;
+                ZSearchResult res = zmbox.search(new ZSearchParams(query));
+                for (ZSearchHit hit: res.getHits()) {
+                    if (hit instanceof ZContactHit) {
+                        ZContactHit c = (ZContactHit)hit;
+                        String v = c.getEmail();
+                        if (v != null)
+                            newContacts.remove(v);
+                        v = c.getEmail2();
+                        if (v != null)
+                            newContacts.remove(v);
+                        v = c.getEmail3();
+                        if (v != null)
+                            newContacts.remove(v);
+                        v = c.getWorkEmail1();
+                        if (v != null)
+                            newContacts.remove(v);
+                        v = c.getWorkEmail2();
+                        if (v != null)
+                            newContacts.remove(v);
+                        v = c.getWorkEmail3();
+                        if (v != null)
+                            newContacts.remove(v);
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+            newContacts.clear();
+        } catch (IOException e) {
+            ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+            newContacts.clear();
+        } catch (ParseException e) {
+            ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+            newContacts.clear();
+        }
+        
+        List<InternetAddress> ret = new ArrayList<InternetAddress>();
+        if (!newContacts.isEmpty())
+            ret.addAll(newContacts.values());
+        return ret;
+    }
+    
+    private void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
+        for (InternetAddress inetaddr : newContacts) {
+            ZimbraLog.smtp.debug("adding new contact: " + inetaddr);
+            Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
+            try {
+                if (authMailbox instanceof Mailbox) {
+                    ParsedContact pc = new ParsedContact(fields);
+                    ((Mailbox) authMailbox).createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
+                } else if (authMailbox instanceof ZMailbox) {
+                    ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
+            }
+        }
     }
 
     /**
