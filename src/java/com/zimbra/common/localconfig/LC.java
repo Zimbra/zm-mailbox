@@ -295,6 +295,7 @@ public class LC {
     public static final KnownKey calendar_ics_export_buffer_size;
     public static final KnownKey calendar_max_desc_in_metadata;
     public static final KnownKey calendar_canonical_tzid;
+    public static final KnownKey calendar_freebusy_max_days;
 
     public static final KnownKey calendar_search_max_days;
     public static final KnownKey calendar_cache_enabled;
@@ -1005,6 +1006,9 @@ public class LC {
 
         calendar_canonical_tzid = new KnownKey("calendar_canonical_tzid");
         calendar_canonical_tzid.setDefault("windows");
+
+        calendar_freebusy_max_days = new KnownKey("calendar_freebusy_max_days");
+        calendar_freebusy_max_days.setDefault("366");
 
         calendar_search_max_days = new KnownKey("calendar_search_max_days");
         calendar_search_max_days.setDefault("400");
