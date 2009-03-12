@@ -426,6 +426,9 @@ public class LC {
     
     public static final KnownKey httpclient_idle_connection_timeout;
     
+    public static final KnownKey shared_mime_info_globs;
+    public static final KnownKey shared_mime_info_magic;
+
     public static final KnownKey xmpp_server_tls_enabled;
     public static final KnownKey xmpp_server_dialback_enabled;
     public static final KnownKey xmpp_server_session_allowmultiple;
@@ -1336,6 +1339,12 @@ public class LC {
                 "if set to 0, the connection is always closed after each http method invocation, " + 
                 "if set to -1, the connection will not be explicit closed, it could be closed by finalizer, which should not be relied on.");
         
+        shared_mime_info_globs = new KnownKey("shared_mime_info_globs",
+            "${zimbra_home}" + FS + "conf" + FS + "globs2",
+            "freedesktop.org shared-mime-info glob file");
+        shared_mime_info_magic = new KnownKey("shared_mime_info_magic",
+            "${zimbra_home}" + FS + "conf" + FS + "magic",
+            "freedesktop.org shared-mime-info magic file");
         
         xmpp_server_tls_enabled = new KnownKey("xmpp_server_tls_enabled","true", "Allow TLS for S2S connections"); 
         xmpp_server_dialback_enabled = new KnownKey("xmpp_server_dialback_enabled", "true", "Allow S2S Server Dialback Protocol");
