@@ -34,6 +34,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -483,6 +484,10 @@ public class Message extends MailItem {
         // and see if it updates an existing CalendarItem in the database table, or whatever...
         boolean updatedMetadata = false;
 
+        // Override CLASS property if preference says to mark everything as private.
+        PrefCalendarApptVisibility prefClass = acct.getPrefCalendarApptVisibility();
+        boolean forcePrivateClass = prefClass != null && !prefClass.equals(PrefCalendarApptVisibility._public);
+
         // Ignore alarms set by organizer.
         boolean allowOrganizerAlarm = DebugConfig.calendarAllowOrganizerSpecifiedAlarms;
 
@@ -496,6 +501,11 @@ public class Message extends MailItem {
                 calUidsSeen.add(uid);
             } else {
                 addRevision = false;
+            }
+
+            if (forcePrivateClass) {
+                cur.setClassProp(IcalXmlStrMap.CLASS_PRIVATE);
+                cur.setClassPropSetByMe(true);
             }
 
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
