@@ -264,7 +264,7 @@ public class Appointment extends CalendarItem {
             instances = expandInstances(st, et, false);
         } else {
             instances = new ArrayList<Instance>(1);
-            instances.add(Instance.fromInvite(this, invite));
+            instances.add(Instance.fromInvite(getId(), invite));
         }
         if (instances == null || instances.isEmpty())
             return null;

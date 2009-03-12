@@ -637,6 +637,7 @@ OR
   [name="email,..."]          // comma-separated list of email
   // For accounts listed in uid/id/name above, f/b search will be done for all calendar folders.
   // To view free/busy for a single folder in a particular account, use the <usr> format below.
+  [excludeUid="UID of appointment to exclude from free/busy search"]
 >
   [<usr [id="zimbraId] [name="email"]  // either id or email must be specified
        [l="folder id"]  // calendar folder id; if omitted, get f/b on all calendar folders
@@ -827,19 +828,79 @@ OR
 //
 // ExpandRecur
 //
-// Expand a Recur rule over a set of dates -- not sure if this is useful,
-// but might be useful to the UI if it wants to show occurences???
-//
-<ExpandRecurRequest s="RANGE_START_MSEC_GMT" e="RANGE_END_MSEC_GMT">
-   <recur>
-      ***see CreateAppointment for <recur> details***
-    </recur>
+
+<ExpandRecurRequest s="start time in millis" e="end time in millis">
+  <tz/>*
+  [<comp>     // series
+    <s/>                   // DTSTART
+    [<e/> OR <dur/>]       // DTEND/DURATION
+    <recur/>               // RRULE/RDATE/EXDATE
+  </comp>]
+  [<except>  // modified instances
+    <s/>                   // DTSTART
+    [<e/> OR <dur/>]       // DTEND/DURATION
+    <exceptId/>            // RECURRENCE-ID
+  </except>]*
+  [<cancel>  // canceled instances
+    <exceptId/>            // RECURRENCE-ID
+  </cancel>]*
 </ExpandRecurRequest>
 
 <ExpandRecurResponse>
-  <inst s="MSECS_GMT">*
+  <inst s="start time in millis" dur="duration in millis"
+        ridZ="recurrence-id string in UTC timezone"
+        [allDay="1"]    // if instance is for an all-day appointment
+        [tzo="millis"]  // GMT offset of start time in millis; returned only when allDay=1
+  />*
 </ExpandRecurResponse>
 
+
+//////////////////////////////////////////////////////////////////////
+//
+// GetRecur
+//
+// Retrieve the recurrence definition of an appointment
+//
+<GetRecurRequest id="calendar item id"/>
+
+<GetRecurResponse>
+  [same as ExpandRecurRequest content]
+</GetRecurResponse>
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// CheckRecurConflicts
+//
+// Check conflicts in recurrence against list of users.
+// Use all=1 to get all instances, even those without conflicts.  By default
+// only instances that have conflicts are returned.
+//
+
+<CheckRecurConflictsRequest
+  s="start time in millis" e="end time in millis"
+  [all="1"]
+  [excludeUid="UID of appointment to exclude from free/busy search"]
+>
+  <recurrence>
+    tz/comp/except/cancel elements (same as ExpandRecurRequest content)
+  </recurrence>
+  [<usr [id="zimbraId] [name="email"]  // either id or email must be specified
+       [l="folder id"]  // calendar folder id; if omitted, get f/b on all calendar folders
+  />]*
+</CheckRecurConflictsRequest>
+
+<CheckRecurConflictsResponse>
+  <inst s="start time in millis" dur="duration in millis"
+        ridZ="recurrence-id string in UTC timezone"
+        [allDay="1"]    // if instance is for an all-day appointment
+        [tzo="millis"]  // GMT offset of start time in millis; returned only when allDay=1
+  >
+    <usr name="email" fb="B|T|O"/>*  // for all users who have a conflict with the instance
+                                     // fb is free/busy status (Busy, Tentative or Out-of-office)
+  </inst>*
+</CheckRecurConflictsResponse>
 
 
 //////////////////////////////////////////////////////////////////////

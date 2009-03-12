@@ -45,6 +45,7 @@ public class InviteInfo implements Comparable {
     }
 
     public boolean equals(Object o) {
+        if (!(o instanceof InviteInfo)) return false;
         InviteInfo other = (InviteInfo) o;
         if (mMsgId == other.mMsgId
                 && mComponentId == other.mComponentId) {
@@ -55,6 +56,7 @@ public class InviteInfo implements Comparable {
     }
     
     public int compareTo(Object o) {
+        if (o == null) return 1;  // null sorts first
         InviteInfo other = (InviteInfo) o;
         int toRet = mMsgId - other.mMsgId;
         if (toRet == 0) {

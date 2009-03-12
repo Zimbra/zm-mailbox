@@ -29,6 +29,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 
 
 /**
@@ -108,7 +109,7 @@ public class Recurrence
     public interface IRecurrence extends Cloneable {
         public Metadata encodeMetadata();
         
-        abstract List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        abstract List<Instance> expandInstances(int calItemId, long start, long end)
         throws ServiceException;
         
         // get the first time for which the rule has instances
@@ -277,13 +278,13 @@ public class Recurrence
             return parent;
         }
 
-        List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        List<Instance> expandInstances(int calItemId, long start, long end)
         throws ServiceException {
             List lists[] = new ArrayList[mRules.size()];
             int num = 0;
             for (Iterator iter = mRules.iterator(); iter.hasNext();) {
                 IRecurrence cur = (IRecurrence)iter.next();
-                lists[num] = cur.expandInstances(calItem, start, end);
+                lists[num] = cur.expandInstances(calItemId, start, end);
                 num++;
             }
             
@@ -390,13 +391,14 @@ public class Recurrence
             return end;
         }
 
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
+        public List<Instance> expandInstances(int calItemId, long start, long end) {
             List<Instance> list = new ArrayList<Instance>();
             for (DateValue val : mDates) {
                 ParsedDateTime valStart = val.getStartTime();
                 ParsedDateTime valEnd = val.getEndTime();
-                list.add(new Instance(calItem, mInvId, false,
+                list.add(new Instance(calItemId, mInvId, false,
                                       valStart.getUtcTime(), valEnd.getUtcTime(),
+                                      !valStart.hasTime(), valStart.getOffset(), 
                                       true, true));
             }
             Collections.sort(list);
@@ -408,7 +410,8 @@ public class Recurrence
             meta.put(FN_RULE_TYPE, RULE_SINGLE_DATES);
             meta.put(FN_RDATE_EXDATE, mRdateExdate.encodeMetadata());
             meta.put(FN_DEFAULT_DURATION, mDefaultDuration);
-            meta.put(FN_INVID, mInvId.encodeMetadata());
+            if (mInvId != null)
+                meta.put(FN_INVID, mInvId.encodeMetadata());
             return meta;
         }
         
@@ -417,7 +420,9 @@ public class Recurrence
             Metadata rexdate = meta.getMap(FN_RDATE_EXDATE);
             mRdateExdate = RdateExdate.decodeMetadata(rexdate, tzmap);
             mDefaultDuration = ParsedDuration.parse(meta.get(FN_DEFAULT_DURATION));
-            mInvId = InviteInfo.fromMetadata(meta.getMap(FN_INVID), tzmap);
+            Metadata metaInvId = meta.getMap(FN_INVID, true);
+            if (metaInvId != null)
+                mInvId = InviteInfo.fromMetadata(metaInvId, tzmap);
             setDates();
         }
 
@@ -631,7 +636,7 @@ public class Recurrence
             return rule;
         }
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) 
+        public List<Instance> expandInstances(int calItemId, long start, long end) 
         {
             if (mDtStart == null) {
                 ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
@@ -664,7 +669,8 @@ public class Recurrence
                         instEnd = instStart;
                     }
                     if (instStart < end && instEnd > start) {
-                        toRet.add(num++, new Instance(calItem, mInvId, false, instStart, instEnd, false, false));
+                        int tzOffset = tz.getOffset(instStart);
+                        toRet.add(num++, new Instance(calItemId, mInvId, false, instStart, instEnd, !mDtStart.hasTime(), tzOffset, false, false));
                     }
                 }
             } catch (ServiceException se) {
@@ -727,7 +733,8 @@ public class Recurrence
             meta.put(FN_DTSTART, mDtStart);
             meta.put(FN_DURATION, mDuration);
             meta.put(FN_RECUR, mRecur);
-            meta.put(FN_INVID, mInvId.encodeMetadata());
+            if (mInvId != null)
+                meta.put(FN_INVID, mInvId.encodeMetadata());
             
             return meta;
         }
@@ -747,8 +754,9 @@ public class Recurrence
                 throw ServiceException.FAILURE("ParseException ", e);
             }
             mRecur = new ZRecur(meta.get(FN_RECUR).toString(), tzmap);
-            
-            mInvId = InviteInfo.fromMetadata(meta.getMap(FN_INVID), tzmap);
+            Metadata metaInvId = meta.getMap(FN_INVID, true);
+            if (metaInvId != null)
+                mInvId = InviteInfo.fromMetadata(metaInvId, tzmap);
         }
 
         // define the value
@@ -817,7 +825,7 @@ public class Recurrence
         }
         
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        public List<Instance> expandInstances(int calItemId, long start, long end)
         throws ServiceException {
             if (mDtStart == null) {
                 ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
@@ -829,7 +837,7 @@ public class Recurrence
             // RRULEs + RDATEs
             List<Instance> toAdd;
             if (mAddRules != null)
-                toAdd = mAddRules.expandInstances(calItem, start, end);
+                toAdd = mAddRules.expandInstances(calItemId, start, end);
             else
                 toAdd = new ArrayList<Instance>(1);
 
@@ -843,7 +851,7 @@ public class Recurrence
                 }
 
                 CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
-                        calItem, mInvId, false, firstStart, firstEnd, false, true);
+                        calItemId, mInvId, false, firstStart, firstEnd, !mDtStart.hasTime(), mDtStart.getOffset(), false, true);
                 if (first == null || first.compareTo(dtstartInst) != 0) {
                     assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
                     toAdd.add(0,dtstartInst);
@@ -853,7 +861,7 @@ public class Recurrence
             // -(EXRULEs + EXDATEs)
             if (mSubtractRules == null)
                 return toAdd;
-            List<Instance> toExclude = mSubtractRules.expandInstances(calItem, start, end);
+            List<Instance> toExclude = mSubtractRules.expandInstances(calItemId, start, end);
             return ListUtil.subtractSortedLists(
                     toAdd, toExclude, new Instance.StartTimeComparator());
         }
@@ -899,7 +907,8 @@ public class Recurrence
                 meta.put(FN_ADDRULES, mAddRules.encodeMetadata());
             if (mSubtractRules != null)
                 meta.put(FN_SUBRULES, mSubtractRules.encodeMetadata());
-            meta.put(FN_INVID, mInvId.encodeMetadata());
+            if (mInvId != null)
+                meta.put(FN_INVID, mInvId.encodeMetadata());
 
             return meta;
         }
@@ -919,7 +928,9 @@ public class Recurrence
                 mSubtractRules = new MultiRuleSorter(metaSubrules, tzmap);
             }
 
-            mInvId = InviteInfo.fromMetadata(meta.getMap(FN_INVID), tzmap);
+            Metadata metaInvId = meta.getMap(FN_INVID, true);
+            if (metaInvId != null)
+                mInvId = InviteInfo.fromMetadata(metaInvId, tzmap);
         }
         
         protected CompoundRuleBase(ParsedDateTime dtstart, ParsedDuration duration, 
@@ -1060,7 +1071,7 @@ public class Recurrence
             return meta;
         }
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
+        public List<Instance> expandInstances(int calItemId, long start, long end) {
             return new ArrayList<Instance>(); // NONE!
         }
         
@@ -1126,9 +1137,9 @@ public class Recurrence
         
         public int getType() { return TYPE_EXCEPTION; }
 
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        public List<Instance> expandInstances(int calItemId, long start, long end)
         throws ServiceException {
-            List<Instance> toRet = super.expandInstances(calItem, start, end);
+            List<Instance> toRet = super.expandInstances(calItemId, start, end);
             
             for (Iterator iter = toRet.iterator(); iter.hasNext();) {
                 CalendarItem.Instance cur = (CalendarItem.Instance)iter.next();
@@ -1175,10 +1186,10 @@ public class Recurrence
         }
         
         private ExceptionRule(ExceptionRule other) {
-            super(other.mDtStart, other.mDuration, 
-                    other.mAddRules == null ? null : (MultiRuleSorter)other.mAddRules.clone(), 
-                            other.mSubtractRules == null ? null : (MultiRuleSorter)other.mSubtractRules.clone(), 
-                                    other.mInvId);
+            super(other.mDtStart, other.mDuration,
+                  other.mAddRules == null ? null : (MultiRuleSorter) other.mAddRules.clone(),
+                  other.mSubtractRules == null ? null : (MultiRuleSorter) other.mSubtractRules.clone(),
+                  other.mInvId);
             mRecurRange = other.mRecurRange;
         }
         
@@ -1261,7 +1272,7 @@ public class Recurrence
             mExceptions.add(rule);
         }
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) throws ServiceException {
+        public List<Instance> expandInstances(int calItemId, long start, long end) throws ServiceException {
             long startAdjusted = start;
             long endAdjusted = end;
             // Stretch the start/end times to ensure all exception instances are included.
@@ -1300,7 +1311,7 @@ public class Recurrence
             }
 
             // get the list of instances that THIS rule expands into
-            List<Instance> stdInstances = super.expandInstances(calItem, startAdjusted, endAdjusted);
+            List<Instance> stdInstances = super.expandInstances(calItemId, startAdjusted, endAdjusted);
 
             // Iterate the expanded instances and eliminate instances whose start time:
             // 1) lies outside the [start, end) range
@@ -1328,7 +1339,7 @@ public class Recurrence
             List<List<Instance>> exceptionInstancesList = new ArrayList<List<Instance>>();
             for (IException except : mExceptions) {
                 if (except != null) {
-                    List<Instance> instances = except.expandInstances(calItem, startAdjusted, endAdjusted);
+                    List<Instance> instances = except.expandInstances(calItemId, startAdjusted, endAdjusted);
                     // Restrict to [start, end) range.
                     for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
                         Instance inst = iter.next();
@@ -1399,9 +1410,9 @@ public class Recurrence
         
         private RecurrenceRule(RecurrenceRule other) {
             super(other.mDtStart, other.mDuration, 
-                    other.mAddRules == null ? null : (MultiRuleSorter)other.mAddRules.clone(), 
-                            other.mSubtractRules == null ? null : (MultiRuleSorter)other.mSubtractRules.clone(), 
-                                    other.mInvId);
+                  other.mAddRules == null ? null : (MultiRuleSorter)other.mAddRules.clone(), 
+                  other.mSubtractRules == null ? null : (MultiRuleSorter)other.mSubtractRules.clone(), 
+                  other.mInvId);
             mExceptions = new ArrayList<IException>();
             for (Iterator iter = other.mExceptions.iterator(); iter.hasNext();) {
                 IException cur = (IException)iter.next();
@@ -1417,9 +1428,9 @@ public class Recurrence
         protected List<IException> mExceptions;
     }
 
-    public static List<Instance> expandInstances(IRecurrence recur, CalendarItem calItem, long start, long end)
+    public static List<Instance> expandInstances(IRecurrence recur, int calItemId, long start, long end)
     throws ServiceException {
-        List<Instance> list = recur.expandInstances(calItem, start, end);
+        List<Instance> list = recur.expandInstances(calItemId, start, end);
 
         // Eliminate duplicate instances.  For example, an instance may be mentioned both as
         // a RDATE and an exception VEVENT.  Outlook seems to generate this type of data upon
@@ -1446,5 +1457,73 @@ public class Recurrence
         if (prev != null)
             toRet.add(prev);
         return toRet;
+    }
+
+    public static void main(String[] args) throws Exception {
+        ICalTimeZone pacific = new ICalTimeZone(
+                "America/Los_Angeles",
+                -28800000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=11;BYDAY=1SU", "PST",
+                -25200000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=3;BYDAY=2SU", "PDT");
+        TimeZoneMap tzmap = new TimeZoneMap(pacific);
+        String str = "TZID=\"" + pacific.getID() + "\":20090105T120000";
+        ParsedDateTime dtStart = ParsedDateTime.parse(str, tzmap);
+        ParsedDuration duration = ParsedDuration.parse("PT1H");
+
+        List<IRecurrence> addRules = new ArrayList<IRecurrence>();
+        List<IRecurrence> subRules = new ArrayList<IRecurrence>();
+
+        // weekly from 2009/01/05, for 52 weeks
+        ZRecur rule = new ZRecur("FREQ=WEEKLY;INTERVAL=1", tzmap);
+        addRules.add(new SimpleRepeatingRule(dtStart, duration, rule, null));
+
+        // add a couple of RDATES: 2009/01/06, 2009/01/07
+        RdateExdate rdate = new RdateExdate(ICalTok.RDATE, pacific);
+        str = "TZID=\"" + pacific.getID() + "\":20090106T120000";
+        ParsedDateTime rd1 = ParsedDateTime.parse(str, tzmap);
+        rdate.addValue(rd1);
+        str = "TZID=\"" + pacific.getID() + "\":20090107T120000";
+        ParsedDateTime rd2 = ParsedDateTime.parse(str, tzmap);
+        rdate.addValue(rd2);
+        addRules.add(new SingleDates(rdate, duration));
+
+        // modify instance on 2009/02/16 to start at 1pm instead of noon, for 2 hours
+        str = "TZID=\"" + pacific.getID() + "\":20090216T120000";
+        ParsedDateTime ridDtModify1 = ParsedDateTime.parse(str, tzmap);
+        RecurId ridModify1 = new RecurId(ridDtModify1, RecurId.RANGE_NONE);
+        str = "TZID=\"" + pacific.getID() + "\":20090216T130000";
+        ParsedDateTime dtStartModify1 = ParsedDateTime.parse(str, tzmap);
+        ParsedDuration durModify1 = ParsedDuration.parse("PT2H");
+        ExceptionRule modify1 = new ExceptionRule(ridModify1, dtStartModify1, durModify1, null);
+
+        // cancel instance on 2009/01/19
+        str = "TZID=\"" + pacific.getID() + "\":20090119T120000";
+        ParsedDateTime dtCancel1 = ParsedDateTime.parse(str, tzmap);
+        RecurId ridCancel1 = new RecurId(dtCancel1, RecurId.RANGE_NONE);
+        CancellationRule cancel1 = new CancellationRule(ridCancel1);
+
+        // EXDATE on 2009/02/09
+        RdateExdate exdate = new RdateExdate(ICalTok.EXDATE, pacific);
+        str = "TZID=\"" + pacific.getID() + "\":20090209T120000";
+        ParsedDateTime ex1 = ParsedDateTime.parse(str, tzmap);
+        exdate.addValue(ex1);
+        SingleDates exdateRule = new SingleDates(exdate, duration);
+        subRules.add(exdateRule);
+
+        RecurrenceRule recurrence = new RecurrenceRule(dtStart, duration, null, addRules, subRules);
+        recurrence.addException(modify1);
+        recurrence.addException(cancel1);
+
+        // Get all instances between 2009/01/01 and 2010/01/01.
+        Calendar startCal = new GregorianCalendar(pacific);
+        startCal.clear();
+        startCal.set(2009, Calendar.JANUARY, 1, 0, 0, 0);
+        Calendar endCal = (Calendar) startCal.clone();
+        endCal.add(Calendar.YEAR, 1);
+//        List<Instance> instances = recurrence.expandInstances(-1, startCal.getTimeInMillis(), endCal.getTimeInMillis());
+        List<Instance> instances = recurrence.expandInstances(-1, startCal.getTimeInMillis(), Long.MAX_VALUE);
+        for (Instance inst : instances) {
+            System.out.println(inst);
+        }
+        System.out.println("Got " + instances.size() + " instances");
     }
 }

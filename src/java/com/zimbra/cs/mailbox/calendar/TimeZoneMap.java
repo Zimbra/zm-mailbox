@@ -62,7 +62,10 @@ public class TimeZoneMap {
     
     
     public boolean contains(ICalTimeZone tz) {
-        return mTzMap.containsKey(tz.getID());
+        if (tz != null)
+            return mTzMap.containsKey(tz.getID());
+        else
+            return false;
     }
 
     /**

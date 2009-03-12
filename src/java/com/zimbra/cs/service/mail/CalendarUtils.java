@@ -350,11 +350,10 @@ public class CalendarUtils {
         return list;
     }
 
-    static RecurId parseRecurId(Element e, TimeZoneMap invTzMap, Invite inv)
-            throws ServiceException {
-        String range = e.getAttribute(MailConstants.A_CAL_RANGE, "");
+    static RecurId parseRecurId(Element e, TimeZoneMap tzmap) throws ServiceException {
+        String range = e.getAttribute(MailConstants.A_CAL_RANGE, null);
 
-        ParsedDateTime dt = parseDateTime(e, invTzMap, inv);
+        ParsedDateTime dt = parseDateTime(e, tzmap);
         return new RecurId(dt, range);
     }
 
@@ -367,23 +366,22 @@ public class CalendarUtils {
      * @return obj[0] is a Date, obj[1] is a TimeZone
      * @throws ServiceException
      */
-    static ParsedDateTime parseDateTime(Element e, TimeZoneMap invTzMap,
-            Invite inv) throws ServiceException {
+    static ParsedDateTime parseDateTime(Element e, TimeZoneMap invTzMap) throws ServiceException {
         String d = e.getAttribute(MailConstants.A_CAL_DATETIME, null);
         String tz = e.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
-        return parseDateTime(e.getName(), d, tz, invTzMap, inv);
+        return parseDateTime(e.getName(), d, tz, invTzMap);
     }
 
     private static ParsedDateTime parseDateTime(String eltName, String d,
-            String tzName, TimeZoneMap invTzMap, Invite inv)
+            String tzName, TimeZoneMap invTzMap)
             throws ServiceException {
         try {
             ICalTimeZone zone = null;
             if (tzName != null) {
-                zone = lookupAndAddToTzList(tzName, invTzMap, inv);
+                zone = lookupAndAddToTzList(tzName, invTzMap, null);
             }
-            return ParsedDateTime.parse(d, invTzMap, zone, inv.getTimeZoneMap()
-                    .getLocalTimeZone());
+            ICalTimeZone localTz = invTzMap != null ? invTzMap.getLocalTimeZone() : null;
+            return ParsedDateTime.parse(d, invTzMap, zone, localTz);
         } catch (ParseException ex) {
             throw ServiceException.INVALID_REQUEST("could not parse time "
                     + d + " in element " + eltName, ex);
@@ -418,18 +416,17 @@ public class CalendarUtils {
                 throw ServiceException.INVALID_REQUEST("invalid time zone \"" + tzId + "\"", null);
             }
         }
-        if (!inv.getTimeZoneMap().contains(zone))
+        if (inv != null && !inv.getTimeZoneMap().contains(zone))
             inv.getTimeZoneMap().add(zone);
         return zone;
     }
 
-    private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap, Invite inv) 
+    static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap,
+                                                    ParsedDateTime dtStart, ParsedDateTime dtEnd,
+                                                    ParsedDuration dur, RecurId recurId)
     throws ServiceException {
-        
-        ParsedDuration dur = inv.getDuration();
-        if (dur == null && inv.getStartTime() != null && inv.getEndTime() != null) {
-            dur = inv.getEndTime().difference(inv.getStartTime());
-        }
+        if (dur == null && dtStart != null && dtEnd != null)
+            dur = dtEnd.difference(dtStart);
         
         ArrayList<IRecurrence> addRules = new ArrayList<IRecurrence>();
         ArrayList<IRecurrence> subRules = new ArrayList<IRecurrence>();
@@ -462,30 +459,30 @@ public class CalendarUtils {
                          dtvalIter.hasNext(); ) {
                         ICalTok dtvalValueType = null;
                         Element dtvalElem = dtvalIter.next();
-                        Element dtvalStart = dtvalElem.getElement(MailConstants.E_CAL_START_TIME);
-                        String dtvalStartDateStr = dtvalStart.getAttribute(MailConstants.A_CAL_DATETIME);
-                        ParsedDateTime dtStart =
-                            parseDateTime(dtvalElem.getName(), dtvalStartDateStr, tzid, invTzMap, inv);
+                        Element dtvalStartElem = dtvalElem.getElement(MailConstants.E_CAL_START_TIME);
+                        String dtvalStartDateStr = dtvalStartElem.getAttribute(MailConstants.A_CAL_DATETIME);
+                        ParsedDateTime dtvalStart =
+                            parseDateTime(dtvalElem.getName(), dtvalStartDateStr, tzid, invTzMap);
 
-                        Element dtvalEnd = dtvalElem.getOptionalElement(MailConstants.E_CAL_END_TIME);
-                        Element dtvalDur = dtvalElem.getOptionalElement(MailConstants.E_CAL_DURATION);
-                        if (dtvalEnd == null && dtvalDur == null) {
-                            if (dtStart.hasTime())
+                        Element dtvalEndElem = dtvalElem.getOptionalElement(MailConstants.E_CAL_END_TIME);
+                        Element dtvalDurElem = dtvalElem.getOptionalElement(MailConstants.E_CAL_DURATION);
+                        if (dtvalEndElem == null && dtvalDurElem == null) {
+                            if (dtvalStart.hasTime())
                                 dtvalValueType = ICalTok.DATE_TIME;
                             else
                                 dtvalValueType = ICalTok.DATE;
-                            rexdate.addValue(dtStart);
+                            rexdate.addValue(dtvalStart);
                         } else {
                             dtvalValueType = ICalTok.PERIOD;
-                            if (dtvalEnd != null) {
-                                String dtvalEndDateStr = dtvalEnd.getAttribute(MailConstants.A_CAL_DATETIME);
-                                ParsedDateTime dtEnd =
-                                    parseDateTime(dtvalElem.getName(), dtvalEndDateStr, tzid, invTzMap, inv);
-                                Period p = new Period(dtStart, dtEnd);
+                            if (dtvalEndElem != null) {
+                                String dtvalEndDateStr = dtvalEndElem.getAttribute(MailConstants.A_CAL_DATETIME);
+                                ParsedDateTime dtvalEnd =
+                                    parseDateTime(dtvalElem.getName(), dtvalEndDateStr, tzid, invTzMap);
+                                Period p = new Period(dtvalStart, dtvalEnd);
                                 rexdate.addValue(p);
                             } else {
-                                ParsedDuration d = ParsedDuration.parse(dtvalDur);
-                                Period p = new Period(dtStart, d);
+                                ParsedDuration d = ParsedDuration.parse(dtvalDurElem);
+                                Period p = new Period(dtvalStart, d);
                                 rexdate.addValue(p);
                             }
                         }
@@ -605,9 +602,9 @@ public class CalendarUtils {
                     try { 
                         ZRecur recur = new ZRecur(recurBuf.toString(), invTzMap);
                         if (exclude) {
-                            subRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
+                            subRules.add(new Recurrence.SimpleRepeatingRule(dtStart, dur, recur, null));
                         } else {
-                            addRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
+                            addRules.add(new Recurrence.SimpleRepeatingRule(dtStart, dur, recur, null));
                         }
                     } catch (ServiceException ex) {
                         throw ServiceException.INVALID_REQUEST("Exception parsing <recur> <rule>", ex);
@@ -620,10 +617,10 @@ public class CalendarUtils {
             }    // iterate inside <add> or <exclude>
         } // iter inside <recur>
         
-        if (inv.getRecurId() != null) {
-            return new Recurrence.ExceptionRule(inv.getRecurId(), inv.getStartTime(), dur, null, addRules, subRules);
+        if (recurId != null) {
+            return new Recurrence.ExceptionRule(recurId, dtStart, dur, null, addRules, subRules);
         } else {
-            return new Recurrence.RecurrenceRule(inv.getStartTime(), dur, null, addRules, subRules);
+            return new Recurrence.RecurrenceRule(dtStart, dur, null, addRules, subRules);
         }
     }
 
@@ -644,17 +641,15 @@ public class CalendarUtils {
         }
     }
 
-    private static void parseTimeZones(Element parent, TimeZoneMap tzMap)
-            throws ServiceException {
+    static void parseTimeZones(Element parent, TimeZoneMap tzMap) throws ServiceException {
         assert (tzMap != null);
-        for (Iterator iter = parent.elementIterator(MailConstants.E_CAL_TZ); iter
-                .hasNext();) {
+        for (Iterator iter = parent.elementIterator(MailConstants.E_CAL_TZ); iter.hasNext();) {
             Element tzElem = (Element) iter.next();
             ICalTimeZone tz = parseTzElement(tzElem);
             tzMap.add(tz);
         }
     }
-    
+
     /**
      * Parse a <tz> definition, as described in soap-calendar.txt and soap.txt (SearchRequest)
      *
@@ -752,7 +747,7 @@ public class CalendarUtils {
         // RECURRENCE-ID
         if (recurrenceIdAllowed) {
             Element e = element.getElement(MailConstants.E_CAL_EXCEPTION_ID);
-            ParsedDateTime dt = parseDateTime(e, tzMap, newInv);
+            ParsedDateTime dt = parseDateTime(e, tzMap);
             RecurId recurId = new RecurId(dt, RecurId.RANGE_NONE);
             newInv.setRecurId(recurId);
         } else {
@@ -956,8 +951,9 @@ public class CalendarUtils {
                 throw ServiceException.INVALID_REQUEST(
                         "No <recur> allowed in an exception", null);
             }
-            Recurrence.IRecurrence recurrence = parseRecur(recur, tzMap,
-                    newInv);
+            Recurrence.IRecurrence recurrence = parseRecur(
+                    recur, tzMap, newInv.getStartTime(), newInv.getEndTime(),
+                    newInv.getDuration(), newInv.getRecurId());
             newInv.setRecurrence(recurrence);
         }
 

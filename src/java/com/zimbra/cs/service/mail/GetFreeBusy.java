@@ -71,9 +71,10 @@ public class GetFreeBusy extends MailDocumentHandler {
         String uidParam = request.getAttribute(MailConstants.A_UID, null);    // comma-separated list of account emails or zimbraId GUIDs that *must* match UUID format
         String idParam = request.getAttribute(MailConstants.A_ID, null);    // comma-separated list of account zimbraId GUIDs
         String nameParam = request.getAttribute(MailConstants.A_NAME, null); // comma-separated list of account emails
+        String exApptUid = request.getAttribute(MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID, null);
 
         Account requestor = Provisioning.getInstance().get(Provisioning.AccountBy.id, zc.getAuthtokenAccountId());
-    	FreeBusyQuery fbQuery = new FreeBusyQuery((HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST), zc, requestor, rangeStart, rangeEnd);
+    	FreeBusyQuery fbQuery = new FreeBusyQuery((HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST), zc, requestor, rangeStart, rangeEnd, exApptUid);
 
         String[] idStrs = null;
 

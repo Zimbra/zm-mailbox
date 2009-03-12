@@ -150,7 +150,7 @@ public class SendInviteReply extends CalendarRequest {
                     tz = CalendarUtils.parseTzElement(tzElem);
                     tzmap.add(tz);
                 }
-                exceptDt = CalendarUtils.parseDateTime(exc, tzmap, oldInv);
+                exceptDt = CalendarUtils.parseDateTime(exc, tzmap);
             } else if (oldInv.hasRecurId()) {
                 exceptDt = oldInv.getRecurId().getDt();
             }

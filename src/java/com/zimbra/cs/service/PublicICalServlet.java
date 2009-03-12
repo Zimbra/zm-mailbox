@@ -24,6 +24,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Log;
@@ -47,9 +48,6 @@ public class PublicICalServlet extends ZimbraServlet {
     private static final long serialVersionUID = -7350146465570984660L;
 
     private static Log sLog = LogFactory.getLog(PublicICalServlet.class);
-
-    private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
-
 
     public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
@@ -110,8 +108,9 @@ public class PublicICalServlet extends ZimbraServlet {
         }
 
         long days = (rangeEnd - rangeStart) / Constants.MILLIS_PER_DAY;
-        if (days > MAX_PERIOD_SIZE_IN_DAYS) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (max " + MAX_PERIOD_SIZE_IN_DAYS + " days)");
+        long maxDays = LC.calendar_freebusy_max_days.longValueWithinRange(0, 36600);
+        if (days > maxDays) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (max " + maxDays + " days)");
             return;
         }
 
@@ -150,7 +149,7 @@ public class PublicICalServlet extends ZimbraServlet {
             }
         }
 
-        FreeBusyQuery fbQuery = new FreeBusyQuery(req, zsc, authAccount, rangeStart, rangeEnd);
+        FreeBusyQuery fbQuery = new FreeBusyQuery(req, zsc, authAccount, rangeStart, rangeEnd, null);
         fbQuery.addEmailAddress(acctName, FreeBusyQuery.CALENDAR_FOLDER_ALL);
         Collection<FreeBusy> result = fbQuery.getResults();
         FreeBusy fb = null;

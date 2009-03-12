@@ -182,7 +182,7 @@ public class CalendarCache {
                     String effectivePartStat = calItem.getEffectivePartStat(inv, inst);
                     InstanceData instData;
                     if (!inst.isException()) {
-                        String ridZ = inst.getRecurIdZ(inv);
+                        String ridZ = inst.getRecurIdZ();
                         Long tzOffset = instStartLong != null ? Util.getTZOffsetForInvite(inv, instStart) : null;
                         instData = new InstanceData(
                                 ridZ, instStartLong, durationLong, alarmAt, tzOffset,

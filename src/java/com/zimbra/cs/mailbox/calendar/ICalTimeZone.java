@@ -538,7 +538,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         return tz;
     }
 
-    private ICalTimeZone(String tzId,
+    ICalTimeZone(String tzId,
                     int stdOffset, String stdDtStart, String stdRRule, String stdTzname,
                     int dayOffset, String dayDtStart, String dayRRule, String dayTzname) {
         super(0, tzId);

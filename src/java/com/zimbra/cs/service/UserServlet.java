@@ -196,6 +196,11 @@ public class UserServlet extends ZimbraServlet {
      */
     public static final String QP_META = "meta";
 
+    /**
+     * Used by {@link #IfbFormatter} to specify the UID of calendar item to exclude when computing free/busy.
+     */
+    public static final String QP_EXUID = "exuid";
+
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 
     public static final String AUTH_BASIC = "ba"; // basic auth

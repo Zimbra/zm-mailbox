@@ -725,7 +725,7 @@ public abstract class CalendarItem extends MailItem {
         List<Instance> instances = new ArrayList<Instance>();
         if (mRecurrence != null) {
             long startTime = System.currentTimeMillis();
-            instances = Recurrence.expandInstances(mRecurrence, this, start, endAdjusted);
+            instances = Recurrence.expandInstances(mRecurrence, getId(), start, endAdjusted);
             if (ZimbraLog.calendar.isDebugEnabled()) {
 	            long elapsed = System.currentTimeMillis() - startTime;
 	            ZimbraLog.calendar.debug(
@@ -747,9 +747,10 @@ public abstract class CalendarItem extends MailItem {
                     ParsedDateTime dtEnd = inv.getEffectiveEndTime();
                     long invEnd = dtEnd != null ? dtEnd.getUtcTime() : 0;
                     if ((invStart < endAdjusted && invEnd > start) || (dtStart == null)) {
-                        Instance inst = new Instance(this, new InviteInfo(inv),
+                        Instance inst = new Instance(getId(), new InviteInfo(inv),
                                                      dtStart == null,
                                                      invStart, invEnd,
+                                                     inv.isAllDayEvent(), dtStart != null ? dtStart.getOffset() : 0,
                                                      inv.hasRecurId(), false);
                         instances.add(inst);
                     }
@@ -782,7 +783,9 @@ public abstract class CalendarItem extends MailItem {
 
         private InviteInfo mInvId;
         
-        private CalendarItem mCalItem;
+        private int mCalItemId;
+        private boolean mAllDay;
+        private int mTzOffset;    // used when mAllDay == true; timezone offset in millis of mStart
 
         /**
          * Create an Instance object using data in an Invite that points to
@@ -790,41 +793,64 @@ public abstract class CalendarItem extends MailItem {
          * @param inv
          * @return
          */
-        public static Instance fromInvite(CalendarItem calItem, Invite inv) {
+        public static Instance fromInvite(int calItemId, Invite inv) {
             ParsedDateTime dtStart = inv.getStartTime();
             long start = dtStart != null ? dtStart.getUtcTime() : 0;
             ParsedDateTime dtEnd = inv.getEffectiveEndTime();
             long end = dtEnd != null ? dtEnd.getUtcTime() : 0;
-            return new Instance(calItem, new InviteInfo(inv), dtStart == null, start, end, inv.hasRecurId(), false);
+            int tzOffset = 0;
+            boolean allDay = inv.isAllDayEvent();
+            if (allDay)
+                tzOffset = dtStart.getOffset();
+            return new Instance(calItemId, new InviteInfo(inv), dtStart == null, start, end, allDay, tzOffset, inv.hasRecurId(), false);
         }
 
-        public Instance(CalendarItem calItem, InviteInfo invInfo,
+        public Instance(int calItemId, InviteInfo invInfo,
                 boolean timeless,
-                long _start, long _end,
+                long start, long end, boolean allDay, int tzOffset,
                 boolean _exception, boolean fromRdate) 
         {
             mInvId = invInfo;
-            mCalItem = calItem;
+            mCalItemId = calItemId;
             mTimeless = timeless;
             if (mTimeless) {
                 mStart = mEnd = 0;
+                mAllDay = false;
+                mTzOffset = 0;
             } else {
-                mStart = _start;
-                mEnd = _end;
+                mStart = start;
+                mEnd = end;
+                mAllDay = allDay;
+                mTzOffset = mAllDay ? tzOffset : 0;  // don't set mTzOffset for non-allday instances
             }
             mIsException = _exception;
             mFromRdate = fromRdate;
         }
 
         public int compareTo(Instance other) {
-            long toRet = mCalItem.getId() - other.mCalItem.getId();
+            long toRet = mCalItemId - other.mCalItemId;
             if (toRet == 0) {
                 if (mTimeless == other.mTimeless) {
                     toRet = mStart - other.mStart;
                     if (toRet == 0) {
                         toRet = mEnd - other.mEnd;
                         if (toRet == 0) {
-                            toRet = mInvId.compareTo(other.mInvId);
+                            if (mAllDay == other.mAllDay) {
+                                toRet = mTzOffset - other.mTzOffset;
+                                if (toRet == 0) {
+                                    if (mInvId != null)
+                                        toRet = mInvId.compareTo(other.mInvId);
+                                    else if (other.mInvId != null)
+                                        toRet = other.mInvId.compareTo(mInvId) * -1;
+                                    else
+                                        toRet = 0;
+                                }
+                            } else {
+                                if (mAllDay)
+                                    toRet = -1;
+                                else
+                                    toRet = 1;
+                            }
                         }
                     }
                 } else {
@@ -848,14 +874,21 @@ public abstract class CalendarItem extends MailItem {
             }
 
             Instance other = (Instance) o;
-            return (mTimeless == other.mTimeless) && (mStart == other.mStart) && (mEnd == other.mEnd)
-                    && (mInvId.equals(other.mInvId));
+            boolean sameInvId;
+            if (mInvId != null)
+                sameInvId = mInvId.equals(other.mInvId);
+            else
+                sameInvId = other.mInvId == null;
+            return sameInvId && (mTimeless == other.mTimeless)
+                   && (mStart == other.mStart) && (mEnd == other.mEnd)
+                   && (mAllDay == other.mAllDay) && (mTzOffset == other.mTzOffset);
         }
 
         public boolean sameTime(Instance other) {
             if (!mTimeless && !other.mTimeless) {
                 // Same if they have identical start and end times.
-                return mStart == other.mStart && mEnd == other.mEnd;
+                return mStart == other.mStart && mEnd == other.mEnd
+                       && mAllDay == other.mAllDay && mTzOffset == other.mTzOffset;
             } else {
                 // Even if both are timeless they are considered different.
                 return false;
@@ -867,19 +900,23 @@ public abstract class CalendarItem extends MailItem {
             Date dstart = new Date(mStart);
             Date dend = new Date(mEnd);
             toRet.append(mTimeless).append(",");
-            toRet.append(dstart).append(",").append(dend).append(",").append(
-                    mIsException);
-            toRet.append(",ID=").append(mInvId.getMsgId()).append("-").append(
-                    mInvId.getComponentId());
+            toRet.append(dstart).append(",").append(dend).append(",").append(mIsException);
+            toRet.append(",allDay=").append(mAllDay);
+            toRet.append(",tzo=").append(mTzOffset);
+            if (mInvId != null)
+                toRet.append(",ID=").append(mInvId.getMsgId()).append("-").append(mInvId.getComponentId());
             toRet.append(")");
             return toRet.toString();
         }
         
-        public CalendarItem getCalendarItem() { return mCalItem; }
-        public int getMailItemId() { return mInvId.getMsgId(); }
-        public int getComponentNum() { return mInvId.getComponentId(); }
+        public int getCalendarItemId() { return mCalItemId; }
+        public CalendarItem getCalendarItem() { return null; }
+        public int getMailItemId() { return mInvId != null ? mInvId.getMsgId() : -1; }
+        public int getComponentNum() { return mInvId != null ? mInvId.getComponentId() : -1; }
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
+        public boolean isAllDay() { return mAllDay; }
+        public int getTzOffset() { return mTzOffset; }
         public boolean isTimeless() { return mTimeless; }
         public boolean isException() { return mIsException; }
         public void setIsException(boolean isException) { mIsException = isException; } 
@@ -890,41 +927,43 @@ public abstract class CalendarItem extends MailItem {
             public int compare(Instance a, Instance b) {
                 long as = a.getStart();
                 long bs = b.getStart();
-                if (as < bs)
+                if (as < bs) {
                     return -1;
-                else if (as == bs)
-                    return 0;
-                else
+                } else if (as > bs) {
                     return 1;
+                } else {
+                    if (a.mAllDay == b.mAllDay) {
+                        return a.mTzOffset - b.mTzOffset;
+                    } else {
+                        if (a.mAllDay)
+                            return -1;
+                        else
+                            return 1;
+                    }
+                }
             }
         }
 
         /**
-         * Returns "YYYYMMDD[ThhmmssZ]" string for this instance.  inv is the Invite
-         * that this instance was expanded from.
-         * @param inv
+         * Returns "YYYYMMDD[ThhmmssZ]" string for this instance.
          * @return
          */
-        public String getRecurIdZ(Invite inv) {
-            ParsedDateTime dtStart = inv.getStartTime();
-            if (dtStart == null)
+        public String getRecurIdZ() {
+            if (mTimeless)
                 return null;
-            ICalTimeZone tz = dtStart.getTimeZone();
-            long startTime = mStart;
             ParsedDateTime dt;
-            if (inv.isAllDayEvent() && tz != null) {
-                startTime += tz.getOffset(startTime);
-                dt = ParsedDateTime.fromUTCTime(startTime);
+            if (mAllDay) {
+                dt = ParsedDateTime.fromUTCTime(mStart + mTzOffset);
                 dt.setHasTime(false);
             } else {
-                dt = ParsedDateTime.fromUTCTime(startTime);            
+                dt = ParsedDateTime.fromUTCTime(mStart);
             }
             return dt.getDateTimePartString(false);
         }
 
         public RecurId makeRecurId(Invite refInv) {
             // Get it from InviteInfo if we can.
-            RecurId rid = mInvId.getRecurrenceId();
+            RecurId rid = mInvId != null ? mInvId.getRecurrenceId() : null;
             if (rid != null)
                 return rid;
 

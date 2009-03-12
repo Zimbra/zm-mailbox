@@ -50,6 +50,7 @@ import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -1343,7 +1344,7 @@ public class ToXML {
                 }
 
                 if (invite.isEvent()) {
-                    Instance inst = Instance.fromInvite(calItem, invite);
+                    Instance inst = Instance.fromInvite(calItem.getId(), invite);
                     if (calItem instanceof Appointment) {
                         Appointment appt = (Appointment) calItem;
                         e.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL,
@@ -1390,71 +1391,19 @@ public class ToXML {
             if (isException) {
                 e.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
                 RecurId rid = invite.getRecurId();
-                ParsedDateTime ridDt = rid.getDt();
-                Element ridElem = e.addElement(MailConstants.E_CAL_EXCEPTION_ID);
-                ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString(false));
-                if (!allDay)
-                    ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
-                ridElem.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, rid.getRange());
-
                 e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, rid.getDtZ());
+                encodeRecurId(e, rid, allDay);
             }
 
             boolean forceUTC =
                 DebugConfig.calendarForceUTC && !isRecurring && !isException && !allDay;
             ParsedDateTime dtStart = invite.getStartTime();
-            if (dtStart != null) {
-                if (forceUTC) {
-                    dtStart = (ParsedDateTime) dtStart.clone();
-                    dtStart.toUTC();
-                }
-                // fixup for bug 30121
-                if (allDay && dtStart.hasTime()) {
-                    // If this is supposed to be an all-day event but DTSTART has time part, clear the time part.
-                    dtStart = (ParsedDateTime) dtStart.clone();
-                    dtStart.setHasTime(false);
-                } else if (!allDay && !dtStart.hasTime()){
-                    // If the event isn't marked all-day but DTSTART has no time part, mark the event all-day.
-                    allDay = true;
-                }
-                Element startElt = e.addElement(MailConstants.E_CAL_START_TIME);
-                startElt.addAttribute(MailConstants.A_CAL_DATETIME, dtStart.getDateTimePartString(false));
-                if (!allDay) {
-                    String tzName = dtStart.getTZName();
-                    if (tzName != null)
-                        startElt.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
-                }
-            }
+            if (dtStart != null)
+                encodeDtStart(e, dtStart, allDay, forceUTC);
 
             ParsedDateTime dtEnd = invite.getEndTime();
-            if (dtEnd != null) {
-                if (forceUTC) {
-                    dtEnd = (ParsedDateTime) dtEnd.clone();
-                    dtEnd.toUTC();
-                }
-                // fixup for bug 30121
-                if (allDay && dtEnd.hasTime()) {
-                    // If this is supposed to be an all-day event but DTEND has time part, clear the time part.
-                    dtEnd = (ParsedDateTime) dtEnd.clone();
-                    dtEnd.setHasTime(false);
-                } else if (!allDay && !dtEnd.hasTime()) {
-                    // If the event isn't marked all-day but DTEND has no time part, mark the event all-day.
-                    allDay = true;
-                }
-                Element endElt = e.addElement(MailConstants.E_CAL_END_TIME);
-                if (!allDay) {
-                    String tzName = dtEnd.getTZName();
-                    if (tzName != null)
-                        endElt.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
-                } else {
-                    if (!invite.isTodo()) {
-                        // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
-                        // for a description of why we add -1d when sending to the client
-                        dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
-                    }
-                }
-                endElt.addAttribute(MailConstants.A_CAL_DATETIME, dtEnd.getDateTimePartString(false));
-            }
+            if (dtEnd != null)
+                encodeDtEnd(e, dtEnd, allDay, invite.isTodo(), forceUTC);
 
             ParsedDuration dur = invite.getDuration();
             if (dur != null) {
@@ -2037,5 +1986,118 @@ public class ToXML {
         }
     	
         return resp;
+    }
+
+    private static Element encodeRecurId(Element parent, RecurId recurId, boolean allDay)
+    throws ServiceException {
+        ParsedDateTime ridDt = recurId.getDt();
+        Element ridElem = parent.addElement(MailConstants.E_CAL_EXCEPTION_ID);
+        ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString(false));
+        if (!allDay)
+            ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
+        int rangeType = recurId.getRange();
+        if (rangeType != RecurId.RANGE_NONE)
+            ridElem.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, rangeType);
+        return ridElem;
+    }
+
+    private static Element encodeDtStart(Element parent, ParsedDateTime dtStart, boolean allDay, boolean forceUtc)
+    throws ServiceException {
+        if (forceUtc) {
+            dtStart = (ParsedDateTime) dtStart.clone();
+            dtStart.toUTC();
+        }
+        // fixup for bug 30121
+        if (allDay && dtStart.hasTime()) {
+            // If this is supposed to be an all-day event but DTSTART has time part, clear the time part.
+            dtStart = (ParsedDateTime) dtStart.clone();
+            dtStart.setHasTime(false);
+        } else if (!allDay && !dtStart.hasTime()){
+            // If the event isn't marked all-day but DTSTART has no time part, mark the event all-day.
+            allDay = true;
+        }
+        Element dtStartElem = parent.addElement(MailConstants.E_CAL_START_TIME);
+        dtStartElem.addAttribute(MailConstants.A_CAL_DATETIME, dtStart.getDateTimePartString(false));
+        if (!allDay) {
+            String tzName = dtStart.getTZName();
+            if (tzName != null)
+                dtStartElem.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
+        }
+        return dtStartElem;
+    }
+
+    private static Element encodeDtEnd(Element parent, ParsedDateTime dtEnd, boolean allDay, boolean isTodo, boolean forceUtc)
+    throws ServiceException {
+        if (forceUtc) {
+            dtEnd = (ParsedDateTime) dtEnd.clone();
+            dtEnd.toUTC();
+        }
+        // fixup for bug 30121
+        if (allDay && dtEnd.hasTime()) {
+            // If this is supposed to be an all-day event but DTEND has time part, clear the time part.
+            dtEnd = (ParsedDateTime) dtEnd.clone();
+            dtEnd.setHasTime(false);
+        } else if (!allDay && !dtEnd.hasTime()) {
+            // If the event isn't marked all-day but DTEND has no time part, mark the event all-day.
+            allDay = true;
+        }
+        Element dtEndElem = parent.addElement(MailConstants.E_CAL_END_TIME);
+        if (!allDay) {
+            String tzName = dtEnd.getTZName();
+            if (tzName != null)
+                dtEndElem.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
+        } else {
+            if (!isTodo) {
+                // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
+                // for a description of why we add -1d when sending to the client
+                dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
+            }
+        }
+        dtEndElem.addAttribute(MailConstants.A_CAL_DATETIME, dtEnd.getDateTimePartString(false));
+        return dtEndElem;
+    }
+
+    public static void encodeCalendarItemRecur(Element parent, ItemIdFormatter ifmt,
+                                                  OperationContext octxt, CalendarItem calItem)
+    throws ServiceException {
+        TimeZoneMap tzmap = calItem.getTimeZoneMap();
+        encodeTimeZoneMap(parent, tzmap);
+        Invite[] invites = calItem.getInvites();
+        for (Invite inv : invites) {
+            String elemName;
+            if (inv.isCancel())
+                elemName = MailConstants.E_CAL_CANCEL;
+            else if (inv.hasRecurId())
+                elemName = MailConstants.E_CAL_EXCEPT;
+            else
+                elemName = MailConstants.E_INVITE_COMPONENT;
+            Element compElem = parent.addElement(elemName);
+            boolean allDay = inv.isAllDayEvent();
+            // RECURRENCE-ID
+            if (inv.hasRecurId())
+                encodeRecurId(compElem, inv.getRecurId(), allDay);
+            if (!inv.isCancel()) {
+                // DTSTART
+                ParsedDateTime dtStart = inv.getStartTime();
+                if (dtStart != null)
+                    encodeDtStart(compElem, dtStart, allDay, false);
+                // DTEND or DURATION
+                ParsedDateTime dtEnd = inv.getEndTime();
+                if (dtEnd != null) {
+                    encodeDtEnd(compElem, dtEnd, allDay, inv.isTodo(), false);
+                } else {
+                    ParsedDuration dur = inv.getDuration();
+                    if (dur != null)
+                        dur.toXml(compElem);
+                }
+
+                // recurrence definition
+                IRecurrence recurrence = inv.getRecurrence();
+                if (recurrence != null) {
+                    Element recurElem = compElem.addElement(MailConstants.E_CAL_RECUR);
+                    recurrence.toXml(recurElem);
+                }
+            }
+        }
     }
 }

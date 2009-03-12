@@ -137,7 +137,7 @@ public class ScheduleOutbox extends Collection {
 		
 		FreeBusy fb = null;
         if (ctxt.isFreebusyEnabled()) {
-        	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end);
+        	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end, null);
         	fbQuery.addEmailAddress(getAddressFromPrincipalURL(rcpt), FreeBusyQuery.CALENDAR_FOLDER_ALL);
         	java.util.Collection<FreeBusy> fbResult = fbQuery.getResults();
             if (fbResult.size() > 0)

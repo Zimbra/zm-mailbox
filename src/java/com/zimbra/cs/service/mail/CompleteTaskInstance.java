@@ -86,7 +86,7 @@ public class CompleteTaskInstance extends CalendarRequest {
                 tz = CalendarUtils.parseTzElement(tzElem);
                 tzmap.add(tz);
             }
-            ParsedDateTime exceptDt = CalendarUtils.parseDateTime(exceptElem, tzmap, inv);
+            ParsedDateTime exceptDt = CalendarUtils.parseDateTime(exceptElem, tzmap);
 
             if (exceptDt.getUtcTime() != recurStart.getUtcTime()) {
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());

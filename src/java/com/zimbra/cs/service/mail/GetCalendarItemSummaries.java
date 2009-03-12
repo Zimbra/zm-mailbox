@@ -236,7 +236,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             RecurId rid = inv.getRecurId();
                             instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, rid.getDtZ());
                         } else {
-                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, inst.getRecurIdZ(inv));
+                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, inst.getRecurIdZ());
                         }
 
                         if (inst.isException()) {
