@@ -43,7 +43,7 @@ public class FixCalendarEndTime extends AdminDocumentHandler {
 
         // what to check for this SOAP?
         // allow only system admin for now
-        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
         
         boolean sync = request.getAttributeBool(AdminConstants.A_TZFIXUP_SYNC, false);
         List<Element> acctElems = request.listElements(AdminConstants.E_ACCOUNT);

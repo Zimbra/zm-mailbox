@@ -100,7 +100,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(value);
             
-            checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW); 
+            checkDomainRight(zsc, domain, AdminRight.PR_ALWAYS_ALLOW); 
 
             response = zsc.createElement(getResponseQName());
             doDomain(zsc, response, domain, server);

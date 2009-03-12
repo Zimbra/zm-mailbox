@@ -46,7 +46,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         // allow only system admin for now
-        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
         // this command can only execute on the monitor host, so proxy if necessary
         Provisioning prov = Provisioning.getInstance();

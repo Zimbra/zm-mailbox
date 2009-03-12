@@ -42,7 +42,7 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         // allow only system admin for now
-        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
         if (limit == 0)

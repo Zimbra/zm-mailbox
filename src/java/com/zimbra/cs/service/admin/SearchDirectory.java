@@ -132,7 +132,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW);
+                checkDomainRight(zsc, domain, AdminRight.PR_ALWAYS_ALLOW);
             }
         }
 

@@ -61,7 +61,7 @@ public class PurgeMessages extends AdminDocumentHandler {
             
         } else {
             // all accounts on the system, has to be a system admin
-            checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+            checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
             
             accounts = MailboxManager.getInstance().getAccountIds();
         }

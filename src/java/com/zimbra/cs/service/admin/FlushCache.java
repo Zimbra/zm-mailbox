@@ -87,11 +87,6 @@ public class FlushCache extends AdminDocumentHandler {
         return response;
     }
     
-    @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_flushCache);
-    }
-
 	static void sendFlushRequest(Map<String,Object> context,
 	                             String appContext, String resourceUri) throws ServiceException {
 		ServletContext containerContext = (ServletContext)context.get(SoapServlet.SERVLET_CONTEXT);
@@ -127,4 +122,8 @@ public class FlushCache extends AdminDocumentHandler {
 		}
 	}
 
+    @Override
+    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_flushCache);
+    }
 }

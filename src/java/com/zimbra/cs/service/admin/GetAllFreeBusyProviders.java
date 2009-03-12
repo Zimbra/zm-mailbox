@@ -32,7 +32,7 @@ public class GetAllFreeBusyProviders extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         // allow only system admin for now
-        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
         
         Element response = zsc.createElement(AdminConstants.GET_ALL_FREE_BUSY_PROVIDERS_RESPONSE);
         

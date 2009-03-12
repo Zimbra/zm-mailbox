@@ -534,7 +534,7 @@ public class RightChecker {
     // public only for unittest
     public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, 
             AdminRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
-        if (rightNeeded != AdminRight.R_PSEUDO_GET_ATTRS && rightNeeded != AdminRight.R_PSEUDO_SET_ATTRS)
+        if (rightNeeded != AdminRight.PR_GET_ATTRS && rightNeeded != AdminRight.PR_SET_ATTRS)
             throw ServiceException.FAILURE("internal error", null); 
         
         Provisioning prov = Provisioning.getInstance();
@@ -946,10 +946,10 @@ public class RightChecker {
             presetRights = getEffectivePresetRights(grantee, target);
             
             // get effective setAttrs rights
-            allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
+            allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
             
             // get effective getAttrs rights
-            allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, false);
+            allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.PR_GET_ATTRS, false);
         }
         
         // finally, populate our result 
@@ -986,7 +986,7 @@ public class RightChecker {
             RightCommand.EffectiveRights result) throws ServiceException {
         
         // get effective setAttrs rights 
-        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
+        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
         
         // setAttrs
         if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
@@ -1311,7 +1311,7 @@ public class RightChecker {
             // see if the grantee can set zimbraConstraint on the constraint entry
             // if so, the grantee can set attrs to any value (not restricted by the constraints)
             AllowedAttrs allowedAttrsOnConstraintEntry = 
-                canAccessAttrs(grantee, constraintEntry, AdminRight.R_PSEUDO_SET_ATTRS, false);
+                canAccessAttrs(grantee, constraintEntry, AdminRight.PR_SET_ATTRS, false);
             
             if (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_ALL ||
                 (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_SOME &&

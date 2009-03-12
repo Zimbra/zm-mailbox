@@ -705,8 +705,8 @@ public abstract class TestACL extends TestCase {
         try {
             // call RightChecker directly instead of mAM, we want to verify the interim result.
             AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
-                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, false):
-                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
+                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.PR_GET_ATTRS, false):
+                                            RightChecker.canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
             // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
             assertEquals(expected, allowedAttrs);
         } catch (ServiceException e) {

@@ -32,7 +32,7 @@ public class GetFreeBusyQueueInfo extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         // allow only system admin for now
-        checkRight(zsc, context, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
         
         String name = null;
         Element provider = request.getOptionalElement(AdminConstants.E_PROVIDER);

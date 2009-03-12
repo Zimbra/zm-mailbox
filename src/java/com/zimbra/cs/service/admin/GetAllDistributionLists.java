@@ -72,7 +72,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
         
         if (isDomainAdminOnly(zsc)) {
             if (domain != null) { 
-                checkDomainRight(zsc, domain, AdminRight.R_PSEUDO_ALWAYS_ALLOW); 
+                checkDomainRight(zsc, domain, AdminRight.PR_ALWAYS_ALLOW); 
             }
             domain = getAuthTokenAccountDomain(zsc);
         }

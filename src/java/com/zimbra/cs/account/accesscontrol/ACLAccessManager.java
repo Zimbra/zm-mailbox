@@ -178,9 +178,9 @@ public class ACLAccessManager extends AccessManager {
         
         // check pseudo rights
         if (asAdmin) {
-            if (rightNeeded == AdminRight.R_PSEUDO_ALWAYS_ALLOW)
+            if (rightNeeded == AdminRight.PR_ALWAYS_ALLOW)
                 return true;
-            else if (rightNeeded == AdminRight.R_PSEUDO_ALWAYS_DENY)
+            else if (rightNeeded == AdminRight.PR_SYSTEM_ADMIN_ONLY)
                 return false;
         }
         
@@ -277,7 +277,7 @@ public class ACLAccessManager extends AccessManager {
         if (RightChecker.isSystemAdmin(grantee, asAdmin))
             return true;
         
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
         return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
     }
     
@@ -450,12 +450,12 @@ public class ACLAccessManager extends AccessManager {
     }
     
     private boolean canGetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_GET_ATTRS, canDelegateNeeded);
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
     
     private boolean canSetAttrsInternal(Account grantee, Entry target, Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, canDelegateNeeded);
+        RightChecker.AllowedAttrs allowedAttrs = canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
 

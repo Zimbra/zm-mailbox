@@ -93,7 +93,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         if (d != null)
             checkDomainRight(zsc, d, Admin.R_getDomainQuotaUsage);
         else
-            checkRight(zsc, null, AdminRight.R_PSEUDO_ALWAYS_DENY);
+            checkRight(zsc, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
         
         QuotaUsageParams params = new QuotaUsageParams(d, sortBy,sortAscending);
 
