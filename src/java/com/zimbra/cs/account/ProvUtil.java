@@ -3471,14 +3471,18 @@ public class ProvUtil implements DebugListener {
     
         RightCommand.ACL acl = mProv.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName);
         
-        String format = "%20.20s  %20.20s  %s\n";
-        System.out.printf(format, "grantee", "grantee type", "right");
-        System.out.printf(format, "--------------------", "--------------------", "--------------------");
+        String format = "%-36.36s %-20.20s %-20.20s %s\n";
+        System.out.printf(format, "grantee id", "grantee name", "grantee type", "right");
+        System.out.printf(format, "------------------------------------",
+                "--------------------", 
+                "--------------------", 
+                "--------------------");
         for (RightCommand.ACE ace : acl.getACEs()) {
             // String deny = ace.deny()?"-":"";
             RightModifier rightModifier = ace.rightModifier();
             String rm = (rightModifier==null)?"":String.valueOf(rightModifier.getModifier());
             System.out.printf(format, 
+                              ace.granteeId(),
                               ace.granteeName(),
                               ace.granteeType(),
                               rm + ace.right());

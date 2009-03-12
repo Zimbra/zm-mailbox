@@ -28,6 +28,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccountServiceException;
@@ -78,10 +79,10 @@ public class RightCommand {
          */
         public ACL(Element parent) throws ServiceException {
             for (Element eGrant : parent.listElements(AdminConstants.E_GRANT)) {
-                String granteeType = eGrant.getAttribute(AdminConstants.A_TYPE);
-                String granteeId = eGrant.getAttribute(AdminConstants.A_ID);
-                String granteeName = eGrant.getAttribute(AdminConstants.A_NAME);
-                String right = eGrant.getAttribute(AdminConstants.A_RIGHT);
+                String granteeType = eGrant.getAttribute(AdminConstants.A_TYPE, "");
+                String granteeId = eGrant.getAttribute(AdminConstants.A_ID, "");
+                String granteeName = eGrant.getAttribute(AdminConstants.A_NAME, "");
+                String right = eGrant.getAttribute(AdminConstants.A_RIGHT, "");
                 
                 boolean deny = eGrant.getAttributeBool(AdminConstants.A_DENY, false);
                 boolean canDelegate = eGrant.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
@@ -691,15 +692,38 @@ public class RightCommand {
         
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
+        NamedEntry granteeEntry = null;
+        String granteeId = null;
+        try {
+            granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
+            granteeId = granteeEntry.getId();
+        } catch (AccountServiceException e) {
+            String code = e.getCode();
+            if (AccountServiceException.NO_SUCH_ACCOUNT.equals(code) ||
+                AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(code) ||
+                AccountServiceException.NO_SUCH_DOMAIN.equals(code)) {
+                
+                ZimbraLog.acl.warn("revokeRight: no such grantee " + grantee);
+                
+                // grantee had been probably deleted.
+                // if granteeBy is id, we try to revoke the orphan grant
+                if (granteeBy == GranteeBy.id)
+                    granteeId = grantee;
+                else
+                    throw ServiceException.INVALID_REQUEST("cannot find grantee by name: " + grantee + 
+                            ", try revoke by grantee id if you want to remove the orphan grant", e);
+            } else
+                throw e;
+        }
         
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, true);
+        if (granteeEntry != null)
+            verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, true);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
+        ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, null);
         aces.add(ace);
         
         List<ZimbraACE> revoked = RightUtil.revokeRight(prov, targetEntry, aces);

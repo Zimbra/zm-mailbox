@@ -201,12 +201,13 @@ public class RightChecker {
      * @param rightNeeded
      * @param canDelegateNeeded if we are checking for "can delegate" the right
      * @param via if not null, will be populated with the grant info via which the result was decided.
-     * @return Boolean.TRUE if allowed, Boolean.FALSE if denied, null if there is no grant applicable to the rightNeeded.
+     * @return Boolean.TRUE if allowed, 
+     *         Boolean.FALSE if denied, 
+     *         null if there is no grant applicable to the rightNeeded.
      * @throws ServiceException
      */
     static Boolean checkPresetRight(Account grantee, Entry target, 
-                                    Right rightNeeded, boolean canDelegateNeeded, 
-                                    ViaGrant via) throws ServiceException {
+            Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         if (!rightNeeded.isPresetRight())
             throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
                     rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
@@ -285,9 +286,9 @@ public class RightChecker {
                 groupACLs.collectACL(grantedOn, skipPositiveGrants);
                 
             } else {
-                // end of group targets, put all collected denied and allowed grants into one list, as if 
-                // they are granted on the same entry, then check.  We put denied in the front, so it is 
-                // consistent with ZimbraACL.getAllACEs
+                // end of group targets, put all collected denied and allowed grants into one 
+                // list, as if they are granted on the same entry, then check.  
+                // We put denied in the front, so it is consistent with ZimbraACL.getAllACEs
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null)
@@ -317,11 +318,10 @@ public class RightChecker {
     }
     
     private static Boolean checkTargetPresetRight(List<ZimbraACE> acl, 
-                                                  TargetType targetType, 
-                                                  Account grantee, AclGroups granteeGroups, 
-                                                  Right rightNeeded, boolean canDelegateNeeded,
-                                                  ViaGrant via, SeenRight seenRight) 
-        throws ServiceException {
+            TargetType targetType, 
+            Account grantee, AclGroups granteeGroups, 
+            Right rightNeeded, boolean canDelegateNeeded,
+            ViaGrant via, SeenRight seenRight) throws ServiceException {
         Boolean result = null;
         
         // if the right is user right, checking for individual match will
@@ -330,24 +330,28 @@ public class RightChecker {
         short adminFlag = (rightNeeded.isUserRight()? 0 : GranteeFlag.F_ADMIN);
         
         // as an individual: user, guest, key
-        result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag), via, seenRight);
+        result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, 
+                (short)(GranteeFlag.F_INDIVIDUAL | adminFlag), via, seenRight);
         if (result != null) 
             return result;
         
         // as a group member
-        result = checkGroupPresetRight(acl, targetType, granteeGroups, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_GROUP), via, seenRight);
+        result = checkGroupPresetRight(acl, targetType, granteeGroups, grantee, rightNeeded, canDelegateNeeded, 
+                (short)(GranteeFlag.F_GROUP), via, seenRight);
         if (result != null) 
             return result;
        
         // if right is an user right, check authed users and public
         if (rightNeeded.isUserRight()) {
             // all authed zimbra user
-            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_AUTHUSER), via, seenRight);
+            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, 
+                    (short)(GranteeFlag.F_AUTHUSER), via, seenRight);
             if (result != null) 
                 return result;
             
             // public
-            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, (short)(GranteeFlag.F_PUBLIC), via, seenRight);
+            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, 
+                    (short)(GranteeFlag.F_PUBLIC), via, seenRight);
             if (result != null) 
                 return result;
         }
@@ -359,8 +363,7 @@ public class RightChecker {
      * check if rightNeeded is applicable on target type 
      */
     static boolean rightApplicableOnTargetType(TargetType targetType, 
-                                               Right rightNeeded, 
-                                               boolean canDelegateNeeded) {
+            Right rightNeeded, boolean canDelegateNeeded) {
         if (canDelegateNeeded) {
             // check if the right is grantable on the target
             if (!rightNeeded.grantableOnTargetType(targetType))
@@ -387,10 +390,8 @@ public class RightChecker {
      *           the grantable property of a less relevant grantable grant.
      *                 
      */
-    private static boolean matchesPresetRight(ZimbraACE ace, 
-                                              TargetType targetType,
-                                              Right rightNeeded, boolean canDelegateNeeded,
-                                              short granteeFlags) throws ServiceException {
+    private static boolean matchesPresetRight(ZimbraACE ace, TargetType targetType,
+            Right rightNeeded, boolean canDelegateNeeded, short granteeFlags) throws ServiceException {
         GranteeType granteeType = ace.getGranteeType();
         if (!granteeType.hasFlags(granteeFlags))
             return false;
@@ -443,10 +444,8 @@ public class RightChecker {
      * @throws ServiceException
      */
     private static Boolean checkPresetRight(List<ZimbraACE> acl, TargetType targetType, 
-                                            Account grantee, 
-                                            Right rightNeeded, boolean canDelegateNeeded,
-                                            short granteeFlags, ViaGrant via, SeenRight seenRight) 
-        throws ServiceException {
+            Account grantee, Right rightNeeded, boolean canDelegateNeeded,
+            short granteeFlags, ViaGrant via, SeenRight seenRight) throws ServiceException {
         Boolean result = null;
         for (ZimbraACE ace : acl) {
             if (!matchesPresetRight(ace, targetType, rightNeeded, canDelegateNeeded, granteeFlags))
@@ -476,10 +475,9 @@ public class RightChecker {
      *     if grant is made, the grant is still there on the targe entry, but becomes useless.
      */
     private static Boolean checkGroupPresetRight(List<ZimbraACE> acl, TargetType targetType, 
-                                                 AclGroups granteeGroups, Account grantee, 
-                                                 Right rightNeeded, boolean canDelegateNeeded,
-                                                 short granteeFlags, ViaGrant via, SeenRight seenRight) 
-        throws ServiceException {
+            AclGroups granteeGroups, Account grantee, 
+            Right rightNeeded, boolean canDelegateNeeded,
+            short granteeFlags, ViaGrant via, SeenRight seenRight) throws ServiceException {
         Boolean result = null;
         for (ZimbraACE ace : acl) {
             if (!matchesPresetRight(ace, targetType, rightNeeded, canDelegateNeeded, granteeFlags))
@@ -495,7 +493,8 @@ public class RightChecker {
         return result;
     }
     
-    private static Boolean gotResult(ZimbraACE ace, Account grantee, Right right, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
+    private static Boolean gotResult(ZimbraACE ace, Account grantee, Right right, boolean canDelegateNeeded, 
+            ViaGrant via) throws ServiceException {
         if (ace.deny()) {
             if (sLog.isDebugEnabled())
                 sLog.debug("Right " + "[" + right.getName() + "]" + " DENIED to " + grantee.getName() + 
@@ -533,7 +532,8 @@ public class RightChecker {
      * @throws ServiceException
      */
     // public only for unittest
-    public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, AdminRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
+    public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, 
+            AdminRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         if (rightNeeded != AdminRight.R_PSEUDO_GET_ATTRS && rightNeeded != AdminRight.R_PSEUDO_SET_ATTRS)
             throw ServiceException.FAILURE("internal error", null); 
         
@@ -559,7 +559,8 @@ public class RightChecker {
         // check the target entry itself
         List<ZimbraACE> acl = RightUtil.getAllACEs(target);
         if (acl != null) {
-            car = checkTargetAttrsRight(acl, targetType, granteeIds, rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+            car = checkTargetAttrsRight(acl, targetType, granteeIds, 
+                    rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
             relativity += 2;
         }
         
@@ -592,13 +593,14 @@ public class RightChecker {
                     groupACLs.collectACL(grantedOn, skipPositiveGrants);
                     
                 } else {
-                    // end of group targets, put all collected denied and allowed grants into one list, as if 
-                    // they are granted on the same entry, then check.  We put denied in the front, so it is 
-                    // consistent with ZimbraACL.getAllACEs
+                    // end of group targets, put all collected denied and allowed grants into 
+                    // one list, as if they are granted on the same entry, then check.  
+                    // We put denied in the front, so it is consistent with ZimbraACL.getAllACEs
                     if (groupACLs != null) {
                         List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                         if (aclsOnGroupTargets != null) {
-                            car = checkTargetAttrsRight(aclsOnGroupTargets, targetType, granteeIds, rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                            car = checkTargetAttrsRight(aclsOnGroupTargets, targetType, granteeIds, 
+                                    rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                             relativity += 2;
                             if (car.isAll()) 
                                 break;
@@ -611,7 +613,8 @@ public class RightChecker {
                     
                     if (acl == null)
                         continue;
-                    car = checkTargetAttrsRight(acl, targetType, granteeIds, rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                    car = checkTargetAttrsRight(acl, targetType, granteeIds, 
+                            rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                     relativity += 2;
                 }
             }
@@ -649,7 +652,8 @@ public class RightChecker {
 
     }
     
-    private static AllowedAttrs processDenyAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, AttributeClass klass) throws ServiceException {
+    private static AllowedAttrs processDenyAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, 
+            AttributeClass klass) throws ServiceException {
         if (allowSome.isEmpty())
             return DENY_ALL_ATTRS();
         else {
@@ -658,7 +662,8 @@ public class RightChecker {
         }
     }
 
-    private static AllowedAttrs processAllowAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, AttributeClass klass) throws ServiceException {
+    private static AllowedAttrs processAllowAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, 
+            AttributeClass klass) throws ServiceException {
         
         if (denySome.isEmpty()) {
             return ALLOW_ALL_ATTRS();
@@ -698,13 +703,15 @@ public class RightChecker {
         
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity, allowSome, denySome);
+        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), 
+                canDelegateNeeded, granteeFlags, relativity, allowSome, denySome);
         if (result.isAll()) 
             return result;
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP);
-        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), canDelegateNeeded, granteeFlags, relativity+1, allowSome, denySome);
+        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), 
+                canDelegateNeeded, granteeFlags, relativity+1, allowSome, denySome);
 
         return result;
     }
@@ -863,7 +870,8 @@ public class RightChecker {
             
             if (rightGranted.isAttrRight()) {
                 AttrRight attrRight = (AttrRight)rightGranted;
-                result = expandAttrsGrantToAttrs(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                result = expandAttrsGrantToAttrs(ace, targetType, attrRight, 
+                        rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                 
                 /*
                  * denied grants appear before allowed grants
@@ -878,7 +886,8 @@ public class RightChecker {
             } else if (rightGranted.isComboRight()) {
                 ComboRight comboRight = (ComboRight)rightGranted;
                 for (AttrRight attrRight : comboRight.getAttrRights()) {
-                    result = expandAttrsGrantToAttrs(ace, targetType, attrRight, rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                    result = expandAttrsGrantToAttrs(ace, targetType, attrRight, 
+                            rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                     // return if we see an allow-all/deny-all, same reason as above.
                     if (result != null && result.isAll())
                         return result;
@@ -961,7 +970,7 @@ public class RightChecker {
     }
     
     static RightCommand.EffectiveRights getEffectiveAttrs(Account grantee, Entry target, 
-                                                          RightCommand.EffectiveRights result) throws ServiceException {
+            RightCommand.EffectiveRights result) throws ServiceException {
         
         // get effective setAttrs rights 
         AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.R_PSEUDO_SET_ATTRS, false);
@@ -983,19 +992,24 @@ public class RightChecker {
         return list;
     }
     
-    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, AllowedAttrs allowSetAttrs) throws ServiceException {
+    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefault(Entry target, 
+            AllowedAttrs allowSetAttrs) throws ServiceException {
         return fillDefaultAndConstratint(target, allowSetAttrs.getAllowed());
     }
     
-    private static SortedMap<String, RightCommand.EffectiveAttr> expandAttrs(Entry target) throws ServiceException {
+    private static SortedMap<String, RightCommand.EffectiveAttr> expandAttrs(Entry target) 
+    throws ServiceException {
         return fillDefaultAndConstratint(target, TargetType.getAttrsInClass(target));
     }
     
-    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefaultAndConstratint(Entry target, Set<String> attrs) throws ServiceException {
+    private static SortedMap<String, RightCommand.EffectiveAttr> fillDefaultAndConstratint(Entry target, 
+            Set<String> attrs) throws ServiceException {
         SortedMap<String, RightCommand.EffectiveAttr> effAttrs = new TreeMap<String, RightCommand.EffectiveAttr>();
         
         Entry constraintEntry = AttributeConstraint.getConstraintEntry(target);
-        Map<String, AttributeConstraint> constraints = (constraintEntry==null)?null:AttributeConstraint.getConstraint(constraintEntry);
+        Map<String, AttributeConstraint> constraints = (constraintEntry==null)?null:
+            AttributeConstraint.getConstraint(constraintEntry);
+        
         boolean hasConstraints = (constraints != null && !constraints.isEmpty());
 
         for (String attrName : attrs) {
@@ -1116,8 +1130,8 @@ public class RightChecker {
     }
     
     private static void collectPresetRightOnTarget(List<ZimbraACE> acl, TargetType targeType,
-                                                   Set<String> granteeIds, Integer relativity,
-                                                   Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
+            Set<String> granteeIds, Integer relativity,
+            Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
         collectPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
@@ -1129,10 +1143,9 @@ public class RightChecker {
     
 
     private static void collectPresetRights(List<ZimbraACE> acl, TargetType targetType,
-                                            Set<String> granteeIds, short granteeFlags, 
-                                            Integer relativity,
-                                            Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
-
+            Set<String> granteeIds, short granteeFlags, 
+            Integer relativity,
+            Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
         
         for (ZimbraACE ace : acl) {
             GranteeType granteeType = ace.getGranteeType();
@@ -1212,8 +1225,6 @@ public class RightChecker {
         return granteeIds;
     }
     
-
-    
     private static String getActualAttrName(String attr) {
         if (attr.charAt(0) == '+' || attr.charAt(0) == '-')
             return attr.substring(1);
@@ -1269,7 +1280,8 @@ public class RightChecker {
      * @param attrsNeeded attrs needed to be set.  Cannot be null, must specify which attrs/values to set
      * @return
      */
-    static boolean canSetAttrs(AllowedAttrs attrsAllowed, Account grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
+    static boolean canSetAttrs(AllowedAttrs attrsAllowed, Account grantee, Entry target, 
+            Map<String, Object> attrsNeeded) throws ServiceException {
         
         if (attrsNeeded == null)
             throw ServiceException.FAILURE("internal error", null);
@@ -1278,13 +1290,16 @@ public class RightChecker {
             return false;
         
         Entry constraintEntry = AttributeConstraint.getConstraintEntry(target);
-        Map<String, AttributeConstraint> constraints = (constraintEntry==null)?null:AttributeConstraint.getConstraint(constraintEntry);
+        Map<String, AttributeConstraint> constraints = (constraintEntry==null)?null:
+            AttributeConstraint.getConstraint(constraintEntry);
         boolean hasConstraints = (constraints != null && !constraints.isEmpty());
         
         if (hasConstraints) {
             // see if the grantee can set zimbraConstraint on the constraint entry
             // if so, the grantee can set attrs to any value (not restricted by the constraints)
-            AllowedAttrs allowedAttrsOnConstraintEntry = canAccessAttrs(grantee, constraintEntry, AdminRight.R_PSEUDO_SET_ATTRS, false);
+            AllowedAttrs allowedAttrsOnConstraintEntry = 
+                canAccessAttrs(grantee, constraintEntry, AdminRight.R_PSEUDO_SET_ATTRS, false);
+            
             if (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_ALL ||
                 (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_SOME &&
                  allowedAttrsOnConstraintEntry.getAllowed().contains(Provisioning.A_zimbraConstraint)))
@@ -1312,9 +1327,9 @@ public class RightChecker {
      * construct a pseudo target
      */
     static Entry createPseudoTarget(Provisioning prov,
-                                    TargetType targetType, 
-                                    DomainBy domainBy, String domainStr,
-                                    CosBy cosBy, String cosStr) throws ServiceException {
+            TargetType targetType, 
+            DomainBy domainBy, String domainStr,
+            CosBy cosBy, String cosStr) throws ServiceException {
         
         Entry targetEntry = null;
         Config config = prov.getConfig();

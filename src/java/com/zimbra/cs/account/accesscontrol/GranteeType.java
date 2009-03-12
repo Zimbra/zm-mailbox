@@ -92,7 +92,8 @@ public enum GranteeType {
      * @return
      * @throws ServiceException
      */
-    public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
+    public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, 
+            GranteeBy granteeBy, String grantee) throws ServiceException {
         NamedEntry granteeEntry = null;
         
         switch (granteeType) {
@@ -112,7 +113,8 @@ public enum GranteeType {
                 throw AccountServiceException.NO_SUCH_DOMAIN(grantee); 
             break;
         default:
-            ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + granteeType.getCode(), null);
+            ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + 
+                    granteeType.getCode(), null);
         }
     
         return granteeEntry;
