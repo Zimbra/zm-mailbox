@@ -110,10 +110,6 @@ public class RightChecker {
         return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
     }
     
-    static class GrantableAttrs {
-        private Map<TargetType, AllowedAttrs> mGrantableAttrs;
-    }
-    
     private static class SeenRight {
         private boolean mSeenRight;
         
@@ -212,30 +208,32 @@ public class RightChecker {
             throw ServiceException.INVALID_REQUEST("RightChecker.canDo can only check preset right, right " + 
                     rightNeeded.getName() + " is a " + rightNeeded.getRightType() + " right",  null);
         
-        boolean granteeMustBeAdmin = !rightNeeded.isUserRight();
+        boolean adminRight = !rightNeeded.isUserRight();
         
-        if (granteeMustBeAdmin) {
+        Provisioning prov = Provisioning.getInstance();
+        Domain granteeDomain = null; 
+        
+        if (adminRight) {
             // if the grantee is no longer legitimate, e.g. not an admin any more, ignore all his grants
             if (!isValidGranteeForAdminRights(GranteeType.GT_USER, grantee))
                 return null;
+            
+            granteeDomain = prov.getDomain(grantee);
+            // if we ever get here, the grantee must have a domain
+            if (granteeDomain == null)
+                throw ServiceException.FAILURE("internal error, cannot find domain for " + grantee.getName(), null);
+                 
+            // should only come from granting/revoking check
+            if (rightNeeded == Admin.R_crossDomainAdmin)
+                return CrossDomain.checkCrossDomainAdminRight(prov, granteeDomain, target, canDelegateNeeded);
         }
-        
-        Provisioning prov = Provisioning.getInstance();
-        
-        Domain granteeDomain = prov.getDomain(grantee);
-        // if we ever get here, the grantee must have a domain
-        if (granteeDomain == null)
-            throw ServiceException.FAILURE("internal error", null);
-        
-        // should only come from granting/revoking check
-        if (rightNeeded == Admin.R_crossDomainAdmin)
-            return CrossDomain.checkCrossDomainAdminRight(prov, granteeDomain, target, canDelegateNeeded);
+
         
         Boolean result = null;
         SeenRight seenRight = new SeenRight();
         
         // only get admin groups 
-        AclGroups granteeGroups = prov.getAclGroups(grantee, granteeMustBeAdmin);
+        AclGroups granteeGroups = prov.getAclGroups(grantee, adminRight);
         
         TargetType targetType = TargetType.getTargetType(target);
             
@@ -277,7 +275,9 @@ public class RightChecker {
                 if (acl == null)
                     continue;
                 
-                boolean skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
+                boolean skipPositiveGrants = false;
+                if (adminRight)
+                    skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
                         targetDomain, (DistributionList)grantedOn);
                 
                 // don't check yet, collect all acls on all target groups
@@ -551,6 +551,13 @@ public class RightChecker {
         Map<String, Integer> denySome = new HashMap<String, Integer>();
         Integer relativity = Integer.valueOf(1);
         
+        // we iterate through all the targets from which grants can be inherited
+        // by the perspective target.  More specific targets are visited before 
+        // less specific targets.  For each target, there are two "ranks" of 
+        // grantee types: individual and group.   Therefore, each time when we 
+        // visit the next target, we bump up the relativity by 2.
+        int granteeRanksPerTarget = 2;
+        
         //
         // collecting phase
         //
@@ -561,7 +568,7 @@ public class RightChecker {
         if (acl != null) {
             car = checkTargetAttrsRight(acl, targetType, granteeIds, 
                     rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
-            relativity += 2;
+            relativity += granteeRanksPerTarget;
         }
         
         //
@@ -601,7 +608,7 @@ public class RightChecker {
                         if (aclsOnGroupTargets != null) {
                             car = checkTargetAttrsRight(aclsOnGroupTargets, targetType, granteeIds, 
                                     rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
-                            relativity += 2;
+                            relativity += granteeRanksPerTarget;
                             if (car.isAll()) 
                                 break;
                             // else continue with the next target 
@@ -615,7 +622,7 @@ public class RightChecker {
                         continue;
                     car = checkTargetAttrsRight(acl, targetType, granteeIds, 
                             rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
-                    relativity += 2;
+                    relativity += granteeRanksPerTarget;
                 }
             }
         }
@@ -739,22 +746,20 @@ public class RightChecker {
             Integer relativity,
             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         
-        //
-        // note: do NOT call ace.getRight in this method, ace is passed in for deny() and getTargetType() 
-        // calls only.  
-        //
-        // Because if the granted right is a combo right, ace.getRight will return the combo right, 
-        // not the attr rights in the combo right.  If the grant contains a combo right, each attr 
-        // rights of the combo right will be passed in as the attrRight arg.
-        //
-        
         /*
-         * if the grant is executable only and canDelegateNeeded is true,
-         * skip the grant and let the flow continue to check other grants, 
-         * instead of denying the granting attempt.
+         * note: do NOT call ace.getRight in this method, ace is passed in for deny() and getTargetType() 
+         * calls only.  
+         *
+         * Because if the granted right is a combo right, ace.getRight will return the combo right, 
+         * not the attr rights in the combo right.  If the grant contains a combo right, each attr 
+         * rights of the combo right will be passed in as the attrRight arg.
+         * 
+         * - AttrRight specific changes are done in this method.
+         *   (i.e. checks can only be done on a AttrRight, not on combo right)
+         *
+         * - ZimbraACE level checks are done in the caller (expandACLToAttrs).
          */
-        if (canDelegateNeeded && ace.canExecuteOnly())
-            return null; // just ignore the grant
+        
         
         /*
          * check if get/set matches
@@ -768,7 +773,8 @@ public class RightChecker {
          * the wrong target.  e.g. put a setAttrs server right on a cos entry.  
          * This should not happen if the grant is done via RightCommand.grantRight.
          */
-        if (!rightApplicableOnTargetType(targetType, attrRightGranted, canDelegateNeeded))
+         if (!rightApplicableOnTargetType(targetType, attrRightGranted, canDelegateNeeded))
+         // if (!attrRightGranted.executableOnTargetType(targetType))
             return null;
         
         if (attrRightGranted.allAttrs()) {
@@ -867,6 +873,13 @@ public class RightChecker {
             Right rightGranted = ace.getRight();
             if (rightGranted.isPresetRight())
                 continue;
+            
+            /*
+             * if the grant is executable only and canDelegateNeeded is true,
+             * skip the grant and let the flow continue to check other grants, 
+             */
+            if (canDelegateNeeded && ace.canExecuteOnly())
+                continue; // just ignore the grant
             
             if (rightGranted.isAttrRight()) {
                 AttrRight attrRight = (AttrRight)rightGranted;
