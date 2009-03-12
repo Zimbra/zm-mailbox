@@ -24,11 +24,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -528,7 +528,7 @@ public class MailSender {
         if (contacts.isEmpty())
             return Collections.emptyList();
 
-        TreeMap<String,InternetAddress> newContacts = new TreeMap<String,InternetAddress>();
+        HashMap<String,InternetAddress> newContacts = new HashMap<String,InternetAddress>();
         Collection<String> emailKeys = new ContactAutoComplete(authuser.getId()).getEmailKeys();
         StringBuilder buf = new StringBuilder();
         boolean first = true;
