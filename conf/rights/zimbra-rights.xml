@@ -790,6 +790,11 @@
 ========================================================
 -->
 
+<right name="crossDomainAdmin" type="preset" targetType="domain">
+  <desc>cross domain admin right</desc>
+</right>
+
+
 <right name="viewGrants" type="getAttrs" targetType="account,calresource,cos,dl,domain,server,xmppcomponent,zimlet,config,global">
   <desc>view grants on all target types</desc>
   <doc>
