@@ -3013,12 +3013,11 @@ public class DbMailItem {
             String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
             String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
             String folderConstraint = f != null ? " AND mi.folder_id = ?" : "";
-            String typeConstraint = " AND type = 11";
             stmt = conn.prepareStatement("SELECT mi.id, ci.uid, mi.mod_metadata, mi.mod_content" + 
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
                         " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" + 
                         (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? ") +
-                        startConstraint + endConstraint + folderConstraint + typeConstraint);
+                        startConstraint + endConstraint + folderConstraint);
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
