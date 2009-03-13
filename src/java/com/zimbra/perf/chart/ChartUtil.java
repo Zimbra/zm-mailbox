@@ -168,14 +168,10 @@ public class ChartUtil {
         Option srcDirOption = new Option("s", OPT_SRCDIR, true,
                 "one or more directories where the csv files are located");
         srcDirOption.setArgs(Option.UNLIMITED_VALUES);
-        srcDirOption.setRequired(true);
         opts.addOption(srcDirOption);
 
-        confOption.setRequired(true);
-        opts.addOption(confOption);
         Option destDirOption = new Option("d", OPT_DESTDIR, true,
                 "directory where the generated chart files are saved");
-        destDirOption.setRequired(true);
         opts.addOption(destDirOption);
 
         opts.addOption(null, OPT_TITLE, true,
@@ -241,6 +237,13 @@ public class ChartUtil {
     
             if (cl.hasOption('h'))
                 usage(opts);
+            if (!cl.hasOption('s') && !cl.hasOption('d'))
+                usage(opts, "-s and -d options are required");
+            if (!cl.hasOption('s'))
+                usage(opts, "Missing required -s option");
+            
+            if (!cl.hasOption('d'))
+                usage(opts, "Missing required -d option");
     
             String[] confs = cl.getOptionValues(OPT_CONF);
             if (confs == null || confs.length == 0)
