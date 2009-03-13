@@ -1797,11 +1797,26 @@
 	
 	<target name="generate-rights-txt">
         <antcall target="zmprov"> 
-            <param name="args" value="grd"/>
+        	<!-- our core admin SOAP -->
+            <param name="args" value="grd com.zimbra.cs.service.admin"/>
 	        <param name="output" value="docs/rights.txt"/>
         </antcall>
 	</target>
 	
+	<target name="generate-rights-ext-txt">
+	    <antcall target="zmprov"> 
+	    	<!-- known admin extensions, dump them in one file for now -->
+	        <param name="args" 
+	        	value="grd com.zimbra.bp 
+	        	           com.zimbra.cert 
+	        	           com.zimbra.cs.network.license.service 
+	        	           com.zimbra.cs.service.backup 
+	    	               com.zimbra.cs.service.hsm 
+	    	               com.zimbra.xmbxsearch"/>
+	        <param name="output" value="docs/rights-ext.txt"/>
+	    </antcall>
+	</target>
+
 	<target name="refresh-rights">
 		<antcall target="stop-webserver"/>
 		<sleep seconds="2"/>

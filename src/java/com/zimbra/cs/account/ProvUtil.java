@@ -381,7 +381,7 @@ public class ProvUtil implements DebugListener {
         GET_PUBLISHED_DISTRIBUTION_LIST_SHARE_INFO("getPublishedDistributionListShareInfo", "gpdlsi", "{dl-name|dl-id} [{owner-name|owner-id}]", Category.SHARE, 1, 2),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_RIGHT("getRight", "gr", "[-e] {name|id} [attr1 [attr2...]]", Category.RIGHT, 1, Integer.MAX_VALUE),
-        GET_RIGHTS_DOC("getRightsDoc", "grd", "", Category.RIGHT, 0, 0),
+        GET_RIGHTS_DOC("getRightsDoc", "grd", "", Category.RIGHT, 0, Integer.MAX_VALUE),
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
@@ -727,7 +727,7 @@ public class ProvUtil implements DebugListener {
             dumpRight(lookupRight(args[1]));
             break;
         case GET_RIGHTS_DOC:
-            doGetRightsDoc();
+            doGetRightsDoc(args);
             break;
         case GET_SERVER:
             doGetServer(args);
@@ -1896,7 +1896,7 @@ public class ProvUtil implements DebugListener {
         System.out.println();
     }
     
-    private void doGetRightsDoc() throws ServiceException {
+    private void doGetRightsDoc(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         
@@ -1907,20 +1907,27 @@ public class ProvUtil implements DebugListener {
         System.out.println("# ");
         System.out.println("\n");
         
-        List<RightsDoc> docs = mProv.getRightsDoc();
-        for (RightsDoc doc : docs) {
-            System.out.println("------------------------------");
-            System.out.println(doc.getCmd() + "\n");
-            
-            System.out.println("    Related rights:");
-            for (String r : doc.getRights())
-                System.out.println("        " + r);
-            
+        Map<String, List<RightsDoc>> allDocs = mProv.getRightsDoc(args);
+        for (Map.Entry<String, List<RightsDoc>> docs : allDocs.entrySet()) {
+            System.out.println("========================================");
+            System.out.println("Package: " + docs.getKey());
+            System.out.println("========================================");
             System.out.println();
-            System.out.println("    Notes:");
-            for (String n : doc.getNotes())
-                System.out.println(FileGenUtil.wrapComments(StringUtil.escapeHtml(n), 70, "        ") + "\n");
-            System.out.println();
+            
+            for (RightsDoc doc : docs.getValue()) {
+                System.out.println("------------------------------");
+                System.out.println(doc.getCmd() + "\n");
+                
+                System.out.println("    Related rights:");
+                for (String r : doc.getRights())
+                    System.out.println("        " + r);
+                
+                System.out.println();
+                System.out.println("    Notes:");
+                for (String n : doc.getNotes())
+                    System.out.println(FileGenUtil.wrapComments(StringUtil.escapeHtml(n), 70, "        ") + "\n");
+                System.out.println();
+            }
         }
     }
 

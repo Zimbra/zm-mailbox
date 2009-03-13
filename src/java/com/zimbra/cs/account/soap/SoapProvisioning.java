@@ -17,6 +17,8 @@
 
 package com.zimbra.cs.account.soap;
 
+import java.util.TreeMap;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -31,6 +33,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccessManager;
@@ -1928,26 +1931,36 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public List<RightsDoc> getRightsDoc() throws ServiceException {
+    public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_RIGHTS_DOC_REQUEST);
+        
+        if (pkgs != null) {
+            for (String pkg : pkgs)
+                req.addElement(AdminConstants.E_PACKAGE).addAttribute(AdminConstants.A_NAME, pkg);
+        }
         Element resp = invoke(req);
         
-        List<RightsDoc> docs = new ArrayList<RightsDoc>();
-        for (Element eCmd : resp.listElements(AdminConstants.E_CMD)) {
-            RightsDoc doc = new RightsDoc(eCmd.getAttribute(AdminConstants.A_NAME));
-            
-            Element eRights = eCmd.getElement(AdminConstants.E_RIGHTS);
-            for (Element eRight : eRights.listElements(AdminConstants.E_RIGHT))
-                doc.addRight(eRight.getAttribute(AdminConstants.A_NAME));
-                
-            Element eDesc = eCmd.getElement(AdminConstants.E_DESC);
-            for (Element eNote : eDesc.listElements(AdminConstants.E_NOTE))
-                doc.addNote(eNote.getText());
-            
-            docs.add(doc);
-        }
+        Map<String, List<RightsDoc>> allDocs = new TreeMap<String, List<RightsDoc>>();
         
-        return docs;
+        for (Element ePkg : resp.listElements(AdminConstants.E_PACKAGE)) {
+            List docs = new ArrayList<RightsDoc>();
+            allDocs.put(ePkg.getAttribute(AdminConstants.A_NAME), docs);
+            
+            for (Element eCmd : ePkg.listElements(AdminConstants.E_CMD)) {
+                RightsDoc doc = new RightsDoc(eCmd.getAttribute(AdminConstants.A_NAME));
+                
+                Element eRights = eCmd.getElement(AdminConstants.E_RIGHTS);
+                for (Element eRight : eRights.listElements(AdminConstants.E_RIGHT))
+                    doc.addRight(eRight.getAttribute(AdminConstants.A_NAME));
+                    
+                Element eDesc = eCmd.getElement(AdminConstants.E_DESC);
+                for (Element eNote : eDesc.listElements(AdminConstants.E_NOTE))
+                    doc.addNote(eNote.getText());
+                
+                docs.add(doc);
+            }
+        }
+        return allDocs;
     }
     
     @Override

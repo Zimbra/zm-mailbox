@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
@@ -46,18 +47,27 @@ public class GetRightsDoc extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
+        HashSet<String> specificPackages = null;
+        for (Element ePackage : request.listElements(AdminConstants.E_PACKAGE)) {
+            if (specificPackages == null)
+                specificPackages = new HashSet<String>();
+            specificPackages.add(ePackage.getAttribute(AdminConstants.A_NAME));
+        }
+        
         Element response = lc.createElement(AdminConstants.GET_RIGHTS_DOC_RESPONSE);
-        doGetRightsDoc(context, response);
+        doGetRightsDoc(context, specificPackages, response);
         return response;
     }
     
-    private void doGetRightsDoc(Map<String, Object> context, Element response) throws ServiceException {
+    private void doGetRightsDoc(Map<String, Object> context, HashSet<String> specificPackages,
+            Element response) throws ServiceException {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         DocumentDispatcher dispatcher = engine.getDocumentDispatcher();
         
         Map<QName, DocumentHandler> handlers = dispatcher.getHandlers();
         
-        Map<String, AdminDocumentHandler> handlersWithRightsDoc = new TreeMap<String, AdminDocumentHandler>();
+        Map<String, TreeMap<String, AdminDocumentHandler>>
+            handlersWithRightsDoc = new TreeMap<String, TreeMap<String, AdminDocumentHandler>>();
         
         for (Map.Entry<QName, DocumentHandler> handler : handlers.entrySet()) {
             // String soapName = handler.getKey().getQualifiedName();
@@ -65,7 +75,18 @@ public class GetRightsDoc extends AdminDocumentHandler {
             
             if (soapHandler instanceof AdminDocumentHandler) {
                 QName qname = handler.getKey();
-                handlersWithRightsDoc.put(qname.getQualifiedName(), (AdminDocumentHandler)soapHandler);
+                String pkg = soapHandler.getClass().getPackage().getName();
+                
+                if (specificPackages != null && !specificPackages.contains(pkg))
+                    continue;
+                
+                TreeMap<String, AdminDocumentHandler> handlersInPkg = handlersWithRightsDoc.get(pkg);
+                if (handlersInPkg == null) {
+                    handlersInPkg = new TreeMap<String, AdminDocumentHandler>();
+                    handlersWithRightsDoc.put(pkg, handlersInPkg);
+                }
+                    
+                handlersInPkg.put(qname.getQualifiedName(), (AdminDocumentHandler)soapHandler);
             }
         }
         
@@ -73,30 +94,37 @@ public class GetRightsDoc extends AdminDocumentHandler {
         
         List<AdminRight> relatedRights = new ArrayList<AdminRight>();
         List<String> notes = new ArrayList<String>();
-        for (Map.Entry<String, AdminDocumentHandler> handler : handlersWithRightsDoc.entrySet()) {
-            String soapName = handler.getKey();
-            AdminDocumentHandler soapHandler = handler.getValue();
+        for (Map.Entry<String, TreeMap<String, AdminDocumentHandler>> entry : handlersWithRightsDoc.entrySet()) {
+            String pkg = entry.getKey();
+            Map<String, AdminDocumentHandler> handlersInPkg = entry.getValue();
             
-            relatedRights.clear();
-            notes.clear();
-            soapHandler.docRights(relatedRights, notes);
+            Element ePackage = response.addElement(AdminConstants.E_PACKAGE);
+            ePackage.addAttribute(AdminConstants.A_NAME, pkg);
             
-            Element eCommand = response.addElement(AdminConstants.E_CMD);
-            eCommand.addAttribute(AdminConstants.A_NAME, soapName);
-            Element eRights = eCommand.addElement(AdminConstants.E_RIGHTS);
-            
-            for (AdminRight adminRight : relatedRights) {
-                Element eRight = eRights.addElement(AdminConstants.E_RIGHT);
-                eRight.addAttribute(AdminConstants.A_NAME, adminRight.getName());
+            for (Map.Entry<String, AdminDocumentHandler> handler : handlersInPkg.entrySet()) {
+                String soapName = handler.getKey();
+                AdminDocumentHandler soapHandler = handler.getValue();
                 
-                usedRights.add(adminRight);
+                relatedRights.clear();
+                notes.clear();
+                soapHandler.docRights(relatedRights, notes);
+                
+                Element eCommand = ePackage.addElement(AdminConstants.E_CMD);
+                eCommand.addAttribute(AdminConstants.A_NAME, soapName);
+                Element eRights = eCommand.addElement(AdminConstants.E_RIGHTS);
+                
+                for (AdminRight adminRight : relatedRights) {
+                    Element eRight = eRights.addElement(AdminConstants.E_RIGHT);
+                    eRight.addAttribute(AdminConstants.A_NAME, adminRight.getName());
+                    
+                    usedRights.add(adminRight);
+                }
+                
+                Element eNotes = eCommand.addElement(AdminConstants.E_DESC);
+                for (String note : notes)
+                    eNotes.addElement(AdminConstants.E_NOTE).setText(note);
             }
-            
-            Element eNotes = eCommand.addElement(AdminConstants.E_DESC);
-            for (String note : notes)
-                eNotes.addElement(AdminConstants.E_NOTE).setText(note);
         }
-        
         genNotUsed(usedRights, response);
         genDomainAdminRights(context, response);
     }

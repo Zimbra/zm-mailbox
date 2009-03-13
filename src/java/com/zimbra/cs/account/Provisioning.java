@@ -1646,7 +1646,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
     
-    public List<RightsDoc> getRightsDoc() throws ServiceException {
+    public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
