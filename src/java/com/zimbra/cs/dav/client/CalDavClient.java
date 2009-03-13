@@ -124,8 +124,11 @@ public class CalDavClient extends WebDavClient {
 	
 	public Appointment getCalendarData(Appointment appt) throws IOException {
 		HttpInputStream resp = sendGet(appt.href);
-		byte[] res = ByteUtil.getContent(resp, resp.getContentLength());
-		appt.data = new String(res, "UTF-8");
+		appt.data = null;
+		if (resp.getStatusCode() == 200) {
+			byte[] res = ByteUtil.getContent(resp, resp.getContentLength());
+			appt.data = new String(res, "UTF-8");
+		}
 		return appt;
 	}
 	

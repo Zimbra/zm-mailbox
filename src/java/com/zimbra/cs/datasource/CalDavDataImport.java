@@ -414,31 +414,43 @@ public class CalDavDataImport extends MailItemImport {
     	} else if (isStale) {
         	ZimbraLog.datasource.debug("Updating stale appointment %s", item.href);
     		ZCalendar.ZVCalendar vcalendar;
+			SetCalendarItemData main = new SetCalendarItemData();
+			SetCalendarItemData exceptions[] = null;
+			CalDavClient client = null;
     		try {
-    			CalDavClient client = getClient();
-    			Appointment appt = client.getCalendarData(new Appointment(item.href, item.etag));
-        		dsItem.md.put(METADATA_KEY_ETAG, appt.etag);
-    			vcalendar = ZCalendar.ZCalendarBuilder.build(new StringReader(appt.data));
+    			client = getClient();
     		} catch (DavException e) {
-        		throw ServiceException.FAILURE("error getting calendar data for "+item.href, e);
+           		throw ServiceException.FAILURE("error creating CalDAV client", e);
     		}
-    		List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, vcalendar, true);
-    		SetCalendarItemData main = new SetCalendarItemData();
-    		SetCalendarItemData exceptions[] = null;
-    		if (invites.size() > 1)
-    			exceptions = new SetCalendarItemData[invites.size() - 1];
+    		
+			Appointment appt = client.getCalendarData(new Appointment(item.href, item.etag));
+			if (appt.data == null) {
+	        	ZimbraLog.datasource.warn("No appointment found at "+item.href);
+	        	return null;
+			}
+    		dsItem.md.put(METADATA_KEY_ETAG, appt.etag);
+    		
+    		try {
+    			vcalendar = ZCalendar.ZCalendarBuilder.build(new StringReader(appt.data));
+    			List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, vcalendar, true);
+    			if (invites.size() > 1)
+    				exceptions = new SetCalendarItemData[invites.size() - 1];
 
-    		int pos = 0;
-    		boolean first = true;
-    		for (Invite i : invites) {
-    			if (first) {
-    				main.mInv = i;
-    				first = false;
-    			} else {
-    				SetCalendarItemData scid = new SetCalendarItemData();
-    				scid.mInv = i;
-    				exceptions[pos++] = scid;
+    			int pos = 0;
+    			boolean first = true;
+    			for (Invite i : invites) {
+    				if (first) {
+    					main.mInv = i;
+    					first = false;
+    				} else {
+    					SetCalendarItemData scid = new SetCalendarItemData();
+    					scid.mInv = i;
+    					exceptions[pos++] = scid;
+    				}
     			}
+    		} catch (Exception e) {
+	        	ZimbraLog.datasource.warn("Error parsing appointment ", e);
+	        	return null;
     		}
     		mi = mbox.setCalendarItem(octxt, where.getId(), 0, 0,
     				main, exceptions, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
