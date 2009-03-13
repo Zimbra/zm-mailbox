@@ -20,6 +20,7 @@ package com.zimbra.soap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -312,45 +313,10 @@ public class SoapServlet extends ZimbraServlet {
         int statusCode = soapProto.hasFault(envelope) ?
             HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
         
-        // file buffered mechanism can be disabled by setting soap_max_in_memory_buffer_size to 0
-        boolean fileBufferingDisabled = (LC.soap_max_in_memory_buffer_size.intValue() == 0);
-        
-        if (!fileBufferingDisabled && soapProto.getBodyElement(envelope).isLarge()) {
-            ZimbraLog.soap.debug("file buffering response");
-            /*
-             * ====================
-             * NOTE:
-             *     This is currently only done for GAL SOAP commands. (only GAL handlers would set needsBuffering
-             *     for its response to true if it's got a large result) 
-             * ====================
-             *
-             * The handler told us that this response could be large.
-             * The actual serialize body may or may not, but is likely to, exceed soap_max_in_memory_buffer_size.
-             * Use a FileBufferedWriter to hold the serialized envelope and then write it to the response writer. 
-             * 
-             * FileBufferedWriter keeps data in memory if it is smaller than soap_max_in_memory_buffer_size, 
-             * If data exceeds this size, it is buffered to a temporary file. 
-             * 
-             * The fileBufferedWriter.finish() call triggers writing to the http response.
-             */
-            
-            // Note: resp.setContentType has to be called *before* resp.getWriter(), or else jetty thinks this response 
-            // is already in writing(even if nothing has been written to the writer yet) state and will ignore the charset in 
-            // setContentType call.  It will then use whatever charset is last set (by setCharacterEncoding() or setContentType()).  
-            // If none was set, it will use iso-8859-1 as the charset.
-            resp.setContentType(soapProto.getContentType());  
-            resp.setStatus(statusCode);
-            
-            FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(resp.getWriter(), 
-                    LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));
-            try {
-                // serialize envelope to a FileBufferedWriter
-                envelope.toUTF8(fileBufferedWriter);
-            } finally {
-                // write response
-                fileBufferedWriter.finish();
-            }
-        } else {
+        // http chunking can be disabled by setting soap_max_in_memory_buffer_size to 0
+        boolean chunkingDisabled = (LC.soap_max_in_memory_buffer_size.intValue() == 0);
+
+        if (chunkingDisabled) {
             /*
              * serialize the envelope to a byte array and send the response with Content-Length header.
              */
@@ -360,7 +326,31 @@ public class SoapServlet extends ZimbraServlet {
             resp.setContentLength(soapBytes.length);
             resp.setStatus(statusCode);
             resp.getOutputStream().write(soapBytes);
-        }    
+        } else {
+            /*
+             * On DF, 0.35% of all SOAP responses were over 128K, 0.25% of
+             * all SOAP responses were over 256K, 0.018% over 512K, 0.011% over 1MB.
+             * 
+             * default for soap_max_in_memory_buffer_size is 524288 (512KB)
+             */
+            
+            /*
+             * seems jetty's threshold for chunking is around 24KB,
+             * i.e, no matter how small the number passed to 
+             * setBufferSize is, chunking is triggered only when the 
+             * actual data written to the writer is more than 24KB.  
+             * 
+             * Setting soap_max_in_memory_buffer_size to a value 
+             * less than 24KB is essentially no effect.
+             */
+            int bufSize = LC.soap_max_in_memory_buffer_size.intValue();
+            resp.setBufferSize(bufSize);
+            resp.setContentType(soapProto.getContentType());  
+            resp.setStatus(statusCode);
+            
+            Writer writer = resp.getWriter();
+            envelope.toUTF8(writer);
+        }
     }
 
     /**
