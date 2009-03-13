@@ -268,23 +268,13 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     {
         synchronized(getLock()) {        
             IndexWriter writer = null;
-            try {
-                flush();
-                // FIXME maybe: under Windows only, this can fail.  Might need way to forcibly close all open indices???
-                //              closeIndexReader();
-                if (sLog.isDebugEnabled())
-                    sLog.debug("****Deleting index " + mIdxDirectory.toString());
-
-                // can use default analyzer here since it is easier, and since we aren't actually
-                // going to do any indexing...
-                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true, null);
-                
-                if (ZimbraLog.index_lucene.isDebugEnabled())
-                    writer.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-            } finally {
-                if (writer != null) {
-                    writer.close();
-                }
+            flush();
+            if (sLog.isDebugEnabled())
+                sLog.debug("****Deleting index " + mIdxDirectory.toString());
+            
+            String[] files = mIdxDirectory.list();
+            for (String file : files) {
+                mIdxDirectory.deleteFile(file);
             }
         }
     }
