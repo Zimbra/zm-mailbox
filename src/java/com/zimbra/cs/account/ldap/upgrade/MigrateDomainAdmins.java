@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.ldap.LdapDIT;
@@ -168,7 +169,7 @@ public class MigrateDomainAdmins extends LdapUpgrade {
         //
         mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                RightConsts.RT_domainAdminRights, null);
+                RightConsts.RT_domainAdminRights, RightModifier.RM_CAN_DELEGATE);
         
         //
         // cos rights
@@ -180,11 +181,11 @@ public class MigrateDomainAdmins extends LdapUpgrade {
         //
         mProv.grantRight(TargetType.global.getCode(), null, null, 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                RightConsts.RT_listZimlet, null);
+                RightConsts.RT_listZimlet, RightModifier.RM_CAN_DELEGATE);
         
         mProv.grantRight(TargetType.global.getCode(), null, null, 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                RightConsts.RT_getZimlet, null);
+                RightConsts.RT_getZimlet, RightModifier.RM_CAN_DELEGATE);
         
         //
         // admin UI components
@@ -210,15 +211,15 @@ public class MigrateDomainAdmins extends LdapUpgrade {
             
             mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                    RightConsts.RT_listCos, null);
+                    RightConsts.RT_listCos, RightModifier.RM_CAN_DELEGATE);
             
             mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                    RightConsts.RT_getCos, null);
+                    RightConsts.RT_getCos, RightModifier.RM_CAN_DELEGATE);
             
             mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                    RightConsts.RT_assignCos, null);
+                    RightConsts.RT_assignCos, RightModifier.RM_CAN_DELEGATE);
         }
         
     }
