@@ -3872,7 +3872,7 @@ public class ZMailbox implements ToZJSONObject {
             searchQuery.append("(");
             for (String folderId : idsToFetch) {
                 if (searchQuery.length() > 1) searchQuery.append(" or ");
-                searchQuery.append("inid:").append(folderId);
+                searchQuery.append("inid:").append("\""+folderId+"\"");
                 //folder2List.
                 List<ZAppointmentHit> appts = new ArrayList<ZAppointmentHit>();
                 ZApptSummaryResult result = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts, query);
