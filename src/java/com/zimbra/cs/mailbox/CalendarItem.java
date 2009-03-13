@@ -2417,11 +2417,16 @@ public abstract class CalendarItem extends MailItem {
          * @throws ServiceException
          */
         ZAttendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
+            // Are we dealing with a simple, non-recurring meeting?
+            boolean isSimple = inv.getRecurrence() == null && !inv.hasRecurId();
             ZAttendee defaultAt = null;
 
             for (ReplyInfo cur : mReplies) {
                 if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
-                    boolean match = cur.mRecurId == null && inst == null;  // asking for default instance
+                    // We have a match if reply isn't for a specific instance and either we're asking about
+                    // the default instance of a recurring appointment or we're not dealing with a recurring
+                    // appointment.
+                    boolean match = cur.mRecurId == null && (inst == null || isSimple);
                     if (!match) {
                         if (inst != null && cur.mRecurId != null) {  // matches specific requested instance
                             long instStart = inst.getStart();
@@ -2454,11 +2459,30 @@ public abstract class CalendarItem extends MailItem {
                     }
                 }
             }
-            
-            if (defaultAt == null || !inv.isLocalOnly())
-                return inv.getMatchingAttendee(acct);
-            else
-                return defaultAt;
+
+            // We didn't find an exact match.
+
+            if (isSimple || inst == null) {
+                // simple appointment or the series of a recurring appointment
+                return defaultAt != null ? defaultAt : inv.getMatchingAttendee(acct);
+            } else {
+                // instance of a recurring appointment
+
+                // Special handling for local-only invites.  (Local-only means the data exists on attendee
+                // side only and wasn't published by the organizer.)
+
+                // For local-only invite, inherit the reply status from the series, if one was found.
+                // It's okay to inherit from the series because we know there was no instance-specific
+                // reply.  If there was one, we would have found ti and returned from the method already
+                // and would not be here.
+                //
+                // If there was no series reply or the invite is not local-only, get the data out of the
+                // attendee info in the invite definition.
+                if (defaultAt != null && inv.isLocalOnly())
+                    return defaultAt;
+                else
+                    return inv.getMatchingAttendee(acct);
+            }
         }
         
         List<ReplyInfo> getAllReplies() {
