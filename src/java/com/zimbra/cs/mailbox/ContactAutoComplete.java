@@ -47,12 +47,15 @@ public class ContactAutoComplete {
 	public static class AutoCompleteResult {
 		public Collection<ContactEntry> entries;
 		public boolean canBeCached;
-		public AutoCompleteResult() { 
+		public int limit;
+		public AutoCompleteResult(int limit) { 
 			entries = new ArrayList<ContactEntry>(); 
 			emails = new HashSet<String>();
 			canBeCached = true; 
 		}
 		public void addEntry(ContactEntry entry) {
+			if (entries.size() >= limit)
+				return;
 			String email;
 			if (entry.isDlist())
 				email = entry.mDisplayName;
@@ -190,7 +193,7 @@ public class ContactAutoComplete {
 	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
 		ZimbraLog.gal.debug("querying "+str);
-		AutoCompleteResult result = new AutoCompleteResult();
+		AutoCompleteResult result = new AutoCompleteResult(limit);
 		if (limit <= 0)
 			return result;
 		

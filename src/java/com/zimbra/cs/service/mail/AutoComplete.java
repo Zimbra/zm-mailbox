@@ -41,7 +41,7 @@ public class AutoComplete extends MailDocumentHandler {
 		String n = request.getAttribute(MailConstants.A_NAME);
 		while (n.endsWith("*"))
 			n = n.substring(0, n.length() - 1);
-        int limit = (int) request.getAttributeLong(MailConstants.A_LIMIT, 20);
+        int limit = account.getContactAutoCompleteMaxResults();
 		ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
 		ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
 		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
