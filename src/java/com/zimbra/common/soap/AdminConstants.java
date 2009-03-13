@@ -619,6 +619,7 @@ public class AdminConstants {
     public static final String E_MAX         = "max";
     public static final String E_MIN         = "min";
     public static final String E_NOTE        = "note";
+    public static final String E_PACKAGE     = "package";
     public static final String E_RIGHTS      = "rights";
     public static final String E_R           = "r";
     public static final String E_RIGHT       = "right";
