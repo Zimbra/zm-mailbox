@@ -2926,7 +2926,7 @@ public class DbMailItem {
             String typeConstraint = " AND type = 11";
             stmt = conn.prepareStatement("SELECT mi.id, ci.uid, mi.mod_metadata, mi.mod_content" + 
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
-                        " WHERE " + "mi.id = ci.item_id AND mi.mailbox_id = ? " + 
+                        " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id AND mi.mailbox_id = ? " + 
                         startConstraint + endConstraint + folderConstraint + typeConstraint);
             int pos = 1;
             stmt.setInt(pos++, mbox.getId());
