@@ -55,6 +55,7 @@
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
+          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
@@ -77,6 +78,7 @@
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
+          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
