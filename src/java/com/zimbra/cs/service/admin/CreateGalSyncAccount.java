@@ -141,6 +141,8 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    	attrs.put(Provisioning.A_zimbraDataSourceFolderId, "" + folderId);
 	    	if (!attrs.containsKey(Provisioning.A_zimbraDataSourceEnabled))
 	    		attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_TRUE);
+	    	if (!attrs.containsKey(Provisioning.A_zimbraGalStatus))
+	    		attrs.put(Provisioning.A_zimbraGalStatus, "active");
 	    	prov.createDataSource(account, DataSource.Type.gal, name, attrs);
 	    } catch (ServiceException e) {
 	    	ZimbraLog.gal.error("error creating datasource for GalSyncAccount", e);

@@ -2223,7 +2223,7 @@ returns all shares owned by user1@test.com that are shared with dl@test.com.
                         
 ----------------------------
  
-<CreateGalSyncAccountRequest name="{identifier}" [domain="{domain}"] [folder="{contact-folder-name}"] >
+<CreateGalSyncAccountRequest name="{identifier}" [domain="true"] [folder="{contact-folder-name}"] >
   <account by="id|name">...</account>
   <a n="attr-name">...</a>+
 </CreateGalSyncAccountRequest>
@@ -2235,7 +2235,8 @@ returns all shares owned by user1@test.com that are shared with dl@test.com.
 
 Notes:
 
-    - the identifier used in name attr is used for SyncGal and SearchGal
+	- if the referenced account is not found it will be created.
+    - the identifier used in name attr is used for SyncGal and SearchGal.
     - if domain attr is not present it'll set up gal sync account for Zimbra LDAP server.
     - if folder attr is not present it'll default to Contacts folder.
     - passed in attrs are used to initialize the gal data source.
@@ -2266,5 +2267,13 @@ example for creating domain gal sync account.
 
 Access: domain admin sufficient
 
-                        
-                        
+----------------------------
+ 
+<SyncGalAccountRequest>
+  <account id="{account-id}">
+    <datasource by="id|name" [fullSync="true|false"]>...</datasource>+
+  </account>+
+</SyncGalAccountRequest>
+
+<SyncGalAccountResponse/>
+
