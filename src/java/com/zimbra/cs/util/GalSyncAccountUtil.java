@@ -142,7 +142,7 @@ public class GalSyncAccountUtil {
     		if (pollingInterval != null)
     			req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
     			
-    		mTransport.invoke(req);
+    		mTransport.invokeWithoutSession(req);
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
@@ -169,6 +169,8 @@ public class GalSyncAccountUtil {
 	}
 	
 	public static void main(String[] args) throws Exception {
+		if (args.length < 1)
+			usage();
 		CliUtil.toolSetup();
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
@@ -218,6 +220,7 @@ public class GalSyncAccountUtil {
 			if (acctName == null || dsName == null)
 				usage();
 			cli.createGalSyncAccount(acctName, dsName, domain, fid, pollingInterval);
+			break;
 		default:
 			usage();
 		}

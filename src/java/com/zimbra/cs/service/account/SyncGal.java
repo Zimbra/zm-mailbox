@@ -54,7 +54,7 @@ public class SyncGal extends AccountDocumentHandler {
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
 
-        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, tokenAttr, null, response);
+        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, tokenAttr, null, request, response);
         if (!galAccountSearchSucceeded) {
         	response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
         	doLdapSearch(account, tokenAttr, response);
