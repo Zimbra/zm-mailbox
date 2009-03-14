@@ -382,6 +382,9 @@ public class AdminConstants {
     public static final QName GET_SERVER_STATS_REQUEST = QName.get("GetServerStatsRequest", NAMESPACE);
     public static final QName GET_SERVER_STATS_RESPONSE = QName.get("GetServerStatsResponse", NAMESPACE);
     
+    public static final QName SYNC_GAL_ACCOUNT_REQUEST = QName.get("SyncGalAccountRequest", NAMESPACE);
+    public static final QName SYNC_GAL_ACCOUNT_RESPONSE = QName.get("SyncGalAccountResponse", NAMESPACE);
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -459,6 +462,7 @@ public class AdminConstants {
     public static final String E_FOLDER = "folder";
     public static final String E_OWNER = "owner";
     public static final String E_SHARE = "share";
+    public static final String E_DATASOURCE = "datasource";
     
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
@@ -640,4 +644,6 @@ public class AdminConstants {
     
     // Monitoring
     public static final String E_STAT = "stat";
+    
+    public static final String A_FULLSYNC = "fullSync";
 }
