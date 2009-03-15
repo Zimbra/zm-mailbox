@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090309-1526 */
+    /* build: 5.0 jjzhuang 20090314-2218 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2536,6 +2536,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailUpsellURL = "zimbraFeatureMailUpsellURL";
 
     /**
+     * whether to enforce mobile policy
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=833)
+    public static final String A_zimbraFeatureMobilePolicyEnabled = "zimbraFeatureMobilePolicyEnabled";
+
+    /**
      * whether to permit mobile sync
      */
     @ZAttr(id=347)
@@ -3847,6 +3855,142 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=157)
     public static final String A_zimbraMimeType = "zimbraMimeType";
+
+    /**
+     * whether to allow non-provisionable devices; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=834)
+    public static final String A_zimbraMobilePolicyAllowNonProvisionableDevices = "zimbraMobilePolicyAllowNonProvisionableDevices";
+
+    /**
+     * whether to allow partial policy enforcement on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=835)
+    public static final String A_zimbraMobilePolicyAllowPartialProvisioning = "zimbraMobilePolicyAllowPartialProvisioning";
+
+    /**
+     * whether to allow simple password; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=839)
+    public static final String A_zimbraMobilePolicyAllowSimpleDevicePassword = "zimbraMobilePolicyAllowSimpleDevicePassword";
+
+    /**
+     * whether to require alpha-numeric password as device pin; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=840)
+    public static final String A_zimbraMobilePolicyAlphanumericDevicePasswordRequired = "zimbraMobilePolicyAlphanumericDevicePasswordRequired";
+
+    /**
+     * require data encryption on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=847)
+    public static final String A_zimbraMobilePolicyDeviceEncryptionEnabled = "zimbraMobilePolicyDeviceEncryptionEnabled";
+
+    /**
+     * whether to force pin on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=837)
+    public static final String A_zimbraMobilePolicyDevicePasswordEnabled = "zimbraMobilePolicyDevicePasswordEnabled";
+
+    /**
+     * number of days before device pin must expire; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=842)
+    public static final String A_zimbraMobilePolicyDevicePasswordExpiration = "zimbraMobilePolicyDevicePasswordExpiration";
+
+    /**
+     * number of previously used password stored in history; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordExpiration=0
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=843)
+    public static final String A_zimbraMobilePolicyDevicePasswordHistory = "zimbraMobilePolicyDevicePasswordHistory";
+
+    /**
+     * number of consecutive incorrect pin input before device is wiped;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=845)
+    public static final String A_zimbraMobilePolicyMaxDevicePasswordFailedAttempts = "zimbraMobilePolicyMaxDevicePasswordFailedAttempts";
+
+    /**
+     * max idle time in minutes before device is locked; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=844)
+    public static final String A_zimbraMobilePolicyMaxInactivityTimeDeviceLock = "zimbraMobilePolicyMaxInactivityTimeDeviceLock";
+
+    /**
+     * least number of complex characters must be included in device pin;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=841)
+    public static final String A_zimbraMobilePolicyMinDevicePasswordComplexCharacters = "zimbraMobilePolicyMinDevicePasswordComplexCharacters";
+
+    /**
+     * min length for device pin; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=838)
+    public static final String A_zimbraMobilePolicyMinDevicePasswordLength = "zimbraMobilePolicyMinDevicePasswordLength";
+
+    /**
+     * support device pin recovery; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobileDevicePasswordEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=846)
+    public static final String A_zimbraMobilePolicyPasswordRecoveryEnabled = "zimbraMobilePolicyPasswordRecoveryEnabled";
+
+    /**
+     * time interval in minutes before forcing device to refresh policy;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=836)
+    public static final String A_zimbraMobilePolicyRefreshInterval = "zimbraMobilePolicyRefreshInterval";
 
     /**
      * mta anti spam lock method.

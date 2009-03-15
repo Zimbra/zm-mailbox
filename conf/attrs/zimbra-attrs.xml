@@ -4177,4 +4177,121 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>default visibility of the appointment when starting a new appointment in the UI</desc>
 </attr>
 
+<attr id="833" name="zimbraFeatureMobilePolicyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to enforce mobile policy</desc>
+</attr>
+
+<attr id="834" name="zimbraMobilePolicyAllowNonProvisionableDevices" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    whether to allow non-provisionable devices;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="835" name="zimbraMobilePolicyAllowPartialProvisioning" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    whether to allow partial policy enforcement on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="836" name="zimbraMobilePolicyRefreshInterval" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>1440</defaultCOSValue>
+  <desc>
+    time interval in minutes before forcing device to refresh policy;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="837" name="zimbraMobilePolicyDevicePasswordEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    whether to force pin on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="838" name="zimbraMobilePolicyMinDevicePasswordLength" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>4</defaultCOSValue>
+  <desc>
+    min length for device pin;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="839" name="zimbraMobilePolicyAllowSimpleDevicePassword" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>
+    whether to allow simple password;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="840" name="zimbraMobilePolicyAlphanumericDevicePasswordRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>
+    whether to require alpha-numeric password as device pin;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="841" name="zimbraMobilePolicyMinDevicePasswordComplexCharacters" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    least number of complex characters must be included in device pin;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="842" name="zimbraMobilePolicyDevicePasswordExpiration" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    number of days before device pin must expire;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="843" name="zimbraMobilePolicyDevicePasswordHistory" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>8</defaultCOSValue>
+  <desc>
+    number of previously used password stored in history;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE or zimbraMobilePolicyDevicePasswordExpiration=0
+  </desc>
+</attr>
+
+<attr id="844" name="zimbraMobilePolicyMaxInactivityTimeDeviceLock" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>15</defaultCOSValue>
+  <desc>
+    max idle time in minutes before device is locked;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="845" name="zimbraMobilePolicyMaxDevicePasswordFailedAttempts" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>4</defaultCOSValue>
+  <desc>
+    number of consecutive incorrect pin input before device is wiped;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="846" name="zimbraMobilePolicyPasswordRecoveryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    support device pin recovery;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="847" name="zimbraMobilePolicyDeviceEncryptionEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    require data encryption on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
 </attrs>
