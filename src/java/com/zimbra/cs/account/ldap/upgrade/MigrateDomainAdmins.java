@@ -102,7 +102,6 @@ public class MigrateDomainAdmins extends LdapUpgrade {
                 e.printStackTrace();
             }
         }
-
     }
     
     private Set<String> getAllDomainAdmins() throws ServiceException {

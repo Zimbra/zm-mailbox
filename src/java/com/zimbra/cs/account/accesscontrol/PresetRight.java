@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.zimbra.common.service.ServiceException;
+
 public class PresetRight extends AdminRight {
 
     PresetRight(String name) {
@@ -23,5 +25,17 @@ public class PresetRight extends AdminRight {
     @Override
     public boolean isPresetRight() {
         return true;
+    }
+    
+    @Override
+    boolean overlaps(Right other) throws ServiceException {
+        if (other.isPresetRight())
+            return this==other;
+        else if (other.isAttrRight())
+            return false;
+        else if (other.isComboRight())
+            return ((ComboRight)other).containsPresetRight(this);
+        else
+            throw ServiceException.FAILURE("internal error", null);
     }
 }

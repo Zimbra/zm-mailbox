@@ -800,7 +800,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 4.2.3 Which Rights and Target Entries can be Granted
       When a right is granted with the "can grant" modifier, the grantee of the grant can further 
       grant the right or part of the right to others, on the same target on which his own grants 
-      are on, or on targets that can inherit the grants.
+      are on, or on targets that can inherit the grants(sub-targets).
       
       e.g. if adminA has grants on a distribution list dl@test.com:
                  {id-of-adminA} usr changePassword
@@ -813,13 +813,26 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
            Then, 
            - adminA cannot grant changePassword (he can only execute the right himself)
            - adminA can grant the modifyAccount right on dl@test.com
-           - adminA can grant inline rights setAttrs:zimbraMailStatus or getAttrs:zimbraMailStatus,
-             because zimbraMailStatus is "part of" the modifyAccount right.
+           - adminA can grant inline rights set.account.zimbraMailStatus or get.account.zimbraMailStatus,
+             because get/set account zimbraMailStatus is "part of" the modifyAccount right.
            - adminA can grant the addDistributionMember right
            - Rights can be granted on dl@test.com or any dl/account members of dl@test.com.
-
-      TODO: find and grant the same negative grants to sub targets, ... 
       
+      Note, if a right overlaps with the to-be-granted-right is specified denied to the grantor on a
+            sub-target, then the granting attempt will be denied.  Otherwise the admin get granted 
+            the right will end of having "more" rights than the granting admin.
+            
+            e.g continue with the above example, if user1@test.com and user2@test.com are members 
+                of dl@test.com, and there is a negative grant on user1@test.com that denies adminA 
+                to modify zimbraFeatureCalendarEnabled, like:
+                     {id-of-adminA} usr -set.account.zimbraFeatureCalendarEnabled
+                     
+                Then:
+                - adminA *cannot* grant the modifyAccount right on dl@test.com to others(e.g. adminB).  
+                  Because if the granting is allowed, then adminB will be able to set zimbraFeatureCalendarEnabled 
+                  on account user1@test.com, which adminA is not allowed to do.
+                - adminA *can* still grant the modifyAccount right on user2@test.com to others.
+                    
       
 4.2.4 Which Target Type can a Right be Granted on
       A right can only be granted on target types the right is applicable or on targets from 

@@ -22,8 +22,8 @@ public abstract class AdminRight extends Right {
     // pseudo rights, should never actually be granted on any entry 
     //
     
-    public static AdminRight PR_GET_ATTRS;
-    public static AdminRight PR_SET_ATTRS;
+    public static AttrRight PR_GET_ATTRS;
+    public static AttrRight PR_SET_ATTRS;
     
     // pseudo rights to always allow/deny, used by admin soap handlers for 
     // API clean-ness when coding with legacy domain based AccessManager 
@@ -33,8 +33,8 @@ public abstract class AdminRight extends Right {
     
     static void init(RightManager rm) throws ServiceException {
         
-        PR_GET_ATTRS = newAdminSystemRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
-        PR_SET_ATTRS = newAdminSystemRight("PSEUDO_SET_ATTRS", RightType.setAttrs);
+        PR_GET_ATTRS = (AttrRight)newAdminSystemRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
+        PR_SET_ATTRS = (AttrRight)newAdminSystemRight("PSEUDO_SET_ATTRS", RightType.setAttrs);
         
         PR_ALWAYS_ALLOW = newAdminSystemRight("PSEUDO_ALWAYS_ALLOW", RightType.preset);
         PR_SYSTEM_ADMIN_ONLY = newAdminSystemRight("PSEUDO_SYSTEM_ADMIN_ONLY", RightType.preset);

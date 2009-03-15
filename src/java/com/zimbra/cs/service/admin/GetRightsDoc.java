@@ -170,7 +170,7 @@ public class GetRightsDoc extends AdminDocumentHandler {
                             TargetType tt = r.getTargetType();
                             rights.get(tt).add(r.getName());
                         } else if (r.isAttrRight()) {
-                            List<TargetType> tts = ((AttrRight)r).getTargetTypes();
+                            Set<TargetType> tts = ((AttrRight)r).getTargetTypes();
                             for (TargetType tt : tts)
                                 rights.get(tt).add(r.getName());
                         }

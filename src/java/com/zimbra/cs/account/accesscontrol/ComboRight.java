@@ -61,6 +61,18 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
+    boolean overlaps(Right other) throws ServiceException {
+        
+        for (Right r : getAllRights()) {
+            // r is either a preset right or an attr right
+            // delegate to the overlaps method of those
+            if (r.overlaps(other))
+                return true;
+        }
+        return false;
+    }
+    
+    @Override
     boolean executableOnTargetType(TargetType targetType) {
         return true;
     }

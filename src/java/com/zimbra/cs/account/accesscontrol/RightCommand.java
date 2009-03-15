@@ -435,22 +435,10 @@ public class RightCommand {
      * remove when all is well
      * 
      * TODOs:
-     *
-     * 3. family mailbox (currently in DomainAccessManager, move to AccessManager so can apply to non domain based AM)
-     *
      * 4. check all callsites of AuthToken.isAdmin() to call AccessManager.isGlobalAdmin()
-     * 
-     * 6. domain admin rights     
      * 7. check all rights in zimbra-rights.xml ar used or still need to be used
      *   
-     * 7. cross domain right
-     * 8. grant the same negative grants of the granter to the grantee
-     * 
      * For domain admin login:
-     * 
-     * zmprov grr config usr da@test.com getGlobalConfig (???)
-     * zmprov grr domain test.com usr da@test.com domainAdminRights
-     * 
      */
     private static boolean READY() {
         return true;
@@ -638,9 +626,11 @@ public class RightCommand {
         
         if (authedAcct != null) {
             AccessManager am = AccessManager.getInstance();
-            boolean canGrant = am.canPerform((Account)authedAcct, targetEntry, right, true, null, true, null);
+            boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
             if (!canGrant)
-                throw ServiceException.PERM_DENIED("insuffcient right to grant");
+                throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
+            
+            RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
         }
     }
             
@@ -664,10 +654,6 @@ public class RightCommand {
         Right r = RightManager.getInstance().getRight(right);
         
         verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, false);
-        
-        /*
-         * TODO: grant the same negative right on sub targets!!!
-         */
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);

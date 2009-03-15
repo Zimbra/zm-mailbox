@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,9 +26,16 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
@@ -41,16 +49,23 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 public class RightChecker {
 
@@ -530,10 +545,8 @@ public class RightChecker {
      * @throws ServiceException
      */
     // public only for unittest
-    public static AllowedAttrs canAccessAttrs(Account grantee, Entry target, 
-            AdminRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
-        if (rightNeeded != AdminRight.PR_GET_ATTRS && rightNeeded != AdminRight.PR_SET_ATTRS)
-            throw ServiceException.FAILURE("internal error", null); 
+    public static AllowedAttrs accessibleAttrs(Account grantee, Entry target, 
+            AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         
         Provisioning prov = Provisioning.getInstance();
         
@@ -625,7 +638,19 @@ public class RightChecker {
             }
         }
         
-        // todo, log result from the collecting phase
+        // log collecting phase result
+        if (sLog.isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Allowed: {");
+            for (Map.Entry<String, Integer> as : allowSome.entrySet())
+                sb.append("(" + as.getKey() + ", " + as.getValue() + ")");
+            sb.append("}");
+            sb.append(" Denied: {");
+            for (Map.Entry<String, Integer> ds : denySome.entrySet())
+                sb.append("(" + ds.getKey() + ", " + ds.getValue() + ")");
+            sb.append("}");
+            sLog.debug("accessibleAttrs: " + car.name() + ". " + sb.toString());
+        }
         
         //
         // computing phase
@@ -700,7 +725,7 @@ public class RightChecker {
     private static CollectAttrsResult checkTargetAttrsRight(
             List<ZimbraACE> acl, TargetType targetType,
             Set<String> granteeIds, 
-            Right rightNeeded, boolean canDelegateNeeded,
+            AttrRight rightNeeded, boolean canDelegateNeeded,
             Integer relativity,
             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         
@@ -708,14 +733,14 @@ public class RightChecker {
         
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), 
+        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded, 
                 canDelegateNeeded, granteeFlags, relativity, allowSome, denySome);
         if (result.isAll()) 
             return result;
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP);
-        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded.getRightType(), 
+        result = expandACLToAttrs(acl, targetType, granteeIds, rightNeeded, 
                 canDelegateNeeded, granteeFlags, relativity+1, allowSome, denySome);
 
         return result;
@@ -740,7 +765,7 @@ public class RightChecker {
     private static CollectAttrsResult expandAttrsGrantToAttrs(
             ZimbraACE ace, TargetType targetType, 
             AttrRight attrRightGranted, 
-            Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
+            AttrRight rightNeeded, boolean canDelegateNeeded,
             Integer relativity,
             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         
@@ -758,6 +783,7 @@ public class RightChecker {
          * - ZimbraACE level checks are done in the caller (expandACLToAttrs).
          */
         
+        Right.RightType rightTypeNeeded = rightNeeded.getRightType();
         
         /*
          * check if get/set matches
@@ -774,6 +800,41 @@ public class RightChecker {
          if (!rightApplicableOnTargetType(targetType, attrRightGranted, canDelegateNeeded))
          // if (!attrRightGranted.executableOnTargetType(targetType))
             return null;
+         
+        /*
+         * If canDelegateNeeded is true, rightApplicableOnTargetType return true 
+         * if right.grantableOnTargetType() is true.  This creates a problem for 
+         * granting attr right when:
+         * 
+         *   e.g. grant on domain d.com: {id-of-adminA} usr +set.domain.zimbraMailStatus
+         *        Note the grant is for the zimbraMailStatus on domain, not account(the 
+         *        attr is also on account)
+         *        
+         *        now, adminA trying to "ma usr1@d.com zimbraMailStatus enabled" is PERM_DENIED, 
+         *        this is correct.  It is blocked in rightApplicableOnTargetType because 
+         *        the decision was made on right.executableOnTargetType (the path when 
+         *        canDelegateNeeded is false)
+         *        
+         *        but, adminA trying to "grr domain d.com usr adminB set.account.zimbraMailStatus" 
+         *        is will be allowed, this is *wrong*.  The right adminA has is setting 
+         *        zimbraMailStatus on domain, not on account, but it can end up granting the 
+         *        set.account.zimbraMailStatus to admin B.  The following check fixes this 
+         *        problem.
+         *        
+         * This is not a problem for granting preset right because each preset right has a 
+         * specific name and designated target.  
+         * 
+         * e.g. if on domain d.com: {id-of-adminA} usr +deleteDomain   
+         *      then when adminA is trying to grant the deleteAccount right, he can't because
+         *      the right is simply not there.  deleteAccount and deleteDomain are totally 
+         *      two different rights.
+         *      
+         */
+        if (rightNeeded != AdminRight.PR_GET_ATTRS && rightNeeded != AdminRight.PR_SET_ATTRS) {
+            // not pseudo right, that means we are checking for a specific right
+            if (SetUtil.intersect(attrRightGranted.getTargetTypes(), rightNeeded.getTargetTypes()).isEmpty())
+                return null;
+        }
         
         if (attrRightGranted.allAttrs()) {
             // all attrs, return if we hit a grant with all attrs
@@ -854,7 +915,7 @@ public class RightChecker {
     private static CollectAttrsResult expandACLToAttrs(
             List<ZimbraACE> acl, TargetType targetType,
             Set<String> granteeIds, 
-            Right.RightType rightTypeNeeded, boolean canDelegateNeeded,
+            AttrRight rightNeeded, boolean canDelegateNeeded,
             short granteeFlags, Integer relativity,
             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
                                                 
@@ -878,11 +939,12 @@ public class RightChecker {
              */
             if (canDelegateNeeded && ace.canExecuteOnly())
                 continue; // just ignore the grant
+
             
             if (rightGranted.isAttrRight()) {
                 AttrRight attrRight = (AttrRight)rightGranted;
                 result = expandAttrsGrantToAttrs(ace, targetType, attrRight, 
-                        rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                        rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                 
                 /*
                  * denied grants appear before allowed grants
@@ -898,7 +960,7 @@ public class RightChecker {
                 ComboRight comboRight = (ComboRight)rightGranted;
                 for (AttrRight attrRight : comboRight.getAttrRights()) {
                     result = expandAttrsGrantToAttrs(ace, targetType, attrRight, 
-                            rightTypeNeeded, canDelegateNeeded, relativity, allowSome, denySome);
+                            rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
                     // return if we see an allow-all/deny-all, same reason as above.
                     if (result != null && result.isAll())
                         return result;
@@ -944,10 +1006,10 @@ public class RightChecker {
             presetRights = getEffectivePresetRights(grantee, target);
             
             // get effective setAttrs rights
-            allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
+            allowSetAttrs = accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
             
             // get effective getAttrs rights
-            allowGetAttrs = canAccessAttrs(grantee, target, AdminRight.PR_GET_ATTRS, false);
+            allowGetAttrs = accessibleAttrs(grantee, target, AdminRight.PR_GET_ATTRS, false);
         }
         
         // finally, populate our result 
@@ -975,23 +1037,6 @@ public class RightChecker {
                 result.setCanGetAttrs(expandAttrs(target));
         } else if (allowGetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
             result.setCanGetAttrs(fillDefault(target, allowGetAttrs));
-        }
-        
-        return result;
-    }
-    
-    static RightCommand.EffectiveRights getEffectiveAttrs(Account grantee, Entry target, 
-            RightCommand.EffectiveRights result) throws ServiceException {
-        
-        // get effective setAttrs rights 
-        AllowedAttrs allowSetAttrs = canAccessAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
-        
-        // setAttrs
-        if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
-            result.setCanSetAllAttrs();
-            result.setCanSetAttrs(expandAttrs(target));
-        } else if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
-            result.setCanSetAttrs(fillDefault(target, allowSetAttrs));
         }
         
         return result;
@@ -1243,7 +1288,8 @@ public class RightChecker {
             return attr;
     }
     
-    static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded) throws ServiceException {
+    static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded) 
+    throws ServiceException {
         
         if (sLog.isDebugEnabled()) {
             sLog.debug("canAccessAttrs attrsAllowed: " + attrsAllowed.dump());
@@ -1276,8 +1322,16 @@ public class RightChecker {
         Set<String> allowed = attrsAllowed.getAllowed();
         for (String attr : attrsNeeded) {
             String attrName = getActualAttrName(attr);
-            if (!allowed.contains(attrName))
-                return false;
+            if (!allowed.contains(attrName)) {
+                /*
+                 * throw instead of return false, so it is easier for users to 
+                 * figure out the denied reason.  All callsite of this method 
+                 * can handle either a false return value or a PERM_DENIED  
+                 * ServiceException and react properly.
+                 */
+                // return false;
+                throw ServiceException.PERM_DENIED("cannot access attribute " + attrName);
+            }
         }
         return true;
     }
@@ -1309,7 +1363,7 @@ public class RightChecker {
             // see if the grantee can set zimbraConstraint on the constraint entry
             // if so, the grantee can set attrs to any value (not restricted by the constraints)
             AllowedAttrs allowedAttrsOnConstraintEntry = 
-                canAccessAttrs(grantee, constraintEntry, AdminRight.PR_SET_ATTRS, false);
+                accessibleAttrs(grantee, constraintEntry, AdminRight.PR_SET_ATTRS, false);
             
             if (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_ALL ||
                 (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_SOME &&
@@ -1323,9 +1377,17 @@ public class RightChecker {
         for (Map.Entry<String, Object> attr : attrsNeeded.entrySet()) {
             String attrName = getActualAttrName(attr.getKey());
             
-            if (!allowAll && !allowed.contains(attrName))
-                return false;
-                 
+            if (!allowAll && !allowed.contains(attrName)) {
+                /*
+                 * throw instead of return false, so it is easier for users to 
+                 * figure out the denied reason.  All callsite of this method 
+                 * can handle either a false return value or a PERM_DENIED  
+                 * ServiceException and react properly.
+                 */
+                // return false;
+                throw ServiceException.PERM_DENIED("cannot access attribute " + attrName);
+            }
+            
             if (hasConstraints) {
                 if (AttributeConstraint.violateConstraint(constraints, attrName, attr.getValue()))
                     return false;
@@ -1465,14 +1527,312 @@ public class RightChecker {
             return (PSEUDO_ZIMBRA_ID.equals(zid));
         }
     }
-
-
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
+    
+    static class SearchGrantResult {
+        String zimbraId;
+        Set<String> objectClass;
+        String[] zimbraACE;
+        
+        SearchGrantResult(Attributes attrs) throws NamingException {
+            zimbraId = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
+            objectClass = new HashSet<String>(Arrays.asList(LdapUtil.getMultiAttrString(attrs, Provisioning.A_objectClass)));
+            zimbraACE = LdapUtil.getMultiAttrString(attrs, Provisioning.A_zimbraACE);
+        }
     }
+      
+    /**
+     
+     *
+     * search grants granted to any of the grntees specified in granteeIds
+     *
+     * @param prov
+     * @param granteeIds
+     * @return
+     * @throws ServiceException
+     */
+    private static Set<SearchGrantResult> searchGrants(Provisioning prov, 
+            Set<TargetType> targetTypes, Set<String> granteeIds) throws ServiceException {
+        
+        Set<SearchGrantResult> result = new HashSet<SearchGrantResult>();
+        
+        Pair<String, Set<String>> baseAndOcs = TargetType.getSearchBaseAndOCs(prov, targetTypes);
+
+        // base
+        String base = baseAndOcs.getFirst();
+        
+        // query
+        StringBuilder ocQuery = new StringBuilder();
+        ocQuery.append("(|");
+        for (String oc : baseAndOcs.getSecond())
+            ocQuery.append("(" + Provisioning.A_objectClass + "=" + oc + ")");
+        ocQuery.append(")");
+        
+        StringBuilder granteeQuery = new StringBuilder();
+        granteeQuery.append("(|");
+        for (String granteeId : granteeIds)
+            granteeQuery.append("(" + Provisioning.A_zimbraACE + "=" + granteeId + "*)");
+        granteeQuery.append(")");
+        
+        String query = "(&" + granteeQuery + ocQuery + ")";
+        
+        String returnAttrs[] = new String[] {Provisioning.A_zimbraId,
+                                             Provisioning.A_objectClass,
+                                             Provisioning.A_zimbraACE};
+        
+        int maxResults = 0; // no limit
+        ZimbraLdapContext zlc = null; 
+        
+        try {
+            zlc = new ZimbraLdapContext(true, false);  // use master, do not use connection pool
+            
+            SearchControls searchControls =
+                new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
+
+            //Set the page size and initialize the cookie that we pass back in subsequent pages
+            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+            byte[] cookie = null;
+
+            NamingEnumeration ne = null;
+            
+            try {
+                do {
+                    zlc.setPagedControl(pageSize, cookie, true);
+
+                    ne = zlc.searchDir(base, query.toString(), searchControls);
+                    while (ne != null && ne.hasMore()) {
+                        SearchResult sr = (SearchResult) ne.nextElement();
+                        String dn = sr.getNameInNamespace();
+
+                        Attributes attrs = sr.getAttributes();
+                        result.add(new SearchGrantResult(attrs));
+                    }
+                    cookie = zlc.getCookie();
+                } while (cookie != null);
+            } finally {
+                if (ne != null) ne.close();
+            }
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to search grants", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to search grants", e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * converts a SearchGrantResult to <Entry, ZimbraACL> pair.
+     * 
+     * @param prov
+     * @param sgr
+     * @return
+     */
+    private static Pair<Entry, ZimbraACL> getGrants(Provisioning prov, SearchGrantResult sgr) {
+        
+        TargetType tt;
+        if (sgr.objectClass.contains(AttributeClass.calendarResource.getOCName()))
+            tt = TargetType.calresource;
+        else if (sgr.objectClass.contains(AttributeClass.account.getOCName()))
+            tt = TargetType.account;
+        else if (sgr.objectClass.contains(AttributeClass.cos.getOCName()))
+            tt = TargetType.cos;
+        else if (sgr.objectClass.contains(AttributeClass.distributionList.getOCName()))
+            tt = TargetType.dl;
+        else if (sgr.objectClass.contains(AttributeClass.domain.getOCName()))
+            tt = TargetType.domain;
+        else if (sgr.objectClass.contains(AttributeClass.server.getOCName()))
+            tt = TargetType.server;
+        else if (sgr.objectClass.contains(AttributeClass.xmppComponent.getOCName()))
+            tt = TargetType.xmppcomponent;
+        else if (sgr.objectClass.contains(AttributeClass.zimletEntry.getOCName()))
+            tt = TargetType.zimlet;
+        else if (sgr.objectClass.contains(AttributeClass.globalConfig.getOCName()))
+            tt = TargetType.config;
+        else if (sgr.objectClass.contains(AttributeClass.aclTarget.getOCName()))
+            tt = TargetType.global;
+        else
+            return null;
+        
+        Entry entry = null;
+        try {
+            entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
+            if (entry == null) {
+                ZimbraLog.acl.warn("canot find target by id " + sgr.zimbraId);
+                return null;
+            }
+            ZimbraACL acl = new ZimbraACL(sgr.zimbraACE, tt, entry.getLabel());
+            return new Pair<Entry, ZimbraACL>(entry, acl);
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("canot find target by id " + sgr.zimbraId, e);
+            return null;
+        }
+    }
+           
+    private static boolean isSubTarget(Provisioning prov, Entry targetSup, Entry targetSub) throws ServiceException {
+       
+        if (targetSup instanceof Domain) {
+            Domain domain = (Domain)targetSup;
+            Domain targetSubInDomain = TargetType.getTargetDomain(prov, targetSub);
+            if (targetSubInDomain == null)
+                return false;  // not a domain-ed entry
+            else {
+                if (domain.getId().equals(targetSubInDomain.getId()))
+                    return true;
+                else {
+                    // see if targetSub is in a group that is in the domain
+                    AclGroups groups = null;
+                    if (targetSub instanceof Account)
+                        groups = prov.getAclGroups((Account)targetSub, false);
+                    else if (targetSub instanceof DistributionList)
+                        groups = prov.getAclGroups((DistributionList)targetSub);
+                    else 
+                        return false;
+                    
+                    for (String groupId : groups.groupIds()) {
+                        DistributionList group = prov.getAclGroup(DistributionListBy.id, groupId);
+                        Domain groupInDomain = prov.getDomain(group);
+                        if (groupInDomain!= null &&  // hmm, log a warn if groupInDomain is null? throw internal err?
+                            domain.getId().equals(groupInDomain.getId()))
+                            return true;
+                    }
+                }
+            }
+            return false;
+            
+        } else if (targetSup instanceof DistributionList) {
+            DistributionList dl = (DistributionList)targetSup;
+            
+            String subId = null;
+            if (targetSub instanceof Account)  // covers cr too
+                return prov.inDistributionList((Account)targetSub, dl.getId());
+            else if (targetSub instanceof DistributionList)
+                return prov.inDistributionList((DistributionList)targetSub, dl.getId());
+            else
+                return false;        
+            
+        } else if (targetSup instanceof GlobalGrant)
+            return true;
+        else {
+            /*
+             * is really an error, somehow our logic of finding sub-targets
+             * is wrong, throw FAILURE and fix if we get here.  The granting attemp 
+             * will be denied, but that's fine.
+             */
+            throw ServiceException.FAILURE("internal error, unexpected entry type: " + targetSup.getLabel(), null); 
+        }
+    }
+    
+    /**
+     * check rights denied to grantee or admin groups the grantee belongs
+     * 
+     * exactly one of granteeId and granteeGroups is not null, and the other is null.
+     * 
+     * if granteeGroups is not null, we check for grants granted to the groups
+     * 
+     * @param prov
+     * @param targetToGrant
+     * @param rightToGrant
+     * @param sgr
+     * @param granteeId
+     * @param granteeGroups
+     * @throws ServiceException
+     */
+    static void checkDenied(Provisioning prov, Entry targetToGrant, Right rightToGrant,
+            Set<SearchGrantResult> sgr, 
+            String granteeId, Set<String> granteeGroups) throws ServiceException {
+        
+        for (SearchGrantResult grant : sgr) {
+            Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
+            Entry grantedOnEntry = grantsOnTarget.getFirst();
+            
+            if (isSubTarget(prov, targetToGrant, grantedOnEntry)) {
+                ZimbraACL grants = grantsOnTarget.getSecond();
+                
+                // check denied grants
+                for (ZimbraACE ace : grants.getDeniedACEs()) {
+                    if ((granteeId != null && granteeId.equals(ace.getGrantee())) ||
+                        (granteeGroups != null && granteeGroups.contains(ace.getGrantee()))) {   
+
+                        if (rightToGrant.overlaps(ace.getRight()))
+                            throw ServiceException.PERM_DENIED("insuffcient right to grant. " + 
+                                    "Right " + ace.getRight().getName() + 
+                                    " is denied to grp/usr " + ace.getGrantee() + 
+                                    " on target " + grantedOnEntry.getLabel());
+                    }
+                }
+            }
+        }
+    }
+    
+    static void getAllGrantableTargetTypes(Right right, Set<TargetType> result) throws ServiceException {
+
+        if (right.isPresetRight() || right.isAttrRight()) {
+            result.addAll(right.getGrantableTargetTypes());
+        } else if (right.isComboRight()) {
+            //
+            // Note: call getTargetTypesSpanByRight recursively instead of 
+            // calling getGrantableTargetTypes on the combo right
+            // 
+            // ComboRight.getGrantableTargetTypes returns the intersect of 
+            // all the rights, but here we want the union of all the target 
+            // types of all the sub-rights of the combo right.
+            //
+            // e.g. a ComboRight that include rights on doamin, dl, account, 
+            //      cr can only be granted on domain or global config 
+            //      (what ComboRight.getGrantableTargetTypes returns)
+            //      But here we wnat target types dl, account, cr too.
+            // 
+            ComboRight cr = (ComboRight)right;
+            for (Right r : cr.getAllRights())
+                getAllGrantableTargetTypes(r, result);
+        }
+    }
+    
+    /**
+     * Returns if rightToGrant is (partically) denied to grantor(or groups it belongs) 
+     * on sub-targets of targetToGrant.
+     * 
+     * @param grantor              the "grantor" of the granting attempt
+     * @param targetTypeToGrant    the target type of the granting attempt 
+     * @param targetToGrant        the target of the granting attempt
+     * @param rightToGrant  the right of the granting attremp
+     * @throws ServiceException
+     */
+    static void checkPartiallyDenied(Account grantor, TargetType targetTypeToGrant, 
+            Entry targetToGrant, Right rightToGrant) throws ServiceException {
+        
+        if (isSystemAdmin(grantor, true))
+            return;
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        // set of sub target types
+        Set<TargetType> subTargetTypes = targetTypeToGrant.subTargetTypes();
+        
+        // set of target types any sub-right can be granted
+        Set<TargetType> subRightsGrantableOnTargetTypes = new HashSet<TargetType>();
+        getAllGrantableTargetTypes(rightToGrant, subRightsGrantableOnTargetTypes);
+        
+        // get the interset of the two, that would be the target types to search for
+        Set<TargetType> targetTypesToSearch = 
+            SetUtil.intersect(subTargetTypes, subRightsGrantableOnTargetTypes);
+        
+        // get the set of zimbraId of the grantees to search for
+        Set<String> granteeIdsToSearch = setupGranteeIds(grantor);
+        
+        Set<SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        
+        // check grants granted to the grantor
+        checkDenied(prov, targetToGrant, rightToGrant, sgr, grantor.getId(), null);
+        
+        // check grants granted to any groups of the grantor
+        checkDenied(prov, targetToGrant, rightToGrant, sgr, null, granteeIdsToSearch);
+        
+        // all is well, or else PERM_DENIED would've been thrown in one of the checkDenied calls
+        // yes, you can grant the rightToGrant on targetToGrant.
+    }
+
 
 }

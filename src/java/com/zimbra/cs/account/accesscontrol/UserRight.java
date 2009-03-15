@@ -43,4 +43,9 @@ public class UserRight extends Right {
         return super.dump(sb);
     }
     */
+    
+    @Override
+    boolean overlaps(Right other) throws ServiceException {
+        throw ServiceException.FAILURE("internal error, unsupported", null);
+    }
 }

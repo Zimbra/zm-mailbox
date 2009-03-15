@@ -71,6 +71,13 @@ public abstract class Right extends RightConsts {
         return sb.toString();
     }
     
+    /**
+     * returns if this right overlaps the other right
+     * @param other
+     * @return
+     */
+    abstract boolean overlaps(Right other) throws ServiceException;
+    
     public boolean isUserRight() {
         return false;
     }
@@ -191,5 +198,19 @@ public abstract class Right extends RightConsts {
         if (getDesc() == null)
             throw ServiceException.PARSE_ERROR("missing description", null);
         verifyTargetType();
+    }
+
+    public static void main(String[] args) throws ServiceException {
+        // init rights
+        RightManager.getInstance();
+        
+        Right r1 = Rights.Admin.R_domainAdminAccountRights;
+        Right r2 = Rights.Admin.R_domainAdminRights;
+        boolean overlaps = r1.overlaps(r2);
+        System.out.println(r1.getName() +  " " + r2.getName() + " => " + overlaps);
+        
+        r1 = Rights.Admin.R_modifyCos;
+        overlaps = r1.overlaps(r2);
+        System.out.println(r1.getName() +  " " + r2.getName() + " => " + overlaps);
     }
 }

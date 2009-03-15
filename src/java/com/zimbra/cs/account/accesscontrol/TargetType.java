@@ -15,10 +15,12 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -41,6 +43,8 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.Provisioning.ZimletBy;
+import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
@@ -71,10 +75,18 @@ public enum TargetType {
     // inherited from this target type
     private Set<TargetType> mInheritedByTargetTypes;
     
-    // set of target type from which the designated target type
+    // set of target types from which the designated target type
     // for a right can inherit from
     private Set<TargetType> mInheritFromTargetTypes;
     
+    // pretty much like mInheritedByTargetTypes, but this is for LDAP 
+    // search of sub-targets of a target type.  This Set is different 
+    // from the mInheritedByTargetTypes that it:
+    // 1. does not contain self
+    // 2. for calresource, does not contain account.  Because account 
+    //    is not really "sub-target" of calresource.
+    private Set<TargetType> mSubTargetTypes;
+
     static {
         init();
     }
@@ -93,7 +105,7 @@ public enum TargetType {
     }
     
     private void setInheritedByTargetTypes(TargetType[] targetTypes) {
-        mInheritedByTargetTypes = (targetTypes==null)? null : new HashSet<TargetType>(Arrays.asList(targetTypes));
+        mInheritedByTargetTypes = new HashSet<TargetType>(Arrays.asList(targetTypes));
     }
     
     static void init() {
@@ -106,18 +118,46 @@ public enum TargetType {
         TargetType.xmppcomponent.setInheritedByTargetTypes(new TargetType[]{TargetType.xmppcomponent});
         TargetType.zimlet.setInheritedByTargetTypes(new TargetType[]{TargetType.zimlet});
         TargetType.config.setInheritedByTargetTypes(new TargetType[]{TargetType.config});
-        TargetType.global.setInheritedByTargetTypes(null);  // inherited by all
+        TargetType.global.setInheritedByTargetTypes(new TargetType[]{TargetType.account, 
+                                                        TargetType.calresource, 
+                                                        TargetType.cos,
+                                                        TargetType.dl,
+                                                        domain,
+                                                        server,
+                                                        xmppcomponent,
+                                                        zimlet,
+                                                        config,
+                                                        global});  // inherited by all
         
-        // compute mInheritFromTargetTypes from mInheritedByTargetTypes
+        // compute mInheritFromTargetTypes and  mInheritedByOtherTargetTypes 
+        // from mInheritedByTargetTypes
         for (TargetType inheritFrom : TargetType.values()) {
             inheritFrom.mInheritFromTargetTypes = new HashSet<TargetType>();
+            inheritFrom.mSubTargetTypes = new HashSet<TargetType>();
             
             for (TargetType inheritedBy : TargetType.values()) {
-                if (inheritedBy.mInheritedByTargetTypes == null ||
-                    inheritedBy.mInheritedByTargetTypes.contains(inheritFrom))
+                if (inheritedBy.mInheritedByTargetTypes.contains(inheritFrom))
                     inheritFrom.mInheritFromTargetTypes.add(inheritedBy);
             }
+            
+            for (TargetType tt: inheritFrom.mInheritedByTargetTypes) {
+                // add this ugly check, see comments for mSubTargetTypes above
+                if (inheritFrom == TargetType.calresource) {
+                    if (inheritFrom != tt && tt != TargetType.account)
+                        inheritFrom.mSubTargetTypes.add(tt);
+                } else {
+                    if (inheritFrom != tt)
+                        inheritFrom.mSubTargetTypes.add(tt);
+                }
+            }
         }
+        
+        for (TargetType tt : TargetType.values()) {
+            tt.mInheritedByTargetTypes = Collections.unmodifiableSet(tt.mInheritedByTargetTypes);
+            tt.mInheritFromTargetTypes = Collections.unmodifiableSet(tt.mInheritFromTargetTypes);
+            tt.mSubTargetTypes = Collections.unmodifiableSet(tt.mSubTargetTypes);
+        }
+        
     }
     
     /**
@@ -127,10 +167,19 @@ public enum TargetType {
      * @return
      */
     boolean isInheritedBy(TargetType targetType) {
-        if (mInheritedByTargetTypes == null)
-            return true;
-        else
-            return mInheritedByTargetTypes.contains(targetType);
+        return mInheritedByTargetTypes.contains(targetType);
+    }
+    
+    /**
+     * returns the set of sub target types this target type can be inherited by.
+     * do not include the target type itself.
+     * 
+     * e.g. if this is domain, then accouunt, calresource, and dl will be returned
+     * 
+     * @return
+     */
+    Set<TargetType> subTargetTypes() {
+        return mSubTargetTypes;
     }
     
     /**
@@ -305,5 +354,174 @@ public enum TargetType {
             return prov.getDomain(dl);
         } else
             return null;
+    }
+    
+    /*
+     * This method is called for searching for negative grants granted on a  
+     * "sub-target" of a target on which we are granting a right.  If the 
+     * granting account has any negative grants for a right that is a 
+     * "sub-right" of the right he is trying to grant to someone else,
+     * and ths negative grant is on a "sub-target" of the target he is 
+     * trying to grant on, then sorry, it is not allowed.  Because otherwise
+     * the person receiving the grant can end up getting "more" rights 
+     * than the granting person.
+     * 
+     * e.g. on domain D.com, adminA +domainAdminRights
+     *      on dl dl@D.com,  adminA -setPassword
+     *      
+     *      When adminA tries to grant domainAdminRights to adminB on 
+     *      domain D.com, it should not be allowed; otherwise adminB 
+     *      can setPassword for accounts in dl@D.com, but adminA cannot.
+     * 
+     * The targetTypes parameter contains a set of target types that are 
+     * "sub-target" of the target type on which we are trying to grant.
+     * 
+     * SO, for the search base:
+     *   - for domain-ed targets, dls must be under the domain, but accounts 
+     *     in dls can be in any domain, so the search base is ''.
+     *   - for non domain-ed targets, the search base is the base DN for the type
+     *   
+     *   we go through all wanted target types, find the least common base  
+     */ 
+    static Pair<String, Set<String>> getSearchBaseAndOCs(Provisioning prov, 
+            Set<TargetType> targetTypes) throws ServiceException {
+        
+        LdapDIT dit = ((LdapProvisioning)prov).getDIT();
+        
+        String[] curRnds = null;
+        String base = null;
+        Set<String> ocs = new HashSet<String>();
+        
+        for (TargetType tt : targetTypes) {
+            
+            String bs;
+            
+            switch (tt) {
+            case account:
+            case calresource:
+            case dl:
+            case domain:
+                bs = "";
+                break;
+            case cos:
+                bs = dit.cosBaseDN();
+                break;    
+            case server:
+                bs = dit.serverBaseDN();
+                break;
+            case xmppcomponent:
+                bs = dit.xmppcomponentBaseDN();
+                break;    
+            case zimlet:
+                bs = dit.zimletBaseDN();
+                break;
+            case config:
+                bs = dit.configDN();
+                break;
+            case global: 
+                // is really an internal error, globalgrant should never appear in the 
+                // targetTypes if we get here, because it is not a sub-target of any 
+                // other target types.  
+                bs = dit.globalGrantDN();
+                break;
+            default:
+                throw ServiceException.FAILURE("internal error", null);
+            }
+            
+            // if we've reached the '', break
+            if (bs.equals("")) {
+                base = bs;
+            } else {
+                String[] rdns = bs.split(",");
+                if (curRnds == null)
+                    curRnds = rdns;
+                else {
+                    // find the least common base
+                    int shorter = rdns.length < curRnds.length? rdns.length : curRnds.length;
+                    for (int i = 1 ; i <= shorter; i++) {
+                        if (!rdns[rdns.length-i].equals(curRnds[curRnds.length-i])) {
+                            if (i == 1) {
+                                base = "";
+                                break;
+                            } else {
+                                
+                                curRnds = new String[i-1];
+                                for (int j = 0; j < i-1; j++)
+                                    curRnds[curRnds.length-1-j] = rdns[rdns.length-1-j];
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            if (base != null)
+                break;
+        }
+        
+        if (base == null) {
+            boolean first = true;
+            for (int i=0; i<curRnds.length; i++) {
+                if (first) {
+                    base = curRnds[i];
+                    first = false;
+                } else {
+                    base = base + "," + curRnds[i];
+                }
+            }
+        }
+        
+        for (TargetType tt : targetTypes) {
+            ocs.add(tt.getAttributeClass().getOCName());
+        }
+        
+        return new Pair<String, Set<String>>(base, ocs);
+    }
+    
+    private static void doTest(Provisioning prov, Set<TargetType> ttInheritBy) throws ServiceException {
+        Pair<String, Set<String>> baseAndOcs = getSearchBaseAndOCs(prov, ttInheritBy);
+        System.out.println("    base:" + baseAndOcs.getFirst());
+        System.out.print("    OCs: ");
+        for (String oc : baseAndOcs.getSecond())
+            System.out.print(oc + " ");
+        
+        System.out.println("\n");
+    }
+    
+    public static void main(String[] args) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        
+        Set<TargetType> ttInheritBy;
+        
+        for (TargetType tt : TargetType.values()) {
+            System.out.println("Target " + tt.name());  
+            
+            ttInheritBy = new HashSet<TargetType>();
+            ttInheritBy.add(tt);
+            doTest(prov, ttInheritBy);
+            
+            ttInheritBy = tt.subTargetTypes();
+            
+            System.out.print("    sub target types: ");
+            for (TargetType ttib : ttInheritBy)
+                System.out.print(ttib.name() + " ");
+            System.out.println();
+            
+            if (ttInheritBy.isEmpty()) {
+                System.out.println();
+                continue;
+            }
+            
+            doTest(prov, ttInheritBy);
+        }
+        
+        System.out.println("==========");
+        System.out.println("Test");
+        ttInheritBy = new HashSet<TargetType>();
+        ttInheritBy.add(TargetType.cos);
+        ttInheritBy.add(TargetType.server);
+        ttInheritBy.add(TargetType.zimlet);
+        ttInheritBy.add(TargetType.global);
+        doTest(prov, ttInheritBy);
+
     }
 }

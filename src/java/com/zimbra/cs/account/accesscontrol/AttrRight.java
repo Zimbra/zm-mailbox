@@ -26,7 +26,7 @@ import com.zimbra.cs.account.AttributeManager;
 
 public class AttrRight extends AdminRight {
 
-    private List<TargetType> mTargetTypes = new ArrayList<TargetType>();
+    private Set<TargetType> mTargetTypes = new HashSet<TargetType>();
     private Set<String> mAttrs;
     
     
@@ -58,6 +58,37 @@ public class AttrRight extends AdminRight {
         }
         
         return sb.toString();
+    }
+    
+    @Override
+    boolean overlaps(Right other) throws ServiceException {
+        if (other.isPresetRight()) {
+            return false;
+        } else if (other.isAttrRight()) {
+            return overlapAttrRight((AttrRight)other);
+        } else if (other.isComboRight()) {
+            ComboRight cr = (ComboRight)other;
+            Set<AttrRight> otherAttrRights = cr.getAttrRights();
+            for (AttrRight ar : otherAttrRights) {
+                if (overlapAttrRight(ar))
+                    return true;
+            }
+            return false;
+        } else
+            throw ServiceException.FAILURE("internal error", null);
+    }
+        
+    private boolean overlapAttrRight(AttrRight otherAttrRight) {
+        if (this == otherAttrRight)
+            return true; 
+        if (SetUtil.intersect(getTargetTypes(), otherAttrRight.getTargetTypes()).isEmpty())
+            return false;
+                
+        if (allAttrs() || otherAttrRight.allAttrs())
+            return true;
+            
+        // neither is allAttrs
+        return !SetUtil.intersect(getAttrs(), otherAttrRight.getAttrs()).isEmpty();
     }
     
     @Override
@@ -103,7 +134,7 @@ public class AttrRight extends AdminRight {
         throw ServiceException.FAILURE("internal error", null);
     }
     
-    public List<TargetType> getTargetTypes() {
+    public Set<TargetType> getTargetTypes() {
         return mTargetTypes;
     }
     
@@ -150,7 +181,7 @@ public class AttrRight extends AdminRight {
             throw ServiceException.FAILURE("internal error", null);
         
         // get the sole target type, 
-        TargetType tt = mTargetTypes.get(0);
+        TargetType tt = mTargetTypes.iterator().next();
         return AttributeManager.getInstance().getAllAttrsInClass(tt.getAttributeClass());
     }
     
