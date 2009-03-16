@@ -88,7 +88,7 @@ abstract class ImapRequest {
 
     void incrementSize(long increment) {
         mSize += increment;
-        if (mSize > mHandler.getConfig().getMaxRequestSize()) {
+        if (mSize > getMaxRequestSize()) {
             mMaxRequestSizeExceeded = true;
         }
     }
@@ -97,11 +97,15 @@ abstract class ImapRequest {
         return mSize;
     }
 
+    int getMaxRequestSize() {
+        return mHandler.getConfig().getMaxRequestSize();
+    }
+
     void addPart(Object obj) {
         assert obj instanceof String || obj instanceof byte[];
         // Do not add any more parts if we have exceeded the maximum request
-        // size. The exception is if this is the first part, in order to be
-        // able to recover the tag when sending the error response.
+        // size. The exception is if this is the first part (request line) so
+        // we can recover the tag when sending an error response.
         if (!isMaxRequestSizeExceeded() || mParts.size() == 0) {
             mParts.add(obj);
         }

@@ -31,7 +31,7 @@ public class TcpImapRequest extends ImapRequest {
     }
 
     private TcpServerInputStream mStream;
-    private int mLiteral = -1;
+    private long mLiteral = -1;
     private boolean mUnlogged;
 
     TcpImapRequest(String line, ImapHandler handler) {
@@ -75,7 +75,7 @@ public class TcpImapRequest extends ImapRequest {
                 } catch (NumberFormatException nfe) { }
                 if (size >= 0) {
                     incrementSize(size);
-                    mLiteral = (int) size;
+                    mLiteral = size;
                     continuation();
                 } else {
                     if (mTag == null && mIndex == 0 && mOffset == 0) {
@@ -89,27 +89,24 @@ public class TcpImapRequest extends ImapRequest {
 
     private void continueLiteral() throws IOException, ImapParseException {
         if (isMaxRequestSizeExceeded()) {
-            int skipped = (int) mStream.skip(mLiteral);
-            if (mLiteral > 0 && skipped == 0) {
+            long skipped = mStream.skip(mLiteral);
+            if (mLiteral > 0 && skipped == 0)
                 throw new ImapTerminatedException();
-            }
             mLiteral -= skipped;
-            if (mLiteral > 0) {
-                throw new ImapContinuationException(false);
-            }
-            mLiteral = -1;
-            return;
+        } else {
+            assert mLiteral < getMaxRequestSize();
+            int size = (int) mLiteral;
+            Object part = mParts.get(mParts.size() - 1);
+            byte[] buffer = (part instanceof byte[] ? (byte[]) part : new byte[size]);
+            if (buffer != part)
+                mParts.add(buffer);
+            int read = mStream.read(buffer, buffer.length - size, size);
+            if (read == -1)
+                throw new ImapTerminatedException();
+            if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
+                ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - size, read)));
+            mLiteral -= read;
         }
-        Object part = mParts.get(mParts.size() - 1);
-        byte[] buffer = (part instanceof byte[] ? (byte[]) part : new byte[mLiteral]);
-        if (buffer != part)
-            mParts.add(buffer);
-        int read = mStream.read(buffer, buffer.length - mLiteral, mLiteral);
-        if (read == -1)
-            throw new ImapTerminatedException();
-        if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
-            ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - mLiteral, read)));
-        mLiteral -= read;
         if (mLiteral > 0)
             throw new ImapContinuationException(false);
         mLiteral = -1;
@@ -138,7 +135,7 @@ public class TcpImapRequest extends ImapRequest {
         if (mIndex == mParts.size() - 1 || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
             if (mLiteral == -1) {
                 incrementSize(length);
-                mLiteral = (int) length;
+                mLiteral = length;
             }
             if (!blocking && mStream.available() >= mLiteral)
                 continuation();
