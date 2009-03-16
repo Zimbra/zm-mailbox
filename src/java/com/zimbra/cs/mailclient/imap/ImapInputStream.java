@@ -280,6 +280,24 @@ public final class ImapInputStream extends MailInputStream {
         return false;
     }
 
+    /**
+     * Skips spaces in input stream.
+     * 
+     * @return true if at least on space was skipped and not at end of line.
+     * @throws IOException if an I/O error occurred
+     */
+    public boolean skipSpaces() throws IOException {
+        if (match(' ')) {
+            while (match(' ')) ;
+            return !isEOL();
+        }
+        return false;
+    }
+
+    public boolean isEOL() throws IOException {
+        return peek() == '\r';
+    }
+
     private static void pd(String fmt, Object... args) {
         System.out.print("[DEBUG] ");
         System.out.printf(fmt, args);

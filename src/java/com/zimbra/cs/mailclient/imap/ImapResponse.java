@@ -71,9 +71,12 @@ public final class ImapResponse {
             data = ResponseText.read(is);
             break;
         case CAPABILITY:
-            is.skipChar(' ');
-            data = ImapCapabilities.read(is);
-            break;           
+            if (is.skipSpaces()) {
+                data = ImapCapabilities.read(is);
+            } else {
+                data = new ImapCapabilities();
+            }
+            break;
         case FLAGS:
             // "FLAGS" SP flag-list
             is.skipChar(' ');

@@ -43,14 +43,14 @@ public class ImapCapabilities {
         return caps;
     }
 
-    private ImapCapabilities() {}
+    public ImapCapabilities() {}
 
     private void readCapabilities(ImapInputStream is) throws IOException {
-        while (is.match(' ')) {
+        do {
             addCapability(is.readAtom().getName());
-        }
+        } while (is.match(' '));
     }
-
+    
     private void addCapability(String cap) {
         capabilities.add(new Atom(cap));
     }
