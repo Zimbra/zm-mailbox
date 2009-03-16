@@ -25,8 +25,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.mail.MessagingException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
@@ -34,6 +32,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
@@ -44,11 +43,8 @@ import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 
-/**
- * @author jhahm
- */
 public class CreateMessage extends RedoableOp
-implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
+implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
     private static final long RECEIVED_DATE_UNSET = -1;
 
@@ -57,8 +53,8 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
     private long mReceivedDate;     // email received date; not necessarily equal to operation time
     private String mRcptEmail;      // email address the message was delivered to
-    // tracked for logging purpose only; useful because the same
-    // mailbox may be addressed using any of the defined aliases
+                                    // tracked for logging purpose only; useful because the same
+                                    // mailbox may be addressed using any of the defined aliases
     private boolean mShared;        // whether message is shared with other mailboxes
     private String mDigest;			// Message blob is referenced by digest rather than blob ID.
     private int mMsgSize;			// original, uncompressed message size in bytes
@@ -71,6 +67,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
+    private CustomMetadata mExtendedData; // extra data associated with the message at delivery time
     private RedoableOpData mData;
 
     private byte mMsgBodyType;
@@ -91,29 +88,15 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mNoICal = false;
     }
 
-    protected CreateMessage(int mailboxId,
-                String rcptEmail,
-                boolean shared,
-                String digest,
-                int msgSize,
-                int folderId,
-                boolean noICal,
-                int flags,
-                String tags) {
-        this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest,
-                    msgSize, folderId, noICal, flags, tags);
+    protected CreateMessage(int mailboxId, String rcptEmail, boolean shared,
+                            String digest, int msgSize, int folderId, boolean noICal,
+                            int flags, String tags) {
+        this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest, msgSize, folderId, noICal, flags, tags, null);
     }
 
-    public CreateMessage(int mailboxId,
-                String rcptEmail,
-                long receivedDate,
-                boolean shared,
-                String digest,
-                int msgSize,
-                int folderId,
-                boolean noICal,
-                int flags,
-                String tags) {
+    public CreateMessage(int mailboxId, String rcptEmail, long receivedDate,
+                         boolean shared, String digest, int msgSize, int folderId,
+                         boolean noICal, int flags, String tags, CustomMetadata extended) {
         setMailboxId(mailboxId);
         mRcptEmail = rcptEmail;
         mReceivedDate = receivedDate;
@@ -128,15 +111,16 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mTags = tags != null ? tags : "";
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = noICal;
+        mExtendedData = extended;
     }
 
-    public void start(long timestamp) {
+    @Override public void start(long timestamp) {
         super.start(timestamp);
         if (mReceivedDate == RECEIVED_DATE_UNSET)
             mReceivedDate = timestamp;
     }
 
-    public synchronized void commit() {
+    @Override public synchronized void commit() {
         // Override commit() and abort().  Null out mData (reference to message
         // body byte array) after calling superclass' commit/abort.
         // Indexer keeps many IndexItem redo objects in memory because of batch
@@ -157,7 +141,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         }
     }
 
-    public synchronized void abort() {
+    @Override public synchronized void abort() {
         // see comments in commit()
         try {
             super.abort();
@@ -287,19 +271,21 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             sb.append(", calItemId=").append(mCalendarItemId);
         sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", noICal=").append(mNoICal);
+        if (mExtendedData != null)
+            sb.append(", extended=").append(mExtendedData);
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
         sb.append(", vol=").append(mVolumeId);
         if (mMsgBodyType == MSGBODY_LINK) {
             sb.append(", linkSourcePath=").append(mPath);
             sb.append(", linkSrcVol=").append(mLinkSrcVolumeId);
-        } else
+        } else {
             sb.append(", path=").append(mPath);
+        }
         return sb.toString();
     }
 
-    @Override
-    public InputStream getAdditionalDataStream()
+    @Override public InputStream getAdditionalDataStream()
     throws IOException {
         if (mMsgBodyType == MSGBODY_INLINE) {
             return mData.getInputStream();
@@ -328,6 +314,14 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         out.writeUTF(mTags);
         out.writeUTF(mPath);
         out.writeShort(mVolumeId);
+        if (getVersion().atLeast(1, 25)) {
+            if (mExtendedData == null) {
+                out.writeUTF(null);
+            } else {
+                out.writeUTF(mExtendedData.getSectionKey());
+                out.writeUTF(mExtendedData.getSerializedValue());
+            }
+        }
 
         out.writeByte(mMsgBodyType);
         if (mMsgBodyType == MSGBODY_INLINE) {
@@ -342,7 +336,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             out.writeShort(mLinkSrcVolumeId);
         }
     }
-    
+
     protected void deserializeData(RedoLogInput in) throws IOException {
         mRcptEmail = in.readUTF();
         if (getVersion().atLeast(1, 4))
@@ -365,6 +359,12 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mTags = in.readUTF();
         mPath = in.readUTF();
         mVolumeId = in.readShort();
+        if (getVersion().atLeast(1, 25)) {
+            mExtendedData = null;
+            String extendedKey = in.readUTF();
+            if (extendedKey != null)
+                mExtendedData = new CustomMetadata(extendedKey, in.readUTF());
+        }
 
         mMsgBodyType = in.readByte();
         if (mMsgBodyType == MSGBODY_INLINE) {
@@ -395,7 +395,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         }
     }
 
-    protected ParsedMessage getParsedMessageFromData(long date) throws ServiceException, IOException, MessagingException {
+    protected ParsedMessage getParsedMessageFromData(long date) throws ServiceException, IOException {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         ParsedMessage pm;
@@ -450,7 +450,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             // saving the blob to incoming directory or write StoreIncomingBlob redo op.
             sharedDeliveryCtxt.setFirst(false);
 
-            if (file.length() != (long) mMsgSize) {
+            if (file.length() != mMsgSize) {
                 // Possibly compressed file.  We have to pass uncompressed file to ParsedMessage.
                 StoreManager sm = StoreManager.getInstance();
                 Volume volume = Volume.getCurrentMessageVolume();
@@ -478,7 +478,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         }
 
         try {
-            mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags, mTags, mConvId, mRcptEmail, sharedDeliveryCtxt);
+            mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags, mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);

@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
@@ -126,13 +127,16 @@ public class Document extends MailItem {
         saveData(null);
     }
 
-    protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, short volumeId, String name, String mimeType, ParsedDocument pd, Metadata meta) 
+    protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, short volumeId, String name, String mimeType,
+                                                  ParsedDocument pd, Metadata meta, CustomMetadata custom) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         name = validateItemName(name);
+
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
 
         Mailbox mbox = folder.getMailbox();
 
@@ -149,21 +153,19 @@ public class Document extends MailItem {
         data.name        = name;
         data.subject     = name;
         data.setBlobDigest(pd.getDigest());
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, 1, mimeType, pd.getCreator(), pd.getFragment()).toString();
-
+        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, 1, extended, mimeType, pd.getCreator(), pd.getFragment()).toString();
         return data;
     }
 
-    static Document create(int id, Folder folder, short volumeId, String filename, String type, ParsedDocument pd)
+    static Document create(int id, Folder folder, short volumeId, String filename, String type, ParsedDocument pd, CustomMetadata custom)
     throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
-        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, type, pd, null);
-
         Mailbox mbox = folder.getMailbox();
+        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, type, pd, null, custom);
         data.contentChanged(mbox);
-        ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.",
-            filename, data.id, folder.getId(), folder.getName());
+
+        ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.", filename, data.id, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data, null);
 
         Document doc = new Document(mbox, data);
@@ -195,18 +197,17 @@ public class Document extends MailItem {
         mFragment    = meta.get(Metadata.FN_FRAGMENT, mFragment);
     }
 
-    @Override 
-    Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mContentType, mCreator, mFragment);
+    @Override Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mContentType, mCreator, mFragment);
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, String mimeType, String creator, String fragment) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment) {
         if (meta == null)
             meta = new Metadata();
         meta.put(Metadata.FN_MIME_TYPE, mimeType);
         meta.put(Metadata.FN_CREATOR, creator);
         meta.put(Metadata.FN_FRAGMENT, fragment);
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
 
@@ -215,8 +216,7 @@ public class Document extends MailItem {
     private static final String CN_FILE_NAME = "filename";
     private static final String CN_EDITOR    = "edited_by";
 
-    @Override 
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append(getNameForType(this)).append(": {");
         sb.append(CN_FILE_NAME).append(": ").append(getName()).append(", ");

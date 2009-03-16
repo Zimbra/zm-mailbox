@@ -101,9 +101,10 @@ public class Metadata {
     static final String FN_VIEW            = "vt";
     static final String FN_WIKI_WORD       = "ww";
     static final String FN_ELIDED          = "X";
+    static final String FN_EXTRA_DATA      = "xd";
 
 
-    int mVersion = CURRENT_METADATA_VERSION;
+    private int mVersion = CURRENT_METADATA_VERSION;
     Map mMap;
 
     public Metadata()         { mMap = new TreeMap(); }
@@ -196,7 +197,7 @@ public class Metadata {
         throw ServiceException.INVALID_REQUEST("invalid/missing value for attribute: " + key, null);
     }
 
-    public String toString() {
+    @Override public String toString() {
         put(FN_MD_VERSION, mVersion);  String result = BEncoding.encode(mMap);
         mMap.remove(FN_MD_VERSION);    return result;
     }

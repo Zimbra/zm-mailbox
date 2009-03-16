@@ -20,6 +20,7 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -90,6 +91,7 @@ public class SearchFolder extends Folder {
      * @param types   The (optional) set of item types the search returns.
      * @param sort    The (optional) order the results are returned in.
      * @param color   The new folder's color.
+     * @param custom  An optional extra set of client-defined metadata.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
@@ -106,7 +108,7 @@ public class SearchFolder extends Folder {
      * @see #validateItemName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, byte color)
+    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, byte color, CustomMetadata custom)
     throws ServiceException {
         if (parent == null || !parent.canContain(TYPE_SEARCHFOLDER))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -130,7 +132,7 @@ public class SearchFolder extends Folder {
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, query, types, sort);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, custom, query, types, sort);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
             name, data.id, parent.getId(), parent.getName());
@@ -201,18 +203,19 @@ public class SearchFolder extends Folder {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mQuery, mTypes, mSort);
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mQuery, mTypes, mSort);
     }
 
-    private static String encodeMetadata(byte color, int version, String query, String types, String sort) {
-        return encodeMetadata(new Metadata(), color, version, query, types, sort).toString();
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, String query, String types, String sort) {
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, query, types, sort).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, String query, String types, String sort) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String query, String types, String sort) {
         meta.put(Metadata.FN_QUERY, query);
         meta.put(Metadata.FN_TYPES, types);
         meta.put(Metadata.FN_SORT,  sort);
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
 

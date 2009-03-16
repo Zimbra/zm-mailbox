@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -371,9 +372,8 @@ public abstract class CalendarItem extends MailItem {
         return toRet;
     }
     
-    static CalendarItem create(int id, Folder folder, short volumeId, int flags, long tags,
-                               String uid, ParsedMessage pm, Invite firstInvite,
-                               long nextAlarm)
+    static CalendarItem create(int id, Folder folder, short volumeId, int flags, long tags, String uid,
+                               ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom)
     throws ServiceException {
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
@@ -438,9 +438,8 @@ public abstract class CalendarItem extends MailItem {
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
         data.subject  = subject;
-        data.metadata = encodeMetadata(DEFAULT_COLOR, 1, uid, startTime, endTime,
-                                       recur, invites, firstInvite.getTimeZoneMap(),
-                                       new ReplyList(), null);
+        data.metadata = encodeMetadata(DEFAULT_COLOR, 1, custom, uid, startTime, endTime, recur,
+                                       invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding CalendarItem: id=%d, Message-ID=%s, folderId=%d, folderName=%s, invite=%s.",
             data.id, pm != null ? pm.getMessageID() : "none", folder.getId(), folder.getName(), firstInvite.getName());
@@ -613,7 +612,7 @@ public abstract class CalendarItem extends MailItem {
 
     public static final String FN_CALITEM_RECURRENCE = "apptRecur";
 
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         int mdVersion = meta.getVersion();
@@ -656,21 +655,22 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
-    Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mUid, mStartTime, mEndTime,
-                mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
+    @Override Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
+                              mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
     }
-    private static String encodeMetadata(byte color, int version, String uid, long startTime, long endTime,
+
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, String uid, long startTime, long endTime,
                                          Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
                                          ReplyList replyList, AlarmData alarmData) {
-        return encodeMetadata(new Metadata(), color, version, uid, startTime, endTime, recur,
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, uid, startTime, endTime, recur,
                               invs, tzmap, replyList, alarmData).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, String uid,
-                                   long startTime, long endTime,
-                                   Recurrence.IRecurrence recur,
-                                   List<Invite> invs, TimeZoneMap tzmap,
-                                   ReplyList replyList, AlarmData alarmData) {
+
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended,
+                                   String uid, long startTime, long endTime, Recurrence.IRecurrence recur,
+                                   List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
         meta.put(Metadata.FN_TZMAP, tzmap.encodeAsMetadata());
         meta.put(Metadata.FN_UID, uid);
         meta.put(Metadata.FN_CALITEM_START, startTime);
@@ -689,7 +689,7 @@ public abstract class CalendarItem extends MailItem {
         if (alarmData != null)
             meta.put(Metadata.FN_ALARM_DATA, alarmData.encodeMetadata());
 
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
     /**
@@ -2877,8 +2877,7 @@ public abstract class CalendarItem extends MailItem {
         private static final String FNAME_COMP_NUM = "compNum";
         private static final String FNAME_ALARM = "alarm";
 
-        private static AlarmData decodeMetadata(Metadata meta)
-        throws ServiceException {
+        static AlarmData decodeMetadata(Metadata meta) throws ServiceException {
             long nextAt = meta.getLong(FNAME_NEXT_AT);
             long nextInstStart = meta.getLong(FNAME_NEXT_INSTANCE_START);
             int invId = (int) meta.getLong(FNAME_INV_ID);
@@ -2890,7 +2889,7 @@ public abstract class CalendarItem extends MailItem {
             return new AlarmData(nextAt, nextInstStart, invId, compNum, alarm);
         }
 
-        private Metadata encodeMetadata() {
+        Metadata encodeMetadata() {
             Metadata meta = new Metadata();
             meta.put(FNAME_NEXT_AT, mNextAt);
             meta.put(FNAME_NEXT_INSTANCE_START, mNextInstStart);

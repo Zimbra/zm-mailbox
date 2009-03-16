@@ -37,12 +37,14 @@ import java.util.TreeSet;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
@@ -52,9 +54,6 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 
-/**
- * @author dkarp
- */
 public abstract class MailItem implements Comparable<MailItem> {
 
     /** Item is a standard {@link Folder}. */
@@ -371,13 +370,75 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
+    public static final class CustomMetadata extends HashMap<String, String> {
+        private static final long serialVersionUID = -3866150929202858077L;
+
+        private final String mSectionKey;
+        private String mSerializedValue;
+
+        public CustomMetadata(String section) {
+            super();
+            mSectionKey = section;
+        }
+
+        public CustomMetadata(String section, String serialized) {
+            super();
+            mSectionKey = section;
+            mSerializedValue = serialized;
+        }
+
+        @SuppressWarnings("unchecked")
+        static CustomMetadata deserialize(Pair<String, String> serialized) throws ServiceException {
+            CustomMetadata custom = new CustomMetadata(serialized.getFirst());
+            for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) new Metadata(serialized.getSecond()).asMap()).entrySet())
+                custom.put(entry.getKey().toString(), entry.getValue().toString());
+            return custom;
+        }
+
+        public String getSectionKey() {
+            return mSectionKey;
+        }
+
+        public String getSerializedValue() {
+            if (mSerializedValue != null)
+                return mSerializedValue;
+            remove(null);
+            return new Metadata(this).toString();
+        }
+
+        @Override public String toString() {
+            return mSectionKey + ": " + super.toString();
+        }
+
+        public static final class CustomMetadataList extends ArrayList<Pair<String, String>> {
+            private static final long serialVersionUID = 3213399133413270157L;
+            CustomMetadataList() {
+                super(1);
+            }
+            CustomMetadataList(CustomMetadata custom) {
+                this();  addSection(custom);
+            }
+            boolean addSection(CustomMetadata custom) {
+                return addSection(custom.getSectionKey(), custom.getSerializedValue());
+            }
+            boolean addSection(String key, String encoded) {
+                return add(new Pair<String, String>(key, encoded));
+            }
+        }
+
+        public CustomMetadataList asList() {
+            return new CustomMetadataList(this);
+        }
+    }
+
     protected int            mId;
-    protected byte           mColor;
     protected UnderlyingData mData;
     protected Mailbox        mMailbox;
     protected MailboxBlob    mBlob;
     protected int            mVersion;
     protected List<MailItem> mRevisions;
+    protected byte           mColor;
+    protected CustomMetadataList mExtendedData;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null)
@@ -545,7 +606,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the item's underlying storage data so that it may be persisted
-     * somewhere besides the database - usually in encoded form */
+     *  somewhere besides the database - usually in encoded form. */
     public UnderlyingData getUnderlyingData() {
         mData.metadata = encodeMetadata();
         return mData;
@@ -553,15 +614,15 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     public abstract String getSender();
 
-    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc) of the subject
-     *  of this mail item. */
+    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc.) of the
+     *  subject of this mail item. */
     public String getSortSubject() {
         String subject = getSubject();
         return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
     }
 
-    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc) of the sender
-     *  of this mail item. */
+    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc.) of the
+     *  sender of this mail item. */
     public String getSortSender() {
         String sender = getSender();
         return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
@@ -576,15 +637,47 @@ public abstract class MailItem implements Comparable<MailItem> {
         return flags;
     }
 
-    /**
-     * Convenience function.  Equivalent to ((getFlagBitmask() & FLAG)!=0)
-     * 
-     * @param bitmask
-     * @return
-     */
-    boolean isFlagSet(int mask) {
-        return ((getFlagBitmask() & mask) != 0); 
+    /** Returns the requested set of non-Zimbra-standard metadata values in
+     *  the requested <code>section</code>.  If no set of custom metadata is
+     *  associated with the <code>section</code>, returns <tt>null</tt>.
+     * @see #setCustomData(CustomMetadata) */
+    public CustomMetadata getCustomData(String section) throws ServiceException {
+        if (section != null && mExtendedData != null && !mExtendedData.isEmpty()) {
+            for (Pair<String, String> entry : mExtendedData) {
+                if (section.equals(entry.getFirst()))
+                    return CustomMetadata.deserialize(entry);
+            }
+        }
+        return null;
     }
+
+    /** Updates the requested set of non-Zimbra-standard metadata values in
+     *  the requested section.  If the provided set of <code>custom</code>
+     *  metdata contains no metadata key/value pairs, the section is deleted.
+     * @see #getCustomData(String) */
+    void setCustomData(CustomMetadata custom) throws ServiceException {
+        if (custom == null)
+            return;
+
+        markItemModified(Change.MODIFIED_METADATA);
+        // first, delete any existing entries for the given section name
+        if (mExtendedData != null && !mExtendedData.isEmpty()) {
+            for (Iterator<Pair<String, String>> it = mExtendedData.iterator(); it.hasNext(); ) {
+                if (custom.getSectionKey().equals(it.next().getFirst()))
+                    it.remove();
+            }
+        }
+        // then add the new section to the list
+        if (!custom.isEmpty()) {
+            if (mExtendedData == null)
+                mExtendedData = custom.asList();
+            else
+                mExtendedData.addSection(custom);
+        }
+        // and finally write the new data to the database
+        saveMetadata();
+    }
+
 
     /** Returns the "internal" flag bitmask, which does not include
      *  {@link Flag#BITMASK_UNREAD}.  This is the same bitmask as is stored
@@ -627,6 +720,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         int position = (isFlag ? Flag.getIndex(tagId) : Tag.getIndex(tagId));
         long bitmask = (position < 0 || position > 63 ? 0 : 1L << position);
         return ((bitfield & bitmask) != 0);
+    }
+
+    /** Returns whether the given flag bitmask applies to the object.<p>
+     * 
+     *  Equivalent to <code>((getFlagBitmask() & <b>mask</b>) != 0)</code>. */
+    boolean isFlagSet(int mask) {
+        return ((getFlagBitmask() & mask) != 0); 
     }
 
     /** Returns whether the item's unread count is >0.
@@ -2502,12 +2602,14 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
 
+    private static final String CUSTOM_META_PREFIX = Metadata.FN_EXTRA_DATA + ".";
+
     protected boolean trackUserAgentInMetadata() {
         return false;
     }
 
     String encodeMetadata() {
-        Metadata meta =  encodeMetadata(new Metadata());
+        Metadata meta = encodeMetadata(new Metadata());
         if (trackUserAgentInMetadata()) {
             OperationContext octxt = getMailbox().getOperationContext();
             if (octxt != null)
@@ -2518,11 +2620,14 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     abstract Metadata encodeMetadata(Metadata meta);
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended) {
         if (color != DEFAULT_COLOR)
             meta.put(Metadata.FN_COLOR, color);
         if (version > 1)
             meta.put(Metadata.FN_VERSION, version);
+        if (extended != null)
+            for (Pair<String, String> mpair : extended)
+                meta.put(CUSTOM_META_PREFIX + mpair.getFirst(), mpair.getSecond());
         return meta;
     }
 
@@ -2530,11 +2635,23 @@ public abstract class MailItem implements Comparable<MailItem> {
         decodeMetadata(new Metadata(metadata, this));
     }
 
+    @SuppressWarnings("unchecked")
     void decodeMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
             return;
+
         mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
         mVersion = (int) meta.getLong(Metadata.FN_VERSION, 1);
+
+        mExtendedData = null;
+        for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) meta.asMap()).entrySet()) {
+            String key = entry.getKey().toString();
+            if (key.startsWith(CUSTOM_META_PREFIX)) {
+                if (mExtendedData == null)
+                    mExtendedData = new CustomMetadataList();
+                mExtendedData.addSection(key.substring(CUSTOM_META_PREFIX.length()), entry.getValue().toString());
+            }
+        }
     }
 
 
@@ -2610,7 +2727,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mData.children != null)
             sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
         if (getDigest() != null)
-            sb.append(CN_BLOB_DIGEST).append(": ").append(getDigest());
+            sb.append(CN_BLOB_DIGEST).append(": ").append(getDigest()).append(", ");
         if (mData.imapId > 0)
             sb.append(CN_IMAP_ID).append(": ").append(mData.imapId).append(", ");
         sb.append(CN_DATE).append(": ").append(mData.date).append(", ");

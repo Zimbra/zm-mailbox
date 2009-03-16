@@ -78,6 +78,7 @@ import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
@@ -444,13 +445,13 @@ public class Mailbox {
     private int           mId;
     private MailboxData   mData;
     private MailboxChange mCurrentChange = new MailboxChange();
+    private List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
     private Map<Integer, Folder> mFolderCache;
     private Map<Object, Tag>     mTagCache;
     private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
     private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
-    private CopyOnWriteArrayList<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
@@ -1410,24 +1411,24 @@ public class Mailbox {
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
         byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
-        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT",     hidden, MailItem.TYPE_UNKNOWN,      0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG,          0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR, null);
+        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT",     hidden, MailItem.TYPE_UNKNOWN,      0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG,          0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR, null, null);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
-        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.TYPE_DOCUMENT, 0, MailItem.DEFAULT_COLOR, null);
+        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.TYPE_DOCUMENT, 0, MailItem.DEFAULT_COLOR, null, null);
         
 
         mCurrentChange.itemId = getInitialItemId();
@@ -4030,7 +4031,7 @@ public class Mailbox {
         public Invite mInv;
         public ParsedMessage mPm;
 
-        public String toString() {
+        @Override public String toString() {
             StringBuilder toRet = new StringBuilder();
             toRet.append("inv:").append(mInv.toString()).append("\n");
             return toRet.toString();
@@ -4044,9 +4045,9 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized CalendarItem setCalendarItem(OperationContext octxt, int folderId, int flags, long tags,
-                                            SetCalendarItemData defaultInv,
-                                            SetCalendarItemData exceptions[],
-                                            List<ReplyInfo> replies, long nextAlarm)
+                                                     SetCalendarItemData defaultInv,
+                                                     SetCalendarItemData exceptions[],
+                                                     List<ReplyInfo> replies, long nextAlarm)
     throws ServiceException {
         flags = (flags & ~Flag.FLAG_SYSTEM);
         SetCalendarItem redoRecorder = new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
@@ -4127,9 +4128,7 @@ public class Mailbox {
                         // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
-                            calItem = createCalendarItem(
-                                    folderId, volumeId, flags, tags,
-                                    scid.mInv.getUid(), scid.mPm, scid.mInv);
+                            calItem = createCalendarItem(folderId, volumeId, flags, tags, scid.mInv.getUid(), scid.mPm, scid.mInv, null);
                         } else {
                             return null; // for now, just ignore this Invitation
                         }
@@ -4386,7 +4385,7 @@ public class Mailbox {
                     if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
                         int flags = Flag.BITMASK_INDEXING_DEFERRED;
                         incrementIndexDeferredCount(1);
-                        calItem = createCalendarItem(folderId, volumeId, flags, 0, inv.getUid(), pm, inv);
+                        calItem = createCalendarItem(folderId, volumeId, flags, 0, inv.getUid(), pm, inv, null);
                         calItemIsNew = true;
                     } else {
 //                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
@@ -4578,24 +4577,30 @@ public class Mailbox {
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", null, sharedDeliveryCtxt);
     } 
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", null, sharedDeliveryCtxt);
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
+                              String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, null, sharedDeliveryCtxt);
     }
 
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId,
-                boolean noICal, int flags, String tagStr, int conversationId,
-                String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
+                              String rcptEmail, MailItem.CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+    throws IOException, ServiceException {
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, customData, sharedDeliveryCtxt);
+    }
+
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
+                              int flags, String tagStr, int conversationId, String rcptEmail,
+                              MailItem.CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         int batchIndexCount = getBatchedIndexingCount();
         maybeIndexDeferredItems();
@@ -4633,14 +4638,15 @@ public class Mailbox {
             }
         }
 
-        Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, sharedDeliveryCtxt);
+        Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, customData, sharedDeliveryCtxt);
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
     }
 
-    private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId,
-                boolean noICal, int flags, String tagStr, int conversationId, 
-                String rcptEmail, Message.DraftInfo dinfo, SharedDeliveryContext sharedDeliveryCtxt)
+    private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
+                                                    int flags, String tagStr, int conversationId, String rcptEmail,
+                                                    Message.DraftInfo dinfo, MailItem.CustomMetadata extendedData,
+                                                    SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
@@ -4693,7 +4699,7 @@ public class Mailbox {
         }
         
         CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), sharedDeliveryCtxt.getShared(),
-                                                       digest, msgSize, folderId, noICal, flags, tagStr);
+                                                       digest, msgSize, folderId, noICal, flags, tagStr, extendedData);
         StoreIncomingBlob storeRedoRecorder = null;
 
         // strip out unread flag for internal storage (don't do this before redoRecorder initialization)
@@ -4775,7 +4781,7 @@ public class Mailbox {
             if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi))
                 iCal = cpi.cal;
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
-                        volumeId, unread, flags, tags, dinfo, noICal, iCal);
+                                 volumeId, unread, flags, tags, dinfo, noICal, iCal, extendedData);
 
             redoRecorder.setMessageId(msg.getId());
 
@@ -4976,7 +4982,7 @@ public class Mailbox {
             if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")))
                 dinfo = new Message.DraftInfo(replyType, origId, identityId);
             return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
-                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
+                                      ID_AUTO_INCREMENT, ":API:", dinfo, null, new SharedDeliveryContext());
         } else {
             return saveDraftInternal(octxt, pm, id);
         }
@@ -5116,6 +5122,24 @@ public class Mailbox {
         }
     }
 
+    public synchronized void setCustomData(OperationContext octxt, int itemId, byte type, CustomMetadata custom) throws ServiceException {
+        SetCustomData redoRecorder = new SetCustomData(mId, itemId, type, custom);
+
+        boolean success = false;
+        try {
+            beginTransaction("setCustomData", octxt, redoRecorder);
+
+            MailItem item = getItemById(itemId, type);
+            if (!checkItemChangeID(item))
+                throw MailServiceException.MODIFY_CONFLICT();
+
+            item.setCustomData(custom);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized void setDate(OperationContext octxt, int itemId, byte type, long date) throws ServiceException {
         DateItem redoRecorder = new DateItem(mId, itemId, type, date);
 
@@ -5126,6 +5150,7 @@ public class Mailbox {
             MailItem item = getItemById(itemId, type);
             if (!checkItemChangeID(item))
                 throw MailServiceException.MODIFY_CONFLICT();
+
             item.setDate(date);
             success = true;
         } finally {
@@ -5726,7 +5751,7 @@ public class Mailbox {
                 noteId = getNextItemId(redoPlayer.getNoteId());
                 volumeId = redoPlayer.getVolumeId();
             }
-            Note note = Note.create(noteId, getFolderById(folderId), volumeId, content, location, color);
+            Note note = Note.create(noteId, getFolderById(folderId), volumeId, content, location, color, null);
 
             redoRecorder.setNoteId(note.getId());
             redoRecorder.setVolumeId(note.getVolumeId());
@@ -5783,7 +5808,7 @@ public class Mailbox {
     }
 
     CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid,
-                                    ParsedMessage pm, Invite invite)
+                                    ParsedMessage pm, Invite invite, CustomMetadata custom)
     throws ServiceException {
         // FIXME: assuming that we're in the middle of a AddInvite op
         CreateCalendarItemPlayer redoPlayer = (CreateCalendarItemPlayer) mCurrentChange.getRedoPlayer();
@@ -5793,7 +5818,7 @@ public class Mailbox {
         int createId = getNextItemId(newCalItemId);
 
         CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), volumeId, flags, tags,
-                                                   uid, pm, invite, CalendarItem.NEXT_ALARM_FROM_NOW);
+                                                   uid, pm, invite, CalendarItem.NEXT_ALARM_FROM_NOW, custom);
 
         if (redoRecorder != null)
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), calItem.getVolumeId());
@@ -5840,7 +5865,7 @@ public class Mailbox {
                 incrementIndexDeferredCount(1);
             }
 
-            Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, pc, flags, tags);
+            Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, pc, flags, tags, null);
 
             if (pc.hasAttachment()) {
                 try {
@@ -5937,7 +5962,7 @@ public class Mailbox {
             CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
 
             int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
-            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url);
+            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url, null);
             redoRecorder.setFolderId(folder.getId());
             success = true;
             updateRssDataSource(folder);
@@ -6002,7 +6027,7 @@ public class Mailbox {
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null)
                     subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0,
-                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, color, last ? url : null);
+                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, color, last ? url : null, null);
                 else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (last)
@@ -6288,7 +6313,7 @@ public class Mailbox {
             CreateSavedSearch redoPlayer = (CreateSavedSearch) mCurrentChange.getRedoPlayer();
 
             int searchId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getSearchId());
-            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort, color);
+            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort, color, null);
             redoRecorder.setSearchId(search.getId());
             success = true;
             return search;
@@ -6315,7 +6340,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId, byte view, int flags, byte color)
+    public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
+                                                    String ownerId, int remoteId, byte view, int flags, byte color)
     throws ServiceException {
         CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color);
 
@@ -6325,7 +6351,7 @@ public class Mailbox {
             CreateMountpoint redoPlayer = (CreateMountpoint) mCurrentChange.getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, color);
+            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, color, null);
             redoRecorder.setId(mpt.getId());
             success = true;
             return mpt;
@@ -6485,9 +6511,9 @@ public class Mailbox {
 
             Document doc;
             if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getContentType(), pd);
+                doc = Document.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getContentType(), pd, null);
             else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd);
+                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd, null);
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
@@ -7248,7 +7274,7 @@ public class Mailbox {
         try {
             // rolling back changes, so purge dirty items from the various caches
             Map<Integer, MailItem> cache = change.itemCache;
-            for (Map map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
+            for (Map<?, ?> map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
                 if (map != null) {
                     for (Object obj : map.values()) {
                         if (obj instanceof Change)

@@ -23,6 +23,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -35,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -622,7 +622,8 @@ public class Contact extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see #canContain(byte) */
-    static Contact create(int id, Folder folder, short volumeId, ParsedContact pc, int flags, String tags) throws ServiceException {
+    static Contact create(int id, Folder folder, short volumeId, ParsedContact pc, int flags, String tags, CustomMetadata custom)
+    throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -644,7 +645,7 @@ public class Contact extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
         data.tags        = Tag.tagsToBitmask(tags);
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pc.getFields(), pc.getAttachments());
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, custom, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
         
         if (ZimbraLog.mailop.isInfoEnabled()) {
@@ -729,6 +730,7 @@ public class Contact extends MailItem {
     }
 
 
+    @SuppressWarnings("unchecked")
     @Override void decodeMetadata(Metadata meta) throws ServiceException {
         Metadata metaAttrs;
         if (meta.getVersion() <= 8) {
@@ -748,21 +750,21 @@ public class Contact extends MailItem {
         }
 
         mFields = new HashMap<String, String>();
-        for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
+        for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) metaAttrs.asMap()).entrySet())
             mFields.put(entry.getKey().toString(), entry.getValue().toString());
-        }
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mFields, mAttachments);
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mFields, mAttachments);
     }
 
-    private static String encodeMetadata(byte color, int version, Map<String, String> fields, List<Attachment> attachments) {
-        return encodeMetadata(new Metadata(), color, version, fields, attachments).toString();
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments) {
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, fields, attachments).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, Map<String, String> fields, List<Attachment> attachments) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended,
+                                   Map<String, String> fields, List<Attachment> attachments) {
         meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         if (attachments != null && !attachments.isEmpty()) {
             MetadataList mlist = new MetadataList();
@@ -770,7 +772,7 @@ public class Contact extends MailItem {
                 mlist.add(attach.asMetadata());
             meta.put(Metadata.FN_ATTACHMENTS, mlist);
         }
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
 

@@ -20,6 +20,7 @@ package com.zimbra.cs.mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 
 public class Mountpoint extends Folder {
 
@@ -86,7 +87,8 @@ public class Mountpoint extends Folder {
      * @param remoteId  The remote item's numeric id.
      * @param view      The (optional) default object type for the folder.
      * @param flags     Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
-     * @param name      The new mountpoint's color.
+     * @param color     The new mountpoint's color.
+     * @param custom    An optional extra set of client-defined metadata.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
@@ -102,7 +104,7 @@ public class Mountpoint extends Folder {
      *        sufficient permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte) */
-    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, byte color)
+    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, byte color, CustomMetadata custom)
     throws ServiceException {
         if (parent == null || ownerId == null || remoteId <= 0)
             throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
@@ -126,7 +128,7 @@ public class Mountpoint extends Folder {
         data.flags    = flags & Flag.FLAGS_FOLDER;
         data.name     = name;
         data.subject  = name;
-        data.metadata = encodeMetadata(color, 1, view, ownerId, remoteId);
+        data.metadata = encodeMetadata(color, 1, custom, view, ownerId, remoteId);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
             name, data.id, parent.getId(), parent.getName());
@@ -151,17 +153,18 @@ public class Mountpoint extends Folder {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mOwnerId, mRemoteId);
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mAttributes, mDefaultView, mOwnerId, mRemoteId);
     }
 
-    private static String encodeMetadata(byte color, int version, byte view, String owner, int remoteId) {
-        return encodeMetadata(new Metadata(), color, version, (byte) 0, view, owner, remoteId).toString();
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, byte view, String owner, int remoteId) {
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, (byte) 0, view, owner, remoteId).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attrs, byte view, String owner, int remoteId) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, byte attrs, byte view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
-        return Folder.encodeMetadata(meta, color, version, attrs, view, null, null, 0, 0, 0, 0, 0);
+        return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0);
     }
 
     @Override public String toString() {

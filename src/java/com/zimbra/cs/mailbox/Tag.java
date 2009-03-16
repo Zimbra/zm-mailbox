@@ -257,7 +257,7 @@ public class Tag extends MailItem {
     }
 
     static Metadata encodeMetadata(Metadata meta, byte color, int version) {
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, null);
     }
 
     @Override

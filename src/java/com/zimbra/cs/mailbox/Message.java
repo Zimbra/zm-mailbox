@@ -36,6 +36,7 @@ import com.zimbra.cs.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.Alarm.Action;
@@ -57,10 +58,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-
-/**
- * @author schemers
- */
 public class Message extends MailItem {
 
     static class DraftInfo {
@@ -315,18 +312,19 @@ public class Message extends MailItem {
         }
     }
     
-    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm,
-                          int msgSize, String digest, short volumeId, boolean unread,
-                          int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal)  
+    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, int msgSize,
+                          String digest, short volumeId, boolean unread, int flags, long tags,
+                          DraftInfo dinfo, boolean noICal, ZVCalendar cal, CustomMetadata custom)  
     throws ServiceException {
         return createInternal(id, folder, conv, pm, msgSize, digest, volumeId, unread, 
-                    flags, tags, dinfo, noICal, cal,new MessageCreateFactory());
+                              flags, tags, dinfo, noICal, cal, custom, new MessageCreateFactory());
     }
     
     protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm,
-                int msgSize, String digest, short volumeId, boolean unread,
-                int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
-                MessageCreateFactory fact) throws ServiceException {
+                                            int msgSize, String digest, short volumeId, boolean unread,
+                                            int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
+                                            CustomMetadata custom, MessageCreateFactory fact)
+    throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN(folder, TYPE_MESSAGE);
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -339,7 +337,6 @@ public class Message extends MailItem {
         String methodStr = null;
         // Skip calendar processing if message is being filed as spam or trash.
         if (cal != null && folder.getId() != Mailbox.ID_FOLDER_SPAM && folder.getId() != Mailbox.ID_FOLDER_TRASH) {
-
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
@@ -353,7 +350,7 @@ public class Message extends MailItem {
                 if (components != null) {
                     flags |= Flag.BITMASK_INVITE;
                     if (ICalTok.PUBLISH.toString().equals(methodStr) &&
-                        !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false)) {
+                            !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false)) {
                         // If method is PUBLISH, we don't process the calendar part.  Mark it as
                         // a regular attachment instead.
                         flags |= Flag.BITMASK_ATTACHED;
@@ -365,6 +362,11 @@ public class Message extends MailItem {
             }
         }
 
+        // make sure the received date is not negative or in the future
+        long date = pm.getReceivedDate(), now = System.currentTimeMillis();
+        if (date < 0 || date > now)
+            date = now;
+
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
         data.type        = fact.getType();
@@ -375,21 +377,13 @@ public class Message extends MailItem {
             data.indexId     = id;
         data.volumeId    = volumeId;
         data.imapId      = id;
-
-        // Make sure the date is not negative or in the future (bug 17031)
-        long date = pm.getReceivedDate();
-        long now = System.currentTimeMillis();
-        if (date < 0 || date > now) {
-            date = now;
-        }
         data.date        = (int) (date / 1000);
-        
         data.size        = msgSize;
         data.setBlobDigest(digest);
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pm, flags, dinfo, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, custom, pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
 
@@ -550,7 +544,7 @@ public class Message extends MailItem {
                             int flags = Flag.BITMASK_INDEXING_DEFERRED;
                             mMailbox.incrementIndexDeferredCount(1);
                             int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur);
+                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur, null);
                             calItemIsNew = true;
                         } else {
                             sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
@@ -770,8 +764,8 @@ public class Message extends MailItem {
             getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
-        
-        String metadata = encodeMetadata(mColor, mVersion, pm, mData.flags, mDraftInfo, mCalendarItemInfos);
+
+        String metadata = encodeMetadata(mColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos);
 
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
@@ -840,21 +834,35 @@ public class Message extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mSender, mRecipients, mFragment,
+                              mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
     }
 
-    private static String encodeMetadata(byte color, int version, ParsedMessage pm, int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
+    private static String encodeMetadata(byte color, int version, CustomMetadataList extended, ParsedMessage pm,
+                                         int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
-        return encodeMetadata(new Metadata(), color, version, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
+        return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
+                              pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, ParsedMessage pm,
+                                         int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
+        // cache the "To" header only for messages sent by the user
+        String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
+                              pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
+    }
+
+
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String sender, String recipients,
+                                   String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
-        if (rawSubject == null || rawSubject.equals(subject))
+        if (rawSubject == null || rawSubject.equals(subject)) {
             rawSubject = null;
-        else if (rawSubject.endsWith(subject)) {
+        } else if (rawSubject.endsWith(subject)) {
             prefix = rawSubject.substring(0, rawSubject.length() - subject.length());
             rawSubject = null;
         }
@@ -880,7 +888,7 @@ public class Message extends MailItem {
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
 

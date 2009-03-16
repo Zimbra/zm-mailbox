@@ -48,6 +48,7 @@ public final class PendingModifications {
         public static final int MODIFIED_CONTENT   = 0x00010000;
         public static final int MODIFIED_INVITE    = 0x00020000;
         public static final int MODIFIED_URL       = 0x00040000;
+        public static final int MODIFIED_METADATA  = 0x00080000;
         public static final int MODIFIED_VIEW      = 0x00100000;
         public static final int MODIFIED_ACL       = 0x00200000;
         public static final int MODIFIED_CONFLICT  = 0x00400000;

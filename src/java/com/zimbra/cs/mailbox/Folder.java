@@ -36,6 +36,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.imap.ImapFolder;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 
@@ -644,7 +645,7 @@ public class Folder extends MailItem {
      * @see #validateItemName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR, null);
+        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR, null, null);
     }
 
     /** Creates a new Folder with optional attributes and persists it
@@ -660,6 +661,7 @@ public class Folder extends MailItem {
      * @param flags       Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
      * @param color       The new folder's color.
      * @param url         The (optional) url to sync folder contents to.
+     * @param custom      An optional extra set of client-defined metadata.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't have
@@ -674,7 +676,8 @@ public class Folder extends MailItem {
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
-    public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, int flags, byte color, String url)
+    public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes,
+                                byte view, int flags, byte color, String url, CustomMetadata custom)
     throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
@@ -697,7 +700,7 @@ public class Folder extends MailItem {
         data.flags    = flags & Flag.FLAGS_FOLDER;
         data.name     = name;
         data.subject  = name;
-        data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0);
+        data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         DbMailItem.create(mbox, data, null);
@@ -1148,14 +1151,19 @@ public class Folder extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff);
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mAttributes, mDefaultView, mRights,
+                              mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff);
     }
 
-    private static String encodeMetadata(byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
-        return encodeMetadata(new Metadata(), color, version, attributes, hint, rights, fsd, uidnext, totalSize, modseq, imapRecent, imapRecentCutoff).toString();
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, byte attributes, byte hint, ACL rights,
+                                         SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, attributes, hint, rights,
+                              fsd, uidnext, totalSize, modseq, imapRecent, imapRecentCutoff).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, byte attributes, byte hint, ACL rights,
+                                   SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
@@ -1178,7 +1186,7 @@ public class Folder extends MailItem {
         }
         if (fsd != null && fsd.lastDate > 0)
             meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
     protected static final String CN_ATTRIBUTES = "attributes";

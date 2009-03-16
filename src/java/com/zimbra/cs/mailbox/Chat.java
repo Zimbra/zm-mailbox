@@ -35,19 +35,19 @@ public class Chat extends Message {
     }
     
     static class ChatCreateFactory extends MessageCreateFactory {
-        Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        @Override Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
             return new Chat(mbox, data);
         }
-        byte getType() { return TYPE_CHAT; }
+        @Override byte getType() { return TYPE_CHAT; }
     }
     
     static Chat create(int id, Folder folder, ParsedMessage pm,
                 int msgSize, String digest, short volumeId, boolean unread,
                 int flags, long tags)  
     throws ServiceException {
-        return (Chat)Message.createInternal(id, folder, null, pm, msgSize, digest, volumeId, unread, 
-                    flags, tags, null, true, null,new ChatCreateFactory());
+        return (Chat) Message.createInternal(id, folder, null, pm, msgSize, digest, volumeId, unread, flags, tags,
+                                             null, true, null, null, new ChatCreateFactory());
     }
     
-    boolean isMutable() { return true; }
+    @Override boolean isMutable() { return true; }
 }

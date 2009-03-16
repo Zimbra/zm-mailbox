@@ -26,6 +26,7 @@ import org.apache.lucene.document.Field;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -107,6 +108,7 @@ public class Note extends MailItem {
      * @param content   The note's body.
      * @param location  The note's onscreen bounding box.
      * @param color     The note's color.
+     * @param custom    An optional extra set of client-defined metadata.
      * @perms {@link ACL#RIGHT_INSERT} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
@@ -116,7 +118,8 @@ public class Note extends MailItem {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see Folder#canContain(byte) */
-    static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, byte color) throws ServiceException {
+    static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, byte color, CustomMetadata custom)
+    throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_NOTE))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -137,7 +140,7 @@ public class Note extends MailItem {
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;
-        data.metadata    = encodeMetadata(color, 1, location);
+        data.metadata    = encodeMetadata(color, 1, custom, location);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
             data.id, folder.getId(), folder.getName());
@@ -209,16 +212,17 @@ public class Note extends MailItem {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mBounds);
+        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mBounds);
     }
 
-    private static String encodeMetadata(byte color, int version, Rectangle bounds) {
-        return encodeMetadata(new Metadata(), color, version, bounds).toString();
+    private static String encodeMetadata(byte color, int version, CustomMetadata custom, Rectangle bounds) {
+        CustomMetadataList extended = (custom == null ? null : custom.asList());
+        return encodeMetadata(new Metadata(), color, version, extended, bounds).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, Rectangle bounds) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, Rectangle bounds) {
         meta.put(Metadata.FN_BOUNDS, bounds);
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
 

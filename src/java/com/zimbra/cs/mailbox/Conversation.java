@@ -857,7 +857,7 @@ public class Conversation extends MailItem {
 
     static Metadata encodeMetadata(Metadata meta, byte color, int version, String encodedSenders) {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
-        return MailItem.encodeMetadata(meta, color, version);
+        return MailItem.encodeMetadata(meta, color, version, null);
     }
 
 
