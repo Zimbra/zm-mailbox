@@ -46,10 +46,11 @@ public class ContactAutoComplete {
 		public Collection<ContactEntry> entries;
 		public boolean canBeCached;
 		public int limit;
-		public AutoCompleteResult(int limit) { 
+		public AutoCompleteResult(int l) { 
 			entries = new ArrayList<ContactEntry>(); 
 			emails = new HashSet<String>();
-			canBeCached = true; 
+			canBeCached = true;
+			limit = l;
 		}
 		public void addEntry(ContactEntry entry) {
 			if (entries.size() >= limit)
