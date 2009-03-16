@@ -883,9 +883,7 @@ OR
   [all="1"]
   [excludeUid="UID of appointment to exclude from free/busy search"]
 >
-  <recurrence>
-    tz/comp/except/cancel elements (same as ExpandRecurRequest content)
-  </recurrence>
+  tz/comp/except/cancel elements (same as ExpandRecurRequest content)
   [<usr [id="zimbraId] [name="email"]  // either id or email must be specified
        [l="folder id"]  // calendar folder id; if omitted, get f/b on all calendar folders
   />]*
