@@ -879,7 +879,8 @@ OR
 //
 
 <CheckRecurConflictsRequest
-  s="start time in millis" e="end time in millis"
+  [s="start time in millis"]  // if not specified, defaults to current time
+  [e="end time in millis"]    // if not specified, unlimited
   [all="1"]
   [excludeUid="UID of appointment to exclude from free/busy search"]
 >

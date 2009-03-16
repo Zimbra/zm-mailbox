@@ -22,11 +22,9 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
@@ -47,12 +45,12 @@ public class CheckRecurConflicts extends ExpandRecur {
         Account authAcct = getAuthenticatedAccount(zsc);
         Element response = getResponseElement(zsc);
 
-        long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
-        long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
-        long days = (rangeEnd-rangeStart)/Constants.MILLIS_PER_DAY;
-        long maxDays = LC.calendar_freebusy_max_days.longValueWithinRange(0, 36600);
-        if (days > maxDays)
-            throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum " + maxDays + " days)", null);
+        long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME, 0);
+        if (rangeStart == 0)
+            rangeStart = System.currentTimeMillis();
+        long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME, 0);
+        if (rangeEnd == 0)
+            rangeEnd = Long.MAX_VALUE;
         boolean allInstances = request.getAttributeBool(MailConstants.A_CAL_ALL, false);
         String exApptUid = request.getAttribute(MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID, null);
 
