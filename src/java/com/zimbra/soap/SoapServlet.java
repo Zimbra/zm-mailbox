@@ -31,6 +31,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.map.LazyMap;
+import org.apache.commons.httpclient.HttpVersion;
+import org.apache.commons.httpclient.ProtocolException;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.common.localconfig.LC;
@@ -244,7 +246,7 @@ public class SoapServlet extends ZimbraServlet {
                 ZimbraLog.soap.warn(null, e);
                 Element fault = SoapProtocol.Soap12.soapFault(e);
                 Element envelope = SoapProtocol.Soap12.soapEnvelope(fault);
-                sendResponse(resp, envelope);
+                sendResponse(req, resp, envelope);
                 ZimbraLog.clearContext();
                 return;
             }
@@ -299,13 +301,13 @@ public class SoapServlet extends ZimbraServlet {
         if (ZimbraLog.soap.isDebugEnabled()) {
             ZimbraLog.soap.debug("SOAP response: \n" + envelope.prettyPrint());
         }
-        sendResponse(resp, envelope);
+        sendResponse(req, resp, envelope);
         
         ZimbraLog.clearContext();
         ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }
     
-    private void sendResponse(HttpServletResponse resp, Element envelope)
+    private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope)
     throws IOException {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         int statusCode = soapProto.hasFault(envelope) ?
@@ -314,6 +316,18 @@ public class SoapServlet extends ZimbraServlet {
         // http chunking can be disabled by setting soap_max_in_memory_buffer_size to 0
         boolean chunkingDisabled = (LC.soap_max_in_memory_buffer_size.intValue() == 0);
 
+        if (!chunkingDisabled) {
+            // disable chunking if proto < HTTP 1.1
+            String proto = req.getProtocol();
+            try {
+                HttpVersion httpVer = HttpVersion.parse(proto);
+                chunkingDisabled = httpVer.lessEquals(HttpVersion.HTTP_1_0);
+            } catch (ProtocolException e) {
+                ZimbraLog.soap.warn("cannot parse http version in request: " + proto + ", http chunked transfer encoding disabled", e);
+                chunkingDisabled = true;
+            }
+        }
+        
         if (chunkingDisabled) {
             /*
              * serialize the envelope to a byte array and send the response with Content-Length header.
