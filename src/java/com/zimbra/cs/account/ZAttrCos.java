@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jjzhuang 20090314-2218 */
+    /* build: 5.0 pshao 20090316-1114 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2939,10 +2939,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
@@ -2962,10 +2962,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
@@ -2981,10 +2981,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
@@ -3003,10 +3003,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
@@ -3026,10 +3026,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
@@ -3047,10 +3047,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
@@ -5644,13 +5644,13 @@ public class ZAttrCos extends NamedEntry {
     /**
      * whether to enforce mobile policy
      *
-     * @return zimbraFeatureMobilePolicyEnabled, or false if unset
+     * @return zimbraFeatureMobilePolicyEnabled, or true if unset
      *
      * @since ZCS 6.0.0
      */
     @ZAttr(id=833)
     public boolean isFeatureMobilePolicyEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureMobilePolicyEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMobilePolicyEnabled, true);
     }
 
     /**

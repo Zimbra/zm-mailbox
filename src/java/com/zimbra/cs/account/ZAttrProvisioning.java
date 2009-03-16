@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jjzhuang 20090314-2218 */
+    /* build: 5.0 pshao 20090316-1114 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1997,10 +1997,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourcePassword = "zimbraDataSourcePassword";
 
     /**
-     * Prior to 6.0.1: The time interval between automated data imports for a
+     * Prior to 6.0.0: The time interval between automated data imports for a
      * data source, or all data sources owned by an account. If unset or 0,
      * the data source will not be scheduled for automated polling. Since
-     * 6.0.1: Deprecated on account/cos since 6.0.1. Values on account/cos
+     * 6.0.0: Deprecated on account/cos since 6.0.0. Values on account/cos
      * are migrated to protocol specific
      * zimbraDataSource{proto}PollingInterval attributes. 1. if
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
