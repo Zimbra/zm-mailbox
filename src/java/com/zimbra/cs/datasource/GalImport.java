@@ -16,6 +16,7 @@ package com.zimbra.cs.datasource;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.Map;
 import javax.naming.NamingException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
@@ -71,6 +73,15 @@ public class GalImport extends MailItemImport {
 	private static final String FOLDER = "f";
 	private static final String SYNCTOKEN = "st";
 	
+	private void setStatus(boolean success) throws ServiceException {
+		Date now = new Date();
+		Map<String,Object> attrs = getDataSource().getAttrs();
+		String attr = success ? 
+				Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp :
+				Provisioning.A_zimbraGalLastFailedSyncTimestamp;
+		attrs.put(attr, DateUtil.toGeneralizedTime(now));
+	}
+	
 	private void importGal(int fid, boolean fullSync) throws ServiceException {
 		DataSource ds = getDataSource();
 		DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
@@ -86,6 +97,7 @@ public class GalImport extends MailItemImport {
     	try {
     		result = searchGal(syncToken);
     	} catch (Exception e) {
+    		setStatus(false);
     		ZimbraLog.gal.error("Error executing gal search", e);
     		return;
     	}
@@ -98,13 +110,16 @@ public class GalImport extends MailItemImport {
                 processContact(octxt, contact, fid, false);
                 allMappings.remove(contact.getId());
         	} catch (Exception e) {
+        		setStatus(false);
         		ZimbraLog.gal.warn("Ignoring error importing gal contact "+contact.getId(), e);
         	}
         }
         folderMapping.md.put(SYNCTOKEN, result.getToken());
         DbDataSource.updateMapping(ds, folderMapping);
-        if (allMappings.size() == 0 || !fullSync)
+        if (allMappings.size() == 0 || !fullSync) {
+    		setStatus(true);
         	return;
+        }
         
         ArrayList<Integer> deleted = new ArrayList<Integer>();
         int[] deletedIds = new int[allMappings.size()];
@@ -119,6 +134,7 @@ public class GalImport extends MailItemImport {
     		ZimbraLog.gal.warn("Ignoring error deleting gal contacts", e);
     	}
         DbDataSource.deleteMappings(getDataSource(), deleted);
+		setStatus(true);
 	}
 	
 	private SearchGalResult searchGal(String syncToken) throws ServiceException, NamingException, IOException  {

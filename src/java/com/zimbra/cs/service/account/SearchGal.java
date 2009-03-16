@@ -223,6 +223,9 @@ public class SearchGal extends AccountDocumentHandler {
 		        	query = "\""+query+"\"";
 	    		String searchQuery = null;
 	    		for (DataSource ds : galAcct.getAllDataSources()) {
+	    			// check if there was any successful import from gal
+	    			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
+	    				return false;
 	    			if (ds.getType() != DataSource.Type.gal)
 	    				continue;
 	    			if (searchQuery == null)
