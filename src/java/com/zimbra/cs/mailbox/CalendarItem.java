@@ -446,7 +446,18 @@ public abstract class CalendarItem extends MailItem {
         DbMailItem.create(mbox, data, sender);
 
         CalendarItem item = type == TYPE_APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
-        item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
+
+        // If we're creating an invite during email delivery, always default to NEEDS_ACTION state.
+        // If not email delivery, we assume the requesting client knows what it's doing and has set the
+        // correct partstat in the invite.
+        String defaultPartStat;
+        if (mbox.getOperationContext() == null) {
+            // octxt == null implies we're in email delivery.  (There needs to be better way to determine this...)
+            defaultPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+        } else {
+            defaultPartStat = firstInvite.getPartStat();
+        }
+        item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, defaultPartStat);
         item.finishCreation(null);
 
         if (pm != null)
@@ -1245,18 +1256,6 @@ public abstract class CalendarItem extends MailItem {
             return r2 == null;
     }
 
-    /**
-     * Returns true if newInv is a newer version than oldInv based on SEQUENCE and DTSTAMP.
-     * @param newInv
-     * @param oldInv
-     * @return
-     */
-    private static boolean isNewerVersion(Invite oldInv, Invite newInv) {
-        int oldSeq = oldInv.getSeqNo();
-        int newSeq = newInv.getSeqNo();
-        return oldSeq < newSeq || (oldSeq == newSeq && oldInv.getDTStamp() <= newInv.getDTStamp());
-    }
-
     private boolean processNewInviteRequestOrCancel(ParsedMessage pm,
                                                     Invite newInvite,
                                                     int folderId,
@@ -1310,14 +1309,14 @@ public abstract class CalendarItem extends MailItem {
                 // Canceling series.  Check the sequencing requirement to make sure the invite isn't outdated.
                 Invite series = getInvite((RecurId) null);
                 if (series != null)
-                    cancelAll = isNewerVersion(series, newInvite);
+                    cancelAll = newInvite.isSameOrNewerVersion(series);
                 // If series invite is not found, it's still a total cancel.
             } else {
                 // Canceling an instance.  It's a total cancel only if mInvites has one invite and it matches
                 // the recurrence id.  (subject to sequencing requirements)
                 cancelAll = false;
                 Invite curr = getInvite(newInvite.getRecurId());
-                if (curr != null && isNewerVersion(curr, newInvite)) {
+                if (curr != null && newInvite.isSameOrNewerVersion(curr)) {
                     cancelAll = true;
                     // See if there any non-cancel invites besides the one being canceled.
                     for (Invite inv : mInvites) {
@@ -1468,7 +1467,7 @@ public abstract class CalendarItem extends MailItem {
 
             boolean matchingRecurId = recurrenceIdsMatch(cur, newInvite);
             if (discardExistingInvites || matchingRecurId) {
-                if (discardExistingInvites || isNewerVersion(cur, newInvite)) {
+                if (discardExistingInvites || newInvite.isSameOrNewerVersion(cur)) {
                     // Invite is local-only only if both old and new are local-only.
                     newInvite.setLocalOnly(cur.isLocalOnly() && newInvite.isLocalOnly());
 

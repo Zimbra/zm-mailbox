@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090316-1114 */
+    /* build: 5.0 jhahm 20090316-1132 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4613,6 +4613,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarApptVisibility = "zimbraPrefCalendarApptVisibility";
 
     /**
+     * automatically add appointments when invited
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=848)
+    public static final String A_zimbraPrefCalendarAutoAddInvites = "zimbraPrefCalendarAutoAddInvites";
+
+    /**
      * hour of day that the day view should end at, non-inclusive (16=4pm, 24
      * = midnight, etc)
      */
@@ -4714,6 +4722,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=578)
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
+
+    /**
+     * if an invite is received from an organizer who does not have
+     * permission to invite this user to a meeting, send an auto-decline
+     * reply
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=849)
+    public static final String A_zimbraPrefCalendarSendInviteDeniedAutoReply = "zimbraPrefCalendarSendInviteDeniedAutoReply";
 
     /**
      * whether to enable toaster notification for new mail

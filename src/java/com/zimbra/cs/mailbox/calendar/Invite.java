@@ -2283,6 +2283,18 @@ public class Invite {
         }
     }
 
+    /**
+     * Returns true if this invite is same or newer version of the other invite based on SEQUENCE and DTSTAMP.
+     * @param other
+     * @return
+     */
+    public boolean isSameOrNewerVersion(Invite other) {
+        if (other == null) return false;
+        int thisSeq = getSeqNo();
+        int otherSeq = other.getSeqNo();
+        return thisSeq > otherSeq || (thisSeq == otherSeq && getDTStamp() >= other.getDTStamp());
+    }
+
     public Invite newCopy() {
         List<ZAttendee> attendees = new ArrayList<ZAttendee>(mAttendees.size());
         for (ZAttendee at : mAttendees) {

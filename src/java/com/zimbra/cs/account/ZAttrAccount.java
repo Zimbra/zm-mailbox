@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090316-1114 */
+    /* build: 5.0 jhahm 20090316-1132 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -18517,6 +18517,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * automatically add appointments when invited
+     *
+     * @return zimbraPrefCalendarAutoAddInvites, or true if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=848)
+    public boolean isPrefCalendarAutoAddInvites() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarAutoAddInvites, true);
+    }
+
+    /**
+     * automatically add appointments when invited
+     *
+     * @param zimbraPrefCalendarAutoAddInvites new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=848)
+    public void setPrefCalendarAutoAddInvites(boolean zimbraPrefCalendarAutoAddInvites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAddInvites, zimbraPrefCalendarAutoAddInvites ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * automatically add appointments when invited
+     *
+     * @param zimbraPrefCalendarAutoAddInvites new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=848)
+    public Map<String,Object> setPrefCalendarAutoAddInvites(boolean zimbraPrefCalendarAutoAddInvites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAddInvites, zimbraPrefCalendarAutoAddInvites ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * automatically add appointments when invited
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=848)
+    public void unsetPrefCalendarAutoAddInvites() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAddInvites, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * automatically add appointments when invited
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=848)
+    public Map<String,Object> unsetPrefCalendarAutoAddInvites(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAddInvites, "");
+        return attrs;
+    }
+
+    /**
      * hour of day that the day view should end at, non-inclusive (16=4pm, 24
      * = midnight, etc)
      *
@@ -19529,6 +19601,88 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefCalendarReminderYMessenger(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarReminderYMessenger, "");
+        return attrs;
+    }
+
+    /**
+     * if an invite is received from an organizer who does not have
+     * permission to invite this user to a meeting, send an auto-decline
+     * reply
+     *
+     * @return zimbraPrefCalendarSendInviteDeniedAutoReply, or false if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=849)
+    public boolean isPrefCalendarSendInviteDeniedAutoReply() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarSendInviteDeniedAutoReply, false);
+    }
+
+    /**
+     * if an invite is received from an organizer who does not have
+     * permission to invite this user to a meeting, send an auto-decline
+     * reply
+     *
+     * @param zimbraPrefCalendarSendInviteDeniedAutoReply new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=849)
+    public void setPrefCalendarSendInviteDeniedAutoReply(boolean zimbraPrefCalendarSendInviteDeniedAutoReply) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarSendInviteDeniedAutoReply, zimbraPrefCalendarSendInviteDeniedAutoReply ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if an invite is received from an organizer who does not have
+     * permission to invite this user to a meeting, send an auto-decline
+     * reply
+     *
+     * @param zimbraPrefCalendarSendInviteDeniedAutoReply new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=849)
+    public Map<String,Object> setPrefCalendarSendInviteDeniedAutoReply(boolean zimbraPrefCalendarSendInviteDeniedAutoReply, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarSendInviteDeniedAutoReply, zimbraPrefCalendarSendInviteDeniedAutoReply ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if an invite is received from an organizer who does not have
+     * permission to invite this user to a meeting, send an auto-decline
+     * reply
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=849)
+    public void unsetPrefCalendarSendInviteDeniedAutoReply() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarSendInviteDeniedAutoReply, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if an invite is received from an organizer who does not have
+     * permission to invite this user to a meeting, send an auto-decline
+     * reply
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=849)
+    public Map<String,Object> unsetPrefCalendarSendInviteDeniedAutoReply(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarSendInviteDeniedAutoReply, "");
         return attrs;
     }
 

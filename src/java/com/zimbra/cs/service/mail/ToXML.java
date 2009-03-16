@@ -851,7 +851,7 @@ public class ToXML {
                                        boolean includeContent, boolean neuter)
     throws ServiceException {
         Element ie = parent.addElement(MailConstants.E_INVITE);
-        setCalendarItemType(ie, cal);
+        setCalendarItemType(ie, cal.getType());
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
 
         //encodeAlarmTimes(ie, cal);
@@ -1041,7 +1041,7 @@ public class ToXML {
             }
 
             Element invElt = m.addElement(MailConstants.E_INVITE);
-            setCalendarItemType(invElt, calItem);
+            setCalendarItemType(invElt, calItem.getType());
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             if (invites.length > 0) {
                 if (showAll)
@@ -1246,7 +1246,8 @@ public class ToXML {
     }
 
     public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-                                                CalendarItem calItem, Invite invite,
+                                                CalendarItem calItem,  // may be null
+                                                Invite invite,
                                                 int fields, boolean neuter)
     throws ServiceException {
         boolean allFields = true;
@@ -1264,8 +1265,9 @@ public class ToXML {
 
         e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
 
+        boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
         if (allFields) {
-            if (invite.isPublic() || allowPrivateAccess(octxt, calItem)) {
+            if (invite.isPublic() || allowPrivateAccess) {
                 String priority = invite.getPriority();
                 if (priority != null)
                     e.addAttribute(MailConstants.A_CAL_PRIORITY, priority);
@@ -1351,8 +1353,8 @@ public class ToXML {
                 }
 
                 if (invite.isEvent()) {
-                    Instance inst = Instance.fromInvite(calItem.getId(), invite);
-                    if (calItem instanceof Appointment) {
+                    if (calItem != null && calItem instanceof Appointment) {
+                        Instance inst = Instance.fromInvite(calItem.getId(), invite);
                         Appointment appt = (Appointment) calItem;
                         e.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL,
                                     appt.getEffectiveFreeBusyActual(invite, inst));
@@ -1377,10 +1379,12 @@ public class ToXML {
             e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
             e.addAttribute(MailConstants.A_CAL_DATETIME, invite.getDTStamp()); //zdsync
 
-            String itemId = ifmt.formatItemId(calItem);
-            e.addAttribute(MailConstants.A_CAL_ID, itemId);
-            if (invite.isEvent())
-                e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+            if (calItem != null) {
+                String itemId = ifmt.formatItemId(calItem);
+                e.addAttribute(MailConstants.A_CAL_ID, itemId);
+                if (invite.isEvent())
+                    e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+            }
 
             Recurrence.IRecurrence recur = invite.getRecurrence();
             if (recur != null) {
@@ -1460,43 +1464,71 @@ public class ToXML {
 
         Element ie = parent.addElement(MailConstants.E_INVITE);
 
-        boolean addedMethod = false;
         Mailbox mbox = msg.getMailbox();
 
         for (Iterator<Message.CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
             Message.CalendarItemInfo info = iter.next();
-
-            CalendarItem calItem = null;
-            try {
-                calItem = mbox.getCalendarItemById(octxt, info.getCalendarItemId());
-            } catch (MailServiceException.NoSuchItemException e) {
-                // ignore
-            } catch (ServiceException e) {
-                // eat PERM_DENIED
-                if (e.getCode() != ServiceException.PERM_DENIED)
-                    throw e;
-            }
-
-            if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
-                //encodeAlarmTimes(ie, calItem);
-
-                setCalendarItemType(ie, calItem);
-                Invite inv = calItem.getInvite(msg.getId(), info.getComponentNo());
-
-                if (inv != null) {
-                    if (!addedMethod) {
-//                      ie.addAttribute("method", inv.getMethod());
-                        addedMethod = true;
-                    }
-                    encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
-                    encodeInviteComponent(ie, ifmt, octxt, calItem, inv, fields, neuter);
+            Invite invite = null;
+            if (info.calItemCreated()) {
+                CalendarItem calItem = null;
+                try {
+                    calItem = mbox.getCalendarItemById(octxt, info.getCalendarItemId());
+                } catch (MailServiceException.NoSuchItemException e) {
+                    // ignore
+                } catch (ServiceException e) {
+                    // eat PERM_DENIED
+                    if (e.getCode() != ServiceException.PERM_DENIED)
+                        throw e;
+                }
+    
+                if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
+                    invite = calItem.getInvite(msg.getId(), info.getComponentNo());
+                    // invite == null if the invite was outdated by a newer update
                 } else {
-                    // invite not in this appointment anymore
+                    // couldn't find appointment
                 }
             } else {
-                // couldn't find appointment
+                // We have an invite that wasn't auto-added.
+                Invite invCi = info.getInvite();
+                if (invCi != null) {
+                    CalendarItem calItem = null;
+                    try {
+                        calItem = mbox.getCalendarItemByUid(octxt, invCi.getUid());
+                    } catch (MailServiceException.NoSuchItemException e) {
+                        // ignore
+                    } catch (ServiceException e) {
+                        // eat PERM_DENIED
+                        if (e.getCode() != ServiceException.PERM_DENIED)
+                            throw e;
+                    }
+                    if (calItem != null) {
+                        // See if the messsage's invite is outdated.
+                        Invite invCurr = calItem.getInvite(invCi.getRecurId());
+                        if (invCurr != null) {
+                            if (invCi.isSameOrNewerVersion(invCurr)) {
+                                // Invite is new or same as what's in the appointment.  Show it even if
+                                // appointment is in Trash folder.
+                                invite = invCi;
+                            } else {
+                                // Outdated.  Don't show it.
+                                invite = null;
+                            }
+                        } else {
+                            // New invite.  Show it even if appointment is in Trash folder.
+                            invite = invCi;
+                        }
+                    } else {
+                        // Appointment doesn't exist.  The invite in the message should be displayed and the
+                        // user can manually add the appointment.
+                        invite = invCi;
+                    }
+                }
             }
-
+            if (invite != null) {
+                setCalendarItemType(ie, invite.getItemType());
+                encodeTimeZoneMap(ie, invite.getTimeZoneMap());
+                encodeInviteComponent(ie, ifmt, octxt, null, invite, fields, neuter);
+            }
         }
 
         return ie;
@@ -1930,9 +1962,9 @@ public class ToXML {
         }
     }
     
-    private static void setCalendarItemType(Element elem, CalendarItem calItem) {
+    private static void setCalendarItemType(Element elem, byte itemType) {
         elem.addAttribute(MailConstants.A_CAL_ITEM_TYPE,
-                calItem.getType() == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
+                itemType == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
     }
 
     public static void encodeAlarmTimes(Element elem, CalendarItem calItem) {

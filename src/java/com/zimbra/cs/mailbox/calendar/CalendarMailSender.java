@@ -231,8 +231,8 @@ public class CalendarMailSender {
             replyText.append(additionalMsgBody).append("\r\n");
         }
 
-        boolean hidePrivate = !inv.isPublic() && !calItem.allowPrivateAccess(authAccount, asAdmin);
-        if (!hidePrivate && mmInv != null)
+        boolean allowPrivateAccess = calItem != null ? calItem.allowPrivateAccess(authAccount, asAdmin) : true;
+        if ((inv.isPublic() || allowPrivateAccess) && mmInv != null)
             attachInviteSummary(replyText, mmInv, lc);
 
         List<Address> toList = new ArrayList<Address>(1);
