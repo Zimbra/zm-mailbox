@@ -282,6 +282,7 @@ public class SearchGal extends AccountDocumentHandler {
     				ToXML.encodeContact(response, ifmt, (Contact)item, true, null);
 			}
 			// XXX deleted items
+            response.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());
 		} catch (Exception e) {
 			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
 			return false;
