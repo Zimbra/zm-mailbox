@@ -4179,6 +4179,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="833" name="zimbraFeatureMobilePolicyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValueUpgrade>FALSE</defaultCOSValueUpgrade>
   <desc>whether to enforce mobile policy</desc>
 </attr>
 
