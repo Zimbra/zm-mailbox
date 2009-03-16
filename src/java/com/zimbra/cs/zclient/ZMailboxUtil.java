@@ -1376,7 +1376,7 @@ public class ZMailboxUtil implements DebugListener {
         else if (name.equalsIgnoreCase("domain")) return GranteeType.dom;
         else if (name.equalsIgnoreCase("guest")) return GranteeType.guest;
         else if (name.equalsIgnoreCase("key")) return GranteeType.key;
-        else throw ZClientException.CLIENT_ERROR("unnown grantee type: "+name, null);
+        else throw ZClientException.CLIENT_ERROR("unknown grantee type: "+name, null);
     }
 
     private void doModifyFolderGrant(String[] args) throws ServiceException {
