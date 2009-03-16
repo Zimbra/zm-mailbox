@@ -206,7 +206,9 @@ public class SearchGal extends AccountDocumentHandler {
         	accountIds.addAll(Arrays.asList(domainGalAccountIds));
         }
         HashSet<Integer> folderIds = new HashSet<Integer>();
-    	for (String galAccountId : galAccountIds) {
+        if (accountIds.isEmpty())
+        	return false;
+    	for (String galAccountId : accountIds) {
     		Account galAcct = prov.getAccountById(galAccountId);
     		if (galAcct == null) {
     			ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
