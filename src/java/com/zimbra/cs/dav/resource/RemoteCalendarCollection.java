@@ -58,14 +58,10 @@ import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
 
 public class RemoteCalendarCollection extends CalendarCollection {
 
-    private String mRemoteId;
-    private int mItemId;
     private HashMap<String,String> mCalendarData;
     
     public RemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
-        mRemoteId = mp.getOwnerId();
-        mItemId = mp.getRemoteId();
     }
 
     @Override
@@ -79,13 +75,8 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
     
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
-        try {
-            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
-            if (target != null && Provisioning.onLocalServer(target))
-            	return super.getChildren(ctxt, hrefs, range);
-        } catch (ServiceException se) {
-	        ZimbraLog.dav.warn("cannot determine shared folder for "+ctxt.getAuthAccount().getName(), se);
-        }
+        if (mOnLocalServer)
+        	return super.getChildren(ctxt, hrefs, range);
     	boolean needCalendarData = false;
 		for (QName prop : ctxt.getRequestProp().getProps()) {
 			if (prop.equals(DavElements.E_CALENDAR_DATA)) {
@@ -115,11 +106,11 @@ public class RemoteCalendarCollection extends CalendarCollection {
     
     private void getCalendarData(DavContext ctxt, java.util.Collection<String> uids) throws ServiceException, IOException, DavException {
         AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
         if (target == null)
             return;
         ZMailbox zmbx = getRemoteMailbox(authToken.toZAuthToken());
-        ZFolder f = zmbx.getFolderById(new ItemId(mRemoteId, mItemId).toString());
+        ZFolder f = zmbx.getFolderById(new ItemId(mRemoteOwnerId, mRemoteId).toString());
         String path = f.getPath();
         String url = DavServlet.getDavUrl(target.getName());
         CalDavClient cl = new CalDavClient(url);
@@ -156,17 +147,17 @@ public class RemoteCalendarCollection extends CalendarCollection {
         List<ZApptSummaryResult> results;
         
         try {
-            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            if (mOnLocalServer)
+            	return super.getAppointmentMap(ctxt, range);
+            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
             if (target == null)
             	return appts;
-            if (Provisioning.onLocalServer(target))
-            	return super.getAppointmentMap(ctxt, range);
             ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
-            zoptions.setTargetAccount(mRemoteId);
+            zoptions.setTargetAccount(mRemoteOwnerId);
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-            String folderId = Integer.toString(mItemId);
+            String folderId = Integer.toString(mRemoteId);
         	long start = 0;
         	long end = 0;
             if (range != null) {
@@ -174,7 +165,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             	end = range.getEnd();
             } else {
             	TimeRange mine = new TimeRange(getOwner());
-            	Account remoteAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            	Account remoteAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
             	if (remoteAcct != null) {
                 	TimeRange theirs = new TimeRange(remoteAcct.getName());
             		mine.intersection(theirs);
@@ -199,11 +190,11 @@ public class RemoteCalendarCollection extends CalendarCollection {
     	Header[] respHeaders = null;
         try {
             AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
-            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
             if (target == null)
                 throw new DavException("can't create resource", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             ZMailbox zmbx = getRemoteMailbox(authToken.toZAuthToken());
-            ZFolder f = zmbx.getFolderById(new ItemId(mRemoteId, mItemId).toString());
+            ZFolder f = zmbx.getFolderById(new ItemId(mRemoteOwnerId, mRemoteId).toString());
             
             @SuppressWarnings("unchecked")
             Enumeration reqHeaders = ctxt.getRequest().getHeaderNames();
@@ -232,7 +223,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         if (status == null || etag == null)
             throw new DavException("can't create resource", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         
-        UrlNamespace.invalidateApptSummariesCache(mOwnerId, mRemoteId, mItemId);
+        UrlNamespace.invalidateApptSummariesCache(mOwnerId, mRemoteOwnerId, mRemoteId);
         return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), etag, this, status.equals("" + HttpServletResponse.SC_CREATED));
     }
     
@@ -254,26 +245,24 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
     
     protected int getId() {
-    	return mItemId;
+    	return mRemoteId;
     }
     
 	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
 		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.get(AccountBy.id, mRemoteId);
-		if (account == null)
-			return super.getMailbox(ctxt);
-		if (Provisioning.onLocalServer(account))
+		Account account = prov.get(AccountBy.id, mRemoteOwnerId);
+		if (account != null && mOnLocalServer)
 			return MailboxManager.getInstance().getMailboxByAccount(account);
-		return null;
+		return super.getMailbox(ctxt);
 	}
 	
     private ZMailbox getRemoteMailbox(ZAuthToken zat) throws ServiceException {
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
         if (target == null)
         	return null;
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
-        zoptions.setTargetAccount(mRemoteId);
+        zoptions.setTargetAccount(mRemoteOwnerId);
         zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
         return ZMailbox.getMailbox(zoptions);
     }
