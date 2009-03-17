@@ -20,9 +20,14 @@ import java.util.TimeZone;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
 /**
  * draft-dusseault-caldav section 9.9.
@@ -106,5 +111,26 @@ public class TimeRange {
 	
 	public long getEnd() {
 		return mEnd;
+	}
+	
+	public boolean matches(int mboxId, int itemId, long apptRangeStart, long apptRangeEnd) {
+		// it matches if the range of the appointment is completely contained in the requested range.
+    	if (apptRangeStart >= mStart && apptRangeEnd <= mEnd)
+    		return true;
+    	if (mboxId == 0 || itemId == 0)
+    		return true;
+    	try {
+    		// check each instances and see if at least one of them overlaps with the requested range.
+        	Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        	CalendarItem item = mbox.getCalendarItemById(new OperationContext(mbox), itemId);
+        	for (CalendarItem.Instance instance : item.expandInstances(mStart, mEnd, false)) {
+        		if ((instance.getStart() >= mStart && instance.getStart() <= mEnd) ||
+        			(instance.getEnd() >= mStart && instance.getEnd() <= mEnd))
+        			return true;
+        	}
+    	} catch (ServiceException se) {
+            ZimbraLog.dav.warn("error getting calendar item "+itemId+" from mailbox "+mboxId, se);
+    	}
+    	return false;
 	}
 }

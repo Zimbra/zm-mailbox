@@ -201,7 +201,7 @@ public class CalendarCollection extends Collection {
 		
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         ctxt.setCollectionPath(getUri());
-        if (range == null && !needCalendarData(ctxt)) {
+        if (!needCalendarData(ctxt)) {
         	ZimbraLog.dav.debug("METADATA only");
         	mMetadataOnly = true;
     		if (range == null)

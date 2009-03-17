@@ -38,7 +38,6 @@ import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -108,22 +107,7 @@ public interface CalendarObject {
         	TimeRange range = filter.getTimeRange();
         	if (range == null)
         		return true;
-        	long start = range.getStart();
-        	long end = range.getEnd();
-        	if (start <= mStart && end >= mEnd)
-        		return true;
-        	try {
-            	Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
-            	CalendarItem item = mbox.getCalendarItemById(new OperationContext(mbox), mId);
-            	for (CalendarItem.Instance instance : item.expandInstances(mStart, mEnd, false)) {
-            		if ((instance.getStart() >= start && instance.getStart() <= end) ||
-            			(instance.getEnd() >= start && instance.getEnd() <= end))
-            			return true;
-            	}
-        	} catch (ServiceException se) {
-                ZimbraLog.dav.debug("error getting mailbox", se);
-        	}
-        	return false;
+        	return range.matches(mMailboxId, mId, mStart, mEnd);
         }
         public String getEtag() {
     		return mEtag;
@@ -204,15 +188,24 @@ public interface CalendarObject {
             	newList.addAll(exceptions);
             	mInvites = newList.toArray(new Invite[0]);
             }
+            mMailboxId = calItem.getMailboxId();
+            mStart = calItem.getStartTime();
+            mEnd = calItem.getEndTime();
         }
 
         private String mUid;
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
         private boolean isSchedulingMessage;
+        private int mMailboxId;
+        private long mStart;
+        private long mEnd;
 
         /* Returns true if the supplied Filter matches this calendar object. */
         public boolean match(Filter filter) {
+        	TimeRange range = filter.getTimeRange();
+        	if (range != null && !range.matches(mMailboxId, mId, mStart, mEnd))
+        		return false;
             for (Invite inv : mInvites) {
             	try {
             		ZCalendar.ZComponent vcomp = inv.newToVComponent(false, false);
@@ -311,6 +304,8 @@ public interface CalendarObject {
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
             setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             addProperty(CalDavProperty.getCalendarData(this));
+            mStart = appt.getStartTime();
+            mEnd = appt.getEndTime();
 	    }
 
 	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCalendarCollection parent, boolean newlyCreated) {
@@ -338,6 +333,8 @@ public interface CalendarObject {
 	    private String mUid;
 	    private String mEtag;
 	    private byte[] mContent;
+	    private long mStart;
+	    private long mEnd;
 	    
 	    @Override
 	    public void delete(DavContext ctxt) throws DavException {
@@ -367,7 +364,10 @@ public interface CalendarObject {
 	    }
 	    
 	    public boolean match(Filter filter) {
-	        return true;
+        	TimeRange range = filter.getTimeRange();
+        	if (range == null)
+        		return true;
+        	return range.matches(mParent.getMailboxId(), mItemId, mStart, mEnd);
 	    }
 	    
 	    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException {
