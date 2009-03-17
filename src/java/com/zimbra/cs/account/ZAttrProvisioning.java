@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090316-1132 */
+    /* build: 5.0 pshao 20090316-2327 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -247,7 +247,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum GalStatus {
-        active("active");
+        enabled("enabled"),
+        disabled("disabled");
         private String mValue;
         private GalStatus(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -257,7 +258,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isActive() { return this == active;}
+        public boolean isEnabled() { return this == enabled;}
+        public boolean isDisabled() { return this == disabled;}
     }
 
     public static enum GalSyncLdapAuthMech {
@@ -308,6 +310,22 @@ public class ZAttrProvisioning {
         }
         public boolean isAnd() { return this == and;}
         public boolean isOr() { return this == or;}
+    }
+
+    public static enum GalType {
+        zimbra("zimbra"),
+        ldap("ldap");
+        private String mValue;
+        private GalType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static GalType fromString(String s) throws ServiceException {
+            for (GalType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isZimbra() { return this == zimbra;}
+        public boolean isLdap() { return this == ldap;}
     }
 
     public static enum IMService {
@@ -3049,6 +3067,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=600)
     public static final String A_zimbraGalTokenizeSearchKey = "zimbraGalTokenizeSearchKey";
+
+    /**
+     * type of this GAl data source. zimbra - zimbra internal GAL. ldap -
+     * external LDAP GAL.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=850)
+    public static final String A_zimbraGalType = "zimbraGalType";
 
     /**
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
