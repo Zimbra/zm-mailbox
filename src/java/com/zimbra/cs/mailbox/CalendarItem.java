@@ -773,12 +773,15 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
-        // Remove instances that aren't in the actual range, except the alarm instance.
-        if (includeAlarmOnlyInstances && endAdjusted != end) {
-            for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
-                Instance inst = iter.next();
+        // Remove instances that aren't in the actual range.
+        for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
+            Instance inst = iter.next();
+            if (!inst.isTimeless()) {
                 long instStart = inst.getStart();
-                if (instStart != alarmInstStart && instStart < start && instStart >= end)
+                long instEnd = inst.getEnd();
+                // Remove if instance is not the alarm instance and instance ends before range start
+                // or instance starts after range end. (i.e. instance does not overlap range)
+                if (instStart != alarmInstStart && (instEnd <= start || instStart >= end))
                     iter.remove();
             }
         }
