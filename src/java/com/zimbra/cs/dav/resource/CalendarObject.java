@@ -33,10 +33,12 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
+import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -63,7 +65,7 @@ public interface CalendarObject {
     
     public String getUid();
     public boolean match(Filter filter);
-    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;    
+    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;
 
     public static class CalendarPath {
         public static String generate(DavContext ctxt, String itemPath, String uid, int extra) {
@@ -82,14 +84,20 @@ public interface CalendarObject {
         }
     }
     public static class LightWeightCalendarObject extends DavResource implements CalendarObject {
+    	private int mMailboxId;
     	private int mId;
     	private String mUid;
     	private String mEtag;
+    	private long mStart;
+    	private long mEnd;
     	
     	public LightWeightCalendarObject(String path, String owner, CalendarItem.CalendarMetadata data) {
     		super(CalendarPath.generate(null, path, data.uid, -1), owner);
+    		mMailboxId = data.mailboxId;
     		mId = data.itemId;
     		mUid = data.uid;
+    		mStart = data.start_time;
+    		mEnd = data.end_time;
     		mEtag = MailItemResource.getEtag(Integer.toString(data.mod_metadata), Integer.toString(data.mod_content));
     		setProperty(DavElements.P_GETETAG, mEtag);
     	}
@@ -97,7 +105,25 @@ public interface CalendarObject {
         	return mUid;
         }
         public boolean match(Filter filter) {
-        	return true;
+        	TimeRange range = filter.getTimeRange();
+        	if (range == null)
+        		return true;
+        	long start = range.getStart();
+        	long end = range.getEnd();
+        	if (start <= mStart && end >= mEnd)
+        		return true;
+        	try {
+            	Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
+            	CalendarItem item = mbox.getCalendarItemById(new OperationContext(mbox), mId);
+            	for (CalendarItem.Instance instance : item.expandInstances(mStart, mEnd, false)) {
+            		if ((instance.getStart() >= start && instance.getStart() <= end) ||
+            			(instance.getEnd() >= start && instance.getEnd() <= end))
+            			return true;
+            	}
+        	} catch (ServiceException se) {
+                ZimbraLog.dav.debug("error getting mailbox", se);
+        	}
+        	return false;
         }
         public String getEtag() {
     		return mEtag;

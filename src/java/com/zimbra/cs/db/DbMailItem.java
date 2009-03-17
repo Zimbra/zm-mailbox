@@ -3011,7 +3011,7 @@ public class DbMailItem {
             String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
             String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
             String folderConstraint = f != null ? " AND mi.folder_id = ?" : "";
-            stmt = conn.prepareStatement("SELECT mi.id, ci.uid, mi.mod_metadata, mi.mod_content" + 
+            stmt = conn.prepareStatement("SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" + 
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
                         " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" + 
                         (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? ") +
@@ -3029,9 +3029,12 @@ public class DbMailItem {
             while (rs.next()) {
             	result.add(new CalendarItem.CalendarMetadata(
             			rs.getInt(1),
-            			rs.getString(2),
-            			rs.getInt(3),
-            			rs.getInt(4)));
+            			rs.getInt(2),
+            			rs.getString(3),
+            			rs.getInt(4),
+            			rs.getInt(5),
+            			rs.getTimestamp(6).getTime(),
+            			rs.getTimestamp(7).getTime()));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching CalendarItem Metadata for mbox " + mbox.getId(), e);

@@ -127,25 +127,34 @@ public class CalendarCollection extends Collection {
 	/* Returns all the appointments specified in hrefs */
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
 		Map<String,String> uidmap = getHrefUidMap(hrefs, true);
-		
+		Map<String,DavResource> requestedAppts = null;
 		ArrayList<DavResource> resp = new ArrayList<DavResource>();
-		if (mAppts == null || needCalendarData(ctxt) && mMetadataOnly) {
+		boolean fetchAppts = 
+			range != null || // ranged request
+			mAppts == null; // hasn't fetched before
+		if (fetchAppts) {
 			try {
-				mAppts = getAppointmentMap(ctxt, null);
+				requestedAppts = getAppointmentMap(ctxt, range);
 			} catch (ServiceException se) {
 				ZimbraLog.dav.error("can't get calendar items", se);
 				return Collections.emptyList();
 			}
+		} else {
+			requestedAppts = mAppts;
 		}
 		if (uidmap == null)
-			return mAppts.values();
+			return requestedAppts.values();
 		for (String uid : uidmap.keySet()) {
 			String href = uidmap.get(uid);
-			DavResource appt = mAppts.get(uid);
+			DavResource appt = requestedAppts.get(uid);
 			if (appt == null)
 				appt = new DavResource.InvalidResource(href, getOwner());
 			appt.setHref(href);
 			resp.add(appt);
+		}
+		// cache the full appt list
+		if (range == null && (mAppts == null || needCalendarData(ctxt))) {
+			mAppts = requestedAppts;
 		}
 		return resp;
 	}
@@ -189,14 +198,14 @@ public class CalendarCollection extends Collection {
 	}
 	protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
-		if (range == null)
-			range = new TimeRange(getOwner());
 		
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         ctxt.setCollectionPath(getUri());
-        if (!needCalendarData(ctxt)) {
+        if (range == null && !needCalendarData(ctxt)) {
         	ZimbraLog.dav.debug("METADATA only");
         	mMetadataOnly = true;
+    		if (range == null)
+    			range = new TimeRange(getOwner());
         	for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), range.getStart(), range.getEnd()))
         		appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
         } else {
