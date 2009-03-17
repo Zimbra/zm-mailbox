@@ -242,6 +242,9 @@ implements SharedInputStream {
         int retVal = getSharedFile().read(mPos);
         if (retVal >= 0) {
             mPos++;
+        } else {
+            // Close proactively, since JavaMail keeps SharedInputStreams open.
+            close();
         }
         return retVal;
     }
@@ -260,6 +263,9 @@ implements SharedInputStream {
         int numRead = getSharedFile().read(mPos, b, off, len);
         if (numRead > 0) {
             mPos += numRead;
+        } else {
+            // Close proactively, since JavaMail keeps SharedInputStreams open.
+            close();
         }
         return numRead;
     }

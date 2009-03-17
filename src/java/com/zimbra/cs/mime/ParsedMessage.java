@@ -369,6 +369,7 @@ public class ParsedMessage {
     throws IOException {
         if (mBlobInputStream != null) {
             mBlobInputStream.close();
+            mBlobInputStream.closeFile();
         }
         if (mIncomingBlob != null) {
             StoreManager.getInstance().delete(mIncomingBlob);
