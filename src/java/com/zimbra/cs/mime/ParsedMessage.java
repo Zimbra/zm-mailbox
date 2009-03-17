@@ -1271,7 +1271,9 @@ public class ParsedMessage {
 
     // these *should* be taken from a properties file
     private static final Set<String> SYSTEM_PREFIXES = new HashSet<String>(Arrays.asList(
-        "accept:", "accepted:", "decline:", "declined:", "tentative:", "cancelled:", "new time proposed:", "read-receipt:"
+        "accept:", "accepted:", "decline:", "declined:",
+        "tentative:", "cancelled:", "new time proposed:",
+        "read-receipt:", "share created:", "share accepted:"
     ));
     private static final String FWD_TRAILER = "(fwd)";
 
