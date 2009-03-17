@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -33,6 +35,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -49,6 +52,8 @@ public class Collection extends MailItemResource {
 
 	protected byte mView;
 	protected byte mType;
+	protected boolean mOnLocalServer;
+	protected int mMailboxId;
 	
 	public Collection(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
@@ -60,11 +65,19 @@ public class Collection extends MailItemResource {
 		mView = f.getDefaultView();
 		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
+		mOnLocalServer = true;
+		mMailboxId = f.getMailboxId();
 		
 		if (f instanceof Mountpoint) {
 			Mountpoint mp = (Mountpoint) f;
 			mRemoteOwnerId = mp.getOwnerId();
 			mRemoteId = mp.getRemoteId();
+			mMailboxId = 0;
+	        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
+	        if (target != null) {
+	        	mOnLocalServer = Provisioning.onLocalServer(target);
+	        	mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
+	        }
 		}
 	}
 	
@@ -84,6 +97,15 @@ public class Collection extends MailItemResource {
 	@Override
 	public boolean isCollection() {
 		return true;
+	}
+	
+	@Override
+	public boolean isLocal() {
+		return mOnLocalServer;
+	}
+	
+	public int getMailboxId() {
+		return mMailboxId;
 	}
 	
 	@Override
