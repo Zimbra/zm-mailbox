@@ -315,7 +315,7 @@ public enum TargetType {
             throw ServiceException.FAILURE("internal error", null);
     }
     
-    static TargetType getTargetType(Entry target) throws ServiceException{
+    public static TargetType getTargetType(Entry target) throws ServiceException{
         
         if (target instanceof CalendarResource)
             return TargetType.calresource;

@@ -289,7 +289,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * @return
      * @throws ServiceException
      */
-    private boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
+    private boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) 
+    throws ServiceException {
         
         Account authedAcct = getAuthenticatedAccount(zsc);
         
@@ -310,13 +311,14 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             throw ServiceException.FAILURE("internal error", null);
     }
 
-    private String dumpNeeded(Object needed) throws ServiceException {
+    private String dumpNeeded(Entry target, Object needed) throws ServiceException {
+        String targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
         if (needed instanceof AdminRight)
-            return "need right: " + ((AdminRight)needed).getName();
+            return "need right: " + ((AdminRight)needed).getName() + " for " + targetInfo;
         else if (needed instanceof Set)
-            return "cannot get attrs";
+            return "cannot get attrs on " + targetInfo;
         else if (needed instanceof Map)
-            return "cannot set attrs";
+            return "cannot set attrs on " + targetInfo;
         else
             throw ServiceException.FAILURE("internal error", null);
     }
@@ -440,7 +442,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             if (target == null)
                 target = Provisioning.getInstance().getGlobalGrant();
             if (!doCheckRight(am, zsc, target, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(target, needed));
         }
     }
     
@@ -463,7 +465,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             if (target == null)
                 target = Provisioning.getInstance().getGlobalGrant();
             if (!doCheckRight(am, zsc, target, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(target, needed));
         }
     }
     
@@ -505,7 +507,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             else
                 hasRight = canAccess.booleanValue();
             if (!hasRight)
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(account, needed));
         }
     }
 
@@ -532,7 +534,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             else
                 hasRight = canAccess.booleanValue();
             if (!hasRight)
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(cr, needed));
         }
     }
         
@@ -549,7 +551,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 throw ServiceException.PERM_DENIED("can not access dl");
         } else {
             if (!doCheckRight(am, zsc, dl, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(dl, needed));
         }
     }
     
@@ -571,7 +573,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
             if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(domain, needed));
         }
     }
     
@@ -592,7 +594,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
             if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(domain, needed));
         }
     }
     
@@ -607,7 +609,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             
         } else {
             if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(domain, needed));
         }
     }
     
@@ -622,7 +624,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             
         } else {
             if (!doCheckRight(am, zsc, cos, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(needed));
+                throw ServiceException.PERM_DENIED(dumpNeeded(cos, needed));
         }
     }
     

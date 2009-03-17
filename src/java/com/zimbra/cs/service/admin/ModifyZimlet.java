@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,13 +90,16 @@ public class ModifyZimlet extends AdminDocumentHandler {
 	    Zimlet zimlet = Provisioning.getInstance().getZimlet(name);
         if (z == null)
             throw AccountServiceException.NO_SUCH_ZIMLET(name);
-        checkRight(zsc, context, zimlet, Admin.R_modifyZimlet);
 	    
         Element s = z.getElement(AdminConstants.E_STATUS);
         String val = s.getAttribute(AdminConstants.A_VALUE, null);
         if (val == null) return;
 	    boolean status = val.equalsIgnoreCase("enabled");
 
+	    Map<String, String> attrRightNeeded = new HashMap<String,String>();
+	    attrRightNeeded.put(Provisioning.A_zimbraZimletEnabled, status ? Provisioning.TRUE : Provisioning.FALSE);
+	    checkRight(zsc, context, zimlet, attrRightNeeded);
+	    
 		try {
 			ZimletUtil.setZimletEnable(name, status);
 		} catch (ZimletException ze) {
@@ -107,14 +111,29 @@ public class ModifyZimlet extends AdminDocumentHandler {
 	    String name = z.getAttribute(AdminConstants.A_NAME);
 	    
 	    Zimlet zimlet = Provisioning.getInstance().getZimlet(name);
-	    if (z == null)
+	    if (zimlet == null)
 	        throw AccountServiceException.NO_SUCH_ZIMLET(name);
-	    checkRight(zsc, context, zimlet, Admin.R_modifyZimlet);
 	        
         Element p = z.getElement(AdminConstants.E_PRIORITY);
         int val = (int)p.getAttributeLong(AdminConstants.A_VALUE, -1);
         if (val == -1) return;
-
+        
+        // ===========
+        // check right
+        //
+        // need right to modify zimbraZimletPriority on *all* zimlets, because
+        // all zimlets can be re-prioritized.
+        Map<String, String> attrRightNeeded = new HashMap<String,String>();
+        attrRightNeeded.put(Provisioning.A_zimbraZimletPriority, null); // yuck, pass null for the value
+        
+        List<Zimlet> allZimlets = Provisioning.getInstance().listAllZimlets();
+        for (Zimlet zl : allZimlets) {
+            checkRight(zsc, context, zl, attrRightNeeded);
+        }
+        //
+        // end check right
+        // ===============
+        
 		ZimletUtil.setPriority(name, val);
 	}
     
@@ -124,6 +143,8 @@ public class ModifyZimlet extends AdminDocumentHandler {
         relatedRights.add(Admin.R_manageZimlet);
         relatedRights.add(Admin.R_modifyZimlet);
         notes.add("For acl: needs " + Admin.R_manageZimlet.getName() + " on cos.");
-        notes.add("For status and priority: needs " + Admin.R_modifyZimlet.getName() + " on zimlet.");
+        notes.add("For status: needs right to set " + Provisioning.A_zimbraZimletEnabled + " on the zimlet");
+        notes.add("For priority: needs right to set " + Provisioning.A_zimbraZimletPriority + " on *all* zimlets, " +
+                "because potentially the attribute can be modified on all zimlets.");
     }
 }
