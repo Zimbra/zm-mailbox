@@ -170,7 +170,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 // default interest types required for "All" waitsets
                 defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
                 int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
-                cb.ws = WaitSetMgr.lookupOrCreateForAllAccts(zsc.getAuthtokenAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
+                cb.ws = WaitSetMgr.lookupOrCreateForAllAccts(zsc.getRequestedAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
             } else {
                 cb.ws = WaitSetMgr.lookup(waitSetId);
             }
@@ -178,13 +178,13 @@ public class WaitSetRequest extends MailDocumentHandler {
             if (cb.ws == null)
                 throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
             
-            if (!cb.ws.getOwnerAccountId().equals(zsc.getAuthtokenAccountId()))
+            if (!cb.ws.getOwnerAccountId().equals(zsc.getRequestedAccountId()))
                 throw ServiceException.PERM_DENIED("Not owner of waitset");
             
             List<String> allowedAccountIds = null;
             if (!adminAllowed) {
                 allowedAccountIds = new ArrayList<String>(1);
-                allowedAccountIds.add(zsc.getAuthtokenAccountId());
+                allowedAccountIds.add(zsc.getRequestedAccountId());
             }
             
             
