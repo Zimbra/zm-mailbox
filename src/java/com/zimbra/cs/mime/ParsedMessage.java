@@ -98,6 +98,7 @@ public class ParsedMessage {
     private boolean mAnalyzedBodyParts = false;
     private boolean mAnalyzedNonBodyParts = false;
     private String mBodyContent = "";
+    private List<String> mFilenames = new ArrayList<String>();
     private boolean mIndexAttachments;
     private int mNumParseErrors = 0;
 
@@ -507,7 +508,7 @@ public class ParsedMessage {
             }
             
             // requires FULL content (all parts)
-            mLuceneDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(mBodyContent, fullContent)));
+            mLuceneDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(fullContent)));
 
             // we're done with the body content (saved from analyzeBodyParts()) now
             mBodyContent = "";
@@ -947,7 +948,7 @@ public class ParsedMessage {
         return this.mTemporaryAnalysisFailure; 
     }
     
-    private Document getMainBodyLuceneDocument(String bodyContent, StringBuilder fullContent)
+    private Document getMainBodyLuceneDocument(StringBuilder fullContent)
     throws MessagingException, ServiceException {
         Document document = new Document();
         
@@ -1031,6 +1032,11 @@ public class ParsedMessage {
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
+        
+        // bug 33461: add filenames to our CONTENT field
+        for (String fn : mFilenames) {
+            appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, fn));
+        }
 
         String text = contentPrepend.toString()+" "+fullContent.toString();
 
@@ -1059,7 +1065,7 @@ public class ParsedMessage {
                 buf.append(',');
             buf.append(contentType);
         }
-
+        
         String attachments = buf.toString();
         if (attachments.equals(""))
             attachments = LuceneFields.L_ATTACHMENT_NONE;
@@ -1211,6 +1217,12 @@ public class ParsedMessage {
                     // client what parts match if a search matched a particular
                     // part.
                     Document doc = handler.getDocument();
+                    
+                    String fn = handler.getFilename();
+                    if (fn != null && fn.length() > 0) {
+                        mFilenames.add(fn);
+                    }
+                    
                     if (doc != null) {
                         int partSize = mpi.getMimePart().getSize();
                         doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
