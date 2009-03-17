@@ -1201,6 +1201,80 @@ the available UI components for the authed admin in admin console.
 - certsView (admin ext)
 - saveSearch
 
+9.2.2  Account Item View
+- accountsGeneralTab (always enabled)
+- accountsContactTab
+- accountsMemberOfTab
+- accountsPrefsTab
+- accountsFeaturesTab
+- accountsAliasesTab
+- accountsForwardingTab
+- accountsInteropTab
+- accountsSkinTab
+- accountsZimletTab
+- accountsAdvancedTab
+- accountsPermissionTab (admin ext)
+
+9.2.3 Distribution List Item View
+- dlMembersTab (always enabled)
+- dlNotesOfTab
+- dlMemberOfTab
+- dlAliasesTab
+- dlSharesTab
+- dlPermissionTab (admin ext)
+
+9.2.4 Resource Item View
+- resourcePropertiesTab (always enabled)
+- resourceContactTab
+- resourcePermissionTab (admin ext)
+
+9.2.5 COS Item View
+- cosGeneralTab (always enabled)
+- cosFeatureTab
+- cosPreferenceTab
+- cosThemeTab
+- cosZimletTab
+- cosServerPoolTab
+- cosAdvancedTab
+- cosPermissionTab (admin ext)
+
+9.2.6 Domain Item View
+- domainGeneralTab (always enabled)
+- domainGALTab
+- domainAuthTab
+- domainVirtualHostTab
+- domainWikiTab
+- domainInteropTab
+- domainZimletsTab
+- domainSkinsTab
+- domainAccountLimitsTab (admin ext)
+- domainPermissionTab (admin ext)
+
+9.2.7 Server Item View
+- serverGeneralTab  (always enabled)
+- serverServiceTab
+- serverMTATab
+- serverIMAPTab
+- serverPopTab
+- serverVolumeTab
+- serverPermissionTab (admin ext)
+
+9.2.8 Zimlet Item View
+- zimletPermissionTab (admin ext)
+
+9.2.9 Global Config Viw
+- configGeneralTab (always enabled)
+- configAttachmentTab
+- configMTATab
+- configIMAPTab
+- configPOPTab
+- configAntiSpamVirusTab
+- configInteropTab
+- configThemesTab
+- configPermissionTab (admin ext)
+- configHSMTab (admin ext)
+- configLicenseTab (admin ext)
+
 ========================================
 10. Backward Compatibility and Migration
 ========================================
