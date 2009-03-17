@@ -127,10 +127,10 @@ public class MailSender {
         Identity identity = null;
         if (identityId != null)
             identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
-        else
+        if (identity == null)
             identity = Provisioning.getInstance().getDefaultIdentity(authuser); 
 
-        boolean saveToSent = identity.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
+        boolean saveToSent = authuser.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
 
         return sendMimeMessage(octxt, mbox, saveToSent, mm, newContacts, uploads, origMsgId, replyType, identity,
                                ignoreFailedAddresses, replyToSender);
