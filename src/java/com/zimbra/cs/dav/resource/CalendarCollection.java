@@ -201,11 +201,11 @@ public class CalendarCollection extends Collection {
 		
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         ctxt.setCollectionPath(getUri());
+		if (range == null)
+			range = new TimeRange(getOwner());
         if (!needCalendarData(ctxt)) {
         	ZimbraLog.dav.debug("METADATA only");
         	mMetadataOnly = true;
-    		if (range == null)
-    			range = new TimeRange(getOwner());
         	for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), range.getStart(), range.getEnd()))
         		appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
         } else {
