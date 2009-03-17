@@ -688,8 +688,6 @@ OR
 <GetMsgResponse> // mesage with invite
   <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{date}" l="{folder}">
      [<e .../>*]  // optional users to send request to
-     <su>{subject}</su>
-     <f>{fragment}</f>
 
      <inv type="appt|task" id="{invId}">
        [
@@ -752,8 +750,7 @@ OR
 
        ]+
      </inv>
-     <mp>...</mp>
-     [<content (url="{url}")>...</content>]
+     [<mp>...</mp>]
    </m>
 </GetMsgResponse>
 
