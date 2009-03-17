@@ -1680,7 +1680,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>serverId:mboxId of mailbox before being moved</desc>
 </attr>
 
-<attr id="347" name="zimbraFeatureMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited">
+<attr id="347" name="zimbraFeatureMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to permit mobile sync</desc>
 </attr>
@@ -4180,7 +4180,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>default visibility of the appointment when starting a new appointment in the UI</desc>
 </attr>
 
-<attr id="833" name="zimbraFeatureMobilePolicyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0">
+<attr id="833" name="zimbraFeatureMobilePolicyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <defaultCOSValueUpgrade>FALSE</defaultCOSValueUpgrade>
   <desc>whether to enforce mobile policy</desc>
