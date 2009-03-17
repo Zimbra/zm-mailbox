@@ -1172,12 +1172,40 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
 
     run "zmprov help right" for all right related zmprov commands.
 
-                
+
 ========================================
-9. Backward Compatibility and Migration
+9. zimbraAdminConsoleUIComponents
 ========================================
 
-9.1 Switch to the new Access Manager
+9.1 zimbraAdminConsoleUIComponents is a multi-value attribute on admin accounts and admin groups. It is used to define
+the available UI components for the authed admin in admin console.
+
+9.2 The following UI components are currently available in the admin console:
+
+9.2.1 Overview Panel Items' View
+- accountListView
+- aliasListView
+- DLListView
+- resourceListView
+- COSListView
+- serverListView
+- zimletListView
+- adminZimletListView
+- globalConfigView
+- rightListView (admin ext)
+- globalPermissionView (admin ext)
+- globalServerStatusView
+- globalServerStatisticsView
+- mailQueueView
+- backupsView (admin ext)
+- certsView (admin ext)
+- saveSearch
+
+========================================
+10. Backward Compatibility and Migration
+========================================
+
+10.1 Switch to the new Access Manager
 
     Switching between the legacy domain based access manager and the new pure ACL based 
     access manager is fully supported.  
@@ -1209,15 +1237,15 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
     For production, we can have the installer ask which access manager they want to use.
     
 
-9.2 Migrating Current Admin Accounts
+10.2 Migrating Current Admin Accounts
 
-9.2.1 For current admins (zimbraIsAdminAccount), 
+10.2.1 For current admins (zimbraIsAdminAccount),
       (A) If you want them to continue being the "can do all" admin, set the account attribute 
           zimbraIsSystemAdminAccount to TRUE.
           
       (B) Otherwise, grant proper rights to them.
 
-9.2.2 For current domain admins (zimbraIsDomainAdminAccount),
+10.2.2 For current domain admins (zimbraIsDomainAdminAccount),
       (A) If you want them to continue doing what they used to be able to do with the domain 
           based access manager, grant them the following combo rights:
           - On their domain: domainAdminRights
@@ -1293,7 +1321,7 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
 
             
 
-9.3 Reference and Documentations
+10.3 Reference and Documentations
 
 (1) ZimbraServer/docs/rights.txt
         Rights needed for each admin SOAP command and notes.
@@ -1309,14 +1337,14 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
             domain rights, account rights, calendar resource rights, and distribution 
             list rights.
             
-9.4. TODO
+10.4. TODO
      We still need to go in all admin extensions to convert the right checking code 
      to use the right checking new API.   I currently only converted admin SOAPs in 
      the core product.
      
 
 ===========================
-10. References, requirements
+11. References, requirements
 ===========================
 - Kevin Kluge's requirement doc: 
   https://dogfood.zimbra.com/home/kluge/Public/delegateAdmin
