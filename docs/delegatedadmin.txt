@@ -1198,6 +1198,7 @@ the available UI components for the authed admin in admin console.
 - globalServerStatisticsView
 - mailQueueView
 - backupsView (admin ext)
+- crossMailboxSearchView (admin ext)
 - certsView (admin ext)
 - saveSearch
 
@@ -1257,6 +1258,7 @@ the available UI components for the authed admin in admin console.
 - serverIMAPTab
 - serverPopTab
 - serverVolumeTab
+- serverHSMTab (admin ext)
 - serverPermissionTab (admin ext)
 
 9.2.8 Zimlet Item View
