@@ -69,4 +69,8 @@ public class ZimletException extends Exception {
 	public static ZimletException CANNOT_DISABLE(String zimlet, Throwable cause) {
 		return new ZimletException("Cannot disable Zimlet " + zimlet, cause);
 	}
+
+	public static ZimletException CANNOT_FLUSH_CACHE(Throwable cause) {
+		return new ZimletException("Cannot flush zimlet cache", cause);
+	}
 }
