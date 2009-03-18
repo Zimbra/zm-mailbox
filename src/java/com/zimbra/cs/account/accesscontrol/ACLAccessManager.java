@@ -61,11 +61,13 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
-        
-        checkDomainStatus(target);
-        
-        if (isParentOf(at, target))
+         
+        if (isParentOf(at, target)) {
+            // check domain status because we are not going into canDo 
+            // where domain status is checked for all ACL checking paths.
+            checkDomainStatus(target);
             return true;
+        }
         
         if (asAdmin)
             return canDo(at, target, Admin.R_adminLoginAs, asAdmin, false);
@@ -83,10 +85,12 @@ public class ACLAccessManager extends AccessManager {
     public boolean canAccessAccount(Account credentials, Account target,
             boolean asAdmin) throws ServiceException {
         
-        checkDomainStatus(target);
-        
-        if (isParentOf(credentials, target))
+        if (isParentOf(credentials, target)) {
+            // check domain status because we are not going into canDo 
+            // where domain status is checked for all ACL checking paths.
+            checkDomainStatus(target);
             return true;
+        }
         
         if (asAdmin)
             return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin, false);
@@ -138,7 +142,7 @@ public class ACLAccessManager extends AccessManager {
         
         Account authedAcct = getAccountFromAuthToken(at);
         
-        if (RightChecker.isSystemAdmin(authedAcct, true))
+        if (alwaysAllow(authedAcct, true, targetAccount))
             return true;
         
         // TODO: how do we handle the use case "only certain (non-system) admins can 
@@ -153,25 +157,53 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+    /**
+     * User right entrance - do not throw
+     */
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, 
+            boolean asAdmin, boolean defaultGrant) {
+        try {
+            return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("right denied", e);
+            return false;
+        }
     }
     
     @Override
-    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+    /**
+     * User right entrance - do not throw
+     */
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, 
+            boolean asAdmin, boolean defaultGrant) {
+        try {
+            return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("right denied", e);
+            return false;
+        }
     }
     
     @Override
-    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant, null);
+    /**
+     * User right entrance - do not throw
+     */
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, 
+            boolean asAdmin, boolean defaultGrant) {
+        try {
+            return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant, null);
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("right denied", e);
+            return false;
+        }
     }
     
     @Override
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, 
+            boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
         
         // always allow system admin access
-        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+        if (alwaysAllow(grantee, asAdmin, target))
             return true;
         
         // check pseudo rights
@@ -186,7 +218,8 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, 
+            boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
         try {
             Account granteeAcct;
             if (grantee == null) {
@@ -216,7 +249,8 @@ public class ACLAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, 
+            boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
         try {
             Account granteeAcct = null;
             
@@ -244,7 +278,7 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+        if (alwaysAllow(grantee, asAdmin, target))
             return true;
         
         return canGetAttrsInternal(grantee, target, attrsNeeded, false);
@@ -261,7 +295,7 @@ public class ACLAccessManager extends AccessManager {
     // this API does not check constraints
     public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+        if (alwaysAllow(grantee, asAdmin, target))
             return true;
         
         return canSetAttrsInternal(grantee, target, attrsNeeded, false);
@@ -277,7 +311,7 @@ public class ACLAccessManager extends AccessManager {
     // this API does check constraints
     public boolean canSetAttrs(Account grantee, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+        if (alwaysAllow(grantee, asAdmin, target))
             return true;
         
         RightChecker.AllowedAttrs allowedAttrs = RightChecker.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
@@ -332,7 +366,7 @@ public class ACLAccessManager extends AccessManager {
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) 
     throws ServiceException {
         
-        if (RightChecker.isSystemAdmin(grantee, asAdmin))
+        if (alwaysAllow(grantee, asAdmin, target))
             return true;
         
         boolean allowed = false;
@@ -466,9 +500,9 @@ public class ACLAccessManager extends AccessManager {
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
     }
 
-    //
+    // ============
     // util methods
-    //
+    // ============
     
     /*
      * get the authed account from an auth token
@@ -481,11 +515,40 @@ public class ACLAccessManager extends AccessManager {
         
         return acct;
     }
-
     
-    //
+
+    /**
+     * entry point for each and every ACL checking calls.
+     * 1. check domain stauts for domain-ed target
+     * 2. returns if the authed account is a system admin.
+     * 
+     * @param authedAcct
+     * @param target
+     * @return
+     * @throws ServiceException
+     */
+    private boolean alwaysAllow(Account authedAcct, boolean asAdmin, Entry target) throws ServiceException {
+        /*
+         * check domain status if target is a domain-ed object: account, cr, dl
+         * 
+         * Note: if target *is* a domain, domain status is *not* checked here.
+         *       - if domain status is "shutdown":
+         *             Modify/DeleteDomain would've been already blocked in the SOAP handlers
+         *       - if domain status is "suspended":
+         *             Modify/DeleteDomain are allowed/denied by our regular ACL checking:
+         *             (i.e. system admin or whoever has the right)
+         *       - for both "shutdown" and "suspended" status:      
+         *             List/Get domain are allowed/denied by our regular ACL checking.
+         */
+        Domain domain = TargetType.getTargetDomain(Provisioning.getInstance(), target);
+        checkDomainStatus(domain); // will throw if domain is not in an accessible state
+            
+        return RightChecker.isSystemAdmin(authedAcct, asAdmin);
+    }
+    
+    // ================
     // end util methods
-    //
+    // ================
     
     
     /**

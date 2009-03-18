@@ -109,73 +109,6 @@ public abstract class AccessManager {
             return true;    
         }
     }
-    
-    //
-    // ACL based methods
-    //
-    
-    public abstract boolean canDo(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canDo(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    
-    // for admin calls to return the decisive grant that lead to the result 
-    public static class ViaGrant {
-        private ViaGrant mImpl;
-        public void setImpl(ViaGrant impl) { mImpl = impl;}
-        public String getTargetType()   { return (mImpl==null)?null:mImpl.getTargetType(); } 
-        public String getTargetName()   { return (mImpl==null)?null:mImpl.getTargetName(); } 
-        public String getGranteeType()  { return (mImpl==null)?null:mImpl.getGranteeType(); } 
-        public String getGranteeName()  { return (mImpl==null)?null:mImpl.getGranteeName(); } 
-        public String getRight()        { return (mImpl==null)?null:mImpl.getRight(); } 
-        public boolean isNegativeGrant(){ return (mImpl==null)?null:mImpl.isNegativeGrant(); } 
-        
-        public boolean available() { return mImpl != null; }
-    }
-    
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
-        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
-    }
-    
-    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
-        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
-    }
-    
-    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant, ViaGrant viaGrant) {
-        return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
-    }
-    
-    /*
-     * returns if grantee can get attrs on target
-     */
-    public abstract boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    
-    /*
-     * returns if grantee can set attrs on target, constraints are NOT checked
-     */
-    public abstract boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    
-    /*
-     * returns if grantee can set attrs to desired values on target, constraints DOES get checked.
-     */
-    public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
-    
-    public boolean canSetAttrsOnCreate(AuthToken grantee, TargetType targetType, String entryName, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
-        throw ServiceException.FAILURE("not supported", null);
-    }
-    
-    // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, 
-                              Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
-        throw ServiceException.FAILURE("not supported", null);
-    }
-    
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
-            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
-        throw ServiceException.FAILURE("not supported", null);
-    }
 
     /**
      * Returns true if authAccount should be allowed access to private data in appointments owned
@@ -253,4 +186,88 @@ public abstract class AccessManager {
                 throw ServiceException.PERM_DENIED("domain is " + domain.getDomainStatusAsString());
         }
     }
+    
+    
+    //
+    // ACL based methods
+    //
+    
+    /* 
+     * ====================
+     * user right entrances
+     * ====================
+     */
+    public abstract boolean canDo(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canDo(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    
+    
+    /* 
+     * =====================
+     * admin right entrances
+     * =====================
+     */
+    // for admin calls to return the decisive grant that lead to the result 
+    public static class ViaGrant {
+        private ViaGrant mImpl;
+        public void setImpl(ViaGrant impl) { mImpl = impl;}
+        public String getTargetType()   { return (mImpl==null)?null:mImpl.getTargetType(); } 
+        public String getTargetName()   { return (mImpl==null)?null:mImpl.getTargetName(); } 
+        public String getGranteeType()  { return (mImpl==null)?null:mImpl.getGranteeType(); } 
+        public String getGranteeName()  { return (mImpl==null)?null:mImpl.getGranteeName(); } 
+        public String getRight()        { return (mImpl==null)?null:mImpl.getRight(); } 
+        public boolean isNegativeGrant(){ return (mImpl==null)?null:mImpl.isNegativeGrant(); } 
+        
+        public boolean available() { return mImpl != null; }
+    }
+    
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, 
+            boolean defaultGrant, ViaGrant viaGrant) throws ServiceException {
+        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
+    }
+    
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, 
+            boolean defaultGrant, ViaGrant viaGrant) throws ServiceException {
+        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
+    }
+    
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, 
+            boolean defaultGrant, ViaGrant viaGrant) throws ServiceException {
+        return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
+    }
+    
+    /*
+     * returns if grantee can get attrs on target
+     */
+    public abstract boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    
+    /*
+     * returns if grantee can set attrs on target, constraints are NOT checked
+     */
+    public abstract boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    
+    /*
+     * returns if grantee can set attrs to desired values on target, constraints DOES get checked.
+     */
+    public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    
+    public boolean canSetAttrsOnCreate(AuthToken grantee, TargetType targetType, String entryName, 
+            Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
+    
+    // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
+    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
+    
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
+
 }

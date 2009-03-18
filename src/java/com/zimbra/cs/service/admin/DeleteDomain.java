@@ -41,13 +41,16 @@ public class DeleteDomain extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminConstants.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
 
-	    Domain domain = prov.get(DomainBy.id, id);
+        Domain domain = prov.get(DomainBy.id, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
+        
+        if (domain.isShutdown())
+            throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
         
         checkRight(zsc, context, domain, Admin.R_deleteDomain);
         

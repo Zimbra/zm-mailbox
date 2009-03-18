@@ -311,7 +311,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             throw ServiceException.FAILURE("internal error", null);
     }
 
-    private String dumpNeeded(Entry target, Object needed) throws ServiceException {
+    private String printNeededRight(Entry target, Object needed) throws ServiceException {
         String targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
         if (needed instanceof AdminRight)
             return "need right: " + ((AdminRight)needed).getName() + " for " + targetInfo;
@@ -442,7 +442,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             if (target == null)
                 target = Provisioning.getInstance().getGlobalGrant();
             if (!doCheckRight(am, zsc, target, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(target, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(target, needed));
         }
     }
     
@@ -465,7 +465,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             if (target == null)
                 target = Provisioning.getInstance().getGlobalGrant();
             if (!doCheckRight(am, zsc, target, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(target, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(target, needed));
         }
     }
     
@@ -507,7 +507,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             else
                 hasRight = canAccess.booleanValue();
             if (!hasRight)
-                throw ServiceException.PERM_DENIED(dumpNeeded(account, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(account, needed));
         }
     }
 
@@ -534,7 +534,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             else
                 hasRight = canAccess.booleanValue();
             if (!hasRight)
-                throw ServiceException.PERM_DENIED(dumpNeeded(cr, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(cr, needed));
         }
     }
         
@@ -551,7 +551,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 throw ServiceException.PERM_DENIED("can not access dl");
         } else {
             if (!doCheckRight(am, zsc, dl, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(dl, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(dl, needed));
         }
     }
     
@@ -573,7 +573,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
             if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(domain, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
         }
     }
     
@@ -594,7 +594,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
             if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(domain, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
         }
     }
     
@@ -609,7 +609,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             
         } else {
             if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(domain, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
         }
     }
     
@@ -624,7 +624,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             
         } else {
             if (!doCheckRight(am, zsc, cos, needed))
-                throw ServiceException.PERM_DENIED(dumpNeeded(cos, needed));
+                throw ServiceException.PERM_DENIED(printNeededRight(cos, needed));
         }
     }
     
