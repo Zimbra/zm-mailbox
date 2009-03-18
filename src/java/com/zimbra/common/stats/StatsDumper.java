@@ -151,7 +151,7 @@ implements Callable<Void> {
             String logLine = mDataSource.getFilename() + ": " +
                     (mDataSource.hasTimestampColumn() ? "timestamp," : "") +
                     header + ":: " + timestamp + "," + line;
-            if (logLine.length() < 900) {
+            if (logLine.length() <= 900) {
                 ZimbraLog.slogger.info(logLine);
             } else {
                 StringBuilder b = new StringBuilder(logLine);
