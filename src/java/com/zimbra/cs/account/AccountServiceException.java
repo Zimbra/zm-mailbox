@@ -154,7 +154,7 @@ public class AccountServiceException extends ServiceException {
     }
 
     public static AccountServiceException PASSWORD_CHANGE_TOO_SOON() {
-        return new AccountServiceException("password can't be chnaged yet", PASSWORD_CHANGE_TOO_SOON, SENDERS_FAULT, null);
+        return new AccountServiceException("password can't be changed yet", PASSWORD_CHANGE_TOO_SOON, SENDERS_FAULT, null);
     }
     
     public static AccountServiceException INVALID_PASSWORD(String desc) {
