@@ -270,7 +270,8 @@ public class LiveImport extends MailItemImport {
                     ZimbraLog.datasource.warn("An error occurred while importing folder %s", dsFolder.remoteId, e);
                 }
             }
-            importContacts(ds, octxt);
+            if (false && ds.getBooleanAttr("zimbraDataSourceContactSyncEnabled", true))
+                importContacts(ds, octxt);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
