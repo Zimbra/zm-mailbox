@@ -1819,6 +1819,10 @@ public class RightChecker {
         Set<TargetType> targetTypesToSearch = 
             SetUtil.intersect(subTargetTypes, subRightsGrantableOnTargetTypes);
         
+        // if the intersect is empty, no need to search
+        if (targetTypesToSearch.isEmpty())
+            return;
+        
         // get the set of zimbraId of the grantees to search for
         Set<String> granteeIdsToSearch = setupGranteeIds(grantor);
         

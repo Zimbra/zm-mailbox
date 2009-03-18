@@ -386,6 +386,10 @@ public enum TargetType {
     static Pair<String, Set<String>> getSearchBaseAndOCs(Provisioning prov, 
             Set<TargetType> targetTypes) throws ServiceException {
         
+        // sanity check, is really an internal error if targetTypes is empty
+        if (targetTypes.isEmpty())
+            return null;
+        
         LdapDIT dit = ((LdapProvisioning)prov).getDIT();
         
         String[] curRnds = null;
