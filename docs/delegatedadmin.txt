@@ -1275,6 +1275,19 @@ the available UI components for the authed admin in admin console.
 - configHSMTab (admin ext)
 - configLicenseTab (admin ext)
 
+9.2.10 Global Server Statistics View
+- globalServerStatsMsgCountTab
+- globalServerStatsMsgVolTab
+- globalServerStatsASAVTab
+
+9.2.11 Individual Server Statistics View
+- perServerStatsMsgCountTab
+- perServerStatsMsgVolTab
+- perServerStatsASAVTab
+- perServerStatsDiskTab
+- perServerSessionTab
+- perServerStatsQuotaTab
+
 ========================================
 10. Backward Compatibility and Migration
 ========================================
