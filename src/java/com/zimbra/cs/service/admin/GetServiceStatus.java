@@ -158,6 +158,9 @@ public class GetServiceStatus extends AdminDocumentHandler {
                     for (String service : row.keySet()) {
                         String status = row.get(service);
                         if (status != null) {
+                            status = status.trim();
+                            // for some reason, QA is getting an empty string
+                            if ("".equals(status)) continue;
                             ServiceStatus s = new ServiceStatus();
                             s.server  = host;
                             s.time    = lastTS;
