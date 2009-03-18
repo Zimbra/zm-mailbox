@@ -390,8 +390,8 @@ public class CalendarMailSender {
             if (descHtml != null) {
                 ContentType ct = new ContentType(Mime.CT_TEXT_HTML);
                 ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
-                htmlPart.setHeader("Content-Type", ct.toString());
                 htmlPart.setText(descHtml, Mime.P_CHARSET_UTF8);
+                htmlPart.setHeader("Content-Type", ct.toString());
             } else {
                 htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(desc)));
             }

@@ -15,6 +15,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -32,6 +33,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServletException;
@@ -121,11 +124,32 @@ public class SyncFormatter extends Formatter {
 
     private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-        Pair<MimeMessage,Integer> calItemMsgData;
-        if (context.itemId.hasSubpart() &&
-            (calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId())) != null) {
-            addXZimbraHeaders(context, calItem, calItemMsgData.getSecond());
-            calItemMsgData.getFirst().writeTo(context.resp.getOutputStream());
+        if (context.itemId.hasSubpart()) {
+            Pair<MimeMessage,Integer> calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
+            if (calItemMsgData != null) {
+                addXZimbraHeaders(context, calItem, calItemMsgData.getSecond());
+                calItemMsgData.getFirst().writeTo(context.resp.getOutputStream());
+            } else {
+                // Backward compatibility for pre-5.0.16 ZCO/ZCB: Build a MIME message on the fly.
+                // Let's first make sure the requested invite id is valid.
+                int invId = context.itemId.getSubpartId();
+                Invite[] invs = calItem.getInvites(invId);
+                if (invs != null && invs.length > 0) {
+                    Invite invite = invs[0];
+                    MimeMessage mm = CalendarMailSender.createCalendarMessage(invite);
+                    if (mm != null) {
+                        // Go through ByteArrayInput/OutputStream to calculate the exact size in bytes.
+                        int sizeHint = mm.getSize();
+                        if (sizeHint < 0) sizeHint = 0;
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream(sizeHint);
+                        mm.writeTo(baos);
+                        byte[] bytes = baos.toByteArray();
+                        addXZimbraHeaders(context, calItem, bytes.length);
+                        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                        ByteUtil.copy(bais, true, context.resp.getOutputStream(), false);
+                    }
+                }
+            }
         } else {
             addXZimbraHeaders(context, calItem, calItem.getSize());
             InputStream is = calItem.getRawMessage();
