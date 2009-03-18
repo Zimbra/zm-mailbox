@@ -50,7 +50,7 @@ public class GalSyncAccountUtil {
 	
 	private static void usage() {
 		System.out.println("zmgsautil: {command}");
-		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} [-f {folder-id}] [-p {polling-interval}] [-domain]");
+		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} [-f {folder-id}] [-p {polling-interval}] [--domain {domain-name}]");
 		System.out.println("\ttrickleSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.out.println("\tfullSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.exit(1);
@@ -122,7 +122,7 @@ public class GalSyncAccountUtil {
                 mTransport.shutdown();
         }                        
 	}
-	private void createGalSyncAccount(String accountName, String dsName, String domain, String folder, String pollingInterval) throws ServiceException, IOException {
+	private Element createGalSyncAccount(String accountName, String dsName, String domain, String folder, String pollingInterval) throws ServiceException, IOException {
         mTransport = null;
         try {
             mTransport = new SoapHttpTransport(mAdminURL);
@@ -140,7 +140,7 @@ public class GalSyncAccountUtil {
     		if (pollingInterval != null)
     			req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
     			
-    		mTransport.invokeWithoutSession(req);
+    		return mTransport.invokeWithoutSession(req);
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
@@ -176,7 +176,7 @@ public class GalSyncAccountUtil {
         options.addOption("i", "id", true, "gal sync account id");
         options.addOption("n", "name", true, "datasource name");
         options.addOption("d", "did", true, "datasource id");
-        options.addOption("x", "domain", false, "for domain gal sync account");
+        options.addOption("x", "domain", true, "for domain gal sync account");
         options.addOption("f", "folder", true, "folder id");
         options.addOption("p", "polling", true, "polling interval");
         options.addOption("h", "help", true, "help");
@@ -212,12 +212,13 @@ public class GalSyncAccountUtil {
 		case CREATE_ACCOUNT:
 			String acctName = cl.getOptionValue('a');
 			String dsName = cl.getOptionValue('n');
-			String domain = cl.getOptionValue("domain");
+			String domain = cl.getOptionValue('x');
 			String fid = cl.getOptionValue('f');
 			String pollingInterval = cl.getOptionValue('p');
 			if (acctName == null || dsName == null)
 				usage();
-			cli.createGalSyncAccount(acctName, dsName, domain, fid, pollingInterval);
+			for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, fid, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
+				System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
 			break;
 		default:
 			usage();

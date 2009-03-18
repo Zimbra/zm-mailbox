@@ -32,6 +32,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,7 +46,8 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ResultsPager;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Contact;
@@ -243,10 +245,12 @@ public class SearchGal extends AccountDocumentHandler {
 		        	// do a full sync
 		        }
 		        boolean ret;
+		        SearchParams params = SearchParams.parse(request, zsc, query);
+		        params.setTypes(new byte[] { MailItem.TYPE_CONTACT });
 		        if (syncToken > 0)
 		        	ret = doLocalGalAccountSync(galAcct, ifmt, syncToken, folderIds, response);
 		        else
-		        	ret = doLocalGalAccountSearch(searchQuery, galAcct, ifmt, response);
+		        	ret = doLocalGalAccountSearch(params, galAcct, ifmt, response);
 		        return ret;
 			} else {
 	    		String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galAcct.getMailHost()));
@@ -256,16 +260,25 @@ public class SearchGal extends AccountDocumentHandler {
     	}
     	return true;
     }
-    private static boolean doLocalGalAccountSearch(String query, Account galAcct, ItemIdFormatter ifmt, Element response) {
+    private static boolean doLocalGalAccountSearch(SearchParams params, Account galAcct, ItemIdFormatter ifmt, Element response) {
 		ZimbraQueryResults zqr = null;
 		try {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-			zqr = mbox.search(new Mailbox.OperationContext(mbox), query, new byte[] { MailItem.TYPE_CONTACT }, MailboxIndex.SortBy.NAME_ASCENDING, 100);
-			while (zqr.hasNext()) {
-                ZimbraHit hit = zqr.getNext();
+			zqr = mbox.search(SoapProtocol.Soap12, new Mailbox.OperationContext(mbox), params);
+            ResultsPager pager = ResultsPager.create(zqr, params);
+            int limit  = params.getLimit();
+            int num = 0;
+			while (pager.hasNext()) {
+				if (num == limit)
+					break;
+                ZimbraHit hit = pager.getNextHit();
                 if (hit instanceof ContactHit)
     				ToXML.encodeContact(response, ifmt, ((ContactHit)hit).getContact(), true, null);
+                num++;
 			}
+            response.addAttribute(MailConstants.A_SORTBY, zqr.getSortBy().toString());
+            response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+            response.addAttribute(MailConstants.A_QUERY_MORE, pager.hasNext());
 		} catch (Exception e) {
 			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
 			return false;

@@ -70,8 +70,8 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    String folder = request.getAttribute(AdminConstants.E_FOLDER, null);
 
 	    Domain domain = null;
-	    if (domain != null)
-	    	prov.getDomainByName(domainStr);
+	    if (domainStr != null)
+	    	domain = prov.getDomainByName(domainStr);
 	    Account account = null;
 	    try {
 	    	account = prov.get(AccountBy.fromString(acctKey), acctValue, zsc.getAuthToken());
@@ -86,8 +86,9 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    	// there should be one zimbra gal sync account
 	    	if (domain == null) {
 	    		String[] galAcctIds = prov.getConfig().getGalAccountId();
-	    		if (galAcctIds.length == 1 && prov.getAccountById(galAcctIds[0]) != null)
-		    		throw AccountServiceException.ACCOUNT_EXISTS(acctValue);
+	    		Account acct = null;
+	    		if (galAcctIds.length == 1 && (acct = prov.getAccountById(galAcctIds[0])) != null)
+		    		throw AccountServiceException.ACCOUNT_EXISTS(acct.getName());
 	    	}
 		    // XXX revisit
 		    checkDomainRightByEmail(zsc, acctValue, Admin.R_createAccount);
@@ -134,13 +135,17 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    // create datasource
 	    Map<String,Object> attrs = AdminService.getAttrs(request, true);
 	    try {
-	    	if (domain == null)
+	    	if (domain == null) {
 	    		getDefaultZimbraGalParams(attrs);
+	    		attrs.put(Provisioning.A_zimbraGalType, "zimbra");
+	    	} else {
+	    		attrs.put(Provisioning.A_zimbraGalType, "ldap");
+	    	}
 	    	attrs.put(Provisioning.A_zimbraDataSourceFolderId, "" + folderId);
 	    	if (!attrs.containsKey(Provisioning.A_zimbraDataSourceEnabled))
 	    		attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_TRUE);
 	    	if (!attrs.containsKey(Provisioning.A_zimbraGalStatus))
-	    		attrs.put(Provisioning.A_zimbraGalStatus, "active");
+	    		attrs.put(Provisioning.A_zimbraGalStatus, "enabled");
 	    	prov.createDataSource(account, DataSource.Type.gal, name, attrs);
 	    } catch (ServiceException e) {
 	    	ZimbraLog.gal.error("error creating datasource for GalSyncAccount", e);
