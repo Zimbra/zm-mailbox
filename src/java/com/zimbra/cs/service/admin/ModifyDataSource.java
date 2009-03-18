@@ -69,7 +69,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
         if (ds == null)
             throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
         
-        DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountConstants.A_TYPE));
+        DataSource.Type type = ds.getType();
         
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
