@@ -289,6 +289,8 @@ public class TarFormatter extends Formatter {
         String metaParam = context.params.get(UserServlet.QP_META);
         boolean meta = metaParam == null || !metaParam.equals("0");
         
+        if (charset == null)
+            charset = UTF8;
         if (!version && mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
                 context.opContext, mi.getId(), mi.getType())) {
@@ -405,8 +407,9 @@ public class TarFormatter extends Formatter {
             entry.setGroupName(MailItem.getNameForType(mi));
             entry.setMajorDeviceId(mi.getType());
             entry.setModTime(mi.getDate());
-            if (charset == null)
-                charset = UTF8;
+            if (mi instanceof Message && (mi.getFlagBitmask() &
+                Flag.ID_FLAG_UNREAD) != 0)
+                entry.setMode(entry.getMode() & ~0200);
             if (tos == null)
                 tos = new TarOutputStream(new GZIPOutputStream(
                     context.resp.getOutputStream()), charset);
@@ -764,7 +767,8 @@ public class TarFormatter extends Formatter {
         return fldr;
     }
 
-    public static byte[] readTarEntry(TarInputStream tis, TarEntry te) throws IOException {
+    public static byte[] readTarEntry(TarInputStream tis, TarEntry te) throws
+        IOException {
         if (te == null)
             return null;
         
