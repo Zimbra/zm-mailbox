@@ -75,11 +75,13 @@ public class GalImport extends MailItemImport {
 	
 	private void setStatus(boolean success) throws ServiceException {
 		Date now = new Date();
-		Map<String,Object> attrs = getDataSource().getAttrs();
+		DataSource ds = getDataSource();
+		Map<String,Object> attrs = new HashMap<String,Object>();
 		String attr = success ? 
 				Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp :
 				Provisioning.A_zimbraGalLastFailedSyncTimestamp;
 		attrs.put(attr, DateUtil.toGeneralizedTime(now));
+		Provisioning.getInstance().modifyAttrs(ds, attrs);
 	}
 	
 	private void importGal(int fid, boolean fullSync) throws ServiceException {
@@ -138,12 +140,7 @@ public class GalImport extends MailItemImport {
 	}
 	
 	private SearchGalResult searchGal(String syncToken) throws ServiceException, NamingException, IOException  {
-		String zimbraGalAccountId = null;
-		Provisioning prov = Provisioning.getInstance();
-		String[] acctIds = prov.getConfig().getGalAccountId();
-		if (acctIds.length > 0)
-			zimbraGalAccountId = acctIds[0];
-		if (zimbraGalAccountId != null && mbox.getAccountId().equals(zimbraGalAccountId))
+		if (getDataSource().getAttr(Provisioning.A_zimbraGalType).compareTo("zimbra") == 0)
 			return searchZimbraGal(syncToken);
 		else
 			return searchExternalGal(syncToken);
@@ -155,15 +152,20 @@ public class GalImport extends MailItemImport {
         	attrs = Provisioning.getInstance().getDomainByName(ds.getAccount().getDomainName()).getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         return new LdapGalMapRules(attrs);
 	}
+	
+	private static final int MAX_GAL_SEARCH_RESULT = 65535;
+	
 	private SearchGalResult searchExternalGal(String syncToken) throws ServiceException, NamingException, IOException  {
+		ZimbraLog.gal.debug("searchExternalGal: "+syncToken);
 		DataSource ds = getDataSource();
 		GalOp galOp = GalOp.sync;
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(ds, galOp);
         LdapGalMapRules rules = getGalMapRules();
-        return LdapUtil.searchLdapGal(galParams, galOp, "", 0, rules, syncToken, null);
+        return LdapUtil.searchLdapGal(galParams, galOp, "", MAX_GAL_SEARCH_RESULT, rules, syncToken, null);
 	}
 	
 	private SearchGalResult searchZimbraGal(String syncToken) throws ServiceException {
+		ZimbraLog.gal.debug("searchZimbraGal "+syncToken);
         SearchGalResult result = SearchGalResult.newSearchGalResult(null);
         String filter = getDataSource().getAttr(Provisioning.A_zimbraGalLdapFilter).replaceAll("\\*\\*", "*")+")";
         String query = filter;

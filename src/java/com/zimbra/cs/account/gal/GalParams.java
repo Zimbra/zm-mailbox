@@ -69,7 +69,7 @@ public abstract class GalParams {
     
     private void setPageSize(String pageSize) {
         if (pageSize == null)
-            pageSize = "0";
+            pageSize = "1000";
         
         try {
             mPageSize = Integer.parseInt(pageSize);

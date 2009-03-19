@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 
@@ -37,14 +35,12 @@ public class GalUtil {
         */
         
         query = expandKey(galParams, galOp, filterTemplate, key);
-        
+
+        if (query.indexOf("**") > 0)
+        	query = query.replaceAll("\\*\\*", "*");
         if (token != null) {
-            if (token.equals(""))
-                query = query.replaceAll("\\*\\*", "*");
-            else {
-                String arg = LdapUtil.escapeSearchFilterArg(token);
-                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
-            }
+        	String arg = LdapUtil.escapeSearchFilterArg(token);
+        	query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
         }
         
         return query;

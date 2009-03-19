@@ -221,19 +221,17 @@ public class SearchGal extends AccountDocumentHandler {
     			return false;
     		}
 			if (Provisioning.onLocalServer(galAcct)) {
-		        if (query == null)
-		        	query = "";
-		        else
-		        	query = "\""+query+"\"";
 	    		String searchQuery = null;
+		        if (query == null)
+		        	searchQuery = "";
+		        else
+		        	searchQuery = "\""+query+"\"";
 	    		for (DataSource ds : galAcct.getAllDataSources()) {
 	    			// check if there was any successful import from gal
 	    			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
 	    				return false;
 	    			if (ds.getType() != DataSource.Type.gal)
 	    				continue;
-	    			if (searchQuery == null)
-	    				searchQuery = query;
 	    			searchQuery += " inid:" + ds.getFolderId();
 	    			folderIds.add(ds.getFolderId());
 	    		}
@@ -245,13 +243,13 @@ public class SearchGal extends AccountDocumentHandler {
 		        	// do a full sync
 		        }
 		        boolean ret;
-		        SearchParams params = SearchParams.parse(request, zsc, query);
+		        SearchParams params = SearchParams.parse(request, zsc, searchQuery);
 		        params.setTypes(new byte[] { MailItem.TYPE_CONTACT });
 		        if (syncToken > 0)
 		        	ret = doLocalGalAccountSync(galAcct, ifmt, syncToken, folderIds, response);
 		        else
 		        	ret = doLocalGalAccountSearch(params, galAcct, ifmt, response);
-		        return ret;
+		        if (!ret) return ret;
 			} else {
 	    		String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galAcct.getMailHost()));
 				if (!proxyGalAccountSearch(zsc, galAccountId, serverUrl, request, response))
@@ -280,7 +278,7 @@ public class SearchGal extends AccountDocumentHandler {
             response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
             response.addAttribute(MailConstants.A_QUERY_MORE, pager.hasNext());
 		} catch (Exception e) {
-			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
+			ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
 			return false;
 		} finally {
 			if (zqr != null) 
