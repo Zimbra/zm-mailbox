@@ -39,10 +39,12 @@ import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
 	private static final int CREATE_ACCOUNT = 10;
-	private static final int TRICKLE_SYNC = 11;
-	private static final int FULL_SYNC = 12;
+	private static final int DELETE_ACCOUNT = 11;
+	private static final int TRICKLE_SYNC = 12;
+	private static final int FULL_SYNC = 13;
 
 	private static final String CREATE_ACCOUNT_COMMAND = "createaccount";
+	private static final String DELETE_ACCOUNT_COMMAND = "deleteaccount";
 	private static final String TRICKLE_SYNC_COMMAND = "tricklesync";
 	private static final String FULL_SYNC_COMMAND = "fullsync";
 	
@@ -50,7 +52,8 @@ public class GalSyncAccountUtil {
 	
 	private static void usage() {
 		System.out.println("zmgsautil: {command}");
-		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} [-f {folder-id}] [-p {polling-interval}] [--domain {domain-name}]");
+		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|gal [-f {folder-name}] [-p {polling-interval}]");
+		System.out.println("\tdeleteAccount [-a {account-name} | -i {account-id}]");
 		System.out.println("\ttrickleSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.out.println("\tfullSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.exit(1);
@@ -71,6 +74,7 @@ public class GalSyncAccountUtil {
 	private static void setup() {
 		mCommands = new HashMap<String,Integer>();
 		addCommand(CREATE_ACCOUNT_COMMAND, CREATE_ACCOUNT);
+		addCommand(DELETE_ACCOUNT_COMMAND, DELETE_ACCOUNT);
 		addCommand(TRICKLE_SYNC_COMMAND, TRICKLE_SYNC);
 		addCommand(FULL_SYNC_COMMAND, FULL_SYNC);
 	}
@@ -122,7 +126,7 @@ public class GalSyncAccountUtil {
                 mTransport.shutdown();
         }                        
 	}
-	private Element createGalSyncAccount(String accountName, String dsName, String domain, String folder, String pollingInterval) throws ServiceException, IOException {
+	private Element createGalSyncAccount(String accountName, String dsName, String domain, String type, String folder, String pollingInterval) throws ServiceException, IOException {
         mTransport = null;
         try {
             mTransport = new SoapHttpTransport(mAdminURL);
@@ -130,8 +134,8 @@ public class GalSyncAccountUtil {
             mTransport.setAuthToken(mAuth);
     		XMLElement req = new XMLElement(AdminConstants.CREATE_GAL_SYNC_ACCOUNT_REQUEST);
     		req.addAttribute(AdminConstants.A_NAME, dsName);
-    		if (domain != null)
-        		req.addAttribute(AdminConstants.A_DOMAIN, domain);
+    		req.addAttribute(AdminConstants.A_DOMAIN, domain);
+    		req.addAttribute(AdminConstants.A_TYPE, type);
     		if (folder != null)
         		req.addAttribute(AdminConstants.E_FOLDER, domain);
     		Element acct = req.addElement(AdminConstants.E_ACCOUNT);
@@ -140,6 +144,31 @@ public class GalSyncAccountUtil {
     		if (pollingInterval != null)
     			req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
     			
+    		return mTransport.invokeWithoutSession(req);
+        } finally {
+            if (mTransport != null)
+                mTransport.shutdown();
+        }                        
+	}
+	private Element deleteGalSyncAccount(String name, String id) throws ServiceException, IOException {
+        mTransport = null;
+        try {
+            mTransport = new SoapHttpTransport(mAdminURL);
+            auth();
+            mTransport.setAuthToken(mAuth);
+    		XMLElement req = new XMLElement(AdminConstants.DELETE_GAL_SYNC_ACCOUNT_REQUEST);
+    		Element acct = req.addElement(AdminConstants.E_ACCOUNT);
+    		String account;
+    		AccountBy by;
+    		if (name == null) {
+    			by = AccountBy.id;
+    			account = id;
+    		} else {
+    			by = AccountBy.name;
+    			account = name;
+    		}
+    		acct.addAttribute(AdminConstants.A_BY, by.name());
+    		acct.setText(account);
     		return mTransport.invokeWithoutSession(req);
         } finally {
             if (mTransport != null)
@@ -179,6 +208,7 @@ public class GalSyncAccountUtil {
         options.addOption("x", "domain", true, "for domain gal sync account");
         options.addOption("f", "folder", true, "folder id");
         options.addOption("p", "polling", true, "polling interval");
+        options.addOption("t", "type", true, "gal type");
         options.addOption("h", "help", true, "help");
         CommandLine cl = null;
         boolean err = false;
@@ -213,12 +243,20 @@ public class GalSyncAccountUtil {
 			String acctName = cl.getOptionValue('a');
 			String dsName = cl.getOptionValue('n');
 			String domain = cl.getOptionValue('x');
-			String fid = cl.getOptionValue('f');
+			String type = cl.getOptionValue('t');
+			String folderName = cl.getOptionValue('f');
 			String pollingInterval = cl.getOptionValue('p');
-			if (acctName == null || dsName == null)
+			if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("gal") != 0)
 				usage();
-			for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, fid, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
+			for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
 				System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
+			break;
+		case DELETE_ACCOUNT:
+			String name = cl.getOptionValue('a');
+			String id = cl.getOptionValue('i');
+			if (name == null && id == null)
+				usage();
+			cli.deleteGalSyncAccount(name, id);
 			break;
 		default:
 			usage();
