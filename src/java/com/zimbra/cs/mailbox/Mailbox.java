@@ -1345,10 +1345,10 @@ public class Mailbox {
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("uncached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
 
-        item.uncacheChildren();
+        uncacheChildren(item);
     }
 
-    /** Removes an item from the <tt>Mailbox</tt>'s item cache.  If the
+    /** Removes an item from the <code>Mailbox</code>'s item cache.  If the
      *  item has any children, they are also uncached.  <i>Note: This function
      *  cannot be used to uncache {@link Tag}s and {@link Folder}s.  You must
      *  call {@link #uncache(MailItem)} to remove those items from their
@@ -1361,10 +1361,35 @@ public class Mailbox {
             ZimbraLog.cache.debug("uncached item " + itemId + " in mailbox " + getId());
         if (item != null) {
             MessageCache.purge(item);
-            item.uncacheChildren();
+            uncacheChildren(item);
         } else {
             MessageCache.purge(this, itemId);
         }
+    }
+
+    /** Removes all this item's children from the <code>Mailbox</code>'s cache.
+     *  Does not uncache the item itself. */
+    void uncacheChildren(MailItem parent) throws ServiceException {
+        if (parent == null || !parent.canHaveChildren())
+            return;
+
+        Collection<? extends MailItem> cached;
+        if (!(parent instanceof Folder))
+            cached = getItemCache().values();
+        else if (mFolderCache != null)
+            cached = mFolderCache.values();
+        else
+            return;
+
+        int parentId = parent.getId();
+        List<MailItem> children = new ArrayList<MailItem>();
+        for (MailItem item : cached)
+            if (item.getParentId() == parentId)
+                children.add(item);
+
+        if (!children.isEmpty())
+            for (MailItem child : children)
+                uncache(child);
     }
 
     /** Removes all items of a specified type from the <tt>Mailbox</tt>'s
@@ -5290,7 +5315,7 @@ public class Mailbox {
                     // this should be done in Conversation.copy(), but redolog issues make that impossible
                     Conversation conv = (Conversation) item;
                     List<Message> msgs = new ArrayList<Message>((int) conv.getSize());
-                    for (Message original : conv.getMessages(DbSearch.SORT_NONE)) {
+                    for (Message original : conv.getMessages()) {
                         if (!original.canAccess(ACL.RIGHT_READ))
                             continue;
                         int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(original.getId()));
@@ -5379,7 +5404,7 @@ public class Mailbox {
         try {
             List<? extends MailItem> items;
             if (item instanceof Conversation)
-                items = ((Conversation) item).getMessages(DbSearch.SORT_NONE);
+                items = ((Conversation) item).getMessages();
             else
                 items = Arrays.asList((MailItem) item);
 

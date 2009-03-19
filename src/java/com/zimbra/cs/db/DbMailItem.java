@@ -2092,7 +2092,6 @@ public class DbMailItem {
 
                 int lastConvId = -1;
                 List<Long> inheritedTags = new ArrayList<Long>();
-                List<Integer> children = new ArrayList<Integer>();
                 int unreadCount = 0;
 
                 while (rs.next()) {
@@ -2102,18 +2101,15 @@ public class DbMailItem {
                         if (lastConvId != -1) {
                             // Update stats for the previous conversation
                             UnderlyingData data = conversations.get(lastConvId);
-                            data.children      = children;
                             data.unreadCount   = unreadCount;
                             data.inheritedTags = StringUtil.join(",", inheritedTags);
                         }
                         lastConvId = convId;
-                        children = new ArrayList<Integer>();
                         inheritedTags.clear();
                         unreadCount = 0;
                     }
 
                     // Read next row
-                    children.add(rs.getInt(2));
                     if (rs.getBoolean(3))
                         unreadCount++;
                     inheritedTags.add(-rs.getLong(4));
@@ -2123,7 +2119,6 @@ public class DbMailItem {
                 // Update the last conversation.
                 UnderlyingData data = conversations.get(lastConvId);
                 if (data != null) {
-                    data.children      = children;
                     data.unreadCount   = unreadCount;
                     data.inheritedTags = StringUtil.join(",", inheritedTags);
                 } else {
@@ -2978,7 +2973,7 @@ public class DbMailItem {
         } catch (SQLException e) {
             if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
-                    stmt.close();
+                    DbPool.closeStatement(stmt);
 
                     stmt = conn.prepareStatement("UPDATE " + getCalendarItemTableName(mbox) +
                             " SET item_id = ?, start_time = ?, end_time = ? WHERE " + IN_THIS_MAILBOX_AND + "uid = ?");
@@ -3001,8 +2996,8 @@ public class DbMailItem {
         }
     }
 
-    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder f, long start, long end) throws ServiceException {
-    	Mailbox mbox = f.getMailbox();
+    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end) throws ServiceException {
+    	Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3010,7 +3005,7 @@ public class DbMailItem {
         try {
             String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
             String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
-            String folderConstraint = f != null ? " AND mi.folder_id = ?" : "";
+            String folderConstraint = folder != null ? " AND mi.folder_id = ?" : "";
             stmt = conn.prepareStatement("SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" + 
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
                         " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" + 
@@ -3023,8 +3018,8 @@ public class DbMailItem {
                 stmt.setTimestamp(pos++, new Timestamp(start));
             if (end > 0)
                 stmt.setTimestamp(pos++, new Timestamp(end));
-            if (f != null)
-            	stmt.setInt(pos++, f.getId());
+            if (folder != null)
+            	stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
             	result.add(new CalendarItem.CalendarMetadata(

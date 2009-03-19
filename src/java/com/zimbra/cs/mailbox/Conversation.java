@@ -21,7 +21,6 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import com.zimbra.cs.account.Account;
@@ -34,9 +33,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-/**
- * @author schemers
- */
 public class Conversation extends MailItem {
 
     protected final class TagSet {
@@ -126,7 +122,7 @@ public class Conversation extends MailItem {
             }
         }
 
-        public String toString() { return mTags.toString(); }
+        @Override public String toString() { return mTags.toString(); }
     }
 
     private   String     mEncodedSenders;
@@ -160,7 +156,7 @@ public class Conversation extends MailItem {
      *  always be equal to {@link MailItem#getSize()}; if it isn't, an error
      *  has occurred and been persisted to the database. */
     public int getMessageCount() {
-        return (mData.children == null ? 0 : mData.children.size());
+        return (int) mData.size;
     }
 
     /** Returns the total number of messages in the conversation not tagged
@@ -215,13 +211,16 @@ public class Conversation extends MailItem {
 
         // failed to parse or too few senders are listed -- have to recalculate
         //   (go through the Mailbox because we need to be in a transaction)
-        List<Message> msgs = getMessages(DbSearch.DEFAULT_SORT_ORDER);
-        recalculateMetadata(msgs);
+        recalculateMetadata();
         return true;
     }
 
     private static final int RECALCULATE_CHANGE_MASK = Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD |
                                                        Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS;
+
+    SenderList recalculateMetadata() throws ServiceException {
+        return recalculateMetadata(getMessages());
+    }
 
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
@@ -234,7 +233,6 @@ public class Conversation extends MailItem {
 
         markItemModified(RECALCULATE_CHANGE_MASK);
 
-        mData.children = new ArrayList<Integer>(msgs.size());
         mInheritedTagSet = new TagSet();
         for (Message msg : msgs) {
             super.addChild(msg);
@@ -252,31 +250,20 @@ public class Conversation extends MailItem {
 
     /** Returns all the {@link Message}s in this conversation.  The messages
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
+     *  they're fetched from the database.  The returned messages are not
+     *  guaranteed to be sorted in any way. */
+    List<Message> getMessages() throws ServiceException {
+        return getMessages(DbSearch.SORT_NONE);
+    }
+
+    /** Returns all the {@link Message}s in this conversation.  The messages
+     *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
      *  they're fetched from the database.
      * 
      * @param sort  The sort order for the messages, specified by one of the
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     List<Message> getMessages(byte sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
-        Comparator<MailItem> cmp = getComparator(sort); 
-        if (mData.children != null && (cmp != null || (sort & DbSearch.SORT_FIELD_MASK) == DbSearch.SORT_NONE)) {
-            // try to get all our info from the cache to avoid a database trip
-            for (int childId : mData.children) {
-                Message msg = mMailbox.getCachedMessage(childId);
-                if (msg == null)
-                    break;
-                msgs.add(msg);
-            }
-
-            if (msgs.size() == mData.children.size()) {
-                if (cmp != null)
-                    Collections.sort(msgs, cmp);
-                return msgs;
-            }
-            // cache miss, so start over and fall through...
-            msgs.clear();
-        }
-
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort);
         for (UnderlyingData data : listData)
             msgs.add(mMailbox.getMessage(data));
@@ -306,7 +293,6 @@ public class Conversation extends MailItem {
         assert(id != Mailbox.ID_AUTO_INCREMENT && msgs.length > 0);
         Arrays.sort(msgs, new Message.SortDateAscending());
         int date = 0, unread = 0;
-        List<Integer> children = new ArrayList<Integer>();
         StringBuilder tags = new StringBuilder();
         SenderList sl = new SenderList(msgs);
         for (int i = 0; i < msgs.length; i++) {
@@ -315,7 +301,6 @@ public class Conversation extends MailItem {
                 throw ServiceException.FAILURE("null Message in list", null);
             date = Math.max(date, msg.mData.date);
             unread += msg.mData.unreadCount;
-            children.add(msg.mId);
             tags.append(i == 0 ? "-" : ",-").append(msg.mData.flags).append(',').append(msg.mData.tags);
         }
 
@@ -328,20 +313,17 @@ public class Conversation extends MailItem {
         data.size        = msgs.length;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, sl);
         data.unreadCount = unread;
-        data.children    = children;
         data.inheritedTags = tags.toString();
         data.contentChanged(mbox);
         
         if (ZimbraLog.mailop.isDebugEnabled()) {
             StringBuilder msgIds = new StringBuilder();
             for (int i = 0; i < msgs.length; i++) {
-                if (i > 0) {
+                if (i > 0)
                     msgIds.append(',');
-                }
                 msgIds.append(msgs[i].getId());
             }
-            ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.",
-                data.id, msgIds);
+            ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.", data.id, msgIds);
         }
         DbMailItem.create(mbox, data, null);
 
@@ -397,7 +379,7 @@ public class Conversation extends MailItem {
         // and tags.
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         List<Integer> targets = new ArrayList<Integer>();
-        for (Message msg : getMessages(DbSearch.DEFAULT_SORT_ORDER)) {
+        for (Message msg : getMessages()) {
             // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
             if (msg.isUnread() == unread ) {
                 continue;
@@ -456,7 +438,7 @@ public class Conversation extends MailItem {
 
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         List<Integer> targets = new ArrayList<Integer>();
-        for (Message msg : getMessages(SORT_ID_ASCENDING)) {
+        for (Message msg : getMessages()) {
             // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
             if (msg.isTagged(tag) == add) {
                 continue;
@@ -527,7 +509,7 @@ public class Conversation extends MailItem {
             throw MailServiceException.CANNOT_CONTAIN();
         markItemModified(Change.UNMODIFIED);
 
-        List<Message> msgs = getMessages(SORT_ID_ASCENDING);
+        List<Message> msgs = getMessages();
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         boolean toTrash = target.inTrash();
         int oldUnread = 0;
@@ -664,7 +646,7 @@ public class Conversation extends MailItem {
                     mSenderList.add((Message) child);
                     saveMetadata();
                 } catch (SenderList.RefreshException slre) {
-                    recalculateMetadata(getMessages(SORT_ID_ASCENDING));
+                    recalculateMetadata();
                 }
             }
         }
@@ -702,7 +684,7 @@ public class Conversation extends MailItem {
             mData.size--;
             saveMetadata(null);
         } else {
-            List<Message> msgs = getMessages(SORT_ID_ASCENDING);
+            List<Message> msgs = getMessages();
             msgs.remove(child);
             recalculateMetadata(msgs);
         }
@@ -777,9 +759,9 @@ public class Conversation extends MailItem {
         info.rootId = mId;
         info.itemIds.add(getType(), mId);
 
-        if (mData.children == null || mData.children.isEmpty())
+        if (mData.size == 0)
             return info;
-        List<Message> msgs = getMessages(SORT_ID_ASCENDING);
+        List<Message> msgs = getMessages();
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
 
         boolean excludeModify = false, excludeAccess = false;
@@ -809,17 +791,9 @@ public class Conversation extends MailItem {
     }
 
     @Override void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
-        if (info.incomplete) {
-            // *some* of the messages remain; recalculate the data based on this
-            int oldSize = getMessageCount(), remaining = oldSize - info.itemIds.size();
-            List<Message> msgs = new ArrayList<Message>(remaining);
-            for (int i = 0; i < oldSize; i++) {
-                int childId = mData.children.get(i);
-                if (!info.itemIds.contains(childId))
-                    msgs.add(mMailbox.getMessageById(childId));
-            }
-            recalculateMetadata(msgs);
-        }
+        // if *some* of the messages remain, recalculate the data based on this
+        if (info.incomplete)
+            recalculateMetadata();
 
         super.purgeCache(info, purgeItem);
     }

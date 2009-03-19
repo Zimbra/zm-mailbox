@@ -1095,12 +1095,6 @@ public class Folder extends MailItem {
         super.purgeCache(info, purgeItem);
     }
 
-    @Override void uncacheChildren() throws ServiceException {
-        if (mSubfolders != null)
-            for (Folder subfolder : mSubfolders)
-                mMailbox.uncache(subfolder);
-    }
-
 
     static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread, boolean useChangeDate) throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())

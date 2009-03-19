@@ -204,7 +204,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    modContent;
 
         public String inheritedTags;
-        public List<Integer> children;
 
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
         public String getBlobDigest() {
@@ -313,7 +312,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 inclusions ^= ALL_LOCATIONS;
             return new TargetConstraint(mbox, inclusions, query);
         }
-        public String toString() {
+        @Override public String toString() {
             if (inclusions == 0)
                 return "";
             StringBuilder sb = new StringBuilder();
@@ -447,8 +446,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         mId      = data.id;
         mData    = data;
         mMailbox = mbox;
-        if (mData.children != null && !canHaveChildren())
-            mData.children = null;
         decodeMetadata(mData.metadata);
         mData.metadata = null;
         if ((data.flags & Flag.BITMASK_UNCACHED) == 0)
@@ -1037,15 +1034,15 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class SortNameNaturalOrderAscending extends SortNameNaturalOrder {
-    	protected int returnResult(int result) {
-    		return result;
-    	}
+        @Override protected int returnResult(int result) {
+            return result;
+        }
     }
     
     public static final class SortNameNaturalOrderDescending extends SortNameNaturalOrder {
-    	protected int returnResult(int result) {
-    		return -result;
-    	}
+        @Override protected int returnResult(int result) {
+            return -result;
+        }
     }
 
     static Comparator<MailItem> getComparator(byte sort) {
@@ -1272,14 +1269,6 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see PendingModifications.Change */
     void markItemModified(int reason) {
         mMailbox.markItemModified(this, reason);
-    }
-
-    /** Removes all this item's children from the {@link Mailbox}'s cache.
-     *  Does not uncache the item itself. */
-    void uncacheChildren() throws ServiceException {
-        if (mData.children != null)
-            for (Integer childId : mData.children)
-                mMailbox.uncacheItem(childId);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of blobs to be removed
@@ -1999,12 +1988,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             markItemModified(Change.MODIFIED_PARENT);
             parent.markItemModified(Change.MODIFIED_CHILDREN);
             mData.metadataChanged(mMailbox);
-            if (parent.mData.children == null) {
-                (parent.mData.children = new ArrayList<Integer>(1)).add(new Integer(copyId));
-            } else {
-                parent.mData.children.remove(new Integer(mId));
-                parent.mData.children.add(new Integer(copyId));
-            }
             mData.parentId = mData.type == TYPE_MESSAGE ? -mId : -1;
         }
 
@@ -2258,23 +2241,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mMailbox != child.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
 
-        // update child list
-        if (mData.children == null)
-            (mData.children = new ArrayList<Integer>()).add(child.getId());
-        else if (!mData.children.contains(child.getId()))
-            mData.children.add(child.getId());
-
         // update unread counts
         updateUnread(child.mData.unreadCount);
     }
 
     void removeChild(MailItem child) throws ServiceException {
         markItemModified(Change.MODIFIED_CHILDREN);
-
-        // update child list
-        if (mData.children == null || !mData.children.contains(child.getId()))
-            throw MailServiceException.IS_NOT_CHILD();
-        mData.children.remove((Integer) child.getId());
 
         // remove parent reference from the child
         if (child.mData.parentId == mId)
@@ -2724,8 +2696,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
-        if (mData.children != null)
-            sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
         if (getDigest() != null)
             sb.append(CN_BLOB_DIGEST).append(": ").append(getDigest()).append(", ");
         if (mData.imapId > 0)

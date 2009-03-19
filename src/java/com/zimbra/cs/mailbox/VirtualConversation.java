@@ -83,7 +83,6 @@ public class VirtualConversation extends Conversation {
         data.size        = 1;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, new SenderList(msg));
         data.unreadCount = msg.getUnreadCount();
-        data.children    = children;
         data.inheritedTags = "-" + msg.mData.flags + ',' + msg.mData.tags;
         return data;
     }
