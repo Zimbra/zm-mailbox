@@ -646,4 +646,5 @@ public class AdminConstants {
     public static final String E_STAT = "stat";
     
     public static final String A_FULLSYNC = "fullSync";
+    public static final String A_RESET    = "reset";
 }
