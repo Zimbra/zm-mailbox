@@ -42,6 +42,8 @@ public class AdminConstants {
     public static final QName CREATE_GAL_SYNC_ACCOUNT_RESPONSE = QName.get("CreateGalSyncAccountResponse", NAMESPACE);
     public static final QName DELEGATE_AUTH_REQUEST = QName.get("DelegateAuthRequest", NAMESPACE);
     public static final QName DELEGATE_AUTH_RESPONSE = QName.get("DelegateAuthResponse", NAMESPACE);
+    public static final QName DELETE_GAL_SYNC_ACCOUNT_REQUEST = QName.get("DeleteGalSyncAccountRequest", NAMESPACE);
+    public static final QName DELETE_GAL_SYNC_ACCOUNT_RESPONSE = QName.get("DeleteGalSyncAccountResponse", NAMESPACE);
     public static final QName GET_ACCOUNT_REQUEST = QName.get("GetAccountRequest", NAMESPACE);
     public static final QName GET_ACCOUNT_RESPONSE = QName.get("GetAccountResponse", NAMESPACE);
     public static final QName GET_ACCOUNT_INFO_REQUEST = QName.get("GetAccountInfoRequest", NAMESPACE);
