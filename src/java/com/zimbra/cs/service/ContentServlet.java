@@ -42,12 +42,14 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.html.HtmlDefang;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
@@ -161,27 +163,28 @@ public class ContentServlet extends ZimbraServlet {
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         InputStream is = msg.getContentStream();
                         ByteUtil.copy(is, true, resp.getOutputStream(), false);
-                    } else if (item instanceof Appointment) {
-                        Appointment appt = (Appointment) item;
+                    } else if (item instanceof CalendarItem) {
+                        CalendarItem calItem = (CalendarItem) item;
                         if (sync) {
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
                         
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         if (iid.hasSubpart()) {
-                            MimeMessage mm = appt.getSubpartMessage(iid.getSubpartId());
+                            int invId = iid.getSubpartId();
+                            MimeMessage mm = calItem.getSubpartMessage(invId);
+                            if (mm == null) {
+                                // Backward compatibility for pre-5.0.16 ZDesktop: Build a MIME message on the fly.
+                                Invite[] invs = calItem.getInvites(invId);
+                                if (invs != null && invs.length > 0) {
+                                    Invite invite = invs[0];
+                                    mm = CalendarMailSender.createCalendarMessage(invite);
+                                }
+                            }
                             if (mm != null)
                                 mm.writeTo(resp.getOutputStream());
                         } else { 
-//                            Invite[] invites = appt.getInvites();
-//                            for (int i = 0; i < invites.length; i++)
-//                            {
-//                                Calendar cal = invites[i].toICalendar();
-//                                cal.toString();
-//                                resp.getWriter().write(cal.toString());
-//                            }
-                            
-                            InputStream is = appt.getRawMessage();
+                            InputStream is = calItem.getRawMessage();
                             if (is != null)
                                 ByteUtil.copy(is, true, resp.getOutputStream(), false);
                         }
@@ -192,13 +195,13 @@ public class ContentServlet extends ZimbraServlet {
                     if (item instanceof Message) {
                         mp = getMimePart((Message) item, part); 
                     } else {
-                        Appointment appt = (Appointment) item;
+                        CalendarItem calItem = (CalendarItem) item;
                         if (iid.hasSubpart()) {
-                            MimeMessage mbp = appt.getSubpartMessage(iid.getSubpartId());
+                            MimeMessage mbp = calItem.getSubpartMessage(iid.getSubpartId());
                             if (mbp != null)
                                 mp = Mime.getMimePart(mbp, part);
                         } else {
-                            mp = getMimePart(appt, part);
+                            mp = getMimePart(calItem, part);
                         }
                     }
                     if (mp != null) {
@@ -292,14 +295,14 @@ public class ContentServlet extends ZimbraServlet {
         }
     }
 
-    public static MimePart getMimePart(Appointment appt, String part) throws IOException, MessagingException, ServiceException {
-        return Mime.getMimePart(appt.getMimeMessage(), part);
+    public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
+        return Mime.getMimePart(calItem.getMimeMessage(), part);
     }
     
     public static MimePart getMimePart(Message msg, String part) throws IOException, MessagingException, ServiceException {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
-    
+
     public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp)
     throws IOException, MessagingException {
         String filename = Mime.getFilename(mp);
