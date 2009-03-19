@@ -3005,7 +3005,7 @@ public class DbMailItem {
         try {
             String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
             String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
-            String folderConstraint = folder != null ? " AND mi.folder_id = ?" : "";
+            String folderConstraint = " AND mi.folder_id = ?";
             stmt = conn.prepareStatement("SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" + 
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
                         " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" + 
@@ -3018,8 +3018,7 @@ public class DbMailItem {
                 stmt.setTimestamp(pos++, new Timestamp(start));
             if (end > 0)
                 stmt.setTimestamp(pos++, new Timestamp(end));
-            if (folder != null)
-            	stmt.setInt(pos++, folder.getId());
+            stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
             	result.add(new CalendarItem.CalendarMetadata(
