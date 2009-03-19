@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
@@ -56,6 +57,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.ProvUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
@@ -381,6 +383,19 @@ public class ZimletUtil {
 		return LC.zimlet_directory.value();
 	}
 
+	public static void flushCache() throws ZimletException, IOException {
+		try {
+			String[] argv = { "-z", "flushCache", "zimlet" };
+			ProvUtil.main(argv);
+		}
+		catch (ParseException e) {
+			throw ZimletException.CANNOT_FLUSH_CACHE(e);
+		}
+		catch (ServiceException e) {
+			throw ZimletException.CANNOT_FLUSH_CACHE(e);
+		}
+	}
+
 	public static interface DeployListener {
 		public void markFinished(Server s);
 		public void markFailed(Server s);
@@ -551,6 +566,8 @@ public class ZimletUtil {
 			file.getParentFile().mkdirs();
 			writeFile(entry.getContents(), file);
 		}
+
+		flushCache();
 	}
 	
 	/**
