@@ -38,6 +38,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.datasource.CalDavDataImport;
+import com.zimbra.cs.datasource.GalImport;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.datasource.SyncState;
@@ -98,6 +99,8 @@ public class DataSource extends AccountProperty {
     	switch (ds) {
     	case caldav:
     		return CalDavDataImport.class.getName();
+    	case gal:
+    		return GalImport.class.getName();
     	}
     	return null;
     }

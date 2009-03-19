@@ -51,12 +51,11 @@ public class GalImport extends MailItemImport {
     
 	public void importData(List<Integer> folderIds, boolean fullSync)
 			throws ServiceException {
-    	mbox.beginTrackingSync();
     	if (folderIds == null)
-    		importGal(dataSource.getFolderId(), fullSync);
+    		importGal(dataSource.getFolderId(), fullSync, false);
     	else
     		for (int fid : folderIds)
-    			importGal(fid, fullSync);
+    			importGal(fid, fullSync, false);
 	}
 
 	public void test() throws ServiceException {
@@ -84,7 +83,8 @@ public class GalImport extends MailItemImport {
 		Provisioning.getInstance().modifyAttrs(ds, attrs);
 	}
 	
-	private void importGal(int fid, boolean fullSync) throws ServiceException {
+	public void importGal(int fid, boolean fullSync, boolean force) throws ServiceException {
+    	mbox.beginTrackingSync();
 		DataSource ds = getDataSource();
 		DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
 		if (folderMapping.md == null) {
@@ -109,7 +109,7 @@ public class GalImport extends MailItemImport {
         		allMappings.put(dsItem.remoteId, dsItem);
         for (GalContact contact : result.getMatches()) {
         	try {
-                processContact(octxt, contact, fid, false);
+                processContact(octxt, contact, fid, force);
                 allMappings.remove(contact.getId());
         	} catch (Exception e) {
         		setStatus(false);

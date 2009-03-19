@@ -42,11 +42,13 @@ public class GalSyncAccountUtil {
 	private static final int DELETE_ACCOUNT = 11;
 	private static final int TRICKLE_SYNC = 12;
 	private static final int FULL_SYNC = 13;
+	private static final int FORCE_SYNC = 14;
 
 	private static final String CREATE_ACCOUNT_COMMAND = "createaccount";
 	private static final String DELETE_ACCOUNT_COMMAND = "deleteaccount";
 	private static final String TRICKLE_SYNC_COMMAND = "tricklesync";
 	private static final String FULL_SYNC_COMMAND = "fullsync";
+	private static final String FORCE_SYNC_COMMAND = "forcesync";
 	
 	private static Map<String,Integer> mCommands;
 	
@@ -56,6 +58,7 @@ public class GalSyncAccountUtil {
 		System.out.println("\tdeleteAccount [-a {account-name} | -i {account-id}]");
 		System.out.println("\ttrickleSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.out.println("\tfullSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
+		System.out.println("\tforceSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.exit(1);
 	}
 	
@@ -77,6 +80,7 @@ public class GalSyncAccountUtil {
 		addCommand(DELETE_ACCOUNT_COMMAND, DELETE_ACCOUNT);
 		addCommand(TRICKLE_SYNC_COMMAND, TRICKLE_SYNC);
 		addCommand(FULL_SYNC_COMMAND, FULL_SYNC);
+		addCommand(FORCE_SYNC_COMMAND, FORCE_SYNC);
 	}
 	
 	private String mUsername;
@@ -101,6 +105,7 @@ public class GalSyncAccountUtil {
 	private String mDataSourceId;
 	private String mDataSourceName;
 	private boolean mFullSync;
+	private boolean mForceSync;
 	
 	private void syncGalAccount() throws ServiceException, IOException {
 		checkArgs();
@@ -119,6 +124,8 @@ public class GalSyncAccountUtil {
     			ds.addAttribute(AdminConstants.A_BY, "name").setText(mDataSourceName);
     		if (mFullSync)
     			ds.addAttribute(AdminConstants.A_FULLSYNC, "TRUE");
+    		if (mForceSync)
+    			ds.addAttribute(AdminConstants.A_RESET, "TRUE");
     			
     		mTransport.invoke(req);
         } finally {
@@ -187,6 +194,9 @@ public class GalSyncAccountUtil {
 	private void setFullSync() {
 		mFullSync = true;
 	}
+	private void setForceSync() {
+		mForceSync = true;
+	}
 	private void auth() throws ServiceException, IOException {
 		XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
 		req.addElement(AdminConstants.E_NAME).setText(mUsername);
@@ -237,6 +247,10 @@ public class GalSyncAccountUtil {
 			break;
 		case FULL_SYNC:
 			cli.setFullSync();
+			cli.syncGalAccount();
+			break;
+		case FORCE_SYNC:
+			cli.setForceSync();
 			cli.syncGalAccount();
 			break;
 		case CREATE_ACCOUNT:
