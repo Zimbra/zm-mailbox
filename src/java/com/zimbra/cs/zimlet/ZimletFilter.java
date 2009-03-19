@@ -127,7 +127,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
 		// order by priority
 		List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(allowedZimlets);
-		Set<String> allowedZimletNames = new HashSet<String>();
+		Set<String> allowedZimletNames = new LinkedHashSet<String>();
 		for (Zimlet zimlet : zimletList) {
 			allowedZimletNames.add(zimlet.getName());
 		}
