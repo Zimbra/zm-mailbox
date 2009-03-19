@@ -1076,6 +1076,20 @@ public class ZimletUtil {
 			}
 			setPriority(z, newPriority.toString());
 		}
+
+		try {
+			flushCache();
+		}
+		catch (Exception e) {
+			Throwable t = e.getCause();
+			if (t instanceof ServiceException) {
+				throw (ServiceException)t;
+			}
+			if (e instanceof IOException) {
+				t = e;
+			}
+			throw ServiceException.FAILURE("unable to set priority", t);
+		}
 	}
 	
 	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL) throws ServiceException, IOException {
