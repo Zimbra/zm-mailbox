@@ -778,6 +778,11 @@ public class ByteUtil {
         }
     }
 
+    /**
+     * Calculates the number of bytes read from the wrapped stream.
+     * 
+     * @see PositionInputStream#getPosition()
+     */
     public static class PositionInputStream extends FilterInputStream {
         private long position = 0, mark = 0;
 
@@ -814,6 +819,9 @@ public class ByteUtil {
             return delta;
         }
 
+        /**
+         * Returns the number of bytes read from the wrapped stream.
+         */
         public long getPosition() {
             return position;
         }
