@@ -27,7 +27,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.datasource.GalImport;
+import com.zimbra.cs.gal.GalImport;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SyncGalAccount extends AdminDocumentHandler {

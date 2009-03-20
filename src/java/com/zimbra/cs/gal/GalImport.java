@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.datasource;
+package com.zimbra.cs.gal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +35,7 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Mailbox;

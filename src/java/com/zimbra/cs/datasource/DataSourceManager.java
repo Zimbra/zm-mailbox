@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.gal.GalImport;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
