@@ -64,27 +64,27 @@ public class GetRightsDoc extends AdminDocumentHandler {
         
         Map<QName, DocumentHandler> handlers = dispatcher.getHandlers();
         
-        Map<String, TreeMap<String, AdminDocumentHandler>>
-            handlersWithRightsDoc = new TreeMap<String, TreeMap<String, AdminDocumentHandler>>();
+        Map<String, TreeMap<String, AdminRightCheckPoint>>
+            handlersWithRightsDoc = new TreeMap<String, TreeMap<String, AdminRightCheckPoint>>();
         
         for (Map.Entry<QName, DocumentHandler> handler : handlers.entrySet()) {
             // String soapName = handler.getKey().getQualifiedName();
             DocumentHandler soapHandler = handler.getValue();
             
-            if (soapHandler instanceof AdminDocumentHandler) {
+            if (soapHandler instanceof AdminRightCheckPoint) {
                 QName qname = handler.getKey();
                 String pkg = soapHandler.getClass().getPackage().getName();
                 
                 if (specificPackages != null && !specificPackages.contains(pkg))
                     continue;
                 
-                TreeMap<String, AdminDocumentHandler> handlersInPkg = handlersWithRightsDoc.get(pkg);
+                TreeMap<String, AdminRightCheckPoint> handlersInPkg = handlersWithRightsDoc.get(pkg);
                 if (handlersInPkg == null) {
-                    handlersInPkg = new TreeMap<String, AdminDocumentHandler>();
+                    handlersInPkg = new TreeMap<String, AdminRightCheckPoint>();
                     handlersWithRightsDoc.put(pkg, handlersInPkg);
                 }
                     
-                handlersInPkg.put(qname.getQualifiedName(), (AdminDocumentHandler)soapHandler);
+                handlersInPkg.put(qname.getQualifiedName(), (AdminRightCheckPoint)soapHandler);
             }
         }
         
@@ -92,16 +92,16 @@ public class GetRightsDoc extends AdminDocumentHandler {
         
         List<AdminRight> relatedRights = new ArrayList<AdminRight>();
         List<String> notes = new ArrayList<String>();
-        for (Map.Entry<String, TreeMap<String, AdminDocumentHandler>> entry : handlersWithRightsDoc.entrySet()) {
+        for (Map.Entry<String, TreeMap<String, AdminRightCheckPoint>> entry : handlersWithRightsDoc.entrySet()) {
             String pkg = entry.getKey();
-            Map<String, AdminDocumentHandler> handlersInPkg = entry.getValue();
+            Map<String, AdminRightCheckPoint> handlersInPkg = entry.getValue();
             
             Element ePackage = response.addElement(AdminConstants.E_PACKAGE);
             ePackage.addAttribute(AdminConstants.A_NAME, pkg);
             
-            for (Map.Entry<String, AdminDocumentHandler> handler : handlersInPkg.entrySet()) {
+            for (Map.Entry<String, AdminRightCheckPoint> handler : handlersInPkg.entrySet()) {
                 String soapName = handler.getKey();
-                AdminDocumentHandler soapHandler = handler.getValue();
+                AdminRightCheckPoint soapHandler = handler.getValue();
                 
                 relatedRights.clear();
                 notes.clear();
@@ -158,7 +158,9 @@ public class GetRightsDoc extends AdminDocumentHandler {
         for (Map.Entry<QName, DocumentHandler> handler : handlers.entrySet()) {
             DocumentHandler soapHandler = handler.getValue();
             
-            if (soapHandler instanceof AdminDocumentHandler) {
+            // only works for AdminDocumentHandler
+            if (soapHandler instanceof AdminRightCheckPoint &&
+                soapHandler instanceof AdminDocumentHandler) {
                 AdminDocumentHandler adminHandler = (AdminDocumentHandler)soapHandler;
                 if (adminHandler.domainAuthSufficient(context)) {
                     List<AdminRight> relatedRights = new ArrayList<AdminRight>();
@@ -202,7 +204,7 @@ public class GetRightsDoc extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(sDocRightNotesAllowAllAdmins);
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(AdminRightCheckPoint.Notes.ALLOW_ALL_ADMINS);
     }
 }

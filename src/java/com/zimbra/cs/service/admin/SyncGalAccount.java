@@ -72,7 +72,8 @@ public class SyncGalAccount extends AdminDocumentHandler {
 	}
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
     	// XXX todo
+        notes.add(AdminRightCheckPoint.Notes.TODO);
     }
 }

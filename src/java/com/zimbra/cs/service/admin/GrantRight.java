@@ -85,7 +85,7 @@ public class GrantRight extends RightDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add("Grantor must have the same or more rights on the same target or " + 
                 "on a larger target set.");
     }

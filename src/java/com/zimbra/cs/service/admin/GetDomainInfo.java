@@ -144,8 +144,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(sDocRightNotesAllowAllAdmins);
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(AdminRightCheckPoint.Notes.ALLOW_ALL_ADMINS);
     }
     
     public static void main(String args[]) throws ServiceException {

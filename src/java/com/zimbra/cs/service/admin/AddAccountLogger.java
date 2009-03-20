@@ -109,7 +109,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageAccountLogger);
     }
 }

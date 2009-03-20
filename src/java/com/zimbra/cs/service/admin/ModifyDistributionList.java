@@ -65,7 +65,8 @@ public class ModifyDistributionList extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyDistributionList.getName(), "distribution list"));
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyDistributionList.getName(), "distribution list"));
     }
 }

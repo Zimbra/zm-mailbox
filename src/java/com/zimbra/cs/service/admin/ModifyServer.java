@@ -75,7 +75,8 @@ public class ModifyServer extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyServer.getName(), "server"));
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyServer.getName(), "server"));
     }
 }

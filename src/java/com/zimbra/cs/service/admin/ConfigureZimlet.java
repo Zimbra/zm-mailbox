@@ -61,8 +61,8 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 	}
 	
 	@Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-	    notes.add(sDocRightNotesTODO);
+	public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+	    notes.add(AdminRightCheckPoint.Notes.TODO);
 	    
 	    notes.add("Currently the soap gets a uploaded blob containing metadata. " + 
 	            "The zimlet name is encoded in in the blob and is decoded in ZimletUtil. " +

@@ -153,7 +153,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	}
 	
 	@Override
-	protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+	public void docRights(List<AdminRight> relatedRights, List<String> notes) {
 	    relatedRights.add(Admin.R_deployZimlet);
 	    
 	    notes.add("If deploying on all servers, need the " + Admin.R_deployZimlet.getName() + 

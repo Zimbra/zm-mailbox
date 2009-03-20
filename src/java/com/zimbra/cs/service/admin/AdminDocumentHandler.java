@@ -44,7 +44,6 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
@@ -58,7 +57,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /** @author schemers */
-public abstract class AdminDocumentHandler extends DocumentHandler {
+public abstract class AdminDocumentHandler extends DocumentHandler implements AdminRightCheckPoint {
 
     @Override
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
@@ -256,7 +255,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * ======================================================================
      */
     
-    private boolean isDomainBasedAccessManager(AccessManager am) {
+    private static boolean isDomainBasedAccessManager(AccessManager am) {
         return (!(am instanceof ACLAccessManager));
     }
 
@@ -289,7 +288,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * @return
      * @throws ServiceException
      */
-    private boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) 
+    private static boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) 
     throws ServiceException {
         
         Account authedAcct = getAuthenticatedAccount(zsc);
@@ -311,7 +310,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             throw ServiceException.FAILURE("internal error", null);
     }
 
-    private String printNeededRight(Entry target, Object needed) throws ServiceException {
+    private static String printNeededRight(Entry target, Object needed) throws ServiceException {
         String targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
         if (needed instanceof AdminRight)
             return "need right: " + ((AdminRight)needed).getName() + " for " + targetInfo;
@@ -417,8 +416,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         
         return hasRight;
     }
-    
-    /*
+
+    /**
      * -------------------
      * non-domained rights
      * (i.e. not: account, calendar resource, distribution list, domain)
@@ -427,6 +426,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      * it should have been rejected in SoapEngine.  So it should just return true 
      * here.  But we sanity check again, just in case.
      * -------------------
+     *
+     * @param zsc
+     * @param context
+     * @param target
+     * @param needed
+     * @throws ServiceException
      */
     protected void checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
@@ -448,15 +453,27 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     
     /**
      * This API is for checking ACL rights only, domain based access manager
-     * will always return OK.  This should be called only when domain based 
-     * permission checking has passed.
+     * will always return OK.  This should be called only when 
+     * 
+     * (1) domain based permission checking has passed.
+     * or 
+     * (2) from SOAP handlers that are actually admin commands, but can't inherit 
+     *     from AdminDocumentHanlder because it already inherited from otehr class, 
+     *     e.g. SearchMultipleMailboxes.
+     *     This method is static just because of that.  Ideally it should call 
+     *     the other checkRight API, which does sanity checking for domain admins 
+     *     if the active AccessManager is a domain based access manager.  But that 
+     *     AI has other dependency on AdminDocumentHanlder/DocumentHandler instance 
+     *     methods, also, the sanity is really not necessary, we should remove it 
+     *     at some point when we can completely retire the domain based access 
+     *     manager.
      * 
      * @param zsc
      * @param target
      * @param needed
      * @throws ServiceException
      */
-    protected void checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
+    public static void checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         
         if (isDomainBasedAccessManager(am)) {
@@ -639,23 +656,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     }
     
     // for documenting rights needed and notes for a SOAP.
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(sDocRightNotesTODO);
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(AdminRightCheckPoint.Notes.TODO);
     }
-   
-    
-    // in the end no one should refer to this string
-    protected static final String sDocRightNotesTODO = "TDB";
-    
-    protected static final String sDocRightNotesModifyEntry = 
-        "All attrs provided in the attribute list have to settable by. " + 
-        "the authed admin.   You can grant the %s right, which allows " + 
-        "setting all attributes on %s, or grant the set attrs right just " +
-        "for the attributes the admin needs to set while creating an entry.";
 
-    // only system admins are allowed
-    protected static final String sDocRightNotesSystemAdminsOnly = "Only system admins are allowed.";
-    
-    // no right is needed, any admin can do it.
-    protected static final String sDocRightNotesAllowAllAdmins = "Do not need any right, all admins are allowed.";
+
 }

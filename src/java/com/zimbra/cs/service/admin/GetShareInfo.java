@@ -76,7 +76,7 @@ public class GetShareInfo extends ShareInfoHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
 
         notes.add("Needs the " + Admin.R_adminLoginAs.getName() + " right on the owner account.");

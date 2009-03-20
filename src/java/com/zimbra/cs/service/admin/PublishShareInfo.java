@@ -142,7 +142,7 @@ public class PublishShareInfo extends ShareInfoHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
         relatedRights.add(Admin.R_publishDistributionListShareInfo);
         

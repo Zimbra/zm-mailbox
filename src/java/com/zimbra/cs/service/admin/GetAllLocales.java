@@ -44,7 +44,7 @@ public class GetAllLocales extends AdminDocumentHandler {
     }
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add("Allow all admins");
     }
 }

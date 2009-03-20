@@ -101,8 +101,9 @@ public class ModifyDomain extends AdminDocumentHandler {
     }
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyDomain.getName(), "domain"));
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyDomain.getName(), "domain"));
         
         notes.add("Notes on " + Provisioning.A_zimbraDomainDefaultCOSId + ": " +
                 "If setting " + Provisioning.A_zimbraDomainDefaultCOSId + ", needs the " + Admin.R_assignCos.getName() + 

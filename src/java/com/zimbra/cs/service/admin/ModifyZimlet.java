@@ -139,7 +139,7 @@ public class ModifyZimlet extends AdminDocumentHandler {
     
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageZimlet);
         relatedRights.add(Admin.R_modifyZimlet);
         notes.add("For acl: needs " + Admin.R_manageZimlet.getName() + " on cos.");

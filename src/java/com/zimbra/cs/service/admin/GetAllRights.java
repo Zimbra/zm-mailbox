@@ -46,7 +46,7 @@ public class GetAllRights extends RightDocumentHandler {
     }
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(sDocRightNotesAllowAllAdmins);
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(AdminRightCheckPoint.Notes.ALLOW_ALL_ADMINS);
     }
 }

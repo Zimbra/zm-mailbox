@@ -88,7 +88,7 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
 	
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_removeAccountAlias);
         relatedRights.add(Admin.R_removeCalendarResourceAlias);
         relatedRights.add(Admin.R_deleteAlias);

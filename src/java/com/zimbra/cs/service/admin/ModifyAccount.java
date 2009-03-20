@@ -184,10 +184,11 @@ public class ModifyAccount extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_assignCos);
         
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account") + "\n");
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyAccount.getName(), "account") + "\n");
         
         notes.add("Notes on " + Provisioning.A_zimbraMailQuota + ": " +
                 "Prior to ACL based AccessManager, " + 

@@ -221,7 +221,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getDomainQuotaUsage);
         
         notes.add("If a domain is specified, need the the domain right " + Admin.R_getDomainQuotaUsage.getName() +

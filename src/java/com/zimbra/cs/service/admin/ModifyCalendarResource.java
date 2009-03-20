@@ -75,7 +75,8 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyCalendarResource.getName(), "calendar resource"));
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyCalendarResource.getName(), "calendar resource"));
     }
 }

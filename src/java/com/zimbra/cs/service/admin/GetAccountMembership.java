@@ -98,7 +98,7 @@ public class GetAccountMembership extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccountMembership);
         notes.add("If the authed admin has get attr right on  distribution list attr " + 
                 Provisioning.A_zimbraIsAdminGroup + ", it is returned in the response if set.");

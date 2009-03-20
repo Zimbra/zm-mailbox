@@ -93,10 +93,11 @@ public class CreateAccount extends AdminDocumentHandler {
     }
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_createAccount);
         
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyAccount.getName(), "account"));
         
         notes.add("Notes on " + Provisioning.A_zimbraCOSId + ": " +
                 "If setting " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 

@@ -60,9 +60,9 @@ public class CreateServer extends AdminDocumentHandler {
 	}
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_createServer);
-        notes.add(String.format(sDocRightNotesModifyEntry, 
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
                 Admin.R_modifyServer.getName(), "server"));
     }
 }

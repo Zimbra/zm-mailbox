@@ -178,7 +178,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
     }
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(sDocRightNotesSystemAdminsOnly);
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);
     }
 }

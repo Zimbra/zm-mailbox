@@ -70,7 +70,7 @@ public class GetAllZimlets extends AdminDocumentHandler {
 	}
     	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listZimlet);
         relatedRights.add(Admin.R_getZimlet);
     }

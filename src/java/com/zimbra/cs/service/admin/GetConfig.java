@@ -77,7 +77,7 @@ public class GetConfig extends AdminDocumentHandler {
     }
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add("Need get attr right for the specified attribute.");
     }
 }

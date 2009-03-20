@@ -57,7 +57,8 @@ public class ModifyConfig extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyGlobalConfig.getName(), "global config"));
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyGlobalConfig.getName(), "global config"));
     }
 }

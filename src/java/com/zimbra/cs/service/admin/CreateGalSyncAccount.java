@@ -160,13 +160,6 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	}
 	
 	private static final Set<String> emptySet = Collections.emptySet();
-	
-    @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-    	// XXX revisit
-        relatedRights.add(Admin.R_createAccount);
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyAccount.getName(), "account"));
-    }
     
     private void getDefaultZimbraGalParams(Map<String,Object> attrs) throws ServiceException {
     	if (attrs.get(Provisioning.A_zimbraGalLdapFilter) == null) {
@@ -174,5 +167,13 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
     		filter = "(&(!(zimbraHideInGal=TRUE))" + filter + ")";
     		attrs.put(Provisioning.A_zimbraGalLdapFilter, filter.replaceAll("%s\\*", ""));
     	}
+    }
+    
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        // XXX revisit
+        relatedRights.add(Admin.R_createAccount);
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyAccount.getName(), "account"));
     }
 }

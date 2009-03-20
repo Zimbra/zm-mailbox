@@ -177,7 +177,7 @@ public class SearchAccounts extends AdminDocumentHandler {
     }   
 
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccount);
         relatedRights.add(Admin.R_getCalendarResource);
         relatedRights.add(Admin.R_getDistributionList);

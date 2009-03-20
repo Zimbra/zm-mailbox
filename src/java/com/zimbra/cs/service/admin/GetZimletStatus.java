@@ -103,7 +103,7 @@ public class GetZimletStatus extends AdminDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listZimlet);
         relatedRights.add(Admin.R_listCos);
         relatedRights.add(Admin.R_getZimlet);

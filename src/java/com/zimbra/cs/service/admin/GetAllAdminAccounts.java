@@ -58,7 +58,7 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
 	}
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listAccount);
         relatedRights.add(Admin.R_getAccount);
     }

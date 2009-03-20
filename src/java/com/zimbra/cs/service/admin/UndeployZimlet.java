@@ -67,7 +67,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 	}
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_deployZimlet);
         notes.add("Need the " + Admin.R_deployZimlet.getName() + " right on all servers.");
     }

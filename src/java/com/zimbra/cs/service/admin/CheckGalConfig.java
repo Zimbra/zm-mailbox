@@ -79,7 +79,7 @@ public class CheckGalConfig extends AdminDocumentHandler {
 	}
 	
 	@Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+	public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_checkExternalGALConfig);
         notes.add(Admin.R_checkExternalGALConfig.getName() + 
                 " is a domain right.  However CheckExchangeAuth does not take a " + 

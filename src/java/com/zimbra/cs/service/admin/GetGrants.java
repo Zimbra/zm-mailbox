@@ -61,7 +61,7 @@ public class GetGrants extends RightDocumentHandler {
     }
     
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_viewGrants);
         notes.add("Needs a get attr right of zimbraACE of the requested target type.  " +
                 "Granting the " + Admin.R_viewGrants.getName() + " is one way to do it, " +

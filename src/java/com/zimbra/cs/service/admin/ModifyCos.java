@@ -64,8 +64,9 @@ public class ModifyCos extends AdminDocumentHandler {
 	}
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(sDocRightNotesModifyEntry, Admin.R_modifyCos.getName(), "cos"));
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyCos.getName(), "cos"));
     }
 
 }
