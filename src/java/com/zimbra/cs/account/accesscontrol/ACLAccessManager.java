@@ -519,8 +519,8 @@ public class ACLAccessManager extends AccessManager {
 
     /**
      * entry point for each and every ACL checking calls.
-     * 1. check domain stauts for domain-ed target
-     * 2. returns if the authed account is a system admin.
+     * 
+     * Currently, the only check is if the authed account is a system admin.
      * 
      * @param authedAcct
      * @param target
@@ -528,21 +528,6 @@ public class ACLAccessManager extends AccessManager {
      * @throws ServiceException
      */
     private boolean alwaysAllow(Account authedAcct, boolean asAdmin, Entry target) throws ServiceException {
-        /*
-         * check domain status if target is a domain-ed object: account, cr, dl
-         * 
-         * Note: if target *is* a domain, domain status is *not* checked here.
-         *       - if domain status is "shutdown":
-         *             Modify/DeleteDomain would've been already blocked in the SOAP handlers
-         *       - if domain status is "suspended":
-         *             Modify/DeleteDomain are allowed/denied by our regular ACL checking:
-         *             (i.e. system admin or whoever has the right)
-         *       - for both "shutdown" and "suspended" status:      
-         *             List/Get domain are allowed/denied by our regular ACL checking.
-         */
-        Domain domain = TargetType.getTargetDomain(Provisioning.getInstance(), target);
-        checkDomainStatus(domain); // will throw if domain is not in an accessible state
-            
         return RightChecker.isSystemAdmin(authedAcct, asAdmin);
     }
     

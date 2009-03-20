@@ -341,7 +341,7 @@ public enum TargetType {
             throw ServiceException.FAILURE("internal error", null);
     }
 
-    static Domain getTargetDomain(Provisioning prov, Entry target) throws ServiceException{
+    public static Domain getTargetDomain(Provisioning prov, Entry target) throws ServiceException{
         
         if (target instanceof CalendarResource) {
             CalendarResource cr = (CalendarResource)target;

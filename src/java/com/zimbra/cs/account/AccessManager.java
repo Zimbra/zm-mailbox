@@ -180,7 +180,7 @@ public abstract class AccessManager {
         checkDomainStatus(domain);
     }
     
-    protected void checkDomainStatus(Domain domain) throws ServiceException {
+    public void checkDomainStatus(Domain domain) throws ServiceException {
         if (domain != null) {
             if (domain.isSuspended() || domain.isShutdown())
                 throw ServiceException.PERM_DENIED("domain is " + domain.getDomainStatusAsString());

@@ -258,6 +258,34 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     private static boolean isDomainBasedAccessManager(AccessManager am) {
         return (!(am instanceof ACLAccessManager));
     }
+    
+    /**
+     * check domain status for domain-ed targets: account, cr, dl
+     * 
+     * We can't put this check in ACLAccessManager because some rights, like 
+     * listAccount, listCalendarResource, listDistributionList that takes 
+     * a account/cr/dl target object, but should be allowed even when 
+     * domain status is suspended/shutdown.
+     * 
+     * Note: if target *is* a domain, domain status is *not* checked here.
+     *       - if domain status is "shutdown":
+     *             Modify/DeleteDomain would've been already blocked in the SOAP handlers
+     *       - if domain status is "suspended":
+     *             Modify/DeleteDomain are allowed/denied by our regular ACL checking:
+     *             (i.e. system admin or whoever has the right)
+     *       - for both "shutdown" and "suspended" status:      
+     *             List/Get domain are allowed/denied by our regular ACL checking.
+     * 
+     * @param target
+     */
+    private void checkDomainStatus(AccessManager am, Entry target) throws ServiceException {
+        Domain domain;
+        if (target instanceof Domain)
+            domain = (Domain)target;
+        else
+            domain = TargetType.getTargetDomain(Provisioning.getInstance(), target);
+        am.checkDomainStatus(domain); // will throw if domain is not in an accessible state
+    }
 
     /**
      * only called for domain based access manager
@@ -517,6 +545,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 checkModifyAttrs(AttributeClass.account, (Map<String, Object>)needed);
             
         } else {
+            checkDomainStatus(am, account);
+            
             Boolean canAccess = canAccessAccountCommon(zsc, account);
             boolean hasRight;
             if (canAccess == null)
@@ -544,6 +574,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 checkModifyAttrs(AttributeClass.calendarResource, (Map<String, Object>)needed);
             
         } else {
+            checkDomainStatus(am, cr);
+            
             Boolean canAccess = canAccessAccountCommon(zsc, cr);
             boolean hasRight;
             if (canAccess == null)
@@ -567,6 +599,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (!canAccessEmail(zsc, dl.getName()))
                 throw ServiceException.PERM_DENIED("can not access dl");
         } else {
+            checkDomainStatus(am, dl);
+            
             if (!doCheckRight(am, zsc, dl, needed))
                 throw ServiceException.PERM_DENIED(printNeededRight(dl, needed));
         }
@@ -576,6 +610,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * ------------
      * domain right
      * ------------
+     */
+    /**
+     * called by handlers that need to check right on a domain for domain-ed objects:
+     * account, alias, cr, dl.
+     * 
+     * Note: this method *do* check domain status.  
      */
     protected void checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
@@ -589,11 +629,16 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (domain == null)
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
+            checkDomainStatus(am, domain);
+            
             if (!doCheckRight(am, zsc, domain, needed))
                 throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
         }
     }
     
+    /**
+     * Note: this method do *not* check domain status.  
+     */
     protected void checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         
@@ -615,6 +660,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         }
     }
     
+    /**
+     * Note: this method do *not* check domain status.  
+     */
     protected void checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         
@@ -644,6 +692,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 throw ServiceException.PERM_DENIED(printNeededRight(cos, needed));
         }
     }
+    
     
 
     // ==========================================
