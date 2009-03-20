@@ -86,5 +86,9 @@ public class AddAccountAlias extends AdminDocumentHandler {
 	    relatedRights.add(Admin.R_addCalendarResourceAlias);
 	    relatedRights.add(Admin.R_addAccountAlias);
 	    relatedRights.add(Admin.R_createAlias);
+	    
+	    notes.add("Need " + Admin.R_createAlias.getName() + " right on the domain in which the alias is to be created.");
+	    notes.add("Need " + Admin.R_addAccountAlias.getName() + " right if adding alias for an account.");
+	    notes.add("Need " + Admin.R_addCalendarResourceAlias.getName() + " right if adding alias for a calendar resource.");
 	}
 }
