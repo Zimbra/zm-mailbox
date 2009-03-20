@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on May 26, 2004
- */
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
@@ -24,8 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.MimePartDataSource;
 
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
@@ -36,16 +36,19 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.DocumentDataSource;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MessageDataSource;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -132,12 +135,9 @@ public class CreateContact extends MailDocumentHandler  {
         // check for uploaded attachment
         String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachId != null) {
-            try {
-                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
-                return new Attachment(ByteUtil.getContent(up.getInputStream(), 0), up.getContentType(), name, up.getName());
-            } catch (IOException ioe) {
-                throw ServiceException.FAILURE("error reading uploaded attachment", ioe);
-            }
+            Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
+            UploadDataSource uds = new UploadDataSource(up);
+            return new Attachment(new DataHandler(uds), name); 
         }
 
         int itemId = (int) elt.getAttributeLong(MailConstants.A_ID, -1);
@@ -153,10 +153,8 @@ public class CreateContact extends MailDocumentHandler  {
                             int partNum = Integer.parseInt(part) - 1;
                             if (partNum >= 0 && partNum < contact.getAttachments().size()) {
                                 Attachment att = contact.getAttachments().get(partNum);
-                                return new Attachment(att.getContent(contact), att.getContentType(), name, att.getFilename());
+                                return new Attachment(att.getDataHandler(), name);
                             }
-                        } catch (MessagingException me) {
-                            throw ServiceException.FAILURE("error parsing blob", me);
                         } catch (NumberFormatException nfe) { }
                         throw ServiceException.INVALID_REQUEST("invalid contact part number: " + part, null);
                     } else {
@@ -170,21 +168,26 @@ public class CreateContact extends MailDocumentHandler  {
                             MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
                             if (mp == null)
                                 throw MailServiceException.NO_SUCH_PART(part);
-                            return new Attachment(ByteUtil.getContent(mp.getInputStream(), mp.getSize()), mp.getContentType(), name, Mime.getFilename(mp));
+                            DataSource ds = new MimePartDataSource(mp);
+                            return new Attachment(new DataHandler(ds), name);
                         } catch (MessagingException me) {
                             throw ServiceException.FAILURE("error parsing blob", me);
                         }
                     } else {
-                        return new Attachment(msg.getContent(), "message/rfc822", name, msg.getSubject());
+                        DataSource ds = new MessageDataSource(msg);
+                        return new Attachment(new DataHandler(ds), name);
                     }
                 } else if (item instanceof Document) {
                     Document doc = (Document) item;
                     if (part != null && !part.equals(""))
                         throw MailServiceException.NO_SUCH_PART(part);
-                    return new Attachment(doc.getContent(), doc.getContentType(), name, doc.getName());
+                    DataSource ds = new DocumentDataSource(doc);
+                    return new Attachment(new DataHandler(ds), name);
                 }
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("error attaching existing item data", ioe);
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE("error attaching existing item data", e);
             }
         }
 

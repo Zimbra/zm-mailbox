@@ -369,11 +369,13 @@ public class ToXML {
         }
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter)
+    throws ServiceException {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter, int fields) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter, int fields)
+    throws ServiceException {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -458,10 +460,15 @@ public class ToXML {
         return elem;
     }
 
-    private static void encodeContactAttachment(Element elem, Attachment attach) {
+    private static void encodeContactAttachment(Element elem, Attachment attach)
+    throws ServiceException {
         Element.KeyValuePair kvp = elem.addKeyValuePair(attach.getName(), null);
         kvp.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());
-        kvp.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
+        try {
+            kvp.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to encode attachment", e);
+        }
     }
 
     public static Element encodeNote(Element parent, ItemIdFormatter ifmt, Note note) {

@@ -14,9 +14,8 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,10 +24,11 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.SharedInputStream;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -37,6 +37,7 @@ import org.json.JSONException;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
@@ -44,40 +45,111 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Contact.Attachment;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
 public class ParsedContact {
     private Map<String, String> mFields;
     private List<Attachment> mAttachments;
-    private byte[] mBlob;
+    
+    // Used when parsing existing blobs.
+    private InputStream mSharedStream;
+    
+    // Used when assembling a contact from attachments.
+    private MimeMessage mMimeMessage;
+    
     private String mDigest;
+    private long mSize;
 
     private List<Document> mLuceneDocuments;
-    
+
+    /**
+     * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
+     */
     public ParsedContact(Map<String, ? extends Object> fields) throws ServiceException {
-    	HashMap<String,String> strMap = new HashMap<String,String>();
-        // prune out the empty and blank fields
+        init(fields, null);
+    }
+
+    /**
+     * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
+     */
+    public ParsedContact(Map<String, ? extends Object> fields, byte[] blob) throws ServiceException {
+        init(fields, new SharedByteArrayInputStream(blob));
+    }
+    
+    /**
+     * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
+     */
+    public ParsedContact(Map<String, String> fields, InputStream in)
+    throws ServiceException {
+        init(fields, in);
+    }
+    
+    /**
+     * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
+     */
+    public ParsedContact(Map<String, ? extends Object> fields, List<Attachment> attachments) throws ServiceException {
+        init(fields, null);
+
+        if (attachments != null && !attachments.isEmpty()) {
+            try {
+                mAttachments = attachments;
+                mMimeMessage = generateMimeMessage(attachments);
+                mDigest = ByteUtil.getSHA1Digest(Mime.getInputStream(mMimeMessage), true);
+
+                for (Attachment attach : mAttachments)
+                    mFields.remove(attach.getName());
+                if (fields.isEmpty())
+                    throw ServiceException.INVALID_REQUEST("contact must have fields", null);
+                initializeSizeAndDigest(); // This didn't happen in init() because there was no stream.
+            } catch (MessagingException me) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+            } catch (IOException ioe) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+            }
+        }
+    }
+
+    public ParsedContact(Contact con) throws ServiceException {
+        init(con.getFields(), con.getContentStream());
+    }
+
+    private void init(Map<String, ? extends Object> fields, InputStream in)
+    throws ServiceException {
+        // Initialized shared stream.
+        try {
+            if (in instanceof SharedInputStream) {
+                mSharedStream = in;
+            } else if (in != null) {
+                byte[] content = ByteUtil.getContent(in, 1024);
+                mSharedStream = new SharedByteArrayInputStream(content);
+            }
+        } catch (IOException e) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+        }
+
+        // Initialize fields.
+        Map<String,String> strMap = new HashMap<String,String>();
         if (fields == null)
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
         for (String key : fields.keySet()) {
             Object value = fields.get(key);
             String strValue = null;
-        	key = StringUtil.stripControlCharacters(key);
-        	// encode multi value attributes as JSONObject
-        	if (value instanceof String[]) {
-        		try {
-            		strValue = Contact.encodeMultiValueAttr((String[])value);
-        		} catch (JSONException e) {
+            key = StringUtil.stripControlCharacters(key);
+            // encode multi value attributes as JSONObject
+            if (value instanceof String[]) {
+                try {
+                    strValue = Contact.encodeMultiValueAttr((String[])value);
+                } catch (JSONException e) {
                     ZimbraLog.index.warn("Error encoding multi valued attribute " + key, e);
-        		}
-        	} else if (value instanceof String) {
+                }
+            } else if (value instanceof String) {
                 strValue = StringUtil.stripControlCharacters((String)value);
-        	}
+            }
             
             if (key != null && !key.trim().equals("") && strValue != null && !strValue.equals(""))
                 strMap.put(key, strValue);
@@ -89,89 +161,73 @@ public class ParsedContact {
         addNicknameAndTypeIfPDL(strMap);
 
         mFields = strMap;
-    }
 
-    public ParsedContact(Map<String, ? extends Object> fields, byte[] blob) throws ServiceException {
-        this(fields);
-
-        if (blob != null && blob.length > 0) {
+        // Initialize attachments.
+        InputStream contentStream = null;
+        if (mSharedStream != null) {
             try {
-                mAttachments = parseBlob(blob);
-                mBlob = blob;
-                mDigest = ByteUtil.getDigest(blob);
-
+                // Parse attachments.
+                contentStream = getContentStream();
+                mAttachments = parseBlob(contentStream);
                 for (Attachment attach : mAttachments)
                     mFields.remove(attach.getName());
                 if (fields.isEmpty())
                     throw ServiceException.INVALID_REQUEST("contact must have fields", null);
+
+                initializeSizeAndDigest();
             } catch (MessagingException me) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
             } catch (IOException ioe) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+            } finally {
+                ByteUtil.closeStream(contentStream);
             }
         }
     }
-
-    public ParsedContact(Map<String, ? extends Object> fields, List<Attachment> attachments) throws ServiceException {
-        this(fields);
-
-        if (attachments != null && !attachments.isEmpty()) {
-            try {
-                mAttachments = attachments;
-                mBlob = generateBlob(attachments);
-                mDigest = ByteUtil.getDigest(mBlob);
-
-                for (Attachment attach : mAttachments)
-                    mFields.remove(attach.getName());
-                if (fields.isEmpty())
-                    throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-            } catch (MessagingException me) {
-                throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-            }
-        }
+    
+    private void initializeSizeAndDigest()
+    throws IOException {
+        CalculatorStream calc = new CalculatorStream(getContentStream());
+        mSize = ByteUtil.getDataLength(calc);
+        mDigest = calc.getDigest();
     }
 
-    public ParsedContact(Contact con) throws ServiceException {
-        this(con.getFields(), con.getContent());
-    }
-
-    private static byte[] generateBlob(List<Attachment> attachments) throws MessagingException {
+    private static MimeMessage generateMimeMessage(List<Attachment> attachments)
+    throws MessagingException {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
         MimeMultipart multi = new MimeMultipart("mixed");
         int part = 1;
         for (Attachment attach : attachments) {
-            InternetHeaders headers = new InternetHeaders();
             ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT);
             cdisp.setParameter("filename", attach.getFilename()).setParameter("field", attach.getName());
-            headers.addHeader("Content-Disposition", cdisp.toString());
-            headers.addHeader("Content-Type", attach.getContentType());
-            headers.addHeader("Content-Transfer-Encoding", Mime.ET_8BIT);
-
-            attach.setPartName(Integer.toString(part));
-            multi.addBodyPart(new MimeBodyPart(headers, attach.getContent()));
+            
+            MimeBodyPart bp = new MimeBodyPart();
+            bp.addHeader("Content-Disposition", cdisp.toString());
+            bp.addHeader("Content-Type", attach.getContentType());
+            bp.addHeader("Content-Transfer-Encoding", Mime.ET_8BIT);
+            bp.setDataHandler(attach.getDataHandler());
+            multi.addBodyPart(bp);
+            
+            attach.setPartName(Integer.toString(part++));
         }
         mm.setContent(multi);
         mm.saveChanges();
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            mm.writeTo(baos);
-        } catch (IOException ioe) {
-            // this shouldn't actually happen since the OutputStream doesn't throw IOException
-        }
-        return baos.toByteArray();
+        
+        return mm;
     }
-
-    private static List<Attachment> parseBlob(byte[] blob) throws MessagingException, IOException {
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new ByteArrayInputStream(blob));
+    
+    private static List<Attachment> parseBlob(InputStream in) throws MessagingException, IOException {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), in);
         MimeMultipart multi = (MimeMultipart) mm.getContent();
 
         List<Attachment> attachments = new ArrayList<Attachment>(multi.getCount());
         for (int i = 1; i <= multi.getCount(); i++) {
             MimeBodyPart bp = (MimeBodyPart) multi.getBodyPart(i - 1);
-            byte[] content = ByteUtil.getContent(bp.getInputStream(), bp.getSize());
             ContentDisposition cdisp = new ContentDisposition(bp.getHeader("Content-Disposition", null));
-            attachments.add(new Attachment(content, bp.getContentType(), cdisp.getParameter("field"), cdisp.getParameter("filename"), Integer.toString(i)));
+            
+            Attachment attachment = new Attachment(bp.getDataHandler(), cdisp.getParameter("field"));
+            attachment.setPartName(Integer.toString(i));
+            attachments.add(attachment);
         }
         return attachments;
     }
@@ -204,12 +260,23 @@ public class ParsedContact {
         return mAttachments;
     }
 
-    public byte[] getBlob() {
-        return mBlob;
+    /**
+     * Returns the stream to this contact's blob, or <tt>null</tt> if
+     * it has no attachments. 
+     */
+    public InputStream getContentStream()
+    throws IOException {
+        if (mSharedStream != null) {
+            return ((SharedInputStream) mSharedStream).newStream(0, -1);
+        }
+        if (mMimeMessage != null) {
+            return Mime.getInputStream(mMimeMessage);
+        }
+        return null;
     }
-
+    
     public long getSize() {
-        return mBlob == null ? 0 : mBlob.length;
+        return mSize;
     }
 
     public String getDigest() {
@@ -251,17 +318,30 @@ public class ParsedContact {
 
         addNicknameAndTypeIfPDL(mFields);
 
-        mBlob = null;
         mDigest = null;
         mLuceneDocuments = null;
 
         if (mAttachments != null) {
             try {
-                mBlob = generateBlob(mAttachments);
-                mDigest = ByteUtil.getDigest(mBlob);
+                mMimeMessage = generateMimeMessage(mAttachments);
+                
+                // Original stream is now stale.
+                ByteUtil.closeStream(mSharedStream);
+                mSharedStream = null;
+                
+                initializeSizeAndDigest();
             } catch (MessagingException me) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+            } catch (IOException e) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(e);
             }
+        } else {
+            // No attachments.  Wipe out any previous reference to a blob.
+            ByteUtil.closeStream(mSharedStream);
+            mSharedStream = null;
+            mMimeMessage = null;
+            mSize = 0;
+            mDigest = null;
         }
 
         return this;
@@ -363,7 +443,12 @@ public class ParsedContact {
                 // part.
                 Document doc = handler.getDocument();
                 if (doc != null) {
-                    doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(attach.getSize()), Field.Store.YES, Field.Index.NO));
+                    try {
+                        doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(attach.getSize()), Field.Store.YES, Field.Index.NO));
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("Unable to analyze attachment", e);
+                    }
+                    
                     mLuceneDocuments.add(doc);
                 }
             }

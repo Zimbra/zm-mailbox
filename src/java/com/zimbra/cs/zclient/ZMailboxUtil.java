@@ -899,7 +899,7 @@ public class ZMailboxUtil implements DebugListener {
             doAdminAuth(args);
             break;
         case CREATE_CONTACT:
-            String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt()));
+            String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt())).getId();
             stdout.println(ccId);
             break;
         case CREATE_IDENTITY:
@@ -2376,7 +2376,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doModifyContact(String[] args) throws ServiceException {
-        String id = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getContactMap(args, 1, !ignoreOpt()));
+        String id = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getContactMap(args, 1, !ignoreOpt())).getId();
         stdout.println(id);
     }
 

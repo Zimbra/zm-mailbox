@@ -15,17 +15,21 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.KeyValuePair;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.zclient.event.ZModifyContactEvent;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import org.json.JSONException;
-
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.json.JSONException;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 
 public class ZContact implements ZItem, ToZJSONObject {
 
@@ -54,6 +58,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     private long mDate;
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
+    private Map<String, String> mAttachments;
     private boolean mGalContact;
     private ZMailbox mMailbox;
 
@@ -86,7 +91,7 @@ public class ZContact implements ZItem, ToZJSONObject {
             mFlagChar = flagChar;            
         }
     }
-
+    
     public ZContact(Element e, boolean galContact, ZMailbox mailbox) throws ServiceException {
         this(e, mailbox);
         mGalContact = galContact;
@@ -101,11 +106,22 @@ public class ZContact implements ZItem, ToZJSONObject {
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
-        mAttrs = new HashMap<String, String>();
+        
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        HashMap<String, String> attachments = new HashMap<String, String>();
 
-        for (KeyValuePair pair : e.listKeyValuePairs(MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME)) {
-            mAttrs.put(pair.getKey(), pair.getValue());
+        for (Element attrEl : e.listElements(MailConstants.E_ATTRIBUTE)) {
+            String name = attrEl.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
+            String part = attrEl.getAttribute(MailConstants.A_PART, null);
+            if (part != null) {
+                attachments.put(name, part);
+            } else {
+                attrs.put(name, attrEl.getText());
+            }
         }
+        
+        mAttrs = Collections.unmodifiableMap(attrs);
+        mAttachments = Collections.unmodifiableMap(attachments);
     }
 
     public ZMailbox getMailbox() {
@@ -169,7 +185,28 @@ public class ZContact implements ZItem, ToZJSONObject {
     public Map<String, String> getAttrs() {
         return mAttrs;
     }
-
+    
+    /**
+     * Returns the attachment names, or an empty set.
+     */
+    public Set<String> getAttachmentNames() {
+        return mAttachments.keySet();
+    }
+    
+    public String getAttachmentPartName(String name) {
+        return mAttachments.get(name);
+    }
+    
+    public InputStream getAttachmentData(String name)
+    throws ServiceException {
+        String part = mAttachments.get(name);
+        if (part == null) {
+            throw ZClientException.CLIENT_ERROR("Invalid attachment name: " + name, null);
+        }
+        String url = String.format("?id=%s&part=%s", getId(), part);
+        return mMailbox.getRESTResource(url);
+    }
+    
     public long getDate() {
         return mDate;
     }
@@ -264,7 +301,7 @@ public class ZContact implements ZItem, ToZJSONObject {
 
     public void modify(Map<String,String> attrs, boolean replace) throws ServiceException {
         if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
-        mMailbox.modifyContact(mId, replace, attrs, true);
+        mMailbox.modifyContact(mId, replace, attrs);
     }
 
     // TODO: better handling of folder/tag ids

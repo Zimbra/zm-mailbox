@@ -17,17 +17,13 @@ package com.zimbra.cs.store;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -175,20 +171,11 @@ public class UncompressedFileCache<K> {
     
     private UncompressedFile uncompressToTempFile(File compressedFile, boolean sync)
     throws IOException {
-        // Initialize streams and digest calculator.
-        MessageDigest digestCalculator;
-        try {
-            digestCalculator = MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Unable to calculate digest for " + compressedFile.getPath(), e);
-        }
-        
         // Write the uncompressed file and calculate the digest.
-        InputStream in = new GZIPInputStream(new FileInputStream(compressedFile));
-        in  = new DigestInputStream(in, digestCalculator);
+        CalculatorStream calc = new CalculatorStream(new GZIPInputStream(new FileInputStream(compressedFile)));
         File tempFile = File.createTempFile(UncompressedFileCache.class.getSimpleName(), null);
-        FileUtil.uncompress(in, tempFile,  sync);
-        String digest = ByteUtil.encodeFSSafeBase64(digestCalculator.digest());
+        FileUtil.uncompress(calc, tempFile,  sync);
+        String digest = calc.getDigest();
         sLog.debug("Uncompressed %s to %s, digest=%s.", compressedFile.getPath(), tempFile.getPath(), digest);
         
         UncompressedFile result = new UncompressedFile();

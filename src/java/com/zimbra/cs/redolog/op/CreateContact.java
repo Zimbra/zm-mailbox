@@ -18,11 +18,15 @@
  */
 package com.zimbra.cs.redolog.op;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -38,7 +42,13 @@ public class CreateContact extends RedoableOp {
     private int mId;
     private int mFolderId;
     private Map<String, String> mFields;
-    private byte[] mBlob;
+    
+    /** Used when this op is created from a <tt>ParsedContact</tt>. */
+    private ParsedContact mParsedContact;
+    
+    /** Used when this op is read from the redolog. */
+    private RedoableOpData mRedoLogContent;
+    
     private short mVolumeId = -1;
     private String mTags;
 
@@ -52,7 +62,7 @@ public class CreateContact extends RedoableOp {
         mId = UNKNOWN_ID;
         mFolderId = folderId;
         mFields = pc.getFields();
-        mBlob = pc.getBlob();
+        mParsedContact = pc;
         mTags = tags != null ? tags : "";
     }
 
@@ -110,12 +120,22 @@ public class CreateContact extends RedoableOp {
             }
         }
         if (getVersion().atLeast(1, 14)) {
-            int length = mBlob == null ? 0 : mBlob.length;
-            out.writeInt(length);
-            if (length > 0)
-                out.write(mBlob);
+            out.writeInt((int) mParsedContact.getSize());
         }
 	}
+
+    
+    @Override
+    public InputStream getAdditionalDataStream() throws IOException {
+        if (getVersion().atLeast(1, 14)) {
+            if (mParsedContact != null) {
+                return mParsedContact.getContentStream();
+            } else if (mRedoLogContent != null) {
+                return mRedoLogContent.getInputStream();
+            }
+        }
+        return null;
+    }
 
     @Override
 	protected void deserializeData(RedoLogInput in) throws IOException {
@@ -136,9 +156,9 @@ public class CreateContact extends RedoableOp {
             int length = in.readInt();
             if (length > StoreIncomingBlob.MAX_BLOB_SIZE)
                 throw new IOException("deserialized message size too large (" + length + " bytes)");
-            mBlob = new byte[length];
-            if (length > 0)
-                in.readFully(mBlob);
+            if (length > 0) {
+                mRedoLogContent = new RedoableOpData(new File(in.getPath()), in.getFilePointer(), length);
+            }
         }
 	}
 
@@ -146,8 +166,10 @@ public class CreateContact extends RedoableOp {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        InputStream in = null;
         try {
-            ParsedContact pc = new ParsedContact(mFields, mBlob);
+            in = getAdditionalDataStream();
+            ParsedContact pc = new ParsedContact(mFields, in);
             mailbox.createContact(getOperationContext(), pc, mFolderId, mTags);
         } catch (ServiceException e) {
             String code = e.getCode();
@@ -157,6 +179,8 @@ public class CreateContact extends RedoableOp {
             } else {
                 throw e;
             }
+        } finally {
+            ByteUtil.closeStream(in);
         }
     }
 }

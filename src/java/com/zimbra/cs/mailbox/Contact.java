@@ -39,9 +39,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.SharedInputStream;
+import javax.mail.util.ByteArrayDataSource;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -248,26 +252,41 @@ public class Contact extends MailItem {
     }
 
     public static class Attachment implements DataSource {
-        private byte[] mContent;
-        private int mSize;
-        private String mContentType;
-        private String mFilename;
+        private DataHandler mDataHandler;
+        private Integer mSize;
         private String mFieldName;
         private String mPartName;
 
+        /**
+         * Creates a new attachment.
+         * 
+         * @param content attachment content
+         * @param ctype content type
+         * @param field field name
+         * @param filename filename
+         */
         public Attachment(byte[] content, String ctype, String field, String filename) {
-            mContent = content;
-            mSize = content == null ? 0 : mContent.length;
-            mContentType = ctype == null ? Mime.CT_APPLICATION_OCTET_STREAM : ctype.toLowerCase();
+            if (ctype == null) {
+                ctype = Mime.CT_APPLICATION_OCTET_STREAM;
+            } else {
+                ctype = ctype.toLowerCase();
+            }
+            ByteArrayDataSource ds = new ByteArrayDataSource(content, ctype); 
+            if (filename != null) {
+                ds.setName(filename);
+            } else {
+                ds.setName("unknown");
+            }
+            mDataHandler = new DataHandler(ds);
+            mSize = content == null ? 0 : content.length;
             mFieldName = field;
-            mFilename = filename == null ? "unknown" : filename;
         }
 
-        public Attachment(byte[] content, String ctype, String field, String filename, String part) {
-            this(content, ctype, field, filename);
-            setPartName(part);
+        public Attachment(DataHandler dataHandler, String field) {
+            mDataHandler = dataHandler;
+            mFieldName = field;
         }
-
+        
         Attachment(Metadata meta) throws ServiceException {
             this(null, meta.get(FN_CTYPE), meta.get(FN_FIELD), meta.get(FN_NAME));
             setPartName(meta.get(FN_PART));
@@ -275,32 +294,75 @@ public class Contact extends MailItem {
         }
 
         public void setPartName(String name)  { mPartName = name; }
-        public void clearContent()            { mContent = null; }
-
-        public String getContentType()         { return mContentType; }
-        public String getName()                { return mFieldName; }
-        public InputStream getInputStream()    { return new ByteArrayInputStream(mContent); }
+        public void setSize(int size)         { mSize = size; }
+        
+        public String getContentType()        { return mDataHandler.getContentType(); }
+        public String getName()               { return mFieldName; }
+        
+        public int getSize()
+        throws IOException {
+            if (mSize == null) {
+                if (mDataHandler != null) {
+                    mSize = (int) ByteUtil.getDataLength(mDataHandler.getInputStream());
+                } else {
+                    mSize = 0;
+                }
+            }
+            return mSize;
+        }
+        /**
+         * Returns an <tt>InputStream</tt> to this attachment's content, or <tt>null</tt>
+         * if there is no content.
+         */
+        public InputStream getInputStream()
+        throws IOException {
+            if (mDataHandler == null) {
+                return null;
+            }
+            return mDataHandler.getInputStream();
+        }
+        
         public OutputStream getOutputStream()  { throw new UnsupportedOperationException(); }
 
-        public byte[] getContent()   { return mContent; }
-        public int getSize()         { return mSize; }
-        public String getFilename()  { return mFilename; }
+        /**
+         * Returns this attachment's content, or <tt>null</tt>.
+         */
+        public byte[] getContent()
+        throws IOException {
+            byte[] content = null;
+            if (mDataHandler != null) {
+                content = ByteUtil.getContent(getInputStream(), mSize);
+            }
+            return content;
+        }
+        
+        public String getFilename()  { return mDataHandler.getName(); }
         public String getPartName()  { return mPartName; }
+        public DataHandler getDataHandler() { return mDataHandler; }
 
+        /**
+         * Returns a stream the content of an attachment that's owned by a <tt>Contact</tt>.
+         */
+        public InputStream getInputStream(Contact con)
+        throws ServiceException, IOException, MessagingException {
+            return Mime.getMimePart(con.getMimeMessage(false), mPartName).getInputStream();
+        }
+        
+        /**
+         * Returns the content of an attachment that's owned by a <tt>Contact</tt>.
+         */
         public byte[] getContent(Contact con) throws ServiceException, IOException, MessagingException {
-            if (mContent != null)
-                return mContent;
-            return ByteUtil.getContent(Mime.getMimePart(con.getMimeMessage(false), mPartName).getInputStream(), mSize);
+            return ByteUtil.getContent(getInputStream(con), mSize);
         }
 
         private static final String FN_SIZE = "size", FN_NAME = "name", FN_PART = "part", FN_CTYPE = "ctype", FN_FIELD = "field";
 
         Metadata asMetadata() {
-            return new Metadata().put(FN_SIZE, mSize).put(FN_NAME, mFilename).put(FN_PART, mPartName).put(FN_CTYPE, mContentType).put(FN_FIELD, mFieldName);
+            return new Metadata().put(FN_SIZE, mSize).put(FN_NAME, getFilename()).put(FN_PART, mPartName).put(FN_CTYPE, getContentType()).put(FN_FIELD, mFieldName);
         }
 
         @Override public String toString() {
-            return new StringBuilder(mFieldName).append(" [").append(mContentType).append(", ").append(mSize).append("B]").toString();
+            return new StringBuilder(mFieldName).append(" [").append(getContentType()).append(", ").append(mSize).append("B]").toString();
         }
     }
 
@@ -695,11 +757,6 @@ public class Contact extends MailItem {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
         mAttachments = pc.getAttachments();
-        if (mAttachments != null) {
-            // don't hold onto attachment content in memory
-            for (Attachment attach : mAttachments)
-                attach.clearContent();
-        }
 
         mData.flags &= ~Flag.BITMASK_ATTACHED;
         if (pc.hasAttachment())

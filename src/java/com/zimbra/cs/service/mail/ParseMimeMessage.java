@@ -18,11 +18,38 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.activation.DataHandler;
+import javax.mail.Header;
+import javax.mail.MessagingException;
+import javax.mail.Part;
+import javax.mail.SendFailedException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePart;
+
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ExceptionToString;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.IDNUtil;
@@ -39,52 +66,19 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.Part;
-import javax.mail.SendFailedException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimePart;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
 
 /**
  * @author tim
@@ -692,37 +686,6 @@ public class ParseMimeMessage {
         mmp.addBodyPart(mbp);
     }
 
-    // subclass of MimePartDataSource that cleans up Content-Type headers before returning them so JavaMail doesn't barf
-    private static class FixedMimePartDataSource implements DataSource {
-        private final MimePart mMimePart;
-
-        FixedMimePartDataSource(MimePart mimePart) {
-            mMimePart = mimePart;
-        }
-
-        public String getName() {
-            return Mime.getFilename(mMimePart);
-        }
-        public String getContentType() {
-            try {
-                return new ContentType(mMimePart.getContentType()).toString();
-            } catch (MessagingException e) {
-                return Mime.CT_APPLICATION_OCTET_STREAM;
-            }
-        }
-        public InputStream getInputStream() throws IOException {
-            try {
-                return mMimePart.getInputStream();
-            } catch (MessagingException e) {
-                IOException ioe = new IOException(e.getMessage());
-                ioe.initCause(e);
-                throw ioe;
-            }
-        }
-        public OutputStream getOutputStream() {
-            throw new UnsupportedOperationException();
-        }
-    }
 
     private static void attachPart(MimeMultipart mmp, ItemId iid, String part, String contentID, ParseMessageContext ctxt)
     throws IOException, MessagingException, ServiceException {
@@ -748,7 +711,7 @@ public class ParseMimeMessage {
         ctxt.incrementSize("part " + filename, mp.getSize());
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new FixedMimePartDataSource(mp)));
+        mbp.setDataHandler(mp.getDataHandler());
 
         String ctype = mp.getContentType();
         if (ctype != null)

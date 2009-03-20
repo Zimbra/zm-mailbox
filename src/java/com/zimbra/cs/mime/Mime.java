@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -1187,5 +1189,24 @@ public class Mime {
         int num;  byte buf[] = new byte[1024];
         while ((num = is.read(buf)) != -1)
             System.out.write(buf, 0, num);
+    }
+
+    /**
+     * Returns an <tt>InputStream</tt> to the content of a <tt>MimeMessage</tt>
+     * by starting a thread that serves up its content to a <tt>PipedOutputStream</tt>.
+     * This workaround is necessary because JavaMail does not provide <tt>InputStream</tt>
+     * access to the content.
+     */
+    public static InputStream getInputStream(MimeMessage msg)
+    throws IOException {
+        // Nasty hack because JavaMail doesn't provide an InputStream accessor
+        // to the entire RFC 822 content of a MimeMessage.  Start a thread that
+        // serves up the content of the MimeMessage via PipedOutputStream.
+        PipedInputStream in = new PipedInputStream();
+        PipedOutputStream out = new PipedOutputStream(in);
+        Thread thread = new Thread(new MimeMessageOutputThread(msg, out));
+        thread.setName("MimeMessageThread");
+        thread.start();
+        return in;
     }
 }

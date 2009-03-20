@@ -15,66 +15,30 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.RemoteServiceException;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.Disposition;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.soap.VoiceConstants;
-import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.zclient.ZFolder.Color;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZCreateContactEvent;
-import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
-import com.zimbra.cs.zclient.event.ZCreateEvent;
-import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
-import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
-import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
-import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
-import com.zimbra.cs.zclient.event.ZCreateTagEvent;
-import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
-import com.zimbra.cs.zclient.event.ZDeleteEvent;
-import com.zimbra.cs.zclient.event.ZEventHandler;
-import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZModifyContactEvent;
-import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
-import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
-import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
-import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
-import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
-import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
-import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
-import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.cs.servlet.ZimbraServlet;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -91,31 +55,41 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.RemoteServiceException;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.VoiceConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.Element.Disposition;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.zclient.ZFolder.Color;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.*;
 
 public class ZMailbox implements ToZJSONObject {
 
@@ -943,6 +917,10 @@ public class ZMailbox implements ToZJSONObject {
         }
         return mGetInfoResult;
     }
+    
+    public int getTimeout() {
+        return mTransport.getTimeout();
+    }
 
     public static class JsonDebugListener implements DebugListener {
             Element env;
@@ -1366,54 +1344,126 @@ public class ZMailbox implements ToZJSONObject {
         return result;
     }
 
-    public String createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
-        return createContact(folderId, tags, attrs, true).getId();
+    /**
+     * Specifies properties for an attachment when creating or modifying
+     * a contact.
+     */
+    public static class ZAttachmentInfo {
+        private String mAttachmentId;
+        private String mPartName;
+        private String mItemId;
+        
+        public ZAttachmentInfo setAttachmentId(String attachmentId) {
+            mAttachmentId = attachmentId;
+            return this;
+        }
+        
+        public ZAttachmentInfo setPartName(String partName) {
+            mPartName = partName;
+            return this;
+        }
+        
+        public ZAttachmentInfo setItemId(String itemId) {
+            mItemId = itemId;
+            return this;
+        }
+        
+        public String getAttachmentId() { return mAttachmentId; }
+        public String getPartName() { return mPartName; }
+        public String getItemId() { return mItemId; }
+        
+        public String toString() {
+            return String.format("%s: {attachmentId=%s, partName=%s, itemId=%s}",
+                ZAttachmentInfo.class.getSimpleName(), mAttachmentId, mPartName, mItemId);
+        }
+    }
+    
+    /**
+     * Creates a new contact.
+     * @param folderId the new contact's folder id
+     * @param tags tags to set on the contact, or <tt>null</tt>
+     * @param attrs contact attributes (key/value)
+     * @return the new contact
+     * @throws ServiceException
+     */
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
+        return createContact(folderId, tags, attrs, null);
     }
 
-    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, boolean verbose) throws ServiceException {
+    /**
+     * Creates a new contact.
+     * @param folderId the new contact's folder id
+     * @param tags tags to set on the contact, or <tt>null</tt>
+     * @param attrs contact attributes (key/value)
+     * @param attachments contact attachments (key/upload id) or <tt>null</tt>
+     * @param verbose <tt>false</tt> to only initialize the <tt>id</tt> of the return <tt>ZContact</tt> object
+     * @return the new contact
+     * @throws ServiceException
+     */
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments)
+    throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
-        req.addAttribute(MailConstants.A_VERBOSE, verbose);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         if (folderId != null)
             cn.addAttribute(MailConstants.A_FOLDER, folderId);
         if (tags != null)
             cn.addAttribute(MailConstants.A_TAGS, tags);
-        for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            cn.addKeyValuePair(entry.getKey(), entry.getValue().trim(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
-        }
+        addAttrsAndAttachments(cn, attrs, attachments);
         return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
-
-    /**
-     *
-     * @param id of contact
-     * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
-     * @param attrs modified attrs
-     * @return updated contact
-     * @throws ServiceException on error
-     */
-    public String modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
-        return modifyContact(id, replace, attrs, true).getId();
+    
+    private void addAttrsAndAttachments(Element cn, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments)
+    throws ServiceException {
+        if (attrs != null) {
+            for (Map.Entry<String, String> entry : attrs.entrySet()) {
+                cn.addKeyValuePair(entry.getKey(), entry.getValue().trim(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
+            }
+        }
+        if (attachments != null) {
+            for (String name : attachments.keySet()) {
+                ZAttachmentInfo info = attachments.get(name);
+                
+                Element attachEl =  cn.addElement(MailConstants.E_ATTRIBUTE);
+                attachEl.addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+                if (info.getAttachmentId() != null) {
+                    attachEl.addAttribute(MailConstants.A_ATTACHMENT_ID, info.getAttachmentId());
+                } else if (info.getItemId() != null) {
+                    attachEl.addAttribute(MailConstants.A_ID, info.getItemId());
+                    attachEl.addAttribute(MailConstants.A_PART, info.getPartName());
+                } else if (info.getPartName() != null) {
+                    attachEl.addAttribute(MailConstants.A_PART, info.getPartName());
+                }
+            }
+        }
     }
-
+    
     /**
-     *
      * @param id of contact
      * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
      * @param attrs modified attrs
      * @return updated contact
      * @throws ServiceException on error
      */
-    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, boolean verbose) throws ServiceException {
+    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
+        return modifyContact(id, replace, attrs, null);
+    }
+    
+    /**
+     * @param id of contact
+     * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
+     * @param attrs modified attrs, or <tt>null</tt>
+     * @param attachments modified attachments , or <tt>null</tt>
+     * @return updated contact
+     * @throws ServiceException on error
+     */
+    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments)
+    throws ServiceException {
         Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
-        req.addAttribute(MailConstants.A_VERBOSE, verbose);
         if (replace)
             req.addAttribute(MailConstants.A_REPLACE, replace);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, id);
-        for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            cn.addKeyValuePair(entry.getKey(), entry.getValue().trim(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
-        }
+        addAttrsAndAttachments(cn, attrs, attachments);
         return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
 
@@ -1964,8 +2014,12 @@ public class ZMailbox implements ToZJSONObject {
         return aid;
     }
 
-    public String uploadContentAsStream(InputStream in, String contentType, long contentLength, int msTimeout) throws ServiceException {
+    public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout)
+    throws ServiceException {
         String aid = null;
+        if (name != null) {
+            contentType += "; name=" + name;
+        }
 
         URI uri = getUploadURI();
         HttpClient client = getHttpClient(uri);
@@ -2390,13 +2444,24 @@ public class ZMailbox implements ToZJSONObject {
      * @param msecTimeout connection timeout
      * @throws ServiceException on error
      */
-    @SuppressWarnings({"EmptyCatchBlock"})
     public void getRESTResource(
             String relativePath, OutputStream os, boolean closeOs,
             String startTimeArg, String endTimeArg, int msecTimeout)
     throws ServiceException {
+        InputStream in = null;
+        try {
+            in = getRESTResource(relativePath, startTimeArg, endTimeArg, msecTimeout);
+            ByteUtil.copy(in, false, os, closeOs);
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR("Unable to get " + relativePath, e);
+        } finally {
+            ByteUtil.closeStream(in);
+        }
+    }
+
+    private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg, int msecTimeout)
+    throws ServiceException {
         GetMethod get = null;
-        InputStream is = null;
         URI uri = null;
 
         int statusCode;
@@ -2427,10 +2492,10 @@ public class ZMailbox implements ToZJSONObject {
             statusCode = client.executeMethod(get);
             // parse the response
             if (statusCode == 200) {
-                is = get.getResponseBodyAsStream();
-                ByteUtil.copy(is, false, os, false);
+                return new GetMethodInputStream(get);
             } else {
-                throw ServiceException.FAILURE("GET failed, status=" + statusCode+" "+get.getStatusText(), null);
+                String msg = String.format("GET from %s failed, status=%d.  %s", uri.toString(), statusCode, get.getStatusText());
+                throw ServiceException.FAILURE(msg, null);
             }
         } catch (IOException e) {
             String fromUri = "";
@@ -2439,28 +2504,16 @@ public class ZMailbox implements ToZJSONObject {
             }
             String msg = String.format("Unable to get REST resource%s: %s", fromUri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
-        } finally {
-            ByteUtil.closeStream(is);
-            if (closeOs)
-                ByteUtil.closeStream(os);
-            if (get != null)
-                get.releaseConnection();
         }
     }
-
+    
     /**
-     *
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
-     * @param os the stream to send the output to
-     * @param closeOs whether or not to close the output stream when done
-     * @param msecTimeout connection timeout
      * @throws ServiceException on error
      */
-    @SuppressWarnings({"EmptyCatchBlock"})
-    public void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout)
-            throws ServiceException
-    {
-        getRESTResource(relativePath, os, closeOs, null, null, msecTimeout);
+    public InputStream getRESTResource(String relativePath)
+    throws ServiceException {
+        return getRESTResource(relativePath, null, null, getTimeout());
     }
 
     /**
@@ -2472,10 +2525,9 @@ public class ZMailbox implements ToZJSONObject {
      * @param contentType optional content-type header value (defaults to "application/octect-stream")
      * @param ignoreAndContinueOnError if true, set optional ignore=1 query string parameter
      * @param preserveAlarms if true, set optional preserveAlarms=1 query string parameter
-     * @param msecTimeout connection timeout in milliseconds
+     * @param msecTimeout connection timeout in milliseconds, or <tt>-1</tt> for no timeout
      * @throws ServiceException on error
      */
-    @SuppressWarnings({"EmptyCatchBlock"})
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
                                  String contentType, boolean ignoreAndContinueOnError, boolean preserveAlarms,
                                  int msecTimeout)
@@ -2530,10 +2582,9 @@ public class ZMailbox implements ToZJSONObject {
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
      * @param contentType optional content-type header value (defaults to "application/octect-stream")
-     * @param msecTimeout connection timeout in milliseconds
+     * @param msecTimeout connection timeout in milliseconds, or <tt>-1</tt> for no timeout
      * @throws ServiceException on error
      */
-    @SuppressWarnings({"EmptyCatchBlock"})
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
                                  String contentType,
                                  int msecTimeout)
@@ -4602,3 +4653,4 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 }
+

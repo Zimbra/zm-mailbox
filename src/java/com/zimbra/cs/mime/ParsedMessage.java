@@ -24,8 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
@@ -666,7 +664,7 @@ public class ParsedMessage {
                 return StoreManager.getInstance().getContent(mIncomingBlob);
             }
             if (mMimeMessage != null) {
-                return getInputStream(mMimeMessage);
+                return Mime.getInputStream(mMimeMessage);
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get InputStream.", e);
@@ -675,19 +673,6 @@ public class ParsedMessage {
         ZimbraLog.mailbox.warn("%s.getInputStream(): Unable to get input stream because message data is not available.",
             ParsedMessage.class.getSimpleName());
         return null;
-    }
-    
-    private InputStream getInputStream(MimeMessage msg)
-    throws IOException {
-        // Nasty hack because JavaMail doesn't provide an InputStream accessor
-        // to the entire RFC 822 content of a MimeMessage.  Start a thread that
-        // serves up the content of the MimeMessage via PipedOutputStream.
-        PipedInputStream in = new PipedInputStream();
-        PipedOutputStream out = new PipedOutputStream(in);
-        Thread thread = new Thread(new MimeMessageOutputThread(mMimeMessage, out));
-        thread.setName("MimeMessageThread");
-        thread.start();
-        return in;
     }
     
     public boolean isAttachmentIndexingEnabled() {

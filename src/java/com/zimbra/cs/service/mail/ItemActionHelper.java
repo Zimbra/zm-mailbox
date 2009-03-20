@@ -48,6 +48,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMountpoint;
@@ -511,7 +512,8 @@ public class ItemActionHelper {
 
             switch (item.getType()) {
                 case MailItem.TYPE_CONTACT:
-                    createdId = zmbx.createContact(folderStr, null, ((Contact) item).getFields());
+                    ZContact contact = zmbx.createContact(folderStr, null, ((Contact) item).getFields());
+                    createdId = contact.getId();
                     mCreatedIds.add(createdId);
                     break;
 

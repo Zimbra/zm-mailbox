@@ -5898,7 +5898,7 @@ public class Mailbox {
             if (pc.hasAttachment()) {
                 try {
                     StoreManager sm = StoreManager.getInstance();
-                    Blob blob = sm.storeIncoming(pc.getBlob(), pc.getDigest(), null, volumeId);
+                    Blob blob = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null, volumeId, null, false);
                     MailboxBlob mblob = sm.renameTo(blob, this, contactId, getOperationChangeID(), volumeId);
 
                     markOtherItemDirty(mblob);
@@ -5957,7 +5957,7 @@ public class Mailbox {
                 }
                 
                 try {
-                    con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
+                    con.setContent(pc.getContentStream(), (int) pc.getSize(), pc.getDigest(), volumeId, pc);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }

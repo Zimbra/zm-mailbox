@@ -18,11 +18,15 @@
  */
 package com.zimbra.cs.redolog.op;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.ParsedContact;
@@ -36,8 +40,13 @@ public class ModifyContact extends RedoableOp {
 
     private int mId;
     private Map<String, String> mFields;
-    private byte[] mBlob;
     private short mVolumeId = -1;
+    
+    /** Used when this op is created from a <tt>ParsedContact</tt>. */
+    private ParsedContact mParsedContact;
+
+    /** Used when this op is read from the redolog. */
+    private RedoableOpData mRedoLogContent;
 
     public ModifyContact() {
         mId = UNKNOWN_ID;
@@ -47,7 +56,7 @@ public class ModifyContact extends RedoableOp {
         setMailboxId(mailboxId);
         mId = id;
         mFields = pc.getFields();
-        mBlob = pc.getBlob();
+        mParsedContact = pc;
     }
 
     public void setVolumeId(short volumeId) {
@@ -94,12 +103,22 @@ public class ModifyContact extends RedoableOp {
         }
         if (getVersion().atLeast(1, 14)) {
             out.writeShort(mVolumeId);
-            out.writeInt(mBlob == null ? 0 : mBlob.length);
-            if (mBlob != null)
-                out.write(mBlob);
+            out.writeInt((int) mParsedContact.getSize());
         }
     }
 
+    @Override
+    public InputStream getAdditionalDataStream() throws IOException {
+        if (getVersion().atLeast(1, 14)) {
+            if (mParsedContact != null) {
+                return mParsedContact.getContentStream();
+            } else if (mRedoLogContent != null) {
+                return mRedoLogContent.getInputStream();
+            }
+        }
+        return null;
+    }
+    
     @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
@@ -117,15 +136,25 @@ public class ModifyContact extends RedoableOp {
         if (getVersion().atLeast(1, 14)) {
             mVolumeId = in.readShort();
             int length = in.readInt();
-            if (length > 0)
-                in.readFully(mBlob = new byte[length]);
+            if (length > 0) {
+                mRedoLogContent = new RedoableOpData(new File(in.getPath()), in.getFilePointer(), length);
+            }
         }
     }
 
     @Override
     public void redo() throws ServiceException {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        ParsedContact pc = new ParsedContact(mFields, mBlob);
-        mailbox.modifyContact(getOperationContext(), mId, pc);
+        
+        InputStream in = null;
+        try {
+            in = getAdditionalDataStream();
+            ParsedContact pc = new ParsedContact(mFields, in);
+            mailbox.modifyContact(getOperationContext(), mId, pc);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Redo error", e);
+        } finally {
+            ByteUtil.closeStream(in);
+        }
     }
 }
