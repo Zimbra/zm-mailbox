@@ -88,7 +88,7 @@ import com.zimbra.cs.util.NetUtil;
 /**
  * 
  * <pre>
- *   http://server/service/user/[&tilde;][{username}]/[{folder}]?[{query-params}]
+ *   http://server/service/home/[&tilde;][{username}]/[{folder}]?[{query-params}]
  *          fmt={ics, csv, etc}
  *          id={item-id}
  *          imap_id={item-imap-id}

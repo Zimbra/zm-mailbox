@@ -462,6 +462,7 @@ public class FileUploadServlet extends ZimbraServlet {
             filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
 
         if (filename == null || filename.trim().equals("")) {
+            mLog.info("Rejecting upload with no name.");
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
             return;
