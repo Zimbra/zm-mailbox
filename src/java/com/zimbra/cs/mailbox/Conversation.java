@@ -26,6 +26,7 @@ import java.util.List;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -215,8 +216,8 @@ public class Conversation extends MailItem {
         return true;
     }
 
-    private static final int RECALCULATE_CHANGE_MASK = Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD |
-                                                       Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS;
+    private static final int RECALCULATE_CHANGE_MASK = Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS  | Change.MODIFIED_SENDERS |
+                                                       Change.MODIFIED_SIZE | Change.MODIFIED_UNREAD | Change.MODIFIED_METADATA;
 
     SenderList recalculateMetadata() throws ServiceException {
         return recalculateMetadata(getMessages());
@@ -224,19 +225,21 @@ public class Conversation extends MailItem {
 
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
+        
+        markItemModified(RECALCULATE_CHANGE_MASK);
 
         mEncodedSenders = null;
         mSenderList = new SenderList(msgs);
-
         mData.size = msgs.size();
+
         mData.unreadCount = 0;
-
-        markItemModified(RECALCULATE_CHANGE_MASK);
-
         mInheritedTagSet = new TagSet();
+        mExtendedData = null;
         for (Message msg : msgs) {
+            // unread count is updated via MailItem.addChild() for some reason...
             super.addChild(msg);
             mInheritedTagSet.updateFlags(msg.getInternalFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
+            mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
 
         // need to rewrite the overview metadata
@@ -245,7 +248,6 @@ public class Conversation extends MailItem {
         return mSenderList;
     }
 
-    public static final byte SORT_ID_ASCENDING   = DbSearch.SORT_BY_ID | DbSearch.SORT_ASCENDING;
     public static final byte SORT_DATE_ASCENDING = DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING;
 
     /** Returns all the {@link Message}s in this conversation.  The messages
@@ -292,9 +294,10 @@ public class Conversation extends MailItem {
     static Conversation create(Mailbox mbox, int id, Message[] msgs) throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT && msgs.length > 0);
         Arrays.sort(msgs, new Message.SortDateAscending());
+
         int date = 0, unread = 0;
         StringBuilder tags = new StringBuilder();
-        SenderList sl = new SenderList(msgs);
+        CustomMetadataList extended = null;
         for (int i = 0; i < msgs.length; i++) {
             Message msg = msgs[i];
             if (msg == null)
@@ -302,6 +305,7 @@ public class Conversation extends MailItem {
             date = Math.max(date, msg.mData.date);
             unread += msg.mData.unreadCount;
             tags.append(i == 0 ? "-" : ",-").append(msg.mData.flags).append(',').append(msg.mData.tags);
+            extended = MetadataCallback.duringConversationAdd(extended, msg);
         }
 
         UnderlyingData data = new UnderlyingData();
@@ -311,7 +315,7 @@ public class Conversation extends MailItem {
         data.subject     = msgs.length > 0 ? msgs[0].getNormalizedSubject() : "";
         data.date        = date;
         data.size        = msgs.length;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, sl);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msgs));
         data.unreadCount = unread;
         data.inheritedTags = tags.toString();
         data.contentChanged(mbox);
@@ -605,23 +609,29 @@ public class Conversation extends MailItem {
 
     /** please call this *after* adding the child row to the DB */
     @Override void addChild(MailItem child) throws ServiceException {
-        super.addChild(child);
+        if (!(child instanceof Message))
+            throw MailServiceException.CANNOT_PARENT();
+        Message msg = (Message) child;
+
+        super.addChild(msg);
 
         // update inherited tags, if applicable
-        if (child.mData.tags != 0 || child.mData.flags != 0) {
+        if (msg.mData.tags != 0 || msg.mData.flags != 0) {
             int oldFlags = mData.flags;
             long oldTags = mData.tags;
 
-            if (child.mData.tags != 0)
-                mInheritedTagSet.updateTags(child.mData.tags, true);
-            if (child.mData.flags != 0)
-                mInheritedTagSet.updateFlags(child.mData.flags, true);
+            if (msg.mData.tags != 0)
+                mInheritedTagSet.updateTags(msg.mData.tags, true);
+            if (msg.mData.flags != 0)
+                mInheritedTagSet.updateFlags(msg.mData.flags, true);
 
             if (mData.flags != oldFlags)  markItemModified(Change.MODIFIED_FLAGS);
             if (mData.tags != oldTags)    markItemModified(Change.MODIFIED_TAGS);
         }
 
-        markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
+        markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS | Change.MODIFIED_METADATA);
+
+        MetadataCallback.duringConversationAdd(mExtendedData, msg);
 
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
@@ -633,7 +643,7 @@ public class Conversation extends MailItem {
             mData.size++;
             try {
                 if (mSenderList != null)
-                    mSenderList.add((Message) child);
+                    mSenderList.add(msg);
             } catch (SenderList.RefreshException slre) {
                 mSenderList = null;
             }
@@ -643,7 +653,7 @@ public class Conversation extends MailItem {
             if (!recalculated) {
                 mData.size++;
                 try {
-                    mSenderList.add((Message) child);
+                    mSenderList.add(msg);
                     saveMetadata();
                 } catch (SenderList.RefreshException slre) {
                     recalculateMetadata();
@@ -822,16 +832,16 @@ public class Conversation extends MailItem {
         String encoded = mEncodedSenders;
         if (encoded == null && mSenderList != null)
             encoded = mSenderList.toString();
-    	return encodeMetadata(meta, mColor, mVersion, encoded);
+    	return encodeMetadata(meta, mColor, mVersion, mExtendedData, encoded);
     }
 
-    static String encodeMetadata(byte color, int version, SenderList senders) {
-        return encodeMetadata(new Metadata(), color, version, senders.toString()).toString();
+    static String encodeMetadata(byte color, int version, CustomMetadataList extended, SenderList senders) {
+        return encodeMetadata(new Metadata(), color, version, extended, senders.toString()).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, String encodedSenders) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String encodedSenders) {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
-        return MailItem.encodeMetadata(meta, color, version, null);
+        return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
 

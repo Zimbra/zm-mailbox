@@ -90,8 +90,6 @@ import org.apache.commons.httpclient.HttpURL;
 import org.json.JSONException;
 
 /**
- * @author jhahm
- *
  * Class containing static methods for encoding various MailItem-derived
  * objects into XML.
  */
@@ -196,6 +194,9 @@ public class ToXML {
                     encodeACL(elem, folder.getEffectiveACL(), exposeAclAccessKey);
             }
         }
+
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, folder);
         return elem;
     }
 
@@ -263,7 +264,7 @@ public class ToXML {
             eACE.addAttribute(MailConstants.A_ACCESSKEY, ace.getSecret());
         else if (ace.getGranteeType() == GranteeType.GT_GUEST)
             eACE.addAttribute(MailConstants.A_PASSWORD, ace.getSecret());
-        
+
         if (ace.deny())
             eACE.addAttribute(MailConstants.A_DENY, ace.deny());
        
@@ -326,6 +327,8 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_SORTBY, search.getSortField());
             elem.addAttribute(MailConstants.A_SEARCH_TYPES, search.getReturnTypes());
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, search);
         return elem;
     }
 
@@ -344,6 +347,8 @@ public class ToXML {
             if (mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
                 elem.addAttribute(MailConstants.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, mpt);
         return elem;
     }
 
@@ -414,6 +419,8 @@ public class ToXML {
             }
 
             // stop here if we're not returning the actual contact content
+            if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, contact);
             return elem;
         }
 
@@ -457,6 +464,9 @@ public class ToXML {
                     encodeContactAttachment(elem, attach);
             }
         }
+
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, contact);
         return elem;
     }
 
@@ -495,6 +505,8 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, note.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, note);
         return elem;
     }
 
@@ -520,6 +532,8 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, tag.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, tag);
         return elem;
     }
 
@@ -555,8 +569,12 @@ public class ToXML {
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
+                if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(m, msg);
             }
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(c, conv);
         return c;
     }
 
@@ -633,6 +651,9 @@ public class ToXML {
             c.addAttribute(MailConstants.A_CHANGE_DATE, conv.getChangeDate() / 1000);
             c.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
         }
+
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(c, conv);
         return c;
     }
 
@@ -789,6 +810,8 @@ public class ToXML {
         } catch (MessagingException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
         }
+
+        MetadataCallback.postSerialization(m, msg);
         return m;
     }
 
@@ -916,15 +939,17 @@ public class ToXML {
                                                     OperationContext octxt, CalendarItem calItem,
                                                     int fields, boolean includeInvites, boolean includeContent)
     throws ServiceException {
-        Element calItemElem;
+        Element elem;
         if (calItem instanceof Appointment)
-            calItemElem = parent.addElement(MailConstants.E_APPOINTMENT);
+            elem = parent.addElement(MailConstants.E_APPOINTMENT);
         else
-            calItemElem = parent.addElement(MailConstants.E_TASK);
+            elem = parent.addElement(MailConstants.E_TASK);
         
-        setCalendarItemFields(calItemElem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
-        
-        return calItemElem;
+        setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
+
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, calItem);
+        return elem;
     }
 
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt,
@@ -1129,6 +1154,7 @@ public class ToXML {
             }
         }
 
+        MetadataCallback.postSerialization(m, msg);
         return m;
     }
 
@@ -1141,36 +1167,38 @@ public class ToXML {
 
     public static Element encodeMessageSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
                                                Message msg, OutputParticipants output, int fields) {
-        Element e = encodeMessageCommon(parent, ifmt, msg, fields, true);
-        e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+        Element elem = encodeMessageCommon(parent, ifmt, msg, fields, true);
+        elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
 
         if (!needToOutput(fields, Change.MODIFIED_CONTENT))
-            return e;
+            return elem;
 
         boolean addRecips  = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
         if (addRecips)
-            addEmails(e, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
+            addEmails(elem, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
 
         if (addSenders)
-            encodeEmail(e, msg.getSender(), EmailType.FROM);
+            encodeEmail(elem, msg.getSender(), EmailType.FROM);
 
-        e.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.Disposition.CONTENT);
+        elem.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.Disposition.CONTENT);
 
         // fragment has already been sanitized...
         String fragment = msg.getFragment();
         if (!fragment.equals(""))
-            e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
+            elem.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
 
         if (msg.isInvite() && msg.hasCalendarItemInfos()) {
             try {
-                encodeInvitesForMessage(e, ifmt, octxt, msg, fields, true);
+                encodeInvitesForMessage(elem, ifmt, octxt, msg, fields, true);
             } catch (ServiceException ex) {
                 mLog.debug("Caught exception while encoding Invites for msg " + msg.getId(), ex);
             }
         }
 
-        return e;
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, msg);
+        return elem;
     }
 
     private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, MailItem item, int fields, boolean serializeType) {
@@ -1834,9 +1862,11 @@ public class ToXML {
     }
 
     public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields) {
-        Element m = parent.addElement(MailConstants.E_WIKIWORD);
-        encodeDocumentCommon(m, ifmt, octxt, wiki, fields);
-        return m;
+        Element elem = parent.addElement(MailConstants.E_WIKIWORD);
+        encodeDocumentCommon(elem, ifmt, octxt, wiki, fields);
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, wiki);
+        return elem;
     }
 
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc) {
@@ -1844,10 +1874,12 @@ public class ToXML {
     }
 
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
-        Element m = parent.addElement(MailConstants.E_DOC);
-        encodeDocumentCommon(m, ifmt, octxt, doc, fields);
-        m.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
-        return m;
+        Element elem = parent.addElement(MailConstants.E_DOC);
+        encodeDocumentCommon(elem, ifmt, octxt, doc, fields);
+        elem.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            MetadataCallback.postSerialization(elem, doc);
+        return elem;
     }
 
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
@@ -2034,8 +2066,7 @@ public class ToXML {
         return resp;
     }
 
-    private static Element encodeRecurId(Element parent, RecurId recurId, boolean allDay)
-    throws ServiceException {
+    private static Element encodeRecurId(Element parent, RecurId recurId, boolean allDay) {
         ParsedDateTime ridDt = recurId.getDt();
         Element ridElem = parent.addElement(MailConstants.E_CAL_EXCEPTION_ID);
         ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString(false));
@@ -2047,8 +2078,7 @@ public class ToXML {
         return ridElem;
     }
 
-    private static Element encodeDtStart(Element parent, ParsedDateTime dtStart, boolean allDay, boolean forceUtc)
-    throws ServiceException {
+    private static Element encodeDtStart(Element parent, ParsedDateTime dtStart, boolean allDay, boolean forceUtc) {
         if (forceUtc) {
             dtStart = (ParsedDateTime) dtStart.clone();
             dtStart.toUTC();
@@ -2072,8 +2102,7 @@ public class ToXML {
         return dtStartElem;
     }
 
-    private static Element encodeDtEnd(Element parent, ParsedDateTime dtEnd, boolean allDay, boolean isTodo, boolean forceUtc)
-    throws ServiceException {
+    private static Element encodeDtEnd(Element parent, ParsedDateTime dtEnd, boolean allDay, boolean isTodo, boolean forceUtc) {
         if (forceUtc) {
             dtEnd = (ParsedDateTime) dtEnd.clone();
             dtEnd.toUTC();
@@ -2104,8 +2133,7 @@ public class ToXML {
     }
 
     public static void encodeCalendarItemRecur(Element parent, ItemIdFormatter ifmt,
-                                                  OperationContext octxt, CalendarItem calItem)
-    throws ServiceException {
+                                               OperationContext octxt, CalendarItem calItem) {
         TimeZoneMap tzmap = calItem.getTimeZoneMap();
         encodeTimeZoneMap(parent, tzmap);
         Invite[] invites = calItem.getInvites();

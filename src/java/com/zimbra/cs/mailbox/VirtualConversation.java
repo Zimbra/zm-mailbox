@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 
 /**
  * @author dkarp
@@ -47,6 +48,7 @@ public class VirtualConversation extends Conversation {
         Message msg = msgs.get(0);
         mData = wrapMessage(msg);
         mInheritedTagSet = new TagSet().updateFlags(msg.getFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
+        mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
         return getSenderList();
     }
 
@@ -69,8 +71,7 @@ public class VirtualConversation extends Conversation {
     }
 
     private static UnderlyingData wrapMessage(Message msg) {
-        ArrayList<Integer> children = new ArrayList<Integer>();
-        children.add(msg.getId());
+        CustomMetadataList extended = MetadataCallback.duringConversationAdd(null, msg);
 
         UnderlyingData data = new UnderlyingData();
         data.id          = -msg.getId();
@@ -81,7 +82,7 @@ public class VirtualConversation extends Conversation {
         data.modMetadata = msg.getSavedSequence();
         data.modContent  = msg.getSavedSequence();
         data.size        = 1;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, new SenderList(msg));
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msg));
         data.unreadCount = msg.getUnreadCount();
         data.inheritedTags = "-" + msg.mData.flags + ',' + msg.mData.tags;
         return data;

@@ -85,12 +85,12 @@ public class Message extends MailItem {
         private int mComponentNo;
         private Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
 
-        private CalendarItemInfo(int calItemId, int componentNo) {
+        CalendarItemInfo(int calItemId, int componentNo) {
             mCalendarItemId = calItemId;
             mComponentNo = componentNo;
         }
 
-        private CalendarItemInfo(int componentNo, Invite inv) {
+        CalendarItemInfo(int componentNo, Invite inv) {
             mCalendarItemId = CALITEM_ID_NONE;
             mComponentNo = componentNo;
             mInvite = inv;
@@ -105,22 +105,20 @@ public class Message extends MailItem {
         private static final String FN_COMPNO = "c";
         private static final String FN_INV = "inv";
 
-        private Metadata encodeMetadata() {
-            Metadata md = new Metadata();
-            md.put(FN_CALITEMID, mCalendarItemId);
-            md.put(FN_COMPNO, mComponentNo);
-            if (mInvite != null) {
-                Metadata metaInv = Invite.encodeMetadata(mInvite);
-                md.put(FN_INV, metaInv);
-            }
-            return md; 
+        Metadata encodeMetadata() {
+            Metadata meta = new Metadata();
+            meta.put(FN_CALITEMID, mCalendarItemId);
+            meta.put(FN_COMPNO, mComponentNo);
+            if (mInvite != null)
+                meta.put(FN_INV, Invite.encodeMetadata(mInvite));
+            return meta; 
         }
 
-        private static CalendarItemInfo decodeMetadata(Metadata md, Mailbox mbox) throws ServiceException {
-            int calItemId = (int) md.getLong(FN_CALITEMID);
-            int componentNo = (int) md.getLong(FN_COMPNO);
+        static CalendarItemInfo decodeMetadata(Metadata meta, Mailbox mbox) throws ServiceException {
+            int calItemId = (int) meta.getLong(FN_CALITEMID);
+            int componentNo = (int) meta.getLong(FN_COMPNO);
             Invite inv = null;
-            Metadata metaInv = md.getMap(FN_INV, true);
+            Metadata metaInv = meta.getMap(FN_INV, true);
             if (metaInv != null) {
                 int mboxId = mbox.getId();
                 ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(mbox.getAccount());
@@ -342,16 +340,16 @@ public class Message extends MailItem {
     
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, int msgSize,
                           String digest, short volumeId, boolean unread, int flags, long tags,
-                          DraftInfo dinfo, boolean noICal, ZVCalendar cal, CustomMetadata custom)  
+                          DraftInfo dinfo, boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
     throws ServiceException {
         return createInternal(id, folder, conv, pm, msgSize, digest, volumeId, unread, 
-                              flags, tags, dinfo, noICal, cal, custom, new MessageCreateFactory());
+                              flags, tags, dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
     
     protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm,
                                             int msgSize, String digest, short volumeId, boolean unread,
                                             int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
-                                            CustomMetadata custom, MessageCreateFactory fact)
+                                            CustomMetadataList extended, MessageCreateFactory fact)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN(folder, TYPE_MESSAGE);
@@ -411,7 +409,7 @@ public class Message extends MailItem {
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, custom, pm, flags, dinfo, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
 
@@ -891,15 +889,6 @@ public class Message extends MailItem {
                                          int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
-        return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
-                              pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
-    }
-
-    private static String encodeMetadata(byte color, int version, CustomMetadata custom, ParsedMessage pm,
-                                         int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
-        // cache the "To" header only for messages sent by the user
-        String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
-        CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
                               pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
     }

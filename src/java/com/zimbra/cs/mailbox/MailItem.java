@@ -409,24 +409,51 @@ public abstract class MailItem implements Comparable<MailItem> {
             return mSectionKey + ": " + super.toString();
         }
 
-        public static final class CustomMetadataList extends ArrayList<Pair<String, String>> {
-            private static final long serialVersionUID = 3213399133413270157L;
-            CustomMetadataList() {
-                super(1);
-            }
-            CustomMetadataList(CustomMetadata custom) {
-                this();  addSection(custom);
-            }
-            boolean addSection(CustomMetadata custom) {
-                return addSection(custom.getSectionKey(), custom.getSerializedValue());
-            }
-            boolean addSection(String key, String encoded) {
-                return add(new Pair<String, String>(key, encoded));
-            }
+        public CustomMetadataList asList() {
+            return isEmpty() ? null : new CustomMetadataList(this);
         }
 
-        public CustomMetadataList asList() {
-            return new CustomMetadataList(this);
+        public static final class CustomMetadataList extends ArrayList<Pair<String, String>> {
+            private static final long serialVersionUID = 3213399133413270157L;
+
+            public CustomMetadataList() {
+                super(1);
+            }
+            public CustomMetadataList(CustomMetadata custom) {
+                this();  addSection(custom);
+            }
+
+            public void addSection(CustomMetadata custom) {
+                if (custom.isEmpty())
+                    removeSection(custom.getSectionKey());
+                else
+                    addSection(custom.getSectionKey(), custom.getSerializedValue());
+            }
+
+            public void addSection(String key, String encoded) {
+                removeSection(key);
+                if (key != null && encoded != null)
+                    add(new Pair<String, String>(key, encoded));
+            }
+
+            public CustomMetadata getSection(String key) throws ServiceException {
+                if (!isEmpty()) {
+                    for (Pair<String, String> entry : this) {
+                        if (key.equals(entry.getFirst()))
+                            return CustomMetadata.deserialize(entry);
+                    }
+                }
+                return null;
+            }
+
+            public void removeSection(String key) {
+                if (key != null && !isEmpty()) {
+                    for (Iterator<Pair<String, String>> it = iterator(); it.hasNext(); ) {
+                        if (key.equals(it.next().getFirst()))
+                            it.remove();
+                    }
+                }
+            }
         }
     }
 
@@ -639,13 +666,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  associated with the <code>section</code>, returns <tt>null</tt>.
      * @see #setCustomData(CustomMetadata) */
     public CustomMetadata getCustomData(String section) throws ServiceException {
-        if (section != null && mExtendedData != null && !mExtendedData.isEmpty()) {
-            for (Pair<String, String> entry : mExtendedData) {
-                if (section.equals(entry.getFirst()))
-                    return CustomMetadata.deserialize(entry);
-            }
-        }
-        return null;
+        if (section == null || mExtendedData == null)
+            return null;
+        return mExtendedData.getSection(section);
     }
 
     /** Updates the requested set of non-Zimbra-standard metadata values in
@@ -657,20 +680,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             return;
 
         markItemModified(Change.MODIFIED_METADATA);
-        // first, delete any existing entries for the given section name
-        if (mExtendedData != null && !mExtendedData.isEmpty()) {
-            for (Iterator<Pair<String, String>> it = mExtendedData.iterator(); it.hasNext(); ) {
-                if (custom.getSectionKey().equals(it.next().getFirst()))
-                    it.remove();
-            }
-        }
-        // then add the new section to the list
-        if (!custom.isEmpty()) {
-            if (mExtendedData == null)
-                mExtendedData = custom.asList();
-            else
-                mExtendedData.addSection(custom);
-        }
+        // first add the new section to the list
+        if (mExtendedData != null)
+            mExtendedData.addSection(custom);
+        else if (!custom.isEmpty())
+            mExtendedData = custom.asList();
         // and finally write the new data to the database
         saveMetadata();
     }
@@ -2672,7 +2686,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     private static final String CN_TAGS         = "tags";
     private static final String CN_SUBJECT      = "subject";
     private static final String CN_NAME         = "name";
-    private static final String CN_CHILDREN     = "children";
     private static final String CN_COLOR        = "color";
     private static final String CN_VERSION      = "version";
     private static final String CN_IMAP_ID      = "imap_id";

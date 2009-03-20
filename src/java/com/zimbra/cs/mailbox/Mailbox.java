@@ -3029,7 +3029,7 @@ public class Mailbox {
     }
 
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
-        return getMessagesByConversation(octxt, convId, Conversation.SORT_ID_ASCENDING);
+        return getMessagesByConversation(octxt, convId, Conversation.SORT_DATE_ASCENDING);
     }
 
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId, byte sort) throws ServiceException {
@@ -4621,14 +4621,14 @@ public class Mailbox {
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                              String rcptEmail, MailItem.CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+                              String rcptEmail, CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, customData, sharedDeliveryCtxt);
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
-                              MailItem.CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+                              CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         int batchIndexCount = getBatchedIndexingCount();
         maybeIndexDeferredItems();
@@ -4673,7 +4673,7 @@ public class Mailbox {
 
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                                                     int flags, String tagStr, int conversationId, String rcptEmail,
-                                                    Message.DraftInfo dinfo, MailItem.CustomMetadata extendedData,
+                                                    Message.DraftInfo dinfo, CustomMetadata customData,
                                                     SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         if (pm == null)
@@ -4725,9 +4725,9 @@ public class Mailbox {
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get message properties.", e);
         }
-        
+
         CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), sharedDeliveryCtxt.getShared(),
-                                                       digest, msgSize, folderId, noICal, flags, tagStr, extendedData);
+                                                       digest, msgSize, folderId, noICal, flags, tagStr, customData);
         StoreIncomingBlob storeRedoRecorder = null;
 
         // strip out unread flag for internal storage (don't do this before redoRecorder initialization)
@@ -4741,6 +4741,14 @@ public class Mailbox {
         boolean success = false;
         Folder folder = null;
         boolean deferIndexing = (getBatchedIndexingCount() > 0 || pm.hasTemporaryAnalysisFailure());
+
+        CustomMetadata.CustomMetadataList extended = MetadataCallback.preDelivery(pm);
+        if (customData != null) {
+            if (extended == null)
+                extended = customData.asList();
+            else
+                extended.addSection(customData);
+        }
 
         try {
             beginTransaction("addMessage", octxt, redoRecorder);
@@ -4809,7 +4817,7 @@ public class Mailbox {
             if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi))
                 iCal = cpi.cal;
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
-                                 volumeId, unread, flags, tags, dinfo, noICal, iCal, extendedData);
+                                 volumeId, unread, flags, tags, dinfo, noICal, iCal, extended);
 
             redoRecorder.setMessageId(msg.getId());
 
