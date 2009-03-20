@@ -145,12 +145,23 @@ public class GalImport extends MailItemImport {
 		else
 			return searchExternalGal(syncToken);
 	}
+	private static String[] ZIMBRA_ATTRS = {
+		"zimbraAccountCalendarUserType",
+		"zimbraCalResType",
+		"zimbraCalResLocationDisplayName",
+		"zimbraCalResCapacity",
+		"zimbraCalResContactEmail"
+	};
 	private LdapGalMapRules getGalMapRules() throws ServiceException {
 		DataSource ds = getDataSource();
         String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         if (attrs.length == 0)
         	attrs = Provisioning.getInstance().getDomainByName(ds.getAccount().getDomainName()).getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        return new LdapGalMapRules(attrs);
+        ArrayList<String> attrList = new ArrayList<String>();
+        java.util.Collections.addAll(attrList, attrs);
+        for (String attr : ZIMBRA_ATTRS)
+        	attrList.add(attr+"="+attr);
+        return new LdapGalMapRules(attrList.toArray(new String[0]));
 	}
 	
 	private static final int MAX_GAL_SEARCH_RESULT = 65535;
@@ -167,11 +178,11 @@ public class GalImport extends MailItemImport {
 	private SearchGalResult searchZimbraGal(String syncToken) throws ServiceException {
 		ZimbraLog.gal.debug("searchZimbraGal "+syncToken);
         SearchGalResult result = SearchGalResult.newSearchGalResult(null);
-        String filter = getDataSource().getAttr(Provisioning.A_zimbraGalLdapFilter).replaceAll("\\*\\*", "*")+")";
+        String filter = getDataSource().getAttr(Provisioning.A_zimbraGalLdapFilter);
         String query = filter;
         if (syncToken != null) {
             String arg = LdapUtil.escapeSearchFilterArg(syncToken);
-            query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+filter;
+            query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+filter+")";
         }
         LdapGalMapRules rules = getGalMapRules();
         ZimbraLdapContext zlc = null;

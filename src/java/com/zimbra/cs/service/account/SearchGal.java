@@ -96,7 +96,7 @@ public class SearchGal extends AccountDocumentHandler {
         String query = null;
         if (n.compareTo(".") != 0)
         	query = n + "*";
-        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, null, query, request, response);
+        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, null, query, type, request, response);
         if (!galAccountSearchSucceeded) {
         	response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
         	doLdapSearch(account, n, type, response);
@@ -191,7 +191,7 @@ public class SearchGal extends AccountDocumentHandler {
         }
     }
     
-    public static boolean doGalAccountSearch(Map<String, Object> context, Account account, String tokenAttr, String query, Element request, Element response) throws ServiceException {
+    public static boolean doGalAccountSearch(Map<String, Object> context, Account account, String tokenAttr, String query, Provisioning.GAL_SEARCH_TYPE type, Element request, Element response) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Domain d = prov.getDomain(account);
@@ -234,6 +234,16 @@ public class SearchGal extends AccountDocumentHandler {
 	    				continue;
 	    			searchQuery += " inid:" + ds.getFolderId();
 	    			folderIds.add(ds.getFolderId());
+	    		}
+	    		switch (type) {
+	    		case CALENDAR_RESOURCE:
+	    			searchQuery = "("+searchQuery+") AND #zimbraAccountCalendarUserType:RESOURCE";
+	    			break;
+	    		case USER_ACCOUNT:
+	    			searchQuery = "("+searchQuery+") AND !(#zimbraAccountCalendarUserType:RESOURCE)";
+	    			break;
+	    		case ALL:
+	    			break;
 	    		}
 		        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 		        int syncToken = 0;

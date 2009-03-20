@@ -163,9 +163,12 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
     
     private void getDefaultZimbraGalParams(Map<String,Object> attrs) throws ServiceException {
     	if (attrs.get(Provisioning.A_zimbraGalLdapFilter) == null) {
-    		String filter = LdapProvisioning.getFilterDef(GalNamedFilter.getZimbraAcountFilter(GalOp.sync));
-    		filter = "(&(!(zimbraHideInGal=TRUE))" + filter + ")";
-    		attrs.put(Provisioning.A_zimbraGalLdapFilter, filter.replaceAll("%s\\*", ""));
+    		// XXX we don't have a default filter that matches both account and resources today.
+    		String filter = "(&(!(zimbraHideInGal=TRUE))(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))))";
+    			//LdapProvisioning.getFilterDef(GalNamedFilter.getZimbraAcountFilter(GalOp.sync));
+    			//filter = "(&(!(zimbraHideInGal=TRUE))" + filter + ")";
+    			//filter.replaceAll("%s\\*", "");
+    		attrs.put(Provisioning.A_zimbraGalLdapFilter, filter);
     	}
     }
     
