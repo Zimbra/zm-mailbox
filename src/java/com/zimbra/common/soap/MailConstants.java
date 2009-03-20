@@ -252,6 +252,8 @@ public class MailConstants {
     public static final String E_DESCRIPTION = "desc";
     public static final String E_VCARD = "vcard";
     public static final String E_SIGNATURE = "signature";
+    public static final String E_METADATA = "meta";
+    public static final String A_SECTION = "section";
 
     // Old filter rules constants
     public static final String E_RULE = "r";
