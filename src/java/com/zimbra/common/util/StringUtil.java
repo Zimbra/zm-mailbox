@@ -18,6 +18,8 @@
  */
 package com.zimbra.common.util;
 
+import com.zimbra.common.service.ServiceException;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,16 +27,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
@@ -650,7 +650,7 @@ public class StringUtil {
      */
     public static String escapeJavaIdentifier(String s) {
         if (isNullOrEmpty(s)) return s;
-        else if (isJavaReservedWord(s)) return "_"+s;
+        else if (isJavaReservedWord(s)) return s+"_";
 
         StringBuilder result = new StringBuilder();
 
