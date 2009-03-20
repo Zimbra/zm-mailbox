@@ -66,9 +66,8 @@ public class DeleteGalSyncAccount extends AdminDocumentHandler {
 	}
 	
     @Override
-    protected void docRights(List<AdminRight> relatedRights, List<String> notes) {
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
     	// XXX revisit
-        relatedRights.add(Admin.R_deleteAccount);
-        notes.add(String.format(sDocRightNotesAllowAllAdmins, Admin.R_deleteAccount.getName(), "account"));
+        notes.add(AdminRightCheckPoint.Notes.TODO);
     }
 }
