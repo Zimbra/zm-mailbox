@@ -1803,12 +1803,19 @@
         </antcall>
 	</target>
 	
+	<!--
+	   ZimbraNetwork>ant dev-deploy-all
+	   ZimbraNetwork/ZimbraServer>ant deploy
+	   ZimbraAdminExt>ant deploy-all
+	   ZimbraXMbxSearch>ant deploy
+	-->
 	<target name="generate-rights-ext-txt">
 	    <antcall target="zmprov"> 
 	    	<!-- known admin extensions, dump them in one file for now -->
 	        <param name="args" 
 	        	value="grd com.zimbra.bp 
 	        	           com.zimbra.cert 
+                           com.zimbra.cs.network
 	        	           com.zimbra.cs.network.license.service 
 	        	           com.zimbra.cs.service.backup 
 	    	               com.zimbra.cs.service.hsm 
