@@ -18,7 +18,6 @@ import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.util.Config;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
