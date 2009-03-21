@@ -531,6 +531,10 @@ public class Alarm {
     	return new Alarm(Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
     			ParsedDuration.parse(true, 0, 0, 0, minBeforeStart, 0), null, null, 0, null, null, null, null);
     }
+    
+    public static Alarm fromSimpleTime(ParsedDateTime time) throws ServiceException {
+    	return new Alarm(Action.DISPLAY, TriggerType.ABSOLUTE, null, null, time, null, 0, null, null, null, null);
+    }
 
     private static final String FN_ACTION = "ac";
     private static final String FN_TRIGGER_TYPE = "tt";

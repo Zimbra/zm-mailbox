@@ -46,6 +46,15 @@ public final class ParsedDateTime {
     	try {
             ParsedDateTime t1 = ParsedDateTime.parse("20050910", tzmap, null, utc);
             System.out.println(t1);
+            
+            ParsedDateTime t2 = ParsedDateTime.parse("20050910T103000", tzmap, null, utc);
+            System.out.println(t2);
+            
+            ParsedDateTime t3 = ParsedDateTime.parse("20050910T103000Z", tzmap, null, utc);
+            System.out.println(t3);
+            
+            ParsedDateTime t4 = ParsedDateTime.parse("2005-09-10T10:30:00.000Z", tzmap, null, utc);
+            System.out.println(t4);
         } catch (ParseException e) {
             System.out.println("Caught "+e);
             e.printStackTrace();
@@ -53,8 +62,9 @@ public final class ParsedDateTime {
     }
 
     // YYYYMMDD'T'HHMMSSss'Z' YYYY MM DD 'T' HH MM SS Z
+    // or YYYY'-'MM'-'DD'T'HH':'MM':'ss'.'SSS'Z'
     static Pattern sDateTimePattern = Pattern
-            .compile("(\\d{4})(\\d{2})(\\d{2})(?:T(\\d{2})(\\d{2})(\\d{2})(Z)?)?");
+            .compile("(\\d{4})(?:-)?(\\d{2})(?:-)?(\\d{2})(?:T(\\d{2})(?:\\:)?(\\d{2})(?:\\:)?(\\d{2})(?:\\.\\d{3})?(Z)?)?");
 
     public static ParsedDateTime fromUTCTime(long utc) {
         return new ParsedDateTime(new java.util.Date(utc));
