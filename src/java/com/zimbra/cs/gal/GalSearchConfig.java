@@ -26,7 +26,7 @@ public class GalSearchConfig {
 	private String mKerberosPrincipal;
 	private String mKerberosKeytab;
 	private LdapGalMapRules mRules;
-
+	
 	public String getUrl() {
 		return mUrl;
 	}
@@ -36,22 +36,49 @@ public class GalSearchConfig {
 	public String getSearchBase() {
 		return mSearchBase;
 	}
-	public String getAuthType() {
+	public String getAuthMech() {
 		return mAuthMech;
 	}
-	public String getBindDN() {
+	public String getBindDn() {
 		return mBindDn;
 	}
-	public String getPassword() {
+	public String getBindPassword() {
 		return mBindPassword;
 	}
-	public String getKerberos5Principal() {
+	public String getKerberosPrincipal() {
 		return mKerberosPrincipal;
 	}
-	public String getKerberos5Keytab() {
+	public String getKerberosKeytab() {
 		return mKerberosKeytab;
 	}
 	public LdapGalMapRules getRules() {
 		return mRules;
+	}
+	public void setUrl(String url) {
+		mUrl = url;
+	}
+	public void setFilter(String filter) {
+		mFilter = filter;
+	}
+	public void setSearchBase(String searchBase) {
+		mSearchBase = searchBase;
+	}
+	public void setAuthMech(String authMech) {
+		mAuthMech = authMech;
+	}
+	public void setBindDn(String bindDn) {
+		mBindDn = bindDn;
+	}
+	public void setBindPassword(String bindPassword) {
+		mBindPassword = bindPassword;
+	}
+	public void setKerberosPrincipal(String kerberosPrincipal) {
+		mKerberosPrincipal = kerberosPrincipal;
+	}
+	public void setKerberosKeytab(String kerberosKeytab) {
+		mKerberosKeytab = kerberosKeytab;
+	}
+	public void setRules(LdapGalMapRules rules) {
+		mRules = rules;
 	}
 }

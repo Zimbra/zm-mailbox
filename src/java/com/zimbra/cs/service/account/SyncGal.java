@@ -27,6 +27,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -50,10 +52,15 @@ public class SyncGal extends AccountDocumentHandler {
         }
         
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
-        Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
 
-        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, tokenAttr, null, Provisioning.GAL_SEARCH_TYPE.ALL, request, response);
-        if (!galAccountSearchSucceeded) {
+        GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setToken(tokenAttr);
+        params.setRequest(request);
+        params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.sync();
+        Element response = params.createResultCallback().getResponse();
+        if (response == null) {
         	response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
         	doLdapSearch(account, tokenAttr, response);
         }

@@ -14,16 +14,37 @@
  */
 package com.zimbra.cs.gal;
 
+import org.dom4j.QName;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GalSearchParams {
 	private GalSearchConfig mConfig;
 	private Provisioning.GAL_SEARCH_TYPE mType;
 	private int mLimit;
 	private int mPageSize;
+	private String mQuery;
 	private String mToken;
 	private SearchGalResult mResult;
+	private ZimbraSoapContext mSoapContext;
+	
+	private Account mAccount;
+    private SearchParams mSearchParams;
+    private GalSearchResultCallback mResultCallback;
+    private Element mRequest;
+    private QName mResponse;
+	
+	public GalSearchParams(Account account, ZimbraSoapContext ctxt) {
+        mAccount = account;
+        mSoapContext = ctxt;
+	}
 	
 	public GalSearchConfig getConfig() {
 		return mConfig;
@@ -40,6 +61,10 @@ public class GalSearchParams {
 	public int getPageSize() {
 		return mPageSize;
 	}
+
+	public String getQuery() {
+		return mQuery;
+	}
 	
 	public String getSyncToken() {
 		return mToken;
@@ -47,5 +72,73 @@ public class GalSearchParams {
 	
 	public SearchGalResult getResult() {
 		return mResult;
+	}
+	
+	public Account getAccount() {
+		return mAccount;
+	}
+	
+	public ZimbraSoapContext getSoapContext() {
+		return mSoapContext;
+	}
+	
+	public SearchParams getSearchParams() {
+		return mSearchParams;
+	}
+
+	public GalSearchResultCallback getResultCallback() {
+		return mResultCallback;
+	}
+	
+	public Element getRequest() {
+		return mRequest;
+	}
+	
+	public void setSearchConfig(GalSearchConfig config) {
+		mConfig = config;
+	}
+	
+	public void setType(Provisioning.GAL_SEARCH_TYPE type) {
+		mType = type;
+	}
+	
+	public void setLimit(int limit) {
+		mLimit = limit;
+	}
+	
+	public void setPageSize(int pageSize) {
+		mPageSize = pageSize;
+	}
+	
+	public void setQuery(String query) {
+		mQuery = query;
+	}
+	
+	public void setToken(String token) {
+		mToken = token;
+	}
+	
+	public void setGalResult(SearchGalResult result) {
+		mResult = result;
+	}
+	
+	public void parseSearchParams(Element request, String searchQuery) throws ServiceException {
+		setRequest(request);
+	    mSearchParams = SearchParams.parse(request, mSoapContext, searchQuery);
+	    mSearchParams.setTypes(new byte[] { MailItem.TYPE_CONTACT });
+	    setLimit(mSearchParams.getLimit());
+	}
+	
+	public GalSearchResultCallback createResultCallback() {
+		mResultCallback = new GalSearchResultCallback(this, mSoapContext.createElement(mResponse));
+		return mResultCallback;
+	}
+	
+	public void setRequest(Element req) {
+		mRequest = req;
+	}
+	public void setResponseName(QName response) {
+		mResponse = response;
+
 	}
 }

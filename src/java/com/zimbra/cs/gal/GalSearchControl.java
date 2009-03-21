@@ -14,6 +14,264 @@
  */
 package com.zimbra.cs.gal;
 
-public class GalSearchControl {
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.index.ContactHit;
+import com.zimbra.cs.index.ResultsPager;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.util.TypedIdList;
+
+public class GalSearchControl {
+	private GalSearchParams mParams;
+	
+	public GalSearchControl(GalSearchParams params) {
+		mParams = params;
+	}
+	
+	public void autocomplete() {
+		
+	}
+	
+	public void search() throws ServiceException {
+		try {
+			accountSearch();
+		} catch (GalAccountNotConfiguredException e) {
+			// fallback to ldap search
+			mParams.getResultCallback().reset();
+		}
+	}
+	
+	public void sync() throws ServiceException {
+		try {
+			accountSync();
+		} catch (GalAccountNotConfiguredException e) {
+			// fallback to ldap search
+			mParams.getResultCallback().reset();
+		}
+	}
+	
+	private String[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Domain d = prov.getDomain(mParams.getAccount());
+        String[] accts = d.getGalAccountId();
+        if (accts.length == 0)
+        	throw new GalAccountNotConfiguredException();
+        return accts;
+	}
+	
+	private void generateSearchQuery(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+		String query = mParams.getQuery();
+		Provisioning.GAL_SEARCH_TYPE type = mParams.getType();
+		String searchQuery = null;
+        if (query == null)
+        	searchQuery = "";
+        else
+        	searchQuery = "(#email:"+query+" OR #fileasstr:"+query+" OR #fullname:"+query+")";
+        GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
+		for (DataSource ds : galAcct.getAllDataSources()) {
+			// check if there was any successful import from gal
+			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
+	        	throw new GalAccountNotConfiguredException();
+			if (ds.getType() != DataSource.Type.gal)
+				continue;
+			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
+				continue;
+			if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+				continue;
+			searchQuery = searchQuery + " inid:" + ds.getFolderId();
+		}
+		switch (type) {
+		case CALENDAR_RESOURCE:
+			searchQuery = "("+searchQuery+") AND #zimbraAccountCalendarUserType:RESOURCE";
+			break;
+		case USER_ACCOUNT:
+			searchQuery = "("+searchQuery+") AND !(#zimbraAccountCalendarUserType:RESOURCE)";
+			break;
+		case ALL:
+			break;
+		}
+        mParams.parseSearchParams(mParams.getRequest(), searchQuery);
+	}
+	
+	private HashSet<Integer> getDataSourceFolderIds(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+        HashSet<Integer> folderIds = new HashSet<Integer>();
+        GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
+		for (DataSource ds : galAcct.getAllDataSources()) {
+			// check if there was any successful import from gal
+			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
+	        	throw new GalAccountNotConfiguredException();
+			if (ds.getType() != DataSource.Type.gal)
+				continue;
+			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
+				continue;
+			if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+				continue;
+			if (folderIds != null)
+				folderIds.add(ds.getFolderId());
+		}
+		return folderIds;
+	}
+	
+	private void accountSearch() throws ServiceException, GalAccountNotConfiguredException {
+        Provisioning prov = Provisioning.getInstance();
+        mParams.createResultCallback();
+    	for (String galAccountId : getGalSyncAccounts()) {
+    		Account galAcct = prov.getAccountById(galAccountId);
+    		if (galAcct == null) {
+    			ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
+    			continue;
+    		}
+    		if (!galAcct.getAccountStatus().isActive()) {
+    			ZimbraLog.gal.info("GalSync account "+galAccountId+" is in "+galAcct.getAccountStatus().name());
+            	throw new GalAccountNotConfiguredException();
+    		}
+			if (Provisioning.onLocalServer(galAcct)) {
+		        generateSearchQuery(galAcct);
+		        if (!doLocalGalAccountSearch(galAcct))
+		        	throw new GalAccountNotConfiguredException();
+			} else {
+				if (!proxyGalAccountSearch(galAcct))
+		        	throw new GalAccountNotConfiguredException();
+			}
+    	}
+	}
+	
+	private void accountSync() throws ServiceException, GalAccountNotConfiguredException {
+        Provisioning prov = Provisioning.getInstance();
+        mParams.createResultCallback();
+    	for (String galAccountId : getGalSyncAccounts()) {
+    		Account galAcct = prov.getAccountById(galAccountId);
+    		if (galAcct == null) {
+    			ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
+    			continue;
+    		}
+    		if (!galAcct.getAccountStatus().isActive()) {
+    			ZimbraLog.gal.info("GalSync account "+galAccountId+" is in "+galAcct.getAccountStatus().name());
+            	throw new GalAccountNotConfiguredException();
+    		}
+			if (Provisioning.onLocalServer(galAcct)) {
+		        HashSet<Integer> folderIds = getDataSourceFolderIds(galAcct);
+		        int syncToken = 0;
+		        try {
+		        	String token = mParams.getSyncToken();
+		        	if (token != null)
+		        		syncToken = Integer.parseInt(token);
+		        } catch (NumberFormatException e) {
+		        	// do a full sync
+		        }
+		        if (!doLocalGalAccountSync(galAcct, syncToken, folderIds))
+		        	throw new GalAccountNotConfiguredException();
+			} else {
+				if (!proxyGalAccountSearch(galAcct))
+		        	throw new GalAccountNotConfiguredException();
+			}
+    	}
+	}
+	
+    private boolean doLocalGalAccountSearch(Account galAcct) {
+		ZimbraQueryResults zqr = null;
+		try {
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
+			SearchParams searchParams = mParams.getSearchParams();
+			zqr = mbox.search(SoapProtocol.Soap12, new Mailbox.OperationContext(mbox), searchParams);
+            ResultsPager pager = ResultsPager.create(zqr, searchParams);
+            GalSearchResultCallback callback = mParams.getResultCallback();
+            int limit  = mParams.getLimit();
+            int num = 0;
+			while (pager.hasNext()) {
+				if (num == limit)
+					break;
+                ZimbraHit hit = pager.getNextHit();
+                if (hit instanceof ContactHit)
+                	callback.handleContact(((ContactHit)hit).getContact());
+                num++;
+			}
+            callback.setSortBy(zqr.getSortBy().toString());
+            callback.setQueryOffset(searchParams.getOffset());
+            callback.setHasMoreResult(pager.hasNext());
+		} catch (Exception e) {
+			ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
+			return false;
+		} finally {
+			if (zqr != null) 
+				try { zqr.doneWithSearchResults(); } catch (ServiceException e) {}
+		}
+		return true;
+    }
+    
+    private boolean doLocalGalAccountSync(Account galAcct, int syncToken, HashSet<Integer> folderIds) {
+		try {
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
+			Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
+			Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, syncToken, MailItem.TYPE_CONTACT, folderIds);
+            GalSearchResultCallback callback = mParams.getResultCallback();
+			// XXX batch items
+			for (int itemId : changed.getFirst()) {
+				MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
+				if (item instanceof Contact)
+					callback.handleContact((Contact)item);
+			}
+			// XXX deleted items
+            callback.setNewToken(mbox.getLastChangeID());
+		} catch (Exception e) {
+			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
+			return false;
+		}
+		return true;
+    }
+    
+    private boolean proxyGalAccountSearch(Account targetAcct) {
+		try {
+			Provisioning prov = Provisioning.getInstance();
+    		String serverUrl = URLUtil.getAdminURL(prov.getServerByName(targetAcct.getMailHost()));
+			SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
+			transport.setAuthToken(AuthToken.getZimbraAdminAuthToken().toZAuthToken());
+			transport.setTargetAcctId(targetAcct.getId());
+			transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
+			Element resp = transport.invokeWithoutSession(mParams.getRequest());
+			GalSearchResultCallback callback = mParams.createResultCallback();
+			Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
+			while (iter.hasNext())
+				callback.handleElement(iter.next());
+		} catch (IOException e) {
+			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
+			return false;
+		} catch (ServiceException e) {
+			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
+			return false;
+		}
+		return true;
+    }
+    
+	private static class GalAccountNotConfiguredException extends Exception {
+		private static final long serialVersionUID = 679221874958248740L;
+
+		public GalAccountNotConfiguredException() {
+		}
+	}
 }

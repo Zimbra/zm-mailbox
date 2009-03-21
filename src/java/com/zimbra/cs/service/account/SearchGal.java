@@ -18,12 +18,6 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
@@ -31,32 +25,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.FileBufferedWriter;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.ResultsPager;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.util.TypedIdList;
-import com.zimbra.cs.service.mail.ToXML;
-import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -91,13 +68,18 @@ public class SearchGal extends AccountDocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-        Element response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
-        
         String query = null;
         if (n.compareTo(".") != 0)
         	query = n + "*";
-        boolean galAccountSearchSucceeded = SearchGal.doGalAccountSearch(context, account, null, query, type, request, response);
-        if (!galAccountSearchSucceeded) {
+        GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setType(type);
+        params.setRequest(request);
+        params.setQuery(query);
+        params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.search();
+        Element response =  params.getResultCallback().getResponse();
+        if (response == null) {
         	response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
         	doLdapSearch(account, n, type, response);
         }
@@ -189,151 +171,5 @@ public class SearchGal extends AccountDocumentHandler {
         public void visit(GalContact gc) {
             addContact(mResponse, gc);
         }
-    }
-    
-    public static boolean doGalAccountSearch(Map<String, Object> context, Account account, String tokenAttr, String query, Provisioning.GAL_SEARCH_TYPE type, Element request, Element response) throws ServiceException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(account);
-        ArrayList<String> accountIds = new ArrayList<String>();
-        String[] galAccountIds = prov.getConfig().getGalAccountId();
-        String[] domainGalAccountIds = d.getGalAccountId();
-        GalMode galMode = d.getGalMode();
-        if ((galMode == GalMode.both || galMode == GalMode.zimbra)
-        	&& galAccountIds.length > 0) {
-        	accountIds.addAll(Arrays.asList(galAccountIds));
-        }
-        if ((galMode == GalMode.both || galMode == GalMode.ldap)
-           	&& domainGalAccountIds.length > 0) {
-        	accountIds.addAll(Arrays.asList(domainGalAccountIds));
-        }
-        HashSet<Integer> folderIds = new HashSet<Integer>();
-        if (accountIds.isEmpty())
-        	return false;
-    	for (String galAccountId : accountIds) {
-    		Account galAcct = prov.getAccountById(galAccountId);
-    		if (galAcct == null) {
-    			ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
-    			return false;
-    		}
-    		if (!galAcct.getAccountStatus().isActive()) {
-    			ZimbraLog.gal.info("GalSync account "+galAccountId+" is in "+galAcct.getAccountStatus().name());
-    			return false;
-    		}
-			if (Provisioning.onLocalServer(galAcct)) {
-	    		String searchQuery = null;
-		        if (query == null)
-		        	searchQuery = "";
-		        else
-		        	searchQuery = "\""+query+"\"";
-	    		for (DataSource ds : galAcct.getAllDataSources()) {
-	    			// check if there was any successful import from gal
-	    			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
-	    				return false;
-	    			if (ds.getType() != DataSource.Type.gal)
-	    				continue;
-	    			searchQuery += " inid:" + ds.getFolderId();
-	    			folderIds.add(ds.getFolderId());
-	    		}
-	    		switch (type) {
-	    		case CALENDAR_RESOURCE:
-	    			searchQuery = "("+searchQuery+") AND #zimbraAccountCalendarUserType:RESOURCE";
-	    			break;
-	    		case USER_ACCOUNT:
-	    			searchQuery = "("+searchQuery+") AND !(#zimbraAccountCalendarUserType:RESOURCE)";
-	    			break;
-	    		case ALL:
-	    			break;
-	    		}
-		        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-		        int syncToken = 0;
-		        try {
-			        syncToken = Integer.parseInt(tokenAttr);
-		        } catch (NumberFormatException e) {
-		        	// do a full sync
-		        }
-		        boolean ret;
-		        SearchParams params = SearchParams.parse(request, zsc, searchQuery);
-		        params.setTypes(new byte[] { MailItem.TYPE_CONTACT });
-		        if (syncToken > 0)
-		        	ret = doLocalGalAccountSync(galAcct, ifmt, syncToken, folderIds, response);
-		        else
-		        	ret = doLocalGalAccountSearch(params, galAcct, ifmt, response);
-		        if (!ret) return ret;
-			} else {
-	    		String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galAcct.getMailHost()));
-				if (!proxyGalAccountSearch(zsc, galAccountId, serverUrl, request, response))
-					return false;
-			}
-    	}
-    	return true;
-    }
-    private static boolean doLocalGalAccountSearch(SearchParams params, Account galAcct, ItemIdFormatter ifmt, Element response) {
-		ZimbraQueryResults zqr = null;
-		try {
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-			zqr = mbox.search(SoapProtocol.Soap12, new Mailbox.OperationContext(mbox), params);
-            ResultsPager pager = ResultsPager.create(zqr, params);
-            int limit  = params.getLimit();
-            int num = 0;
-			while (pager.hasNext()) {
-				if (num == limit)
-					break;
-                ZimbraHit hit = pager.getNextHit();
-                if (hit instanceof ContactHit)
-    				ToXML.encodeContact(response, ifmt, ((ContactHit)hit).getContact(), true, null);
-                num++;
-			}
-            response.addAttribute(MailConstants.A_SORTBY, zqr.getSortBy().toString());
-            response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
-            response.addAttribute(MailConstants.A_QUERY_MORE, pager.hasNext());
-		} catch (Exception e) {
-			ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
-			return false;
-		} finally {
-			if (zqr != null) 
-				try {zqr.doneWithSearchResults(); } catch (ServiceException e) {}
-		}
-		return true;
-    }
-    private static boolean doLocalGalAccountSync(Account galAcct, ItemIdFormatter ifmt, int syncToken, HashSet<Integer> folderIds, Element response) {
-		try {
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-			Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
-			Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, syncToken, MailItem.TYPE_CONTACT, folderIds);
-			// XXX batch items
-			for (int itemId : changed.getFirst()) {
-				MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
-				if (item instanceof Contact)
-    				ToXML.encodeContact(response, ifmt, (Contact)item, true, null);
-			}
-			// XXX deleted items
-            response.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());
-		} catch (Exception e) {
-			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
-			return false;
-		}
-		return true;
-    }
-    private static boolean proxyGalAccountSearch(ZimbraSoapContext zsc, String targetAccountId, String serverUrl, Element request, Element response) {
-		try {
-			SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
-			transport.setAuthToken(AuthToken.getZimbraAdminAuthToken().toZAuthToken());
-			transport.setTargetAcctId(targetAccountId);
-			transport.setResponseProtocol(zsc.getResponseProtocol());
-			Element resp = transport.invokeWithoutSession(request);
-			Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
-			while (iter.hasNext()) {
-				Element cn = iter.next();
-				response.addElement(cn.detach());
-			}
-		} catch (IOException e) {
-			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAccountId, e);
-			return false;
-		} catch (ServiceException e) {
-			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAccountId, e);
-			return false;
-		}
-		return true;
     }
 }
