@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -59,6 +60,8 @@ class ImapProxy {
         config.setAuthenticationId(acct.getName());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
         config.setAuthenticatorFactory(sAuthenticatorFactory);
+        config.setReadTimeout(LC.javamail_imap_timeout.intValue());
+        config.setConnectTimeout(config.getReadTimeout());
         config.setHost(host);
         if (server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, true)) {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapBindPort, ImapConfig.DEFAULT_PORT));
