@@ -45,9 +45,9 @@ public class ServerConfig {
     }
 
     protected void failure(String msg) throws ServiceException {
-        ServiceException.FAILURE(msg, null);
+        throw ServiceException.FAILURE(msg, null);
     }
-        
+
     public void setName(String name) {
         mName = name;
     }
@@ -97,11 +97,11 @@ public class ServerConfig {
     }
     
     public void setSSLExcludeCiphers(String[] excludeCiphers) {
-	mSSLExcludeCiphers = excludeCiphers;
+        mSSLExcludeCiphers = excludeCiphers;
     }
     
     public String[] getSSLExcludeCiphers() {
-	return mSSLExcludeCiphers;
+        return mSSLExcludeCiphers;
     }
 
     public ServerSocket getServerSocket() throws ServiceException {
