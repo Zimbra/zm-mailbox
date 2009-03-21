@@ -57,9 +57,9 @@ public class LmtpConfig extends ServerConfig {
         if (getBindPort() < 0) {
             failure("invalid value " + getBindPort() + " for " + A_zimbraLmtpBindPort);
         }
-        if (getRecipientDelimiter() == null) {
-            failure("missing recipient delimiter");
-        }
+//        if (getRecipientDelimiter() == null) {
+//            failure("missing recipient delimiter");
+//        }
         if (getLmtpBackend() == null) {
             failure("missing lmtp backend");
         }
