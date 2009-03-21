@@ -29,11 +29,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 class TcpImapHandler extends ImapHandler {
     private TcpServerInputStream mInputStream;
@@ -271,88 +266,5 @@ class TcpImapHandler extends ImapHandler {
         if (message != null)
             length += message.length();
         return new StringBuilder(length).append("[").append(mRemoteAddress).append("] ").append(message);
-    }
-
-
-    public static void main(String[] args) throws IOException, ImapParseException {
-        List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
-        List<String> pieces = new ArrayList<String>();
-        Set<String> patterns = new HashSet<String>();
-        TcpImapHandler handler = new TcpImapHandler(null);
-        handler.mOutputStream = System.out;
-
-        System.out.println("> A001 CAPABILITY");
-        handler.doCAPABILITY("A001");
-
-        System.out.println("> A002 LOGIN \"user1@example.zimbra.com\" \"test123\"");
-        handler.doLOGIN("A002", "user1@example.zimbra.com", "test123");
-
-        System.out.println("> B002 ID NIL");
-        handler.doID("B002", null);
-
-        System.out.println("> A003 LIST \"\" \"\"");
-        patterns.clear();  patterns.add("");
-        handler.doLIST("A003", "", patterns, (byte) 0, (byte) 0);
-
-        System.out.println("> B003 CREATE \"/test/slap\"");
-        handler.doCREATE("B003", new ImapPath("/test/slap", null));
-
-        System.out.println("> A004 LIST \"/\" \"%\"");
-        patterns.clear();  patterns.add("[^/]*");
-        handler.doLIST("A004", "/", patterns, (byte) 0, (byte) 0);
-
-        System.out.println("> B004 DELETE \"/test/slap\"");
-        handler.doDELETE("B004", new ImapPath("/test/slap", null));
-
-        System.out.println("> A005 LIST \"/\" \"*\"");
-        patterns.clear();  patterns.add(".*");
-        handler.doLIST("A005", "/", patterns, (byte) 0, (byte) 0);
-
-        System.out.println("> B005 LIST \"/\" \"inbox\"");
-        patterns.clear();  patterns.add("INBOX");
-        handler.doLIST("B005", "/", patterns, (byte) 0, (byte) 0);
-
-        System.out.println("> C005 LIST \"/\" \"$NBOX+?\"");
-        patterns.clear();  patterns.add("\\$NBOX\\+\\?");
-        handler.doLIST("C005", "/", patterns, (byte) 0, (byte) 0);
-
-        System.out.println("> D005 LIST \"/\" \"%/sub()\"");
-        patterns.clear();  patterns.add("[^/]*/SUB\\(\\)");
-        handler.doLIST("D005", "/", patterns, (byte) 0, (byte) 0);
-
-        System.out.println("> A006 SELECT \"/floo\"");
-        handler.doSELECT("A006", new ImapPath("/floo", null), (byte) 0, null);
-
-        System.out.println("> B006 SELECT \"/INBOX\"");
-        handler.doSELECT("B006", new ImapPath("/INBOX", null), (byte) 0, null);
-
-        System.out.println("> A007 STATUS \"/Sent\" (UNSEEN UIDVALIDITY MESSAGES)");
-        handler.doSTATUS("A007", new ImapPath("/Sent", null), STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
-
-        System.out.println("> B007 STATUS \"/INBOX\" (UNSEEN UIDVALIDITY MESSAGES)");
-        handler.doSTATUS("B007", new ImapPath("/INBOX", null), STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
-
-        System.out.println("> A008 FETCH 1:3,*:1234 FULL");
-        handler.doFETCH("A008", "1:3,*:1234", FETCH_FULL, parts, false, -1);
-
-        System.out.println("> A009 UID FETCH 444,288,602:593 FULL");
-        handler.doFETCH("A009", "444,288,602:593", FETCH_FULL, parts, true, -1);
-
-        System.out.println("> A010 FETCH 7 (ENVELOPE BODY.PEEK[1] BODY[HEADER.FIELDS (DATE SUBJECT)]");
-        List<String> headers = new LinkedList<String>();  headers.add("date");  headers.add("subject");
-        parts.clear();  parts.add(new ImapPartSpecifier("BODY", "1", ""));  parts.add(new ImapPartSpecifier("BODY", "", "HEADER.FIELDS").setHeaders(headers));
-        handler.doFETCH("A010", "7", FETCH_ENVELOPE, parts, false, -1);
-
-        System.out.println("> A011 STORE 1 +FLAGS ($MDNSent)");
-        List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
-        handler.doSTORE("A011", "1", flags, StoreAction.ADD, false, -1, false);
-
-        ImapRequest req = new TcpImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"", handler);
-        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());
-        System.out.println(pieces);
-
-        req = new TcpImapRequest("X002 CREATE ~peter/mail/&U,BTFw-/&ZeVnLIqe-", handler);
-        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
-        System.out.println(pieces);
     }
 }
