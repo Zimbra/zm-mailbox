@@ -77,13 +77,10 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
 
-/**
- * @author dkarp
- */
 abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
-    enum ActivatedExtension { CONDSTORE, QRESYNC };
+    enum ImapExtension { CONDSTORE, QRESYNC };
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
@@ -105,7 +102,7 @@ abstract class ImapHandler extends ProtocolHandler {
     private   String          mIdleTag;
     private   String          mOrigRemoteAddress;
     protected boolean         mGoodbyeSent;
-    private   Set<ActivatedExtension> mActivatedExtensions;
+    private   Set<ImapExtension> mActiveExtensions;
 
     ImapHandler(MinaImapServer server) {
         super(null);
@@ -359,7 +356,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 String param = req.readATOM();
                                 if (param.equals("CONDSTORE") && extensionEnabled("CONDSTORE")) {
                                     params |= ImapFolder.SELECT_CONDSTORE;
-                                } else if (param.equals("QRESYNC") && sessionActivated(ActivatedExtension.QRESYNC)) {
+                                } else if (param.equals("QRESYNC") && sessionActivated(ImapExtension.QRESYNC)) {
                                     params |= ImapFolder.SELECT_CONDSTORE;
                                     qri = new QResyncInfo();
                                     req.skipSpace();  req.skipChar('(');
@@ -409,7 +406,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 String modifier = req.readATOM();
                                 if (modifier.equals("CHANGEDSINCE") && extensionEnabled("CONDSTORE")) {
                                     req.skipSpace();  modseq = req.parseInteger(req.readNumber(ImapRequest.ZERO_OK));
-                                } else if (modifier.equals("VANISHED") && byUID && sessionActivated(ActivatedExtension.QRESYNC)) {
+                                } else if (modifier.equals("VANISHED") && byUID && sessionActivated(ImapExtension.QRESYNC)) {
                                     attributes |= FETCH_VANISHED;
                                 } else {
                                     throw new ImapParseException(tag, "bad FETCH modifier: " + modifier);
@@ -577,7 +574,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 String param = req.readATOM();
                                 if (param.equals("CONDSTORE") && extensionEnabled("CONDSTORE")) {
                                     params |= ImapFolder.SELECT_CONDSTORE;
-                                } else if (param.equals("QRESYNC") && sessionActivated(ActivatedExtension.QRESYNC)) {
+                                } else if (param.equals("QRESYNC") && sessionActivated(ImapExtension.QRESYNC)) {
                                     params |= ImapFolder.SELECT_CONDSTORE;
                                     qri = new QResyncInfo();
                                     req.skipSpace();  req.skipChar('(');
@@ -808,7 +805,7 @@ abstract class ImapHandler extends ProtocolHandler {
         mSelectedFolder = null;
         if (i4selected != null) {
             i4selected.unregister();
-            if (sendClosed && sessionActivated(ActivatedExtension.QRESYNC))
+            if (sendClosed && sessionActivated(ImapExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
 
@@ -816,14 +813,14 @@ abstract class ImapHandler extends ProtocolHandler {
         mProxy = null;
         if (proxy != null) {
             proxy.dropConnection();
-            if (sendClosed && sessionActivated(ActivatedExtension.QRESYNC))
+            if (sendClosed && sessionActivated(ImapExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
     }
 
     void setSelectedFolder(ImapFolder i4folder) throws ServiceException, IOException {
         if (i4folder == mSelectedFolder) {
-            if (sessionActivated(ActivatedExtension.QRESYNC))
+            if (sessionActivated(ImapExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
             return;
         }
@@ -981,7 +978,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         StringBuilder enabled = new StringBuilder("ENABLED");
 
-        List<ActivatedExtension> targets = new ArrayList<ActivatedExtension>(extensions.size());
+        List<ImapExtension> targets = new ArrayList<ImapExtension>(extensions.size());
         for (String ext : extensions) {
             // RFC 5161 3.1: "If the argument is not an extension known to the server,
             //                the server MUST ignore the argument."
@@ -989,10 +986,10 @@ abstract class ImapHandler extends ProtocolHandler {
                 continue;
 
             if (ext.equals("CONDSTORE")) {
-                targets.add(ActivatedExtension.CONDSTORE);
+                targets.add(ImapExtension.CONDSTORE);
             } else if (ext.equals("QRESYNC")) {
-                targets.add(ActivatedExtension.CONDSTORE);
-                targets.add(ActivatedExtension.QRESYNC);
+                targets.add(ImapExtension.CONDSTORE);
+                targets.add(ImapExtension.QRESYNC);
             } else {
                 // RFC 5161 3.1: "If the argument is an extension known to the server, and
                 //                it is not specifically permitted to enable it using ENABLE,
@@ -1006,8 +1003,8 @@ abstract class ImapHandler extends ProtocolHandler {
         // RFC 5161 3.1: "If the argument is an extension is supported by the server and
         //                which needs to be enabled, the server MUST enable the extension
         //                for the duration of the connection."
-        for (ActivatedExtension ax : targets)
-            activateExtension(ax);
+        for (ImapExtension i4x : targets)
+            activateExtension(i4x);
 
         sendUntagged(enabled.toString());
         sendNotifications(true, false);
@@ -1015,16 +1012,16 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    void activateExtension(ActivatedExtension ext) {
+    void activateExtension(ImapExtension ext) {
         if (ext == null)
             return;
-        if (mActivatedExtensions == null)
-            mActivatedExtensions = new HashSet<ActivatedExtension>(1);
-        mActivatedExtensions.add(ext);
+        if (mActiveExtensions == null)
+            mActiveExtensions = new HashSet<ImapExtension>(1);
+        mActiveExtensions.add(ext);
     }
 
-    boolean sessionActivated(ActivatedExtension ext) {
-        return mActivatedExtensions != null && mActivatedExtensions.contains(ext);
+    boolean sessionActivated(ImapExtension ext) {
+        return mActiveExtensions != null && mActiveExtensions.contains(ext);
     }
 
     abstract boolean doSTARTTLS(String tag) throws IOException;
@@ -1111,7 +1108,7 @@ abstract class ImapHandler extends ProtocolHandler {
         EnabledHack enabledHack = EnabledHack.NONE;
         if (username != null && username.length() != 0) {
             for (EnabledHack hack : EnabledHack.values()) {
-                if (hack.toString() != null && username != null && username.endsWith(hack.toString())) {
+                if (hack.toString() != null && username.endsWith(hack.toString())) {
                     enabledHack = hack;
                     username = username.substring(0, username.length() - hack.toString().length());
                     break;
@@ -1689,7 +1686,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        if (matches != null) {
+        if (!matches.isEmpty()) {
         	for (String match : matches.values())
         		sendUntagged(match);
         }
@@ -2211,7 +2208,7 @@ abstract class ImapHandler extends ProtocolHandler {
             }
 
             long quota = mCredentials.getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
-            if (qroot == null || !qroot.asImapPath().equals("") || quota <= 0) {
+            if (!qroot.asImapPath().equals("") || quota <= 0) {
                 ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: '" + qroot + "'");
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
                 return CONTINUE_PROCESSING;
@@ -2673,7 +2670,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         String status = "";
         try {
-            if (expunged && !i4folder.isVirtual() && sessionActivated(ActivatedExtension.QRESYNC))
+            if (expunged && !i4folder.isVirtual() && sessionActivated(ImapExtension.QRESYNC))
                 status = "[HIGHESTMODSEQ " + i4folder.getCurrentMODSEQ() + "] ";
         } catch (ServiceException e) {
             ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
@@ -2724,7 +2721,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         String status = "";
         try {
-            if (expunged && byUID && !mSelectedFolder.isVirtual() && sessionActivated(ActivatedExtension.QRESYNC))
+            if (expunged && byUID && !mSelectedFolder.isVirtual() && sessionActivated(ImapExtension.QRESYNC))
                 status = "[HIGHESTMODSEQ " + mSelectedFolder.getCurrentMODSEQ() + "] ";
         } catch (ServiceException e) {
             ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
@@ -2813,14 +2810,14 @@ abstract class ImapHandler extends ProtocolHandler {
 
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ)
-            activateExtension(ActivatedExtension.CONDSTORE);
+            activateExtension(ImapExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
         //                     -  a FETCH or SEARCH command that includes the MODSEQ
         //                         message data item
         //                  MUST reject any such command with the tagged BAD response."
-        if (requiresMODSEQ && !sessionActivated(ActivatedExtension.CONDSTORE))
+        if (requiresMODSEQ && !sessionActivated(ImapExtension.CONDSTORE))
             throw new ImapParseException(tag, "NOMODSEQ", "cannot SEARCH MODSEQ in this mailbox", true);
 
         // only supporting one level of sorting sort at this point
@@ -2909,7 +2906,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits, byUID));
         }
 
-        if (modseq > 0)
+        if (modseq > 0 && result != null)
             result.append(" (MODSEQ ").append(modseq).append(')');
 
         if (saveResults) {
@@ -2978,14 +2975,14 @@ abstract class ImapHandler extends ProtocolHandler {
 
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ)
-            activateExtension(ActivatedExtension.CONDSTORE);
+            activateExtension(ImapExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
         //                     -  a FETCH or SEARCH command that includes the MODSEQ
         //                         message data item
         //                  MUST reject any such command with the tagged BAD response."
-        if (requiresMODSEQ && !sessionActivated(ActivatedExtension.CONDSTORE))
+        if (requiresMODSEQ && !sessionActivated(ImapExtension.CONDSTORE))
             throw new ImapParseException(tag, "NOMODSEQ", "cannot THREAD MODSEQ in this mailbox", true);
 
         LinkedHashMap<Integer, List<ImapMessage>> threads = new LinkedHashMap<Integer, List<ImapMessage>>();
@@ -3096,8 +3093,8 @@ abstract class ImapHandler extends ProtocolHandler {
         if (changedSince >= 0)
             attributes |= FETCH_MODSEQ;
         if ((attributes & FETCH_MODSEQ) != 0)
-            activateExtension(ActivatedExtension.CONDSTORE);
-        boolean modseqEnabled = sessionActivated(ActivatedExtension.CONDSTORE);
+            activateExtension(ImapExtension.CONDSTORE);
+        boolean modseqEnabled = sessionActivated(ImapExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
@@ -3226,8 +3223,10 @@ abstract class ImapHandler extends ProtocolHandler {
                         result.print(empty ? "" : " ");  result.print("ENVELOPE ");
                         ImapMessage.serializeEnvelope(result, mm);  empty = false;
                     }
-                    for (ImapPartSpecifier pspec : parts) {
-                        result.print(empty ? "" : " ");  pspec.write(result, os, mm);  empty = false;
+                    if (parts != null) {
+                        for (ImapPartSpecifier pspec : parts) {
+                            result.print(empty ? "" : " ");  pspec.write(result, os, mm);  empty = false;
+                        }
                     }
                 }
 
@@ -3284,7 +3283,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    enum StoreAction { REPLACE, ADD, REMOVE }
+    private enum StoreAction { REPLACE, ADD, REMOVE }
     
     private final int SUGGESTED_BATCH_SIZE = 100;
 
@@ -3298,8 +3297,8 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         if (modseq >= 0)
-            activateExtension(ActivatedExtension.CONDSTORE);
-        boolean modseqEnabled = sessionActivated(ActivatedExtension.CONDSTORE);
+            activateExtension(ImapExtension.CONDSTORE);
+        boolean modseqEnabled = sessionActivated(ImapExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
@@ -3460,7 +3459,8 @@ abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        String skipped = modifyConflicts == null || modifyConflicts.isEmpty() ? "" : " [MODIFIED " + ImapFolder.encodeSubsequence(modifyConflicts, byUID) + ']';
+        boolean hadConflicts = modifyConflicts != null && !modifyConflicts.isEmpty();
+        String conflicts = hadConflicts ? " [MODIFIED " + ImapFolder.encodeSubsequence(modifyConflicts, byUID) + ']' : "";
 
         sendNotifications(false, false);
         // RFC 2180 4.2.1: "If the ".SILENT" suffix is used, and the STORE completed successfully for
@@ -3469,9 +3469,9 @@ abstract class ImapHandler extends ProtocolHandler {
         //                  expunged messages are referenced, the server MAY set the flags and return
         //                  a FETCH response for the non-expunged messages along with a tagged NO."
         if (silent || allPresent)
-            sendOK(tag, command + skipped + " completed");
+            sendOK(tag, command + conflicts + " completed");
         else
-            sendNO(tag, command + skipped + " completed");
+            sendNO(tag, command + conflicts + " completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -3668,7 +3668,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 List<Integer> expunged = i4folder.collapseExpunged();
                 removed = !expunged.isEmpty();
                 if (removed) {
-                    if (sessionActivated(ActivatedExtension.QRESYNC)) {
+                    if (sessionActivated(ImapExtension.QRESYNC)) {
                         notifications.add("VANISHED " + ImapFolder.encodeSubsequence(expunged));
                     } else {
                         for (Integer index : expunged)
@@ -3679,7 +3679,7 @@ abstract class ImapHandler extends ProtocolHandler {
             i4folder.checkpointSize();
 
             // notify of any message flag changes
-            boolean sendModseq = sessionActivated(ActivatedExtension.CONDSTORE);
+            boolean sendModseq = sessionActivated(ImapExtension.CONDSTORE);
             for (Iterator<ImapFolder.DirtyMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
                 ImapFolder.DirtyMessage dirty = it.next();
                 if (dirty.i4msg.isAdded())
@@ -3728,7 +3728,7 @@ abstract class ImapHandler extends ProtocolHandler {
         String response = (tag == null ? "" : tag + ' ') + (msg == null ? "" : msg);
         if (ZimbraLog.imap.isDebugEnabled())
             ZimbraLog.imap.debug("  S: " + response);
-        else if (msg.startsWith("BAD"))
+        else if (msg != null && msg.startsWith("BAD"))
             ZimbraLog.imap.info("  S: " + response);
         sendLine(response, flush);
     }

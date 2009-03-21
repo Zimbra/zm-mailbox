@@ -38,7 +38,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.imap.ImapHandler.ActivatedExtension;
+import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
@@ -110,7 +110,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             throw ServiceException.PERM_DENIED("cannot select folder: " + mPath);
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
         if ((params & SELECT_CONDSTORE) != 0)
-            mHandler.activateExtension(ActivatedExtension.CONDSTORE);
+            mHandler.activateExtension(ImapExtension.CONDSTORE);
 
         // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
         mInitialRECENT = ((Folder) path.getFolder()).getImapRECENTCutoff();
@@ -272,7 +272,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         // in order to avoid screwing up the RECENT value, this must come after snapshotRECENT() and folder.getImapRECENT()
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
         if ((params & SELECT_CONDSTORE) != 0)
-            mHandler.activateExtension(ActivatedExtension.CONDSTORE);
+            mHandler.activateExtension(ImapExtension.CONDSTORE);
 
         mNotificationsSuspended = false;
         mDirtyMessages.clear();
@@ -410,7 +410,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
     /** Returns whether a given SELECT option is active for this folder. */
-    boolean isExtensionActivated(ActivatedExtension ext) {
+    boolean isExtensionActivated(ImapExtension ext) {
         switch (ext) {
             case CONDSTORE: return !isVirtual() && mHandler.sessionActivated(ext);
             default:        return false;
@@ -889,7 +889,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (getSize() == 0)
             return Collections.emptyList();
 
-        boolean byUID = mHandler.sessionActivated(ActivatedExtension.QRESYNC);
+        boolean byUID = mHandler.sessionActivated(ImapExtension.QRESYNC);
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
 
