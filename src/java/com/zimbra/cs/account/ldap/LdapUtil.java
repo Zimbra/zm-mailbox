@@ -29,6 +29,8 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
+import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 
@@ -877,6 +879,87 @@ public class LdapUtil {
             return null;
         }
     }
+    
+    
+    /* =========================================
+     * 
+     *         Methods for the new GAL
+     *   
+     * =========================================
+     */
+    
+    /**
+     * 
+     * @param params
+     */
+    public static void galSearch(GalSearchParams params) 
+    throws ServiceException, NamingException, IOException{
+        String authMech = params.getConfig().getAuthMech();
+        if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
+            galSearchKrb5(params);
+        else    
+            doGalSearch(params);
+    }
+    
+    private static void doGalSearch(GalSearchParams params) throws ServiceException, NamingException, IOException {
+        
+        ZimbraLdapContext zlc = null;
+        try {
+            GalSearchConfig cfg = params.getConfig();
+            GalSearchConfig.GalType galType =  params.getConfig().getGalType();
+
+            if (galType == GalSearchConfig.GalType.zimbra)
+                zlc = new ZimbraLdapContext(false);
+            else
+            	zlc = new ZimbraLdapContext(cfg.getUrl(), cfg.getStartTlsEnabled(), cfg.getAuthMech(),
+                        cfg.getBindDn(), cfg.getBindPassword(), "external GAL");
+            
+            searchGal(zlc,
+                      params.getPageSize(),
+                      cfg.getSearchBase(),
+                      params.getQuery(),
+                      params.getLimit(),
+                      cfg.getRules(),
+                      params.getSyncToken(),
+                      params.getResult());
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    private static void galSearchKrb5(GalSearchParams params) throws NamingException, ServiceException {
+        
+        try {
+            String krb5Principal = params.getConfig().getKerberosPrincipal();
+            String krb5Keytab = params.getConfig().getKerberosKeytab();
+            Krb5Login.performAs(krb5Principal, krb5Keytab, new GalSearchAction(params));
+        } catch (LoginException le) {
+            throw ServiceException.FAILURE("login failed, unable to search GAL", le);
+        } catch (PrivilegedActionException pae) {
+            // e.getException() should be an instance of NamingException,
+            // as only "checked" exceptions will be wrapped in a PrivilegedActionException.
+            Exception e = pae.getException();
+            if (e instanceof NamingException)
+                throw (NamingException)e;
+            else // huh?
+                throw ServiceException.FAILURE("caught exception, unable to search GAL", e); 
+        }
+    }
+    
+    static class GalSearchAction implements PrivilegedExceptionAction {
+        
+        GalSearchParams mParams;
+        
+        GalSearchAction(GalSearchParams params) {
+            mParams = params;
+        }
+            
+        public Object run() throws ServiceException, NamingException, IOException {
+            doGalSearch(mParams);
+            return null;
+        }
+    }
+    
 
     /**
      * Return the later (more recent) of two LDAP timestamps.  Timestamp

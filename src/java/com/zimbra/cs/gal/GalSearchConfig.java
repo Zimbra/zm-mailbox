@@ -14,10 +14,27 @@
  */
 package com.zimbra.cs.gal;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 
 public class GalSearchConfig {
-	private String mUrl;
+    
+	public enum GalType {
+	    zimbra,
+	    ldap;
+        
+	    public static GalType fromString(String s) throws ServiceException {
+		try {
+		    return GalType.valueOf(s);
+		} catch (IllegalArgumentException e) {
+		    throw ServiceException.INVALID_REQUEST("unknown gal type: " + s, e);
+		}
+	    }
+	}
+    
+	private GalType mGalType;
+	private String[] mUrl;
+	private boolean mStartTlsEnabled;
 	private String mFilter;
 	private String mSearchBase;
 	private String mAuthMech;
@@ -27,8 +44,14 @@ public class GalSearchConfig {
 	private String mKerberosKeytab;
 	private LdapGalMapRules mRules;
 	
-	public String getUrl() {
+	public GalType getGalType() {
+		return mGalType;
+	}
+	public String[] getUrl() {
 		return mUrl;
+	}
+	public boolean getStartTlsEnabled() {
+		return mStartTlsEnabled;
 	}
 	public String getFilter() {
 		return mFilter;
@@ -54,8 +77,14 @@ public class GalSearchConfig {
 	public LdapGalMapRules getRules() {
 		return mRules;
 	}
-	public void setUrl(String url) {
+	public void setGalType(GalType galType) {
+		mGalType = galType;
+	}
+	public void setUrl(String[]  url) {
 		mUrl = url;
+	}
+	public void setStartTlsEnabled(boolean startTlsEnabled) {
+		mStartTlsEnabled = startTlsEnabled;
 	}
 	public void setFilter(String filter) {
 		mFilter = filter;
