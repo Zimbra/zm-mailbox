@@ -171,12 +171,12 @@ class ImapFolderSync {
                                  "Unable to select remote folder", e);
                 return null;
             }
-            long uidValidity = connection.getMailbox().getUidValidity();
             tracker = imapSync.createFolderTracker(
-                folder.getId(), folder.getPath(), remoteFolder.getPath(), uidValidity);
+                folder.getId(), folder.getPath(), remoteFolder.getPath(), getUidValidity());
         }
         return tracker;
     }
+
 
     private RemoteFolder createRemoteFolder(Folder folder)
         throws ServiceException, IOException {
@@ -512,7 +512,8 @@ class ImapFolderSync {
         Flags flags = ld.getFlags();
         long uidValidity = 0;
         if (!flags.isNoselect()) {
-            uidValidity = remoteFolder.select().getUidValidity();
+            remoteFolder.select();
+            uidValidity = getUidValidity();
         }
         // Create local folder
         localFolder = new LocalFolder(mailbox, localPath);
@@ -725,16 +726,15 @@ class ImapFolderSync {
     private Mailbox checkUidValidity()
         throws ServiceException, IOException {
         Mailbox mb = remoteFolder.select();
-        if (mb.getUidValidity() == tracker.getUidValidity()) {
+        long uidValidity = getUidValidity();
+        if (uidValidity == tracker.getUidValidity()) {
             return mb;
         }
         remoteFolder.info("Resynchronizing folder because UIDVALIDITY has " +
-                          "changed from %d to %d", tracker.getUidValidity(),
-                          mb.getUidValidity());
+                          "changed from %d to %d", tracker.getUidValidity(), uidValidity);
         List<Integer> newLocalIds = localFolder.getNewMessageIds();
         if (newLocalIds.size() > 0) {
-            remoteFolder.info("Copying %d messages to remote folder",
-                              newLocalIds.size());
+            remoteFolder.info("Copying %d messages to remote folder", newLocalIds.size());
             // TODO Handle append failure for individual messages
             for (int id : newLocalIds) {
                 clearError(id);
@@ -747,7 +747,7 @@ class ImapFolderSync {
         // Empty local folder so that it will be resynced later
         int folderId = localFolder.getId();
         localFolder.emptyFolder();
-        tracker.setUidValidity(mb.getUidValidity());
+        tracker.setUidValidity(uidValidity);
         ds.updateImapFolder(tracker);
         ds.clearSyncState(folderId);
         return remoteFolder.select();
@@ -1170,7 +1170,13 @@ class ImapFolderSync {
     private boolean isYahoo() {
         return connection.hasCapability(AUTH_XYMCOOKIEB64);
     }
-
+    
+    private long getUidValidity() {
+        // Bug 35554: If server does not provide UIDVALIDITY, then assume a value of 1
+        long uidValidity = connection.getMailbox().getUidValidity();
+        return uidValidity > 0 ? uidValidity : 1;
+    }
+    
     private boolean skipItem(int itemId) {
         return SyncErrorManager.getErrorCount(ds, itemId) >= MAX_ITEM_ERRORS;
     }
@@ -1180,8 +1186,7 @@ class ImapFolderSync {
     }
 
     private String remoteId(long uid) {
-        long uidValidity = connection.getMailbox().getUidValidity();
-        return uidValidity + ":" + uid;
+        return getUidValidity() + ":" + uid;
     }
 
     private void clearError(int itemId) {
