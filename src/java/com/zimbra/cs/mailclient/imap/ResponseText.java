@@ -90,9 +90,9 @@ public final class ResponseText {
             is.skipChar(' ');
             cres.uidValidity = is.readNZNumber();
             is.skipChar(' ');
-            cres.msgIds = is.readText(' ');
+            cres.fromUids = is.readText(' ');
             is.skipChar(' ');
-            cres.uids = is.readText(']');
+            cres.toUids = is.readText(']');
             this.data = cres;
             break;
         default:

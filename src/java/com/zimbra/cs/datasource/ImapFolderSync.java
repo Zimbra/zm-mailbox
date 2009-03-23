@@ -1098,15 +1098,16 @@ class ImapFolderSync {
             if (remoteFolder == null) return false;
             remotePath = remoteFolder.getPath();
         }
-        String seq = String.valueOf(msgTracker.getUid());
         CopyResult cr;
         try {
-            cr = connection.uidCopy(seq, remotePath);
+            cr = remoteFolder.copyMessage(msgTracker.getUid(), remotePath);
         } catch (IOException e) {
             syncMessageFailed(msgTracker.getUid(), "COPY failed", e);
             return false;
         }
-        if (cr == null) return false;
+        if (cr == null) {
+            return false; // Message not found
+        }
         stats.msgsCopiedRemotely++;
         // If remote folder created on demand, then create folder tracker
         if (folderTracker == null) {
@@ -1126,7 +1127,7 @@ class ImapFolderSync {
         }
         // Delete original message tracker and create new one
         DbImapMessage.deleteImapMessage(mailbox, localFolder.getId(), msg.getId());
-        long uid = Long.parseLong(cr.getUids());
+        long uid = Long.parseLong(cr.getToUids());
         DbImapMessage.storeImapMessage(
             mailbox, fid, uid, msg.getId(), msgTracker.getTrackedFlags());
         // This bit of ugliness is to make sure we update target folder sync state

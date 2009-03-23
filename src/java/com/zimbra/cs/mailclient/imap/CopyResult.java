@@ -16,18 +16,18 @@ package com.zimbra.cs.mailclient.imap;
 
 public class CopyResult {
     long uidValidity;
-    String msgIds;
-    String uids;
+    String fromUids;
+    String toUids;
 
     public long getUidValidity() {
         return uidValidity;
     }
 
-    public String getMsgIds() {
-        return msgIds;
+    public String getFromUids() {
+        return fromUids;
     }
 
-    public String getUids() {
-        return uids;
+    public String getToUids() {
+        return toUids;
     }
 }

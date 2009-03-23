@@ -23,6 +23,11 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.ImapRequest;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.ResponseText;
+import com.zimbra.cs.mailclient.imap.CopyResult;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.common.util.Log;
@@ -96,6 +101,29 @@ public class RemoteFolder {
             if (os != null) os.close();
             if (tmp != null) tmp.delete();
         }
+    }
+
+    public CopyResult copyMessage(long uid, String mbox) throws IOException {
+        ensureSelected();
+        String seq = String.valueOf(uid);
+        ImapRequest req = connection.newUidRequest(CAtom.COPY, seq, new MailboxName(mbox));
+        ResponseText rt = req.sendCheckStatus().getResponseText();
+        if (rt.getCCode() == CAtom.COPYUID) {
+            CopyResult cr = (CopyResult) rt.getData();
+            if (cr != null) {
+                if (seq.equals(cr.getFromUids())) {
+                    // Validate destination UID and return result
+                    try {
+                        if (Long.parseLong(cr.getToUids()) > 0) {
+                            return cr;
+                        }
+                    } catch (Exception e) {
+                    }
+                }
+                throw req.failed("Invalid COPYUID result");
+            }
+        }
+        return null; // Message not found
     }
 
     /**
