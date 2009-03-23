@@ -1239,12 +1239,16 @@ public class TarFormatter extends Formatter {
 
             if (idx == -1) {
                 file = name;
-                dir = "/";
+                dir = "";
             } else {
                 file = name.substring(idx + 1);
                 dir = name.substring(0, idx + 1);
+                if (!dir.startsWith("/"))
+                    dir = '/' + dir;
             }
-            if (file.endsWith(".csv") || file.endsWith(".vcf")) {
+            if (file.length() == 0) {
+                return;
+            } else if (file.endsWith(".csv") || file.endsWith(".vcf")) {
                 defaultFldr = Mailbox.ID_FOLDER_CONTACTS;
                 type = MailItem.TYPE_CONTACT;
                 view = Folder.TYPE_CONTACT;
@@ -1273,15 +1277,22 @@ public class TarFormatter extends Formatter {
             }
             if (searchTypes != null && Arrays.binarySearch(searchTypes, type) < 0)
                 return;
-            if (fldr.getPath().equals("/"))
-                fldr = mbox.getFolderById(oc, defaultFldr);
-            if (!dir.equals("/")) {
-                String s = fldr.getPath().substring(1) + '/';
+            if (dir.equals("")) {
+                if (fldr.getPath().equals("/"))
+                    fldr = mbox.getFolderById(oc, defaultFldr);
+                if (fldr.getDefaultView() != Folder.TYPE_UNKNOWN &&
+                    fldr.getDefaultView() != view)
+                    throw ServiceException.INVALID_REQUEST(
+                        "folder cannot contain item type " +
+                        Folder.getNameForType(view), null);
+            } else {
+                String s = fldr.getPath();
                 
+                if (!s.endsWith("/"))
+                    s += '/';
                 if (dir.startsWith(s))
                     dir = dir.substring(s.length());
-                fldr = createPath(context, fmap, fldr.getPath() +
-                    (dir.length() == 0 ? "" : '/' + dir), view);
+                fldr = createPath(context, fmap, fldr.getPath() + dir, view);
             }
             switch (type) {
             case MailItem.TYPE_APPOINTMENT:
