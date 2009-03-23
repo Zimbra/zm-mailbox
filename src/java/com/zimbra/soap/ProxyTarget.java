@@ -33,14 +33,14 @@ import com.zimbra.cs.httpclient.URLUtil;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-/**
- * @author jhahm
- */
 public class ProxyTarget {
 
     private Server mServer;
     private AuthToken mAuthToken;
     private String mURL;
+
+    private int mMaxAttempts;
+    private long mTimeout;
 
     public ProxyTarget(String serverId, AuthToken authToken, HttpServletRequest req) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -67,6 +67,19 @@ public class ProxyTarget {
 
     public ProxyTarget(Server server, AuthToken authToken, String url) {
         mServer = server;  mAuthToken = authToken;  mURL = url;
+    }
+
+    /** Instructs the proxy's underlying {@link SoapHttpTransport} to attempt
+     *  the request only once. */
+    public ProxyTarget disableRetries() {
+        mMaxAttempts = 1;  return this;
+    }
+
+    /** Sets both the connect and read timeouts on the proxy's underlying
+     *  {@link SoapHttpTransport}.
+     * @param timeoutMsecs  The new read/connect timeout, in milliseconds. */
+    public ProxyTarget setTimeouts(long timeoutMsecs) {
+        mTimeout = timeoutMsecs;  return this;
     }
 
     public Server getServer() {
@@ -108,6 +121,11 @@ public class ProxyTarget {
         SoapHttpTransport transport = null;
         try {
             transport = new SoapHttpTransport(mURL);
+            if (mMaxAttempts > 0)
+                transport.setRetryCount(mMaxAttempts);
+            if (mTimeout > 0)
+                transport.setTimeout((int) Math.min(mTimeout, Integer.MAX_VALUE));
+
             Element response = transport.invokeRaw(envelope);
             Element body = transport.extractBodyElement(response);
             return new Pair<Element, Element>(transport.getZimbraContext(), body);
