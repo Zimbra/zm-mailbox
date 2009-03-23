@@ -60,10 +60,11 @@ public class MimeHandlerManager {
      * Returns the <tt>MimeHandler</tt> for the given MIME type and filename
      * extension.  If multiple MIME handlers match, returns the one with the
      * highest priority.  If no match is found, returns either the text/plain
-     * for text MIME types or the unknown type handler for other types.
+     * handler for text MIME types or the unknown type handler for other types.
      * 
      * @param mimeType the MIME type or <tt>null</tt>
-     * @param filename the filename or <tt>null</tt> 
+     * @param filename the filename or <tt>null</tt>
+     * @throws MimeHandlerException if the handler could not be loaded
      */
     public static MimeHandler getMimeHandler(String mimeType, String filename)
     throws MimeHandlerException {
@@ -76,13 +77,14 @@ public class MimeHandlerManager {
         String extension = FileUtil.getExtension(filename);
         HandlerInfo handlerInfo = sHandlers.get(getKey(mimeType, extension));
         
-        if (handlerInfo == null)
+        if (handlerInfo == null) {
             handlerInfo = loadHandler(mimeType, extension);
+            sHandlers.put(getKey(mimeType, extension), handlerInfo);
+        }
+
 
         handler = handlerInfo.getInstance();
-        if (handler != null && sLog.isDebugEnabled()) {
-            sLog.debug("Returning MIME handler: %s", handler.getClass().getName());
-        }
+        sLog.debug("Returning MIME handler: %s", handler.getClass().getName());
         return handler;
     }
     
@@ -102,15 +104,21 @@ public class MimeHandlerManager {
         }
         return length;
     }
-    
-    private static synchronized HandlerInfo loadHandler(String mimeType, String extension) {
+
+    /**
+     * Returns the <tt>HandlerInfo</tt> that matches the given type or extension.  If
+     * an exact match is not found, returns the default handler.  
+     * @throws MimeHandlerException if the handler could not be loaded
+     */
+    private static synchronized HandlerInfo loadHandler(String mimeType, String extension)
+    throws MimeHandlerException {
         sLog.debug("Loading MIME handler for type %s, extension '%s'", mimeType, extension);
         
-        HandlerInfo handlerInfo = null;
         try {
             MimeTypeInfo mt = lookUpMimeTypeInfo(mimeType, extension);
             List<MimeTypeInfo> mimeTypeList;
             
+            // Look up the MimeTypeInfo.
             if (mt == null || mt.getHandlerClass() == null) {
                 boolean isTextType = (mimeType != null && (mimeType.matches(Mime.CT_TEXT_WILD) ||
                     mimeType.equalsIgnoreCase(Mime.CT_MESSAGE_RFC822)));
@@ -125,37 +133,42 @@ public class MimeHandlerManager {
                         sLog.warn("Unable to load MIME handler for %s", Mime.CT_DEFAULT);
                     }
                 }
+
+                // If there was no match, load the catch-all handler.
                 if (mt == null || mt.getHandlerClass() == null) {
                     sLog.debug("Falling back to %s MIME Handler for type %s", MimeHandler.CATCH_ALL_TYPE, mimeType);
                     mimeTypeList = Provisioning.getInstance().getMimeTypes(MimeHandler.CATCH_ALL_TYPE);
                     if (mimeTypeList.size() > 0) {
                         mt = mimeTypeList.get(0);
                     } else {
-                        sLog.warn("Unable to load MIME handler fo %s", MimeHandler.CATCH_ALL_TYPE);
+                        throw new MimeHandlerException("Unable to load MIME handler for type " + MimeHandler.CATCH_ALL_TYPE);
                     }
-                    assert(mt != null);
                 }
             }
 
-            if (mt != null && mt.getHandlerClass() != null) {
-                String clazz = mt.getHandlerClass();
-                assert(clazz != null);
-                if (clazz.indexOf('.') == -1)
-                    clazz = "com.zimbra.cs.mime.handler." + clazz;
-                try {
-                    handlerInfo = new HandlerInfo();
-                    handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), clazz);
-                    handlerInfo.mMimeType = mt;
-                    handlerInfo.mRealMimeType = mimeType;
-                    sHandlers.put(getKey(mimeType, extension), handlerInfo);
-                } catch (Exception e) {
-                    sLog.warn("Unable to instantiate MIME handler", e);
-                }
+            if (mt.getHandlerClass() == null) {
+                String msg = String.format("%s not specified for MIME handler %s.",
+                    Provisioning.A_zimbraMimeHandlerClass, mt.getDescription());
+                throw new MimeHandlerException(msg);
             }
+
+            // Load the class
+            HandlerInfo handlerInfo = new HandlerInfo();
+            String className = mt.getHandlerClass();
+            if (className.indexOf('.') == -1) {
+                className = "com.zimbra.cs.mime.handler." + className;
+            }
+            handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), className);
+            handlerInfo.mMimeType = mt;
+            handlerInfo.mRealMimeType = mimeType;
+            return handlerInfo;
         } catch (ServiceException e) {
-            sLog.error("Unable to load MIME handler", e);
-        } 
-        return handlerInfo;
+            String msg = String.format("Unable to load MIME handler for type %s, extension %s.", mimeType, extension);
+            throw new MimeHandlerException(msg, e);
+        } catch (ClassNotFoundException e) {
+            String msg = String.format("Unable to load MIME handler for type %s, extension %s.", mimeType, extension);
+            throw new MimeHandlerException(msg, e);
+        }
     }
 
     private static String getKey(String mimeType, String ext) {
@@ -169,8 +182,9 @@ public class MimeHandlerManager {
     }
 
     /**
-     * Looks up all <tt>MimeTypeInfo</tt>s that match either the given type or
-     * extension and returns the one with the highest priority.
+     * Returns the highest-priority <tt>MimeTypeInfo</tt> that
+     * matches either the given type or extension.
+     * @return the <tt>MimeTypeInfo</tt> object or <tt>null</tt>
      */
     private static MimeTypeInfo lookUpMimeTypeInfo(String mimeType, String ext)
     throws ServiceException {
