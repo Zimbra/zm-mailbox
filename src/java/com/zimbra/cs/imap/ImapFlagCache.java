@@ -58,12 +58,17 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
         }
 
         private String normalize(String name, int id) {
-            String imapName = name.replaceAll("[ *(){%*\\]\\\\]+", "");
-            if (name.startsWith("\\"))
-                imapName = '\\' + imapName;
-            if (!name.equals(""))
-                return imapName;
-            return ":FLAG" + Tag.getIndex(id);
+            StringBuilder sb = new StringBuilder(name.length());
+            for (int i = 0; i < name.length(); i++) {
+                char c = name.charAt(i);
+                // strip all non-{@link ImapRequest#ATOM_CHARS} except for a leading '\'
+                if (c > 0x20 && c < 0x7f && c != '(' && c != ')' && c != '{' && c != '%' && c != '*' && c != '"' && c != ']' && (i == 0 || c != '\\'))
+                    sb.append(c);
+            }
+            // if we stripped chars, make sure to disambiguate the resulting keyword names
+            if (sb.length() != name.length())
+                sb.append(":FLAG").append(Tag.getIndex(id));
+            return sb.toString();
         }
 
         boolean matches(ImapMessage i4msg) {
