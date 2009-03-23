@@ -44,8 +44,6 @@ import com.zimbra.common.util.ByteUtil;
 
 import org.dom4j.ElementHandler;
 import java.util.HashMap;
-/**
- */
 
 public class SoapHttpTransport extends SoapTransport {
 
@@ -105,7 +103,7 @@ public class SoapHttpTransport extends SoapTransport {
      */
     public SoapHttpTransport(String uri, String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
     	super();
-    	mClient = new HttpClient(sDefaultParams);
+    	mClient = new HttpClient(new HttpClientParams(sDefaultParams));
     	commonInit(uri);
     	
     	if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
