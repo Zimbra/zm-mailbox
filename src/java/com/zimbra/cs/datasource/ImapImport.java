@@ -145,14 +145,10 @@ public class ImapImport extends MailItemImport {
                 long remoteUvv = 0;
                 if (!hasAttribute(remoteFolder, "\\Noselect")) {
                     Status status = getStatus(remoteFolder, "UIDVALIDITY", "UIDNEXT");
-                    if (status != null && status.uidvalidity == 0 &&
-                        store.hasCapability("XAOL-NETMAIL")) {
-                        // Workaround for bug 25623: if this is AOL mail and
-                        // STATUS returns a UIDVALIDITY of 0, then assume
-                        // a correct value of 1 (always seems to be the case).
+                    if (status != null && status.uidvalidity <= 0) {
+                        // bug 35554: if server omits UIDVALIDITY then assume a value of 1
                         status.uidvalidity = 1;
-                    } else if (status == null || status.uidvalidity <= 0 ||
-                               status.uidnext <= 0) {
+                    } else if (status == null || status.uidnext <= 0) {
                         // Skip folder with bad STATUS results (see bug 26425)
                         ZimbraLog.datasource.warn(
                             "Not importing remote folder '%s' because STATUS command failed",
@@ -322,6 +318,10 @@ public class ImapImport extends MailItemImport {
                         long uidValidity = 0;
                         if (jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES)) {
                             uidValidity = jmFolder.getUIDValidity();
+                            // bug 35554: If server omits UIDVALIDITY then assume a value of 1
+                            if (uidValidity <= 0) {
+                                uidValidity = 1;
+                            }
                         } else {
                             ZimbraLog.datasource.warn("Unable to create remote folder: " + jmFolder.getFullName());
                         }
@@ -627,7 +627,7 @@ public class ImapImport extends MailItemImport {
         addMailItemIds(localIds, localFolder.getId(), MailItem.TYPE_MESSAGE);
         addMailItemIds(localIds, localFolder.getId(), MailItem.TYPE_CHAT);
 
-        // For servers not supporting UIDVALIDITY, get tracked messages that
+        // For servers not supporting APPENDUID, get tracked messages that
         // were appended to mailbox but have no UID. We will match to downloaded
         // messages by checksum.
         final Map<Long, ImapMessage> noUidMsgs = new HashMap<Long, ImapMessage>();
@@ -722,7 +722,7 @@ public class ImapImport extends MailItemImport {
                     IMAPMessage msg = remoteMsgs.get(uid);
                     if (msg == null) return;
                     ImapData data = md.getBodySections()[0].getData();
-                    // If server does not support UIDVALIDITY and there are
+                    // If server does not support APPENDUID and there are
                     // local messages without UID, match downloaded messages
                     // based on checksum and assign UID.
                     if (!noUidMsgs.isEmpty()) {
