@@ -124,7 +124,7 @@ public class RightManager {
             File file = yetToProcess.get(0);
             
             if (!file.getPath().endsWith(".xml")) {
-                ZimbraLog.acl.warn("while loading rights, ignoring not .xml file: " + file);
+                ZimbraLog.acl.warn("while loading rights, ignoring none .xml file: " + file);
                 yetToProcess.remove(file);
                 continue;
             }
