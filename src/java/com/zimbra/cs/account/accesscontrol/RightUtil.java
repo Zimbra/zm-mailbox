@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,7 @@ public class RightUtil {
     public static List<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         ZimbraACL acl = getACL(target); 
         if (acl == null)
-            return null;
+            return new ArrayList<ZimbraACE>(); // return empty list
         
         // Make a copy so we don't interfere with others that are using the acl.
         // This instance of acl will never be used in any AccessManager code path.
