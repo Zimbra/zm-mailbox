@@ -2338,11 +2338,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private Right lookupRight(String rightName) throws ServiceException {
-        Right r = mProv.getRight(rightName, false);
-        if (r == null)
-            throw AccountServiceException.NO_SUCH_RIGHT(rightName);
-        else
-            return r;
+        return mProv.getRight(rightName, false);
     }
 
     private Server lookupServer(String key) throws ServiceException {

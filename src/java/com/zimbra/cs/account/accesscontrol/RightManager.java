@@ -56,6 +56,7 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeInfo;
 import com.zimbra.cs.account.AttributeManager;
@@ -389,7 +390,7 @@ public class RightManager {
             r = sAdminRights.get(right);
         
         if (mustFind && r == null)
-            throw ServiceException.FAILURE("invalid right " + right, null);
+            throw AccountServiceException.NO_SUCH_RIGHT("invalid right " + right);
         
         return r;
     }

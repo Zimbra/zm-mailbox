@@ -42,9 +42,6 @@ public class GetRight extends RightDocumentHandler {
 
         Right right = RightManager.getInstance().getRight(value);
         
-        if (right == null)
-            throw AccountServiceException.NO_SUCH_RIGHT(value);
-        
         Element response = zsc.createElement(AdminConstants.GET_RIGHT_RESPONSE);
         RightCommand.rightToXML(response, right, expandAllAtrts);
 
