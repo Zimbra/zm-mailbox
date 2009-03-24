@@ -134,6 +134,8 @@ public class MailConstants {
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
     public static final QName MODIFY_APPOINTMENT_REQUEST = QName.get("ModifyAppointmentRequest", NAMESPACE);
     public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
+    public static final QName ADD_APPOINTMENT_INVITE_REQUEST = QName.get("AddAppointmentInviteRequest", NAMESPACE);
+    public static final QName ADD_APPOINTMENT_INVITE_RESPONSE = QName.get("AddAppointmentInviteResponse", NAMESPACE);
     public static final QName IMPORT_APPOINTMENTS_REQUEST = QName.get("ImportAppointmentsRequest", NAMESPACE);
     public static final QName IMPORT_APPOINTMENTS_RESPONSE = QName.get("ImportAppointmentsResponse", NAMESPACE);
 
@@ -143,6 +145,8 @@ public class MailConstants {
     public static final QName CREATE_TASK_REQUEST = QName.get("CreateTaskRequest", NAMESPACE);
     public static final QName CREATE_TASK_EXCEPTION_REQUEST = QName.get("CreateTaskExceptionRequest", NAMESPACE);
     public static final QName MODIFY_TASK_REQUEST = QName.get("ModifyTaskRequest", NAMESPACE);
+    public static final QName ADD_TASK_INVITE_REQUEST = QName.get("AddTaskInviteRequest", NAMESPACE);
+    public static final QName ADD_TASK_INVITE_RESPONSE = QName.get("AddTaskInviteResponse", NAMESPACE);
     public static final QName CANCEL_TASK_REQUEST = QName.get("CancelTaskRequest", NAMESPACE);
     public static final QName COMPLETE_TASK_INSTANCE_REQUEST = QName.get("CompleteTaskInstanceRequest", NAMESPACE);
 
@@ -638,6 +642,8 @@ public class MailConstants {
     public static final String A_CAL_GEO_LONGITUDE = "lon";
 
     public static final String E_CAL_MINICAL_DATE = "date";
+
+    public static final String A_CAL_INTENDED_FOR = "cif";
 
     // spell checking
     public static final String A_AVAILABLE = "available";
