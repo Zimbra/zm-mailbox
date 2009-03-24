@@ -295,6 +295,6 @@ public class LiveData {
             fields.put(Contact.A_email, mail);
         }
         return contact == null ? new ParsedContact(fields) :
-            new ParsedContact(fields, contact.getContent());
+            new ParsedContact(fields, contact.getContentStream());
     }
 }
