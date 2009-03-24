@@ -26,7 +26,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -47,9 +47,6 @@ import com.zimbra.cs.wiki.Wiki.WikiUrl;
  * the requested page, location of the page referred by the wiklet).
  * 
  * Each parsed templates are cached in the class <code>Wiki</code>.
- * 
- * @author jylee
- *
  */
 public class WikiTemplate implements Comparable<WikiTemplate> {
 
@@ -347,7 +344,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return map;
 		}
 		
-		public String toString() {
+		@Override public String toString() {
 			return "Token: type=" + mType + ", text=" + mVal;
 		}
 	}
@@ -401,7 +398,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 
 			return body.toString(newCtxt);
 		}
-		public String toString() {
+		@Override public String toString() {
 			return "Wiklet: " + getName();
 		}
 		private static Map<String,Wiklet> sWIKLETS;
@@ -492,13 +489,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public static final int sOUTER = 1;
 		public static final int sINNER = 2;
 		
-		public String getName() {
+		@Override public String getName() {
 			return "Table of contents";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "TOC";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
 	    private String createLink(String folder, String name) {
@@ -535,7 +532,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         		buf.append(">");
         	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING))) {
+            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), SortBy.NAME_NATURAL_ORDER_ASCENDING)) {
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
             	buf.append(" class='zmwiki-pageLink'>");
@@ -562,9 +559,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	    	Mailbox mbox = ctxt.item.getMailbox();
             byte type = folder.getDefaultView();
             if (ctxt.wctxt.view == null)
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, type, folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, type, folder.getId(), SortBy.NAME_NATURAL_ORDER_ASCENDING));
 	    	else
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), SortBy.NAME_NATURAL_ORDER_ASCENDING));
 
 			String bt = params.get(sBODYTEMPLATE);
 			String it = params.get(sITEMTEMPLATE);
@@ -574,8 +571,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				it = sDEFAULTITEMTEMPLATE;
 			return handleTemplates(ctxt, list, bt, it);
 		}
-		
-		public String apply(Context ctxt) throws ServiceException, IOException {
+
+		@Override public String apply(Context ctxt) throws ServiceException, IOException {
 			Map<String,String> params = ctxt.token.parseParam();
 			String format = params.get(sFORMAT);
 			if (format == null) {
@@ -597,13 +594,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public static final String sDEFAULTBODYTEMPLATE = "_TocVersionBodyTemplate";
 		public static final String sDEFAULTITEMTEMPLATE = "_TocVersionItemTemplate";
 		
-		public String getName() {
+		@Override public String getName() {
 			return "Version";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "HISTORY";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
 		public String applyTemplates(Context ctxt, Map<String,String> params) throws ServiceException, IOException {
@@ -622,7 +619,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return handleTemplates(ctxt, list, bt, it);
 		}		
 		
-		protected String handleTemplates(Context ctxt,
+		@Override protected String handleTemplates(Context ctxt,
 				List<MailItem> list,
 				String bodyTemplate, 
 				String itemTemplate) throws ServiceException, IOException {
@@ -639,7 +636,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 
 		
-		public String apply(Context ctxt) throws ServiceException, IOException {
+		@Override public String apply(Context ctxt) throws ServiceException, IOException {
 			Map<String,String> params = ctxt.token.parseParam();
 			return applyTemplates(ctxt, params);
 		}
@@ -660,13 +657,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public static final String sDEFAULTBODYTEMPLATE = "_PathBodyTemplate";
 		public static final String sDEFAULTITEMTEMPLATE = "_PathItemTemplate";
 		
-		public String getName() {
+		@Override public String getName() {
 			return "Breadcrumbs";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "PATH";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
 		private Folder getFolder(Context ctxt, MailItem item) throws ServiceException {
@@ -687,7 +684,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			}
 			return list;
 		}
-		public String apply(Context ctxt) throws ServiceException, IOException {
+		@Override public String apply(Context ctxt) throws ServiceException, IOException {
 			List<MailItem> list = getBreadcrumbs(ctxt);
 			Map<String,String> params = ctxt.token.parseParam();
 			String format = params.get(sFORMAT);
@@ -727,16 +724,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class IconWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Icon";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "ICON";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+	    @Override public String apply(Context ctxt) {
 			if (ctxt.item instanceof Document) {
                 if (ctxt.item instanceof WikiItem) {
                     return "<div class='ImgPage'></div>";
@@ -750,16 +747,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class NameWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Name";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "NAME";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+	    @Override public String apply(Context ctxt) {
             String mText = ctxt.item.getName();
             if(ctxt.item.getId() == Wiki.WIKI_FOLDER_ID) {
                  MsgWiklet  msgWiklet =  (MsgWiklet) Wiklet.get("MSG");
@@ -774,16 +771,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class FragmentWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Fragment";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "FRAGMENT";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+	    @Override public String apply(Context ctxt) {
 			if (!(ctxt.item instanceof Document)) 
 				return "";
 			Document doc = (Document) ctxt.item;
@@ -791,16 +788,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class CreatorWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Creator";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "CREATOR";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+	    @Override public String apply(Context ctxt) throws ServiceException {
 		   if (ctxt.item instanceof Folder) {
                //notebook folder
 			   return ctxt.item.getMailbox().getAccount().getName();        
@@ -815,16 +812,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	}
 
 	public static class TagsWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Tags";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "TAGS";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+	    @Override public String apply(Context ctxt) throws ServiceException {
 			if (ctxt.item instanceof Folder) {
 				return "";        
 			}
@@ -851,16 +848,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	}
 
 	public static class ModifierWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Modifier";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "MODIFIER";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+	    @Override public String apply(Context ctxt) {
 			if (!(ctxt.item instanceof Document)) 
 				return "";
 			Document doc = (Document) ctxt.item;
@@ -907,7 +904,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			sFORMATS.put(sLONGDATETIME,   DateFormat.getDateTimeInstance(DateFormat.LONG,   DateFormat.LONG));
 			sFORMATS.put(sFULLDATETIME,   DateFormat.getDateTimeInstance(DateFormat.FULL,   DateFormat.FULL));
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
 		
@@ -958,41 +955,41 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class CreateDateWiklet extends DateTimeWiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Create Date";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "CREATEDATE";
 		}
-		public String apply(Context ctxt) throws ServiceException {
+	    @Override public String apply(Context ctxt) throws ServiceException {
             MailItem item = ctxt.item.getMailbox().getItemRevision(ctxt.wctxt.octxt, ctxt.item.getId(), ctxt.item.getType(), 1);
 			Date createDate = new Date((item == null ? ctxt.item : item).getDate());
 			return formatDate(ctxt, createDate);
 		}
 	}
 	public static class ModifyDateWiklet extends DateTimeWiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Modified Date";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "MODIFYDATE";
 		}
-		public String apply(Context ctxt) {
+	    @Override public String apply(Context ctxt) {
 			Date modifyDate = new Date(ctxt.item.getDate());
 			return formatDate(ctxt, modifyDate);
 		}
 	}
 	public static class VersionWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Version";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "VERSION";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+	    @Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+	    @Override public String apply(Context ctxt) {
 			if (!(ctxt.item instanceof Document)) 
 				return "1";
 			Document doc = (Document) ctxt.item;
@@ -1000,17 +997,17 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class ContentWiklet extends Wiklet {
-		public String getName() {
+	    @Override public String getName() {
 			return "Content";
 		}
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "CONTENT";
 		}
-		public WikiTemplate findInclusion(Context ctxt) throws ServiceException {
+	    @Override public WikiTemplate findInclusion(Context ctxt) throws ServiceException {
 			WikiItem wiki = (WikiItem) ctxt.item;
 			return WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
 		}
-		public String apply(Context ctxt) throws ServiceException, IOException {
+	    @Override public String apply(Context ctxt) throws ServiceException, IOException {
 			if (ctxt.content != null)
 				return ctxt.content;
 			if (!(ctxt.item instanceof WikiItem))
@@ -1029,20 +1026,20 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class InlineWiklet extends IncludeWiklet {
-		public String getPattern() {
+	    @Override public String getPattern() {
 			return "INLINE";
 		}
 	}
 	public static class IncludeWiklet extends Wiklet {
 		public static final String sPAGE = "page";
 		
-		public String getName() {
+		@Override public String getName() {
 			return "Include";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "INCLUDE";
 		}
-		public WikiTemplate findInclusion(Context ctxt) throws ServiceException {
+		@Override public WikiTemplate findInclusion(Context ctxt) throws ServiceException {
 			Map<String,String> params = ctxt.token.parseParam();
 			String page = params.get(sPAGE);
 			if (page == null) {
@@ -1050,7 +1047,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			}
 			return WikiTemplate.findTemplate(ctxt, page);
 		}
-		public String apply(Context ctxt) {
+		@Override public String apply(Context ctxt) {
 			try {
 				WikiTemplate template = findInclusion(ctxt);
 				return template.toString(ctxt);
@@ -1063,16 +1060,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		private static final String PAGENAME = "pagename";
 		private static final String TEXT = "text";
 		
-		public String getName() {
+		@Override public String getName() {
 			return "Wikilink";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "WIKILINK";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) throws ServiceException, IOException {
+		@Override public String apply(Context ctxt) throws ServiceException, IOException {
 			String link, title;
 			if (ctxt.token.getType() == Token.TokenType.WIKILINK) {
 				String text = ctxt.token.getValue();
@@ -1119,16 +1116,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         private static final String sTYPE = "type";
 		private static final String sVERSIONURL = "version";
 		private static final String sHISTORYURL = "history";
-		public String getName() {
+		@Override public String getName() {
 			return "Url";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "URL";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+		@Override public String apply(Context ctxt) {
 			if (ctxt.item == null)
 				return "<!-- cannot resolve item for url wiklet -->";
 			String title = ctxt.item.getName();
@@ -1144,10 +1141,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				if(type != null && type.equals(sVERSIONURL) && ctxt.latestVersionItem !=null) {
 					wurl = new WikiUrl(ctxt.latestVersionItem);
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.latestVersionItem.getMailbox().getAccountId())+"?ver="+ctxt.item.getVersion();
-				}else if(type != null && type.equals(sHISTORYURL)) {
+				} else if (type != null && type.equals(sHISTORYURL)) {
 					if (ctxt.item instanceof Folder){
 						url = null;						
-					}else{
+					} else {
 						wurl = new WikiUrl(ctxt.item);
 						title = params.get(sLABEL);
                         String msgKey = params.get(sKEY);
@@ -1155,15 +1152,15 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                             MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
                             title = msgWiklet.getMessage(msgKey, ctxt);
                          }
-                        if(title==null){
+                        if (title == null){
 							title = sHISTORYURL;
 						}
 						url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId())+"?view="+sHISTORYURL;
 					}
-				}else{
+				} else {
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
 				}
-				if(url != null){
+				if (url != null) {
                     if((ctxt.item.getId() == Wiki.WIKI_FOLDER_ID)) {
                         MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
                         String msgText = msgWiklet.getMessage(title, ctxt);
@@ -1184,13 +1181,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public static class MsgWiklet extends Wiklet {
 		private static final String sKEY = "key";
-		public String getName() {
+		@Override public String getName() {
 			return "Msg";
 		}
-		public String getPattern() {
+		@Override public String getPattern() {
 			return "MSG";
 		}
-		public WikiTemplate findInclusion(Context ctxt) {
+		@Override public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
 
@@ -1210,8 +1207,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             return mText;
         }
 
-        public String apply(Context ctxt) {
-			
+        @Override public String apply(Context ctxt) {
 			try {
 				Map<String,String> params = ctxt.token.parseParam();
 				String key = params.get(sKEY);

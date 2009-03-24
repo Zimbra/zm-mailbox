@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
@@ -1059,15 +1060,15 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    static Comparator<MailItem> getComparator(byte sort) {
-        boolean ascending = (sort & DbSearch.SORT_DIRECTION_MASK) == DbSearch.SORT_ASCENDING;
-        switch (sort & DbSearch.SORT_FIELD_MASK) {
-            case DbSearch.SORT_BY_ID:       return ascending ? new SortIdAscending() : new SortIdDescending();
-            case DbSearch.SORT_BY_DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
-            case DbSearch.SORT_BY_SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
-            case DbSearch.SORT_BY_NAME_NATURAL_ORDER: return ascending ? new SortNameNaturalOrderAscending() : new SortNameNaturalOrderDescending();
+    static Comparator<MailItem> getComparator(SortBy sort) {
+        boolean ascending = sort.getDirection() == SortBy.SortDirection.ASCENDING;
+        switch (sort.getCriterion()) {
+            case ID:       return ascending ? new SortIdAscending() : new SortIdDescending();
+            case DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
+            case SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
+            case NAME_NATURAL_ORDER: return ascending ? new SortNameNaturalOrderAscending() : new SortNameNaturalOrderDescending();
+            default:       return null;
         }
-        return null;
     }
     
     /**

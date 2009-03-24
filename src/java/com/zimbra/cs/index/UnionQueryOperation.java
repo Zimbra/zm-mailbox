@@ -96,7 +96,7 @@ class UnionQueryOperation extends CombiningQueryOperation
     {
         if (mCachedNextHit == null) {
             
-            if (getResultsSet().getSortBy() == MailboxIndex.SortBy.NONE) {
+            if (getResultsSet().getSortBy() == SortBy.NONE) {
                 for (QueryOperation op : mQueryOperations) {
                     mCachedNextHit = op.getNext();
                     if (mCachedNextHit != null)

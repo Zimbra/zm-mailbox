@@ -25,7 +25,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.Session;
@@ -248,14 +248,12 @@ public class Conversation extends MailItem {
         return mSenderList;
     }
 
-    public static final byte SORT_DATE_ASCENDING = DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING;
-
     /** Returns all the {@link Message}s in this conversation.  The messages
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
      *  they're fetched from the database.  The returned messages are not
      *  guaranteed to be sorted in any way. */
     List<Message> getMessages() throws ServiceException {
-        return getMessages(DbSearch.SORT_NONE);
+        return getMessages(SortBy.NONE);
     }
 
     /** Returns all the {@link Message}s in this conversation.  The messages
@@ -264,7 +262,7 @@ public class Conversation extends MailItem {
      * 
      * @param sort  The sort order for the messages, specified by one of the
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
-    List<Message> getMessages(byte sort) throws ServiceException {
+    List<Message> getMessages(SortBy sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort);
         for (UnderlyingData data : listData)

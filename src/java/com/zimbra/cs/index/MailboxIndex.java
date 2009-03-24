@@ -20,7 +20,6 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -35,7 +34,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
@@ -91,7 +89,7 @@ public final class MailboxIndex
 //                throw ServiceException.FAILURE("Unknown $ command", null);
 //
 ////          return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
-//        }			
+//        }         
 
         //
         // calendar expansions
@@ -154,7 +152,7 @@ public final class MailboxIndex
 
             if (isTaskSort) {
                 results = new TaskSortingQueryResults(results, originalSort);
-            }			
+            }           
             return results;
         } catch (IOException e) {
             zq.doneWithQuery();
@@ -277,7 +275,7 @@ public final class MailboxIndex
         return mTextIndex.deleteDocuments(itemIds);
     }
 
-    public String toString() {
+    @Override public String toString() {
         StringBuffer ret = new StringBuffer("MailboxIndex(");
         ret.append(mMailboxId);
         ret.append(")");
@@ -437,62 +435,9 @@ public final class MailboxIndex
     public static final String SEARCH_FOR_WIKI = "wiki";
 
     public static final String SEARCH_FOR_EVERYTHING = SEARCH_FOR_APPOINTMENTS + ',' + SEARCH_FOR_CONTACTS + ',' +
-    SEARCH_FOR_DOCUMENTS + ',' + SEARCH_FOR_BRIEFCASE + ',' + SEARCH_FOR_MESSAGES + ',' +
-    SEARCH_FOR_NOTES + ',' + SEARCH_FOR_TASKS + ',' +
-    SEARCH_FOR_WIKI;
-
-    public static enum SortBy {
-        DATE_ASCENDING  ("dateAsc",  (byte) (DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING)), 
-        DATE_DESCENDING ("dateDesc", (byte) (DbSearch.SORT_BY_DATE | DbSearch.SORT_DESCENDING)),
-        SUBJ_ASCENDING  ("subjAsc",  (byte) (DbSearch.SORT_BY_SUBJECT | DbSearch.SORT_ASCENDING)),
-        SUBJ_DESCENDING ("subjDesc", (byte) (DbSearch.SORT_BY_SUBJECT | DbSearch.SORT_DESCENDING)),
-        NAME_ASCENDING  ("nameAsc",  (byte) (DbSearch.SORT_BY_SENDER | DbSearch.SORT_ASCENDING)),
-        NAME_DESCENDING ("nameDesc", (byte) (DbSearch.SORT_BY_SENDER | DbSearch.SORT_DESCENDING)),
-        SCORE_DESCENDING("score",    (byte) 0),
-
-        // special TASK-only sorts
-        TASK_DUE_ASCENDING("taskDueAsc", (byte)0),
-        TASK_DUE_DESCENDING("taskDueDesc", (byte)0),
-        TASK_STATUS_ASCENDING("taskStatusAsc", (byte)0),
-        TASK_STATUS_DESCENDING("taskStatusDesc", (byte)0),
-        TASK_PERCENT_COMPLETE_ASCENDING("taskPercCompletedAsc", (byte)0),
-        TASK_PERCENT_COMPLETE_DESCENDING("taskPercCompletedDesc", (byte)0),
-
-        NONE("none", (byte)0x10),
-        ;
-
-        static HashMap<String, SortBy> sNameMap = new HashMap<String, SortBy>();
-
-        static {
-            for (SortBy s : SortBy.values()) 
-                sNameMap.put(s.mName.toLowerCase(), s);
-        }
-
-        byte mSort;
-        String mName;
-
-        SortBy(String str, byte sort) {
-            mName = str;
-            mSort = sort;
-        }
-
-        public String toString() { return mName; }
-
-        public byte getDbMailItemSortByte() {
-            return mSort;
-        }
-
-        public boolean isDescending() {
-            return (mSort & DbSearch.SORT_ASCENDING) == 0;
-        }
-
-        public static SortBy lookup(String str) {
-            if (str != null)
-                return sNameMap.get(str.toLowerCase());
-            else
-                return null;
-        }
-    }
+                                                       SEARCH_FOR_DOCUMENTS + ',' + SEARCH_FOR_BRIEFCASE + ',' +
+                                                       SEARCH_FOR_MESSAGES + ',' + SEARCH_FOR_NOTES + ',' +
+                                                       SEARCH_FOR_TASKS + ',' + SEARCH_FOR_WIKI;
 
     public static byte[] parseTypesString(String groupBy) throws ServiceException
     {

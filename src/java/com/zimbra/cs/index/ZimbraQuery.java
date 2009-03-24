@@ -45,8 +45,6 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -131,7 +129,7 @@ public final class ZimbraQuery {
             mNext = next;
         }
 
-        public String toString() {
+        @Override public String toString() {
             return toString(0);
         }
 
@@ -227,7 +225,7 @@ public final class ZimbraQuery {
         }
 
         final boolean isOr() { return getQueryType() == OR; }        
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             switch (getQueryType()) {
                 case AND:
                     return indent(expLevel)+"_AND_";
@@ -281,7 +279,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel)+","+mConvId+")";
         }
     }
@@ -635,7 +633,7 @@ public final class ZimbraQuery {
 
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             String str;
             switch (getQueryType()) {
                 case ZimbraQueryParser.BEFORE:
@@ -679,7 +677,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel)+"-DOMAIN,"+mTarget+")";
         }
     }
@@ -691,7 +689,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Draft", truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mTruth) {
                 return super.toString(expLevel) + ",DRAFT)";
             } else {
@@ -707,7 +705,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Flagged", truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mTruth) {
                 return super.toString(expLevel) + ",FLAGGED)";
             } else {
@@ -723,7 +721,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Forwarded", truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mTruth) {
                 return super.toString(expLevel) + ",FORWARDED)";
             } else {
@@ -948,7 +946,7 @@ public final class ZimbraQuery {
             return dbOp;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mSpecialTarget != null) {
                 String toRet;
                 if (!mIncludeSubfolders) 
@@ -1022,7 +1020,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel)+","+mLuceneField+":"+mValue+")";
         }
     }
@@ -1034,7 +1032,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Unread", !truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (!mTruth) {
                 return super.toString(expLevel) + ",READ)";
             } else {
@@ -1050,7 +1048,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Answered", truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mTruth) {
                 return super.toString(expLevel) + ",REPLIED)";
             } else {
@@ -1067,7 +1065,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Invite", truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mTruth) {
                 return super.toString(expLevel) + ",INVITE)";
             } else {
@@ -1083,7 +1081,7 @@ public final class ZimbraQuery {
             super(mailbox, analyzer, modifier, "\\Sent", truth);
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             if (mTruth) {
                 return super.toString(expLevel) + ",SENT)";
             } else {
@@ -1176,7 +1174,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel)+","+mSize +")";
         }
     }
@@ -1251,7 +1249,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel)+","+mOp+" "+mValue+")";
         }
     }
@@ -1277,7 +1275,7 @@ public final class ZimbraQuery {
             return null;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             String ret = indent(expLevel)+modToString()+"( ";
             BaseQuery sub = (BaseQuery)mSubClauses.get(0);
             while(sub != null) {
@@ -1420,7 +1418,7 @@ public final class ZimbraQuery {
             return dbOp;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel)+","+mTag+")";
         }
     }
@@ -1484,7 +1482,7 @@ public final class ZimbraQuery {
             return dbOp;
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             StringBuffer toRet = new StringBuffer(super.toString(expLevel));
             if (mIsAllQuery) {
                 toRet.append(",all");
@@ -1708,7 +1706,7 @@ public final class ZimbraQuery {
             }
         }
 
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             String ret = super.toString(expLevel)+",";
             for (int i = 0; i < mTokens.size(); i++) {
                 ret+=","+(mTokens.get(i)).toString();
@@ -1745,8 +1743,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        @Override
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel) + "Sender(";
         }
 
@@ -1801,9 +1798,8 @@ public final class ZimbraQuery {
             mHighestCount = highestCount;
             mHigherEq = higherEq;
         }
-        
-        @Override
-        public String toString(int expLevel) {
+
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel) + "ConvCount(" 
                + (mLowerEq ? ">=" : ">") + mLowestCount + " " 
                + (mHigherEq? "<=" : "<") + mHighestCount + ")";
@@ -1867,8 +1863,7 @@ public final class ZimbraQuery {
             return op;
         }
 
-        @Override
-        public String toString(int expLevel) {
+        @Override public String toString(int expLevel) {
             return super.toString(expLevel) + "Subject(";
         }
 
@@ -2118,7 +2113,7 @@ public final class ZimbraQuery {
                 mNodes.add(subNode);
             }
 
-            public String toString() {
+            @Override public String toString() {
                 StringBuffer toRet = new StringBuffer(mTruthFlag ? "" : " NOT ");
 
                 toRet.append(mKind == STATE_AND ? " AND[" : " OR(");
@@ -2190,7 +2185,7 @@ public final class ZimbraQuery {
             public Node simplify() { return this; }
 
 
-            public String toString() {
+            @Override public String toString() {
                 StringBuffer toRet = new StringBuffer(mTruthFlag ? "" : " NOT ");
                 toRet.append(mThing.toString());
 
@@ -2663,7 +2658,7 @@ public final class ZimbraQuery {
                     Set<Folder> allVisibleFolders = mbox.getVisibleFolders(octxt);
                     if (allVisibleFolders == null) {
                         allVisibleFolders = new HashSet<Folder>();
-                        allVisibleFolders.addAll(mbox.getFolderList(octxt, DbSearch.SORT_NONE));
+                        allVisibleFolders.addAll(mbox.getFolderList(octxt, SortBy.NONE));
                     }
                     for (Folder f : allVisibleFolders) {
                         if (f.getType() == MailItem.TYPE_FOLDER &&
@@ -2885,7 +2880,7 @@ public final class ZimbraQuery {
     }
     
     
-    public String toString() {
+    @Override public String toString() {
         String ret = "ZQ:\n";
 
         if (mClauses.size() > 0) {

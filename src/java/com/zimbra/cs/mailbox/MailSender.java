@@ -46,7 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -552,7 +552,7 @@ public class MailSender {
                 Mailbox mbox = (Mailbox) authmbox;
                 ZimbraQueryResults qres = null;
                 try {
-                    qres = mbox.search(octxt, query, types, MailboxIndex.SortBy.NONE, contacts.size());
+                    qres = mbox.search(octxt, query, types, SortBy.NONE, contacts.size());
                     while (qres.hasNext()) {
                         ZimbraHit hit = qres.getNext();
                         if (hit instanceof ContactHit) {

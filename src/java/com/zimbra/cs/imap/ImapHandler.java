@@ -47,8 +47,8 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -676,24 +676,24 @@ abstract class ImapHandler extends ProtocolHandler {
                                 options = RETURN_ALL;
                         }
                         req.skipChar('(');
-                        boolean desc = false;  List<MailboxIndex.SortBy> order = new ArrayList<MailboxIndex.SortBy>(2);
+                        boolean desc = false;  List<SortBy> order = new ArrayList<SortBy>(2);
                         do {
                             if (desc || !order.isEmpty())
                                 req.skipSpace();
-                            MailboxIndex.SortBy sort;
+                            SortBy sort;
                             String key = req.readATOM();
                             if (key.equals("REVERSE") && !desc)  { desc = true;  continue; }
-                            else if (key.equals("ARRIVAL"))      sort = desc ? MailboxIndex.SortBy.DATE_DESCENDING : MailboxIndex.SortBy.DATE_ASCENDING;
+                            else if (key.equals("ARRIVAL"))      sort = desc ? SortBy.DATE_DESCENDING : SortBy.DATE_ASCENDING;
                             // FIXME: CC sort not implemented
-                            else if (key.equals("CC"))           sort = MailboxIndex.SortBy.NONE;
+                            else if (key.equals("CC"))           sort = SortBy.NONE;
                             // FIXME: DATE sorts on INTERNALDATE, not the Date header
-                            else if (key.equals("DATE"))         sort = desc ? MailboxIndex.SortBy.DATE_DESCENDING : MailboxIndex.SortBy.DATE_ASCENDING;
-                            else if (key.equals("FROM"))         sort = desc ? MailboxIndex.SortBy.NAME_DESCENDING : MailboxIndex.SortBy.NAME_ASCENDING;
+                            else if (key.equals("DATE"))         sort = desc ? SortBy.DATE_DESCENDING : SortBy.DATE_ASCENDING;
+                            else if (key.equals("FROM"))         sort = desc ? SortBy.NAME_DESCENDING : SortBy.NAME_ASCENDING;
                             // FIXME: SIZE sort not implemented
-                            else if (key.equals("SIZE"))         sort = MailboxIndex.SortBy.NONE;
-                            else if (key.equals("SUBJECT"))      sort = desc ? MailboxIndex.SortBy.SUBJ_DESCENDING : MailboxIndex.SortBy.SUBJ_ASCENDING;
+                            else if (key.equals("SIZE"))         sort = SortBy.NONE;
+                            else if (key.equals("SUBJECT"))      sort = desc ? SortBy.SUBJ_DESCENDING : SortBy.SUBJ_ASCENDING;
                             // FIXME: TO sort not implemented
-                            else if (key.equals("TO"))           sort = MailboxIndex.SortBy.NONE;
+                            else if (key.equals("TO"))           sort = SortBy.NONE;
                             else
                                 throw new ImapParseException(tag, "unknown SORT key \"" + key + '"');
                             order.add(sort);  desc = false;
@@ -2801,11 +2801,11 @@ abstract class ImapHandler extends ProtocolHandler {
         return search(tag, "SEARCH", i4search, byUID, options, null);
     }
 
-    boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, List<MailboxIndex.SortBy> order) throws IOException, ImapParseException {
+    boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, List<SortBy> order) throws IOException, ImapParseException {
         return search(tag, "SORT", i4search, byUID, options, order);
     }
 
-    boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options, List<MailboxIndex.SortBy> order)
+    boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options, List<SortBy> order)
     throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
@@ -2825,16 +2825,16 @@ abstract class ImapHandler extends ProtocolHandler {
             throw new ImapParseException(tag, "NOMODSEQ", "cannot SEARCH MODSEQ in this mailbox", true);
 
         // only supporting one level of sorting sort at this point
-        MailboxIndex.SortBy sort = MailboxIndex.SortBy.NONE;
+        SortBy sort = SortBy.NONE;
         if (order != null && !order.isEmpty()) {
-            for (MailboxIndex.SortBy level : order) {
-                if ((sort = level) != MailboxIndex.SortBy.NONE)
+            for (SortBy level : order) {
+                if ((sort = level) != SortBy.NONE)
                     break;
             }
         }
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
-        boolean unsorted = sort == MailboxIndex.SortBy.NONE;
+        boolean unsorted = sort == SortBy.NONE;
         Collection<ImapMessage> hits = null;
         int modseq = 0;
 
@@ -2937,7 +2937,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return byUID ? i4msg.imapUid : i4msg.sequence;
     }
 
-    private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, MailboxIndex.SortBy sort, Mailbox.SearchResultMode resultMode)
+    private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, SortBy sort, Mailbox.SearchResultMode resultMode)
     throws ImapParseException, ServiceException, ParseException {
         Mailbox mbox = i4folder.getMailbox();
         if (mbox == null)
@@ -2991,7 +2991,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         LinkedHashMap<Integer, List<ImapMessage>> threads = new LinkedHashMap<Integer, List<ImapMessage>>();
         try {
-            ZimbraQueryResults zqr = runSearch(i4search, i4folder, MailboxIndex.SortBy.DATE_ASCENDING, Mailbox.SearchResultMode.PARENT);
+            ZimbraQueryResults zqr = runSearch(i4search, i4folder, SortBy.DATE_ASCENDING, Mailbox.SearchResultMode.PARENT);
             try {
                 for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                     ImapMessage i4msg = i4folder.getById(hit.getItemId());

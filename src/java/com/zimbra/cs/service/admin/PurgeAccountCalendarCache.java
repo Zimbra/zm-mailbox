@@ -12,7 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.service.admin;
 
 import java.util.List;
@@ -26,7 +25,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -41,17 +40,16 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class PurgeAccountCalendarCache extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.A_ID };
-    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+    @Override protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
      * must be careful and only allow renames from/to domains a domain admin can see
      */
-    public boolean domainAuthSufficient(Map<String, Object> context) {
+    @Override public boolean domainAuthSufficient(Map<String, Object> context) {
         return true;
     }
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         OperationContext octxt = getOperationContext(zsc, context);
         Provisioning prov = Provisioning.getInstance();
@@ -76,7 +74,7 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
         if (mbox != null) {
             CalendarCache calCache = CalendarCache.getInstance();
             synchronized (mbox) {
-                List<Folder> folders = mbox.getFolderList(octxt, DbSearch.SORT_NONE);
+                List<Folder> folders = mbox.getFolderList(octxt, SortBy.NONE);
                 for (Folder folder : folders) {
                     calCache.invalidateSummary(mbox, folder.getId());
                 }

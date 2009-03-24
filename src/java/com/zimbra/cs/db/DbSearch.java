@@ -36,6 +36,9 @@ import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
 import com.zimbra.cs.db.DbSearchConstraints.StringRange;
 import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
 import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.SortBy.SortCriterion;
+import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -64,25 +67,23 @@ public class DbSearch {
         }
 
 
-        public static SearchResult createResult(ResultSet rs, byte sort) throws SQLException {
+        public static SearchResult createResult(ResultSet rs, SortBy sort) throws SQLException {
             return createResult(rs, sort, ExtraData.NONE);
         }
 
-        public static SearchResult createResult(ResultSet rs, byte sort, ExtraData extra) throws SQLException {
-            int sortField = (sort & SORT_FIELD_MASK);
-
+        public static SearchResult createResult(ResultSet rs, SortBy sort, ExtraData extra) throws SQLException {
             SearchResult result = new SearchResult();
             result.id      = rs.getInt(COLUMN_ID);
             result.indexId = rs.getInt(COLUMN_INDEXID);
             result.type    = rs.getByte(COLUMN_TYPE);
-            switch (sortField) {
-                case SORT_BY_SUBJECT:
-                case SORT_BY_SENDER:
-                case SORT_BY_NAME:
-                case SORT_BY_NAME_NATURAL_ORDER:
+            switch (sort.getCriterion()) {
+                case SUBJECT:
+                case SENDER:
+                case NAME:
+                case NAME_NATURAL_ORDER:
                     result.sortkey = rs.getString(COLUMN_SORTKEY);
                     break;
-                case SORT_NONE:
+                case NONE:
                     // note that there's no sort column in the result set for SORT_NONE
                     break;
                 default:
@@ -90,7 +91,7 @@ public class DbSearch {
                     break;
             }
 
-            int offset = sortField == SORT_NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
+            int offset = sort.getCriterion() == SortCriterion.NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
             if (extra == ExtraData.MAIL_ITEM) {
                 // note that there's no sort column in the result set for SORT_NONE
                 result.extraData = DbMailItem.constructItem(rs, offset);
@@ -118,69 +119,45 @@ public class DbSearch {
         }
         
         private static class SearchResultComparator implements Comparator<SearchResult> {
+            private SortBy mSort;
+            SearchResultComparator(SortBy sort)  { mSort = sort; }
+
             public int compare(SearchResult o1, SearchResult o2) {
-                switch (mSort&SORT_FIELD_MASK) {
-                    case SORT_BY_DATE:
-                    {
-                        long date1 = (Long)o1.sortkey;
-                        long date2 = (Long)o2.sortkey;
+                switch (mSort.getCriterion()) {
+                    case DATE:
+                        long date1 = (Long) o1.sortkey;
+                        long date2 = (Long) o2.sortkey;
                         if (date1 != date2) {
                             long diff;
-                            if ((mSort & SORT_ASCENDING)==0) {
-                                // descending!
+                            if (mSort.getDirection() == SortDirection.DESCENDING) {
                                 diff = date2-date1;
                             } else {
                                 diff = date1-date2;    
                             }
-                            if (diff > 0)
-                                return 1;
-                            else
-                                return -1;
+                            return (diff > 0) ? 1 : -1;
                         }
                         // fall through to ID-based comparison below!
-                    }
-                    break;
-                    case SORT_NONE:
+                        break;
+                    case NONE:
                         break;
                     default:
                         throw new UnsupportedOperationException("SearchResultComparator not implemented " +
                                                                 " for anything except for DATE right now. " +
                                                                 " Feel free to fix it!"); 
                 }
-                if ((mSort & SORT_ASCENDING)==0) {
-                    // descending!
+                if (mSort.getDirection() == SortDirection.DESCENDING) {
                     return o2.id - o1.id;
                 } else {
                     return o1.id - o2.id;
                 }
             }
-            SearchResultComparator(byte sort) {
-                mSort = sort;
-            }
-            private byte mSort;
         }
         
-        public static Comparator<SearchResult> getComparator(byte sort) {
+        public static Comparator<SearchResult> getComparator(SortBy sort) {
             return new SearchResultComparator(sort);
         }
     }
 
-    public static final byte SORT_DESCENDING = 0x00;
-    public static final byte SORT_ASCENDING  = 0x01;
-
-    public static final byte SORT_BY_DATE    = 0x00;
-    public static final byte SORT_BY_SENDER  = 0x02;
-    public static final byte SORT_BY_SUBJECT = 0x04;
-    public static final byte SORT_BY_ID      = 0x08;
-    public static final byte SORT_NONE       = 0x10;
-    public static final byte SORT_BY_NAME    = 0x20;
-    public static final byte SORT_BY_NAME_NATURAL_ORDER = 0x40;  // natural order.  see MailItem.java for implementation
-
-    public static final byte DEFAULT_SORT_ORDER = SORT_BY_DATE | SORT_DESCENDING;
-
-    public static final byte SORT_DIRECTION_MASK = 0x01;
-    public static final byte SORT_FIELD_MASK     = 0x7E;
-    
     // alias the sort column b/c of ambiguity problems (the sort column is included twice in the 
     // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
     // which 2 of the 4 sort columns are the "right" ones to use)
@@ -206,18 +183,18 @@ public class DbSearch {
                         colNameAfterPeriod.equals("name")); 
     }
 
-    private static String sortField(byte sort, boolean useAlias, boolean includeCollation) {
+    private static String sortField(SortBy sort, boolean useAlias, boolean includeCollation) {
         String str;
         boolean stringVal = false;
-        switch (sort & SORT_FIELD_MASK) {
-            case SORT_BY_SENDER:   str = "mi.sender";   stringVal = true;  break;
-            case SORT_BY_SUBJECT:  str = "mi.subject";  stringVal = true;  break;
-            case SORT_BY_NAME_NATURAL_ORDER:
-            case SORT_BY_NAME:     str = "mi.name";     stringVal = true;  break;
-            case SORT_BY_ID:       str = "mi.id";    break;
-            case SORT_BY_DATE:
-            default:               str = "mi.date";  break; 
-            case SORT_NONE:        return null;
+        switch (sort.getCriterion()) {
+            case SENDER:   str = "mi.sender";   stringVal = true;  break;
+            case SUBJECT:  str = "mi.subject";  stringVal = true;  break;
+            case NAME_NATURAL_ORDER:
+            case NAME:     str = "mi.name";     stringVal = true;  break;
+            case ID:       str = "mi.id";    break;
+            case DATE:
+            default:       str = "mi.date";  break; 
+            case NONE:     return null;
         }
         
         if (useAlias) {
@@ -238,7 +215,7 @@ public class DbSearch {
      * goes at the beginning of the SELECT statement (the ORDER BY part is generated
      * by sortQuery() below)
      */
-    static String sortKey(byte sort) {
+    static String sortKey(SortBy sort) {
         String field = sortField(sort, false, false);
         // note that there's no sort column in the result set for SORT_NONE
         if (field == null)
@@ -246,21 +223,21 @@ public class DbSearch {
         return ", " + field + " AS " + SORT_COLUMN_ALIAS;
     }
 
-    static String sortQuery(byte sort) {
+    static String sortQuery(SortBy sort) {
         return sortQuery(sort, false);
     }
 
     /**
      * Generate the ORDER BY part that goes at the end of the select
      */
-    static String sortQuery(byte sort, boolean useAlias) {
+    static String sortQuery(SortBy sort, boolean useAlias) {
         // note that there's no need for an ORDER BY clause for SORT_NONE
-        if ((sort & SORT_FIELD_MASK) == SORT_NONE)
+        if (sort.getCriterion() == SortCriterion.NONE)
             return "";
 
         StringBuilder statement = new StringBuilder(" ORDER BY ");
         statement.append(sortField(sort, useAlias, true));
-        if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
+        if (sort.getDirection() == SortDirection.DESCENDING)
             statement.append(" DESC");
         return statement.toString();
     }
@@ -317,12 +294,11 @@ public class DbSearch {
 
     private static final String NO_HINT = "";
 
-    private static String getForceIndexClause(DbSearchConstraintsNode node, byte sortInfo, boolean hasLimit) {
+    private static String getForceIndexClause(DbSearchConstraintsNode node, SortBy sort, boolean hasLimit) {
         if (LC.search_disable_database_hints.booleanValue())
             return NO_HINT;
 
-        int sortBy = sortInfo & SORT_FIELD_MASK;
-        if (sortBy == SORT_NONE)
+        if (sort.getCriterion() == SortCriterion.NONE)
             return NO_HINT;
         
         String index = null;
@@ -336,7 +312,7 @@ public class DbSearch {
                 index = MI_I_MBOX_PARENT;
             } else if (!constraints.indexIds.isEmpty()) {
                 index = MI_I_MBOX_INDEX;
-            } else if (sortBy == SORT_BY_DATE && hasLimit) {
+            } else if (sort.getCriterion() == SortCriterion.DATE && hasLimit) {
                 // Whenever we learn a new case of mysql choosing wrong index, add a case here.
                 if (constraints.isSimpleSingleFolderMessageQuery()) {
                     // Optimization for folder query
@@ -358,9 +334,9 @@ public class DbSearch {
     private static final int COLUMN_TYPE    = 3;
     private static final int COLUMN_SORTKEY = 4;
 
-    private static final String encodeSelect(Mailbox mbox,
-        byte sort, SearchResult.ExtraData extra, boolean includeCalTable,
-        DbSearchConstraintsNode node, boolean validLIMIT) {
+    private static final String encodeSelect(Mailbox mbox, SortBy sort, SearchResult.ExtraData extra,
+                                             boolean includeCalTable, DbSearchConstraintsNode node,
+                                             boolean validLIMIT) {
         /*
          * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap]
          *    [FORCE INDEX (...)]
@@ -547,7 +523,9 @@ public class DbSearch {
     
     static final byte[] APPOINTMENT_TABLE_TYPES = new byte[] { MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK };
 
-    public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c, Mailbox mbox, byte sort, SearchResult.ExtraData extra) throws ServiceException {
+    public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
+                                            Mailbox mbox, SortBy sort, SearchResult.ExtraData extra)
+    throws ServiceException {
         return search(result, conn, c, mbox, sort, -1, -1, extra);
     }
     
@@ -569,14 +547,14 @@ public class DbSearch {
         return toRet;
     }
     
-    public static List<SearchResult> search(List<SearchResult> result, 
-            Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
-            byte sort, int offset, int limit, SearchResult.ExtraData extra)
+    public static List<SearchResult> search(List<SearchResult> result, Connection conn,
+                                            DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
+                                            int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
 
         // this monstrosity for bug 31343
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                        ((sort&SORT_FIELD_MASK) != DbSearch.SORT_BY_DATE) || 
+                        sort.getCriterion() != SortCriterion.DATE || 
                         NodeType.OR != node.getNodeType()) {
             // do it the old way
             return searchInternal(result, conn, node, mbox, sort, offset, limit, extra);
@@ -597,10 +575,10 @@ public class DbSearch {
         }
     }
         
-    public static List<SearchResult> searchInternal(List<SearchResult> result, 
-                                                          Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
-                                                          byte sort, int offset, int limit, SearchResult.ExtraData extra)
-                                                          throws ServiceException {
+    public static List<SearchResult> searchInternal(List<SearchResult> result, Connection conn,
+                                                    DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
+                                                    int offset, int limit, SearchResult.ExtraData extra)
+    throws ServiceException {
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;

@@ -24,7 +24,6 @@ package com.zimbra.cs.index;
 import java.util.*;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 

@@ -53,6 +53,7 @@ import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.util.tar.TarOutputStream;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -232,7 +233,7 @@ public class TarFormatter extends Formatter {
                 }
                 try {
                     results = context.targetMailbox.search(context.opContext,
-                        query, searchTypes, MailboxIndex.SortBy.NONE, 4096);
+                        query, searchTypes, SortBy.NONE, 4096);
                 } catch (com.zimbra.cs.index.queryparser.ParseException e) {
                     throw ServiceException.PARSE_ERROR(e.getLocalizedMessage(), e);
                 }

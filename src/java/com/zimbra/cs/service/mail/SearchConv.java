@@ -39,10 +39,10 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -96,10 +96,10 @@ public class SearchConv extends Search {
                 Element response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);
                 response.addAttribute(MailConstants.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
                 
-                SortBy sb = results.getSortBy();
-                response.addAttribute(MailConstants.A_SORTBY, sb.toString());
+                SortBy sort = results.getSortBy();
+                response.addAttribute(MailConstants.A_SORTBY, sort.toString());
                 
-                List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sb.getDbMailItemSortByte());
+                List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sort);
                 if (msgs.isEmpty() && zsc.isDelegatedRequest())
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
                 

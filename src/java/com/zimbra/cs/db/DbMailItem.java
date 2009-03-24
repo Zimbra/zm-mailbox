@@ -45,6 +45,7 @@ import com.zimbra.common.util.TimeoutMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
@@ -855,7 +856,7 @@ public class DbMailItem {
         } catch (SQLException e) {
             if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
-                    stmt.close();
+                    DbPool.closeStatement(stmt);
 
                     stmt = conn.prepareStatement("UPDATE " + getConversationTableName(item) +
                             " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ?");
@@ -1702,7 +1703,7 @@ public class DbMailItem {
         }
     }
 
-    public static List<UnderlyingData> getByType(Mailbox mbox, byte type, byte sort) throws ServiceException {
+    public static List<UnderlyingData> getByType(Mailbox mbox, byte type, SortBy sort) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
@@ -1732,10 +1733,10 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByParent(MailItem parent) throws ServiceException {
-        return getByParent(parent, DbSearch.DEFAULT_SORT_ORDER);
+        return getByParent(parent, SortBy.DATE_DESCENDING);
     }
 
-    public static List<UnderlyingData> getByParent(MailItem parent, byte sort) throws ServiceException {
+    public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort) throws ServiceException {
         Mailbox mbox = parent.getMailbox();
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
@@ -1812,7 +1813,7 @@ public class DbMailItem {
         }
     }
 
-    public static List<UnderlyingData> getByFolder(Folder folder, byte type, byte sort) throws ServiceException {
+    public static List<UnderlyingData> getByFolder(Folder folder, byte type, SortBy sort) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         Mailbox mbox = folder.getMailbox();

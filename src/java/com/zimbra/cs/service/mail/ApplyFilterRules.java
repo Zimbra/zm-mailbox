@@ -29,7 +29,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem;
@@ -104,7 +104,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
             
             try {
                 results = mbox.search(new Mailbox.OperationContext(mbox), query, types,
-                    MailboxIndex.SortBy.NONE, Integer.MAX_VALUE);
+                    SortBy.NONE, Integer.MAX_VALUE);
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
                     messageIds.add(hit.getItemId());

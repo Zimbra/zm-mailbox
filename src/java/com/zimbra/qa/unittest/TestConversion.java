@@ -23,9 +23,9 @@ import javax.mail.internet.MimeMultipart;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -61,7 +61,7 @@ public class TestConversion extends TestCase {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
         ZimbraQueryResults results = mbox.search(new Mailbox.OperationContext(mbox), query,
-            new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SortBy.SUBJ_ASCENDING, 100);
+            new byte[] { MailItem.TYPE_MESSAGE}, SortBy.SUBJ_ASCENDING, 100);
         assertTrue("No results found for '" + query + "'", results.hasNext());
         
         // Make sure that attachments have been extracted out of winmail.dat

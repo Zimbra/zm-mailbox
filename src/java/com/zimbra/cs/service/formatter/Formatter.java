@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -134,7 +135,7 @@ public abstract class Formatter {
                 if (searchTypes == null)
                     searchTypes = getDefaultSearchTypes();
                 byte[] types = MailboxIndex.parseTypesString(searchTypes);
-                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
+                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
                 return new QueryResultIterator(results);                
             } catch (IOException e) {
                 // TODO Auto-generated catch block

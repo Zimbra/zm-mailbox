@@ -43,7 +43,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
 import com.zimbra.cs.index.*;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -423,8 +422,8 @@ public class Search extends MailDocumentHandler  {
         if (params.getOffset() != 0)
             return null;
         // sortBy = "none"
-        MailboxIndex.SortBy sortBy = params.getSortBy();
-        if (sortBy != null && !sortBy.equals(MailboxIndex.SortBy.NONE))
+        SortBy sortBy = params.getSortBy();
+        if (sortBy != null && !sortBy.equals(SortBy.NONE))
             return null;
 
         // query string is "inid:<folder> [OR inid:<folder>]*"

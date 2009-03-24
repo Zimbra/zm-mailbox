@@ -30,8 +30,8 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -86,7 +86,7 @@ public class Attachment extends PhantomResource {
 			Account account = prov.get(AccountBy.name, user);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 			// if more than one attachments with the same name, take the first one.
-			zqr = mbox.search(ctxt.getOperationContext(), query.toString(), SEARCH_TYPES, MailboxIndex.SortBy.NAME_ASCENDING, 10);
+			zqr = mbox.search(ctxt.getOperationContext(), query.toString(), SEARCH_TYPES, SortBy.NAME_ASCENDING, 10);
 			if (zqr.hasNext()) {
 				ZimbraHit hit = zqr.getNext();
 				if (hit instanceof MessageHit) {

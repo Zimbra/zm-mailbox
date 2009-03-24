@@ -63,7 +63,7 @@ import com.zimbra.cs.client.soap.LmcAdminAuthResponse;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
@@ -303,7 +303,7 @@ extends Assert {
         types[0] = type;
 
         List<Integer> ids = new ArrayList<Integer>();
-        ZimbraQueryResults r = mbox.search(new Mailbox.OperationContext(mbox), query, types, MailboxIndex.SortBy.DATE_DESCENDING, 100);
+        ZimbraQueryResults r = mbox.search(new Mailbox.OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));

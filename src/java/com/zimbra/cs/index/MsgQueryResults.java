@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**

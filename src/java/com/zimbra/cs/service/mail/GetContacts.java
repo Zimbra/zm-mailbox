@@ -27,8 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
@@ -41,11 +40,11 @@ public class GetContacts extends MailDocumentHandler  {
 	private static final int ALL_FOLDERS = -1;
 
 	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
-	protected String[] getProxiedIdPath(Element request) {
+	@Override protected String[] getProxiedIdPath(Element request) {
 		return TARGET_FOLDER_PATH;
 	}
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	@Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(zsc);
 		Mailbox.OperationContext octxt = getOperationContext(zsc, context);
@@ -62,12 +61,10 @@ public class GetContacts extends MailDocumentHandler  {
 				throw ServiceException.FAILURE("Got remote folderId: " + folderIdStr + " but did not proxy", null);
 		}
 
-		byte sort = DbSearch.SORT_NONE;
-		String sortStr = request.getAttribute(MailConstants.A_SORTBY, "");
-		if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
-			sort = DbSearch.SORT_BY_SENDER | DbSearch.SORT_ASCENDING;
-		else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
-			sort = DbSearch.SORT_BY_SENDER | DbSearch.SORT_DESCENDING;
+		String sortStr = request.getAttribute(MailConstants.A_SORTBY, null);
+		SortBy sort = SortBy.lookup(sortStr);
+		if (sort == null)
+		    sort = SortBy.NONE;
 
 		ArrayList<String> attrs = null;
 		ArrayList<ItemId> ids = null;
@@ -124,13 +121,8 @@ public class GetContacts extends MailDocumentHandler  {
                     }
 			    }
 			}
-			
 		} else {
-			ItemId iidFolder = new ItemId(mbox, folderId);
-            List<Contact> contacts;
-            contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1, sort);
-
-			for (Contact con : contacts) {
+			for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
 				if (con != null)
 					ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
             }

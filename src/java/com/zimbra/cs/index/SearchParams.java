@@ -26,7 +26,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -106,7 +105,7 @@ public final class SearchParams implements Cloneable {
     public String getTypesStr() { return mGroupByStr; }
     public byte[] getTypes() { return types; }
     public String getSortByStr() { return mSortByStr; }
-    public MailboxIndex.SortBy getSortBy() { return mSortBy; }
+    public SortBy getSortBy() { return mSortBy; }
     public ExpandResults getInlineRule() { return mInlineRule; }
     public boolean getMarkRead() { return mMarkRead; }
     public int getMaxInlinedLength() { return mMaxInlinedLength; }
@@ -194,7 +193,7 @@ public final class SearchParams implements Cloneable {
     }
     public void setSortByStr(String sortByStr) { 
         mSortByStr = sortByStr;
-        mSortBy = MailboxIndex.SortBy.lookup(sortByStr);
+        mSortBy = SortBy.lookup(sortByStr);
         if (mSortBy == null) {
             mSortBy = SortBy.DATE_DESCENDING;
             mSortByStr = mSortBy.toString();
@@ -352,7 +351,7 @@ public final class SearchParams implements Cloneable {
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
         params.setQueryStr(query);
         params.setTypesStr(request.getAttribute(MailConstants.A_SEARCH_TYPES, request.getAttribute(MailConstants.A_GROUPBY, Search.DEFAULT_SEARCH_TYPES)));
-        params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
+        params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, SortBy.DATE_DESCENDING.toString()));
 
         params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
@@ -649,7 +648,7 @@ public final class SearchParams implements Cloneable {
     private String mSortByStr;
 
     // parsed:
-    private MailboxIndex.SortBy mSortBy;
+    private SortBy mSortBy;
     private byte[] types; // types to seach for
     
     private boolean mPrefetch = true;

@@ -19,7 +19,6 @@ import org.apache.lucene.document.Document;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -112,7 +111,7 @@ public class TaskHit extends CalendarItemHit {
         }
     }
     
-    int compareBySortField(MailboxIndex.SortBy sortOrder, ZimbraHit other) throws ServiceException {
+    int compareBySortField(SortBy sortOrder, ZimbraHit other) throws ServiceException {
         switch (sortOrder) {
             case TASK_DUE_ASCENDING:
                 return compareByDueDate(true, this, other);

@@ -31,9 +31,9 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -76,7 +76,7 @@ class Pop3Mailbox {
             ZimbraQueryResults results = null;
             mMessages = new ArrayList<Pop3Message>(500);            
             try {
-                results = mbox.search(mOpContext, query, POP3_TYPES, MailboxIndex.SortBy.DATE_DESCENDING, 500);
+                results = mbox.search(mOpContext, query, POP3_TYPES, SortBy.DATE_DESCENDING, 500);
 
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();

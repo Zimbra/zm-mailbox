@@ -41,9 +41,9 @@ import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -223,7 +223,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         params.setQueryStr(mQuery);
         params.setIncludeTagDeleted(true);
         params.setTypes(ImapHandler.ITEM_TYPES);
-        params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
+        params.setSortBy(SortBy.DATE_ASCENDING);
         params.setChunkSize(1000);
         params.setMode(Mailbox.SearchResultMode.IMAP);
 

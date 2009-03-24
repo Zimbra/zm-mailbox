@@ -42,7 +42,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -147,7 +147,7 @@ public class AddressBookTest extends AbstractTest {
                             } catch (AddressException e1) {
                             }
                             results = mbox.search(new Mailbox.OperationContext(mbox), "To:" + iaddrStr, 
-                                    SEARCH_TYPE, MailboxIndex.SortBy.DATE_ASCENDING, 100);
+                                    SEARCH_TYPE, SortBy.DATE_ASCENDING, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {
                                 mLog.debug("found " + iaddrStr + " in contacts");

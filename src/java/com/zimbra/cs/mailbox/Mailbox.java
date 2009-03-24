@@ -68,10 +68,10 @@ import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
@@ -1843,7 +1843,7 @@ public class Mailbox {
                         c.types = typesOrNull;
                     
                     msgs = new ArrayList<SearchResult>();
-                    DbSearch.search(msgs, getOperationConnection(), c, this, DbSearch.SORT_NONE, SearchResult.ExtraData.NONE);
+                    DbSearch.search(msgs, getOperationConnection(), c, this, SortBy.NONE, SearchResult.ExtraData.NONE);
                     
                     if (!skipDelete) {
                         if (itemIdsOrNull != null || typesOrNull != null) {
@@ -2367,10 +2367,10 @@ public class Mailbox {
     }
 
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
-        return getItemList(octxt, type, folderId, DbSearch.SORT_NONE);
+        return getItemList(octxt, type, folderId, SortBy.NONE);
     }
 
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, byte sort) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, SortBy sort) throws ServiceException {
         List<MailItem> result;
         boolean success = false;
         
@@ -2427,8 +2427,8 @@ public class Mailbox {
                     if (data != null)
                         result.add(getItem(data));
                 // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
-            	if ((sort & DbSearch.SORT_BY_NAME_NATURAL_ORDER) == 0)
-            	    sort = DbSearch.SORT_NONE;
+            	if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER)
+            	    sort = SortBy.NONE;
             	success = true;
             }
         } finally {
@@ -2925,7 +2925,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Folder> getFolderList(OperationContext octxt, byte sort) throws ServiceException {
+    public synchronized List<Folder> getFolderList(OperationContext octxt, SortBy sort) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort))
             folders.add((Folder) item);
@@ -2960,10 +2960,10 @@ public class Mailbox {
     }
 
     public synchronized List<Note> getNoteList(OperationContext octxt, int folderId) throws ServiceException {
-        return getNoteList(octxt, folderId, DbSearch.SORT_NONE);
+        return getNoteList(octxt, folderId, SortBy.NONE);
     }
 
-    public synchronized List<Note> getNoteList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+    public synchronized List<Note> getNoteList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Note> notes = new ArrayList<Note>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_NOTE, folderId, sort))
             notes.add((Note) item);
@@ -2979,10 +2979,10 @@ public class Mailbox {
     }
 
     public synchronized List<Chat> getChatList(OperationContext octxt, int folderId) throws ServiceException {
-        return getChatList(octxt, folderId, DbSearch.SORT_NONE);
+        return getChatList(octxt, folderId, SortBy.NONE);
     }
 
-    public synchronized List<Chat> getChatList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+    public synchronized List<Chat> getChatList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Chat> chats = new ArrayList<Chat>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_CHAT, folderId, sort))
             chats.add((Chat) item);
@@ -2998,10 +2998,10 @@ public class Mailbox {
     }
 
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId) throws ServiceException {
-        return getContactList(octxt, folderId, DbSearch.SORT_NONE);
+        return getContactList(octxt, folderId, SortBy.NONE);
     }
 
-    public synchronized List<Contact> getContactList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+    public synchronized List<Contact> getContactList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Contact> contacts = new ArrayList<Contact>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_CONTACT, folderId, sort))
             contacts.add((Contact) item);
@@ -3029,10 +3029,10 @@ public class Mailbox {
     }
 
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
-        return getMessagesByConversation(octxt, convId, Conversation.SORT_DATE_ASCENDING);
+        return getMessagesByConversation(octxt, convId, SortBy.DATE_ASCENDING);
     }
 
-    public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId, byte sort) throws ServiceException {
+    public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getMessagesByConversation", octxt);
@@ -3125,10 +3125,10 @@ public class Mailbox {
     }
 
     public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId) throws ServiceException {
-        return getDocumentList(octxt, folderId, DbSearch.SORT_NONE);
+        return getDocumentList(octxt, folderId, SortBy.NONE);
     }
 
-    public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+    public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Document> docs = new ArrayList<Document>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort))
             docs.add((Document) item);
@@ -3615,7 +3615,7 @@ public class Mailbox {
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.tags = new HashSet<Tag>();
                     c.tags.add(getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED));
-                    DbSearch.search(items, getOperationConnection(), c, this, DbSearch.SORT_NONE, SearchResult.ExtraData.NONE);
+                    DbSearch.search(items, getOperationConnection(), c, this, SortBy.NONE, SearchResult.ExtraData.NONE);
                     
                     int deferredCount = getIndexDeferredCount();
                     if (items.size() != deferredCount) {

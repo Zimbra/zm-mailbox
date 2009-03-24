@@ -19,7 +19,6 @@ import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 
 /**
  * 

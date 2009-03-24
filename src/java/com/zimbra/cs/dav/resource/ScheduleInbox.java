@@ -31,9 +31,8 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.service.DavServlet;
-import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Flag;
@@ -50,7 +49,7 @@ public class ScheduleInbox extends Collection {
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
 	}
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+	@Override public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return getChildren(ctxt, null);
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
@@ -72,7 +71,7 @@ public class ScheduleInbox extends Collection {
 		Mailbox mbox = getMailbox(ctxt);
 		ZimbraQueryResults zqr = null;
 		try {
-			zqr = mbox.search(ctxt.getOperationContext(), query, SEARCH_TYPES, MailboxIndex.SortBy.NAME_ASCENDING, 100);
+			zqr = mbox.search(ctxt.getOperationContext(), query, SEARCH_TYPES, SortBy.NAME_ASCENDING, 100);
 			while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
@@ -152,7 +151,7 @@ public class ScheduleInbox extends Collection {
 	private java.util.Collection<Folder> getCalendarFolders(DavContext ctxt) throws ServiceException, DavException {
 		ArrayList<Folder> calendars = new ArrayList<Folder>();
 		Mailbox mbox = getMailbox(ctxt);
-		for (Folder f : mbox.getFolderList(ctxt.getOperationContext(), DbSearch.SORT_NONE))
+		for (Folder f : mbox.getFolderList(ctxt.getOperationContext(), SortBy.NONE))
 			if (!(f instanceof Mountpoint) &&
 					(f.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
 					 f.getDefaultView() == MailItem.TYPE_TASK))

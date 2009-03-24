@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -40,9 +41,9 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetConv extends MailDocumentHandler  {
 
     private static final String[] TARGET_CONV_PATH = new String[] { MailConstants.E_CONV, MailConstants.A_ID };
-    protected String[] getProxiedIdPath(Element request)  { return TARGET_CONV_PATH; }
+    @Override protected String[] getProxiedIdPath(Element request)  { return TARGET_CONV_PATH; }
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Mailbox.OperationContext octxt = getOperationContext(zsc, context);
@@ -66,7 +67,7 @@ public class GetConv extends MailDocumentHandler  {
         if (conv == null)
             throw MailServiceException.NO_SUCH_CONV(iid.getId());
 
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
         if (msgs.isEmpty() && zsc.isDelegatedRequest())
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 

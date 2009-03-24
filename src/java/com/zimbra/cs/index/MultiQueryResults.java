@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 
 
 /**
@@ -67,7 +66,7 @@ public class MultiQueryResults implements ZimbraQueryResults
     private void internalGetNextHit() throws ServiceException
     {
         if (mCachedNextHit == null) {
-            if (mSortOrder == MailboxIndex.SortBy.NONE) {
+            if (mSortOrder == SortBy.NONE) {
                 for (ZimbraQueryResults res : mResults) {
                     mCachedNextHit = res.getNext();
                     if (mCachedNextHit != null)

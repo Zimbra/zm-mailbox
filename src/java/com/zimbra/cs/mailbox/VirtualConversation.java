@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 
 /**
@@ -57,7 +58,7 @@ public class VirtualConversation extends Conversation {
         return mMailbox.getMessageById(getMessageId());
     }
 
-    @Override List<Message> getMessages(byte sort) throws ServiceException {
+    @Override List<Message> getMessages(SortBy sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(1);
         msgs.add(getMessage());
         return msgs;

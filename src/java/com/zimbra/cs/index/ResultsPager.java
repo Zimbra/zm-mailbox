@@ -35,7 +35,7 @@ public final class ResultsPager
     private SearchParams mParams;
     private boolean mForward = true;
     
-    public MailboxIndex.SortBy getSortOrder() { return mParams.getSortBy(); }
+    public SortBy getSortOrder() { return mParams.getSortBy(); }
     
     static public ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException
     {

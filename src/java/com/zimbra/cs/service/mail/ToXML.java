@@ -39,6 +39,7 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
@@ -540,7 +541,7 @@ public class ToXML {
 
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
         return encodeConversation(parent, ifmt, octxt, conv, msgs, params);
     }
 
@@ -603,7 +604,7 @@ public class ToXML {
         Mailbox mbox = conv.getMailbox();
         List<Message> msgs = null;
         if ((octxt != null && octxt.isDelegatedRequest(mbox)) || (addSenders && conv.isTagged(Flag.ID_FLAG_DELETED)))
-            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
+            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
 
         boolean noneVisible = msgs != null && msgs.isEmpty();
         Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, conv, msgs, fields);
@@ -617,7 +618,7 @@ public class ToXML {
         if (fields == NOTIFY_FIELDS && msgHit != null)
             c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.Disposition.CONTENT);
 
-        if (addRecips)
+        if (addRecips && msgHit != null)
             addEmails(c, Mime.parseAddressHeader(msgHit.getRecipients()), EmailType.TO);
 
         if (addSenders) {
@@ -1827,7 +1828,7 @@ public class ToXML {
         private final String mRep;
         private EmailType(String c)  { mRep = c; }
 
-        public String toString()     { return mRep; }
+        @Override public String toString()     { return mRep; }
     }
 
     /**
@@ -2059,8 +2060,10 @@ public class ToXML {
         		elt = null;
         	}
 
-        	elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
-        	elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
+        	if (elt != null) {
+            	elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
+            	elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
+        	}
         }
     	
         return resp;

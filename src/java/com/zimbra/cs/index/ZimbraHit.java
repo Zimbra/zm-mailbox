@@ -23,7 +23,6 @@ import java.util.Date;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.ImapMessage;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.ItemId;
@@ -158,7 +157,7 @@ public abstract class ZimbraHit
      * @return <0 if "this" is BEFORE other, 0 if EQUAL, >0 if this AFTER other
      * @throws ServiceException
      */
-    int compareBySortField(MailboxIndex.SortBy sortOrder, ZimbraHit other) throws ServiceException {
+    int compareBySortField(SortBy sortOrder, ZimbraHit other) throws ServiceException {
         long retVal = 0;
         final boolean dumpComp = false;
 

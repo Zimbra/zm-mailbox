@@ -34,8 +34,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ProxiedHit;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -281,7 +281,7 @@ public class ContactAutoComplete {
     		HashMap<ItemId,Integer> mountpoints = new HashMap<ItemId,Integer>();
     		if (folders == null) {
     			ArrayList<Integer> allFolders = new ArrayList<Integer>();
-    			for (Folder f : mbox.getFolderList(octxt, DbSearch.SORT_NONE)) {
+    			for (Folder f : mbox.getFolderList(octxt, SortBy.NONE)) {
     				boolean isMountpoint = false;
     				if (f.getDefaultView() != MailItem.TYPE_CONTACT)
     					continue;
@@ -305,7 +305,7 @@ public class ContactAutoComplete {
     		}
     		String query = generateQuery(str, folders);
     		ZimbraLog.gal.debug("querying folders: "+query);
-			qres = mbox.search(octxt, query, CONTACT_TYPES, MailboxIndex.SortBy.NONE, limit);
+			qres = mbox.search(octxt, query, CONTACT_TYPES, SortBy.NONE, limit);
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;

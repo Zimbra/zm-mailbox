@@ -24,7 +24,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
@@ -32,12 +32,9 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author schemers
- */
 public class GetSearchFolder extends MailDocumentHandler  {
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(zsc);
 		OperationContext octxt = getOperationContext(zsc, context);
@@ -45,7 +42,7 @@ public class GetSearchFolder extends MailDocumentHandler  {
 		
 		Element response = zsc.createElement(MailConstants.GET_SEARCH_FOLDER_RESPONSE);
         
-		List<? extends MailItem> results = mbox.getItemList(octxt, MailItem.TYPE_SEARCHFOLDER, -1, DbSearch.SORT_NONE);
+		List<? extends MailItem> results = mbox.getItemList(octxt, MailItem.TYPE_SEARCHFOLDER, -1, SortBy.NONE);
 		
 		if (results != null) {
 			for (MailItem item : results) 

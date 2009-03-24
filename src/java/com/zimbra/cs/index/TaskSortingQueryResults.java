@@ -20,7 +20,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 
 /**
  * QueryResults wrapper that implements Sort-By-Task.  It does this by caching **ALL** 

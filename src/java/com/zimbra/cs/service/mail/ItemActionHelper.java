@@ -36,6 +36,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -173,13 +174,11 @@ public class ItemActionHelper {
         UPDATE("update")
         ;
         
-        private Op(String str) {
-            mStr = str;
-        }
-        
-        public String toString() { return mStr; }
-        
         private String mStr;
+
+        private Op(String str)  { mStr = str; }
+
+        @Override public String toString()  { return mStr; }
     }
     
     protected String mResult;
@@ -213,7 +212,7 @@ public class ItemActionHelper {
     protected Account mAuthenticatedAccount;
 
 
-    public String toString() {
+    @Override public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
         
         toRet.append(" Op=").append(mOperation.toString());
@@ -466,7 +465,7 @@ public class ItemActionHelper {
 
             List<Message> msgs = null;
             if (item instanceof Conversation)
-                msgs = mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), Conversation.SORT_DATE_ASCENDING);
+                msgs = mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), SortBy.DATE_ASCENDING);
 
             if (deleteOriginal) {
                 if (msgs != null) {

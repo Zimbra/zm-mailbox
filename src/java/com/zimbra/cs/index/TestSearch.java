@@ -35,7 +35,6 @@ import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -354,7 +353,7 @@ public class TestSearch extends TestCase {
     public static void makeTestQuery(int mailboxId, String qstr, boolean conv)
     {
         try {
-            QueryResult[] ret = runQuery(mailboxId, qstr, conv, getMessageTypes(conv), MailboxIndex.SortBy.DATE_DESCENDING, null);
+            QueryResult[] ret = runQuery(mailboxId, qstr, conv, getMessageTypes(conv), SortBy.DATE_DESCENDING, null);
 
             String qstr2 = qstr.replaceAll("\"", "\\\\\"");
             System.out.println("assertTrue(runTestQuery(mM, \""+
