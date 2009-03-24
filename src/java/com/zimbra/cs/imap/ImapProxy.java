@@ -264,7 +264,7 @@ class ImapProxy {
                         space2 = true;
                         String code = condition.toString().toUpperCase();
                         if (tagged)
-                            success = code.equals("OK");
+                            success = code.equals("OK") || (isIdle && code.equals("BAD"));
                         structured &= !UNSTRUCTURED_CODES.contains(code);
                     } else if (space1) {
                         condition.append((char) c);
