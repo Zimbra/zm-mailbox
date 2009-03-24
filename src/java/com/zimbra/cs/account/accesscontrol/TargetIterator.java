@@ -201,7 +201,7 @@ public abstract class TargetIterator{
                     if (RightChecker.PseudoZimbraId.isPseudoZimrbaId(((DistributionList)mTarget).getId()))
                         mGroups = new AclGroups();
                     else        
-                        mGroups =  mProv.getAclGroups((DistributionList)mTarget);
+                        mGroups =  mProv.getAclGroups((DistributionList)mTarget, false);
                 }
                 
                 if (mIdxInGroups < mGroups.groupIds().size()) {

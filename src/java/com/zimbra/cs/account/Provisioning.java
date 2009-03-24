@@ -516,12 +516,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
     /**
      * 
      * @param list
+     * @param adminGroupsOnly return admin groups only
      * @return List of all the zimbraId's of lists this list belongs to, including any list in other list.
      *         The returned List is sorted by "shortest distance" to the list, the sorter the distance is, 
      *         the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public AclGroups getAclGroups(DistributionList list) throws ServiceException {
+    public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     

@@ -1005,7 +1005,7 @@ public class ShareInfo {
                 // get shares published on parents of this dl
                 if (!dl.isAclGroup())
                     dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
-                AclGroups aclGroups = prov.getAclGroups(dl); 
+                AclGroups aclGroups = prov.getAclGroups(dl, false); 
                 getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
             }
         }

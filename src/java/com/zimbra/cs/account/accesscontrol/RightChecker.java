@@ -1541,9 +1541,9 @@ public class RightChecker {
     }
       
     /**
-     
      *
-     * search grants granted to any of the grntees specified in granteeIds
+     * search grants granted to any of the grantees specified in granteeIds 
+     * granted on any of the target types specified in targetTypes.
      *
      * @param prov
      * @param granteeIds
@@ -1686,7 +1686,7 @@ public class RightChecker {
                     if (targetSub instanceof Account)
                         groups = prov.getAclGroups((Account)targetSub, false);
                     else if (targetSub instanceof DistributionList)
-                        groups = prov.getAclGroups((DistributionList)targetSub);
+                        groups = prov.getAclGroups((DistributionList)targetSub, false);
                     else 
                         return false;
                     
@@ -1837,6 +1837,5 @@ public class RightChecker {
         // all is well, or else PERM_DENIED would've been thrown in one of the checkDenied calls
         // yes, you can grant the rightToGrant on targetToGrant.
     }
-
 
 }

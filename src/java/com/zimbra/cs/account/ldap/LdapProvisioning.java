@@ -2919,19 +2919,6 @@ public class LdapProvisioning extends Provisioning {
         return new AclGroups(groups, groupIds);
     }
     
-    private AclGroups getAclGroupsInternal(Account acct) throws ServiceException {
-        AclGroups dls = (AclGroups)acct.getCachedData(DATA_ACLGROUP_LIST);
-        if (dls != null) 
-            return dls;
-     
-        Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = getDistributionLists(acct, false, via, true);
-        
-        dls = computeUpwardMembership(lists, via);
-        acct.setCachedData(DATA_ACLGROUP_LIST, dls);
-        return dls;
-    }
-    
     // filter out non-admin groups from an AclGroups instance
     private AclGroups getAdminAclGroups(AclGroups aclGroups) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
@@ -2953,23 +2940,22 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
+        String cacheKey = adminGroupsOnly?DATA_ACLGROUP_LIST_ADMINS_ONLY:DATA_ACLGROUP_LIST;
         
-        if (adminGroupsOnly) {
-            AclGroups dls = (AclGroups)acct.getCachedData(DATA_ACLGROUP_LIST_ADMINS_ONLY);
-            if (dls != null) 
-                return dls;
-            
-            // get the one with all groups
-            AclGroups aclGroups = getAclGroupsInternal(acct);
-            
-            // filter out non-admin groups
-            AclGroups adminAclgroups = getAdminAclGroups(aclGroups);
-                
-            acct.setCachedData(DATA_ACLGROUP_LIST_ADMINS_ONLY, adminAclgroups);
-            return adminAclgroups;
-            
-        } else
-            return getAclGroupsInternal(acct);
+        AclGroups dls = (AclGroups)acct.getCachedData(cacheKey);
+        if (dls != null) 
+            return dls;
+     
+        Map<String, String> via = new HashMap<String, String>();
+        List<DistributionList> lists = getDistributionLists(acct, false, via, true);
+        
+        dls = computeUpwardMembership(lists, via);
+        
+        if (adminGroupsOnly)
+            dls = getAdminAclGroups(dls); // filter out non-admin groups
+        
+        acct.setCachedData(cacheKey, dls);
+        return dls;
     }
 
     @Override
@@ -2981,13 +2967,15 @@ public class LdapProvisioning extends Provisioning {
      * upward membership if it is not in cache.
      *
      */
-    public AclGroups getAclGroups(DistributionList list) throws ServiceException {
+    public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
 
         // sanity check
         if (!list.isAclGroup())
             throw ServiceException.FAILURE("internal error", null);
 
-        AclGroups dls = (AclGroups)list.getCachedData(DATA_ACLGROUP_LIST);
+        String cacheKey = adminGroupsOnly?DATA_ACLGROUP_LIST_ADMINS_ONLY:DATA_ACLGROUP_LIST;
+        
+        AclGroups dls = (AclGroups)list.getCachedData(cacheKey);
         if (dls != null) 
             return dls;
         
@@ -2997,7 +2985,11 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(list.getName());
 
         dls = computeUpwardMembership(dl);
-        dl.setCachedData(DATA_ACLGROUP_LIST, dls);
+        
+        if (adminGroupsOnly)
+            dls = getAdminAclGroups(dls); // filter out non-admin groups
+        
+        dl.setCachedData(cacheKey, dls);
         
         return dls;
     }
@@ -4082,7 +4074,7 @@ public class LdapProvisioning extends Provisioning {
         if (!list.isAclGroup())
             group = getAclGroup(DistributionListBy.id, list.getId());
         
-        AclGroups aclGroups = getAclGroups(group);
+        AclGroups aclGroups = getAclGroups(group, false);
         return aclGroups.groupIds().contains(zimbraId);
     }
     
