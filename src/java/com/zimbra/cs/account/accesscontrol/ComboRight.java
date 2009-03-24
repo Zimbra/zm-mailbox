@@ -119,7 +119,7 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
-    String getTargetTypeStr() {
+    public String getTargetTypeStr() {
         return null;
     }
     

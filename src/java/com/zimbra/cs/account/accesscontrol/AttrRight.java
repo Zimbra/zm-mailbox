@@ -140,7 +140,7 @@ public class AttrRight extends AdminRight {
     
     // for SOAP response only
     @Override
-    String getTargetTypeStr() {
+     public String getTargetTypeStr() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (TargetType tt : mTargetTypes) {

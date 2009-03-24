@@ -181,7 +181,7 @@ public abstract class Right extends RightConsts {
     }
     
     // for SOAP response only
-    String getTargetTypeStr() {
+    public String getTargetTypeStr() {
         return mTargetType.getCode();
     }
     

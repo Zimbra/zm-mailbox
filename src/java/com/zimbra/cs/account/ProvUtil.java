@@ -1872,7 +1872,9 @@ public class ProvUtil implements DebugListener {
         System.out.println(right.getName());
         System.out.println(indent + "   description: " + right.getDesc());
         System.out.println(indent + "    right type: " + right.getRightType().name());
-        System.out.println(indent + "target type(s): " + right.getRightType().name());
+        
+        String targetType = right.getTargetTypeStr();
+        System.out.println(indent + "target type(s): " + (targetType==null?"":targetType));
         
         if (right.isAttrRight()) {
             AttrRight attrRight = (AttrRight)right;
