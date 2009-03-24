@@ -424,23 +424,23 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>should be internal (query internal only), external (external only), or both</desc>
 </attr>
 
-<attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain,galDataSource">
+<attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain">
   <desc>LDAP URL for external GAL queries</desc>
 </attr>
 
-<attr id="48" name="zimbraGalLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain,galDataSource">
+<attr id="48" name="zimbraGalLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain">
   <desc>LDAP search base for external GAL queries</desc>
 </attr>
 
-<attr id="49" name="zimbraGalLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource">
+<attr id="49" name="zimbraGalLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain">
   <desc>LDAP bind dn for external GAL queries</desc>
 </attr>
 
-<attr id="50" name="zimbraGalLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource">
+<attr id="50" name="zimbraGalLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain">
   <desc>LDAP bind password for external GAL queries</desc>
 </attr>
 
-<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain,galDataSource">
+<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain">
   <desc>LDAP search filter for external GAL search queries</desc>
 </attr>
 
@@ -2700,7 +2700,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>kerberos5 realm for kerberos5 auth mech</desc>
 </attr>
 
-<attr id="549" name="zimbraGalLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain,galDataSource" since="5.0.0">
+<attr id="549" name="zimbraGalLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>external LDAP GAL authentication mechanism
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
@@ -2708,11 +2708,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.0">
+<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>kerberos5 principal for external GAL queries</desc>
 </attr>
 
-<attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.0">
+<attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>kerberos5 keytab file path for external GAL queries</desc>
 </attr>
 
@@ -2893,19 +2893,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether nginx should send ID command for imap</desc>
 </attr>
 
-<attr id="589" name="zimbraGalSyncLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.2">
+<attr id="589" name="zimbraGalSyncLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>LDAP URL for external GAL sync, if not set fallback to zimbraGalLdapURL</desc>
 </attr>
 
-<attr id="590" name="zimbraGalSyncLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="590" name="zimbraGalSyncLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>LDAP search base for external GAL sync queries, if not set fallback to zimbraGalLdapSearchBase</desc>
 </attr>
 
-<attr id="591" name="zimbraGalSyncLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="591" name="zimbraGalSyncLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>LDAP search filter for external GAL sync queries, if not set fallback to zimbraGalLdapFilter</desc>
 </attr>
 
-<attr id="592" name="zimbraGalSyncLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="592" name="zimbraGalSyncLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>external LDAP GAL authentication mechanism for GAL sync
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
@@ -2915,23 +2915,23 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="593" name="zimbraGalSyncLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="593" name="zimbraGalSyncLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>LDAP bind dn for external GAL sync queries, if not set fallback to zimbraGalLdapBindDn</desc>
 </attr>
 
-<attr id="594" name="zimbraGalSyncLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="594" name="zimbraGalSyncLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>LDAP bind password for external GAL sync queries, if not set fallback to zimbraGalLdapBindPassword</desc>
 </attr>
 
-<attr id="595" name="zimbraGalSyncLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="595" name="zimbraGalSyncLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>kerberos5 principal for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Principal</desc>
 </attr>
 
-<attr id="596" name="zimbraGalSyncLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="596" name="zimbraGalSyncLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain,galDataSource" since="5.0.2">
   <desc>kerberos5 keytab file path for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Keytab</desc>
 </attr>
 
-<attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.2">
+<attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited" since="5.0.2">
   <globalConfigValue>1000</globalConfigValue>
   <desc>LDAP page size for paged search control while accessing LDAP server for GAL sync.  
         This apples to both Zimbra and external LDAP servers.
@@ -3265,13 +3265,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to use startTLS for external LDAP auth</desc>
 </attr>
 
-<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain,galDataSource" since="5.0.6">
+<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="5.0.6">
   <desc>whether to use startTLS for external GAL.
         startTLS will be used for external GAL access only if this attribute is true and zimbraGalLdapURL(or zimbraGalSyncLdapURL for sync) does not contain a ldaps URL.
   </desc>
 </attr>
 
-<attr id="656" name="zimbraGalSyncLdapStartTlsEnabled"  type="boolean" cardinality="single" optionalIn="domain" since="5.0.6">
+<attr id="656" name="zimbraGalSyncLdapStartTlsEnabled"  type="boolean" cardinality="single" optionalIn="domain,galDataSource" since="5.0.6">
   <desc>whether to use startTLS for external GAL sync, if not set fallback to zimbraGalLdapStartTlsEnabled</desc>
 </attr>
 
