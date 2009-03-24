@@ -15,6 +15,11 @@
 package com.zimbra.cs.gal;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 
 public class GalSearchConfig {
@@ -32,17 +37,120 @@ public class GalSearchConfig {
 	    }
 	}
     
-	private GalType mGalType;
-	private String[] mUrl;
-	private boolean mStartTlsEnabled;
-	private String mFilter;
-	private String mSearchBase;
-	private String mAuthMech;
-	private String mBindDn;
-	private String mBindPassword;
-	private String mKerberosPrincipal;
-	private String mKerberosKeytab;
-	private LdapGalMapRules mRules;
+	public static GalSearchConfig create(Account account, GalOp op) throws ServiceException {
+		return new AccountConfig(account, op);
+	}
+	
+	public static GalSearchConfig create(DataSource ds, GalOp op) throws ServiceException {
+		return new DataSourceConfig(ds, op);
+	}
+	
+	private static class AccountConfig extends GalSearchConfig {
+		public AccountConfig(Account account, GalOp op) throws ServiceException {
+			Provisioning prov = Provisioning.getInstance();
+			Domain domain = prov.getDomain(account);
+
+            switch (op) {
+            case sync:
+            	mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
+                mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
+                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase, "");
+                mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled, false);
+                mAuthMech = domain.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech);
+                mBindDn = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn);
+                mBindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
+                mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
+                mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
+            	break;
+            case search:
+                mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+                mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
+                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase);
+                mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
+                mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
+                mBindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
+                mBindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
+                mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
+                mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
+            	break;
+            case autocomplete:
+                mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+                mFilter = domain.getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter);
+                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase);
+                mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
+                mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
+                mBindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
+                mBindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
+                mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
+                mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
+            	break;
+            }
+            mRules = new LdapGalMapRules(domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap));
+		}
+	}
+	
+	private static class DataSourceConfig extends AccountConfig {
+		public DataSourceConfig(DataSource ds, GalOp op) throws ServiceException {
+			super(ds.getAccount(), op);
+			String[] url = null;
+            switch (op) {
+            case sync:
+            	url = ds.getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
+            	if (url != null && url.length > 0)
+            		mUrl = url;
+                mFilter = ds.getAttr(Provisioning.A_zimbraGalLdapFilter, mFilter);
+                mSearchBase = ds.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase, mSearchBase);
+                mStartTlsEnabled = ds.getBooleanAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled, mStartTlsEnabled);
+                mAuthMech = ds.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech, mAuthMech);
+                mBindDn = ds.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn, mBindDn);
+                mBindPassword = ds.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword, mBindPassword);
+                mKerberosPrincipal = ds.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal, mKerberosPrincipal);
+                mKerberosKeytab = ds.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab, mKerberosKeytab);
+            	break;
+            case search:
+            	url = ds.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+            	if (url != null && url.length > 0)
+            		mUrl = url;
+                mFilter = ds.getAttr(Provisioning.A_zimbraGalLdapFilter, mFilter);
+                mSearchBase = ds.getAttr(Provisioning.A_zimbraGalLdapSearchBase, mSearchBase);
+                mStartTlsEnabled = ds.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, mStartTlsEnabled);
+                mAuthMech = ds.getAttr(Provisioning.A_zimbraGalLdapAuthMech, mAuthMech);
+                mBindDn = ds.getAttr(Provisioning.A_zimbraGalLdapBindDn, mBindDn);
+                mBindPassword = ds.getAttr(Provisioning.A_zimbraGalLdapBindPassword, mBindPassword);
+                mKerberosPrincipal = ds.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal, mKerberosPrincipal);
+                mKerberosKeytab = ds.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab, mKerberosKeytab);
+            	break;
+            case autocomplete:
+            	url = ds.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+            	if (url != null && url.length > 0)
+            		mUrl = url;
+                mFilter = ds.getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter, mFilter);
+                mSearchBase = ds.getAttr(Provisioning.A_zimbraGalLdapSearchBase, mSearchBase);
+                mStartTlsEnabled = ds.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, mStartTlsEnabled);
+                mAuthMech = ds.getAttr(Provisioning.A_zimbraGalLdapAuthMech, mAuthMech);
+                mBindDn = ds.getAttr(Provisioning.A_zimbraGalLdapBindDn, mBindDn);
+                mBindPassword = ds.getAttr(Provisioning.A_zimbraGalLdapBindPassword, mBindPassword);
+                mKerberosPrincipal = ds.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal, mKerberosPrincipal);
+                mKerberosKeytab = ds.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab, mKerberosKeytab);
+            	break;
+            }
+            String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
+            if (attrs.length > 0)
+            	mRules = new LdapGalMapRules(attrs);
+		}
+	}
+	
+	protected GalType mGalType;
+	protected String[] mUrl;
+	protected boolean mStartTlsEnabled;
+	protected String mFilter;
+	protected String mSearchBase;
+	protected String mAuthMech;
+	protected String mBindDn;
+	protected String mBindPassword;
+	protected String mKerberosPrincipal;
+	protected String mKerberosKeytab;
+	protected LdapGalMapRules mRules;
 	
 	public GalType getGalType() {
 		return mGalType;
