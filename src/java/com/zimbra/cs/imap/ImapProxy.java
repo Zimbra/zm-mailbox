@@ -91,17 +91,10 @@ class ImapProxy {
     }
 
     void dropConnection() {
-        Thread idle = mIdleThread;
-        if (idle != null && idle.isAlive()) {
-            ZimbraLog.imap.info("dropping IDLE proxy thread");
-            mIdleThread = null;
-            idle.interrupt();
-        }
-
         ImapConnection conn = mConnection;
+        mConnection = null;
         if (conn == null)
             return;
-        mConnection = null;
 
         // FIXME: should close cleanly (i.e. with tagged LOGOUT)
         ZimbraLog.imap.info("closing proxy connection");
@@ -143,18 +136,21 @@ class ImapProxy {
     boolean idle(final ImapRequest req, final boolean begin) throws IOException {
         if (begin == ImapHandler.IDLE_STOP) {
             // check state -- don't want to send DONE if we're somehow not in IDLE
+            ImapHandler handler = mHandler;
+            if (handler == null)
+                throw new IOException("proxy connection already closed");
             Thread idle = mIdleThread;
             if (idle == null)
                 throw new IOException("bad proxy state: no IDLE thread active when attempting DONE");
             // send the DONE, which elicits the tagged response that causes the IDLE thread (below) to exit
             writeRequest(req.toByteArray());
-            // make sure that the idle thread actually exited
+            // make sure that the idle thread actually exits; otherwise we're in a bad place and we must kill the whole session
             mIdleThread = null;
             try {
                 idle.join(5 * Constants.MILLIS_PER_SECOND);
             } catch (InterruptedException ie) { }
             if (idle.isAlive())
-                idle.interrupt();
+                handler.dropConnection(false);
         } else {
             final ImapHandler handler = mHandler;
             final ImapConnection conn = mConnection;
