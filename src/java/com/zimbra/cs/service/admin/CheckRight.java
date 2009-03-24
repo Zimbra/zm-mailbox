@@ -89,7 +89,7 @@ public class CheckRight extends RightDocumentHandler {
                                                  right, attrs,
                                                  via);
         
-        Element resp = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
+        Element resp = zsc.createElement(AdminConstants.CHECK_RIGHT_RESPONSE);
         
         resp.addAttribute(AdminConstants.A_ALLOW, result);
         if (via.available()) {
