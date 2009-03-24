@@ -536,7 +536,31 @@ OR
   <default id="invId_of_default_invite/>
   [<except recurId="recurrence_id_of_exception"
   id="invId_of_exception/>]*
-</SetAppointmentResponse>  
+</SetAppointmentResponse>
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// AddAppointmentInvite
+//
+// Add an invite.  The invite corresponds to a VEVENT component.  Based on the UID specified (required),
+// a new appointment is created in the default calendar if necessary.  If an appointment with the same UID
+// exists, the appointment is updated with the new invite only if the invite is not outdated, according to
+// the iCalendar sequencing rule (based on SEQUENCE, RECURRENCE-ID and DTSTAMP).
+//
+
+<AddAppointmentInviteRequest>
+  <m ...>  // same as <m> under <default> in SetAppointmentRequest
+  </m>
+</AddAppointmentInviteRequest>
+
+<AddAppointmentInviteResponse
+  // These attributes are returned only if the invite was added successfully.  They are omitted if invite
+  // was ignored as being outdated.
+  [calItemId="calendar item id"]
+  [invId="invite id of the added invite"]
+  [compNum="compNum of the added invite"]
+/>
 
    
 //////////////////////////////////////////////////////////////////////

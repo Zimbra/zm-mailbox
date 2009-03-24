@@ -35,6 +35,7 @@ import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.Message.RecipientType;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
@@ -66,6 +67,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
 public class CalendarMailSender {
+
+    // custom email header indicating this invite email is intended for another user
+    public static final String X_ZIMBRA_CALENDAR_INTENDED_FOR = "X-Zimbra-Calendar-Intended-For";
 
     public final static class Verb {
         String mName;
@@ -536,6 +540,42 @@ public class CalendarMailSender {
         }
     }
 
+    public static MimeMessage createForwardedInviteMessage(MimeMessage mmOrig, String origSenderEmail, String forwarderEmail, String[] forwardTo)
+    throws ServiceException {
+        List<Address> rcpts = new ArrayList<Address>(forwardTo.length);
+        for (String to : forwardTo) {
+            try {
+                rcpts.add(new InternetAddress(to));
+            } catch (AddressException e) {
+                ZimbraLog.calendar.warn("Ignoring invalid address \"" + to + "\" during invite forward");
+            }
+        }
+        if (rcpts.isEmpty())
+            return null;
+        MimeMessage mm = null;
+        try {
+            mm = new MimeMessage(mmOrig);
+            mm.removeHeader("To");
+            mm.removeHeader("Cc");
+            mm.removeHeader("Bcc");
+            mm.addRecipients(RecipientType.TO, rcpts.toArray(new Address[0]));
+            // Set Reply-To to the original sender.
+            mm.setReplyTo(new Address[] { new InternetAddress(origSenderEmail) });
+            mm.removeHeader("Date");
+            mm.removeHeader("Message-ID");
+            mm.removeHeader("Return-Path");
+            mm.removeHeader("Received");
+
+            // Set special header to indicate the forwarding attendee.
+            mm.setHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, forwarderEmail);
+
+            mm.saveChanges();
+        } catch (MessagingException e) {
+            ZimbraLog.calendar.warn("Unable to compose email for invite forwarding", e);
+        }
+        return mm;
+    }
+
     private static MimeMessage createCalendarInviteDeniedMessage(
             Account fromAccount, Account senderAccount, boolean onBehalfOf, boolean allowPrivateAccess,
             Address toAddr, Invite inv, MsgKey bodyTextKey)
@@ -591,6 +631,27 @@ public class CalendarMailSender {
             }
         };
         Thread senderThread = new Thread(r, "CalendarPermDeniedReplySender");
+        senderThread.setDaemon(true);
+        senderThread.start();
+    }
+
+    public static void sendInviteForwardMessage(
+            final OperationContext octxt, final Mailbox mbox, final ItemId origMsgId, final MimeMessage mm)
+    throws ServiceException {
+        // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
+        Runnable r = new Runnable() {
+            public void run() {
+                try {
+                    mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null,
+                            origMsgId, MailSender.MSGTYPE_REPLY, null, true, false, true);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("OutOfMemoryError while sending permission-denied auto reply", e);
+                }
+            }
+        };
+        Thread senderThread = new Thread(r, "CalendarInviteForwardSender");
         senderThread.setDaemon(true);
         senderThread.start();
     }

@@ -291,6 +291,33 @@ public class CalendarUtils {
         return toRet;
     }
 
+    static ParseMimeMessage.InviteParserResult parseInviteForAddInvite(
+            Account account, byte itemType, Element inviteElem, TimeZoneMap tzMap)
+    throws ServiceException {
+        if (tzMap == null)
+            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        Invite inv = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
+
+        CalendarUtils.parseInviteElementCommon(account, itemType, inviteElem, inv, true, true);
+
+        // DTSTAMP
+        if (inv.getDTStamp() == 0) { //zdsync
+            inv.setDtStamp(new Date().getTime());
+        }
+
+        ZVCalendar iCal = inv.newToICalendar(true);
+
+        String summaryStr = inv.getName() != null ? inv.getName() : "";
+
+        ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
+        toRet.mCal = iCal;
+        toRet.mUid = inv.getUid();
+        toRet.mSummary = summaryStr;
+        toRet.mInvite = inv;
+
+        return toRet;
+    }
+
     // Compare the attendee lists in old and new invites to figure out which attendees are being removed.
     // Distribution lists are taken into consideration.
     public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv, boolean applyDL)
@@ -744,10 +771,12 @@ public class CalendarUtils {
 
         // RECURRENCE-ID
         if (recurrenceIdAllowed) {
-            Element e = element.getElement(MailConstants.E_CAL_EXCEPTION_ID);
-            ParsedDateTime dt = parseDateTime(e, tzMap);
-            RecurId recurId = new RecurId(dt, RecurId.RANGE_NONE);
-            newInv.setRecurId(recurId);
+            Element e = element.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID);
+            if (e != null) {
+                ParsedDateTime dt = parseDateTime(e, tzMap);
+                RecurId recurId = new RecurId(dt, RecurId.RANGE_NONE);
+                newInv.setRecurId(recurId);
+            }
         } else {
             if (element.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID) != null) {
                 throw ServiceException.INVALID_REQUEST(

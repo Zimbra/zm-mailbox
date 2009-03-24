@@ -28,6 +28,7 @@ import java.io.OutputStreamWriter;
 import javax.activation.DataSource;
 import javax.mail.internet.ContentType;
 
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mime.Mime;
 
@@ -48,7 +49,7 @@ public class CalendarDataSource implements DataSource
 
     public CalendarDataSource(ZCalendar.ZVCalendar iCal, String uid, String attachmentName) {
         mICal = iCal;
-        mUid = uid;
+        mUid = uid != null && uid.length() > 0 ? uid : LdapUtil.generateUUID();
         mAttachName = attachmentName;
         if (mAttachName == null || mAttachName.equals("")) {
             mAttachName = "meeting.ics";

@@ -53,6 +53,7 @@ import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -757,6 +758,9 @@ public class ToXML {
             if (!octxt.isDelegatedRequest(msg.getMailbox()))
                 addEmails(m, Mime.parseAddressHeader(mm, "Disposition-Notification-To"), EmailType.READ_RECEIPT);
 
+            String calIntendedFor = mm.getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+            m.addAttribute(MailConstants.A_CAL_INTENDED_FOR, calIntendedFor);
+
             String subject = mm.getSubject();
             if (subject != null)
                 m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
@@ -1125,6 +1129,11 @@ public class ToXML {
      */
     public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, Message msg, String part, boolean serializeType)
     throws ServiceException {
+        return encodeMessageAsMIME(parent, ifmt, msg, part, false, serializeType);
+    }
+
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, Message msg, String part, boolean mustInline, boolean serializeType)
+    throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         Element m;
@@ -1141,7 +1150,7 @@ public class ToXML {
         long size = msg.getSize() + 2048;
         if (!wholeMessage) {
             content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg) + PART_PARAM_STRING + part);
-        } else if (size > MAX_INLINE_MSG_SIZE) {
+        } else if (!mustInline && size > MAX_INLINE_MSG_SIZE) {
             content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
         } else {
             try {

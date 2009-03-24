@@ -4364,7 +4364,8 @@ public class Mailbox {
      * @param addRevision if true and revisioning is enabled and calendar item exists already, add a revision
      *                    with current snapshot of the calendar item
      * 
-     * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
+     * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id,
+     *         that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
@@ -4408,6 +4409,7 @@ public class Mailbox {
                 
                 boolean calItemIsNew = false;
                 CalendarItem calItem = getCalendarItemByUid(inv.getUid());
+                boolean processed = true;
                 if (calItem == null) { 
                     // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                     if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
@@ -4430,15 +4432,19 @@ public class Mailbox {
                     }
                     if (addRevision)
                         calItem.snapshotRevision();
-                    calItem.processNewInvite(pm, inv, folderId, volumeId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
-                                             preserveExistingAlarms, discardExistingInvites);
+                    processed = calItem.processNewInvite(
+                            pm, inv, folderId, volumeId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
+                            preserveExistingAlarms, discardExistingInvites);
                 }
                 
                 queueForIndexing(calItem, !calItemIsNew, null);
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 
                 success = true;
-                return new int[] { calItem.getId(), inv.getMailItemId() };
+                if (processed)
+                    return new int[] { calItem.getId(), inv.getMailItemId() };
+                else
+                    return null;
             } finally {
                 endTransaction(success);
             }

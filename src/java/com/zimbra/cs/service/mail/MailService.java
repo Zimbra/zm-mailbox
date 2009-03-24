@@ -108,6 +108,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());
         dispatcher.registerHandler(MailConstants.MODIFY_APPOINTMENT_REQUEST, new ModifyAppointment());
         dispatcher.registerHandler(MailConstants.CANCEL_APPOINTMENT_REQUEST, new CancelAppointment());
+        dispatcher.registerHandler(MailConstants.ADD_APPOINTMENT_INVITE_REQUEST, new AddAppointmentInvite());
         dispatcher.registerHandler(MailConstants.IMPORT_APPOINTMENTS_REQUEST, new ImportAppointments());
 
         dispatcher.registerHandler(MailConstants.GET_TASK_SUMMARIES_REQUEST, new GetTaskSummaries());
@@ -117,6 +118,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CREATE_TASK_EXCEPTION_REQUEST, new CreateTaskException());
         dispatcher.registerHandler(MailConstants.MODIFY_TASK_REQUEST, new ModifyTask());
         dispatcher.registerHandler(MailConstants.CANCEL_TASK_REQUEST, new CancelTask());
+        dispatcher.registerHandler(MailConstants.ADD_TASK_INVITE_REQUEST, new AddTaskInvite());
         dispatcher.registerHandler(MailConstants.COMPLETE_TASK_INSTANCE_REQUEST, new CompleteTaskInstance());
 
         dispatcher.registerHandler(MailConstants.GET_CALITEM_SUMMARIES_REQUEST, new GetCalendarItemSummaries());

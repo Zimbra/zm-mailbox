@@ -1650,7 +1650,9 @@ if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
 <GetMsgResponse>
-  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
+  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")
+     (cif="{X-Zimbra-Calendar-Intended-For header}")
+  >
     <e .../>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -1664,7 +1666,10 @@ if <header>s are requested, any matching headers are inlined into the response
 </GetMsgResponse>
 
 origid/rt/irt are present only on drafts
- 
+cif is set when the message is a calendar invite that was forwarded by another user, whose calendar is being
+managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
+originally intended.
+
 ------------
 <GetMsgMetadataRequest>
   <m ids="{msg-id-list}"/>

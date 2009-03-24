@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090316-2327 */
+    /* build: 5.0 jhahm 20090323-1654 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -13002,13 +13002,13 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [public, private]
      *
-     * @return zimbraPrefCalendarApptVisibility, or ZAttrProvisioning.PrefCalendarApptVisibility._public if unset and/or has invalid value
+     * @return zimbraPrefCalendarApptVisibility, or ZAttrProvisioning.PrefCalendarApptVisibility.public_ if unset and/or has invalid value
      *
      * @since ZCS 6.0.0
      */
     @ZAttr(id=832)
     public ZAttrProvisioning.PrefCalendarApptVisibility getPrefCalendarApptVisibility() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarApptVisibility); return v == null ? ZAttrProvisioning.PrefCalendarApptVisibility._public : ZAttrProvisioning.PrefCalendarApptVisibility.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalendarApptVisibility._public; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarApptVisibility); return v == null ? ZAttrProvisioning.PrefCalendarApptVisibility.public_ : ZAttrProvisioning.PrefCalendarApptVisibility.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalendarApptVisibility.public_; }
     }
 
     /**

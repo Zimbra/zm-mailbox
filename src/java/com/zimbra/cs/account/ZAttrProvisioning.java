@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090316-2327 */
+    /* build: 5.0 jhahm 20090323-1654 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -417,8 +417,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefCalendarApptVisibility {
-        _public("public"),
-        _private("private");
+        public_("public"),
+        private_("private");
         private String mValue;
         private PrefCalendarApptVisibility(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -428,8 +428,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean is_public() { return this == _public;}
-        public boolean is_private() { return this == _private;}
+        public boolean isPublic_() { return this == public_;}
+        public boolean isPrivate_() { return this == private_;}
     }
 
     public static enum PrefCalendarInitialView {
@@ -2230,16 +2230,20 @@ public class ZAttrProvisioning {
      * zimbraDomainStatus values: all values for zimbraAccountStatus (except
      * for lockout, see mapping below) suspended - maintenance + no
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + no modifying domain attrs (can only be set internally,
-     * cannot be set in admin console or zmprov) How zimbraDomainStatus
-     * affects account behavior : -------------------------------------
-     * zimbraDomainStatus account behavior
-     * ------------------------------------- active zimbraAccountStatus
-     * locked zimbraAccountStatus if it is maintenance or pending or closed,
-     * else locked maintenance zimbraAccountStatus if it is pending or
-     * closed, else maintenance suspended zimbraAccountStatus if it is
-     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
-     * is pending or closed, else maintenance closed closed
+     * suspended + cannot modify domain attrs + cannot delete the domain
+     * Indicating server is doing major and lengthy maintenance work on the
+     * domain, e.g. renaming the domain and moving LDAP enteries.
+     * Modification and deletion of the domain can only be done internally by
+     * the server when it is safe to release the domain, they cannot be done
+     * in admin console or zmprov. How zimbraDomainStatus affects account
+     * behavior : ------------------------------------- zimbraDomainStatus
+     * account behavior ------------------------------------- active
+     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
+     * pending or closed, else locked maintenance zimbraAccountStatus if it
+     * is pending or closed, else maintenance suspended zimbraAccountStatus
+     * if it is pending or closed, else maintenance shutdown
+     * zimbraAccountStatus if it is pending or closed, else maintenance
+     * closed closed
      *
      * @since ZCS 5.0.0
      */
@@ -4665,6 +4669,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=261)
     public static final String A_zimbraPrefCalendarFirstDayOfWeek = "zimbraPrefCalendarFirstDayOfWeek";
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public static final String A_zimbraPrefCalendarForwardInvitesTo = "zimbraPrefCalendarForwardInvitesTo";
 
     /**
      * comma-sep list of calendars that are initially checked

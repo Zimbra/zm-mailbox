@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090316-2327 */
+    /* build: 5.0 jhahm 20090323-1654 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -18383,13 +18383,13 @@ public class ZAttrAccount  extends MailTarget {
      *
      * <p>Valid values: [public, private]
      *
-     * @return zimbraPrefCalendarApptVisibility, or ZAttrProvisioning.PrefCalendarApptVisibility._public if unset and/or has invalid value
+     * @return zimbraPrefCalendarApptVisibility, or ZAttrProvisioning.PrefCalendarApptVisibility.public_ if unset and/or has invalid value
      *
      * @since ZCS 6.0.0
      */
     @ZAttr(id=832)
     public ZAttrProvisioning.PrefCalendarApptVisibility getPrefCalendarApptVisibility() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarApptVisibility); return v == null ? ZAttrProvisioning.PrefCalendarApptVisibility._public : ZAttrProvisioning.PrefCalendarApptVisibility.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalendarApptVisibility._public; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarApptVisibility); return v == null ? ZAttrProvisioning.PrefCalendarApptVisibility.public_ : ZAttrProvisioning.PrefCalendarApptVisibility.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalendarApptVisibility.public_; }
     }
 
     /**
@@ -18776,6 +18776,140 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefCalendarFirstDayOfWeek(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek, "");
+        return attrs;
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @return zimbraPrefCalendarForwardInvitesTo, or ampty array if unset
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public String[] getPrefCalendarForwardInvitesTo() {
+        return getMultiAttr(Provisioning.A_zimbraPrefCalendarForwardInvitesTo);
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param zimbraPrefCalendarForwardInvitesTo new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public void setPrefCalendarForwardInvitesTo(String[] zimbraPrefCalendarForwardInvitesTo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarForwardInvitesTo, zimbraPrefCalendarForwardInvitesTo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param zimbraPrefCalendarForwardInvitesTo new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public Map<String,Object> setPrefCalendarForwardInvitesTo(String[] zimbraPrefCalendarForwardInvitesTo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarForwardInvitesTo, zimbraPrefCalendarForwardInvitesTo);
+        return attrs;
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param zimbraPrefCalendarForwardInvitesTo new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public void addPrefCalendarForwardInvitesTo(String zimbraPrefCalendarForwardInvitesTo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefCalendarForwardInvitesTo, zimbraPrefCalendarForwardInvitesTo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param zimbraPrefCalendarForwardInvitesTo new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public Map<String,Object> addPrefCalendarForwardInvitesTo(String zimbraPrefCalendarForwardInvitesTo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefCalendarForwardInvitesTo, zimbraPrefCalendarForwardInvitesTo);
+        return attrs;
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param zimbraPrefCalendarForwardInvitesTo existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public void removePrefCalendarForwardInvitesTo(String zimbraPrefCalendarForwardInvitesTo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefCalendarForwardInvitesTo, zimbraPrefCalendarForwardInvitesTo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param zimbraPrefCalendarForwardInvitesTo existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public Map<String,Object> removePrefCalendarForwardInvitesTo(String zimbraPrefCalendarForwardInvitesTo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefCalendarForwardInvitesTo, zimbraPrefCalendarForwardInvitesTo);
+        return attrs;
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public void unsetPrefCalendarForwardInvitesTo() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarForwardInvitesTo, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Forward a copy of calendar invites received to these users.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0
+     */
+    @ZAttr(id=851)
+    public Map<String,Object> unsetPrefCalendarForwardInvitesTo(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarForwardInvitesTo, "");
         return attrs;
     }
 

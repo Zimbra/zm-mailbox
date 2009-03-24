@@ -4316,4 +4316,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>type of this GAl data source.  zimbra - zimbra internal GAL.  ldap   - external LDAP GAL.</desc>
 </attr>
 
+<attr id="851" name="zimbraPrefCalendarForwardInvitesTo" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" since="6.0.0">
+  <desc>Forward a copy of calendar invites received to these users.</desc>
+</attr>
+
 </attrs>

@@ -66,6 +66,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -922,7 +923,22 @@ public class ParsedMessage {
         }
         return mCalendarPartInfo;
     }
-    
+
+    /**
+     * Returns the email address of the user for whom this calendar invite email is intended originally.
+     * A user who receives calendar invite email may optionally forward the invite to another user who
+     * manages his/her calendar.  The forwarded email will have this header set to the forwarder, who
+     * is the user that was originally invited to the meeting.
+     * @return
+     */
+    public String getZimbraCalendarIntendedFor() {
+        String val = null;
+        try {
+            val = getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+        } catch (MessagingException e) { }
+        return val;
+    }
+
     /**
      * @return TRUE if there was a _temporary_ failure detected while analyzing the message.  In
      *         the case of a temporary failure, the message should be flagged and indexing re-tried

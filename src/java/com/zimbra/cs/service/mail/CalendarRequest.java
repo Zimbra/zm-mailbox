@@ -378,7 +378,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     tempMmFile.delete();
             }
 
-            if (updateOwnAppointment && response != null && ids != null) {
+            if (updateOwnAppointment && response != null && ids != null && ids.length >= 2) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
                 String id = ifmt.formatItemId(ids[0]);
                 response.addAttribute(MailConstants.A_CAL_ID, id);

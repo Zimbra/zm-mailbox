@@ -158,7 +158,15 @@ public class MailSender {
             }
         }
     }
-    
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
+                                  List<InternetAddress> saveContacts, List<Upload> uploads,
+                                  ItemId origMsgId, String replyType, Identity identity,
+                                  boolean ignoreFailedAddresses, boolean replyToSender)
+    throws ServiceException {
+        return sendMimeMessage(octxt, mbox, saveToSent, mm, saveContacts, uploads, origMsgId, replyType,
+                               identity, ignoreFailedAddresses, replyToSender, false);
+    }
     /**
      * Send MimeMessage out as an email.
      * @param octxt operation context
@@ -176,6 +184,7 @@ public class MailSender {
      *                      header to the same address, otherwise don't set
      *                      Reply-To, letting the recipient MUA choose to whom
      *                      to send reply
+     * @param skipSendAsCheck if true, skip the check that disallows From address that's not explicitly allowed
      * 
      * @return the id of the copy in the first saved folder, or <tt>null</tt>
      * @throws ServiceException
@@ -183,7 +192,8 @@ public class MailSender {
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
                                   List<InternetAddress> saveContacts, List<Upload> uploads,
                                   ItemId origMsgId, String replyType, Identity identity,
-                                  boolean ignoreFailedAddresses, boolean replyToSender)
+                                  boolean ignoreFailedAddresses, boolean replyToSender,
+                                  boolean skipSendAsCheck)
     throws ServiceException {
         try {
             logMessage(mm, origMsgId, uploads, replyType);
@@ -201,7 +211,7 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId.getId());
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, replyToSender);
+            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, replyToSender, skipSendAsCheck);
 
             // run any pre-send/pre-save MIME mutators
             try {
@@ -273,7 +283,7 @@ public class MailSender {
             Collection<Address> sentAddresses = sendMessage(mm, ignoreFailedAddresses, rollback);
         	Collection<InternetAddress> newContacts = null;
 
-            if (!sentAddresses.isEmpty()) {
+            if (!sentAddresses.isEmpty() && octxt != null) {
             	try {
                 	ContactRankings.increment(octxt.getAuthenticatedUser().getId(), sentAddresses);
             	} catch (Exception e) {
@@ -406,7 +416,8 @@ public class MailSender {
         return "[" + origIp + "]";
     }
 
-    void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
+    void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP,
+                       boolean replyToSender, boolean skipSendAsCheck)
     throws MessagingException, ServiceException {
 	    Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
@@ -425,28 +436,40 @@ public class MailSender {
         if (prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, false))
             mm.addHeader(X_AUTHENTICATED_USER, authuser.getName());
 
-        boolean overrideFromHeader = true;
-        try {
-            String fromHdr = mm.getHeader("From", null);
-            if (fromHdr != null && !fromHdr.equals("")) {
-                InternetAddress from = new InternetAddress(fromHdr);
-                if (AccountUtil.allowFromAddress(acct, from.getAddress()))
-                    overrideFromHeader = false;
-            }
-        } catch (Exception e) { }
+        boolean overrideFromHeader;
+        if (skipSendAsCheck) {
+            overrideFromHeader = false;
+        } else {
+            overrideFromHeader = true;
+            try {
+                String fromHdr = mm.getHeader("From", null);
+                if (fromHdr != null && !fromHdr.equals("")) {
+                    InternetAddress from = new InternetAddress(fromHdr);
+                    if (AccountUtil.allowFromAddress(acct, from.getAddress()))
+                        overrideFromHeader = false;
+                }
+            } catch (Exception e) { }
+        }
 
         // we need to set the Sender to the authenticated user for delegated sends by non-admins
         boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
         boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
         boolean canSendAs = !isDelegatedRequest || AccessManager.getInstance().canDo(authuser, acct, User.R_sendAs, isAdminRequest, false);
 
-        InternetAddress sender = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
-        if (canSendAs) {
-            // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
+        InternetAddress sender = null;
+        if (skipSendAsCheck) {
             Address addr = mm.getSender();
-            if (addr != null && addr instanceof InternetAddress) {
-                if (AccountUtil.addressMatchesAccount(authuser, ((InternetAddress) addr).getAddress()))
-                    sender = (InternetAddress) addr;
+            if (addr != null && addr instanceof InternetAddress)
+                sender = (InternetAddress) addr;
+        } else {
+            sender = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
+            if (canSendAs) {
+                // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
+                Address addr = mm.getSender();
+                if (addr != null && addr instanceof InternetAddress) {
+                    if (AccountUtil.addressMatchesAccount(authuser, ((InternetAddress) addr).getAddress()))
+                        sender = (InternetAddress) addr;
+                }
             }
         }
 
