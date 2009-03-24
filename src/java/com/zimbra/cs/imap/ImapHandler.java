@@ -252,7 +252,7 @@ abstract class ImapHandler extends ProtocolHandler {
             try {
                 clean = req.readATOM().equals("DONE") && req.eof();
             } catch (ImapParseException ipe) { }
-            return doIDLE(null, IDLE_STOP, clean);
+            return doIDLE(null, IDLE_STOP, clean, req);
         }
 
         String tag = req.readTag();
@@ -441,7 +441,7 @@ abstract class ImapHandler extends ProtocolHandler {
                         return doID(tag, params);
                     } else if (command.equals("IDLE") && extensionEnabled("IDLE")) {
                         checkEOF(tag, req);
-                        return doIDLE(tag, IDLE_START, true);
+                        return doIDLE(tag, IDLE_START, true, req);
                     }
                     break;
                 case 'L':
@@ -2166,23 +2166,27 @@ abstract class ImapHandler extends ProtocolHandler {
     //              IDLE command remains active until the client responds to the continuation,
     //              and as long as an IDLE command is active, the server is now free to send
     //              untagged EXISTS, EXPUNGE, and other messages at any time."
-    boolean doIDLE(String tag, boolean begin, boolean success) throws IOException, ImapParseException {
+    boolean doIDLE(String tag, boolean begin, boolean success, ImapRequest req) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        // XXX: not supporting cross-server IDLE at present
-        if (mProxy != null)
-            throw new ImapParseException(tag, "command not implemented", true);
-
         if (begin == IDLE_START) {
             mIdleTag = tag;
-            sendNotifications(true, false);
-            sendContinuation("idling");
+            if (mProxy != null) {
+                mProxy.idle(req, begin);
+            } else {
+                sendNotifications(true, false);
+                sendContinuation("idling");
+            }
         } else {
             tag = mIdleTag;
             mIdleTag = null;
-            if (success)  sendOK(tag, "IDLE completed");
-            else          sendBAD(tag, "IDLE stopped without DONE");
+            if (mProxy != null) {
+                mProxy.idle(req, begin);
+            } else {
+                if (success)  sendOK(tag, "IDLE completed");
+                else          sendBAD(tag, "IDLE stopped without DONE");
+            }
         }
         return CONTINUE_PROCESSING;
     }

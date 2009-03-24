@@ -134,6 +134,10 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void dropConnection(boolean sendBanner, long timeout) {
+        try {
+            unsetSelectedFolder(false);
+        } catch (Exception e) { }
+
         if (!mSession.isConnected())
             return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);

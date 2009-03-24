@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
@@ -343,6 +344,18 @@ public abstract class MailConnection {
      */
     public MailConfig getConfig() {
         return config;
+    }
+
+    /**
+     * Sets the read timeout for the connection.
+     *
+     * @param readTimeout  The new read timeout, in seconds.
+     *                     <tt>0</tt> means no timeout.
+     */
+    public void setReadTimeout(final int readTimeout) throws SocketException {
+        int timeout = (int) Math.min(readTimeout * 1000L, Integer.MAX_VALUE);
+        if (socket != null && !isClosed())
+            socket.setSoTimeout(timeout > 0 ? timeout : Integer.MAX_VALUE);
     }
 
     /**

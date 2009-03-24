@@ -160,10 +160,6 @@ class TcpImapHandler extends ImapHandler {
         return CONTINUE_PROCESSING;
     }
 
-    @Override public void dropConnection() {
-        dropConnection(true);
-    }
-
     @Override protected void dropConnection(boolean sendBanner) {
         try {
             unsetSelectedFolder(false);
