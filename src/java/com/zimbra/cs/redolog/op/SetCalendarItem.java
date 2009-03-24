@@ -62,7 +62,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
     public SetCalendarItem() {}
     
-    private static void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
+    private void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
     throws IOException, MessagingException {
         out.writeBoolean(true);  // keep this for backward compatibility with when SetCalendarItemData
                                  // used to have mForce field
@@ -71,7 +71,10 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         out.writeUTF(localTz.encodeAsMetadata().toString());
         
         out.writeUTF(Invite.encodeMetadata(data.mInv).toString());
-        
+
+        if (getVersion().atLeast(1, 24))
+            out.writeBoolean(data.mPm != null);
+        // If version is earlier than 1.24, we always have non-null data.mPm.
         if (data.mPm != null) {
             out.writeLong(data.mPm.getReceivedDate());
             
@@ -95,16 +98,23 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             
             toRet.mInv = Invite.decodeMetadata(mboxId, new Metadata(in.readUTF()), null, localTz);
             
-            long receivedDate = in.readLong();
-            
-            int dataLen = in.readInt();
-            byte[] rawPmData = new byte[dataLen];
-            in.readFully(rawPmData, 0, dataLen);
-
-            InputStream is = new ByteArrayInputStream(rawPmData);
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            
-            toRet.mPm = new ParsedMessage(mm, receivedDate, attachmentIndexingEnabled);
+            boolean hasPm;
+            if (getVersion().atLeast(1, 24))
+                hasPm = in.readBoolean();
+            else
+                hasPm = true;
+            // If version is earlier than 1.24, we always have ParsedMessage array.
+            if (hasPm) {
+                long receivedDate = in.readLong();
+                int dataLen = in.readInt();
+                byte[] rawPmData = new byte[dataLen];
+                in.readFully(rawPmData, 0, dataLen);
+    
+                InputStream is = new ByteArrayInputStream(rawPmData);
+                MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
+                
+                toRet.mPm = new ParsedMessage(mm, receivedDate, attachmentIndexingEnabled);
+            }
         } catch (ServiceException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for CreateInvite "+ex.toString());

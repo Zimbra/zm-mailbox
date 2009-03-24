@@ -4019,7 +4019,8 @@ public class Mailbox {
 
         public String toString() {
             StringBuilder toRet = new StringBuilder();
-            toRet.append("inv:").append(mInv.toString()).append("\n");
+            toRet.append("inv:").append(mInv.toString());
+            toRet.append(", hasBody:").append(mPm != null).append("\n");
             return toRet.toString();
         }
     }
