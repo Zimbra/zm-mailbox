@@ -4175,7 +4175,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>GAL data source status</desc>
 </attr>
 
-<attr id="831" name="zimbraGalAccountId"  type="id" cardinality="multi" optionalIn="globalConfig,domain" since="6.0.0">
+<attr id="831" name="zimbraGalAccountId"  type="id" cardinality="multi" optionalIn="domain" since="6.0.0">
   <desc>zimbraId of GAL sync accounts</desc>
 </attr>
 
