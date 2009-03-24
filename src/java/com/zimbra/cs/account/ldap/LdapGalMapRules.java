@@ -27,23 +27,17 @@ import javax.naming.directory.Attributes;
 public class LdapGalMapRules {
     
     private List<LdapGalMapRule> mRules;
-    private String mLdapAttrs[];
+    private List<String> mLdapAttrs;
 
     public LdapGalMapRules(String[] rules) {
         mRules = new ArrayList<LdapGalMapRule>(rules.length);
-        ArrayList<String> ldapAttrs = new ArrayList<String>();
-        for (String rule: rules) {
-            LdapGalMapRule lgmr = new LdapGalMapRule(rule);
-            mRules.add(lgmr);
-            for (String ldapattr: lgmr.getLdapAttrs()) {
-                ldapAttrs.add(ldapattr);
-            }
-        }
-        mLdapAttrs = ldapAttrs.toArray(new String[ldapAttrs.size()]);
+        mLdapAttrs = new ArrayList<String>();
+        for (String rule: rules)
+        	add(rule);
     }
     
     public String[] getLdapAttrs() {
-        return mLdapAttrs;
+        return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
     }
     
     public Map<String, Object> apply(Attributes ldapAttrs) {
@@ -52,5 +46,13 @@ public class LdapGalMapRules {
             rule.apply(ldapAttrs, contactAttrs);
         }
         return contactAttrs;
+    }
+    
+    public void add(String rule) {
+        LdapGalMapRule lgmr = new LdapGalMapRule(rule);
+        mRules.add(lgmr);
+        for (String ldapattr: lgmr.getLdapAttrs()) {
+            mLdapAttrs.add(ldapattr);
+        }
     }
 }

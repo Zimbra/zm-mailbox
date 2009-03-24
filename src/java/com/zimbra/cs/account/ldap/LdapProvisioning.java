@@ -4338,31 +4338,6 @@ public class LdapProvisioning extends Provisioning {
             }
         }
         
-        /*
-         *  LDAP doesn't have a > query, just a >= query.  
-         *  This causes SyncGal returns extra entries that were updated/created on the same second 
-         *  as the prev sync token.  To work around it, we add one second to the result token if the 
-         *  token has changed in this sync.        
-         */
-        boolean gotNewToken = true;
-        String newToken = results.getToken();
-        if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
-            gotNewToken = false;
-        
-        if (gotNewToken) {
-            Date parsedToken = DateUtil.parseGeneralizedTime(newToken, false);
-            if (parsedToken != null) {
-                long ts = parsedToken.getTime();
-                ts += 1000;
-                results.setToken(DateUtil.toGeneralizedTime(new Date(ts)));
-            }
-            /*
-             * in the rare case when an LDAP implementation does not conform to generalized time and 
-             * we cannot parser the token, just leave it alone.
-             */
-            
-        }
-        
         return results;
     }
     
@@ -4468,50 +4443,28 @@ public class LdapProvisioning extends Provisioning {
             if (token != null) 
                 n = "";
     
-            query = GalUtil.expandFilter(galParams, galOp, queryExpr, n, token, true);
+            query = GalUtil.expandFilter(null, queryExpr, n, token, true);
         }
-        return searchZimbraWithQuery(domain, galParams, galOp, query, maxResults, token, visitor);
-    }
 
-    private SearchGalResult searchZimbraWithQuery(Domain domain, 
-                                                  GalParams.ZimbraGalParams galParams, 
-                                                  GalOp galOp, 
-                                                  String query, 
-                                                  int maxResults, 
-                                                  String token,
-                                                  GalContact.Visitor visitor)
-    throws ServiceException 
-    {
-        LdapDomain ld = (LdapDomain) domain;
         SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);
         result.setTokenizeKey(GalUtil.tokenizeKey(galParams, galOp));
         if (query == null) {
-            ZimbraLog.gal.warn("searchZimbraWithQuery query is null");
+            ZimbraLog.gal.warn("searchZimbraWithNamedFilter query is null");
             return result;
         }
     
         // filter out hidden entries
         query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
     
-        LdapGalMapRules rules = getGalRules(domain);
-
-        String searchBase = galParams.searchBase();
-        if (searchBase.equalsIgnoreCase("DOMAIN"))
-            searchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
-        else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
-            searchBase = ld.getDN();
-        else if (searchBase.equalsIgnoreCase("ROOT"))
-            searchBase = "";
-        
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(false);
             LdapUtil.searchGal(zlc,
                                galParams.pageSize(),
-                               searchBase, 
+                               galParams.searchBase(), 
                                query, 
                                maxResults,
-                               rules,
+                               getGalRules(domain),
                                token,
                                result);
         } finally {

@@ -25,8 +25,9 @@ public class GalSearchResultCallback {
     private Element mResponse;
 	private ItemIdFormatter mFormatter;
     
-    public GalSearchResultCallback(GalSearchParams params, Element resp) {
-    	mResponse = resp;
+    public GalSearchResultCallback(GalSearchParams params) {
+    	if (params.getSoapContext() != null)
+    		mResponse = params.getSoapContext().createElement(params.getResponseName());
     	mFormatter = new ItemIdFormatter(params.getSoapContext());
     }
     

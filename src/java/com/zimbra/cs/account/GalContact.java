@@ -17,6 +17,7 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 
 /**
@@ -25,7 +26,7 @@ import com.zimbra.cs.mailbox.Contact;
 public class GalContact implements Comparable {
     
     public interface Visitor  {
-        public void visit(GalContact gc);
+        public void visit(GalContact gc) throws ServiceException;
     }
     
     private Map<String, Object> mAttrs;

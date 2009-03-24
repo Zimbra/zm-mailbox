@@ -25,7 +25,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class GalUtil {
     
-    public static String expandFilter(GalParams galParams, GalOp galOp, String filterTemplate, String key, String token, boolean internal) throws ServiceException {
+    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, boolean internal) throws ServiceException {
         String query;
         
         /*
@@ -34,7 +34,7 @@ public class GalUtil {
         query = LdapProvisioning.expandStr(filterTemplate, vars);
         */
         
-        query = expandKey(galParams, galOp, filterTemplate, key);
+        query = expandKey(tokenize, filterTemplate, key);
 
         if (query.indexOf("**") > 0)
         	query = query.replaceAll("\\*\\*", "*");
@@ -47,6 +47,8 @@ public class GalUtil {
     }
     
     public static String tokenizeKey(GalParams galParams, GalOp galOp) {
+    	if (galParams == null)
+    		return null;
         if (galOp == GalOp.autocomplete)
             return galParams.tokenizeAutoCompleteKey();
         else if (galOp == GalOp.search)
@@ -55,7 +57,7 @@ public class GalUtil {
         return null;
     }
     
-    private static String expandKey(GalParams galParams, GalOp galOp, String filterTemplate, String key) throws ServiceException {
+    private static String expandKey(String tokenize, String filterTemplate, String key) throws ServiceException {
 
         if (!filterTemplate.startsWith("(")) {
             if (filterTemplate.endsWith(")"))
@@ -66,8 +68,6 @@ public class GalUtil {
         
         String query = null;
         Map<String, String> vars = new HashMap<String, String>();
-        
-        String tokenize = tokenizeKey(galParams, galOp);
         
         if (tokenize != null) {
             String tokens[] = key.split("\\s+");

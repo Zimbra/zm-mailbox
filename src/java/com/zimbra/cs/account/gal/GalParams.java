@@ -22,7 +22,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.account.ldap.LdapGalCredential;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 public abstract class GalParams {
@@ -92,14 +94,7 @@ public abstract class GalParams {
         
         public ZimbraGalParams(Domain domain, GalOp galOp) throws ServiceException {
             super(domain, galOp); 
-            
-            if (galOp == GalOp.sync) {
-                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase);
-                if (mSearchBase == null)
-                    mSearchBase = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-            } else {
-                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-            }
+            mSearchBase = LdapUtil.getZimbraSearchBase(domain, galOp);
         }
         
         public String searchBase() { return mSearchBase; }

@@ -1325,7 +1325,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return mMatches.size();
         }
 
-        public void addMatch(GalContact gc) {
+        public void addMatch(GalContact gc) throws ServiceException {
             mMatches.add(gc);
         }
 
@@ -1350,7 +1350,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return mNumMatches;
         }
 
-        public void addMatch(GalContact gc) {
+        public void addMatch(GalContact gc) throws ServiceException {
             mVisitor.visit(gc);
             mNumMatches++;
         }

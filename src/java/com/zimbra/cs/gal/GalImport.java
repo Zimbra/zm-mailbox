@@ -31,10 +31,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.gal.GalParams;
-import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -61,7 +58,7 @@ public class GalImport extends MailItemImport {
 
 	public void test() throws ServiceException {
 		try {
-			searchGal(null);
+			searchGal(null, SearchGalResult.newSearchGalResult(null));
 		} catch (NamingException e) {
 			throw ServiceException.FAILURE("Error executing gal search", e);
 		} catch (IOException e) {
@@ -95,28 +92,21 @@ public class GalImport extends MailItemImport {
 			DbDataSource.addMapping(ds, folderMapping);
 		}
 		String syncToken = fullSync ? null : folderMapping.md.get(SYNCTOKEN, null);
+        HashMap<String,DataSourceItem> allMappings = new HashMap<String,DataSourceItem>();
+        if (fullSync || force)
+	        for (DataSourceItem dsItem : DbDataSource.getAllMappings(ds))
+	        	if (dsItem.md == null || dsItem.md.get(TYPE, null) == null)  // non-folder items
+	        		allMappings.put(dsItem.remoteId, dsItem);
     	OperationContext octxt = new Mailbox.OperationContext(mbox);
-    	SearchGalResult result = null;
+    	SearchGalResult result = SearchGalResult.newSearchGalResult(new GalSearchVisitor(mbox, allMappings, fid, force));
     	try {
-    		result = searchGal(syncToken);
+    		searchGal(syncToken, result);
     	} catch (Exception e) {
     		setStatus(false);
     		ZimbraLog.gal.error("Error executing gal search", e);
     		return;
     	}
-        HashMap<String,DataSourceItem> allMappings = new HashMap<String,DataSourceItem>();
-        for (DataSourceItem dsItem : DbDataSource.getAllMappings(ds))
-        	if (dsItem.md == null || dsItem.md.get(TYPE, null) == null)
-        		allMappings.put(dsItem.remoteId, dsItem);
-        for (GalContact contact : result.getMatches()) {
-        	try {
-                processContact(octxt, contact, fid, force);
-                allMappings.remove(contact.getId());
-        	} catch (Exception e) {
-        		setStatus(false);
-        		ZimbraLog.gal.warn("Ignoring error importing gal contact "+contact.getId(), e);
-        	}
-        }
+
         folderMapping.md.put(SYNCTOKEN, result.getToken());
         DbDataSource.updateMapping(ds, folderMapping);
         if (allMappings.size() == 0 || !fullSync) {
@@ -140,11 +130,17 @@ public class GalImport extends MailItemImport {
 		setStatus(true);
 	}
 	
-	private SearchGalResult searchGal(String syncToken) throws ServiceException, NamingException, IOException  {
-		if (getDataSource().getAttr(Provisioning.A_zimbraGalType).compareTo("zimbra") == 0)
-			return searchZimbraGal(syncToken);
-		else
-			return searchExternalGal(syncToken);
+	private void searchGal(String syncToken, SearchGalResult result) throws ServiceException, NamingException, IOException {
+		ZimbraLog.gal.debug("searchGal: "+syncToken);
+		DataSource ds = getDataSource();
+		GalSearchParams params = new GalSearchParams(ds.getAccount());
+		params.setGalResult(result);
+		params.setToken(syncToken);
+		params.setQuery("*");
+		params.createSearchConfig(ds, GalOp.sync);
+        for (String attr : ZIMBRA_ATTRS)
+        	params.getConfig().getRules().add(attr+"="+attr);
+        LdapUtil.galSearch(params);
 	}
 	private static String[] ZIMBRA_ATTRS = {
 		"zimbraAccountCalendarUserType",
@@ -153,69 +149,43 @@ public class GalImport extends MailItemImport {
 		"zimbraCalResCapacity",
 		"zimbraCalResContactEmail"
 	};
-	private LdapGalMapRules getGalMapRules() throws ServiceException {
-		DataSource ds = getDataSource();
-        String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        if (attrs.length == 0)
-        	attrs = Provisioning.getInstance().getDomainByName(ds.getAccount().getDomainName()).getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        ArrayList<String> attrList = new ArrayList<String>();
-        java.util.Collections.addAll(attrList, attrs);
-        for (String attr : ZIMBRA_ATTRS)
-        	attrList.add(attr+"="+attr);
-        return new LdapGalMapRules(attrList.toArray(new String[0]));
-	}
 	
-	private static final int MAX_GAL_SEARCH_RESULT = 65535;
-	
-	private SearchGalResult searchExternalGal(String syncToken) throws ServiceException, NamingException, IOException  {
-		ZimbraLog.gal.debug("searchExternalGal: "+syncToken);
-		DataSource ds = getDataSource();
-		GalOp galOp = GalOp.sync;
-        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(ds, galOp);
-        LdapGalMapRules rules = getGalMapRules();
-        return LdapUtil.searchLdapGal(galParams, galOp, "", MAX_GAL_SEARCH_RESULT, rules, syncToken, null);
-	}
-	
-	private SearchGalResult searchZimbraGal(String syncToken) throws ServiceException {
-		ZimbraLog.gal.debug("searchZimbraGal "+syncToken);
-        SearchGalResult result = SearchGalResult.newSearchGalResult(null);
-        String filter = getDataSource().getAttr(Provisioning.A_zimbraGalLdapFilter);
-        String query = filter;
-        if (syncToken != null) {
-            String arg = LdapUtil.escapeSearchFilterArg(syncToken);
-            query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+filter+")";
-        }
-        LdapGalMapRules rules = getGalMapRules();
-        ZimbraLdapContext zlc = null;
-        try {
-            zlc = new ZimbraLdapContext(false);
-            LdapUtil.searchGal(zlc, 0, "", query, 0, rules, syncToken, result);
-        } finally {
-            ZimbraLdapContext.closeContext(zlc);
-        }
-        return result;
-	}
-	
-	private void processContact(OperationContext octxt, GalContact contact, int fid, boolean force) throws ServiceException {
-		Map<String,Object> attrs = contact.getAttrs();
-		String id = contact.getId();
-		ZimbraLog.gal.debug("processing gal contact "+id);
-		DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
-        String modifiedDate = (String) contact.getAttrs().get("modifyTimeStamp");
-    	if (dsItem.itemId == 0) {
-    		ZimbraLog.gal.debug("creating new contact "+id);
-    		dsItem.remoteId = id;
-            ParsedContact pc = new ParsedContact(attrs);
-            dsItem.itemId = mbox.createContact(octxt, pc, fid, null).getId();
-    		DbDataSource.addMapping(getDataSource(), dsItem);
-    	} else {
-    		String syncDate = mbox.getContactById(octxt, dsItem.itemId).get("modifyTimeStamp");
-            if (force || syncDate == null || !syncDate.equals(modifiedDate)) {
-        		ZimbraLog.gal.debug("modifying contact "+id);
-                ParsedContact pc = new ParsedContact(attrs);
-                mbox.modifyContact(octxt, dsItem.itemId, pc);
-            }
-    	}
+	private class GalSearchVisitor implements GalContact.Visitor {
+		Mailbox mbox;
+		OperationContext octxt;
+		Map<String,DataSourceItem> mappings;
+		int fid;
+		boolean force;
+		
+		private GalSearchVisitor(Mailbox mbox, Map<String,DataSourceItem> mappings, int fid, boolean force) throws ServiceException {
+			this.mbox = mbox;
+			this.octxt = new OperationContext(mbox);
+			this.mappings = mappings;
+			this.fid = fid;
+			this.force = force;
+		}
+		public void visit(GalContact contact) throws ServiceException {
+			Map<String,Object> attrs = contact.getAttrs();
+			String id = contact.getId();
+			ZimbraLog.gal.debug("processing gal contact "+id);
+			DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
+	        String modifiedDate = (String) contact.getAttrs().get("modifyTimeStamp");
+	    	if (dsItem.itemId == 0) {
+	    		ZimbraLog.gal.debug("creating new contact "+id);
+	    		dsItem.remoteId = id;
+	            ParsedContact pc = new ParsedContact(attrs);
+	            dsItem.itemId = mbox.createContact(octxt, pc, fid, null).getId();
+	    		DbDataSource.addMapping(getDataSource(), dsItem);
+	    	} else {
+	    		String syncDate = mbox.getContactById(octxt, dsItem.itemId).get("modifyTimeStamp");
+	            if (force || syncDate == null || !syncDate.equals(modifiedDate)) {
+	        		ZimbraLog.gal.debug("modifying contact "+id);
+	                ParsedContact pc = new ParsedContact(attrs);
+	                mbox.modifyContact(octxt, dsItem.itemId, pc);
+	            }
+	    	}
+	    	mappings.remove(id);
+		}
 	}
 	
 	public String getUrl() {

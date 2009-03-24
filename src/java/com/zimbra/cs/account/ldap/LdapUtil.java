@@ -17,6 +17,7 @@ package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -753,6 +754,31 @@ public class LdapUtil {
         } finally {
             // do it in the caller where the context was obtained
             // closeContext(ctxt);
+        	
+        	// moved from LdapProvisioning so it can be done for all ldap searches.
+            /*
+             *  LDAP doesn't have a > query, just a >= query.  
+             *  This causes SyncGal returns extra entries that were updated/created on the same second 
+             *  as the prev sync token.  To work around it, we add one second to the result token if the 
+             *  token has changed in this sync.        
+             */
+            boolean gotNewToken = true;
+            String newToken = result.getToken();
+            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
+                gotNewToken = false;
+            
+            if (gotNewToken) {
+                Date parsedToken = DateUtil.parseGeneralizedTime(newToken, false);
+                if (parsedToken != null) {
+                    long ts = parsedToken.getTime();
+                    ts += 1000;
+                    result.setToken(DateUtil.toGeneralizedTime(new Date(ts)));
+                }
+                /*
+                 * in the rare case when an LDAP implementation does not conform to generalized time and 
+                 * we cannot parser the token, just leave it alone.
+                 */
+            }
         }
     }
   
@@ -774,7 +800,8 @@ public class LdapUtil {
         String filter = galParams.filter();
     
         SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);
-        result.setTokenizeKey(GalUtil.tokenizeKey(galParams, galOp));
+        String tokenize = GalUtil.tokenizeKey(galParams, galOp);
+        result.setTokenizeKey(tokenize);
     
         if (url == null || url.length == 0 || base == null || filter == null) {
             if (url == null || url.length == 0)
@@ -791,8 +818,7 @@ public class LdapUtil {
             if (queryExpr != null)
                 filter = queryExpr;
         }
-                
-        String query = GalUtil.expandFilter(galParams, galOp, filter, n, token, false);
+        String query = GalUtil.expandFilter(tokenize, filter, n, token, false);
         
         String authMech = galParams.credential().getAuthMech();
         if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
@@ -917,7 +943,7 @@ public class LdapUtil {
             searchGal(zlc,
                       params.getPageSize(),
                       cfg.getSearchBase(),
-                      params.getQuery(),
+                      params.generateLdapQuery(),
                       params.getLimit(),
                       cfg.getRules(),
                       params.getSyncToken(),
@@ -1033,5 +1059,25 @@ public class LdapUtil {
             return pageSize - 1;
         else
             return pageSize;
+    }
+    
+    public static String getZimbraSearchBase(Domain domain, GalOp galOp) {
+        String sb;
+        if (galOp == GalOp.sync) {
+            sb = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase);
+            if (sb == null)
+                sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        } else {
+            sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        }
+        LdapDomain ld = (LdapDomain) domain;
+        if (sb.equalsIgnoreCase("DOMAIN"))
+            return ld.getDN();
+            //mSearchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
+        else if (sb.equalsIgnoreCase("SUBDOMAINS"))
+            return ld.getDN();
+        else if (sb.equalsIgnoreCase("ROOT"))
+            return "";
+        return "";
     }
  }

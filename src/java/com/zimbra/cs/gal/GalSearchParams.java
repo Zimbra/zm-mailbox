@@ -19,8 +19,11 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -41,8 +44,12 @@ public class GalSearchParams {
     private Element mRequest;
     private QName mResponse;
 	
-	public GalSearchParams(Account account, ZimbraSoapContext ctxt) {
+	public GalSearchParams(Account account) {
         mAccount = account;
+	}
+	
+	public GalSearchParams(Account account, ZimbraSoapContext ctxt) {
+		this(account);
         mSoapContext = ctxt;
 	}
 	
@@ -94,6 +101,10 @@ public class GalSearchParams {
 		return mRequest;
 	}
 	
+	public QName getResponseName() {
+		return mResponse;
+	}
+	
 	public void setSearchConfig(GalSearchConfig config) {
 		mConfig = config;
 	}
@@ -130,7 +141,7 @@ public class GalSearchParams {
 	}
 	
 	public GalSearchResultCallback createResultCallback() {
-		mResultCallback = new GalSearchResultCallback(this, mSoapContext.createElement(mResponse));
+		mResultCallback = new GalSearchResultCallback(this);
 		return mResultCallback;
 	}
 	
@@ -139,6 +150,18 @@ public class GalSearchParams {
 	}
 	public void setResponseName(QName response) {
 		mResponse = response;
-
+	}
+	
+	public void createSearchConfig(GalOp op) throws ServiceException {
+		mConfig = GalSearchConfig.create(mAccount, op);
+	}
+	
+	public void createSearchConfig(DataSource ds, GalOp op) throws ServiceException {
+		mConfig = GalSearchConfig.create(ds, op);
+	}
+	
+	public String generateLdapQuery() throws ServiceException {
+		assert(mConfig != null);
+        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), "", mToken, false);
 	}
 }
