@@ -39,6 +39,9 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.html.HtmlEntityMapper;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -179,12 +182,28 @@ class ChatWriter {
             // date tracking: find the date of the latest message in the conv
             if (msg.getDate().after(highestDate))
                 highestDate = msg.getDate();
-
-            String msgBodyHtml = msg.getBody() != null ? msg.getBody().toString() : "";
+            
+            String msgBodyHtml = "";
+            IMMessage.TextPart body = msg.getBody();
+            if (body != null) {
+                if (body.hasXHTML()) {
+                    msgBodyHtml = body.getXHTMLAsString();
+                } else {
+                    msgBodyHtml = StringUtil.escapeHtml(body.getPlainText());
+                }
+            }
             
             // conert embedded unicode entities to their HTML equivalent 
             msgBodyHtml = HtmlEntityMapper.unicodeToHtmlEntity(msgBodyHtml);
 
+            // defang it
+            try {
+                msgBodyHtml = HtmlDefang.defang(msgBodyHtml, true);
+            } catch (IOException ex) {
+                ZimbraLog.im.warn("Unable to htmldefang text: "+msgBodyHtml);
+                msgBodyHtml = "defang_error";
+            }
+            
             // find the color for this user
             if (!colorMap.containsKey(from)) {
                 if (colorOff == -1)
