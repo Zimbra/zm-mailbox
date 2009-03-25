@@ -795,12 +795,12 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     {
         FilenameTokenFilter(TokenFilter in) {
             super(in);
-            mIncludeSeparatorChar = true;
+            mIncludeSeparatorChar = false;
             mMaxSplits = 100;
         }
         FilenameTokenFilter(TokenStream in) {
             super(in);
-            mIncludeSeparatorChar = true;
+            mIncludeSeparatorChar = false;
             mMaxSplits = 100;
         }
 
