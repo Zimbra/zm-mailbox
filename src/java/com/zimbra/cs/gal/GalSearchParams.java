@@ -25,7 +25,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.ZimbraSoapContext;
 
