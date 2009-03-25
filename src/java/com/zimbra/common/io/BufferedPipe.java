@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -142,7 +144,7 @@ class BufferedPipe {
             mIsFull = false;
     }
 
-    private long write(ByteBuffer[] srcs, int offset, int length) {
+    private long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
         synchronized (mWriteLock) {
             long written = 0;
             for (int i = offset; i < offset + length; i++) {
@@ -150,13 +152,13 @@ class BufferedPipe {
                     break;
 
                 ByteBuffer src = srcs[i];
-                written += write(src);
+                written += (long) write(src);
             }
             return written;
         }
     }
 
-    private int write(ByteBuffer src) {
+    private int write(ByteBuffer src) throws IOException {
         synchronized (mWriteLock) {
             synchronized (this) {
                 int expected = src.remaining();
@@ -219,7 +221,7 @@ class BufferedPipe {
      * @return actual number of bytes written
      * @throws IOException
      */
-    private int write(byte[] src, int offset, int len) {
+    private int write(byte[] src, int offset, int len) throws IOException {
         synchronized (mWriteLock) {
             synchronized (this) {
                 int remaining = len;
@@ -274,7 +276,7 @@ class BufferedPipe {
         }
     }
 
-    private long read(ByteBuffer[] dsts, int offset, int length) {
+    private long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
         synchronized (mReadLock) {
             long bytesRead = 0;
             for (int i = offset; i < offset + length; i++) {
@@ -282,13 +284,13 @@ class BufferedPipe {
                     break;
 
                 ByteBuffer dest = dsts[i];
-                bytesRead += read(dest);
+                bytesRead += (long) read(dest);
             }
             return bytesRead;
         }
     }
 
-    private int read(ByteBuffer dst) {
+    private int read(ByteBuffer dst) throws IOException {
         synchronized (mReadLock) {
             synchronized (this) {
                 int expected = dst.remaining();
@@ -352,7 +354,7 @@ class BufferedPipe {
      * @return actual number of bytes read
      * @throws IOException
      */
-    private int read(byte[] dst, int offset, int len) {
+    private int read(byte[] dst, int offset, int len) throws IOException {
         synchronized (mReadLock) {
             synchronized (this) {
                 int remaining = len;
@@ -414,7 +416,7 @@ class BufferedPipe {
 
         public BaseChannel() { mOpen = true; }
 
-        public void close() {
+        public void close() throws IOException {
             synchronized (this) {
                 mOpen = false;
             }
@@ -448,19 +450,19 @@ class BufferedPipe {
          * @return actual number of bytes written
          * @throws IOException
          */
-        public int write(byte[] src, int offset, int len) {
+        public int write(byte[] src, int offset, int len) throws IOException {
             return BufferedPipe.this.write(src, offset, len);
         }
 
-        public int write(ByteBuffer src) {
+        public int write(ByteBuffer src) throws IOException {
             return BufferedPipe.this.write(src);
         }
 
-        public long write(ByteBuffer[] srcs, int offset, int length) {
+        public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
             return BufferedPipe.this.write(srcs, offset, length);
         }
 
-        public long write(ByteBuffer[] srcs) {
+        public long write(ByteBuffer[] srcs) throws IOException {
             return write(srcs, 0, srcs.length);
         }
 
@@ -483,7 +485,7 @@ class BufferedPipe {
          * @return actual number of bytes read
          * @throws IOException
          */
-        public int read(byte[] dst) {
+        public int read(byte[] dst) throws IOException {
             return read(dst, 0, dst.length);
         }
 
@@ -496,19 +498,19 @@ class BufferedPipe {
          * @return actual number of bytes read
          * @throws IOException
          */
-        public int read(byte[] dst, int offset, int len) {
+        public int read(byte[] dst, int offset, int len) throws IOException {
             return BufferedPipe.this.read(dst, offset, len);
         }
 
-        public int read(ByteBuffer dst) {
+        public int read(ByteBuffer dst) throws IOException {
             return BufferedPipe.this.read(dst);
         }
 
-        public long read(ByteBuffer[] dsts, int offset, int length) {
+        public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
             return BufferedPipe.this.read(dsts, offset, length);
         }
 
-        public long read(ByteBuffer[] dsts) {
+        public long read(ByteBuffer[] dsts) throws IOException {
             return read(dsts, 0, dsts.length);
         }
 

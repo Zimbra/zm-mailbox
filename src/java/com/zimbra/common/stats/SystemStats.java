@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -14,11 +14,19 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.common.util;
+package com.zimbra.common.stats;
 
-import java.util.concurrent.Callable;
+import java.util.Map;
 
-public interface ScheduledTaskCallback<V> {
+/**
+ * Returns system-level statistics.
+ * 
+ * @author bburtin
+ */
+public class SystemStats implements RealtimeStatsCallback {
 
-    void afterTaskRun(Callable<V> task);
+    public Map<String, Object> getStatData() {
+        return null;
+    }
+
 }

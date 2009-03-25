@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -166,10 +168,14 @@ public class ChartUtil {
         Option srcDirOption = new Option("s", OPT_SRCDIR, true,
                 "one or more directories where the csv files are located");
         srcDirOption.setArgs(Option.UNLIMITED_VALUES);
+        srcDirOption.setRequired(true);
         opts.addOption(srcDirOption);
 
+        confOption.setRequired(true);
+        opts.addOption(confOption);
         Option destDirOption = new Option("d", OPT_DESTDIR, true,
                 "directory where the generated chart files are saved");
+        destDirOption.setRequired(true);
         opts.addOption(destDirOption);
 
         opts.addOption(null, OPT_TITLE, true,
@@ -235,13 +241,6 @@ public class ChartUtil {
     
             if (cl.hasOption('h'))
                 usage(opts);
-            if (!cl.hasOption('s') && !cl.hasOption('d'))
-                usage(opts, "-s and -d options are required");
-            if (!cl.hasOption('s'))
-                usage(opts, "Missing required -s option");
-            
-            if (!cl.hasOption('d'))
-                usage(opts, "Missing required -d option");
     
             String[] confs = cl.getOptionValues(OPT_CONF);
             if (confs == null || confs.length == 0)
@@ -1084,8 +1083,6 @@ public class ChartUtil {
             }
             for (Map.Entry<String,List<Integer>> g : groups.entrySet()) {
                 String groupByValue = g.getKey();
-                if (gps.getIgnoreSet().contains(groupByValue))
-                    continue;
                 List<Integer> indices = g.getValue();
                 DataSeries syntheticDS = new DataSeries();
                 DataColumn c = new DataColumn(gps.getInfile(),

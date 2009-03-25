@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
@@ -52,7 +54,7 @@ public class MimeCompoundHeader {
         for (int i = 0, count = header.length(); i < count; i++) {
             char c = header.charAt(i);
             // ignore folding, even where it's not actually permitted
-            if ((c == '\r' || c == '\n') && rfc2231.state != RFC2231State.VALUE && rfc2231.state != RFC2231State.SLOP) {
+            if ((c == '\r' || c == '\n') && rfc2231.state != RFC2231State.VALUE && rfc2231.state != RFC2231State.SLOP && (rfc2231.state != RFC2231State.EQUALS || rfc2231.key == null)) {
                 escaped = false;
                 continue;
             }
@@ -74,7 +76,7 @@ public class MimeCompoundHeader {
                         rfc2231.setState(RFC2231State.EQUALS);
                     } else if (c == '*') {
                         rfc2231.setState(RFC2231State.EXTENDED);
-                    } else if (c == '(') {
+                    } else if (c == '(' && rfc2231.key.length() == 0) {
                         escaped = false;  rfc2231.comment++;
                         rfc2231.setState(RFC2231State.COMMENT);
                     } else if (c == ';') {
@@ -86,27 +88,21 @@ public class MimeCompoundHeader {
                     break;
 
                 case VALUE:
-                    if (c == ';' || c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+                    if (c != ';' && c != ' ' && c != '\t' && c != '\r' && c != '\n') {
+                        rfc2231.addValueChar(c);
+                    } else {
                         rfc2231.saveParameter(mParams);
                         rfc2231.setState(c == ' ' || c == '\t' ? RFC2231State.SLOP : RFC2231State.PARAM);
-                    } else if (c == '(') {
-                        escaped = false;  rfc2231.comment++;
-                        rfc2231.setState(RFC2231State.COMMENT);
-                    } else {
-                        rfc2231.addValueChar(c);
                     }
                     break;
 
                 case EQUALS:
-                    if (c == ';') {
+                    if (c == ';' || c == '\r' || c == '\n') {
                         rfc2231.saveParameter(mParams);
                         rfc2231.setState(RFC2231State.PARAM);
                     } else if (c == '"') {
                         escaped = false;
                         rfc2231.setState(RFC2231State.QVALUE);
-                    } else if (c == '(') {
-                        escaped = false;  rfc2231.comment++;
-                        rfc2231.setState(RFC2231State.COMMENT);
                     } else if (c != ' ' && c != '\t') {
                         rfc2231.addValueChar(c);
                         rfc2231.setState(RFC2231State.VALUE);
@@ -321,6 +317,10 @@ public class MimeCompoundHeader {
             if (newstate == RFC2231State.COMMENT && state != RFC2231State.COMMENT)
                 precomment = state;
             state = newstate;
+            if (newstate == RFC2231State.PARAM) {
+                key = new StringBuilder();  value = new StringBuilder();
+                continued = -1;  encoded = false;
+            }
         }
 
         void setEncoded() {
@@ -332,56 +332,47 @@ public class MimeCompoundHeader {
         void addCharsetChar(char c)  { charset.append(c); }
         void addKeyChar(char c)      { key.append(c); }
         void addValueChar(char c)    { value.append(c); }
-
-        void reset() {
-            key = new StringBuilder();  value = new StringBuilder();
-            continued = -1;  encoded = false;
-        }
     
         void saveParameter(Map<String, String> attrs) {
-            try {
-                if (value == null)
-                    return;
-                String pname = key == null ? null : key.toString().toLowerCase();
-                String pvalue = value.toString();
-                if ("".equals(pname))
-                    return;
-    
-                if (continued >= 0) {
-                    // in order to handle out-of-order parts, store all partials in a hash until we're done
-                    if (partials == null)
-                        partials = new HashMap<String, Map<Integer, ParameterContinuation>>(3);
-                    Map<Integer, ParameterContinuation> parts = partials.get(pname);
-                    if (parts == null)
-                        partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
-                    parts.put(continued, new ParameterContinuation(charset == null || charset.length() == 0 ? "us-ascii" : charset.toString(), encoded, value.toString()));
-                    attrs.put(pname, null);
-                } else {
-                    if (encoded) {
-                        if (charset.length() == 0)
-                            charset.append("us-ascii");
-                        try {
-                            pvalue = URLDecoder.decode(pvalue, charset.toString());
-                        } catch (UnsupportedEncodingException uee) { 
-                            System.out.println(uee);
-                        }
-                    } else if (pvalue.length() >= 8) {
-                        int firstEnd;
-                        if (pvalue.lastIndexOf("=?") > 0 || ((firstEnd = pvalue.indexOf("?=", 6)) >= 6 && firstEnd < pvalue.length() - 2)) {
-                            try {
-                                pvalue = MimeUtility.decodeText(pvalue);
-                            } catch (Exception e) { }
-                        } else if (pvalue.startsWith("=?") && pvalue.endsWith("?=")) {
-                            try {
-                                pvalue = MimeUtility.decodeWord(pvalue);
-                            } catch (Exception e) { }
-                        }
-                    }
-                    attrs.put(pname, pvalue);
-                }
-            } finally {
-                reset();
+            if (value == null)
+                return;
+            String pname = key == null ? null : key.toString().toLowerCase();
+            String pvalue = value.toString();
+            if ("".equals(pname))
+                return;
+
+            // in order to handle out-of-order parts, store all partials in a hash until we're done
+            if (continued >= 0) {
+                if (partials == null)
+                    partials = new HashMap<String, Map<Integer, ParameterContinuation>>(3);
+                Map<Integer, ParameterContinuation> parts = partials.get(pname);
+                if (parts == null)
+                    partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
+                parts.put(continued, new ParameterContinuation(charset == null || charset.length() == 0 ? "us-ascii" : charset.toString(), encoded, value.toString()));
+                attrs.put(pname, null);
+                key = value = null;
+                return;
             }
+
+            if (encoded) {
+                if (charset.length() == 0)
+                    charset.append("us-ascii");
+                try {
+                    pvalue = URLDecoder.decode(pvalue, charset.toString());
+                } catch (UnsupportedEncodingException uee) { 
+                    System.out.println(uee);
+                }
+            } else if (pvalue.lastIndexOf("=?") > 0 || pvalue.indexOf("?=") < pvalue.length() - 2) {
+                try {
+                    pvalue = MimeUtility.decodeText(pvalue);
+                } catch (Exception e) { }
+            } else if (pvalue.startsWith("=?") && pvalue.endsWith("?=")) {
+                try {
+                    pvalue = MimeUtility.decodeWord(pvalue);
+                } catch (Exception e) { }
+            }
+            attrs.put(pname, pvalue);
+            key = value = null;
         }
 
         void assembleContinuations(Map<String, String> attrs) {
@@ -395,32 +386,17 @@ public class MimeCompoundHeader {
 
                 Map<Integer, ParameterContinuation> parts = entry.getValue();
                 ParameterContinuation first = parts.get(0);
-                String paramCharset = first == null ? "us-ascii" : first.charset;
-
-                StringBuilder raw = null, assembled = new StringBuilder();
-                for (Iterator<ParameterContinuation> it = parts.values().iterator(); it.hasNext(); ) {
-                    ParameterContinuation partial = it.next();
+                StringBuilder assembled = new StringBuilder();
+                for (ParameterContinuation partial : parts.values()) {
                     if (partial.encoded) {
-                        // we need to concatenate consecutive encoded parts because they don't necessarily break on a character boundary
-                        if (raw == null)
-                            raw = new StringBuilder();
-                        raw.append(partial.value);
-                        // fall through if the *last* partial was encoded
-                        if (it.hasNext())
-                            continue;
-                    }
-                    if (raw != null) {
-                        // if we're here, we've reached the end of consecutive encoded parts and can decode them
                         try {
-                            assembled.append(URLDecoder.decode(raw.toString(), paramCharset));
+                            assembled.append(URLDecoder.decode(partial.value, first == null ? "us-ascii" : first.charset));
+                            continue;
                         } catch (UnsupportedEncodingException uee) { 
-                            assembled.append(raw.toString());
+                            System.out.println(uee);
                         }
-                        raw = null;
                     }
-                    // if this wasn't an encoded partial, append it
-                    if (!partial.encoded)
-                        assembled.append(partial.value);
+                    assembled.append(partial.value);
                 }
                 attrs.put(pname, assembled.toString());
             }
@@ -466,7 +442,7 @@ public class MimeCompoundHeader {
                 "application/x-stuff", "title", "This is even more ***fun*** isn't it!" },
             { "downcasing value, implicit end-of-value at eol",
                 "multipart/MIXED; charset=us-ascii;\n foo=\n  boundary=\"---\" \n",
-                "multipart/mixed", "charset", "us-ascii", "foo", "boundary=\"---\"" },
+                "multipart/mixed", "charset", "us-ascii", "foo", "", "boundary", "---" },
             { "non-encoded continuation",
                 "message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n",
                 "message/external-body", "access-type", "URL", "url", "ftp://cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar" },
@@ -485,12 +461,6 @@ public class MimeCompoundHeader {
             { "null input",
                 null,
                 "text/plain" },
-            { "comments before and after value, param name, equals, and param value",
-                " (morg) text/plain(whoppity)  ;(heep)(hop(hoo)) format(ig)=(nore)\"floo\"  (kell) \n (perm) \n\t(eeble) zoom (ig) = (nore)whop (mm)",
-                "text/plain", "format", "floo", "zoom", "whop" },
-            { "unquoted encoded-words, bad encoded-words in non-2231 values",
-                "text/plain; filename==?us-ascii?q?boo_bah.pdf?=; note=\"   ?==?\"; bloop=\"=?x-unknown?a?text?=\" ",
-                "text/plain", "filename", "boo bah.pdf", "note", "   ?==?", "bloop", "=?x-unknown?a?text?=" },
         };
 
         for (String[] test : ctypeTests)
@@ -528,9 +498,6 @@ public class MimeCompoundHeader {
             { "charset on subsequent continuation, out-of-order continuations",
                 "attachment; foo*2*=%20dog; foo*1=iso-8859-1'en'big",
                 "attachment", "foo", "iso-8859-1'en'big dog" },
-            { "encoded continuation split across partials",
-                "inline;\n filename*0*=ISO-2022-JP''%1B%24%42%24%33%24%73%24%4B%24%41%24%4F%21%22%40;\n filename*1*=%24%33%26%21%2A%1B%28%42%2E%70%64%66",
-                "inline", "filename", "\u3053\u3093\u306b\u3061\u306f\u3001\u4e16\u754c\uff01.pdf" },
         };
 
         for (String[] test : cdispTests)

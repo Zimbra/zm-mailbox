@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,13 +11,12 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.common.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,32 +78,5 @@ public class EmailUtil
     	Matcher matcher = DOMAIN_REGEX.matcher(domain);
     	return len > 0 && domain.charAt(0) != '.' && domain.charAt(len-1) != '.' &&
     			matcher.matches() && domain.indexOf("..") == -1;
-    }
-    
-    /**
-     * Returns <tt>true</tt> if the given stream returns an RFC 822 message.  Confirms
-     * that the streams starts with a header name, followed by a colon (RFC 2822 2.2)
-     * 
-     * @param in the data stream.  Must support mark/reset with a buffer of at least
-     * 998 bytes.
-     */
-    public static boolean isRfc822Message(InputStream in)
-    throws IOException {
-        in.mark(998);
-        boolean gotHeaderName = false;
-        for (int i = 1; i <= 998; i++) {
-            int c = in.read();
-            if (c < 33 || c > 126) {
-                in.reset();
-                return false;
-            }
-            if (c == ':') {
-                in.reset();
-                return gotHeaderName;
-            }
-            gotHeaderName = true;
-        }
-        in.reset();
-        return false;
     }
 }

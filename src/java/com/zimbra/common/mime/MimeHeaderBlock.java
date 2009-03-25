@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
@@ -32,14 +34,10 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         mHeaders = new ArrayList<MimeHeader>(headers.mHeaders);
     }
 
-    public boolean isEmpty() {
-        return mHeaders == null || mHeaders.isEmpty();
-    }
-
     /** Returns the value of the first header matching the given
      *  <tt>name</tt>. */
     public String getHeader(String name) {
-        return getHeader(name, null);
+        return getHeader(null);
     }
 
     /** Returns the value of the last header matching the given <tt>name</tt>.
@@ -111,12 +109,11 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
     @Override public String toString()  { return new String(toByteArray()); }
 
     public MimeHeaderBlock parse(InputStream is) throws IOException {
-        return parse(new MimePart.ParseState(new MimePart.PeekAheadInputStream(is)), null);
+        return parse(new MimePart.PeekAheadInputStream(is), null);
     }
 
-    MimeHeaderBlock parse(MimePart.ParseState pstate, List<String> boundaries) throws IOException {
-        MimePart.PeekAheadInputStream pais = pstate.getInputStream();
-        pstate.clearBoundary();
+    MimeHeaderBlock parse(MimePart.PeekAheadInputStream pais, List<String> boundaries) throws IOException {
+        pais.clearBoundary();
 
         StringBuilder name = new StringBuilder(25);
         ByteArrayOutputStream content = new ByteArrayOutputStream(80);
@@ -136,14 +133,14 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
                 name.append((char) c);
             }
 
-            boolean dashdash = boundaries != null && name.length() > 2 && name.charAt(0) == '-' && name.charAt(1) == '-';
+            boolean dashdash = name.length() > 2 && name.charAt(0) == '-' && name.charAt(1) == '-';
 
             if (c != ':') {
                 // check for the CRLF CRLF that terminates the headers
                 if (name.length() == 0)
                     break;
                 // check for incorrectly-located boundary delimiter
-                if (dashdash && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pstate, boundaries, linestart))
+                if (dashdash && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pais, boundaries, linestart))
                     return this;
                 // no colon, so abort now rather than reading more data
                 continue;
@@ -164,7 +161,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
                     if (pais.peek() != ' ' && pais.peek() != '\t')
                         break;
                     // check for incorrectly-located boundary delimiter
-                    if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pstate, boundaries, linestart))
+                    if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pais, boundaries, linestart))
                         return this;
                     folded = true;
                 }
@@ -172,7 +169,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
             }
 
             // check for incorrectly-located boundary delimiter
-            if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pstate, boundaries, linestart))
+            if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pais, boundaries, linestart))
                 return this;
 
             // if the name was valid, save the header to the hash
