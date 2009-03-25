@@ -28,11 +28,15 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ProxiedHit;
 import com.zimbra.cs.index.SortBy;
@@ -226,9 +230,21 @@ public class ContactAutoComplete {
 		Provisioning prov = Provisioning.getInstance();
 		Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
 		ZimbraLog.gal.debug("querying gal");
-		Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
-		Domain d = prov.getDomain(account);
-        SearchGalResult sgr = prov.autoCompleteGal(d, str, type, limit - result.entries.size());
+		GalSearchParams params = new GalSearchParams(account);
+		params.setQuery(str);
+		params.setType(GAL_SEARCH_TYPE.USER_ACCOUNT);
+		params.setLimit(limit - result.entries.size());
+		params.createSearchConfig(GalOp.autocomplete);
+		params.setResultCallback(new AutoCompleteCallback(str, result, params));
+		try {
+	        GalSearchControl gal = new GalSearchControl(params);
+	        gal.autocomplete();
+		} catch (Exception e) {
+    		ZimbraLog.gal.warn("can't gal search", e);
+    		return;
+		}
+		SearchGalResult sgr = params.getResult();
+		
         if (sgr.getHadMore() || sgr.getTokenizeKey() != null) {
         	result.canBeCached = false;
     		ZimbraLog.gal.debug("result can't be cached by client");
@@ -266,6 +282,53 @@ public class ContactAutoComplete {
 		}
 	}
 	
+	private class AutoCompleteCallback extends GalSearchResultCallback {
+		AutoCompleteResult result;
+		String str;
+		
+	    public AutoCompleteCallback(String str, AutoCompleteResult result, GalSearchParams params) {
+	    	super(params);
+	    	this.result = result;
+	    	this.str = str;
+	    }
+	    public void handleContact(Contact c) throws ServiceException {
+			String id = ""+c.getId();
+			ZimbraLog.gal.debug("gal entry: "+id);
+	        Map<String,String> attrs = c.getFields();
+	        String matchedEmail = null;
+        	for (String emailKey : mEmailKeys) {
+    			String email = attrs.get(emailKey);
+    			if (email == null)
+    				continue;
+    			if (email.toLowerCase().startsWith(str))
+            		matchedEmail = email;
+
+    			if (matchedEmail != null)
+    				break;
+        	}
+			if (matchedEmail == null) {
+        		ZimbraLog.gal.debug("gal entry has empty email address");
+        		return;
+			}
+			
+        	ContactEntry entry = new ContactEntry();
+        	entry.mEmail = matchedEmail;
+			entry.setName((String)attrs.get(Contact.A_fullName));
+        	entry.mFolderId = FOLDER_ID_GAL;
+        	result.addEntry(entry);
+			ZimbraLog.gal.debug("adding "+entry.getEmail());
+	    }
+	    public void handleElement(Element e) throws ServiceException {
+	    }
+	    public void setNewToken(int newToken) {
+	    }
+	    public void setSortBy(String sortBy) {
+	    }
+	    public void setQueryOffset(int offset) {
+	    }
+	    public void setHasMoreResult(boolean more) {
+	    }
+	}
 	private boolean matches(String query, String text) {
 		if (query == null || text == null)
 			return false;

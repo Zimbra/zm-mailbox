@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,6 +47,7 @@ public class GalSearchParams {
 	
 	public GalSearchParams(Account account) {
         mAccount = account;
+        mResult = SearchGalResult.newSearchGalResult(null);
 	}
 	
 	public GalSearchParams(Account account, ZimbraSoapContext ctxt) {
@@ -94,6 +96,8 @@ public class GalSearchParams {
 	}
 
 	public GalSearchResultCallback getResultCallback() {
+		if (mResultCallback == null)
+			return createResultCallback();
 		return mResultCallback;
 	}
 	
@@ -133,11 +137,27 @@ public class GalSearchParams {
 		mResult = result;
 	}
 	
-	public void parseSearchParams(Element request, String searchQuery) throws ServiceException {
-		setRequest(request);
-	    mSearchParams = SearchParams.parse(request, mSoapContext, searchQuery);
+	public void createSearchParams(String searchQuery) {
+		mSearchParams = new SearchParams();
+		mSearchParams.setLimit(mLimit);
+		mSearchParams.setSortBy(SortBy.NAME_ASCENDING);
+		mSearchParams.setQueryStr(searchQuery);
 	    mSearchParams.setTypes(new byte[] { MailItem.TYPE_CONTACT });
-	    setLimit(mSearchParams.getLimit());
+	}
+	
+	public void parseSearchParams(Element request, String searchQuery) throws ServiceException {
+		if (request == null || mSoapContext == null) {
+			createSearchParams(searchQuery);
+			return;
+		}
+		setRequest(request);
+		mSearchParams = SearchParams.parse(request, mSoapContext, searchQuery);
+		mSearchParams.setTypes(new byte[] { MailItem.TYPE_CONTACT });
+		setLimit(mSearchParams.getLimit());
+	}
+	
+	public void setResultCallback(GalSearchResultCallback callback) {
+		mResultCallback = callback;
 	}
 	
 	public GalSearchResultCallback createResultCallback() {

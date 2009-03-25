@@ -112,7 +112,8 @@ public class GalSearchConfig {
 			if (attrs.length > 0)
 				mRules = new LdapGalMapRules(attrs);
 			mGalType = GalType.fromString(ds.getAttr(Provisioning.A_zimbraGalType));
-			mFilter = "(&("+mFilter+")(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
+			if (mGalType == GalType.zimbra)
+				mFilter = "(&("+mFilter+")(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 		}
 	}
 	

@@ -59,7 +59,7 @@ public class SyncGal extends AccountDocumentHandler {
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
         GalSearchControl gal = new GalSearchControl(params);
         gal.sync();
-        Element response = params.createResultCallback().getResponse();
+        Element response = params.getResultCallback().getResponse();
         if (response == null) {
         	response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
         	doLdapSearch(account, tokenAttr, response);

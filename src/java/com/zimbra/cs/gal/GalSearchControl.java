@@ -51,8 +51,14 @@ public class GalSearchControl {
 		mParams = params;
 	}
 	
-	public void autocomplete() {
-		
+	public void autocomplete() throws ServiceException {
+		mParams.setQuery(mParams.getQuery()+"*");
+		try {
+			accountSearch();
+		} catch (GalAccountNotConfiguredException e) {
+			// fallback to ldap search
+			mParams.getResultCallback().reset();
+		}
 	}
 	
 	public void search() throws ServiceException {
@@ -139,7 +145,6 @@ public class GalSearchControl {
 	
 	private void accountSearch() throws ServiceException, GalAccountNotConfiguredException {
         Provisioning prov = Provisioning.getInstance();
-        mParams.createResultCallback();
     	for (String galAccountId : getGalSyncAccounts()) {
     		Account galAcct = prov.getAccountById(galAccountId);
     		if (galAcct == null) {
@@ -163,7 +168,6 @@ public class GalSearchControl {
 	
 	private void accountSync() throws ServiceException, GalAccountNotConfiguredException {
         Provisioning prov = Provisioning.getInstance();
-        mParams.createResultCallback();
     	for (String galAccountId : getGalSyncAccounts()) {
     		Account galAcct = prov.getAccountById(galAccountId);
     		if (galAcct == null) {
@@ -254,7 +258,7 @@ public class GalSearchControl {
 			transport.setTargetAcctId(targetAcct.getId());
 			transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
 			Element resp = transport.invokeWithoutSession(mParams.getRequest());
-			GalSearchResultCallback callback = mParams.createResultCallback();
+			GalSearchResultCallback callback = mParams.getResultCallback();
 			Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
 			while (iter.hasNext())
 				callback.handleElement(iter.next());

@@ -26,9 +26,10 @@ public class GalSearchResultCallback {
 	private ItemIdFormatter mFormatter;
     
     public GalSearchResultCallback(GalSearchParams params) {
-    	if (params.getSoapContext() != null)
+    	if (params.getSoapContext() != null) {
     		mResponse = params.getSoapContext().createElement(params.getResponseName());
-    	mFormatter = new ItemIdFormatter(params.getSoapContext());
+        	mFormatter = new ItemIdFormatter(params.getSoapContext());
+    	}
     }
     
     public void reset() {
@@ -44,7 +45,7 @@ public class GalSearchResultCallback {
 		ToXML.encodeContact(mResponse, mFormatter, c, true, null);
     }
     
-    public void handleElement(Element e) {
+    public void handleElement(Element e) throws ServiceException {
     	mResponse.addElement(e.detach());
     }
     
