@@ -338,7 +338,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{domain}", Category.CONFIG, 1, 1),
-        DESCRIBE("describe", "desc", "[-v] [-f[width] field1 [-f[width] field2] ...] [-ni] [{entry-type}]", Category.MISC, 0, Integer.MAX_VALUE),
+        DESCRIBE("describe", "desc", "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
@@ -2667,28 +2667,26 @@ public class ProvUtil implements DebugListener {
     private static class DescribeArgs {
         
         enum Field {
-            type(10, "attribute type"),
-            value(10, "value for enum or regex attributes"),
-            callback(10, "class name of AttributeCallback object to invoke on changes to attribute."),
-            immutable(10, "whether this attribute can be modified directly"),
-            cardinality(10, "single or multi"),
-            requiredIn(10, "comma-seperated list containing classes in which this attribute is required"),
-            optionalIn(10, "comma-seperated list containing classes in which this attribute can appear"),
-            flags(10, "attribute flags"),
-            defaults(10, "default value on global config or default COS(for new install) and all upgraded COS's"),
-            min(6, "min value for integers and durations. defaults to Integer.MIN_VALUE"),
-            max(6, "max value for integers and durations, max length for strings/email, defaults to Integer.MAX_VALUE"),
-            id(6, "leaf OID of the attribute"),
-            since(8, "version since which the attribute had been introduced"),
-            depreSince(8, "version since which the attribute had been deprecaed"),
-            desc(36, "description");
+            type("attribute type"),
+            value("value for enum or regex attributes"),
+            callback("class name of AttributeCallback object to invoke on changes to attribute."),
+            immutable("whether this attribute can be modified directly"),
+            cardinality("single or multi"),
+            requiredIn("comma-seperated list containing classes in which this attribute is required"),
+            optionalIn("comma-seperated list containing classes in which this attribute can appear"),
+            flags("attribute flags"),
+            defaults("default value on global config or default COS(for new install) and all upgraded COS's"),
+            min("min value for integers and durations. defaults to Integer.MIN_VALUE"),
+            max("max value for integers and durations, max length for strings/email, defaults to Integer.MAX_VALUE"),
+            id("leaf OID of the attribute"),
+            since("version since which the attribute had been introduced"),
+            deprecatedSince("version since which the attribute had been deprecaed");
+            // desc("description");
             
             String mDesc;
-            int mDefaultWidth;
             
-            Field(int defaultWidth, String desc) {
+            Field(String desc) {
                 mDesc = desc;
-                mDefaultWidth = defaultWidth;
             }
             
             String getDesc() {
@@ -2745,7 +2743,7 @@ public class ProvUtil implements DebugListener {
                 return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending , 
             }
             
-            static String print(Field field, Integer preferredWidth, AttributeInfo ai) {
+            static String print(Field field, AttributeInfo ai) {
                 String out = null;
                 
                 switch (field) {
@@ -2800,50 +2798,32 @@ public class ProvUtil implements DebugListener {
                     if (since != null)
                         out = since.toString();
                     break;
-                case depreSince:
+                case deprecatedSince:
                     BuildInfo.Version depreSince = ai.getDeprecatedSince();
                     if (depreSince != null)
                         out = depreSince.toString();
                     break;
-                case desc:
-                    String desc = ai.getDescription();
-                    if (desc == null)
-                        desc = "";
-                    out = FileGenUtil.wrapComments((desc==null?"":desc), field.mDefaultWidth, "    ") + "\n";
-                    return out;
                 }
                 
                 if (out == null)
                     out = "";
-                
-                int width = field.mDefaultWidth;
-                if (preferredWidth != null)
-                    width = preferredWidth.intValue();
-                return formatString(out, width);
+
+                return out;
             }
             
         }
         
+        /*
+         * args when an object class is specified 
+         */
         boolean mNonInheritedOnly;
         AttributeClass mAttrClass;
         boolean mVerbose;
-        List<Pair<Field, Integer>> mFields;
         
-        Pair<Field, Integer> getField(Field field) {
-            if (mFields == null)
-                return null;
-            
-            for (Pair<Field, Integer> p : mFields) {
-                if (field == p.getFirst())
-                    return p;
-            }
-            return null;
-        }
-    }
-    
-    static String formatString(String s, int width) {
-        String format = "%-" + width + "." + width + "s";
-        return String.format(format, s);
+        /*
+         * args when a specific attribute is specified
+         */
+        String mAttr;
     }
     
     static String formatLine(int width) {
@@ -2870,14 +2850,6 @@ public class ProvUtil implements DebugListener {
         return sb.substring(0, sb.length()-1); // trim the ending , 
     }
     
-    /*
-     * zmprov desc [-v] [-f[width] field1 [-f[width] field2] ...] [-ni] {entry-type}]
-     * 
-     * e.g. zmprov desc -v
-     *      zmprov desc -v account
-     *      zmprov desc account -f10 callback -f optionalIn -f max
-     *      zmprov desc -ni -v server
-     */ 
     private void descAttrsUsage(Exception e) {
         System.out.println(e.getMessage() + "\n");
         
@@ -2885,7 +2857,6 @@ public class ProvUtil implements DebugListener {
         
         System.out.println();
         System.out.println("Valid entry types: " + formatAllEntryTypes() + "\n");
-        System.out.println("Valid fields: \n" + formatAllFields() + "\n");
         
         System.out.println("Examples:");
         
@@ -2893,27 +2864,25 @@ public class ProvUtil implements DebugListener {
         System.out.println("    print attribute name of all attributes" + "\n");
         
         System.out.println("zmprov desc -v");
-        System.out.println("    print all fields of all attributes" + "\n");
+        System.out.println("    print attribute name and description of all attributes" + "\n");
         
         System.out.println("zmprov desc account");
         System.out.println("    print attribute name of all account attributes" + "\n");
         
         System.out.println("zmprov desc -ni -v account");
-        System.out.println("    print all fields of all non-inherited account attributes, ");
+        System.out.println("    print attribute name and description of all non-inherited account attributes, ");
         System.out.println("    that is, attributes that are on account but not on cos"+ "\n");
         
-        System.out.println("zmprov desc -ni -domain");
+        System.out.println("zmprov desc -ni domain");
         System.out.println("    print attribute name of all non-inherited domain attributes, ");
         System.out.println("    that is, attributes that are on domain but not on global config"+ "\n");
         
-        System.out.println("zmprov desc server -f type -f15 max -f30 optionalIn");
-        System.out.println("    print attribute name , type, max, optionalIn fields of all server attributes,");
-        System.out.println("    using default width for the type filed, 15 chars for the max field, ");
-        System.out.println("    and 30 chars for the optionalIn field" + "\n");
-        
-        System.out.println("zmprov desc -f20 defaults -f since cos");
-        System.out.println("    print attribute name, default, and since fields of all cos attributes,");
-        System.out.println("    using 20 chars for the defaults filed, default width for the since field"+ "\n");
+        System.out.println("zmprov desc -a zimbraId");
+        System.out.println("    print attribute name, description, and all properties of attribute zimbraId\n");
+
+        System.out.println("zmprov desc account -a zimbraId");
+        System.out.println("    error: can only specify either an entry type or a specific attribute\n");
+
         
         usage();
     }
@@ -2925,34 +2894,29 @@ public class ProvUtil implements DebugListener {
         int i = 1;
         while (i < args.length) {
             if ("-v".equals(args[i])) {
+                if (descArgs.mAttr != null)
+                    throw ServiceException.INVALID_REQUEST("cannot specify -v when -a is specified", null);
                 descArgs.mVerbose = true;
-                if (descArgs.mFields != null)
-                    throw ServiceException.INVALID_REQUEST("cannot specify both -v and -f", null);
-                
-                // fill fields with all fields
-                descArgs.mFields = new ArrayList<Pair<DescribeArgs.Field, Integer>>();
-                for (DescribeArgs.Field f : DescribeArgs.Field.values())
-                    descArgs.mFields.add(new Pair<DescribeArgs.Field, Integer>(f, null));
 
-            } else if (args[i].startsWith("-f")) {
-                if (i == args.length-1)
-                    throw ServiceException.INVALID_REQUEST("not enough args", null);
-                if (descArgs.mVerbose == true)
-                    throw ServiceException.INVALID_REQUEST("cannot specify both -v and -f", null);
-                if (descArgs.mFields == null)
-                    descArgs.mFields = new ArrayList<Pair<DescribeArgs.Field, Integer>>();
-                
-                Integer preferredWidth = null;
-                if (args[i].length() > 2)
-                    preferredWidth = Integer.valueOf(args[i].substring(2));
-
-                i++;
-                descArgs.mFields.add(new Pair<DescribeArgs.Field, Integer>(DescribeArgs.Field.fromString(args[i]), preferredWidth));
-                
             } else if (args[i].startsWith("-ni")) {
+                if (descArgs.mAttr != null)
+                    throw ServiceException.INVALID_REQUEST("cannot specify -ni when -a is specified", null);
                 descArgs.mNonInheritedOnly = true;
                 
+            } else if (args[i].startsWith("-a")) {
+                if (descArgs.mAttrClass != null)
+                    throw ServiceException.INVALID_REQUEST("cannot specify -a when entry type is specified", null);
+                if (descArgs.mAttr != null)
+                    throw ServiceException.INVALID_REQUEST("attribute is already specified as " + descArgs.mAttr, null);
+                if (args.length <= i+1)
+                    throw ServiceException.INVALID_REQUEST("not enough number of args", null);
+                i++;
+                descArgs.mAttr = args[i];
+                
             } else {
+                if (descArgs.mAttr != null)
+                    throw ServiceException.INVALID_REQUEST("too many args", null);
+                
                 if (descArgs.mAttrClass != null)
                     throw ServiceException.INVALID_REQUEST("entry type is already specified as " + descArgs.mAttrClass, null);
                 AttributeClass ac = AttributeClass.fromString(args[i]);
@@ -2965,9 +2929,6 @@ public class ProvUtil implements DebugListener {
         
         if (descArgs.mNonInheritedOnly == true && descArgs.mAttrClass == null)
             throw ServiceException.INVALID_REQUEST("-ni must be specified with an entry type", null);
-        
-        if (descArgs.mFields == null)
-            descArgs.mFields = new ArrayList<Pair<DescribeArgs.Field, Integer>>();
         
         return descArgs;
     }
@@ -2991,10 +2952,13 @@ public class ProvUtil implements DebugListener {
         }
         
         SortedSet<String> attrs  = null;
-            
+        String specificAttr = null;    
+        
         AttributeManager am = AttributeManager.getInstance();
         
-        if (descArgs.mAttrClass != null) {
+        if (descArgs.mAttr != null) {
+            specificAttr = descArgs.mAttr;
+        } else if (descArgs.mAttrClass != null) {
             attrs = new TreeSet<String>(am.getAllAttrsInClass(descArgs.mAttrClass));
             if (descArgs.mNonInheritedOnly) {
                 Set<String> inheritFrom = null;
@@ -3022,53 +2986,35 @@ public class ProvUtil implements DebugListener {
             attrs = new TreeSet<String>(am.getAllAttrs());
         }
         
-        String PADDING = "  "; // padding between fields
-        int nameWidth = 40;
-        
-        // print heading
-        StringBuilder heading = new StringBuilder();
-        StringBuilder line = new StringBuilder();
-        
-        heading.append(formatString("attribute name", nameWidth) + PADDING);
-        line.append(formatLine(nameWidth) + PADDING);
-
-        for (Pair<DescribeArgs.Field, Integer> field : descArgs.mFields) {   
-            DescribeArgs.Field f = field.getFirst();
-            if (f == DescribeArgs.Field.desc)
-                continue; // will print on a separate line
-            else {
-                int width = f.mDefaultWidth;
-                if (field.getSecond() != null)
-                    width = field.getSecond().intValue();
-                heading.append(formatString(f.name(), width) + PADDING);
-                line.append(formatLine(width) + PADDING);
+        if (specificAttr != null) {
+            AttributeInfo ai = am.getAttributeInfo(specificAttr);
+            if (ai == null)
+                throw ServiceException.INVALID_REQUEST("no such attribute: " + specificAttr, null);
+            
+            System.out.println(ai.getName());
+            
+            // description
+            String desc = ai.getDescription();
+            System.out.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    "));
+            System.out.println();
+            
+            for (DescribeArgs.Field f : DescribeArgs.Field.values()) {
+                System.out.format("    %15s : %s\n", f.name(), DescribeArgs.Field.print(f, ai));
             }
-        }
-        
-        
-        System.out.println(heading);
-        System.out.println(line);
-        
-        for (String attr : attrs) {
-            AttributeInfo ai = am.getAttributeInfo(attr);
+            System.out.println();
             
-            StringBuilder sb = new StringBuilder();
-            sb.append(formatString(attr, nameWidth) + PADDING);
-            
-            for (Pair<DescribeArgs.Field, Integer> field : descArgs.mFields) { 
-                DescribeArgs.Field f = field.getFirst();
-                if (f == DescribeArgs.Field.desc)
-                    continue; // will print on a separate line
-                else
-                    sb.append(DescribeArgs.Field.print(f, field.getSecond(), ai) + PADDING);
+        } else {
+            String indent = "    ";
+            for (String attr : attrs) {
+                AttributeInfo ai = am.getAttributeInfo(attr);
+                System.out.println(attr);
+                
+                if (descArgs.mVerbose) {
+                    String desc = ai.getDescription();
+                    System.out.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    ")  + "\n");
+                }
             }
-            System.out.println(sb);
-            
-            // print desc if wanted
-            Pair<DescribeArgs.Field, Integer> field = descArgs.getField(DescribeArgs.Field.desc);
-            if (field != null)
-                System.out.println(DescribeArgs.Field.print(DescribeArgs.Field.desc, field.getSecond(), ai));
-        }
+        } 
     }
     
     private void doFlushCache(String[] args) throws ServiceException {
