@@ -146,7 +146,7 @@ public class CalendarMailSender {
         if (!hidePrivate) {
             MimeMessage mmInv = inv.getMimeMessage();
             if (mmInv != null)
-                attachInviteSummary(sb, mmInv, locale);
+                attachInviteSummary(sb, inv, mmInv, locale);
         }
 
         ZVCalendar iCal = inv.newToICalendar(true);
@@ -236,8 +236,9 @@ public class CalendarMailSender {
         }
 
         boolean allowPrivateAccess = calItem != null ? calItem.allowPrivateAccess(authAccount, asAdmin) : true;
-        if ((inv.isPublic() || allowPrivateAccess) && mmInv != null)
-            attachInviteSummary(replyText, mmInv, lc);
+        if (inv.isPublic() || allowPrivateAccess) {
+            attachInviteSummary(replyText, inv, mmInv, lc);
+        }
 
         List<Address> toList = new ArrayList<Address>(1);
         if (organizerAddress != null)
@@ -249,12 +250,12 @@ public class CalendarMailSender {
                 senderAddr, toList, replySubject, replyText.toString(), null, inv.getUid(), iCal);
     }
 
-    private static void attachInviteSummary(StringBuilder sb,
-                                            MimeMessage mmInv,
-                                            Locale lc)
+    private static void attachInviteSummary(StringBuilder sb, Invite inv, MimeMessage mmInv, Locale lc)
     throws ServiceException {
-        String notes = Invite.getDescription(mmInv, Mime.CT_TEXT_PLAIN);
-        if (notes != null) {
+        String notes = inv.getDescription();
+        if ((notes == null || notes.length() < 1) && mmInv != null)
+            notes = Invite.getDescription(mmInv, Mime.CT_TEXT_PLAIN);
+        if (notes != null && notes.length() > 0) {
             // Remove Outlook's special "*~*~*~*" delimiter from original
             // body. If we leave it in, Outlook will hide all text above
             // that line.
@@ -341,7 +342,7 @@ public class CalendarMailSender {
             if (mmInv == null && defaultInv != null)
                 mmInv = defaultInv.getMimeMessage();
             if (mmInv != null)
-                attachInviteSummary(sb, mmInv, locale);
+                attachInviteSummary(sb, inv, mmInv, locale);
         }
         
         Address from = AccountUtil.getFriendlyEmailAddress(fromAccount);
@@ -777,11 +778,10 @@ public class CalendarMailSender {
         }
     }
 
-    public static void sendResourceAutoReply(final OperationContext octxt, final Mailbox mbox,
-                                             final boolean saveToSent,
-                                             Verb verb, boolean partialAccept,
-                                             String additionalMsgBody, CalendarItem calItem,
-                                             Invite inv, Invite[] replies, MimeMessage mmInv)
+    public static MimeMessage createResourceAutoReply(OperationContext octxt, Mailbox mbox,
+                                                      Verb verb, boolean partialAccept,
+                                                      String additionalMsgBody, CalendarItem calItem,
+                                                      Invite inv, Invite[] replies, MimeMessage mmInv)
     throws ServiceException {
         boolean onBehalfOf = false;
         Account acct = mbox.getAccount();
@@ -810,8 +810,6 @@ public class CalendarMailSender {
             subject = inv.getName();
         String replySubject = getReplySubject(verb, subject, lc);
 
-        final String replyType = MailSender.MSGTYPE_REPLY;
-
         // Put all REPLY VEVENTs into a single VCALENDAR object.
         ZVCalendar iCal = null;
         for (Invite replyInv : replies) {
@@ -822,8 +820,18 @@ public class CalendarMailSender {
                 iCal.addComponent(cancelComp);
             }
         }
-        final MimeMessage mm = createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
-                                                  replySubject, verb, partialAccept, additionalMsgBody, iCal);
+        return createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
+                                  replySubject, verb, partialAccept, additionalMsgBody, iCal);
+    }
+
+    public static void sendResourceAutoReply(final OperationContext octxt, final Mailbox mbox,
+                                             final boolean saveToSent,
+                                             Verb verb, boolean partialAccept,
+                                             String additionalMsgBody, CalendarItem calItem,
+                                             Invite inv, Invite[] replies, MimeMessage mmInv)
+    throws ServiceException {
+        final MimeMessage mm = createResourceAutoReply(octxt, mbox, verb, partialAccept, additionalMsgBody, calItem, inv, replies, mmInv);
+        final String replyType = MailSender.MSGTYPE_REPLY;
         final int invId = inv.getMailItemId();
 
         // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.

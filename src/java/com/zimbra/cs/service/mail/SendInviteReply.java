@@ -308,9 +308,22 @@ public class SendInviteReply extends CalendarRequest {
                             mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
-                        csd.mMm = CalendarMailSender.createDefaultReply(
-                                acct, authAcct, isAdmin, onBehalfOf, calItem, oldInv, null, replySubject,
-                                verb, null, iCal);
+                        if (!(acct instanceof CalendarResource)) {
+                            csd.mMm = CalendarMailSender.createDefaultReply(
+                                    acct, authAcct, isAdmin, onBehalfOf, calItem, oldInv, null, replySubject,
+                                    verb, null, iCal);
+                        } else {
+                            // different template for calendar resources
+                            RecurId rid = oldInv.getRecurId();
+                            ParsedDateTime ridDt = rid != null ? rid.getDt() : null;
+                            Invite replyInv = CalendarMailSender.replyToInvite(
+                                    acct, authAcct, onBehalfOf, allowPrivateAccess, oldInv,
+                                    verb, replySubject, ridDt);
+                            MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
+                            csd.mMm = CalendarMailSender.createResourceAutoReply(
+                                    octxt, mbox, verb, false, null,
+                                    calItem, oldInv, new Invite[] { replyInv }, mmInv);
+                        }
                     }
     
                     int apptFolderId;
