@@ -52,6 +52,7 @@ public class Metadata {
     static final String FN_CALITEM_START   = "aps";
     static final String FN_ATTACHMENTS     = "att";
     static final String FN_COLOR           = "c";
+    static final String FN_CAL_INTENDED_FOR = "cif";
     static final String FN_COMPONENT       = "comp";
     static final String FN_CREATOR         = "cr";
     static final String FN_MIME_TYPE       = "ct";

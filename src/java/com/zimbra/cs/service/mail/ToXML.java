@@ -758,7 +758,7 @@ public class ToXML {
             if (!octxt.isDelegatedRequest(msg.getMailbox()))
                 addEmails(m, Mime.parseAddressHeader(mm, "Disposition-Notification-To"), EmailType.READ_RECEIPT);
 
-            String calIntendedFor = mm.getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+            String calIntendedFor = msg.getCalendarIntendedFor();
             m.addAttribute(MailConstants.A_CAL_INTENDED_FOR, calIntendedFor);
 
             String subject = mm.getSubject();

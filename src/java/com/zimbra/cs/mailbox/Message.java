@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.AccessManager;
@@ -140,6 +141,7 @@ public class Message extends MailItem {
 
     private DraftInfo mDraftInfo;
     private ArrayList<CalendarItemInfo> mCalendarItemInfos;
+    private String mCalendarIntendedFor;
 
 
     /**
@@ -282,6 +284,10 @@ public class Message extends MailItem {
             return null;
     }
 
+    public String getCalendarIntendedFor() {
+        return mCalendarIntendedFor;
+    }
+
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
      *  encapsulating the message content.  If possible, TNEF and uuencoded
      *  attachments are expanded and their components are presented as
@@ -409,7 +415,7 @@ public class Message extends MailItem {
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, pm, flags, dinfo, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, pm, flags, dinfo, null, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
 
@@ -445,9 +451,18 @@ public class Message extends MailItem {
 
         // Is this invite intended for me?  If not, we don't want to auto-apply it.
         boolean intendedForMe = true;
-        String intendedForHeader = pm.getZimbraCalendarIntendedFor();
-        if (intendedForHeader != null)
-            intendedForMe = AccountUtil.addressMatchesAccount(acct, intendedForHeader);
+        try {
+            String headerVal = pm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+            if (headerVal != null && headerVal.length() > 0) {
+                intendedForMe = AccountUtil.addressMatchesAccount(acct, headerVal);
+                if (!intendedForMe)
+                    mCalendarIntendedFor = headerVal;
+            }
+        } catch (MessagingException e) {
+            ZimbraLog.calendar.warn(
+                    "ignoring error while checking for " + CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR +
+                    " header on incoming message", e);
+        }
 
         // Whether to automatically add to calendar when invited to a new appointment.  This only applies
         // to new appointments.  Cancels or updates to existing appointments are always processed immediately.
@@ -693,8 +708,7 @@ public class Message extends MailItem {
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward calendar reply emails.  Only forward request emails.
         // Don't forward the message being added to Sent folder.
-        boolean isForwardEmail = pm.getZimbraCalendarIntendedFor() != null;
-        if (!isForwardEmail && isRequestingMethod && folderId != Mailbox.ID_FOLDER_SENT) {
+        if (intendedForMe && isRequestingMethod && folderId != Mailbox.ID_FOLDER_SENT) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();
@@ -859,7 +873,7 @@ public class Message extends MailItem {
             mData.size = size;
         }
 
-        String metadata = encodeMetadata(mColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos);
+        String metadata = encodeMetadata(mColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
 
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
@@ -913,6 +927,7 @@ public class Message extends MailItem {
                 mCalendarItemInfos.add(CalendarItemInfo.decodeMetadata(md, getMailbox()));
             }
         }
+        mCalendarIntendedFor = meta.get(Metadata.FN_CAL_INTENDED_FOR, null);
 
         Metadata draftMeta = meta.getMap(Metadata.FN_DRAFT, true);
         if (draftMeta != null)
@@ -929,20 +944,23 @@ public class Message extends MailItem {
 
     @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mVersion, mExtendedData, mSender, mRecipients, mFragment,
-                              mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
+                              mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
     }
 
     private static String encodeMetadata(byte color, int version, CustomMetadataList extended, ParsedMessage pm,
-                                         int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
+                                         int flags, DraftInfo dinfo,
+                                         List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
         return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
-                              pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
+                              pm.getNormalizedSubject(), pm.getSubject(), dinfo,
+                              calItemInfos, calIntendedFor).toString();
     }
 
 
     static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String sender, String recipients,
-                                   String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
+                                   String fragment, String subject, String rawSubject, DraftInfo dinfo,
+                                   List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject)) {
@@ -964,6 +982,7 @@ public class Message extends MailItem {
                 mdList.add(info.encodeMetadata());
             meta.put(Metadata.FN_CALITEM_IDS, mdList);
         }
+        meta.put(Metadata.FN_CAL_INTENDED_FOR, calIntendedFor);
 
         if (dinfo != null) {
             Metadata dmeta = new Metadata();

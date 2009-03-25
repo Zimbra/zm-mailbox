@@ -130,8 +130,7 @@ public class SendInviteReply extends CalendarRequest {
                 if (info == null)
                 	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
 
-                ParsedMessage pm = new ParsedMessage(msg.getMimeMessage(false), false);
-                String intendedFor = pm.getZimbraCalendarIntendedFor();
+                String intendedFor = msg.getCalendarIntendedFor();
                 Account intendedAcct = null;
                 if (intendedFor != null) {
                     try {
@@ -191,6 +190,7 @@ public class SendInviteReply extends CalendarRequest {
                                 folder = calItem.getFolderId();
                             else
                                 folder = inv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+                            ParsedMessage pm = new ParsedMessage(msg.getMimeMessage(false), false);
                             int[] ids = mbox.addInvite(octxt, inv, folder, pm);
                             if (ids != null && ids.length > 0)
                                 calItemId = ids[0];
