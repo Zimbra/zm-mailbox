@@ -580,15 +580,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param emailAddress
      * @param password
      * @param attrs
-     * @param addOnlyOCsInAttrs
-     *              if true: honors whatever objectClass's passed in attrs and does not
-     *                       add any other objectClass's(zimbra default or those specified 
-     *                       in zimbraAccountExtraObjectClass).
-     *              if false: equivalent to createAccount(String emailAddress, String password, Map<String, Object> attrs)        
+     * @param restoring 
      * @return
      * @throws ServiceException
      */
-    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean addOnlyOCsInAttrs) throws ServiceException {
+    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean restoring) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     

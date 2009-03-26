@@ -693,8 +693,8 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean addOnlyOCsInAttrs) throws ServiceException {
-        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, addOnlyOCsInAttrs);
+    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean restoring) throws ServiceException {
+        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, restoring);
     }
     
     private Account createAccount(String emailAddress,
@@ -702,7 +702,7 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   SpecialAttrs specialAttrs,
                                   String[] additionalObjectClasses,
-                                  boolean addOnlyOCsInAttrs) throws ServiceException {
+                                  boolean restoring) throws ServiceException {
         
         validEmailAddress(emailAddress);
         
@@ -750,24 +750,42 @@ public class LdapProvisioning extends Provisioning {
                     throw ServiceException.INVALID_REQUEST("invalid attribute for CreateAccount: "+a, null);
             }
             
-            if (!addOnlyOCsInAttrs) {
-                Set<String> ocs;
-                if (additionalObjectClasses == null) {
-                    // We are creating a pure account object, get all object classes for account
-                    ocs = LdapObjectClass.getAccountObjectClasses(this);
-                } else {
-                    // We are creating a "subclass" of account (e.g. calendar resource), get just the
-                    // zimbra default object classes for account, then add extra object classes needed 
-                    // by the subclass.  
-                    // It doesn't matter if the additionalObjectClasses already contains object classes 
-                    // added by the getAccountObjectClasses(this, true).  When additional object classes
-                    // are added to the set, duplicated once will only appear once.
-                    ocs = LdapObjectClass.getAccountObjectClasses(this, true);
-                    for (int i = 0; i < additionalObjectClasses.length; i++)
-                        ocs.add(additionalObjectClasses[i]);
-                }
-                Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
+            Set<String> ocs;
+            if (additionalObjectClasses == null) {
+                // We are creating a pure account object, get all object classes for account.
+                // 
+                // If restoring, only add zimbra default object classes, do not add extra 
+                // ones configured.  After createAccount, the restore code will issue a 
+                // modifyAttrs call and all object classes in the backed up account will be 
+                // in the attr map passed to modifyAttrs.
+                //
+                ocs = LdapObjectClass.getAccountObjectClasses(this, restoring);
+            } else {
+                // We are creating a "subclass" of account (e.g. calendar resource), get just the
+                // zimbra default object classes for account, then add extra object classes needed 
+                // by the subclass.  All object classes need by the subclass (calendar resource) 
+                // were figured out in the createCalendarResource method: including the zimbra
+                // default (zimbracalendarResource) and any extra ones configured via 
+                // globalconfig.zimbraCalendarResourceExtraObjectClass.
+                //
+                // It doesn't matter if the additionalObjectClasses already contains object classes 
+                // added by the getAccountObjectClasses(this, true).  When additional object classes
+                // are added to the set, duplicated once will only appear once.
+                //
+                // 
+                // The "restoring" flag is ignored in this path.
+                // When restoring a calendar a resource, the restoring code:
+                //     - always calls createAccount, not createCalendarResource
+                //     - always pass null for additionalObjectClasses
+                //     - like restoring an account, it will call modifyAttrs after the 
+                //       entry is created, any object classes in the backed up data
+                //       will be in the attr map passed to modifyAttrs.
+                ocs = LdapObjectClass.getAccountObjectClasses(this, true);
+                for (int i = 0; i < additionalObjectClasses.length; i++)
+                    ocs.add(additionalObjectClasses[i]);
             }
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
+
             
             String zimbraIdStr;
             if (uuid == null)
