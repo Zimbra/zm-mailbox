@@ -203,9 +203,11 @@ public class DbSearch {
             if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
                 str = "UPPER(" + str + ")";
         }
-        
-        if (Db.supports(Db.Capability.REQUEST_UTF8_UNICODE_COLLATION) && stringVal && includeCollation) 
-            str += " COLLATE utf8_unicode_ci";
+
+        // tim: back this out for now, but leave code stub here until I deal with it
+        // see bugs 22665, 36579
+        //if (Db.supports(Db.Capability.REQUEST_UTF8_UNICODE_COLLATION) && stringVal && includeCollation) 
+        //    str += " COLLATE utf8_unicode_ci";
 
         return str;
     }
@@ -261,8 +263,6 @@ public class DbSearch {
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(param++, mailboxId);
             param = setSearchVars(stmt, node, param, null, false);
-
-            // FIXME: include COLLATION for sender/subject sort
 
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
