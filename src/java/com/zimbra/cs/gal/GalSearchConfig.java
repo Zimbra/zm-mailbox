@@ -69,10 +69,13 @@ public class GalSearchConfig {
 	private static class DataSourceConfig extends GalSearchConfig {
 		public DataSourceConfig(DataSource ds) throws ServiceException {
 			mGalType = GalType.fromString(ds.getAttr(Provisioning.A_zimbraGalType));
-			if (mGalType == GalType.zimbra)
+			if (mGalType == GalType.zimbra) {
 				loadZimbraConfig(ds.getAccount(), GalOp.sync);
-			else {
-				loadConfig(ds.getAccount(), GalOp.search);
+				mFilter = DEFAULT_FILTER;
+			} else {
+				loadConfig(ds.getAccount(), GalOp.sync);
+				if (mUrl.length == 0 || mFilter == null)
+					loadConfig(ds.getAccount(), GalOp.search);
 				String[] url = ds.getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
 				if (url != null && url.length > 0)
 					mUrl = url;
@@ -91,6 +94,7 @@ public class GalSearchConfig {
 
 			mFilter = GalUtil.expandFilter(null, mFilter, "", null, false);
 		}
+		private static final String DEFAULT_FILTER = "(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 	}
 	
 	protected void loadZimbraConfig(Account account, GalOp op) throws ServiceException {

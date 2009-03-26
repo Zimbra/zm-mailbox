@@ -24,9 +24,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -52,7 +52,6 @@ public class AutoCompleteGal extends AccountDocumentHandler {
             n = n.substring(0, n.length() - 1);
 
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "account");
-        int max = (int) request.getAttributeLong(AccountConstants.A_LIMIT);
         Provisioning.GAL_SEARCH_TYPE type;
         if (typeStr.equals("all"))
             type = Provisioning.GAL_SEARCH_TYPE.ALL;
@@ -63,14 +62,15 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-        Element response = zsc.createElement(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
-        
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(account);
-        SearchGalResult result = prov.autoCompleteGal(d, n, type, max);
-        com.zimbra.cs.service.account.SearchGal.toXML(response, result);
-
-        return response;
+        GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setType(type);
+        params.setRequest(request);
+        params.setQuery(n);
+        params.setLimit(account.getContactAutoCompleteMaxResults());
+        params.setResponseName(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.autocomplete();
+        return params.getResultCallback().getResponse();
     }
 
     @Override
