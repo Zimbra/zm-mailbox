@@ -180,7 +180,7 @@ public class GalSearchParams {
 	}
 	
 	public void createSearchConfig(GalOp op, GalSearchConfig.GalType type) throws ServiceException {
-		mConfig = GalSearchConfig.create(mAccount, op, type);
+		mConfig = GalSearchConfig.create(mAccount, op, type, mType);
 	}
 	
 	public String generateLdapQuery() throws ServiceException {
