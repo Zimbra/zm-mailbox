@@ -28,7 +28,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -78,12 +77,7 @@ public class SearchGal extends AccountDocumentHandler {
         params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
         GalSearchControl gal = new GalSearchControl(params);
         gal.search();
-        Element response =  params.getResultCallback().getResponse();
-        if (response == null) {
-        	response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
-        	doLdapSearch(account, n, type, response);
-        }
-        return response;
+        return params.getResultCallback().getResponse();
     }
 
     @Override
@@ -91,13 +85,6 @@ public class SearchGal extends AccountDocumentHandler {
         return true;
     }
 
-    private void doLdapSearch(Account account, String n, Provisioning.GAL_SEARCH_TYPE type, Element response) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(account);
-        SearchGalResult result = prov.searchGal(d, n, type, null);
-        toXML(response, result);
-    }
-    
     public static void toXML(Element response, SearchGalResult result) throws ServiceException {
         response.addAttribute(AccountConstants.A_MORE, result.getHadMore());
         response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.getTokenizeKey());

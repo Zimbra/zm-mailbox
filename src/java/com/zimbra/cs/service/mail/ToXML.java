@@ -31,6 +31,7 @@ import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -53,7 +54,6 @@ import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Alarm;
-import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -2183,6 +2183,21 @@ public class ToXML {
                     Element recurElem = compElem.addElement(MailConstants.E_CAL_RECUR);
                     recurrence.toXml(recurElem);
                 }
+            }
+        }
+    }
+    public static void encodeGalContact(Element response, GalContact contact) {
+        Element cn = response.addElement(MailConstants.E_CONTACT);
+        cn.addAttribute(MailConstants.A_ID, contact.getId());
+        Map<String, Object> attrs = contact.getAttrs();
+        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof String[]) {
+                String sa[] = (String[]) value;
+                for (int i = 0; i < sa.length; i++)
+                    cn.addKeyValuePair(entry.getKey(), sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+            } else {
+                cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             }
         }
     }

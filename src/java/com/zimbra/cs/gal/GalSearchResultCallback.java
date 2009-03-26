@@ -17,24 +17,30 @@ package com.zimbra.cs.gal;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 
-public class GalSearchResultCallback {
+public class GalSearchResultCallback implements GalContact.Visitor {
     private Element mResponse;
 	private ItemIdFormatter mFormatter;
     
     public GalSearchResultCallback(GalSearchParams params) {
+    	reset(params);
+    }
+    
+    public void reset(GalSearchParams params) {
     	if (params.getSoapContext() != null) {
     		mResponse = params.getSoapContext().createElement(params.getResponseName());
         	mFormatter = new ItemIdFormatter(params.getSoapContext());
     	}
+    	params.setGalResult(SearchGalResult.newSearchGalResult(this));
     }
     
-    public void reset() {
-    	mResponse = null;
-    	mFormatter = null;
+    public void visit(GalContact c) throws ServiceException {
+    	handleContact(c);
     }
     
     public Element getResponse() {
@@ -43,6 +49,10 @@ public class GalSearchResultCallback {
     
     public void handleContact(Contact c) throws ServiceException {
 		ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    }
+    
+    public void handleContact(GalContact c) throws ServiceException {
+		ToXML.encodeGalContact(mResponse, c);
     }
     
     public void handleElement(Element e) throws ServiceException {

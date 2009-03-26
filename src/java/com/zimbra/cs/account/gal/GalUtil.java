@@ -33,12 +33,15 @@ public class GalUtil {
         vars.put("s", key);
         query = LdapProvisioning.expandStr(filterTemplate, vars);
         */
-        
+        if (key != null) {
+            while (key.startsWith("*")) key = key.substring(1);
+            while (key.endsWith("*")) key = key.substring(0,key.length()-1);
+        }
         query = expandKey(tokenize, filterTemplate, key);
 
         if (query.indexOf("**") > 0)
         	query = query.replaceAll("\\*\\*", "*");
-        if (token != null) {
+        if (token != null && token.length() > 0) {
         	String arg = LdapUtil.escapeSearchFilterArg(token);
         	query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
         }

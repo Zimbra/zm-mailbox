@@ -132,11 +132,10 @@ public class GalImport extends MailItemImport {
 	private void searchGal(String syncToken, SearchGalResult result) throws ServiceException, NamingException, IOException {
 		ZimbraLog.gal.debug("searchGal: "+syncToken);
 		DataSource ds = getDataSource();
-		GalSearchParams params = new GalSearchParams(ds.getAccount());
+		GalSearchParams params = new GalSearchParams(ds);
 		params.setGalResult(result);
 		params.setToken(syncToken);
 		params.setQuery("*");
-		params.createSearchConfig(ds);
         for (String attr : ZIMBRA_ATTRS)
         	params.getConfig().getRules().add(attr+"="+attr);
         LdapUtil.galSearch(params);

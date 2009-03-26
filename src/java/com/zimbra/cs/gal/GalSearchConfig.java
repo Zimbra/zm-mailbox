@@ -41,11 +41,14 @@ public class GalSearchConfig {
 	    }
 	}
     
-	public static GalSearchConfig create(Account account, GalOp op, boolean external) throws ServiceException {
-		if (external)
-			return new LdapConfig(account, op);
-		else
+	public static GalSearchConfig create(Account account, GalOp op, GalType type) throws ServiceException {
+		switch (type) {
+		case zimbra:
 			return new ZimbraConfig(account, op);
+		case ldap:
+			return new LdapConfig(account, op);
+		}
+		return null;
 	}
 	
 	public static GalSearchConfig create(DataSource ds) throws ServiceException {
@@ -106,13 +109,14 @@ public class GalSearchConfig {
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
 			break;
 		case autocomplete:
-			mFilter = LdapProvisioning.getFilterDef("zimbraAccountAutocomplete");
+			mFilter = LdapProvisioning.getFilterDef("zimbraAccountAutoComplete");
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
 			break;
 		}
 		mAuthMech = Provisioning.LDAP_AM_SIMPLE;
 		mFilter = "(&("+mFilter+")(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 		mSearchBase = LdapUtil.getZimbraSearchBase(domain, op);
+		mGalType = GalType.zimbra;
 	}
 	
 	protected void loadConfig(Account account, GalOp op) throws ServiceException {
@@ -132,7 +136,7 @@ public class GalSearchConfig {
             mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
             mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase, "");
             mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled, false);
-            mAuthMech = domain.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech);
+            mAuthMech = domain.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech, Provisioning.LDAP_AM_SIMPLE);
             mBindDn = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn);
             mBindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
@@ -143,7 +147,7 @@ public class GalSearchConfig {
             mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
             mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase);
             mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
-            mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
+            mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_SIMPLE);
             mBindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
             mBindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
@@ -155,7 +159,7 @@ public class GalSearchConfig {
             mFilter = domain.getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter);
             mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase);
             mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
-            mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
+            mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_SIMPLE);
             mBindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
             mBindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
@@ -165,6 +169,7 @@ public class GalSearchConfig {
         }
         if (mFilter != null && mFilter.indexOf("(") == -1)
         	mFilter = LdapProvisioning.getFilterDef(mFilter);
+		mGalType = GalType.ldap;
 	}
 	
 	protected GalOp mOp;

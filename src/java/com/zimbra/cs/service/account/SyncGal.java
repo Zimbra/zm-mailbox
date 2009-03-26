@@ -24,12 +24,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -59,32 +56,11 @@ public class SyncGal extends AccountDocumentHandler {
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
         GalSearchControl gal = new GalSearchControl(params);
         gal.sync();
-        Element response = params.getResultCallback().getResponse();
-        if (response == null) {
-        	response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
-        	doLdapSearch(account, tokenAttr, response);
-        }
-        return response;
+        return params.getResultCallback().getResponse();
     }
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
-    }
-
-    private void doLdapSearch(Account account, String tokenAttr, Element response) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(account);
-        
-        SearchGal.GalContactVisitor visitor = null;
-        if (!DebugConfig.disableGalSyncVisitor)
-            visitor = new SearchGal.GalContactVisitor(response);
-
-        SearchGalResult result = prov.searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr, visitor);
-        
-        if (result.getToken() != null)
-            response.addAttribute(MailConstants.A_TOKEN, result.getToken());
-        
-        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
     }
 }

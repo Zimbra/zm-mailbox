@@ -32,8 +32,6 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -234,7 +232,6 @@ public class ContactAutoComplete {
 		params.setQuery(str);
 		params.setType(GAL_SEARCH_TYPE.USER_ACCOUNT);
 		params.setLimit(limit - result.entries.size());
-		params.createSearchConfig(GalOp.autocomplete);
 		params.setResultCallback(new AutoCompleteCallback(str, result, params));
 		try {
 	        GalSearchControl gal = new GalSearchControl(params);
@@ -249,37 +246,6 @@ public class ContactAutoComplete {
         	result.canBeCached = false;
     		ZimbraLog.gal.debug("result can't be cached by client");
         }
-		for (GalContact contact : sgr.getMatches()) {
-			String id = contact.getId();
-			ZimbraLog.gal.debug("gal entry: "+id);
-        	ContactEntry entry = new ContactEntry();
-	        Map<String, Object> attrs = contact.getAttrs();
-        	for (String emailKey : mEmailKeys) {
-    			Object email = attrs.get(emailKey);
-    			if (email == null)
-    				continue;
-    			if (email instanceof String && ((String)email).toLowerCase().startsWith(str))
-            		entry.mEmail = (String)email;
-    			else if (email instanceof String[])
-    				for (String e : ((String[])email))
-    	    			if (e.toLowerCase().startsWith(str)) {
-    	            		entry.mEmail = e;
-    	            		break;
-    	    			}
-
-    			if (entry.mEmail != null)
-    				break;
-        	}
-			if (entry.mEmail == null) {
-        		ZimbraLog.gal.debug("gal entry has empty email address");
-        		continue;
-			}
-			
-			entry.setName((String)attrs.get(Contact.A_fullName));
-        	entry.mFolderId = FOLDER_ID_GAL;
-        	result.addEntry(entry);
-			ZimbraLog.gal.debug("adding "+entry.getEmail());
-		}
 	}
 	
 	private class AutoCompleteCallback extends GalSearchResultCallback {
@@ -291,15 +257,13 @@ public class ContactAutoComplete {
 	    	this.result = result;
 	    	this.str = str;
 	    }
-	    public void handleContact(Contact c) throws ServiceException {
-			String id = ""+c.getId();
-			ZimbraLog.gal.debug("gal entry: "+id);
-	        Map<String,String> attrs = c.getFields();
+	    public void handleContactAttrs(Map<String,? extends Object> attrs) throws ServiceException {
 	        String matchedEmail = null;
         	for (String emailKey : mEmailKeys) {
-    			String email = attrs.get(emailKey);
-    			if (email == null)
+        		Object val = attrs.get(emailKey);
+    			if (val == null || !(val instanceof String))
     				continue;
+        		String email = (String)val;
     			if (email.toLowerCase().startsWith(str))
             		matchedEmail = email;
 
@@ -317,6 +281,14 @@ public class ContactAutoComplete {
         	entry.mFolderId = FOLDER_ID_GAL;
         	result.addEntry(entry);
 			ZimbraLog.gal.debug("adding "+entry.getEmail());
+	    }
+	    public void handleContact(Contact c) throws ServiceException {
+			ZimbraLog.gal.debug("gal entry: "+""+c.getId());
+	        handleContactAttrs(c.getFields());
+	    }
+	    public void visit(GalContact c) throws ServiceException {
+			ZimbraLog.gal.debug("gal entry: "+""+c.getId());
+	        handleContactAttrs(c.getAttrs());
 	    }
 	    public void handleElement(Element e) throws ServiceException {
 	    }

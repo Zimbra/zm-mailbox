@@ -32,6 +32,9 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.gal.GalSearchConfig.GalType;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ResultsPager;
@@ -59,7 +62,8 @@ public class GalSearchControl {
 			accountSearch();
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
-			mParams.getResultCallback().reset();
+			mParams.getResultCallback().reset(mParams);
+			ldapSearch(GalOp.autocomplete);
 		}
 	}
 	
@@ -78,7 +82,8 @@ public class GalSearchControl {
 			accountSearch();
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
-			mParams.getResultCallback().reset();
+			mParams.getResultCallback().reset(mParams);
+			ldapSearch(GalOp.search);
 		}
 	}
 	
@@ -87,7 +92,8 @@ public class GalSearchControl {
 			accountSync();
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
-			mParams.getResultCallback().reset();
+			mParams.getResultCallback().reset(mParams);
+			ldapSearch(GalOp.sync);
 		}
 	}
 	
@@ -109,11 +115,13 @@ public class GalSearchControl {
         GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
         boolean first = true;
 		for (DataSource ds : galAcct.getAllDataSources()) {
+			if (ds.getType() != DataSource.Type.gal)
+				continue;
 			// check if there was any successful import from gal
 			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
 	        	throw new GalAccountNotConfiguredException();
-			if (ds.getType() != DataSource.Type.gal)
-				continue;
+			if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
+	        	throw new GalAccountNotConfiguredException();
 			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
 			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
 				continue;
@@ -142,11 +150,13 @@ public class GalSearchControl {
         HashSet<Integer> folderIds = new HashSet<Integer>();
         GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
 		for (DataSource ds : galAcct.getAllDataSources()) {
+			if (ds.getType() != DataSource.Type.gal)
+				continue;
 			// check if there was any successful import from gal
 			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
 	        	throw new GalAccountNotConfiguredException();
-			if (ds.getType() != DataSource.Type.gal)
-				continue;
+			if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
+	        	throw new GalAccountNotConfiguredException();
 			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
 			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
 				continue;
@@ -285,6 +295,37 @@ public class GalSearchControl {
 			return false;
 		}
 		return true;
+    }
+    
+    private void ldapSearch(GalOp op) throws ServiceException {
+        GalMode galMode = Provisioning.getInstance().getDomain(mParams.getAccount()).getGalMode();
+        int limit = mParams.getLimit();
+        if (galMode == GalMode.both) {
+        	// make two gal searches for 1/2 results each
+        	mParams.setLimit(limit / 2);
+        }
+        GalType type = GalType.ldap;
+        if (galMode != GalMode.ldap) {
+        	// do zimbra gal search
+        	type = GalType.zimbra;
+        }
+    	mParams.createSearchConfig(op, type);
+    	try {
+        	LdapUtil.galSearch(mParams);
+    	} catch (Exception e) {
+    		throw ServiceException.FAILURE("ldap search failed", e);
+    	}
+    	
+    	if (galMode != GalMode.both)
+    		return;
+
+    	// do the second query
+    	mParams.createSearchConfig(op, GalType.ldap);
+    	try {
+        	LdapUtil.galSearch(mParams);
+    	} catch (Exception e) {
+    		throw ServiceException.FAILURE("ldap search failed", e);
+    	}
     }
     
 	private static class GalAccountNotConfiguredException extends Exception {
