@@ -57,6 +57,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
@@ -1272,54 +1273,75 @@ public class ParsedMessage {
         "tentative:", "cancelled:", "new time proposed:",
         "read-receipt:", "share created:", "share accepted:"
     ));
-    private static final String FWD_TRAILER = "(fwd)";
 
     private static final int MAX_PREFIX_LENGTH = 3;
 
-    private static String trimPrefixes(String subject) {
+    private static Pair<String, Boolean> trimPrefixes(String subject) {
+        if (subject == null || subject.length() == 0)
+            return new Pair<String, Boolean>("", false);
+
+        boolean trimmed = false;
         while (true) {
-            int length = subject.length();
+            subject = subject.trim();
+            if (subject.length() == 0)
+                return new Pair<String, Boolean>(subject, trimmed);
+
             // first, strip off any "(fwd)" at the end
-            while (subject.endsWith(FWD_TRAILER)) {
-                subject = subject.substring(0, length - FWD_TRAILER.length()).trim();
-                length = subject.length();
+            int tstart = subject.length() - 5;
+            char c;
+            if (tstart >= 0 && subject.charAt(tstart) == '(' &&
+                    ((c = subject.charAt(tstart + 1)) == 'f' || c == 'F') &&
+                    ((c = subject.charAt(tstart + 2)) == 'w' || c == 'W') &&
+                    ((c = subject.charAt(tstart + 3)) == 'd' || c == 'D') &&
+                    subject.charAt(tstart + 4) == ')') {
+                subject = subject.substring(0, subject.length() - 5).trim();
+                trimmed = true;
+                continue;
             }
-            if (length == 0)
-                return subject;
 
             // find the first ':' in the subject
             boolean braced = subject.charAt(0) == '[';
             int colon = subject.indexOf(':');
-            if (colon <= (braced ? 1 : 0))
-                return subject;
-
-            // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
-            String prefix = subject.substring(braced ? 1 : 0, colon + 1);
-            boolean matched = true;
-            if (SYSTEM_PREFIXES.contains(prefix.toLowerCase())) {
-                matched = true;
-            } else {
-                // make sure to catch "re(2):" and "fwd[5]:" as well...
-                int paren = -1;
-                for (int i = 0; matched && i < prefix.length() - 1; i++) {
-                    char c = prefix.charAt(i);
-                    if ((c == '(' || c == '[') && i > 0 && paren == -1)
-                        paren = i;
-                    else if ((c == ')' || c == ']') && paren != -1)
-                        matched &= i > paren + 1 && i == prefix.length() - 2;
-                    else if (!Character.isLetter(c))
-                        matched &= c >= '0' && c <= '9' && paren != -1;
-                    else if (i >= MAX_PREFIX_LENGTH || paren != -1)
-                        matched = false;
+            if (colon > (braced ? 1 : 0)) {
+                // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
+                String prefix = subject.substring(braced ? 1 : 0, colon + 1);
+                boolean matched = true;
+                if (!SYSTEM_PREFIXES.contains(prefix.toLowerCase())) {
+                    // make sure to catch "re(2):" and "fwd[5]:" as well...
+                    int paren = -1;
+                    for (int i = 0; matched && i < prefix.length() - 1; i++) {
+                        c = prefix.charAt(i);
+                        if ((c == '(' || c == '[') && i > 0 && paren == -1)
+                            paren = i;
+                        else if ((c == ')' || c == ']') && paren != -1)
+                            matched &= i > paren + 1 && i == prefix.length() - 2;
+                        else if (!Character.isLetter(c))
+                            matched &= c >= '0' && c <= '9' && paren != -1;
+                        else if (i >= MAX_PREFIX_LENGTH || paren != -1)
+                            matched = false;
+                    }
+                }
+                if (matched) {
+                    if (braced && subject.endsWith("]"))
+                        subject = subject.substring(colon + 1, subject.length() - 1);
+                    else
+                        subject = subject.substring(colon + 1);
+                    trimmed = true;
+                    continue;
                 }
             }
-            if (!matched)
-                return subject;
 
-            if (braced && subject.endsWith("]"))
-                subject = subject.substring(colon + 1, length - 1).trim();
-            else
-                subject = subject.substring(colon + 1).trim();
+            // trim mailing list prefixes (e.g. "[rev-dandom]")
+            int bclose;
+            if (braced && (bclose = subject.indexOf(']')) > 0 && subject.lastIndexOf('[', bclose) == 0) {
+                String remainder = subject.substring(bclose + 1).trim();
+                if (remainder.length() > 0) {
+                    subject = remainder;
+                    continue;
+                }
+            }
+
+            return new Pair<String, Boolean>(subject, trimmed);
         }
     }
 
@@ -1350,42 +1372,64 @@ public class ParsedMessage {
         if (mSubject == null) {
             mNormalizedSubject = mSubject = "";
         } else {
-            String originalSubject = mNormalizedSubject = StringUtil.stripControlCharacters(mNormalizedSubject).trim();
-            mNormalizedSubject = trimPrefixes(mNormalizedSubject);
-            if (mNormalizedSubject != originalSubject)
-                mSubjectPrefixed = true;
-
-            // handle mailing list prefixes like "[xmlbeans-dev] Re: foo"
-            if (mNormalizedSubject.startsWith("[")) {
-                int endBracket = mNormalizedSubject.indexOf(']');
-                if (endBracket != -1 && mNormalizedSubject.length() > endBracket + 1) {
-                    String realSubject = originalSubject = mNormalizedSubject.substring(endBracket + 1).trim();
-                    realSubject = trimPrefixes(realSubject);
-                    if (realSubject != originalSubject)
-                        mSubjectPrefixed = true;
-                    mNormalizedSubject = mNormalizedSubject.substring(0, endBracket + 1) + ' ' + realSubject;
-                }
-            }
-
-            mNormalizedSubject = compressWhitespace(mNormalizedSubject);
+            Pair<String, Boolean> normalized = trimPrefixes(StringUtil.stripControlCharacters(mSubject));
+            mNormalizedSubject = compressWhitespace(normalized.getFirst());
+            mSubjectPrefixed = normalized.getSecond();
             if (mNormalizedSubject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
                 mNormalizedSubject = mNormalizedSubject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
         }
     }
 
     public static String normalize(String subject) {
-        if (subject != null) {
-            subject = trimPrefixes(StringUtil.stripControlCharacters(subject).trim());
-            if (subject.startsWith("[")) {
-                int endBracket = subject.indexOf(']');
-                if (endBracket != -1 && subject.length() > endBracket + 1)
-                    subject = subject.substring(0, endBracket + 1) + ' ' + trimPrefixes(subject.substring(endBracket + 1).trim());
-            }
-        }
-        subject = compressWhitespace(subject);
+        subject = compressWhitespace(trimPrefixes(StringUtil.stripControlCharacters(subject)).getFirst());
         if (subject != null && subject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
             subject = subject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
-
         return subject;
+    }
+
+
+    private static void testNormalization(String[] test) {
+        String raw = test[0], normalized = test[1], description = test[3];
+        boolean trimmed = Boolean.parseBoolean(test[2]);
+
+        Pair<String, Boolean> result = trimPrefixes(StringUtil.stripControlCharacters(raw));
+        String actual = compressWhitespace(result.getFirst());
+        if (!normalized.equals(actual) || trimmed != result.getSecond()) {
+            System.out.println("failed test: " + description);
+            System.out.println("  raw:      {" + raw + '}');
+            System.out.println("  expected: |" + normalized + "| (" + (trimmed ? "" : "un") + "trimmed)");
+            System.out.println("  actual:   |" + actual + "| (" + (result.getSecond() ? "" : "un") + "trimmed)");
+        }
+
+        if (!normalized.equals(normalize(raw)))
+            System.out.println("error in normalize() for {" + raw + '}');
+    }
+
+    public static void main(String[] args) {
+        String[][] tests = new String[][] {
+            { "foo", "foo", "false", "normal subject" },
+            { " foo", "foo", "false", "leading whitespace" },
+            { "foo\t", "foo", "false", "trailing whitespace" },
+            { "  foo\t", "foo", "false", "leading and trailing whitespace" },
+            { "foo  bar", "foo bar", "false", "compressing whitespace" },
+            { null, "", "false", "missing subject" },
+            { "", "", "false", "blank subject" },
+            { "  \t ", "", "false", "nothing but whitespace" },
+            { "[bar] foo", "foo", "false", "mlist prefix" },
+            { "[foo]", "[foo]", "false", "only a mlist prefix" },
+            { "[bar[] foo", "[bar[] foo", "false", "broken mlist prefix" },
+            { "[bar][baz][foo]", "[foo]", "false", "keep only the last mlist prefix" },
+            { "re: foo", "foo", "true", "re: prefix" },
+            { "re:foo", "foo", "true", "no space after re: prefix" },
+            { "  re: foo", "foo", "true", "re: prefix with leading whitespace" },
+            { "re: [fwd: [fwd: re: [fwd: babylon]]]", "babylon", "true", "re and [fwd" },
+            { "Ad: Re: Ad: Re: Ad: x", "x", "true", "alternative prefixes" },
+            { "[foo] Fwd: [bar] Re: fw: b (fWd)  (fwd)", "b", "true", "mlist prefixes, std prefixes, mixed-case fwd trailers" },
+            { "[foo] Fwd: [bar] Re: d fw: b (fWd)  (fwd)", "d fw: b", "true", "character mixed in with prefixes, mixed-case fwd trailers" },
+            { "Fwd: [Imap-protocol] Re: so long, and thanks for all the fish!", "so long, and thanks for all the fish!", "true", "intermixed prefixes" },
+        };
+
+        for (String[] test : tests)
+            testNormalization(test);
     }
 }
