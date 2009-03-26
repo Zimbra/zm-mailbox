@@ -30,7 +30,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
@@ -137,7 +136,7 @@ public class GalImport extends MailItemImport {
 		params.setGalResult(result);
 		params.setToken(syncToken);
 		params.setQuery("*");
-		params.createSearchConfig(ds, GalOp.sync);
+		params.createSearchConfig(ds);
         for (String attr : ZIMBRA_ATTRS)
         	params.getConfig().getRules().add(attr+"="+attr);
         LdapUtil.galSearch(params);
@@ -186,30 +185,5 @@ public class GalImport extends MailItemImport {
 	    	}
 	    	mappings.remove(id);
 		}
-	}
-	
-	public String getUrl() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapURL);
-	}
-	public String getFilter() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapFilter);
-	}
-	public String getSearchBase() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapSearchBase);
-	}
-	public String getAuthType() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapAuthMech);
-	}
-	public String getBindDN() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapBindDn);
-	}
-	public String getPassword() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapBindPassword);
-	}
-	public String getKerberos5Principal() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
-	}
-	public String getKerberos5Keytab() {
-		return getDataSource().getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
 	}
 }

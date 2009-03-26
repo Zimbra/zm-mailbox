@@ -52,7 +52,9 @@ public class GalSearchControl {
 	}
 	
 	public void autocomplete() throws ServiceException {
-		mParams.setQuery(mParams.getQuery()+"*");
+		String query = mParams.getQuery();
+		if (!query.endsWith("*"))
+			mParams.setQuery(query+"*");
 		try {
 			accountSearch();
 		} catch (GalAccountNotConfiguredException e) {
@@ -62,6 +64,16 @@ public class GalSearchControl {
 	}
 	
 	public void search() throws ServiceException {
+		String query = mParams.getQuery();
+		if (query == null)
+			query = "*";
+		else {
+			if (!query.endsWith("*"))
+				query = query+"*";
+			if (!query.startsWith("*"))
+				query = "*"+query;
+		}
+		mParams.setQuery(query);
 		try {
 			accountSearch();
 		} catch (GalAccountNotConfiguredException e) {
@@ -91,12 +103,11 @@ public class GalSearchControl {
 	private void generateSearchQuery(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
 		String query = mParams.getQuery();
 		Provisioning.GAL_SEARCH_TYPE type = mParams.getType();
-		String searchQuery = null;
-        if (query == null)
-        	searchQuery = "";
-        else
-        	searchQuery = "(#email:"+query+" OR #fileasstr:"+query+" OR #fullname:"+query+")";
+		StringBuilder searchQuery = new StringBuilder();
+        if (query != null)
+        	searchQuery.append("(#email:").append(query).append(" OR #fileasstr:").append(query).append(" OR #fullname:").append(query).append(") AND");
         GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
+        boolean first = true;
 		for (DataSource ds : galAcct.getAllDataSources()) {
 			// check if there was any successful import from gal
 			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
@@ -108,19 +119,23 @@ public class GalSearchControl {
 				continue;
 			if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
 				continue;
-			searchQuery = searchQuery + " inid:" + ds.getFolderId();
+			if (first) searchQuery.append("("); else searchQuery.append(" OR");
+			first = false;
+			searchQuery.append(" inid:").append(ds.getFolderId());
 		}
+		searchQuery.append(")");
 		switch (type) {
 		case CALENDAR_RESOURCE:
-			searchQuery = "("+searchQuery+") AND #zimbraAccountCalendarUserType:RESOURCE";
+			searchQuery.append(" AND #zimbraAccountCalendarUserType:RESOURCE");
 			break;
 		case USER_ACCOUNT:
-			searchQuery = "("+searchQuery+") AND !(#zimbraAccountCalendarUserType:RESOURCE)";
+			searchQuery.append(" AND !(#zimbraAccountCalendarUserType:RESOURCE)");
 			break;
 		case ALL:
 			break;
 		}
-        mParams.parseSearchParams(mParams.getRequest(), searchQuery);
+		ZimbraLog.gal.debug("query: "+searchQuery.toString());
+        mParams.parseSearchParams(mParams.getRequest(), searchQuery.toString());
 	}
 	
 	private HashSet<Integer> getDataSourceFolderIds(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {

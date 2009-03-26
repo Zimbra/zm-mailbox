@@ -20,8 +20,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.index.SearchParams;
@@ -173,11 +175,14 @@ public class GalSearchParams {
 	}
 	
 	public void createSearchConfig(GalOp op) throws ServiceException {
-		mConfig = GalSearchConfig.create(mAccount, op);
+		Provisioning prov = Provisioning.getInstance();
+		Domain domain = prov.getDomain(mAccount);
+        GalMode galMode = domain.getGalMode();
+		mConfig = GalSearchConfig.create(mAccount, op, galMode != GalMode.ldap);
 	}
 	
-	public void createSearchConfig(DataSource ds, GalOp op) throws ServiceException {
-		mConfig = GalSearchConfig.create(ds, op);
+	public void createSearchConfig(DataSource ds) throws ServiceException {
+		mConfig = GalSearchConfig.create(ds);
 	}
 	
 	public String generateLdapQuery() throws ServiceException {

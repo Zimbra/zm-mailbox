@@ -54,7 +54,7 @@ public class GalSyncAccountUtil {
 	
 	private static void usage() {
 		System.out.println("zmgsautil: {command}");
-		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|gal [-f {folder-name}] [-p {polling-interval}]");
+		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
 		System.out.println("\tdeleteAccount [-a {account-name} | -i {account-id}]");
 		System.out.println("\ttrickleSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
 		System.out.println("\tfullSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
@@ -144,7 +144,7 @@ public class GalSyncAccountUtil {
     		req.addAttribute(AdminConstants.A_DOMAIN, domain);
     		req.addAttribute(AdminConstants.A_TYPE, type);
     		if (folder != null)
-        		req.addAttribute(AdminConstants.E_FOLDER, domain);
+        		req.addAttribute(AdminConstants.E_FOLDER, folder);
     		Element acct = req.addElement(AdminConstants.E_ACCOUNT);
     		acct.addAttribute(AdminConstants.A_BY, AccountBy.name.name());
     		acct.setText(accountName);
@@ -260,7 +260,7 @@ public class GalSyncAccountUtil {
 			String type = cl.getOptionValue('t');
 			String folderName = cl.getOptionValue('f');
 			String pollingInterval = cl.getOptionValue('p');
-			if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("gal") != 0)
+			if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
 				usage();
 			for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
 				System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));

@@ -25,12 +25,10 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.gal.GalNamedFilter;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -61,7 +59,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
 	    String name = request.getAttribute(AdminConstants.E_NAME);
 	    String domainStr = request.getAttribute(AdminConstants.E_DOMAIN);
-	    String type = request.getAttribute(AdminConstants.A_TYPE);
+	    String typeStr = request.getAttribute(AdminConstants.A_TYPE);
 	    
 	    Element acctElem = request.getElement(AdminConstants.E_ACCOUNT);
 	    String acctKey = acctElem.getAttribute(AdminConstants.A_BY);
@@ -70,6 +68,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
 	    String folder = request.getAttribute(AdminConstants.E_FOLDER, null);
 
+	    GalMode type = GalMode.fromString(typeStr);
 	    Domain domain = prov.getDomainByName(domainStr);
 	    Account account = null;
 	    try {
@@ -83,7 +82,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    	if (AccountBy.fromString(acctKey) != AccountBy.name)
 	    		throw AccountServiceException.NO_SUCH_ACCOUNT(acctValue);
 	    	// there should be one zimbra gal sync account per domain
-	    	if (type.compareTo("zimbra") == 0) {
+	    	if (type == GalMode.zimbra) {
 	    		for (String acctId : domain.getGalAccountId()) {
 		    		Account acct = prov.getAccountById(acctId);
 		    		if (acct != null) {
@@ -137,9 +136,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    // create datasource
 	    Map<String,Object> attrs = AdminService.getAttrs(request, true);
 	    try {
-    		attrs.put(Provisioning.A_zimbraGalType, type);
-	    	if (type.compareTo("zimbra") == 0)
-	    		getDefaultZimbraGalParams(attrs);
+    		attrs.put(Provisioning.A_zimbraGalType, type.name());
 	    	attrs.put(Provisioning.A_zimbraDataSourceFolderId, "" + folderId);
 	    	if (!attrs.containsKey(Provisioning.A_zimbraDataSourceEnabled))
 	    		attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_TRUE);
@@ -160,17 +157,6 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	}
 	
 	private static final Set<String> emptySet = Collections.emptySet();
-    
-    private void getDefaultZimbraGalParams(Map<String,Object> attrs) throws ServiceException {
-    	if (attrs.get(Provisioning.A_zimbraGalLdapFilter) == null) {
-    		// XXX we don't have a default filter that matches both account and resources today.
-    		String filter = "(&(!(zimbraHideInGal=TRUE))(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))))";
-    			//LdapProvisioning.getFilterDef(GalNamedFilter.getZimbraAcountFilter(GalOp.sync));
-    			//filter = "(&(!(zimbraHideInGal=TRUE))" + filter + ")";
-    			//filter.replaceAll("%s\\*", "");
-    		attrs.put(Provisioning.A_zimbraGalLdapFilter, filter);
-    	}
-    }
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
