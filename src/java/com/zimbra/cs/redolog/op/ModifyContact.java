@@ -26,7 +26,6 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.ParsedContact;
@@ -138,6 +137,15 @@ public class ModifyContact extends RedoableOp {
             int length = in.readInt();
             if (length > 0) {
                 mRedoLogContent = new RedoableOpData(new File(in.getPath()), in.getFilePointer(), length);
+
+                // Now that we have a stream to the data, skip to the next op.
+                long pos = in.getFilePointer();
+                int numSkipped = in.skipBytes(length);
+                if (numSkipped != length) {
+                    String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
+                            length, pos, in.getPath(), numSkipped);
+                    throw new IOException(msg);
+                }
             }
         }
     }
