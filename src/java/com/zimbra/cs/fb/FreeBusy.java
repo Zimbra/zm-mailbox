@@ -215,6 +215,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
                 assert(cur.getNext().mStart == cur.mEnd);
                 if (cur.mStatus.equals(cur.getNext().mStatus)) {
                     cur.mEnd = cur.getNext().mEnd;
+                    cur.mInstances.addAll(cur.getNext().mInstances);
                     cur.removeNext();
                 } else {
                     cur = cur.getNext();                    
@@ -340,20 +341,6 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             val = chooseBusier(val, interval.getStatus());
         }
         return val;
-    }
-
-    /**
-     * Returns all invites (and therefore appointments) that caused non-free
-     * times.
-     * @return
-     */
-    public LinkedHashSet<FBInstance> getAllInstances() {
-        LinkedHashSet<FBInstance> instances = new LinkedHashSet<FBInstance>();
-        for (Iterator<Interval> iter = iterator(); iter.hasNext(); ) {
-            Interval interval = iter.next();
-            instances.addAll(interval.getInstances());
-        }
-        return instances;
     }
 
 
@@ -487,18 +474,21 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         private long mEndTime;
         private int mApptId;
         private long mRecurIdDt;
+        private String mFreeBusy;
 
-        public FBInstance(long start, long end, int apptId, long recurIdDt) {
+        public FBInstance(String fb, long start, long end, int apptId, long recurIdDt) {
+            mFreeBusy = fb;
             mStartTime = start;
             mEndTime = end;
             mApptId = apptId;
             mRecurIdDt = recurIdDt;
         }
 
-        public long getStartTime() { return mStartTime; }
-        public long getEndTime()   { return mEndTime; }
-        public int getApptId()     { return mApptId; }
-        public long getRecurIdDt() { return mRecurIdDt; }
+        public long getStartTime()  { return mStartTime; }
+        public long getEndTime()    { return mEndTime; }
+        public int getApptId()      { return mApptId; }
+        public long getRecurIdDt()  { return mRecurIdDt; }
+        public String getFreeBusy() { return mFreeBusy; }
 
         public int compareTo(FBInstance other) {
             long startDiff = mStartTime - other.mStartTime;
@@ -513,7 +503,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             long ridDiff = mRecurIdDt - other.mRecurIdDt;
             if (ridDiff != 0)
                 return (ridDiff > 0) ? 1 : -1;
-            return 0;
+            return mFreeBusy.compareTo(other.mFreeBusy);
         }
 
         public boolean equals(Object o) {
@@ -523,7 +513,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
             FBInstance other = (FBInstance) o;
             return (mStartTime == other.mStartTime) && (mEndTime == other.mEndTime) &&
-                   (mApptId == other.mApptId) && (mRecurIdDt == other.mRecurIdDt);
+                   (mApptId == other.mApptId) && (mRecurIdDt == other.mRecurIdDt) &&
+                   (mFreeBusy.equals(other.mFreeBusy));
         }
     }
 }

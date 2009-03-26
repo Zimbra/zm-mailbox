@@ -21,7 +21,7 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedHashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
+import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -132,7 +133,18 @@ public class Appointment extends CalendarItem {
 
             // List conflicting appointments and their organizers.
             FreeBusy fb = avail.getFreeBusy();
-            LinkedHashSet<FBInstance> instances = fb.getAllInstances();
+            List<FBInstance> instances = new ArrayList<FBInstance>();
+            for (Iterator<Interval> iter = fb.iterator(); iter.hasNext(); ) {
+                Interval interval = iter.next();
+                // busy intervals only
+                if (Conflict.isBusy(interval.getStatus())) {
+                    // busy appointments only
+                    for (FBInstance fbinst : interval.getInstances()) {
+                        if (Conflict.isBusy(fbinst.getFreeBusy()))
+                            instances.add(fbinst);
+                    }
+                }
+            }
             for (FBInstance instance : instances) {
                 Date startDate = new Date(instance.getStartTime());
                 Date endDate = new Date(instance.getEndTime());
@@ -219,14 +231,17 @@ public class Appointment extends CalendarItem {
     private static class ConflictCheckResult {
         private List<Conflict> mConflicts;
         private boolean mTooManyConflicts;
+        private boolean mHasMoreConflicts;
 
-        public ConflictCheckResult(List<Conflict> conflicts, boolean tooManyConflicts) {
+        public ConflictCheckResult(List<Conflict> conflicts, boolean tooManyConflicts, boolean hasMoreConflicts) {
             mConflicts = conflicts;
             mTooManyConflicts = tooManyConflicts;
+            mHasMoreConflicts = hasMoreConflicts;
         }
 
         public List<Conflict> getConflicts() { return mConflicts; }
         public boolean tooManyConflicts() { return mTooManyConflicts; }
+        public boolean hasMoreConflicts() { return mHasMoreConflicts; }
     }
 
     private static final int MIN_CONFLICT_LIST_SIZE = 5;
@@ -272,9 +287,12 @@ public class Appointment extends CalendarItem {
 
         List<Conflict> list = new ArrayList<Conflict>();
         int numConflicts = 0;
+        boolean hasMoreConflicts = false;
         for (Instance inst : instances) {
-            if (numConflicts > Math.max(maxConflicts, MIN_CONFLICT_LIST_SIZE - 1))
+            if (numConflicts > Math.max(maxConflicts, MIN_CONFLICT_LIST_SIZE - 1)) {
+                hasMoreConflicts = true;
                 break;
+            }
             long start = inst.getStart();
             long end = inst.getEnd();
             // Run free/busy search of this user between instance start/end times.
@@ -285,7 +303,7 @@ public class Appointment extends CalendarItem {
                 numConflicts++;
             }
         }
-        return new ConflictCheckResult(list, numConflicts > maxConflicts);
+        return new ConflictCheckResult(list, numConflicts > maxConflicts, hasMoreConflicts);
     }
 
     protected String processPartStat(Invite invite,
@@ -349,10 +367,12 @@ public class Appointment extends CalendarItem {
                 lc = organizer.getLocale();
             else
                 lc = resource.getLocale();
-            if (resource.autoAcceptDecline()) {
+            if (resource.autoAcceptDecline() || resource.autoDeclineIfBusy() || resource.autoDeclineRecurring()) {
                 boolean replyListUpdated = false;
                 // We'll accept unless one of the checks below fails.
-                partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
+                // If auto-accept is enabled, assume it'll be accepted until it gets declined.
+                if (resource.autoAcceptDecline())
+                    partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     // Decline because resource is configured to decline all recurring appointments.
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
@@ -370,7 +390,7 @@ public class Appointment extends CalendarItem {
                         replySent = true;
                     }
                 } else if (resource.autoDeclineIfBusy()) {
-                    // Auto accept/decline is enabled.  Let's check for conflicts.
+                    // Auto decline is enabled.  Let's check for conflicts.
                     int maxNumConflicts = resource.getMaxNumConflictsAllowed();
                     int maxPctConflicts = resource.getMaxPercentConflictsAllowed();
                     ConflictCheckResult checkResult = checkAvailability(opTime, invite, maxNumConflicts, maxPctConflicts);
@@ -379,58 +399,66 @@ public class Appointment extends CalendarItem {
                         if (conflicts.size() > 0) {
                             if (invite.isRecurrence() && !checkResult.tooManyConflicts()) {
                                 // There are some conflicts, but within resource's allowed limit.
-                                // Let's accept partially.  (Accept the series and decline conflicting instances.)
-                                List<Invite> replyInvites = new ArrayList<Invite>();
-                                // the REPLY for the ACCEPT of recurrence series
-                                Invite acceptInv = makeReplyInvite(
-                                        account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
-                                        CalendarMailSender.VERB_ACCEPT);
-
-                                for (Conflict conflict : conflicts) {
-                                    Instance inst = conflict.getInstance();
-                                    InviteInfo invInfo = inst.getInviteInfo();
-                                    Invite inv = getInvite(invInfo.getMsgId(), invInfo.getComponentId());
-                                    RecurId rid = inst.makeRecurId(inv);
-
-                                    // Record the decline status in reply list.
-                                    getReplyList().modifyPartStat(
-                                            resource, rid, null, resource.getName(), null, null,
-                                            IcalXmlStrMap.PARTSTAT_DECLINED, false, invite.getSeqNo(), opTime);
-                                    replyListUpdated = true;
-
-                                    // Make REPLY VEVENT for the declined instance.
-                                    Invite replyInv = makeReplyInvite(
-                                            account, authAcct, lc, onBehalfOf, allowPrivateAccess, inv, rid,
-                                            CalendarMailSender.VERB_DECLINE);
-                                    replyInvites.add(replyInv);
-                                }
-
-                                if (needReplyEmail) {
-                                    ICalTimeZone tz = chooseReplyTZ(invite);
-                                    // Send one email to accept the series.
-                                    String declinedInstances = getDeclinedTimesString(
-                                            octxt, mbox, conflicts, invite.isAllDayEvent(), tz, lc);
-                                    String msg =
-                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclinedInstances, lc) +
-                                        "\r\n\r\n" + declinedInstances;
-                                    CalendarMailSender.sendResourceAutoReply(
-                                            octxt, mbox, true,
-                                            CalendarMailSender.VERB_ACCEPT, true,
-                                            msg,
-                                            this, invite, new Invite[] { acceptInv }, mmInv);
-                                    // Send another email to decline instances, all in one email.
-                                    String conflictingTimes = getBusyTimesString(octxt, mbox, conflicts, tz, lc, false);
-                                    msg =
-                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclinedInstances, lc) +
-                                        "\r\n\r\n" + declinedInstances + "\r\n" +
-                                        L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
-                                        "\r\n\r\n" + conflictingTimes;
-                                    CalendarMailSender.sendResourceAutoReply(
-                                            octxt, mbox, true,
-                                            CalendarMailSender.VERB_DECLINE, true,
-                                            msg,
-                                            this, invite, replyInvites.toArray(new Invite[0]), mmInv);
-                                    replySent = true;
+                                if (resource.autoAcceptDecline()) {
+                                    // Let's accept partially.  (Accept the series and decline conflicting instances.)
+                                    List<Invite> replyInvites = new ArrayList<Invite>();
+                                    // the REPLY for the ACCEPT of recurrence series
+                                    Invite acceptInv = makeReplyInvite(
+                                            account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
+                                            CalendarMailSender.VERB_ACCEPT);
+    
+                                    for (Conflict conflict : conflicts) {
+                                        Instance inst = conflict.getInstance();
+                                        InviteInfo invInfo = inst.getInviteInfo();
+                                        Invite inv = getInvite(invInfo.getMsgId(), invInfo.getComponentId());
+                                        RecurId rid = inst.makeRecurId(inv);
+    
+                                        // Record the decline status in reply list.
+                                        getReplyList().modifyPartStat(
+                                                resource, rid, null, resource.getName(), null, null,
+                                                IcalXmlStrMap.PARTSTAT_DECLINED, false, invite.getSeqNo(), opTime);
+                                        replyListUpdated = true;
+    
+                                        // Make REPLY VEVENT for the declined instance.
+                                        Invite replyInv = makeReplyInvite(
+                                                account, authAcct, lc, onBehalfOf, allowPrivateAccess, inv, rid,
+                                                CalendarMailSender.VERB_DECLINE);
+                                        replyInvites.add(replyInv);
+                                    }
+    
+                                    if (needReplyEmail) {
+                                        ICalTimeZone tz = chooseReplyTZ(invite);
+                                        // Send one email to accept the series.
+                                        String declinedInstances = getDeclinedTimesString(
+                                                octxt, mbox, conflicts, invite.isAllDayEvent(), tz, lc);
+                                        String msg =
+                                            L10nUtil.getMessage(MsgKey.calendarResourceDeclinedInstances, lc) +
+                                            "\r\n\r\n" + declinedInstances;
+                                        CalendarMailSender.sendResourceAutoReply(
+                                                octxt, mbox, true,
+                                                CalendarMailSender.VERB_ACCEPT, true,
+                                                msg,
+                                                this, invite, new Invite[] { acceptInv }, mmInv);
+                                        // Send another email to decline instances, all in one email.
+                                        String conflictingTimes = getBusyTimesString(octxt, mbox, conflicts, tz, lc, false);
+                                        msg =
+                                            L10nUtil.getMessage(MsgKey.calendarResourceDeclinedInstances, lc) +
+                                            "\r\n\r\n" + declinedInstances + "\r\n" +
+                                            L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
+                                            "\r\n\r\n" + conflictingTimes;
+                                        CalendarMailSender.sendResourceAutoReply(
+                                                octxt, mbox, true,
+                                                CalendarMailSender.VERB_DECLINE, true,
+                                                msg,
+                                                this, invite, replyInvites.toArray(new Invite[0]), mmInv);
+                                        replySent = true;
+                                    }
+                                } else {
+                                    // Auto-accept is not enabled.  Auto-decline is enabled, but there weren't
+                                    // enough conflicting instances to decline outright.  So we just stay
+                                    // silent and let the human admin deal with it.  This case is rather
+                                    // ambiguous, and can be avoided by configuring the resource to allow
+                                    // zero conflicting instance.
                                 }
                             } else {
                                 // Too many conflicts.  Decline outright.
@@ -440,7 +468,7 @@ public class Appointment extends CalendarItem {
                                     String msg =
                                         L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
                                         "\r\n\r\n" +
-                                        getBusyTimesString(octxt, mbox, conflicts, tz, lc, true);
+                                        getBusyTimesString(octxt, mbox, conflicts, tz, lc, checkResult.hasMoreConflicts());
                                     Invite replyInv = makeReplyInvite(
                                             account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
                                             CalendarMailSender.VERB_DECLINE);

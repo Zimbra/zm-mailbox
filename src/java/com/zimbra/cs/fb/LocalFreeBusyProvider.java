@@ -21,7 +21,6 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
@@ -55,16 +54,6 @@ public class LocalFreeBusyProvider {
 	public static FreeBusy getFreeBusyList(
 	        Account authAcct, boolean asAdmin, Mailbox mbox, String name, long start, long end, int folder, Appointment exAppt)
     throws ServiceException {
-	    // Check if this account is an always-free calendar resource.
-        Account acct = mbox.getAccount();
-        if (acct instanceof CalendarResource) {
-            CalendarResource resource = (CalendarResource) acct;
-            if (resource.autoAcceptDecline() && !resource.autoDeclineIfBusy()) {
-                IntervalList intervals = new IntervalList(start, end);
-                return new FreeBusy(acct.getName(), intervals, start, end);
-            }
-        }
-
         AccessManager accessMgr = AccessManager.getInstance();
         boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), User.R_viewFreeBusy, asAdmin, true);
 
@@ -129,7 +118,7 @@ public class LocalFreeBusyProvider {
                     if (freeBusy == null)
                         freeBusy = defaultFreeBusy;
                     if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
-                        FBInstance fbInst = new FBInstance(instStart, instEnd, apptId, recurIdDt);
+                        FBInstance fbInst = new FBInstance(freeBusy, instStart, instEnd, apptId, recurIdDt);
                         Interval ival = new Interval(instStart, instEnd, freeBusy, fbInst);
                         intervals.addInterval(ival);
                     }
