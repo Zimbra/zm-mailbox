@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.security.sasl.*;
 import com.zimbra.cs.service.mail.FolderAction;
@@ -2943,6 +2944,9 @@ abstract class ImapHandler extends ProtocolHandler {
         if (mbox == null)
             throw ServiceException.FAILURE("unexpected session close during search", null);
 
+        Account acct = mCredentials == null ? null : mCredentials.getAccount();
+        TimeZone tz = acct == null ? null : WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
+
         String search;
         synchronized (mbox) {
             search = i4search.toZimbraSearch(i4folder);
@@ -2963,6 +2967,7 @@ abstract class ImapHandler extends ProtocolHandler {
         params.setChunkSize(2000);
         params.setPrefetch(false);
         params.setMode(resultMode);
+        params.setTimeZone(tz);
 
         try {
             return mbox.search(SoapProtocol.Soap12, getContext(), params);
