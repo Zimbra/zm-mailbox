@@ -124,6 +124,13 @@ public class RedoPlayer {
 			while ((op = logReader.getNextOp()) != null) {
 				lastPosition = logReader.position();
 
+				// We can't break from the loop when op.getTimestamp() > endTime.  We could if ops in the file
+				// were sorted by timestamp, but they are not.  Ops are executed and get their timestamps in
+				// separate threads, then later are added to the log.  Logged order is not necessarily the same as
+				// the order in which the threads looked at the clock.
+				//
+				// We have scan to the end of the file to know with certainty we've gone past the time limit.
+
 				if (mLog.isDebugEnabled())
 					mLog.debug("Read: " + op);
 
