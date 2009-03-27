@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -496,6 +497,13 @@ public class Message extends MailItem {
                 calUidsSeen.add(uid);
             } else {
                 addRevision = false;
+            }
+
+            // If inviting a calendar resource, don't allow the organizer to specify intended free/busy value
+            // other than BUSY.  And don't allow transparent meetings.  This will prevent double booking in the future.
+            if (cur.isEvent() && (acct instanceof CalendarResource)) {
+                cur.setFreeBusy(IcalXmlStrMap.FBTYPE_BUSY);
+                cur.setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
             }
 
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
