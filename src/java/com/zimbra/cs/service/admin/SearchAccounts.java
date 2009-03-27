@@ -124,17 +124,8 @@ public class SearchAccounts extends AdminDocumentHandler {
                 if (hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList))
                     doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
-                boolean hasRight;
-                String tt = ((Alias)entry).getTargetType(prov);
-                if (TargetType.dl.getCode().equals(tt))
-                    hasRight = hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList);
-                else if (TargetType.calresource.getCode().equals(tt))
-                    hasRight = hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource);
-                else
-                    hasRight = hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount);
-                
-                if (hasRight)
-                    doAlias(response, (Alias) entry);
+                if (SearchDirectory.hasRightsToListAlias(this, prov, zsc, (Alias)entry))
+                    doAlias(response, (Alias)entry);
             } else if (entry instanceof Domain) {
                 if (hasRightsToList(zsc, entry, Admin.R_listDomain, Admin.R_getDomain))
                     GetDomain.doDomain(response, (Domain) entry, applyCos);

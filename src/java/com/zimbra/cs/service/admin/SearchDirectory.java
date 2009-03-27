@@ -172,16 +172,7 @@ public class SearchDirectory extends AdminDocumentHandler {
                 if (hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList))
                     doDistributionList(response, (DistributionList)entry);
             } else if (entry instanceof Alias) {
-                boolean hasRight;
-                String tt = ((Alias)entry).getTargetType(prov);
-                if (TargetType.dl.getCode().equals(tt))
-                    hasRight = hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList);
-                else if (TargetType.calresource.getCode().equals(tt))
-                    hasRight = hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource);
-                else
-                    hasRight = hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount);
-                
-                if (hasRight)
+                if (hasRightsToListAlias(this, prov, zsc, (Alias)entry))
                     doAlias(response, prov, (Alias)entry);
             } else if (entry instanceof Domain) {
                 if (hasRightsToList(zsc, entry, Admin.R_listDomain, Admin.R_getDomain))
@@ -195,6 +186,40 @@ public class SearchDirectory extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
+    }
+    
+    private static boolean hasRightsToListDanglingAlias(AdminDocumentHandler handler, ZimbraSoapContext zsc, Alias alias) 
+    throws ServiceException {
+        /*
+         * gross, this is the only case we would ever pass an Alias object for ACL checking.
+         * 
+         * We want to pass alias instead of null so if PERM_DENIED the skipping WARN can be 
+         * nicely logged just like whenever we skip listing any object.
+         * 
+         * Alias is *not* a valid TargetTytpe for ACL checking.  Luckily(and hackily), the pseudo 
+         * right PR_SYSTEM_ADMIN_ONLY would never lead to a path that needs to refer to the 
+         * target. 
+         */
+        return handler.hasRightsToList(zsc, alias, AdminRight.PR_SYSTEM_ADMIN_ONLY, null);
+    }
+    
+    static boolean hasRightsToListAlias(AdminDocumentHandler handler, Provisioning prov,
+            ZimbraSoapContext zsc, Alias alias) throws ServiceException {
+        boolean hasRight;
+        
+        // if an admin can list/get attrs on the account/cr/dl, he can do the same on their aliases
+        TargetType tt = alias.getTargetType(prov);
+        
+        if (tt == null) // can't check right, allows only system admin
+            hasRight = hasRightsToListDanglingAlias(handler, zsc, alias);
+        else if (tt == TargetType.dl)
+            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listDistributionList, Admin.R_getDistributionList);
+        else if (tt == TargetType.calresource)
+            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listCalendarResource, Admin.R_getCalendarResource);
+        else
+            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listAccount, Admin.R_getAccount);
+        
+        return hasRight;
     }
 
     static void doDistributionList(Element e, DistributionList list) {
@@ -210,7 +235,10 @@ public class SearchDirectory extends AdminDocumentHandler {
         ealias.addAttribute(AdminConstants.A_NAME, a.getUnicodeName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
         ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetUnicodeName(prov));
-        ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType(prov));
+        
+        TargetType tt = a.getTargetType(prov);
+        if (tt != null)
+            ealias.addAttribute(AdminConstants.A_TYPE, tt.getCode());
         
         Map attrs = a.getUnicodeAttrs();
         doAttrs(ealias, attrs);

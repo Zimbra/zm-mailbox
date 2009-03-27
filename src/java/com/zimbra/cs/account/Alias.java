@@ -27,6 +27,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author anandp
@@ -36,63 +37,69 @@ import com.zimbra.common.service.ServiceException;
  */
 public class Alias extends MailTarget {
     
-    private static final String ALIAS_TARGET_NAME = "targetName";
-    private static final String ALIAS_TARGET_TYPE = "targetType";
+    private NamedEntry mTarget     = null;
+    private boolean mIsDangling    = false;;
 
     public Alias(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, null, prov);
     }
     
-    private String getTargetInfo(Provisioning prov, String forInfo) throws ServiceException {
-        Object data = getCachedData(forInfo);
-        if (data != null)
-            return (String)data;
+    public NamedEntry getTarget(Provisioning prov) {
+        // if we had already searched and know the target is not there, 
+        // don't bother to search again
+        if (mIsDangling)
+            return null;
         
-        /*
-         * not cached, search directory and put info in cache
-         */
-        NamedEntry entry = prov.searchAliasTarget(this, true);
+        // if we had already searched and know the target, return it
+        if (mTarget != null)
+            return mTarget;
         
-        String targetName = entry.getName();
-        String targetType;
+        // search for it
+        try {
+            mTarget = prov.searchAliasTarget(this, false);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("cannot find target " +  getId() + " for alias " + getName(), e);
+        }
         
-        if (entry instanceof CalendarResource)
-            targetType = TargetType.calresource.getCode();
-        else if (entry instanceof Account)
-            targetType = TargetType.account.getCode();
-        else if (entry instanceof DistributionList)
-            targetType = TargetType.dl.getCode();
-        else
-            throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
+        // set the dangling flag so we don't search again next time when called
+        if (mTarget == null)
+            mIsDangling = true;
         
-        /*
-         * put targetName and targetType in cache
-         */
-        setCachedData(ALIAS_TARGET_NAME, targetName);
-        setCachedData(ALIAS_TARGET_TYPE, targetType);
-        
-        if (forInfo == ALIAS_TARGET_NAME)
-            return targetName;
-        else 
-            return targetType;
+        return mTarget;
     }
 
     public String getTargetName(Provisioning prov) throws ServiceException {
-        return getTargetInfo(prov, ALIAS_TARGET_NAME);
+        NamedEntry target = getTarget(prov);
+        if (target == null)
+            return null;
+        return target.getName();
     }
     
     public String getTargetUnicodeName(Provisioning prov) throws ServiceException {
-        String targetName =  getTargetInfo(prov, ALIAS_TARGET_NAME);
+        String targetName = getTargetName(prov);
+        if (targetName == null)
+            return null;
         return IDNUtil.toUnicodeEmail(targetName);
     }
     
-    public String getTargetType(Provisioning prov) throws ServiceException {
-        return getTargetInfo(prov, ALIAS_TARGET_TYPE);
+    public TargetType getTargetType(Provisioning prov) throws ServiceException {
+        NamedEntry target = getTarget(prov);
+        if (target == null)
+            return null;
+        
+        if (target instanceof CalendarResource)
+            return TargetType.calresource;
+        else if (target instanceof Account)
+            return TargetType.account;
+        else if (target instanceof DistributionList)
+            return TargetType.dl;
+        else
+            throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
     }
     
     public boolean isDangling(Provisioning prov) throws ServiceException {
-        NamedEntry entry = prov.searchAliasTarget(this, false);
-        return (entry == null);
+        NamedEntry target = getTarget(prov);
+        return (target == null);
     }
 
 }

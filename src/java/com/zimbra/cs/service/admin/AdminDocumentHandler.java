@@ -25,6 +25,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -339,7 +340,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     private static String printNeededRight(Entry target, Object needed) throws ServiceException {
-        String targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
+        String targetInfo;
+        if (target instanceof Alias) // see comments in SearchDirectory.hasRightsToListDanglingAlias
+            targetInfo = "alias " + target.getLabel();
+        else
+            targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
+        
         if (needed instanceof AdminRight)
             return "need right: " + ((AdminRight)needed).getName() + " for " + targetInfo;
         else if (needed instanceof Set)
