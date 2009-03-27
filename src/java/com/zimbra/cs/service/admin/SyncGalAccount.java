@@ -55,6 +55,8 @@ public class SyncGalAccount extends AdminDocumentHandler {
 		    		ds = acct.getDataSourceById(name);
 		    	else
 			    	ds = acct.getDataSourceByName(name);
+		    	if (ds == null)
+		    		throw AccountServiceException.NO_SUCH_DATA_SOURCE(name);
 		    	if (!ds.getType().equals(DataSource.Type.gal))
 		    		continue;
 		    	boolean fullSync = dsElem.getAttributeBool(AdminConstants.A_FULLSYNC, false);

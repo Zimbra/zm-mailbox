@@ -33,6 +33,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -56,9 +58,9 @@ public class GalSyncAccountUtil {
 		System.out.println("zmgsautil: {command}");
 		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
 		System.out.println("\tdeleteAccount [-a {account-name} | -i {account-id}]");
-		System.out.println("\ttrickleSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
-		System.out.println("\tfullSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
-		System.out.println("\tforceSync -i {account-id} [-d {datasource-id}] [-n {datasource-name}]");
+		System.out.println("\ttrickleSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
+		System.out.println("\tfullSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
+		System.out.println("\tforceSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
 		System.exit(1);
 	}
 	
@@ -96,12 +98,19 @@ public class GalSyncAccountUtil {
         mPassword = LC.zimbra_ldap_password.value();
 	}
 
-	private void checkArgs() {
+	private void checkArgs() throws ServiceException {
+		if (mAccountName != null) {
+	    	Account acct = Provisioning.getInstance().getAccountByName(mAccountName);
+	    	if (acct == null)
+	    		throw AccountServiceException.NO_SUCH_ACCOUNT(mAccountName);
+	    	mAccountId = acct.getId();
+		}
 		if (mAccountId == null || (mDataSourceId == null && mDataSourceName == null))
 			usage();
 	}
 
 	private String mAccountId;
+	private String mAccountName;
 	private String mDataSourceId;
 	private String mDataSourceName;
 	private boolean mFullSync;
@@ -185,6 +194,9 @@ public class GalSyncAccountUtil {
 	private void setAccountId(String aid) {
 		mAccountId = aid;
 	}
+	private void setAccountName(String name) {
+		mAccountName = name;
+	}
 	private void setDataSourceId(String did) {
 		mDataSourceId = did;
 	}
@@ -235,6 +247,8 @@ public class GalSyncAccountUtil {
         }
         if (cl.hasOption('i'))
             cli.setAccountId(cl.getOptionValue('i'));
+        if (cl.hasOption('a'))
+        	cli.setAccountName(cl.getOptionValue('a'));
         if (cl.hasOption('n'))
             cli.setDataSourceName(cl.getOptionValue('n'));
         if (cl.hasOption('d'))
