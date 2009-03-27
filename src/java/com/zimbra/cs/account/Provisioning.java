@@ -580,13 +580,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param emailAddress
      * @param password
      * @param attrs
-     * @param restoring 
      * @return
      * @throws ServiceException
      */
-    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean restoring) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
+    public abstract Account restoreAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
     
     /**
      * deletes the specified account, removing the account and all email aliases.
@@ -1490,7 +1487,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
-
+    
+    public abstract Identity restoreIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
+    
     public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
@@ -1514,6 +1513,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract Signature restoreSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException;
 
@@ -1539,6 +1540,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
+    
+    public abstract DataSource restoreDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
 

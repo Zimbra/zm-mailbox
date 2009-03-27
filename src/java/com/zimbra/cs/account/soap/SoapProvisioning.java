@@ -468,6 +468,12 @@ public class SoapProvisioning extends Provisioning {
         addAttrElements(req, attrs);
         return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT), this);
     }
+    
+    @Override
+    public Account restoreAccount(String emailAddress, String password, Map<String, Object> attrs)
+        throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public CalendarResource createCalendarResource(String emailAddress, String password,
@@ -1652,6 +1658,11 @@ public class SoapProvisioning extends Provisioning {
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_IDENTITY);
         return new SoapIdentity(account, response, this);
     }
+    
+    @Override
+    public Identity restoreIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void deleteIdentity(Account account, String identityName) throws ServiceException {
@@ -1692,6 +1703,11 @@ public class SoapProvisioning extends Provisioning {
         SoapSignature.toXML(signature, attrs);
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_SIGNATURE);
         return new SoapSignature(account, response, this);
+    }
+    
+    @Override
+    public Signature restoreSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException();   
     }
     
     @Override
@@ -1739,6 +1755,11 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public DataSource restoreDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

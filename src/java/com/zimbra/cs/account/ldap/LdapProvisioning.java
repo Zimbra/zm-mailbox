@@ -693,8 +693,8 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs, boolean restoring) throws ServiceException {
-        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, restoring);
+    public Account restoreAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException {
+        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, true);
     }
     
     private Account createAccount(String emailAddress,
@@ -4583,6 +4583,16 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
+        return createIdentity(account, identityName, identityAttrs, false);
+    }
+    
+    @Override
+    public Identity restoreIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
+        return createIdentity(account, identityName, identityAttrs, true);
+    }
+    
+    private Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs,
+            boolean restoring) throws ServiceException {
         removeAttrIgnoreCase("objectclass", identityAttrs);        
         validateIdentityAttrs(identityAttrs);
 
@@ -4601,7 +4611,8 @@ public class LdapProvisioning extends Provisioning {
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
         
         HashMap attrManagerContext = new HashMap();
-        AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, true);
+        boolean checkImmutable = !restoring; 
+        AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, checkImmutable);
 
         ZimbraLdapContext zlc = null;
         try {
@@ -4831,6 +4842,16 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public Signature createSignature(Account account, String signatureName, Map<String, Object> signatureAttrs) throws ServiceException {
+        return createSignature(account,  signatureName, signatureAttrs, false);
+    }
+    
+    @Override
+    public Signature restoreSignature(Account account, String signatureName, Map<String, Object> signatureAttrs) throws ServiceException {
+        return createSignature(account,  signatureName, signatureAttrs, true);
+    }
+    
+    private Signature createSignature(Account account, String signatureName, Map<String, Object> signatureAttrs,
+            boolean restoring) throws ServiceException {
         signatureName = signatureName.trim();
         removeAttrIgnoreCase("objectclass", signatureAttrs);        
         validateSignatureAttrs(signatureAttrs);
@@ -4864,7 +4885,8 @@ public class LdapProvisioning extends Provisioning {
         
         HashMap attrManagerContext = new HashMap();
         attrManagerContext.put(MailSignature.CALLBACK_KEY_MAX_SIGNATURE_LEN, account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
-        AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, true);
+        boolean checkImmutable = !restoring; 
+        AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, checkImmutable);
 
         String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
         if (signatureId == null) {
@@ -5207,9 +5229,20 @@ public class LdapProvisioning extends Provisioning {
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
         return createDataSource(account, dsType, dsName, dataSourceAttrs, false);
     }
-
+    
     @Override
-    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs, boolean passwdAlreadyEncrypted) throws ServiceException {
+    public DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, 
+            boolean passwdAlreadyEncrypted) throws ServiceException {
+        return createDataSource(account, type, dataSourceName, attrs, passwdAlreadyEncrypted, false);
+    }
+    
+    @Override
+    public DataSource restoreDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
+        return createDataSource(account, dsType, dsName, dataSourceAttrs, true, true);
+    }
+    
+    private DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs, 
+            boolean passwdAlreadyEncrypted, boolean restoring) throws ServiceException {
         removeAttrIgnoreCase("objectclass", dataSourceAttrs);    
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         
@@ -5225,7 +5258,8 @@ public class LdapProvisioning extends Provisioning {
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
 
         HashMap attrManagerContext = new HashMap();
-        AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, true);
+        boolean checkImmutable = !restoring;
+        AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, checkImmutable);
 
         ZimbraLdapContext zlc = null;
         try {
