@@ -161,7 +161,9 @@ abstract class LdapUpgrade {
         String bug = cl.getOptionValue(O_BUG);
         LdapUpgrade upgrade = null;
         
-        if ("18277".equalsIgnoreCase(bug)) {
+        if ("14531".equalsIgnoreCase(bug)) {
+            upgrade = new GalLdapFilterDef(bug, verbose);
+        } else if ("18277".equalsIgnoreCase(bug)) {
             upgrade = new MigrateDomainAdmins(bug, verbose);
         } else if ("22033".equalsIgnoreCase(bug)) {
             upgrade = new SetZimbraCreateTimestamp(bug, verbose);

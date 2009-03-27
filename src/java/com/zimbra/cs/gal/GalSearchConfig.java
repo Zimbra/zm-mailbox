@@ -72,7 +72,9 @@ public class GalSearchConfig {
 			Domain domain = Provisioning.getInstance().getDomain(ds.getAccount());
 			if (mGalType == GalType.zimbra) {
 				loadZimbraConfig(domain, GalOp.sync, null);
-				mFilter = DEFAULT_FILTER;
+				mFilter = LdapProvisioning.getFilterDef("zimbraSync");
+				if (mFilter == null)
+				    mFilter = DEFAULT_FILTER;
 			} else {
 				loadConfig(domain, GalOp.sync);
 				if (mUrl.length == 0 || mFilter == null)
