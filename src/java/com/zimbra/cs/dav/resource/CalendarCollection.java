@@ -299,10 +299,7 @@ public class CalendarCollection extends Collection {
 				// Evolution doesn't use UID as the URI, so we'll force it
 				// by issuing redirect to the URI we want it to be at.
 				StringBuilder url = new StringBuilder();
-				url.append(DavServlet.getDavUrl(user));
-				url.append(getUri());
-				url.append(uid);
-				url.append(CalendarObject.CAL_EXTENSION);
+				url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(uid).append(CalendarObject.CAL_EXTENSION);
 				ctxt.getResponse().sendRedirect(url.toString());
 				throw new DavException("wrong url", HttpServletResponse.SC_MOVED_PERMANENTLY, null);
 			}
