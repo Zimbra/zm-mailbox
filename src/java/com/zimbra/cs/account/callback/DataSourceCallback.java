@@ -34,6 +34,7 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Validates <tt>DataSource</tt> attribute values.
@@ -65,6 +66,7 @@ public class DataSourceCallback extends AttributeCallback {
     public void preModify(Map context, String attrName, Object attrValue, Map attrsToModify,
                           Entry entry, boolean isCreate)
     throws ServiceException {
+        
         if (isCreate) {
             // No old value, so nothing to do.  Creation is handled in postModify().
             return;
@@ -102,6 +104,11 @@ public class DataSourceCallback extends AttributeCallback {
     
     @SuppressWarnings("unchecked")
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+        
+        // Don't do anything unless inside the server
+        if (!Zimbra.started())
+            return;
+        
         // Don't do anything if the interval didn't change
         Boolean intervalChanged = isCreate || (Boolean) context.get(KEY_INTERVAL_CHANGED);
         if (intervalChanged == null || !intervalChanged) {
