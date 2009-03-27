@@ -28,9 +28,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -76,12 +77,14 @@ public class SearchGal extends AdminDocumentHandler {
         
         checkDomainRight(zsc, d, Admin.R_accessGAL); 
 
-        Element response = zsc.createElement(AdminConstants.SEARCH_GAL_RESPONSE);
-
-        SearchGalResult result = prov.searchGal(d, n, type, token);
-        com.zimbra.cs.service.account.SearchGal.toXML(response, result);
-
-        return response;
+        GalSearchParams params = new GalSearchParams(d, zsc);
+        params.setType(type);
+        params.setRequest(request);
+        params.setQuery(n);
+        params.setResponseName(AdminConstants.SEARCH_GAL_RESPONSE);
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.search();
+        return params.getResultCallback().getResponse();
     }
     
     @Override

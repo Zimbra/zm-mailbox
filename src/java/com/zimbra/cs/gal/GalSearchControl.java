@@ -98,8 +98,7 @@ public class GalSearchControl {
 	}
 	
 	private String[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(mParams.getAccount());
+        Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();
         if (accts.length == 0)
         	throw new GalAccountNotConfiguredException();
@@ -298,7 +297,7 @@ public class GalSearchControl {
     }
     
     private void ldapSearch(GalOp op) throws ServiceException {
-        GalMode galMode = Provisioning.getInstance().getDomain(mParams.getAccount()).getGalMode();
+        GalMode galMode = mParams.getDomain().getGalMode();
         int limit = mParams.getLimit();
         if (galMode == GalMode.both) {
         	// make two gal searches for 1/2 results each
@@ -315,7 +314,8 @@ public class GalSearchControl {
     	} catch (Exception e) {
     		throw ServiceException.FAILURE("ldap search failed", e);
     	}
-    	
+
+    	boolean hadMore = mParams.getResult().getHadMore();
     	if (galMode != GalMode.both)
     		return;
 
@@ -326,6 +326,8 @@ public class GalSearchControl {
     	} catch (Exception e) {
     		throw ServiceException.FAILURE("ldap search failed", e);
     	}
+    	hadMore |= mParams.getResult().getHadMore();
+    	mParams.getResultCallback().setHasMoreResult(hadMore);
     }
     
 	private static class GalAccountNotConfiguredException extends Exception {

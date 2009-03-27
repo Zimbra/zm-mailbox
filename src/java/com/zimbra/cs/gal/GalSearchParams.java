@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
@@ -40,6 +41,7 @@ public class GalSearchParams {
 	private ZimbraSoapContext mSoapContext;
 	
 	private Account mAccount;
+	private Domain mDomain;
     private SearchParams mSearchParams;
     private GalSearchResultCallback mResultCallback;
     private Element mRequest;
@@ -56,6 +58,11 @@ public class GalSearchParams {
         mSoapContext = ctxt;
 	}
 	
+    public GalSearchParams(Domain domain, ZimbraSoapContext ctxt) {
+    	mDomain = domain;
+    	mSoapContext = ctxt;
+    }
+    
     public GalSearchParams(DataSource ds) throws ServiceException {
     	this(ds.getAccount());
     	mDataSource = ds;
@@ -94,6 +101,11 @@ public class GalSearchParams {
 		return mAccount;
 	}
 	
+	public Domain getDomain() throws ServiceException {
+		if (mDomain != null)
+			return mDomain;
+		return Provisioning.getInstance().getDomain(mAccount);
+	}
 	public ZimbraSoapContext getSoapContext() {
 		return mSoapContext;
 	}
@@ -180,7 +192,7 @@ public class GalSearchParams {
 	}
 	
 	public void createSearchConfig(GalOp op, GalSearchConfig.GalType type) throws ServiceException {
-		mConfig = GalSearchConfig.create(mAccount, op, type, mType);
+		mConfig = GalSearchConfig.create(getDomain(), op, type, mType);
 	}
 	
 	public String generateLdapQuery() throws ServiceException {

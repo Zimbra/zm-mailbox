@@ -15,7 +15,6 @@
 package com.zimbra.cs.gal;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -42,12 +41,12 @@ public class GalSearchConfig {
 	    }
 	}
     
-	public static GalSearchConfig create(Account account, GalOp op, GalType type, GAL_SEARCH_TYPE stype) throws ServiceException {
+	public static GalSearchConfig create(Domain domain, GalOp op, GalType type, GAL_SEARCH_TYPE stype) throws ServiceException {
 		switch (type) {
 		case zimbra:
-			return new ZimbraConfig(account, op, stype);
+			return new ZimbraConfig(domain, op, stype);
 		case ldap:
-			return new LdapConfig(account, op);
+			return new LdapConfig(domain, op);
 		}
 		return null;
 	}
@@ -57,26 +56,27 @@ public class GalSearchConfig {
 	}
 
 	private static class ZimbraConfig extends GalSearchConfig {
-		public ZimbraConfig(Account account, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
-			loadZimbraConfig(account, op, stype);
+		public ZimbraConfig(Domain domain, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
+			loadZimbraConfig(domain, op, stype);
 		}
 	}
 	private static class LdapConfig extends GalSearchConfig {
-		public LdapConfig(Account account, GalOp op) throws ServiceException {
-			loadConfig(account, op);
+		public LdapConfig(Domain domain, GalOp op) throws ServiceException {
+			loadConfig(domain, op);
 		}
 	}
 	
 	private static class DataSourceConfig extends GalSearchConfig {
 		public DataSourceConfig(DataSource ds) throws ServiceException {
 			mGalType = GalType.fromString(ds.getAttr(Provisioning.A_zimbraGalType));
+			Domain domain = Provisioning.getInstance().getDomain(ds.getAccount());
 			if (mGalType == GalType.zimbra) {
-				loadZimbraConfig(ds.getAccount(), GalOp.sync, null);
+				loadZimbraConfig(domain, GalOp.sync, null);
 				mFilter = DEFAULT_FILTER;
 			} else {
-				loadConfig(ds.getAccount(), GalOp.sync);
+				loadConfig(domain, GalOp.sync);
 				if (mUrl.length == 0 || mFilter == null)
-					loadConfig(ds.getAccount(), GalOp.search);
+					loadConfig(domain, GalOp.search);
 				String[] url = ds.getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
 				if (url != null && url.length > 0)
 					mUrl = url;
@@ -98,9 +98,7 @@ public class GalSearchConfig {
 		private static final String DEFAULT_FILTER = "(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 	}
 	
-	protected void loadZimbraConfig(Account account, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
-		Provisioning prov = Provisioning.getInstance();
-		Domain domain = prov.getDomain(account);
+	protected void loadZimbraConfig(Domain domain, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
 		
         mRules = new LdapGalMapRules(domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap));
         mOp = op;
@@ -127,16 +125,14 @@ public class GalSearchConfig {
 		mGalType = GalType.zimbra;
 	}
 	
-	protected void loadConfig(Account account, GalOp op) throws ServiceException {
-		Provisioning prov = Provisioning.getInstance();
-		Domain domain = prov.getDomain(account);
+	protected void loadConfig(Domain domain, GalOp op) throws ServiceException {
 		
         mRules = new LdapGalMapRules(domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap));
         mOp = op;
         
         GalMode galMode = domain.getGalMode();
         if (galMode == GalMode.zimbra)
-        	loadZimbraConfig(account, op, null);
+        	loadZimbraConfig(domain, op, null);
 		
         switch (op) {
         case sync:
