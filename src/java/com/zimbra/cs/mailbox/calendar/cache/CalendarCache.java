@@ -392,7 +392,7 @@ public class CalendarCache {
         // of the LRU.
         private Map<Integer /* mailbox id */, Set<Integer> /* folder ids */> mMboxFolders;
 
-       private SummaryLRU(int capacity) {
+        private SummaryLRU(int capacity) {
             super(capacity + 1, 1.0f, true);
             mMaxAllowed = Math.max(capacity, 1);
             mMboxFolders = new HashMap<Integer, Set<Integer>>();
@@ -427,7 +427,7 @@ public class CalendarCache {
                 SummaryCacheKey k = (SummaryCacheKey) key;
                 deregisterFromMbox(k);
             }
-            return null;
+            return prevVal;
         }        
 
         @Override
@@ -480,6 +480,22 @@ public class CalendarCache {
                 }
             }
             return retval;
+        }
+
+        /**
+         * Toss all folders of the mailbox from the LRU.
+         * @param mboxId
+         */
+        public void removeMailbox(int mboxId) {
+            Set<Integer> folders = mMboxFolders.get(mboxId);
+            if (folders != null) {
+                // Get a copy of the folder list to avoid ConcurrentModificationException on mMboxFolders.
+                Integer[] fids = folders.toArray(new Integer[0]);
+                for (int folderId : fids) {
+                    SummaryCacheKey key = new SummaryCacheKey(mboxId, folderId);
+                    remove(key);
+                }
+            }
         }
     }
 
@@ -751,5 +767,13 @@ public class CalendarCache {
                 }
             }
         }
+    }
+
+    public void removeMailbox(Mailbox mbox) {
+        int mboxId = mbox.getId();
+        synchronized (mSummaryCache) {
+            mSummaryCache.removeMailbox(mboxId);
+        }
+        FileStore.removeMailbox(mboxId);
     }
 }

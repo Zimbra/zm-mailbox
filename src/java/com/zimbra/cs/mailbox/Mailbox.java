@@ -1618,7 +1618,11 @@ public class Mailbox {
                 Connection conn = getOperationConnection();
                 DbMailbox.clearMailboxContent(this);
                 DbMailbox.deleteMailbox(conn, this);
-                    
+
+                // Remove all data related to this mailbox from calendar cache, so the data doesn't
+                // get used by another user later by mistake if/when mailbox id gets reused.
+                CalendarCache.getInstance().removeMailbox(this);
+
                 success = true;
             } finally {
                 // commit the DB transaction before touching the store!  (also ends the operation)

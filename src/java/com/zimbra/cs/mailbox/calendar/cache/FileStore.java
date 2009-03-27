@@ -41,6 +41,15 @@ public class FileStore {
 
     private static final long MAX_CACHE_FILE_LEN = 100 * 1024 * 1024;  // 100MB
 
+    private static File getMailboxDir(int mboxId) {
+        long mdir = mboxId >> MBOX_BITS;
+        mdir &= MBOX_GROUP_BITS;
+
+        StringBuilder sb = new StringBuilder(LC.calendar_cache_directory.value());
+        sb.append(File.separator).append(mdir).append(File.separator).append(mboxId);
+        return new File(sb.toString());
+    }
+
     private static File getCalFolderFile(int mboxId, int folderId) {
         long mdir = mboxId >> MBOX_BITS;
         mdir &= MBOX_GROUP_BITS;
@@ -162,5 +171,14 @@ public class FileStore {
             }
         }
         return null;
+    }
+
+    static void removeMailbox(int mboxId) {
+        File dir = getMailboxDir(mboxId);
+        try {
+            FileUtil.deleteDir(dir);
+        } catch (IOException e) {
+            ZimbraLog.calendar.warn("Unable to delete calendar cache for mailbox " + mboxId, e);
+        }
     }
 }
