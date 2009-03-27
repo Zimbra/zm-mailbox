@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
@@ -280,8 +281,15 @@ public class GalSearchControl {
 			SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
 			transport.setAuthToken(AuthToken.getZimbraAdminAuthToken().toZAuthToken());
 			transport.setTargetAcctId(targetAcct.getId());
-			transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
-			Element resp = transport.invokeWithoutSession(mParams.getRequest());
+			if (mParams.getSoapContext() != null)
+				transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
+			Element req = mParams.getRequest();
+			if (req == null) {
+				req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
+				req.addAttribute(AccountConstants.A_TYPE, "account");
+				req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
+			}
+			Element resp = transport.invokeWithoutSession(req.detach());
 			GalSearchResultCallback callback = mParams.getResultCallback();
 			Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
 			while (iter.hasNext())

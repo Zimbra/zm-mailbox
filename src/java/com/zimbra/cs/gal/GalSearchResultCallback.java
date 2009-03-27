@@ -14,6 +14,11 @@
  */
 package com.zimbra.cs.gal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -59,6 +64,34 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	mResponse.addElement(e.detach());
     }
     
+    protected HashMap<String,Object> parseContactElement(Element e) {
+    	HashMap<String,Object> map = new HashMap<String,Object>();
+    	Iterator<Element> iter = e.elementIterator(MailConstants.E_ATTRIBUTE);
+    	while (iter.hasNext()) {
+    		Element elem = iter.next();
+    		String key = elem.getAttribute(MailConstants.A_ATTRIBUTE_NAME, null);
+    		String value = elem.getText();
+    		if (key == null)
+    			continue;
+    		Object obj = map.get(key);
+    		if (obj != null) {
+    			if (obj instanceof String) {
+    				String[] str = new String[2];
+    				str[0] = (String)obj;
+    				str[1] = value;
+    				map.put(key, str);
+    			} else if (obj instanceof String[]) {
+    				ArrayList<String> arr = new ArrayList<String>();
+    				arr.addAll(Arrays.asList((String[])obj));
+    				arr.add(value);
+    				map.put(key, arr.toArray(new String[0]));
+    			}
+    		} else {
+    			map.put(key, value);
+    		}
+    	}
+    	return map;
+    }
     public void setNewToken(int newToken) {
     	mResponse.addAttribute(MailConstants.A_TOKEN, newToken);
     }

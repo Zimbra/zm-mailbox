@@ -291,6 +291,8 @@ public class ContactAutoComplete {
 	        handleContactAttrs(c.getAttrs());
 	    }
 	    public void handleElement(Element e) throws ServiceException {
+			ZimbraLog.gal.debug("gal entry: "+""+e.getAttribute(MailConstants.A_ID));
+	        handleContactAttrs(parseContactElement(e));
 	    }
 	    public void setNewToken(int newToken) {
 	    }
