@@ -18,7 +18,6 @@ package com.zimbra.cs.service;
 import java.io.FilterInputStream;
 import java.io.InputStream;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -249,7 +248,7 @@ public class UserServlet extends ZimbraServlet {
     public synchronized static void addFormatter(Formatter f) {
         mFormatters.put(f.getType(), f);
         for (String mimeType : f.getDefaultMimeTypes())
-                mDefaultFormatters.put(mimeType, f);
+            mDefaultFormatters.put(mimeType, f);
     }
 
     public Formatter getFormatter(String type) {
@@ -268,27 +267,36 @@ public class UserServlet extends ZimbraServlet {
         return mbox;
     }
     
-    private void getAccount(Context context) throws IOException, ServletException {
+    private void getAccount(Context context) throws IOException, ServletException, UserServletException {
         try {
             boolean isAdminRequest = isAdminRequest(context.req);
             
             // check cookie or access key
             if (context.cookieAuthAllowed() || AuthProvider.allowAccessKeyAuth(context.req, this)) {
-                AuthToken at = cookieAuthRequest(context.req, context.resp);
-                if (at != null) {
-                    if (at.isZimbraUser()) {
-                        context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
-                        if (context.authAccount != null) {
+                try {
+                    AuthToken at = AuthProvider.getAuthToken(context.req, isAdminRequest);
+                    if (at != null) {
+                        if (at.isExpired()) {
+                            // bug 35917: expired auth token means auth failure
+                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                        } else if (at.isZimbraUser()) {
+                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+                            // bug 35917: token for nonexistent user means auth failure
+                            if (context.authAccount == null)
+                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                             context.cookieAuthHappened = true;
                             context.authToken = at;
                             return;
+                        } else {
+                            context.authAccount = new ACL.GuestAccount(at);
+                            context.basicAuthHappened = true; // pretend that we basic authed
+                            context.authToken = at;
+                            return;
                         }
-                    } else {
-                        context.authAccount = new ACL.GuestAccount(at);
-                        context.basicAuthHappened = true; // pretend that we basic authed
-                        context.authToken = at;
-                        return;
                     }
+                } catch (AuthTokenException e) {
+                    // bug 35917: malformed auth token means auth failure
+                    throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                 }
             }
 
@@ -301,14 +309,22 @@ public class UserServlet extends ZimbraServlet {
                     try {
                         // Only supported by ZimbraAuthProvider
                         AuthToken at = AuthProvider.getAuthToken(auth);
-                        if (!at.isExpired()) {
+                        if (at.isExpired()) {
+                            // bug 35917: expired auth token means auth failure
+                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                        } else {
+                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+                            // bug 35917: token for nonexistent user means auth failure
+                            if (context.authAccount == null)
+                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                             context.qpAuthHappened = true;
                             context.authToken = at;
-                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+                            return;
                         }
                     } catch (AuthTokenException e) {
+                        // bug 35917: malformed auth token means auth failure
+                        throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                     }
-                    return;
                 }
             }
             
@@ -363,7 +379,7 @@ public class UserServlet extends ZimbraServlet {
                 return;
             }
 
-            if (isProxyRequest(req, resp, context))
+            if (proxyIfNecessary(req, resp, context))
                 return;
 
             // at this point context.authAccount is set either from the Cookie,
@@ -371,9 +387,8 @@ public class UserServlet extends ZimbraServlet {
             // or basic auth, authAccount is set to anonymous account.
             if (context.authAccount != null) {
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
-                if(context.authAccount.getLocale() != null && context.locale == null){
+                if (context.authAccount.getLocale() != null && context.locale == null)
                 	context.locale = context.authAccount.getLocale();
-                }
             }
 
             doAuthGet(req, resp, context);
@@ -393,7 +408,8 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServletException {
+    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context)
+    throws IOException, ServletException, UserServletException {
         // if they specify /~/, we must auth
         if (context.targetAccount == null && context.accountPath.equals("~")) {
             getAccount(context);
@@ -404,9 +420,8 @@ public class UserServlet extends ZimbraServlet {
 
         // need this before proxy if we want to support sending cookie from a basic-auth
         getAccount(context);
-        if (context.authAccount == null) {
+        if (context.authAccount == null)
             context.setAnonymousRequest();
-        }
 
         return true;
     }
@@ -422,7 +437,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
     
-    private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
+    private boolean proxyIfNecessary(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
 
@@ -498,7 +513,7 @@ public class UserServlet extends ZimbraServlet {
                 return;
             }
 
-            if (isProxyRequest(req, resp, context))
+            if (proxyIfNecessary(req, resp, context))
                 return;
 
             if (context.authAccount != null)
@@ -1047,7 +1062,7 @@ public class UserServlet extends ZimbraServlet {
             private long maxSize;
             private long markSize = 0;
             
-            UploadInputStream(InputStream is, long maxSize) throws IOException {
+            UploadInputStream(InputStream is, long maxSize) {
                 this.is = is;
                 this.maxSize = maxSize;
             }
@@ -1057,7 +1072,7 @@ public class UserServlet extends ZimbraServlet {
                 this.fi = fi;
             }
 
-            public void close() throws IOException {
+            @Override public void close() throws IOException {
                 try {
                     is.close();
                 } finally {
@@ -1067,23 +1082,23 @@ public class UserServlet extends ZimbraServlet {
                 }
             }
             
-            public int available() throws IOException { return is.available(); }
+            @Override public int available() throws IOException { return is.available(); }
 
-            public void mark(int where) { is.mark(where); markSize = curSize; }
+            @Override public void mark(int where) { is.mark(where); markSize = curSize; }
 
-            public boolean markSupported() { return is.markSupported(); }
-            
-            public int read() throws IOException { return (int)check(is.read()); }
-            
-            public int read(byte b[]) throws IOException { return (int)check(is.read(b)); }
+            @Override public boolean markSupported() { return is.markSupported(); }
 
-            public int read(byte b[], int off, int len) throws IOException {
+            @Override public int read() throws IOException { return (int)check(is.read()); }
+
+            @Override public int read(byte b[]) throws IOException { return (int)check(is.read(b)); }
+
+            @Override public int read(byte b[], int off, int len) throws IOException {
                 return (int)check(is.read(b, off, len));
             }
 
-            public void reset() throws IOException { is.reset(); curSize = markSize; }
+            @Override public void reset() throws IOException { is.reset(); curSize = markSize; }
 
-            public long skip(long n) throws IOException { return check(is.skip(n)); }
+            @Override public long skip(long n) throws IOException { return check(is.skip(n)); }
 
             private long check(long in) throws IOException {
                 if (in > 0) {
@@ -1107,13 +1122,9 @@ public class UserServlet extends ZimbraServlet {
             
             if (limit == 0) {
                 if (req.getParameter("lbfums") != null)
-                    limit = Provisioning.getInstance().getLocalServer().
-                        getLongAttr(Provisioning.A_zimbraFileUploadMaxSize,
-                        DEFAULT_MAX_SIZE);
+                    limit = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
                 else
-                    limit = Provisioning.getInstance().getConfig().
-                        getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize,
-                        DEFAULT_MAX_SIZE);
+                    limit = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
             }
             if (ServletFileUpload.isMultipartContent(req)) {
                 ServletFileUpload sfu = new ServletFileUpload();
@@ -1132,19 +1143,16 @@ public class UserServlet extends ZimbraServlet {
                             is = null;
                         } else {
                             ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
-                                fis.getName() == null ? "unknown" : fis.getName(),
-                                req.getContentLength());
+                                fis.getName() == null ? "unknown" : fis.getName(), req.getContentLength());
                             is = new UploadInputStream(fis.openStream(), limit);
                             break;
                         }
                     }
                 } catch (Exception e) {
-                    throw new UserServletException(HttpServletResponse.
-                        SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
+                    throw new UserServletException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
                 }
                 if (is == null)
-                    throw new UserServletException(HttpServletResponse.
-                        SC_NO_CONTENT, "No file content");
+                    throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "No file content");
             } else {
                 String filename = null;
                 String hdr = req.getHeader("content-disposition");
@@ -1456,5 +1464,4 @@ public class UserServlet extends ZimbraServlet {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
         }
     }
-
 }
