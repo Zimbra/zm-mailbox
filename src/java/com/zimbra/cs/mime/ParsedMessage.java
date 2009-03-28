@@ -117,7 +117,7 @@ public class ParsedMessage {
     private long mReceivedDate = -1;
     private String mSubject;
     private String mNormalizedSubject;
-    private boolean mSubjectPrefixed;
+    private boolean mSubjectIsReply;
     private List<Document> mLuceneDocuments = new ArrayList<Document>();
     private CalendarPartInfo mCalendarPartInfo;
 
@@ -732,7 +732,7 @@ public class ParsedMessage {
 
     public boolean isReply() {
         normalizeSubject();
-        return mSubjectPrefixed;
+        return mSubjectIsReply;
     }
 
     public String getSubject() {
@@ -1348,7 +1348,8 @@ public class ParsedMessage {
     private static String compressWhitespace(String value) {
         if (value == null || value.equals(""))
             return value;
-        StringBuffer sb = new StringBuffer();
+
+        StringBuilder sb = new StringBuilder();
         for (int i = 0, len = value.length(), last = -1; i < len; i++) {
             char c = value.charAt(i);
             if (c <= ' ') {
@@ -1364,17 +1365,18 @@ public class ParsedMessage {
     private void normalizeSubject() {
         if (mNormalizedSubject != null)
             return;
-        mSubjectPrefixed = false;
+
         try {
             mNormalizedSubject = mSubject = getMimeMessage().getSubject();
         } catch (MessagingException e) { }
 
         if (mSubject == null) {
             mNormalizedSubject = mSubject = "";
+            mSubjectIsReply = false;
         } else {
             Pair<String, Boolean> normalized = trimPrefixes(StringUtil.stripControlCharacters(mSubject));
             mNormalizedSubject = compressWhitespace(normalized.getFirst());
-            mSubjectPrefixed = normalized.getSecond();
+            mSubjectIsReply = normalized.getSecond();
             if (mNormalizedSubject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
                 mNormalizedSubject = mNormalizedSubject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
         }
@@ -1390,14 +1392,14 @@ public class ParsedMessage {
 
     private static void testNormalization(String[] test) {
         String raw = test[0], normalized = test[1], description = test[3];
-        boolean trimmed = Boolean.parseBoolean(test[2]);
+        boolean isReply = Boolean.parseBoolean(test[2]);
 
         Pair<String, Boolean> result = trimPrefixes(StringUtil.stripControlCharacters(raw));
         String actual = compressWhitespace(result.getFirst());
-        if (!normalized.equals(actual) || trimmed != result.getSecond()) {
+        if (!normalized.equals(actual) || isReply != result.getSecond()) {
             System.out.println("failed test: " + description);
             System.out.println("  raw:      {" + raw + '}');
-            System.out.println("  expected: |" + normalized + "| (" + (trimmed ? "" : "un") + "trimmed)");
+            System.out.println("  expected: |" + normalized + "| (" + (isReply ? "" : "un") + "trimmed)");
             System.out.println("  actual:   |" + actual + "| (" + (result.getSecond() ? "" : "un") + "trimmed)");
         }
 
