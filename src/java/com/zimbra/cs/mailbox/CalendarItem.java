@@ -1273,30 +1273,21 @@ public abstract class CalendarItem extends MailItem {
                                                     boolean preserveAlarms,
                                                     boolean discardExistingInvites)
     throws ServiceException {
-        boolean isCancel = newInvite.isCancel();
-
-        if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
-
-        // Don't allow creating/editing a private appointment on behalf of another user,
-        // unless that other user is a calendar resource.
-        boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
         OperationContext octxt = getMailbox().getOperationContext();
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
-        boolean denyPrivateAccess = false;
+        boolean isCancel = newInvite.isCancel();
+
+        boolean skipPrivateCheck = shouldSkipPrivateCheck(newInvite);
+        if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE, authAccount, asAdmin, skipPrivateCheck))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
+
+        // Don't allow moving a private appointment on behalf of another user,
+        // unless that other user is a calendar resource.
+        boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
+        boolean denyPrivateAccess = skipPrivateCheck ? false : !allowPrivateAccess(authAccount, asAdmin);
         if (!newInvite.isPublic() || !isPublic()) {
-            boolean isMoving = folderId != getFolderId();
-            if (!allowPrivateAccess(authAccount, asAdmin)) {
-                denyPrivateAccess = true;
-                if (!isCalendarResource) {
-                    if (!isMoving)
-                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in this folder");
-                    else
-                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in source folder");
-                }
-            }
-            if (isMoving) {
+            if (folderId != getFolderId()) {
                 Folder folder = getMailbox().getFolderById(folderId);
                 if (!allowPrivateAccess(folder, authAccount, asAdmin)) {
                     denyPrivateAccess = true;
@@ -2659,7 +2650,12 @@ public abstract class CalendarItem extends MailItem {
     
     public boolean processNewInviteReply(Invite reply)
     throws ServiceException {
-        if (!canAccess(ACL.RIGHT_ACTION))
+        // Require private access permission only when we're replying to a private series/instance.
+        boolean skipPrivateCheck = shouldSkipPrivateCheck(reply);
+        OperationContext octxt = getMailbox().getOperationContext();
+        Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
+        boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+        if (!canAccess(ACL.RIGHT_ACTION, authAccount, asAdmin, skipPrivateCheck))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment/task's state");
 
         boolean dirty = false;
@@ -3261,7 +3257,12 @@ public abstract class CalendarItem extends MailItem {
 
     @Override
     boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
-        if (!isPublic()) {
+        return canAccess(rightsNeeded, authuser, asAdmin, false);
+    }
+
+    private boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin, boolean skipPrivateCheck)
+    throws ServiceException {
+        if (!skipPrivateCheck && !isPublic()) {
             // If write/delete was requested on a private item, check private permission first.
             short writeAccess = ACL.RIGHT_WRITE | ACL.RIGHT_DELETE;
             if ((rightsNeeded & writeAccess) != 0) {
@@ -3270,6 +3271,26 @@ public abstract class CalendarItem extends MailItem {
             }
         }
         return super.canAccess(rightsNeeded, authuser, asAdmin);
+    }
+
+    // If we're adding a private invite, we must make sure the authenticated user has permission to
+    // access private data.  If we're adding a non-public invite but the appointment currently has
+    // some private data, private access permission is not needed as long as the instance(s) being
+    // updated aren't currently private.
+    private boolean shouldSkipPrivateCheck(Invite newInvite) throws ServiceException {
+        if (!isPublic() && newInvite.isPublic()) {
+            RecurId rid = newInvite.getRecurId();
+            // If canceling whole series, requester must have private access permission.
+            if (rid == null && newInvite.isCancel())
+                return false;
+            Invite current = getInvite(rid);
+            // If no matching recurrence-id was found, look at the current series.
+            if (current == null && rid != null)
+                current = getInvite((RecurId) null);
+            if (current != null && current.isPublic())
+                return true;
+        }
+        return false;
     }
 
     /**
