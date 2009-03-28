@@ -1035,14 +1035,18 @@ OR
 -------------------------------------------------------------------------------
 
 <ImportAppointmentsRequest ct="{content-type}" [l="{folder-id}"]>
-  <content [aid="{attach-upload-id}"]>...</content>
+  <content [aid="{attach-upload-id}"]                    // use an uploaded object
+           [mid="{message-id}" part="{part-identifier}]  // use a part in an existing message
+  >
+    ...  // or inline the data
+  </content>
 </ImportAppointmentsRequest>
 
 <ImportAppointmentsResponse>
   <appt ids="{list-of-created-ids} n="{num-imported}"/>
 </ImportAppointmentsResponse>
 
-{content-type} = only currently supported content type is "ics"
+{content-type} = only currently supported content type is "text/calendar" (and its nickname "ics")
 {folder-id} = optional folder id to import appointments into
 
 {attach-upload-id} = attachment id from upload server. If specified, then body of content is ignored.

@@ -23,7 +23,6 @@ import java.util.Map;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
@@ -215,33 +214,9 @@ public class CreateContact extends MailDocumentHandler  {
             // part of existing message
             ItemId iid = new ItemId(messageId, zsc);
             String part = vcard.getAttribute(MailConstants.A_PART);
-            if (iid.isLocal()) {
-                try {
-                    // fetch from local store
-                    if (!mbox.getAccountId().equals(iid.getAccountId()))
-                        mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
-                    Message msg = mbox.getMessageById(octxt, iid.getId());
-                    MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
-                    String ctype = new ContentType(mp.getContentType()).getValue();
-                    if (!ctype.equals(Mime.CT_TEXT_PLAIN) && !ctype.equals(Mime.CT_TEXT_VCARD))
-                        throw MailServiceException.INVALID_CONTENT_TYPE(ctype);
-                    text = Mime.getStringContent(mp, mbox.getAccount().getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("error reading vCard", e);
-                } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("error fetching message part", e);
-                }
-            } else {
-                try {
-                    // fetch from remote store
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put(UserServlet.QP_PART, part);
-                    byte[] content = UserServlet.getRemoteContent(zsc.getAuthToken(), iid, params);
-                    text = new String(content, "utf-8");
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("error reading vCard", e);
-                }
-            }
+            String[] acceptableTypes = new String[] { Mime.CT_TEXT_PLAIN, Mime.CT_TEXT_VCARD };
+            String charsetWanted = mbox.getAccount().getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+            text = fetchItemPart(zsc, octxt, mbox, iid, part, acceptableTypes, charsetWanted);
         }
 
         List<VCard> cards = VCard.parseVCard(text);
@@ -263,5 +238,48 @@ public class CreateContact extends MailDocumentHandler  {
                 toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tagsStr));
         }
         return toRet;
+    }
+
+    static String fetchItemPart(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+                                ItemId iid, String part,
+                                String[] acceptableMimeTypes, String charsetWanted)
+    throws ServiceException {
+        String text = null;
+        try {
+            if (iid.isLocal()) {
+                // fetch from local store
+                if (!mbox.getAccountId().equals(iid.getAccountId()))
+                    mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
+                Message msg = mbox.getMessageById(octxt, iid.getId());
+                MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
+                String ctype = new ContentType(mp.getContentType()).getValue();
+                boolean typeAcceptable;
+                if (acceptableMimeTypes != null) {
+                    typeAcceptable = false;
+                    for (String type : acceptableMimeTypes) {
+                        if (type != null && type.equalsIgnoreCase(ctype)) {
+                            typeAcceptable = true;
+                            break;
+                        }
+                    }
+                } else {
+                    typeAcceptable = true;
+                }
+                if (!typeAcceptable)
+                    throw MailServiceException.INVALID_CONTENT_TYPE(ctype);
+                text = Mime.getStringContent(mp, charsetWanted);
+            } else {
+                // fetch from remote store
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(UserServlet.QP_PART, part);
+                byte[] content = UserServlet.getRemoteContent(zsc.getAuthToken(), iid, params);
+                text = new String(content, Mime.P_CHARSET_UTF8);
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("error fetching message part: iid=" + iid + ", part=" + part, e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("error fetching message part: iid=" + iid + ", part=" + part, e);
+        }
+        return text;
     }
 }

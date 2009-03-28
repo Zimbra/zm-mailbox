@@ -25,6 +25,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
@@ -60,18 +61,30 @@ public class ImportAppointments extends MailDocumentHandler  {
         ItemId iidFolder = new ItemId(folder, zsc);
 
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
-        if (!ct.equals("ics"))
+        if (!ct.equalsIgnoreCase("ics") && !ct.equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
 
         Element content = request.getElement(MailConstants.E_CONTENT);
         List<Upload> uploads = null;
         BufferedReader reader = null;
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
+        String messageId = content.getAttribute(MailConstants.A_MESSAGE_ID, null);
+        if (attachment != null && messageId != null)
+            throw ServiceException.INVALID_REQUEST("use either aid or mid but not both", null);
         try {
-            if (attachment == null)
-                reader = new BufferedReader(new StringReader(content.getText()));
-            else
+            if (attachment != null) {
                 reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
+            } else if (messageId != null) {
+                // part of existing message
+                ItemId iid = new ItemId(messageId, zsc);
+                String part = content.getAttribute(MailConstants.A_PART);
+                String[] acceptableTypes = new String[] { Mime.CT_TEXT_CALENDAR };
+                String partStr = CreateContact.fetchItemPart(
+                        zsc, octxt, mbox, iid, part, acceptableTypes, Mime.P_CHARSET_UTF8);
+                reader = new BufferedReader(new StringReader(partStr));
+            } else {
+                reader = new BufferedReader(new StringReader(content.getText()));
+            }
 
             List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
             reader.close();
@@ -132,5 +145,4 @@ public class ImportAppointments extends MailDocumentHandler  {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
     }
-
 }
