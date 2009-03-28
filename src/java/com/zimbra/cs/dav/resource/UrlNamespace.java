@@ -189,10 +189,14 @@ public class UrlNamespace {
 		}
 	}
 
+	public static String getRawResourceUrl(DavResource rs) {
+		return DavServlet.DAV_PATH + "/" + rs.getOwner() + rs.getUri();
+	}
+	
 	/* Returns URL to the resource. */
 	public static String getResourceUrl(DavResource rs) {
 	    //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
-        return URLUtil.urlEscape(DavServlet.DAV_PATH + "/" + rs.getOwner() + rs.getUri());
+        return URLUtil.urlEscape(getRawResourceUrl(rs));
 	}
     
     public static String getPrincipalUrl(String user) {
@@ -348,17 +352,22 @@ public class UrlNamespace {
         }
     }
     
-    private static MailItemResource getCalendarItemForMessage(DavContext ctxt, Message msg) throws ServiceException {
+    private static DavResource getCalendarItemForMessage(DavContext ctxt, Message msg) throws ServiceException {
     	Mailbox mbox = msg.getMailbox();
     	if (msg.isInvite() && msg.hasCalendarItemInfos()) {
     		Message.CalendarItemInfo calItemInfo = msg.getCalendarItemInfo(0);
     		try {
-    			CalendarItem item = mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
-    			int compNum = calItemInfo.getComponentNo();
-    			Invite invite = item.getInvite(msg.getId(), compNum);
-    			if (item != null && invite != null) {
-    				String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), item.getUid(), msg.getId());
-    				return new CalendarObject.LocalCalendarObject(ctxt, path, item, compNum, msg.getId());
+    			Invite invite = null;
+    			if (calItemInfo.getCalendarItemId() != Message.CalendarItemInfo.CALITEM_ID_NONE) {
+        			CalendarItem item = mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
+        			int compNum = calItemInfo.getComponentNo();
+        			invite = item.getInvite(msg.getId(), compNum);
+    			} else {
+    				invite = calItemInfo.getInvite();
+    			}
+    			if (invite != null) {
+    				String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), invite.getUid(), msg.getId());
+    				return new CalendarObject.ScheduleMessage(ctxt, path, ctxt.getUser(), invite, msg);
     			}
             } catch (MailServiceException.NoSuchItemException e) {
             	// the appt must have been cancelled or deleted.
@@ -369,8 +378,8 @@ public class UrlNamespace {
     }
     
 	/* Returns DavResource for the MailItem. */
-	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
-		MailItemResource resource = null;
+	public static DavResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
+		DavResource resource = null;
 		if (item == null)
 			return resource;
 		byte itemType = item.getType();

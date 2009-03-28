@@ -42,7 +42,7 @@ public class Copy extends Move {
 		if (!(col instanceof MailItemResource))
 			throw new DavException("cannot copy", HttpServletResponse.SC_BAD_REQUEST, null);
 		MailItemResource mir = (MailItemResource) rs;
-		MailItemResource copy = mir.copy(ctxt, col);
+		DavResource copy = mir.copy(ctxt, col);
 
 		renameIfNecessary(ctxt, copy, destination, col);
 		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);

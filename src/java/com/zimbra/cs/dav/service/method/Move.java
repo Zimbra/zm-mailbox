@@ -49,7 +49,7 @@ public class Move extends DavMethod {
 		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 	
-	protected void renameIfNecessary(DavContext ctxt, MailItemResource rs, String dest, MailItemResource destCollection) throws DavException {
+	protected void renameIfNecessary(DavContext ctxt, DavResource rs, String dest, MailItemResource destCollection) throws DavException {
 		String oldName = ctxt.getItem();
 		int begin, end;
 		end = dest.length();

@@ -29,6 +29,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.index.MessageHit;
@@ -42,17 +43,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 
-public class ScheduleInbox extends Collection {
+public class ScheduleInbox extends CalendarCollection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
 	}
-	@Override public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
-		return getChildren(ctxt, null);
-	}
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
+
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange tr) throws DavException {
 		try {
 			return getScheduleMessages(ctxt, hrefs);
 		} catch (ServiceException se) {
@@ -76,11 +75,15 @@ public class ScheduleInbox extends Collection {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
                 	Message msg = ((MessageHit)hit).getMessage();
+                	if (msg.getCalendarIntendedFor() != null)
+                		continue;
                 	DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
                 	if (rs != null) {
-                    	String href = UrlNamespace.getResourceUrl(rs);
-                    	if (hrefs != null && hrefs.contains(href))
+                    	String href = UrlNamespace.getRawResourceUrl(rs);
+                    	if (hrefs == null || hrefs.contains(href))
                     		result.add(rs);
+                    	else
+                    		result.add(new DavResource.InvalidResource(href, getOwner()));
                 	}
                 }
 			}
@@ -100,6 +103,7 @@ public class ScheduleInbox extends Collection {
 		ArrayList<Element> newSet = null;
 		for (Element el : set) {
 			if (el.getQName().equals(DavElements.E_CALENDAR_FREE_BUSY_SET)) {
+				@SuppressWarnings("unchecked")
 				Iterator hrefs = el.elementIterator(DavElements.E_HREF);
 				ArrayList<String> urls = new ArrayList<String>();
 				while (hrefs.hasNext())

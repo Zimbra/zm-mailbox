@@ -179,7 +179,7 @@ public abstract class MailItemResource extends DavResource {
 	}
 
 	/* Copies this resource to another Collection. */
-	public MailItemResource copy(DavContext ctxt, Collection dest) throws DavException {
+	public DavResource copy(DavContext ctxt, Collection dest) throws DavException {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
 			MailItem item = mbox.copy(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, dest.getId());
@@ -192,13 +192,16 @@ public abstract class MailItemResource extends DavResource {
 	}
 
 	/* Renames this resource. */
-	public void rename(DavContext ctxt, String newName, MailItemResource destCollection) throws DavException {
+	public void rename(DavContext ctxt, String newName, DavResource destCollection) throws DavException {
+		if (!(destCollection instanceof MailItemResource))
+			return;
+		MailItemResource dest = (MailItemResource) destCollection;
 		try {
 			Mailbox mbox = getMailbox(ctxt);
 			if (isCollection()) {
-				mbox.rename(ctxt.getOperationContext(), mId, MailItem.TYPE_FOLDER, newName, destCollection.mId);
+				mbox.rename(ctxt.getOperationContext(), mId, MailItem.TYPE_FOLDER, newName, dest.mId);
 			} else {
-                mbox.rename(ctxt.getOperationContext(), mId, mType, newName, destCollection.mId);
+                mbox.rename(ctxt.getOperationContext(), mId, mType, newName, dest.mId);
 			}
 		} catch (ServiceException se) {
 			int resCode = se instanceof MailServiceException.NoSuchItemException ?

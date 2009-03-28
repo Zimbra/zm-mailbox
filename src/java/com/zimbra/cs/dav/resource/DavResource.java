@@ -247,4 +247,10 @@ public abstract class DavResource {
 	public String toString() {
 		return mUri;
 	}
+	public DavResource copy(DavContext ctxt, DavResource dest) throws DavException {
+		throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
+	}
+	public void rename(DavContext ctxt, String newName, DavResource destCollection) throws DavException {
+		throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
+	}
 }
