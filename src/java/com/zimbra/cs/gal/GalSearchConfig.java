@@ -127,6 +127,12 @@ public class GalSearchConfig {
 		mGalType = GalType.zimbra;
 	}
 	
+	private boolean isConfigComplete() {
+		return mUrl.length > 0 && mFilter != null && 
+			(mAuthMech.equals(Provisioning.LDAP_AM_NONE) ||
+			 (mAuthMech.equals(Provisioning.LDAP_AM_SIMPLE) && mBindDn != null && mBindPassword != null) || 
+			 (mAuthMech.equals(Provisioning.LDAP_AM_KERBEROS5) && mKerberosKeytab != null && mKerberosPrincipal != null));
+	}
 	protected void loadConfig(Domain domain, GalOp op) throws ServiceException {
 		
         mRules = new LdapGalMapRules(domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap));
@@ -147,11 +153,12 @@ public class GalSearchConfig {
             mBindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
             mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
-        	break;
+            if (isConfigComplete())
+            	break;
         case search:
             mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
             mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
-            mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase);
+            mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
             mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
             mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_SIMPLE);
             mBindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
@@ -163,7 +170,7 @@ public class GalSearchConfig {
         case autocomplete:
             mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
             mFilter = domain.getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter);
-            mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase);
+            mSearchBase = domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
             mStartTlsEnabled = domain.getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
             mAuthMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_SIMPLE);
             mBindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);

@@ -83,7 +83,10 @@ public class SearchGal extends AdminDocumentHandler {
         params.setQuery(n);
         params.setResponseName(AdminConstants.SEARCH_GAL_RESPONSE);
         GalSearchControl gal = new GalSearchControl(params);
-        gal.search();
+        if (token != null)
+        	gal.sync();
+        else
+        	gal.search();
         return params.getResultCallback().getResponse();
     }
     

@@ -92,7 +92,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	}
     	return map;
     }
-    public void setNewToken(int newToken) {
+    public void setNewToken(String newToken) {
     	mResponse.addAttribute(MailConstants.A_TOKEN, newToken);
     }
     public void setSortBy(String sortBy) {

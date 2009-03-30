@@ -266,7 +266,7 @@ public class GalSearchControl {
 					callback.handleContact((Contact)item);
 			}
 			// XXX deleted items
-            callback.setNewToken(mbox.getLastChangeID());
+            callback.setNewToken("" + mbox.getLastChangeID());
 		} catch (Exception e) {
 			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
 			return false;
@@ -324,17 +324,19 @@ public class GalSearchControl {
     	}
 
     	boolean hadMore = mParams.getResult().getHadMore();
-    	if (galMode != GalMode.both)
-    		return;
-
-    	// do the second query
-    	mParams.createSearchConfig(op, GalType.ldap);
-    	try {
-        	LdapUtil.galSearch(mParams);
-    	} catch (Exception e) {
-    		throw ServiceException.FAILURE("ldap search failed", e);
+    	if (galMode == GalMode.both) {
+        	// do the second query
+        	mParams.createSearchConfig(op, GalType.ldap);
+        	try {
+            	LdapUtil.galSearch(mParams);
+        	} catch (Exception e) {
+        		throw ServiceException.FAILURE("ldap search failed", e);
+        	}
+        	hadMore |= mParams.getResult().getHadMore();
     	}
-    	hadMore |= mParams.getResult().getHadMore();
+
+    	if (op == GalOp.sync)
+    		mParams.getResultCallback().setNewToken(mParams.getResult().getToken());
     	mParams.getResultCallback().setHasMoreResult(hadMore);
     }
     
