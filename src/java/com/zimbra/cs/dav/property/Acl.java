@@ -194,19 +194,20 @@ public class Acl extends ResourceProperty {
 	}
 	
 	static protected HashMap<String, Short> sRightsMap;
+	private static final short RIGHT_UNSUPPORTED = 0;
 	
 	static {
 		sRightsMap = new HashMap<String, Short>();
 		sRightsMap.put(DavElements.P_READ, ACL.RIGHT_READ);
 		sRightsMap.put(DavElements.P_READ_CURRENT_USER_PRIVILEGE_SET, ACL.RIGHT_READ);
-		//sRightsMap.put(DavElements.P_READ_FREE_BUSY, ACL.RIGHT_FREEBUSY);
-		//sRightsMap.put(DavElements.P_BIND, ACL.RIGHT_WRITE);
-		//sRightsMap.put(DavElements.P_UNBIND, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_READ_FREE_BUSY, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_BIND, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_UNBIND, RIGHT_UNSUPPORTED);
 		sRightsMap.put(DavElements.P_WRITE, ACL.RIGHT_WRITE);
-		//sRightsMap.put(DavElements.P_WRITE_ACL, ACL.RIGHT_WRITE);
-		//sRightsMap.put(DavElements.P_WRITE_CONTENT, ACL.RIGHT_WRITE);
-		//sRightsMap.put(DavElements.P_WRITE_PROPERTIES, ACL.RIGHT_WRITE);
-		//sRightsMap.put(DavElements.P_UNLOCK, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_WRITE_ACL, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_WRITE_CONTENT, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_WRITE_PROPERTIES, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_UNLOCK, RIGHT_UNSUPPORTED);
 	}
 	
 	private static class PrincipalCollectionSet extends ResourceProperty {

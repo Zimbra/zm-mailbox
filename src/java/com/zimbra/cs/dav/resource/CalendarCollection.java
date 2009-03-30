@@ -197,8 +197,11 @@ public class CalendarCollection extends Collection {
 				return true;
 		return false;
 	}
+	protected Mailbox getCalendarMailbox(DavContext ctxt) throws ServiceException, DavException {
+		return getMailbox(ctxt);
+	}
 	protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
-		Mailbox mbox = getMailbox(ctxt);
+		Mailbox mbox = getCalendarMailbox(ctxt);
 		
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         ctxt.setCollectionPath(getUri());
@@ -386,7 +389,7 @@ public class CalendarCollection extends Collection {
 
 	/* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */
 	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
-		Mailbox mbox = getMailbox(ctxt);
+		Mailbox mbox = getCalendarMailbox(ctxt);
 		FreeBusy fb = mbox.getFreeBusy(ctxt.getOperationContext(), range.getStart(), range.getEnd(), FreeBusyQuery.CALENDAR_FOLDER_ALL);
 		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
 	}

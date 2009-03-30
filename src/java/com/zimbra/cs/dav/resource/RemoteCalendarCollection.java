@@ -33,7 +33,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -61,21 +60,16 @@ public class RemoteCalendarCollection extends CalendarCollection {
     private HashMap<String,String> mCalendarData;
 	private String mRemoteOwnerId;
 	private int mRemoteId;
-    private boolean mOnLocalServer;
     
     public RemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
 		
-		mOnLocalServer = true;
 		mRemoteOwnerId = mp.getOwnerId();
 		mRemoteId = mp.getRemoteId();
 		mMailboxId = 0;
 		Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
-		if (target != null) {
-			mOnLocalServer = Provisioning.onLocalServer(target);
-			if (mOnLocalServer)
-				mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
-		}
+		if (target != null && Provisioning.onLocalServer(target))
+			mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
     }
 
     @Override
@@ -89,7 +83,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
     
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
-        if (mOnLocalServer)
+        if (isLocal())
         	return super.getChildren(ctxt, hrefs, range);
     	boolean needCalendarData = false;
 		for (QName prop : ctxt.getRequestProp().getProps()) {
@@ -161,7 +155,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         List<ZApptSummaryResult> results;
         
         try {
-            if (mOnLocalServer)
+            if (isLocal())
             	return super.getAppointmentMap(ctxt, range);
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
             if (target == null)
@@ -262,11 +256,9 @@ public class RemoteCalendarCollection extends CalendarCollection {
     	return mRemoteId;
     }
     
-	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
-		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.get(AccountBy.id, mRemoteOwnerId);
-		if (account != null && mOnLocalServer)
-			return MailboxManager.getInstance().getMailboxByAccount(account);
+	protected Mailbox getCalendarMailbox(DavContext ctxt) throws ServiceException, DavException {
+		if (isLocal())
+			return MailboxManager.getInstance().getMailboxById(mMailboxId);
 		return super.getMailbox(ctxt);
 	}
 	
@@ -280,4 +272,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
         return ZMailbox.getMailbox(zoptions);
     }
+	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+		return "";  // XXX implement free/busy check on shared calendars.
+	}
 }

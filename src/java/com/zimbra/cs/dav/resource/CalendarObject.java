@@ -344,8 +344,6 @@ public interface CalendarObject {
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
             setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             addProperty(CalDavProperty.getCalendarData(this));
-            mStart = appt.getStartTime();
-            mEnd = appt.getEndTime();
 	    }
 
 	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCalendarCollection parent, boolean newlyCreated) {
@@ -373,8 +371,6 @@ public interface CalendarObject {
 	    private String mUid;
 	    private String mEtag;
 	    private byte[] mContent;
-	    private long mStart;
-	    private long mEnd;
 	    
 	    @Override
 	    public void delete(DavContext ctxt) throws DavException {
@@ -404,10 +400,7 @@ public interface CalendarObject {
 	    }
 	    
 	    public boolean match(Filter filter) {
-        	TimeRange range = filter.getTimeRange();
-        	if (range == null)
-        		return true;
-        	return range.matches(mParent.getMailboxId(), mItemId, mStart, mEnd);
+	    	return true;  // XXX implement time range filter on shared calendars.  CalDAV proxying probably works better.
 	    }
 	    
 	    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException {
