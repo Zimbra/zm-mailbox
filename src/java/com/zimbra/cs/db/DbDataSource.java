@@ -185,6 +185,46 @@ public class DbDataSource {
         }
     }
 
+    public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
+    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
+        try {
+        	String dataSourceTable = getTableName(mbox);
+        	String mailItemTable = DbMailbox.qualifyTableName(mbox, "mail_item");
+        	String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable+".mailbox_id = ? AND ";
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("DELETE FROM ");
+            sb.append(dataSourceTable);
+            sb.append(" WHERE EXISTS ");
+            sb.append(" (SELECT * from ");
+            sb.append(mailItemTable);
+            sb.append(" WHERE ");
+            sb.append(IN_THIS_MAILBOX_AND);
+            sb.append(dataSourceTable).append(".item_id = ").append(mailItemTable).append(".id");
+            sb.append(" AND data_source_id = ? AND folder_id = ?)");
+            stmt = conn.prepareStatement(sb.toString());
+            int i = 1;
+            i = DbMailItem.setMailboxId(stmt, mbox, i);
+            stmt.setString(i++, ds.getId());
+            stmt.setInt(i++, folderId);
+            int numRows = stmt.executeUpdate();
+            conn.commit();
+            stmt.close();
+            ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    	
+    	return items;
+    }
+
     public static boolean hasMapping(DataSource ds, int itemId) throws ServiceException {
     	DataSourceItem item = getMapping(ds, itemId);
     	return item.remoteId != null;
