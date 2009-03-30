@@ -5119,7 +5119,7 @@ public class Mailbox {
         try {
             beginTransaction("setCustomData", octxt, redoRecorder);
 
-            MailItem item = getItemById(itemId, type);
+            MailItem item = checkAccess(getItemById(itemId, type));
             if (!checkItemChangeID(item))
                 throw MailServiceException.MODIFY_CONFLICT();
 

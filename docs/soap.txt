@@ -2416,6 +2416,27 @@ configured max/min values: see LocalConfig variables
 zimbra_noop_default_timeout, zimbra_noop_min_timeout and
 zimbra_noop_max_timeout)
 
+-----------------------
+
+ <SetCustomMetadataRequest id="{item-id}">
+   <meta section="{metadata-section-key}">
+     (<a n="{key}"> {value} </a>)*
+   </meta>
+ </SetCustomMetadataRequest>
+
+ <SetCustomMetadataResponse id="{item-id}"/>
+
+
+ <GetCustomMetadataRequest id="{item-id}">
+   <meta section="{metadata-section-key}"/>
+ </GetCustomMetadataRequest>
+
+ <GetCustomMetadataResponse id="{item-id}">
+   [<meta section="{metadata-section-key}">
+      (<a n="{key}"> {value} </a>)*
+    </meta>]
+ </GetCustomMetadataResponse>
+
 ---------------------------
 
 <GetFilterRulesRequest/>

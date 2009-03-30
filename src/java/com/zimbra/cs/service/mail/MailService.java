@@ -41,6 +41,8 @@ public class MailService implements DocumentService {
         // items
         dispatcher.registerHandler(MailConstants.GET_ITEM_REQUEST, new GetItem());
         dispatcher.registerHandler(MailConstants.ITEM_ACTION_REQUEST, new ItemAction());
+        dispatcher.registerHandler(MailConstants.GET_METADATA_REQUEST, new GetCustomMetadata());
+        dispatcher.registerHandler(MailConstants.SET_METADATA_REQUEST, new SetCustomMetadata());
 
         // conversations
         dispatcher.registerHandler(MailConstants.GET_CONV_REQUEST, new GetConv());

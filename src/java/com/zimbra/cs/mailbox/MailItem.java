@@ -678,6 +678,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     void setCustomData(CustomMetadata custom) throws ServiceException {
         if (custom == null)
             return;
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
 
         markItemModified(Change.MODIFIED_METADATA);
         // first add the new section to the list
