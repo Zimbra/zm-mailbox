@@ -59,9 +59,23 @@ import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
 public class RemoteCalendarCollection extends CalendarCollection {
 
     private HashMap<String,String> mCalendarData;
+	private String mRemoteOwnerId;
+	private int mRemoteId;
+    private boolean mOnLocalServer;
     
     public RemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
+		
+		mOnLocalServer = true;
+		mRemoteOwnerId = mp.getOwnerId();
+		mRemoteId = mp.getRemoteId();
+		mMailboxId = 0;
+		Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
+		if (target != null) {
+			mOnLocalServer = Provisioning.onLocalServer(target);
+			if (mOnLocalServer)
+				mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
+		}
     }
 
     @Override

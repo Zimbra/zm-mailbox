@@ -70,8 +70,6 @@ public abstract class MailItemResource extends DavResource {
 	protected long mModifiedDate;
 	protected String mOwnerId;
 	protected Map<QName,Element> mDeadProps;
-	protected String mRemoteOwnerId;
-	protected int mRemoteId;
 	
 	private static final String CONFIG_KEY = "caldav";
 	private static final int PROP_LENGTH_LIMIT = 1024;
@@ -391,18 +389,6 @@ public abstract class MailItemResource extends DavResource {
 	}
 	public static String getEtag(String modMetadata, String modContent) {
 		return "\""+modMetadata+"-"+modContent+"\"";
-	}
-	
-	public boolean isLocal() {
-		return mRemoteOwnerId == null && mRemoteId == 0;
-	}
-	
-	public String getRemoteOwnerId() {
-		return mRemoteOwnerId;
-	}
-	
-	public int getRemoteId() {
-		return mRemoteId;
 	}
 	
 	public void setAce(DavContext ctxt, List<Ace> aceList) throws ServiceException, DavException {

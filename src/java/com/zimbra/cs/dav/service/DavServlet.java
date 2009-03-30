@@ -23,8 +23,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpState;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -37,8 +35,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.service.method.*;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.AuthProvider;
@@ -245,21 +241,5 @@ public class DavServlet extends ZimbraServlet {
         if (account == null)
 			throw new DavException("unknown user "+user, HttpServletResponse.SC_NOT_FOUND, null);
         return getServiceUrl(account, DAV_PATH);
-	}
-	
-	private void sendProxyRequest(DavContext ctxt, DavMethod m, MailItemResource rs) throws IOException, DavException, ServiceException {
-		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(AccountBy.id, rs.getRemoteOwnerId());
-		if (acct == null)
-			throw new DavException("account not found: "+rs.getRemoteOwnerId(), HttpServletResponse.SC_BAD_REQUEST);
-		Server server = prov.getServer(acct);
-		if (server == null)
-			throw new DavException("server not found for account: "+acct.getName(), HttpServletResponse.SC_BAD_REQUEST);
-		String url = getServiceUrl(acct, DAV_PATH) + "/?id=" + rs.getRemoteId();
-		proxyServletRequest(
-				ctxt.getRequest(), 
-				ctxt.getResponse(), 
-				m.toHttpMethod(ctxt, url), 
-				new HttpState());
 	}
 }
