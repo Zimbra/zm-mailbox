@@ -27,6 +27,7 @@ import org.testng.TestNG;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.extension.ExtensionUtil;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -104,26 +105,31 @@ public class ZimbraSuite extends TestSuite
         List<Class<? extends TestCase>> tests = new ArrayList<Class<? extends TestCase>>();
         
         for (String testName : testNames) {
-            try {
-                if (testName.indexOf('.') < 0) {
-                    // short name...check the suite
-                    boolean found = false;
-                    for (Class<? extends TestCase> c : ZimbraSuite.sClasses) {
-                        if (testName.equals(c.getSimpleName())) {
-                            tests.add(c);
-                            found = true;
-                        }
+            if (testName.indexOf('.') < 0) {
+                // short name...check the suite
+                boolean found = false;
+                for (Class<? extends TestCase> c : ZimbraSuite.sClasses) {
+                    if (testName.equals(c.getSimpleName())) {
+                        tests.add(c);
+                        found = true;
                     }
-                    if (!found) {
-                        ZimbraLog.test.warn("Could not find test %s.  Make sure it's registered with %s.",
-                            testName, ZimbraSuite.class.getName());
-                    }
-                } else {
-                    Class<? extends TestCase> testClass = Class.forName(testName).asSubclass(TestCase.class);
-                    tests.add(testClass);
                 }
-            } catch (Exception e) {
-                throw ServiceException.FAILURE("Error instantiating test "+testName, e);
+                if (!found) {
+                    ZimbraLog.test.warn("Could not find test %s.  Make sure it's registered with %s.",
+                        testName, ZimbraSuite.class.getName());
+                }
+            } else {
+                Class<? extends TestCase> testClass = null;
+                try {
+                    testClass = Class.forName(testName).asSubclass(TestCase.class);
+                } catch (ClassNotFoundException e) {
+                    try {
+                        testClass = ExtensionUtil.findClass(testName).asSubclass(TestCase.class);
+                    } catch (ClassNotFoundException e2) {
+                        throw ServiceException.FAILURE("Error instantiating test " + testName, e2);
+                    }
+                }
+                tests.add(testClass);
             }
         }
 

@@ -25,10 +25,10 @@ import javax.mail.internet.MimeMessage;
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
 
 
@@ -262,6 +262,37 @@ extends TestCase {
         
         // Test size
         assertEquals(size, pm.getRawSize());
+    }
+
+    /**
+     * Tests adding a <tt>ParsedMessage</tt> to a mailbox.
+     */
+    public void testAddMessage()
+    throws Exception {
+        String msg = TestUtil.getTestMessage(NAME_PREFIX + " testAddMessage", SENDER_NAME, SENDER_NAME, null);
+        
+        // Test ParsedMessage from byte[]
+        ParsedMessage pm = new ParsedMessage(msg.getBytes(), true);
+        runAddMessageTest(msg, pm);
+        
+        // Test ParsedMessage from File
+        mFile = File.createTempFile("TestParsedMessage", null);
+        FileOutputStream out = new FileOutputStream(mFile);
+        out.write(msg.getBytes());
+        pm = new ParsedMessage(mFile, null, true);
+        runAddMessageTest(msg, pm);
+        
+        // Test ParsedMessage from MimeMessage
+        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(msg.getBytes()));
+        pm = new ParsedMessage(mimeMsg, true);
+        runAddMessageTest(msg, pm);
+    }
+    
+    private void runAddMessageTest(String originalMsg, ParsedMessage pm)
+    throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(SENDER_NAME);
+        Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        assertEquals(originalMsg, new String(ByteUtil.getContent(msg.getContentStream(), 0)));
     }
     
     private String getContent(MimeMessage msg)

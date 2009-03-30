@@ -177,7 +177,7 @@ public class ExtensionUtil {
      * @return class
      * @throws ClassNotFoundException if class is not found
      */
-    public static synchronized Class findClass(String name) throws ClassNotFoundException {
+    public static synchronized Class<?> findClass(String name) throws ClassNotFoundException {
         try {
             return ExtensionUtil.class.getClassLoader().loadClass(name);
         } catch (ClassNotFoundException e) {
