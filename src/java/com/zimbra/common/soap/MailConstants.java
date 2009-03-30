@@ -40,6 +40,11 @@ public class MailConstants {
     public static final QName GET_ITEM_RESPONSE = QName.get("GetItemResponse", NAMESPACE);
     public static final QName ITEM_ACTION_REQUEST = QName.get("ItemActionRequest", NAMESPACE);
     public static final QName ITEM_ACTION_RESPONSE = QName.get("ItemActionResponse", NAMESPACE);
+    public static final QName GET_METADATA_REQUEST = QName.get("GetCustomMetadataRequest", NAMESPACE);
+    public static final QName GET_METADATA_RESPONSE = QName.get("GetCustomMetadataResponse", NAMESPACE);
+    public static final QName SET_METADATA_REQUEST = QName.get("SetCustomMetadataRequest", NAMESPACE);
+    public static final QName SET_METADATA_RESPONSE = QName.get("SetCustomMetadataResponse", NAMESPACE);
+
     // conversations
     public static final QName GET_CONV_REQUEST = QName.get("GetConvRequest", NAMESPACE);
     public static final QName GET_CONV_RESPONSE = QName.get("GetConvResponse", NAMESPACE);
@@ -98,7 +103,6 @@ public class MailConstants {
     public static final QName IMPORT_CONTACTS_RESPONSE = QName.get("ImportContactsResponse", NAMESPACE);
     public static final QName EXPORT_CONTACTS_REQUEST = QName.get("ExportContactsRequest", NAMESPACE);
     public static final QName EXPORT_CONTACTS_RESPONSE = QName.get("ExportContactsResponse", NAMESPACE);
-
     public static final QName CONTACT_ACTION_REQUEST = QName.get("ContactActionRequest", NAMESPACE);
     public static final QName CONTACT_ACTION_RESPONSE = QName.get("ContactActionResponse", NAMESPACE);
     // notes
