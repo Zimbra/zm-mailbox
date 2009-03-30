@@ -1985,7 +1985,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_RIGHT_REQUEST);
-        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAllAttrs);
+        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAllAttrs);
         req.addElement(AdminConstants.E_RIGHT).setText(rightName);
         
         Element resp = invoke(req);
@@ -1998,7 +1998,7 @@ public class SoapProvisioning extends Provisioning {
     public List<Right> getAllRights(String targetType, boolean expandAllAttrs)  throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_RIGHTS_REQUEST);
         req.addAttribute(AdminConstants.A_TARGET_TYPE, targetType);
-        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAllAttrs);
+        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAllAttrs);
         Element resp = invoke(req);
         
         List<Right> rights = new ArrayList<Right>();
@@ -2054,7 +2054,7 @@ public class SoapProvisioning extends Provisioning {
             expandAttrs = "getAttrs";
         
         if (expandAttrs != null)        
-            req.addAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, expandAttrs);
+            req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAttrs);
         
         toXML(req, targetType, targetBy, target);
         if (granteeBy != null && grantee != null)

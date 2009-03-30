@@ -37,18 +37,19 @@ public class GetEffectiveRights  extends RightDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        String expandAttrs = request.getAttribute(AdminConstants.A_EXPAND_ALL_ATRTS, null);
+        String expandAttrs = request.getAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, null);
         boolean expandSetAttrs = false;
         boolean expandGetAttrs = false;
         if (expandAttrs != null) {
             String[] eas = expandAttrs.split(",");
             for (String e : eas) {
-                if (e.equals("setAttrs"))
+                String exp = e.trim();
+                if (exp.equals("setAttrs"))
                     expandSetAttrs = true;
-                else if (e.equals("getAttrs"))
+                else if (exp.equals("getAttrs"))
                     expandGetAttrs = true;
                 else
-                    throw ServiceException.INVALID_REQUEST("invalid " + AdminConstants.A_EXPAND_ALL_ATRTS + " value: " + e, null);
+                    throw ServiceException.INVALID_REQUEST("invalid " + AdminConstants.A_EXPAND_ALL_ATTRS + " value: " + exp, null);
             }
         }
         

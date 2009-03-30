@@ -35,7 +35,7 @@ public class GetAllRights extends RightDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
         String targetType = request.getAttribute(AdminConstants.A_TARGET_TYPE, null);
-        boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATRTS, false);
+        boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATTRS, false);
         List<Right> rights = RightCommand.getAllRights(targetType);
         
         Element response = lc.createElement(AdminConstants.GET_ALL_RIGHTS_RESPONSE);

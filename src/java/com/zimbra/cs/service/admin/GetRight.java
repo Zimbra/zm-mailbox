@@ -36,7 +36,7 @@ public class GetRight extends RightDocumentHandler {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATRTS, false);
+        boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATTRS, false);
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String value = eRight.getText();
 
