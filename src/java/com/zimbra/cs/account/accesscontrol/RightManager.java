@@ -521,6 +521,7 @@ public class RightManager {
         private static void genDomainAdminSetAttrsRights(String outFile, String templateFile) throws Exception {
             Set<String> acctAttrs = getDomainAdminModifiableAttrs(AttributeClass.account);
             Set<String> crAttrs = getDomainAdminModifiableAttrs(AttributeClass.calendarResource);
+            Set<String> dlAttrs = getDomainAdminModifiableAttrs(AttributeClass.distributionList);
             Set<String> domainAttrs = getDomainAdminModifiableAttrs(AttributeClass.domain);
             
             Set<String> acctAndCrAttrs = SetUtil.intersect(acctAttrs, crAttrs);
@@ -533,11 +534,13 @@ public class RightManager {
             
             String acctAndCrAttrsFiller = genAttrs(acctAndCrAttrs);
             String crOnlyAttrsFiller = genAttrs(crOnlyAttrs);
+            String dlAttrsFiller = genAttrs(dlAttrs);
             String domainAttrsFiller = genAttrs(domainAttrs);
             
             Map<String,String> templateFillers = new HashMap<String,String>();
             templateFillers.put("ACCOUNT_AND_CALENDAR_RESOURCE_ATTRS", acctAndCrAttrsFiller);
             templateFillers.put("CALENDAR_RESOURCE_ATTRS", crOnlyAttrsFiller);
+            templateFillers.put("DISTRIBUTION_LIST_ATTRS", dlAttrsFiller);
             templateFillers.put("DOMAIN_ATTRS", domainAttrsFiller);
             
             genFile(outFile, templateFile, templateFillers);

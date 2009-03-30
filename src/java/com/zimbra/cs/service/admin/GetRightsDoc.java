@@ -153,6 +153,7 @@ public class GetRightsDoc extends AdminDocumentHandler {
         rights.get(TargetType.account).add(Admin.R_setDomainAdminAccountAndCalendarResourceAttrs.getName());
         rights.get(TargetType.calresource).add(Admin.R_setDomainAdminAccountAndCalendarResourceAttrs.getName());
         rights.get(TargetType.calresource).add(Admin.R_setDomainAdminCalendarResourceAttrs.getName());
+        rights.get(TargetType.dl).add(Admin.R_setDomainAdminDistributionListAttrs.getName());
         rights.get(TargetType.domain).add(Admin.R_setDomainAdminDomainAttrs.getName());
         
         for (Map.Entry<QName, DocumentHandler> handler : handlers.entrySet()) {

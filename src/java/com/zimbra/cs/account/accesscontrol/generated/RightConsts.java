@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090311-1354 */
+    /* build: 5.0 pshao 20090330-1359 */
 
 
     /*
@@ -643,6 +643,12 @@ public class RightConsts {
      * access manager
      */
     public static final String RT_setDomainAdminCalendarResourceAttrs = "setDomainAdminCalendarResourceAttrs";
+
+    /**
+     * distribution list attrs modifiable by domain admins for domain based
+     * access manager
+     */
+    public static final String RT_setDomainAdminDistributionListAttrs = "setDomainAdminDistributionListAttrs";
 
     /**
      * domain attrs modifiable by domain admins for domain based access

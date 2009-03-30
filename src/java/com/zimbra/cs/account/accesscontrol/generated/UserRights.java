@@ -30,7 +30,7 @@ public class UserRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090311-1354 */
+    /* build: 5.0 pshao 20090330-1359 */
 
 
     public static UserRight R_invite;
