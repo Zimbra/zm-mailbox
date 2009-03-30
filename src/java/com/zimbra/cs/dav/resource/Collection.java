@@ -81,8 +81,8 @@ public class Collection extends MailItemResource {
 		return true;
 	}
 	
-	public int getMailboxId() {
-		return mMailboxId;
+	public boolean isLocal() {
+		return mMailboxId != 0;
 	}
 	
 	@Override
