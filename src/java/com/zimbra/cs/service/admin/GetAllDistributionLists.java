@@ -105,5 +105,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listDistributionList);
         relatedRights.add(Admin.R_getDistributionList);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

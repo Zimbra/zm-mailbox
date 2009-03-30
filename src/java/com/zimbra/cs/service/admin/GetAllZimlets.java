@@ -73,5 +73,7 @@ public class GetAllZimlets extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listZimlet);
         relatedRights.add(Admin.R_getZimlet);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

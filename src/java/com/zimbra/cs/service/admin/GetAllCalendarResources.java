@@ -67,5 +67,7 @@ public class GetAllCalendarResources extends GetAllAccounts {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listCalendarResource);
         relatedRights.add(Admin.R_getCalendarResource);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

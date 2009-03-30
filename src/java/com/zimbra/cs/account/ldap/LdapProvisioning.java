@@ -1223,6 +1223,7 @@ public class LdapProvisioning extends Provisioning {
         boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean needCalendarUserType = true;
         boolean needDomainName = true;
+        boolean needZimbraACE = true;
 
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
@@ -1247,7 +1248,8 @@ public class LdapProvisioning extends Provisioning {
                   (needAliasTargetId ? 1 : 0) +
                   (needObjectClass ? 1 :0) +
                   (needCalendarUserType ? 1 : 0) +
-                  (needDomainName ? 1 : 0);
+                  (needDomainName ? 1 : 0) +
+                  (needZimbraACE ? 1 : 0);
 
         if (num == 0) return returnAttrs;
 
@@ -1260,6 +1262,7 @@ public class LdapProvisioning extends Provisioning {
         if (needObjectClass) result[i++] = Provisioning.A_objectClass;
         if (needCalendarUserType) result[i++] = Provisioning.A_zimbraAccountCalendarUserType;
         if (needDomainName) result[i++] = Provisioning.A_zimbraDomainName;
+        if (needZimbraACE) result[i++] = Provisioning.A_zimbraACE;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }
@@ -1861,6 +1864,7 @@ public class LdapProvisioning extends Provisioning {
         allAttrs.remove(Provisioning.A_objectClass);
         allAttrs.remove(Provisioning.A_zimbraId);
         allAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
+        allAttrs.remove(Provisioning.A_zimbraACE);
         allAttrs.remove(Provisioning.A_cn);
         allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {

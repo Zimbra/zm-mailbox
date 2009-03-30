@@ -270,5 +270,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         relatedRights.add(Admin.R_listDistributionList);
         relatedRights.add(Admin.R_listDomain);
         relatedRights.add(Admin.R_listCos);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

@@ -56,5 +56,7 @@ public class GetAllXMPPComponents extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listXMPPComponent);
         relatedRights.add(Admin.R_getXMPPComponent);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

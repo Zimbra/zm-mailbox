@@ -24,6 +24,12 @@ public interface AdminRightCheckPoint {
             "the authed admin.   You can grant the %s right, which allows " + 
             "setting all attributes on %s, or grant the set attrs right just " +
             "for the attributes the admin needs to set while creating an entry.";
+        
+        protected static final String LIST_ENTRY = 
+            "If the authed admin does not have corresponding list{Entry} right " +
+            "or get{Entry} right for an entry that fulfill the list/search criteria, " +
+            "the entry is skipped in the getAllXXX/searchXXX/searchDirectoryResponse,  " +
+            "no PERM_DENIED exception will be thrown.";
     }
     
     public void docRights(List<AdminRight> relatedRights, List<String> notes);

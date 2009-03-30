@@ -61,5 +61,7 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listAccount);
         relatedRights.add(Admin.R_getAccount);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

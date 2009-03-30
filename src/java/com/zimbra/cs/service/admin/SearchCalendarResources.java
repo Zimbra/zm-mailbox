@@ -118,5 +118,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getCalendarResource);
         relatedRights.add(Admin.R_listCalendarResource);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

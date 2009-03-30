@@ -177,5 +177,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         relatedRights.add(Admin.R_listCalendarResource);
         relatedRights.add(Admin.R_listDistributionList);
         relatedRights.add(Admin.R_listDomain);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

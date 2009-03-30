@@ -65,5 +65,7 @@ public class GetAllServers extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listServer);
         relatedRights.add(Admin.R_getServer);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

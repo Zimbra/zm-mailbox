@@ -61,5 +61,7 @@ public class GetAllCos extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listCos);
         relatedRights.add(Admin.R_getCos);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

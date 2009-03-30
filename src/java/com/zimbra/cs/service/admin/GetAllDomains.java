@@ -64,5 +64,7 @@ public class GetAllDomains extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listDomain);
         relatedRights.add(Admin.R_getDomain);
+        
+        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }
