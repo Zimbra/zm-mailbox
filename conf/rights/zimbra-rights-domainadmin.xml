@@ -147,9 +147,11 @@
     <a n="zimbraPrefCalendarAlwaysShowMiniCal"/>
     <a n="zimbraPrefCalendarApptReminderWarningTime"/>
     <a n="zimbraPrefCalendarApptVisibility"/>
+    <a n="zimbraPrefCalendarAutoAddInvites"/>
     <a n="zimbraPrefCalendarDayHourEnd"/>
     <a n="zimbraPrefCalendarDayHourStart"/>
     <a n="zimbraPrefCalendarFirstDayOfWeek"/>
+    <a n="zimbraPrefCalendarForwardInvitesTo"/>
     <a n="zimbraPrefCalendarInitialCheckedCalendars"/>
     <a n="zimbraPrefCalendarInitialView"/>
     <a n="zimbraPrefCalendarNotifyDelegatedChanges"/>
@@ -161,6 +163,7 @@
     <a n="zimbraPrefCalendarReminderSendEmail"/>
     <a n="zimbraPrefCalendarReminderSoundsEnabled"/>
     <a n="zimbraPrefCalendarReminderYMessenger"/>
+    <a n="zimbraPrefCalendarSendInviteDeniedAutoReply"/>
     <a n="zimbraPrefCalendarToasterEnabled"/>
     <a n="zimbraPrefCalendarUseQuickAdd"/>
     <a n="zimbraPrefChildVisibleAccount"/>
@@ -316,6 +319,22 @@
   </attrs>
 </right>
 
+<right name="setDomainAdminDistributionListAttrs" type="setAttrs" targetType="dl">
+  <desc>distribution list attrs modifiable by domain admins for domain based access manager</desc>
+  <attrs>    
+    <a n="cn"/>
+    <a n="description"/>
+    <a n="displayName"/>
+    <a n="zimbraHideInGal"/>
+    <a n="zimbraLocale"/>
+    <a n="zimbraMailCanonicalAddress"/>
+    <a n="zimbraMailForwardingAddress"/>
+    <a n="zimbraMailStatus"/>
+    <a n="zimbraNotes"/>
+
+  </attrs>
+</right>
+
 <right name="setDomainAdminDomainAttrs" type="setAttrs" targetType="domain">
   <desc>domain attrs modifiable by domain admins for domain based access manager</desc>
   <attrs>
@@ -431,6 +450,7 @@
             <r n="removeDistributionListAlias"/>
             <r n="removeDistributionListMember"/>
             <r n="renameDistributionList"/>
+            <r n="setDomainAdminDistributionListAttrs"/>
           </rights>
         </right>
         <right type="combo" name="domainAdminDomainRights">
@@ -462,7 +482,6 @@
             <r n="listZimlet"/>
           </rights>
         </right>
-
 
 <!--
   =========================================================

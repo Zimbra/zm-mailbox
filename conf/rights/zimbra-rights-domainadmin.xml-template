@@ -36,6 +36,13 @@ ${CALENDAR_RESOURCE_ATTRS}
   </attrs>
 </right>
 
+<right name="setDomainAdminDistributionListAttrs" type="setAttrs" targetType="dl">
+  <desc>distribution list attrs modifiable by domain admins for domain based access manager</desc>
+  <attrs>    
+${DISTRIBUTION_LIST_ATTRS}
+  </attrs>
+</right>
+
 <right name="setDomainAdminDomainAttrs" type="setAttrs" targetType="domain">
   <desc>domain attrs modifiable by domain admins for domain based access manager</desc>
   <attrs>
@@ -115,6 +122,7 @@ ${DOMAIN_ATTRS}
             <r n="removeDistributionListAlias"/>
             <r n="removeDistributionListMember"/>
             <r n="renameDistributionList"/>
+            <r n="setDomainAdminDistributionListAttrs"/>
           </rights>
         </right>
         <right type="combo" name="domainAdminDomainRights">
@@ -146,7 +154,6 @@ ${DOMAIN_ATTRS}
             <r n="listZimlet"/>
           </rights>
         </right>
-
 
 <!--
   =========================================================
