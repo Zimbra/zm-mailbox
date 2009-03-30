@@ -421,7 +421,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             InputStream in = null;
             try {
                 in = new FileInputStream(blobFile);
-                pm = new ParsedMessage(in, (int) blobFile.length(), date, mbox.attachmentsIndexingEnabled());
+                pm = new ParsedMessage(in, mMsgSize, date, mbox.attachmentsIndexingEnabled());
             } finally {
                 ByteUtil.closeStream(in);
             }
@@ -468,7 +468,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             InputStream in = null;
             try {
                 in = new FileInputStream(file);
-                pm = new ParsedMessage(in, (int) file.length(), mReceivedDate, mbox.attachmentsIndexingEnabled());
+                pm = new ParsedMessage(in, mMsgSize, mReceivedDate, mbox.attachmentsIndexingEnabled());
             } finally {
                 ByteUtil.closeStream(in);
             }

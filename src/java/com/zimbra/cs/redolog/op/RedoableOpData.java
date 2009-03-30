@@ -16,11 +16,13 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil.SegmentInputStream;
 import com.zimbra.cs.store.BlobInputStream;
 
 
@@ -88,7 +90,11 @@ class RedoableOpData {
             return new ByteArrayInputStream(mData);
         }
         if (mFile != null) {
-            return new BlobInputStream(mFile, mFileOffset, mFileOffset + mLength);
+            InputStream in = new FileInputStream(mFile);
+            if (mFileOffset > 0 || mLength != mFile.length()) {
+                in = SegmentInputStream.create(in, mFileOffset, mFileOffset + mLength);
+            }
+            return in;
         }
         assert(false);
         return null;

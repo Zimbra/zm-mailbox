@@ -215,7 +215,7 @@ public class FileBlobStore extends StoreManager {
 
         if (ZimbraLog.store.isDebugEnabled()) {
             ZimbraLog.store.debug("Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
-                path, totalRead, blob.getFile().length(), file.length(), volumeId, blob.isCompressed());
+                path, totalRead, file.length(), volumeId, blob.isCompressed());
         }
         return blob;
     }
