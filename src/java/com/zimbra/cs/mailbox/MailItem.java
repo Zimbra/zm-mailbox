@@ -43,7 +43,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -1799,10 +1798,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         // handle flags first...
         if (flags != mData.flags) {
             markItemModified(Change.MODIFIED_FLAGS);
-            for (int i = 0; i < mMailbox.mFlags.length; i++) {
-                Flag flag = mMailbox.mFlags[i];
-                if (flag != null && (flags & flag.getBitmask()) != (mData.flags & flag.getBitmask()))
-                    alterTag(flag, !isTagged(flag));
+            for (byte i = 0; i < MAX_FLAG_COUNT; i++) {
+                long mask = 1 << i;
+                if ((flags & mask) != (mData.flags & mask)) {
+                    Flag flag = Flag.getFlag(mMailbox, i);
+                    if (flag != null)
+                        alterTag(flag, !isTagged(flag));
+                }
             }
         }
 

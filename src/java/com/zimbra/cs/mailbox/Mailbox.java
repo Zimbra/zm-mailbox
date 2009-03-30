@@ -453,28 +453,18 @@ public class Mailbox {
     private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
 
-    private MailboxLock  mMaintenance = null;
-    private MailboxIndex mMailboxIndex = null;
-    private IMPersona    mPersona = null;
+    private MailboxLock    mMaintenance = null;
+    private MailboxIndex   mMailboxIndex = null;
+    private IMPersona      mPersona = null;
     private MailboxVersion mVersion = null;
-    
-    /** the full set of message flags, in order */
-    final Flag[] mFlags = new Flag[31];
 
     /** used by finishInitialization() to make sure the init steps happen only once */
     private boolean mInitializationComplete = false;
 
-    /**
-     * Constructor
-     * 
-     * @param data
-     * @throws ServiceException
-     */
-    protected Mailbox(MailboxData data) throws ServiceException {
+    protected Mailbox(MailboxData data) {
         mId   = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
-        initFlags();
         // version init done in finishInitialization()
         // index init done in finishInitialization()
     }
@@ -1306,12 +1296,9 @@ public class Mailbox {
             return;
 
         if (item instanceof Tag) {
-            if (item instanceof Flag)
-                mFlags[((Flag) item).getIndex()] = (Flag) item;
             if (mTagCache != null) {
-                Tag tag = (Tag) item;
-                mTagCache.put(tag.getId(), tag);
-                mTagCache.put(tag.getName().toLowerCase(), tag);
+                mTagCache.put(item.getId(), (Tag) item);
+                mTagCache.put(item.getName().toLowerCase(), (Tag) item);
             }
         } else if (item instanceof Folder) {
             if (mFolderCache != null)
@@ -1332,7 +1319,7 @@ public class Mailbox {
             if (mTagCache == null)
                 return;
             mTagCache.remove(item.getId());
-            mTagCache.remove(((Tag) item).getName().toLowerCase());
+            mTagCache.remove(item.getName().toLowerCase());
         } else if (item instanceof Folder) {
             if (mFolderCache == null)
                 return;
@@ -1468,34 +1455,6 @@ public class Mailbox {
 
     int getInitialItemId() { return FIRST_USER_ID; }
 
-    private void initFlags() throws ServiceException {
-        // flags will be added to mFlags array via call to cache() in MailItem constructor
-        Flag.instantiate(this, "\\Sent",        Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
-        Flag.instantiate(this, "\\Attached",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_ATTACHED);
-        Flag.instantiate(this, "\\Answered",    Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
-        Flag.instantiate(this, "\\Forwarded",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
-        Flag.instantiate(this, "\\Copied",      Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
-        Flag.instantiate(this, "\\Flagged",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
-        Flag.instantiate(this, "\\Draft",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
-        Flag.instantiate(this, "\\Deleted",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
-        Flag.instantiate(this, "\\Notified",    Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
-        Flag.instantiate(this, "\\Unread",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
-        Flag.instantiate(this, "\\Invite",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
-        Flag.instantiate(this, "\\Urgent",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
-        Flag.instantiate(this, "\\Bulk",        Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
-        Flag.instantiate(this, "\\Versioned",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
-        Flag.instantiate(this, "\\IdxDeferred", Flag.FLAG_GENERIC,         Flag.ID_FLAG_INDEXING_DEFERRED);
-
-        Flag.instantiate(this, "\\Subscribed",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
-        Flag.instantiate(this, "\\ExcludeFB",   Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
-        Flag.instantiate(this, "\\Checked",     Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
-        Flag.instantiate(this, "\\NoInherit",   Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
-        Flag.instantiate(this, "\\SyncFolder",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
-        Flag.instantiate(this, "\\Sync",        Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
-        Flag.instantiate(this, "\\Noinferiors", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INFERIORS);
-        Flag.instantiate(this, "\\Archived",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_ARCHIVED);
-    }
-
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
@@ -1553,13 +1512,6 @@ public class Mailbox {
                 Tag tag = new Tag(this, ud);
                 if (persist)
                     tag.saveTagCounts();
-            }
-            // flags don't change and thus can be reused in the new cache
-            for (int i = 0; i < mFlags.length; i++) {
-                if (mFlags[i] == null)
-                    continue;
-                ZimbraLog.mailbox.debug(i + ": " + mFlags[i]);
-                cache(mFlags[i]);
             }
         } catch (ServiceException e) {
             mTagCache = null;
@@ -2169,7 +2121,9 @@ public class Mailbox {
     /** retrieve an item from the Mailbox's caches; return null if no item found */
     MailItem getCachedItem(Integer key) throws ServiceException {
         MailItem item = null;
-        if (mTagCache != null)
+        if (key < 0)
+            item = Flag.getFlag(this, key);
+        if (item == null && mTagCache != null)
             item = mTagCache.get(key);
         if (item == null && mFolderCache != null)
             item = mFolderCache.get(key);
@@ -2187,7 +2141,9 @@ public class Mailbox {
                 return getCachedItem(key);
             case MailItem.TYPE_FLAG:
             case MailItem.TYPE_TAG:
-                if (mTagCache != null)
+                if (key < 0)
+                    item = Flag.getFlag(this, key);
+                else if (mTagCache != null)
                     item = mTagCache.get(key);
                 break;
             case MailItem.TYPE_MOUNTPOINT:
@@ -2209,16 +2165,15 @@ public class Mailbox {
     }
 
     public synchronized MailItem getItemFromUnderlyingData(MailItem.UnderlyingData data) throws ServiceException {
+//        data.flags |= Flag.BITMASK_UNCACHED;
         boolean success = false;
         try {
-            beginTransaction("getItemFromUd", null);
-//            data.flags |= Flag.BITMASK_UNCACHED;
+            beginTransaction("getItemFromUnderlyingData", null);
             MailItem item = getItem(data);
             success = true;
             return item;
         } finally {
             endTransaction(success);
-//            data.flags &= ~Flag.BITMASK_UNCACHED;
         }
     }
 
@@ -2393,15 +2348,7 @@ public class Mailbox {
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
 
-            if (type == MailItem.TYPE_FLAG) {
-                if (folderId != -1 && folderId != ID_FOLDER_TAGS)
-                    return Collections.emptyList();
-                result = new ArrayList<MailItem>(mFlags.length);
-                for (Flag flag : mFlags)
-                    if (flag != null)
-                        result.add(flag);
-                success = true;
-            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
+            if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 result = new ArrayList<MailItem>(mFolderCache.size());
                 for (Folder subfolder : mFolderCache.values()) {
                     if (subfolder.getType() == type || type == MailItem.TYPE_FOLDER)
@@ -2412,10 +2359,15 @@ public class Mailbox {
             } else if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
-                result = new ArrayList<MailItem>(mTagCache.size());
+                result = new ArrayList<MailItem>(mTagCache.size() / 2);
                 for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String)
                         result.add(entry.getValue());
+                success = true;
+            } else if (type == MailItem.TYPE_FLAG) {
+                if (folderId != -1 && folderId != ID_FOLDER_TAGS)
+                    return Collections.emptyList();
+                result = new ArrayList<MailItem>(Flag.getAllFlags(this));
                 success = true;
             } else {
                 List<MailItem.UnderlyingData> dataList;
@@ -2619,12 +2571,13 @@ public class Mailbox {
         try {
             beginTransaction("getModifiedTags", octxt);
             if (hasFullAccess()) {
-                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
+                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
                     if (entry.getKey() instanceof String) {
                         Tag tag = entry.getValue();
-                        if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
+                        if (tag.getModifiedSequence() > lastSync)
                             modified.add(tag);
                     }
+                }
             }
             success = true;
             return modified;
@@ -2758,25 +2711,15 @@ public class Mailbox {
     }
 
 
-    public synchronized Flag getFlagById(int id) throws ServiceException {
-        // assume that flags are numbered from -1 to -mFlags.length
-        Flag flag = null;
-        if (id < 0 && id >= -mFlags.length)
-            flag = mFlags[-id - 1];
+    public Flag getFlagById(int flagId) throws ServiceException {
+        Flag flag = Flag.getFlag(this, flagId);
         if (flag == null)
-            throw MailServiceException.NO_SUCH_TAG(id);
-        checkAccess(flag);
+            throw MailServiceException.NO_SUCH_TAG(flagId);
         return flag;
     }
 
-    public synchronized List<Flag> getFlagList() {
-        List<Flag> flags = new ArrayList<Flag>(mFlags.length);
-        
-        for (Flag flag : mFlags) {
-            if (flag != null)
-                flags.add(flag);
-        }
-        return flags;
+    public List<Flag> getFlagList() throws ServiceException {
+        return Flag.getAllFlags(this);
     }
 
     public synchronized Tag getTagById(OperationContext octxt, int id) throws ServiceException {
@@ -2805,7 +2748,7 @@ public class Mailbox {
 
             if (name == null || name.equals(""))
                 throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
-            Tag tag = mTagCache.get(name.toLowerCase());
+            Tag tag = name.charAt(0) == '\\' ? Flag.getFlag(this, name) : mTagCache.get(name.toLowerCase());
             if (tag == null)
                 throw MailServiceException.NO_SUCH_TAG(name);
             checkAccess(tag);
