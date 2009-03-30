@@ -158,7 +158,8 @@ extends TestCase {
         TestUtil.addMessageLmtp(
             "=?UTF-8?B?W2l0dnNmLUluY2lkZW5jaWFzXVs0OTc3Ml0gW2luY2lkZW5jaWFzLXZpbGxhbnVldmFdIENvcnRlcyBkZSBsdXosIGTDrWEgMjUvMDkvMjAwNi4=?=",
             address, address);
-        List<ZMessage> messages = TestUtil.search(mMbox, "villanueva");
+        // bug 36705 List<ZMessage> messages = TestUtil.search(mMbox, "villanueva");
+        List<ZMessage> messages = TestUtil.search(mMbox, "Cortes de luz");
         assertEquals("Unexpected number of messages", 1, messages.size());
         List<ZTag> tags = mMbox.getTags(messages.get(0).getTagIds());
         assertEquals("Unexpected number of tags", 1, tags.size());
@@ -586,7 +587,8 @@ extends TestCase {
         TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
         
         // Clean up messages created by testBase64Subject()
-        for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
+        // bug 36705 for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
+        for (ZMessage msg : TestUtil.search(mMbox, "cortes de luz")) {
             mMbox.deleteMessage(msg.getId());
         }
     }
@@ -595,10 +597,11 @@ extends TestCase {
     throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
 
-        // if subject contains "villanueva", tag with testBase64Subject and stop
+        // if subject contains "Cortes de luz", tag with testBase64Subject and stop
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
-        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "villanueva"));
+        // bug 36705 conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "villanueva"));
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "Cortes de luz"));
         actions.add(new ZTagAction(TAG_TEST_BASE64_SUBJECT));
         rules.add(new ZFilterRule("testBase64Subject", true, false, conditions, actions));
 
