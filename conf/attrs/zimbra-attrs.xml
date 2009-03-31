@@ -4321,4 +4321,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Forward a copy of calendar invites received to these users.</desc>
 </attr>
 
+<!-- 
+   ===============================================================================
+   bug 32811: we need to skip oid 990 and 991, the next oid should start at 1000.
+              Please talk to phoebe if you have any question.
+   ===============================================================================
+ -->
+ 
 </attrs>
