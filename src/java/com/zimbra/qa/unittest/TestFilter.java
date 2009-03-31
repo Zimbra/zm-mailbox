@@ -290,6 +290,31 @@ extends TestCase {
             "in:\"" + MOUNTPOINT_SUBFOLDER_PATH + "\" subject:\"" + subject + "\"").size());
     }
     
+    /**
+     * Make sure we disallow more than four asterisks in a :matches condition (bug 35983).
+     */
+    public void testManyAsterisks()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+
+        ZFilterCondition condition = new ZHeaderCondition(
+            "from", HeaderOp.MATCHES, "*****address@yahoo.com");
+        ZFilterAction action = new ZKeepAction();
+        conditions.add(condition);
+        actions.add(action);
+        rules.add(new ZFilterRule("test many asterisks", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        try {
+            mMbox.saveFilterRules(zRules);
+            fail("Saving filter rules with quotes should not have succeeded");
+        } catch (SoapFaultException e) {
+            assertTrue("Unexpected exception: " + e, e.getMessage().contains("four asterisks"));
+        }
+    }
+    
     protected void tearDown() throws Exception {
         mMbox.saveFilterRules(mOriginalRules);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
