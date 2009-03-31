@@ -64,6 +64,7 @@ public class GalSearchControl {
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
 			mParams.getResultCallback().reset(mParams);
+			mParams.setLimit(100);
 			ldapSearch(GalOp.autocomplete);
 		}
 	}
@@ -84,6 +85,7 @@ public class GalSearchControl {
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
 			mParams.getResultCallback().reset(mParams);
+			mParams.setLimit(100);
 			ldapSearch(GalOp.search);
 		}
 	}
