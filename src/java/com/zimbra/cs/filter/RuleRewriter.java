@@ -332,6 +332,12 @@ public class RuleRewriter {
                         sb.append("\"");
                 }
                 sb.append(" ");
+                
+                // Don't allow more than four stars for :matches (bug 35983).
+                if (":matches".equals(op) && k1 != null && k1.contains("*****")) {
+                    throw ServiceException.INVALID_REQUEST(
+                        "Wildcard match value cannot contain more than four asterisks in a row.", null);
+                }
             } else if ("action".equals(nodeName)) {
                 if (!actionOpenBrace) {
                     sb.append("{\n");

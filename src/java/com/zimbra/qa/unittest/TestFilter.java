@@ -27,6 +27,7 @@ import org.apache.jsieve.parser.generated.Node;
 
 import com.zimbra.common.mime.MimeMessage;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
@@ -48,6 +49,7 @@ import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
@@ -408,6 +410,31 @@ extends TestCase {
         TestUtil.addMessageLmtp(subject, address, address);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"a b c\"");
         assertTrue("Message was not flagged", msg.isFlagged());
+    }
+    
+    /**
+     * Make sure we disallow more than four asterisks in a :matches condition (bug 35983).
+     */
+    public void testManyAsterisks()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+
+        ZFilterCondition condition = new ZHeaderCondition(
+            "from", HeaderOp.MATCHES, "*****address@yahoo.com");
+        ZFilterAction action = new ZKeepAction();
+        conditions.add(condition);
+        actions.add(action);
+        rules.add(new ZFilterRule("test many asterisks", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        try {
+            mMbox.saveFilterRules(zRules);
+            fail("Saving filter rules with quotes should not have succeeded");
+        } catch (SoapFaultException e) {
+            assertTrue("Unexpected exception: " + e, e.getMessage().contains("four asterisks"));
+        }
     }
     
     /**
