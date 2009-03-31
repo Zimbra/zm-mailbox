@@ -77,6 +77,7 @@ ${DOMAIN_ATTRS}
             <r n="setAccountPassword"/>
             <r n="setAdminSavedSearch"/>
             <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
+            <r n="viewAccountAdminUI"/>
             <r n="viewAdminSavedSearch"/>
             <r n="viewPasswordStrength"/>
           </rights>
@@ -123,6 +124,7 @@ ${DOMAIN_ATTRS}
             <r n="removeDistributionListMember"/>
             <r n="renameDistributionList"/>
             <r n="setDomainAdminDistributionListAttrs"/>
+            <r n="viewDistributionListAdminUI"/>
           </rights>
         </right>
         <right type="combo" name="domainAdminDomainRights">

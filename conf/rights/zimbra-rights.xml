@@ -1,110 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- 
-
-<right name="{name}"
-       [userRight="{user-right}"]
-       [type="{right-type}"]
-       [targetType="{target-type}"]
-       
-       
-    <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
-       
-    [<doc>
-         a more detailed description, may include use cases, examples, etc. 
-         This is to be displayed by the zmmailbox listPermission command in verbose mode.
-     </doc>]
-       
-    [<default>TRUE/FALSE</default>]
-    
-    [
-      <attrs>
-          <a n="{attribute-name}"/>+
-      </attrs>
-    ]
-    
-    [
-      <rights>
-          <r n="{right-name}"/>+
-      </rights>
-    ]
-    
-    
-</right>
-
-{name}: 
-    name of the right
-
-{user-right}: 
-    Whether the right is grantable by users
-	1: the right is grantable by user
-	0(default): the right is only grantable by admins
-           
-{right-type}: 
-    Only applicable and required for admin rights(i.e. userRight="0" or not set)  
-	preset      : rights with predefined capabilities     
-	getAttrs    : rights for reading attributes
-	setAttrs    : rights for reading and writing attributes
-	combo       : combo right containing other defined preset/getAttrs/setAttrs/combo rights
-      
-
-{target-type}:
-    Target type on which the right is applicable.
-    1. For preset rights (i.e. type="preset"):
-           Required and can have only one value.
-    
-    2. For getAttrs/setAttrs rights:
-           (A) if <attrs> is not present, it means all attributes on the target type.
-               {target-type} must contain exactly one target type.   
-            
-           (B) if <attrs> is present, {target-type} is optional and can have multiple 
-               values separated by comma.
-           
-	           e.g. If a get/setAttrs right has:
-	                    account/cos attrs A, B, C
-		                domain attrs X, Y, Z
-		                server attrs M, N
-		                account/cos/domain/server attrs P, Q
-	           
-			   - If <targetType> is set:
-			         The right is only effective when granted on one of the specified entry types.
-			         e.g.
-			         - if <targetType> contains "account" only, then the right is effective 
-			           only for account attributes A, B, C, P, Q, not cos atributes A, B, C, P, Q.
-	
-			         -  if <targetType> contains "account,cos,server" then the right is effective 
-			            for: account attrs A, B, C, P, Q
-			                 cos attrs A, B, C, P, Q
-			                 server attrs P, Q
-	  
-	           - If <targetType> is omitted:
-	                 It means the right is not affiliated with a particular target type and is 
-	                 applicable to all target types.  
-    
-    3. For combo rights:
-           Not allowed.
-           
-<attrs>:
-    Attributes covered by the right.
-    It can contain any attrs from any type of entries.
-    e.g.  account attrs A, B, C
-          domain attrs X, Y, Z
-          server attrs M, N
-          
-    If <attrs> is not present, it means all attributes on the target type.
-
-
-{attribute-name}:
-    Attribute name covered by the right
-    
-<rights>:    
-
-<rights>
-    Rights covered by this combo right.
-    Rights appear in <r n=""> must be defined before this right.
-    
--->
-
 <rights>
     
 <!-- 
@@ -292,11 +187,34 @@
   </attrs>
 </right>
 
+<right name="viewAccountAdminUI" type="preset" targetType="account">
+  <desc>right to run the GetAdminConsoleUIComp SOAP call when an account 
+        other than the authenticated account is provided.  
+        Note, this is a preset right instead of a getAttrs right,
+        because it carries extra meanings than simply get the zimbraAdminConsoleUIComponents 
+        attribute on the account.  GetAdminConsoleUIComp return the union of 
+        zimbraAdminConsoleUIComponents on the account and that on all admin 
+        groups the account belongs.  Instead of checking get attr right for 
+        zimbraAdminConsoleUIComponents on the account and on all admin groups 
+        it belong, GetAdminConsoleUICompRequest just checks the viewAccountAdminUI right.
+  </desc>
+</right>
 
+<right name="viewDistributionListAdminUI" type="preset" targetType="dl">
+  <desc>right to run the GetAdminConsoleUIComp SOAP call when a distribution
+        list is provided.  
+        Note, this is a preset right instead of a getAttrs right,
+        because it carries extra meanings than simply get the zimbraAdminConsoleUIComponents 
+        attribute on the distribution list.  GetAdminConsoleUIComp return the union of 
+        zimbraAdminConsoleUIComponents on the dl and that on all admin 
+        groups the dl belongs.  Instead of checking get attr right for 
+        zimbraAdminConsoleUIComponents on the dl and on all admin groups 
+        it belong, GetAdminConsoleUICompRequest just checks the viewDistributionListAdminUI right.
+  </desc>
+</right>
 
-
-<right name="configureAdminUI" type="setAttrs" targetType="account">
-  <desc>configure admin UI</desc>
+<right name="configureAdminUI" type="setAttrs" targetType="account,dl">
+  <desc>configure admin UI components</desc>
   <attrs>
     <a n="zimbraAdminConsoleUIComponents"/>
   </attrs>
