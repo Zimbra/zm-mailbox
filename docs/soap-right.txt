@@ -180,7 +180,7 @@ if <grantee> is omitted, it means the account identified by the auth token.
                            returned in setAttrs/getAttrs in GetEffectiveRightsResponse.  
     
 <GetEffectiveRightsResponse>    
-  <grantee id"{grantee-id}" name="{grantee-name}">
+  <grantee id="{grantee-id}" name="{grantee-name}">
   <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
       <right n="{right-name}"/>+
       <setAttrs [all="{all}"]>
@@ -319,18 +319,29 @@ e.g. 2 creating a server:
           ...
     </setAttrs>
 </GetCreateObjectAttrsResponse>
-         
-         
+    
+    
 ----------------------------------------------------------
-      returns the union of the authed admin account's zimbraAdminConsoleUIComponents 
-      values and the values on all admin groups the admin account belongs.
+      returns the union of the zimbraAdminConsoleUIComponents values on the 
+      specified account/dl entry and that on all admin groups the entry
+      belongs.
                     
-<GetAdminConsoleUICompRequest/>
+<GetAdminConsoleUICompRequest>
+    [<account by="id|name">...</account>]
+    [<dl by="id|name">...</dl>]
+</GetAdminConsoleUICompRequest>
+
+Note: if neither account nor dl is specified, the authed admin account will 
+      be used as the perspective entry.  
 
 <GetAdminConsoleUICompResponse>
-  <a>...</a>+
+  <a inherited="{inherited}">...</a>+
 </GetAdminConsoleUICompResponse>
-         
+
+{inherited} = 0 | 1
+              0: set directly on the entry
+              1: inherited from a group
+        
 ----------------------------------------------------------
 
       Get definition for a right.
