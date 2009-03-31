@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.datasource;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,55 +28,67 @@ import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Contact;
 import static com.zimbra.cs.mailbox.Contact.*;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mime.ParsedContact;
 
-public class LiveData {
-    private int localFolderId;
+public class LiveData extends DataSourceData {
     private long localDate, remoteDate;
-    private int remoteFlags;
+    private int flags;
     private String remoteFolderId;
-    private DataSource ds;
-    private DataSourceItem dsi;
     private static final String METADATA_KEY_DATE_LOCAL = "dl";
     private static final String METADATA_KEY_DATE_REMOTE = "dr";
-    private static final String METADATA_KEY_FLAGS_REMOTE = "fgr";
-    private static final String METADATA_KEY_FOLDER_LOCAL = "fl";
+    private static final String METADATA_KEY_FLAGS = "f";
+    private static final String METADATA_KEY_FLAGS_OLD = "fgr";
     private static final String METADATA_KEY_FOLDER_REMOTE = "fr";
     
     public LiveData(DataSource ds, int itemID) throws ServiceException {
-        setDataSourceItem(ds, DbDataSource.getMapping(ds, itemID));
+        super(ds, itemID);
     }
     
     public LiveData(DataSource ds, String remoteID) throws ServiceException {
-        setDataSourceItem(ds, DbDataSource.getReverseMapping(ds, remoteID));
+        super(ds, remoteID);
     }
     
-    public LiveData(DataSource ds, int localId, int localFolderId,
-        long localDate, String remoteId, String remoteFolderId, long remoteDate,
-        int remoteFlags) throws ServiceException {
-        setDataSourceItem(ds, new DataSourceItem(localId, remoteId, new Metadata()));
+    public LiveData(DataSource ds, int localId, String remoteId) throws
+        ServiceException {
+        super(ds, localId, remoteId);
+    }
+    
+    public LiveData(DataSource ds, int localId, long localDate, String remoteId,
+        String remoteFolderId, long remoteDate, int flags) throws ServiceException {
+        super(ds, localId, remoteId);
         setDates(localDate, remoteDate);
-        setFolderIds(localFolderId, remoteFolderId);
-        setRemoteFlags(remoteFlags);
+        setFolderIds(remoteFolderId);
+        setFlags(flags);
     }
     
     public LiveData(DataSource ds, DataSourceItem dsi) throws ServiceException {
-        setDataSourceItem(ds, dsi);
+        super(ds, dsi);
     }
     
-    DataSourceItem getDataSourceItem() { return dsi; }
-    
-    int getLocalFolderId() { return localFolderId; }
-
     long getLocalDate() { return localDate; }
     
     long getRemoteDate() { return remoteDate; }
 
-    int getRemoteFlags() { return remoteFlags; }
+    int getFlags() { return flags; }
     
     String getRemoteFolderId() { return remoteFolderId; }
 
+    public Map<Integer, LiveData> getFolderMapById() throws ServiceException {
+        return getFolderMapById(ds, dsi.itemId);
+    }
+    
+    public static Map<Integer, LiveData> getFolderMapById(DataSource ds, int
+        folderId) throws ServiceException {
+        Collection<DataSourceItem> dsMappings =
+            DbDataSource.getAllMappingsInFolder(ds, folderId);
+        Map<Integer, LiveData> dsFoldersById = new HashMap<Integer,
+            LiveData>();
+    
+        for (DataSourceItem dsMapping : dsMappings)
+            dsFoldersById.put(dsMapping.itemId, new LiveData(ds, dsMapping));
+        return dsFoldersById;
+    }
+    
     public void setDates(long localDate, long remoteDate) throws ServiceException {
         this.localDate = localDate;
         dsi.md.put(METADATA_KEY_DATE_LOCAL, Long.toString(localDate));
@@ -84,56 +96,22 @@ public class LiveData {
         dsi.md.put(METADATA_KEY_DATE_REMOTE, Long.toString(remoteDate));
     }
     
-    public void setFolderIds(int localFolderId, String remoteFolderId) throws ServiceException {
-        this.localFolderId = localFolderId;
-        dsi.md.put(METADATA_KEY_FOLDER_LOCAL, Integer.toString(localFolderId));
+    public void setFolderIds(String remoteFolderId) throws ServiceException {
         this.remoteFolderId = remoteFolderId;
         dsi.md.put(METADATA_KEY_FOLDER_REMOTE, remoteFolderId);
     }
 
-    public void setRemoteFlags(int remoteFlags) throws ServiceException {
-        this.remoteFlags = remoteFlags;
-        dsi.md.put(METADATA_KEY_FLAGS_REMOTE, Integer.toString(remoteFlags));
+    public void setFlags(int flags) throws ServiceException {
+        this.flags = flags;
+        dsi.md.put(METADATA_KEY_FLAGS, Integer.toString(flags));
     }
 
-    public void add() throws ServiceException {
-        DbDataSource.addMapping(ds, dsi);
-    }
-    
-    public void delete() throws ServiceException {
-        delete(ds, dsi.itemId);
-    }
-    
-    public static void delete(DataSource ds, int itemId) throws ServiceException {
-        ArrayList<Integer> toDelete = new ArrayList<Integer>(1);
-
-        toDelete.add(itemId);
-        DbDataSource.deleteMappings(ds, toDelete);
-    }
-    
-    public void set() throws ServiceException {
-        try {
-            DbDataSource.addMapping(ds, dsi);
-        } catch (Exception e) {
-            delete();
-            DbDataSource.addMapping(ds, dsi);
-        }
-    }
-    
-    public void update() throws ServiceException {
-        DbDataSource.updateMapping(ds, dsi);
-    }
-    
-    private void setDataSourceItem(DataSource ds, DataSourceItem dsi) throws
-        ServiceException {
-        if (dsi.itemId == 0 || dsi.remoteId == null)
-            throw ServiceException.RESOURCE_UNREACHABLE("Datasource item not found", null);
-        this.ds = ds;
-        this.dsi = dsi;
+    protected void parseMetaData() throws ServiceException {
         localDate = dsi.md.getLong(METADATA_KEY_DATE_LOCAL, 0);
-        localFolderId = (int)dsi.md.getLong(METADATA_KEY_FOLDER_LOCAL, -1);
         remoteDate = dsi.md.getLong(METADATA_KEY_DATE_REMOTE, 0);
-        remoteFlags = (int)dsi.md.getLong(METADATA_KEY_FLAGS_REMOTE, 0);
+        flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS, -1);
+        if (flags == -1)
+            flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS_OLD, 0);
         remoteFolderId = dsi.md.get(METADATA_KEY_FOLDER_REMOTE, "");
     }
     

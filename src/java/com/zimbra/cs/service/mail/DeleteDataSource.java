@@ -48,6 +48,7 @@ public class DeleteDataSource extends MailDocumentHandler {
         for (Element eDsrc : request.listElements()) {
             DataSource dsrc = null;
             String name, id = eDsrc.getAttribute(MailConstants.A_ID, null);
+            
             if (id != null)
                 dsrc = prov.get(account, DataSourceBy.id, id);
             else if ((name = eDsrc.getAttribute(MailConstants.A_NAME, null)) != null)
@@ -66,9 +67,7 @@ public class DeleteDataSource extends MailDocumentHandler {
                 DbPop3Message.deleteUids(mbox, dataSourceId);
             else if (dstype == DataSource.Type.imap)
                 DbImapFolder.deleteImapData(mbox, dataSourceId);
-            else
-                dsrc.deleteItemMappings();
-
+            dsrc.deleteItemMappings();
             DataSourceManager.updateSchedule(account.getId(), dataSourceId);
         }
         
