@@ -89,7 +89,6 @@ abstract class ImapHandler extends ProtocolHandler {
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
     private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
-    private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
     private DateFormat mZimbraFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
     protected ImapConfig      mConfig;
@@ -116,7 +115,6 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     DateFormat getTimeFormat()   { return mTimeFormat; }
-    DateFormat getDateFormat()   { return mDateFormat; }
     DateFormat getZimbraFormat() { return mZimbraFormat; }
 
     ImapCredentials getCredentials()  { return mCredentials; }
@@ -282,7 +280,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 flags = req.readFlags();  req.skipSpace();
                             }
                             if (req.peekChar() == '"') {
-                                date = req.readDate(mTimeFormat, true);  req.skipSpace();
+                                date = req.readDate(true, true);  req.skipSpace();
                             }
                             if ((req.peekChar() == 'c' || req.peekChar() == 'C') && extensionEnabled("CATENATE")) {
                                 List<Object> parts = new LinkedList<Object>();

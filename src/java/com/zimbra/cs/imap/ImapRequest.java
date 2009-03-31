@@ -23,10 +23,11 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -457,22 +458,89 @@ abstract class ImapRequest {
         return tags;
     }
 
-
     private Date readDate() throws ImapParseException {
-        return readDate(mHandler.getDateFormat(), false);
-    }
-    Date readDate(DateFormat format, boolean checkRange) throws ImapParseException {
-        String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
-        try {
-            Date date = format.parse(dateStr);
-            if (checkRange && date.getTime() < 0)
-                throw new ImapParseException(mTag, "date out of range");
-            return date;
-        } catch (java.text.ParseException e) {
-            throw new ImapParseException(mTag, "invalid date format");
-        }
+        return readDate(false, false);
     }
 
+    Date readDate(boolean datetime, boolean checkRange) throws ImapParseException {
+        String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
+        if (dateStr.length() < (datetime ? 26 : 10))
+            throw new ImapParseException(mTag, "invalid date format");
+
+        Calendar cal = new GregorianCalendar();
+        cal.set(Calendar.DST_OFFSET, 0);
+
+        int pos = 0, count;
+        if (datetime && dateStr.charAt(0) == ' ')
+            pos++;
+        count = 2 - pos - (datetime || dateStr.charAt(1) != '-' ? 0 : 1);
+        validateDigits(dateStr, pos, count, cal, Calendar.DAY_OF_MONTH);  pos += count;
+        validateChar(dateStr, pos, '-');  pos++;
+        validateMonth(dateStr, pos, cal);  pos += 3;
+        validateChar(dateStr, pos, '-');  pos++;
+        validateDigits(dateStr, pos, 4, cal, Calendar.YEAR);  pos += 4;
+
+        if (datetime) {
+            validateChar(dateStr, pos, ' ');  pos++;
+            validateDigits(dateStr, pos, 2, cal, Calendar.HOUR);  pos += 2;
+            validateChar(dateStr, pos, ':');  pos++;
+            validateDigits(dateStr, pos, 2, cal, Calendar.MINUTE);  pos += 2;
+            validateChar(dateStr, pos, ':');  pos++;
+            validateDigits(dateStr, pos, 2, cal, Calendar.SECOND);  pos += 2;
+            validateChar(dateStr, pos, ' ');  pos++;
+            boolean zonesign = dateStr.charAt(pos) == '+';
+            validateChar(dateStr, pos, zonesign ? '+' : '-');  pos++;
+            int zonehrs = validateDigits(dateStr, pos, 2, cal, -1);  pos += 2;
+            int zonemins = validateDigits(dateStr, pos, 2, cal, -1);  pos += 2;
+            cal.set(Calendar.ZONE_OFFSET, (zonesign ? 1 : -1) * (60 * zonehrs + zonemins) * 60000);
+        }
+
+        if (pos != dateStr.length())
+            throw new ImapParseException(mTag, "excess characters at end of date string");
+
+        Date date = cal.getTime();
+        if (checkRange && date.getTime() < 0)
+            throw new ImapParseException(mTag, "date out of range");
+        return date;
+    }
+
+    private int validateDigits(String str, int pos, int count, Calendar cal, int field) throws ImapParseException {
+        if (str.length() < pos + count)
+            throw new ImapParseException(mTag, "unexpected end of date string");
+
+        int value = 0;
+        for (int i = 0; i < count; i++) {
+            char c = str.charAt(pos + i);
+            if (c < '0' || c > '9')
+                throw new ImapParseException(mTag, "invalid digit in date string");
+            value = value * 10 + (c - '0');
+        }
+
+        if (field >= 0)
+            cal.set(field, value);
+        return value;
+    }
+
+    private void validateChar(String str, int pos, char c) throws ImapParseException {
+        if (str.length() < pos + 1)
+            throw new ImapParseException(mTag, "unexpected end of date string");
+        if (str.charAt(pos) != c)
+            throw new ImapParseException(mTag, "unexpected character in date string");
+    }
+
+    private static final Map<String, Integer> MONTH_NUMBER = new HashMap<String, Integer>(16);
+        static {
+            String[] names = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+            for (int i = 0; i < names.length; i++)
+                MONTH_NUMBER.put(names[i], i);
+        }
+
+    private void validateMonth(String str, int pos, Calendar cal) throws ImapParseException {
+        Integer month = MONTH_NUMBER.get(str.substring(pos, pos + 3).toUpperCase());
+        if (month == null)
+            throw new ImapParseException(mTag, "invalid month string");
+        cal.set(Calendar.MONTH, month);
+    }
 
     Map<String, String> readParameters(boolean nil) throws IOException, ImapParseException {
         if (peekChar() != '(') {
