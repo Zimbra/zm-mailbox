@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090330-1359 */
+    /* build: 5.0 pshao 20090330-2219 */
 
 
     /*
@@ -142,7 +142,7 @@ public class RightConsts {
     public static final String RT_checkRight = "checkRight";
 
     /**
-     * configure admin UI
+     * configure admin UI components
      */
     public static final String RT_configureAdminUI = "configureAdminUI";
 
@@ -657,9 +657,37 @@ public class RightConsts {
     public static final String RT_setDomainAdminDomainAttrs = "setDomainAdminDomainAttrs";
 
     /**
+     * right to run the GetAdminConsoleUIComp SOAP call when an account other
+     * than the authenticated account is provided. Note, this is a preset
+     * right instead of a getAttrs right, because it carries extra meanings
+     * than simply get the zimbraAdminConsoleUIComponents attribute on the
+     * account. GetAdminConsoleUIComp return the union of
+     * zimbraAdminConsoleUIComponents on the account and that on all admin
+     * groups the account belongs. Instead of checking get attr right for
+     * zimbraAdminConsoleUIComponents on the account and on all admin groups
+     * it belong, GetAdminConsoleUICompRequest just checks the
+     * viewAccountAdminUI right.
+     */
+    public static final String RT_viewAccountAdminUI = "viewAccountAdminUI";
+
+    /**
      * view admin saved searches
      */
     public static final String RT_viewAdminSavedSearch = "viewAdminSavedSearch";
+
+    /**
+     * right to run the GetAdminConsoleUIComp SOAP call when a distribution
+     * list is provided. Note, this is a preset right instead of a getAttrs
+     * right, because it carries extra meanings than simply get the
+     * zimbraAdminConsoleUIComponents attribute on the distribution list.
+     * GetAdminConsoleUIComp return the union of
+     * zimbraAdminConsoleUIComponents on the dl and that on all admin groups
+     * the dl belongs. Instead of checking get attr right for
+     * zimbraAdminConsoleUIComponents on the dl and on all admin groups it
+     * belong, GetAdminConsoleUICompRequest just checks the
+     * viewDistributionListAdminUI right.
+     */
+    public static final String RT_viewDistributionListAdminUI = "viewDistributionListAdminUI";
 
     /**
      * view grants on all target types

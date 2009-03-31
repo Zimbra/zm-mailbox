@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090330-1359 */
+    /* build: 5.0 pshao 20090330-2219 */
 
 
     public static AdminRight R_accessGAL;
@@ -149,7 +149,9 @@ public class AdminRights {
     public static AdminRight R_setDomainAdminCalendarResourceAttrs;
     public static AdminRight R_setDomainAdminDistributionListAttrs;
     public static AdminRight R_setDomainAdminDomainAttrs;
+    public static AdminRight R_viewAccountAdminUI;
     public static AdminRight R_viewAdminSavedSearch;
+    public static AdminRight R_viewDistributionListAdminUI;
     public static AdminRight R_viewGrants;
     public static AdminRight R_viewPasswordStrength;
 
@@ -271,7 +273,9 @@ public class AdminRights {
         R_setDomainAdminCalendarResourceAttrs  = rm.getAdminRight(Right.RT_setDomainAdminCalendarResourceAttrs);
         R_setDomainAdminDistributionListAttrs  = rm.getAdminRight(Right.RT_setDomainAdminDistributionListAttrs);
         R_setDomainAdminDomainAttrs            = rm.getAdminRight(Right.RT_setDomainAdminDomainAttrs);
+        R_viewAccountAdminUI                   = rm.getAdminRight(Right.RT_viewAccountAdminUI);
         R_viewAdminSavedSearch                 = rm.getAdminRight(Right.RT_viewAdminSavedSearch);
+        R_viewDistributionListAdminUI          = rm.getAdminRight(Right.RT_viewDistributionListAdminUI);
         R_viewGrants                           = rm.getAdminRight(Right.RT_viewGrants);
         R_viewPasswordStrength                 = rm.getAdminRight(Right.RT_viewPasswordStrength);
     }

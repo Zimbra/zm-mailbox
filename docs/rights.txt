@@ -204,7 +204,7 @@ CopyCosRequest
         getCos
 
     Notes:
-        Need the com.zimbra.cs.account.accesscontrol.AttrRight@f1735 right on
+        Need the com.zimbra.cs.account.accesscontrol.AttrRight@8a9e64 right on
         the source cos.
 
 
@@ -546,9 +546,21 @@ GetAccountRequest
 GetAdminConsoleUICompRequest
 
     Related rights:
+        viewAccountAdminUI
+        viewDistributionListAdminUI
 
     Notes:
-        Do not need any right, all admins are allowed.
+        If account/dl is not specified, Do not need any right, all admins are
+        allowed.
+
+        If an account is specified, need the viewAccountAdminUI right.
+
+        If a dl is specified, need the viewDistributionListAdminUI right.
+
+        Note, this call does not check for the get attr right for
+        zimbraAdminConsoleUIComponents attribute on the account/dl, nor on the
+        admin groups they belong. It simply checks the viewAccountAdminUI or
+        viewDistributionListAdminUI right.
 
 
 ------------------------------
