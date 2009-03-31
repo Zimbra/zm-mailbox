@@ -92,6 +92,7 @@ public class GalSearchControl {
 	
 	public void sync() throws ServiceException {
 		try {
+			mParams.setQuery("");
 			accountSync();
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
@@ -269,6 +270,7 @@ public class GalSearchControl {
 			}
 			// XXX deleted items
             callback.setNewToken("" + mbox.getLastChangeID());
+            callback.setHasMoreResult(false);
 		} catch (Exception e) {
 			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
 			return false;
