@@ -180,7 +180,8 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         {
             return new AddressTokenFilter(new AddrCharTokenizer(reader));
         } else if (fieldName.equals(LuceneFields.L_FILENAME)) {
-            return new FilenameTokenFilter(CommaSeparatedTokenStream(reader));
+            return new FilenameTokenizer(reader);
+//          return new FilenameTokenFilter(CommaSeparatedTokenStream(reader));
         } else {
             return super.tokenStream(fieldName, reader);
         }
@@ -780,43 +781,29 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         }
     }
 
-    /***
-     * 
-     * @author tim
-     *
-     * Filename tokenizer
-     *   foo.doc
-     * Is tokenized as:
-     *    foo.doc
-     *    foo
-     *    .doc
-     */
-    public static class FilenameTokenFilter extends MultiTokenFilter
+    public static class FilenameTokenizer extends CharTokenizer
     {
-        FilenameTokenFilter(TokenFilter in) {
-            super(in);
-            mIncludeSeparatorChar = false;
-            mMaxSplits = 100;
+        public FilenameTokenizer(Reader reader) {
+            super(reader);
         }
-        FilenameTokenFilter(TokenStream in) {
-            super(in);
-            mIncludeSeparatorChar = false;
-            mMaxSplits = 100;
+        
+        protected boolean isTokenChar(char c) {
+            switch (c) {
+                case ',':
+                case ' ':
+                case '\r':
+                case '\n':
+                case '.':
+                    return false;
+                default:
+                    return true;
+            }
         }
-
-        protected int getNextSplit(String s) {
-            int dotIndex = s.lastIndexOf(".");
-            int spaceIndex = s.indexOf(' ');
-            if (dotIndex < 0 && spaceIndex < 0)
-                return -1;
-            if (dotIndex < 0)
-                return spaceIndex;
-            if (spaceIndex < 0)
-                return dotIndex;
-            return Math.min(dotIndex, spaceIndex);
+        protected char normalize(char c) {
+            return Character.toLowerCase(c);
         }
     }
-
+    
 
     /**
      * Tokenizer for email addresses.  Skips&Splits at \r\n<>\",\'
