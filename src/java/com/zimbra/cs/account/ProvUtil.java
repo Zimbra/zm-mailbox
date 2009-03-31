@@ -417,7 +417,7 @@ public class ProvUtil implements DebugListener {
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
-        SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
+        SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE),        
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
@@ -1634,7 +1634,7 @@ public class ProvUtil implements DebugListener {
         }
     }    
 
-    private void doSearchGal(String[] args) throws ServiceException {
+    private void doSearchGal(String[] args) throws ServiceException, ArgException {
         boolean verbose = false;
         int i = 1;
         
@@ -1660,9 +1660,21 @@ public class ProvUtil implements DebugListener {
         String domain = args[i];
         String query = args[i+1];
         
+        Map attrs = getMap(args, i+2);
+        
+        String limitStr = (String) attrs.get("limit");
+        int limit = limitStr == null ? Integer.MAX_VALUE : Integer.parseInt(limitStr);
+        
+        String offsetStr = (String) attrs.get("offset");
+        int offset = offsetStr == null ? 0 : Integer.parseInt(offsetStr);        
+        
+		String sortBy  = (String)attrs.get("sortBy");
+		
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = mProv.searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
+        SearchGalResult result = (mProv instanceof SoapProvisioning) ?
+        		((SoapProvisioning)mProv).searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null, limit, offset, sortBy) :
+        		mProv.searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
         for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }    

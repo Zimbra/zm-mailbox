@@ -1580,6 +1580,10 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
+    	return searchGal(d, query, type, token, 0, 0, null);
+    }
+    
+    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token, int limit, int offset, String sortBy) throws ServiceException {
         String typeStr = null;
 
         if (type == GAL_SEARCH_TYPE.ALL) typeStr = "all";
@@ -1591,6 +1595,13 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_NAME).setText(query);
         req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
         req.addAttribute(AdminConstants.A_TYPE, typeStr);
+        if (limit > 0)
+            req.addAttribute(AdminConstants.A_LIMIT, limit);
+        if (offset > 0)
+            req.addAttribute(AdminConstants.A_OFFSET, limit);
+        if (sortBy != null)
+            req.addAttribute(AdminConstants.A_SORT_BY, sortBy);
+        	
         if (token != null) req.addAttribute(AdminConstants.A_TOKEN, token);
 
         Element resp = invoke(req);
