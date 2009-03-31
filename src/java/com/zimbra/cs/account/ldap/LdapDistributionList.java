@@ -33,6 +33,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 
 class LdapDistributionList extends DistributionList implements LdapEntry {
@@ -46,21 +47,38 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
     }
     
     void addMembers(String[] members, LdapProvisioning prov) throws ServiceException {
-    	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
-    	Set<String> mods = new HashSet<String>();
-    	
+        Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
+        Set<String> mods = new HashSet<String>();
+        
         for (int i = 0; i < members.length; i++) { 
             String memberName = members[i].toLowerCase();
-        	memberName = IDNUtil.toAsciiEmail(members[i]);
-        	if (!existing.contains(memberName)) {
-        		mods.add(memberName);
-        		
-        		// clear the DL cache on accounts
-        		// can't do prov.getFromCache because it only caches by primary name 
-        		Account acct = prov.get(AccountBy.name, memberName);
-        		if (acct != null)
-        		    acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
-        	}
+            memberName = IDNUtil.toAsciiEmail(members[i]);
+            if (!existing.contains(memberName)) {
+                mods.add(memberName);
+
+                // clear the DL cache on accounts/dl
+
+                // can't do prov.getFromCache because it only caches by primary name 
+                Account acct = prov.get(AccountBy.name, memberName);
+                if (acct != null)
+                        clearUpwardMembershipCache(acct);
+                else {
+                        // for DistributionList/ACLGroup, get it from cache because 
+                    // if the dl is not in cache, after loading it prov.getAclGroup 
+                    // always compute the upward membership.  Sounds silly if we are 
+                    // about to clean the cache.  If memberName is indeed an alias 
+                    // of one of the cached DL/ACLGroup, it will get expired after 15 
+                    // mins, just like the multi-node case. 
+                    //
+                    // Note: do not call clearUpwardMembershipCache for AclGroup because
+                    // the upward membership cache for that is computed and cache only when 
+                    // the entry is loaded/being cached, instead of lazily computed like we 
+                    // do for account.
+                    DistributionList dl = prov.getFromCache(DistributionListBy.name, memberName);
+                    if (dl != null)
+                        prov.removeFromCache(dl);
+                }
+            }
         }
 
         if (mods.isEmpty()) {
@@ -74,10 +92,10 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
     }
 
     void removeMembers(String[] members, LdapProvisioning prov) throws ServiceException {
-    	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
-    	Set<String> mods = new HashSet<String>();
-    	HashSet<String> failed = new HashSet<String>();
-    	
+        Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
+        Set<String> mods = new HashSet<String>();
+        HashSet<String> failed = new HashSet<String>();
+
         for (int i = 0; i < members.length; i++) { 
             String memberName = members[i].toLowerCase();
             memberName = IDNUtil.toAsciiEmail(members[i]);
@@ -118,31 +136,35 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
                     failed.add(memberName);
             }
             
-            // clear the DL cache on accounts
-            if (addrsOfEntry.isAccount()) {
-                String primary = addrsOfEntry.getPrimary();
-                if (primary != null) {
+            // clear the DL cache on accounts/dl
+            String primary = addrsOfEntry.getPrimary();
+            if (primary != null) {
+                if (addrsOfEntry.isAccount()) {
                     Account acct = prov.getFromCache(AccountBy.name, primary);
                     if (acct != null)
-                        acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
+                        clearUpwardMembershipCache(acct);
+                } else {
+                    DistributionList dl = prov.getFromCache(DistributionListBy.name, primary);
+                    if (dl != null)
+                        prov.removeFromCache(dl);
                 }
             }
         }
 
-    	if (!failed.isEmpty()) {
-    		StringBuilder sb = new StringBuilder();
-    		Iterator<String> iter = failed.iterator();
-    		while (true) {
-    			sb.append(iter.next());
-    			if (!iter.hasNext())
-    				break;
-    			sb.append(",");
-    		}
-    		throw AccountServiceException.NO_SUCH_MEMBER(getName(), sb.toString());
-    	}
-    	
-    	if (mods.isEmpty()) {
-    		throw ServiceException.INVALID_REQUEST("empty remove set", null);
+        if (!failed.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            Iterator<String> iter = failed.iterator();
+            while (true) {
+                sb.append(iter.next());
+                if (!iter.hasNext())
+                    break;
+                sb.append(",");
+            }
+            throw AccountServiceException.NO_SUCH_MEMBER(getName(), sb.toString());
+        }
+
+        if (mods.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST("empty remove set", null);
         }
         
         Map<String,String[]> modmap = new HashMap<String,String[]>();
@@ -151,6 +173,12 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
 
     }
 
+    private void clearUpwardMembershipCache(Account acct) {
+        acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
+        acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST, null);
+        acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
+    }
+    
     public String getDN() {
         return mDn;
     }

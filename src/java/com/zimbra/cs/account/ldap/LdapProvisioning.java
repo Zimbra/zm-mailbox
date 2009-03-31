@@ -2853,6 +2853,17 @@ public class LdapProvisioning extends Provisioning {
                 return null;
         }
     }
+    
+    public DistributionList getFromCache(DistributionListBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case id: 
+            return sGroupCache.getById(key);
+        case name: 
+            return sGroupCache.getByName(key);
+        default:
+            return null;
+        }
+    }
 
     private DistributionList getAclGroupById(String groupId) throws ServiceException {
 
@@ -5817,8 +5828,15 @@ public class LdapProvisioning extends Provisioning {
                 sAccountCache.clear();
             return;
         case group:
-            // TODO: support clening cache for one group entry 
-            sGroupCache.clear();
+            if (entries != null) {
+                for (CacheEntry entry : entries) {
+                    DistributionListBy dlBy = (entry.mEntryBy==CacheEntryBy.id)? DistributionListBy.id : DistributionListBy.name;
+                    DistributionList aclGroup = getFromCache(dlBy, entry.mEntryIdentity);
+                    if (aclGroup != null)
+                        removeFromCache(aclGroup);
+                }
+            } else
+                sGroupCache.clear();
             return; 
         case config:
             if (entries != null)
@@ -5883,6 +5901,8 @@ public class LdapProvisioning extends Provisioning {
     public void removeFromCache(Entry entry) {
         if (entry instanceof Account)
             sAccountCache.remove((Account)entry);
+        else if (entry instanceof DistributionList)
+            sGroupCache.remove((DistributionList)entry);
         else
             throw new UnsupportedOperationException(); 
     }
