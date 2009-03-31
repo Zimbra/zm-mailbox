@@ -34,6 +34,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -113,9 +114,10 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
 			// add the admin zimlets
 			else {
+				boolean isDomainAdmin = authToken.isDomainAdmin();
 				List<Zimlet> allZimlets = prov.listAllZimlets();
 				for (Zimlet zimlet : allZimlets) {
-					if (zimlet.isExtension() && zimlet.isEnabled()) {
+					if ((!isDomainAdmin && zimlet.isExtension() && zimlet.isEnabled()  && zimlet.checkTarget(AdminConstants.T_ADMIN_MAIN)) || (isDomainAdmin && zimlet.isExtension() && zimlet.isEnabled() && zimlet.checkTarget(AdminConstants.T_ADMIN_DOMAIN))) {
 						allowedZimlets.add(zimlet);
 					}
 				}
