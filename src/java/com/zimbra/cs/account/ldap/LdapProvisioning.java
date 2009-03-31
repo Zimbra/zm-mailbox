@@ -3361,7 +3361,7 @@ public class LdapProvisioning extends Provisioning {
             if (!allowFallback || authMech.isZimbraAuth()) 
                 throw e;
             ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
-                domain.getName() + " failed, fall back to zimbra default auth mechanism");
+                domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
         }
         
         // fall back to zimbra default auth
