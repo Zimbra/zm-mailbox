@@ -118,6 +118,12 @@ public class SoapToSieve {
             String value = test.getAttribute(MailConstants.A_VALUE);
             snippet = String.format("header :%s \"%s\" \"%s\"",
                 comparison, FilterUtil.escape(header), FilterUtil.escape(value));
+            
+            // Bug 35983: disallow more than four asterisks in a row.
+            if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
+                throw ServiceException.INVALID_REQUEST(
+                    "Wildcard match value cannot contain more than four asterisks in a row.", null);
+            }
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = test.getAttribute(MailConstants.A_HEADER);
             snippet = String.format("exists \"%s\"", FilterUtil.escape(header));
