@@ -92,7 +92,7 @@ public class CreateWaitSet extends MailDocumentHandler {
         }
         
 
-        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getAuthtokenAccountId(), adminAllowed, defaultInterests, allAccts, add);
+        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getRequestedAccountId(), adminAllowed, defaultInterests, allAccts, add);
         String wsId = result.getFirst();
         List<WaitSetError> errors = result.getSecond();
         
