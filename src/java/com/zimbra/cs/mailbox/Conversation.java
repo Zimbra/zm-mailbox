@@ -35,107 +35,13 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class Conversation extends MailItem {
-
-    protected final class TagSet {
-        private List<Integer> mTags;
-
-        TagSet()           { mTags = new ArrayList<Integer>(); }
-        TagSet(Tag tag)    { (mTags = new ArrayList<Integer>()).add(tag.getId()); }
-        TagSet(String csv) {
-            mTags = new ArrayList<Integer>();
-            if (csv == null || csv.equals(""))
-                return;
-            String[] tags = csv.split(",");
-            for (int i = 0; i < tags.length; i++) {
-                long value = 0;
-                try {
-                    value = Long.parseLong(tags[i]);
-                } catch (NumberFormatException e) {
-                    ZimbraLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
-                    throw e;
-                }
-                if (value == 0)      continue;
-                else if (value < 0)  updateFlags((int) (-value), true);
-                else                 updateTags(value, true);
-            }
-        }
-
-        boolean contains(Tag tag)   { return contains(tag.getId()); }
-        boolean contains(int tagId) { return mTags.contains(tagId); }
-
-        int count(Tag tag)   { return count(tag.getId()); }
-        int count(int tagId) {
-            int count = 0;
-            for (int i : mTags)
-                if (i == tagId)
-                    count++;
-            return count;
-        }
-
-        boolean update(Tag tag, boolean add)                    { return update(tag.getId(), add, false); }
-        boolean update(Tag tag, boolean add, boolean affectAll) { return update(tag.getId(), add, affectAll); }
-        boolean update(int tagId, boolean add)                  { return update(tagId, add, false); }
-        boolean update(int tagId, boolean add, boolean affectAll) {
-            if (add)
-                mTags.add(tagId);
-            else if (!affectAll)
-                mTags.remove((Integer) tagId);
-            else
-                while (mTags.remove((Integer) tagId)) ;
-            recalculate();
-            return true;
-        }
-
-        TagSet updateFlags(int flags, boolean add) {
-            for (int j = 0; flags != 0 && j < MAX_FLAG_COUNT; j++) {
-                int mask = 1 << j; 
-                if ((flags & mask) != 0) {
-                    if (add)  mTags.add(-j - 1);
-                    else      mTags.remove((Integer) (-j - 1));
-                    flags &= ~mask;
-                }
-            }
-            recalculate();
-            return this;
-        }
-        TagSet updateTags(long tags, boolean add) {
-            for (int j = 0; tags != 0 && j < MAX_TAG_COUNT; j++) {
-                long mask = 1L << j; 
-                if ((tags & mask) != 0) {
-                    // should really check to make sure the tag is reasonable
-                    if (add)  mTags.add(j + TAG_ID_OFFSET);
-                    else      mTags.remove((Integer) (j + TAG_ID_OFFSET));
-                    tags &= ~mask;
-                }
-            }
-            recalculate();
-            return this;
-        }
-
-        private void recalculate() {
-            mData.flags = 0;
-            mData.tags  = 0;
-            for (int value : mTags) {
-                if (value < 0)
-                    mData.flags |= 1 << Flag.getIndex(value);
-                else
-                    mData.tags |= 1L << Tag.getIndex(value);
-            }
-        }
-
-        @Override public String toString() { return mTags.toString(); }
-    }
-
     private   String     mEncodedSenders;
     protected SenderList mSenderList;
-    protected TagSet     mInheritedTagSet;
 
     Conversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
         if (mData.type != TYPE_CONVERSATION && mData.type != TYPE_VIRTUAL_CONVERSATION)
             throw new IllegalArgumentException();
-        mInheritedTagSet = new TagSet(mData.inheritedTags);
-        mData.inheritedTags = null;
     }
 
     /** Returns the normalized subject of the conversation.  This is done by
@@ -160,13 +66,6 @@ public class Conversation extends MailItem {
         return (int) mData.size;
     }
 
-    /** Returns the total number of messages in the conversation not tagged
-     *  with the IMAP \Deleted flag.  This will almost always equal the value
-     *  returned from {@link #getMessageCount()}. */
-    public int getNondeletedCount() {
-        return Math.max(0, getMessageCount() - mInheritedTagSet.count(Flag.ID_FLAG_DELETED));
-    }
-
     @Override public int getInternalFlagBitmask() {
         return 0;
     }
@@ -185,11 +84,11 @@ public class Conversation extends MailItem {
         mSenderList = null;
         // first, attempt to decode the existing sender list (if there is one)
         if (mEncodedSenders != null) {
+            String encoded = mEncodedSenders;
+            mEncodedSenders = null;
             try {
-                String encoded = mEncodedSenders;
-                mEncodedSenders = null;
                 // if the first message has been removed, this should throw
-                //   an exception and force mRawSubject to be recalculated
+                //   an exception and force the list to be recalculated
                 mSenderList = SenderList.parse(encoded);
                 if (mSenderList.size() != mData.size)
                     mSenderList = null;
@@ -216,6 +115,16 @@ public class Conversation extends MailItem {
         return true;
     }
 
+    void recalculateCounts(List<Message> msgs) {
+        markItemModified(Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD);
+        mData.tags = mData.flags = mData.unreadCount = 0;
+        for (Message msg : msgs) {
+            mData.unreadCount += msg.getUnreadCount();
+            mData.flags |= msg.getInternalFlagBitmask();
+            mData.tags |= msg.getTagBitmask();
+        }
+    }
+
     private static final int RECALCULATE_CHANGE_MASK = Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS  | Change.MODIFIED_SENDERS |
                                                        Change.MODIFIED_SIZE | Change.MODIFIED_UNREAD | Change.MODIFIED_METADATA;
 
@@ -232,13 +141,14 @@ public class Conversation extends MailItem {
         mSenderList = new SenderList(msgs);
         mData.size = msgs.size();
 
-        mData.unreadCount = 0;
-        mInheritedTagSet = new TagSet();
+        mData.tags = mData.flags = mData.unreadCount = 0;
         mExtendedData = null;
         for (Message msg : msgs) {
             // unread count is updated via MailItem.addChild() for some reason...
             super.addChild(msg);
-            mInheritedTagSet.updateFlags(msg.getInternalFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
+            mData.unreadCount += (msg.isUnread() ? 1 : 0);
+            mData.flags |= msg.getInternalFlagBitmask();
+            mData.tags |= msg.getTagBitmask();
             mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
 
@@ -290,11 +200,18 @@ public class Conversation extends MailItem {
 
 
     static Conversation create(Mailbox mbox, int id, Message[] msgs) throws ServiceException {
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            StringBuilder msgIds = new StringBuilder();
+            for (int i = 0; i < msgs.length; i++)
+                msgIds.append(i > 0 ? "," : "").append(msgs[i].getId());
+            ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.", id, msgIds);
+        }
+
         assert(id != Mailbox.ID_AUTO_INCREMENT && msgs.length > 0);
         Arrays.sort(msgs, new Message.SortDateAscending());
 
-        int date = 0, unread = 0;
-        StringBuilder tags = new StringBuilder();
+        int date = 0, unread = 0, flags = 0;
+        long tags = 0;
         CustomMetadataList extended = null;
         for (int i = 0; i < msgs.length; i++) {
             Message msg = msgs[i];
@@ -302,7 +219,8 @@ public class Conversation extends MailItem {
                 throw ServiceException.FAILURE("null Message in list", null);
             date = Math.max(date, msg.mData.date);
             unread += msg.mData.unreadCount;
-            tags.append(i == 0 ? "-" : ",-").append(msg.mData.flags).append(',').append(msg.mData.tags);
+            flags  |= msg.mData.flags;
+            tags   |= msg.mData.tags;
             extended = MetadataCallback.duringConversationAdd(extended, msg);
         }
 
@@ -313,20 +231,11 @@ public class Conversation extends MailItem {
         data.subject     = msgs.length > 0 ? msgs[0].getNormalizedSubject() : "";
         data.date        = date;
         data.size        = msgs.length;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msgs));
         data.unreadCount = unread;
-        data.inheritedTags = tags.toString();
+        data.flags       = flags;
+        data.tags        = tags;
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msgs));
         data.contentChanged(mbox);
-        
-        if (ZimbraLog.mailop.isDebugEnabled()) {
-            StringBuilder msgIds = new StringBuilder();
-            for (int i = 0; i < msgs.length; i++) {
-                if (i > 0)
-                    msgIds.append(',');
-                msgIds.append(msgs[i].getId());
-            }
-            ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.", data.id, msgIds);
-        }
         DbMailItem.create(mbox, data, null);
 
         Conversation conv = new Conversation(mbox, data);
@@ -426,7 +335,7 @@ public class Conversation extends MailItem {
     @Override void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
             throw ServiceException.FAILURE("missing tag argument", null);
-        if ((add ? mData.size : 0) == mInheritedTagSet.count(tag))
+        if (!add && !isTagged(tag))
             return;
         if (tag.getId() == Flag.ID_FLAG_UNREAD)
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
@@ -436,11 +345,12 @@ public class Conversation extends MailItem {
 
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
+        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         boolean excludeAccess = false;
 
-        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
-        List<Integer> targets = new ArrayList<Integer>();
-        for (Message msg : getMessages()) {
+        List<Message> msgs = getMessages();
+        List<Integer> targets = new ArrayList<Integer>(msgs.size());
+        for (Message msg : msgs) {
             // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
             if (msg.isTagged(tag) == add) {
                 continue;
@@ -461,7 +371,6 @@ public class Conversation extends MailItem {
 
             targets.add(msg.getId());
             msg.tagChanged(tag, add);
-            mInheritedTagSet.update(tag, add);
         }
 
         if (targets.isEmpty()) {
@@ -473,15 +382,20 @@ public class Conversation extends MailItem {
                 ZimbraLog.mailop.debug("%s %s for %s.  Affected ids: %s",
                     operation, getMailopContext(tag), getMailopContext(this), StringUtil.join(",", targets));
             }
+            recalculateCounts(msgs);
             DbMailItem.alterTag(tag, targets, add);
         }
     }
 
-    @Override protected void inheritedTagChanged(Tag tag, boolean add) {
-        if (tag == null)
+    @Override protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException {
+        if (tag == null || add == isTagged(tag))
             return;
+
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-        mInheritedTagSet.update(tag, add);
+        if (add)
+            tagChanged(tag, add);
+        else
+            DbMailItem.completeConversation(mMailbox, mData);
     }
 
     /** Moves all the conversation's {@link Message}s to a different
@@ -613,18 +527,22 @@ public class Conversation extends MailItem {
 
         super.addChild(msg);
 
-        // update inherited tags, if applicable
-        if (msg.mData.tags != 0 || msg.mData.flags != 0) {
-            int oldFlags = mData.flags;
-            long oldTags = mData.tags;
+        // update inherited flags
+        int oldFlags = mData.flags;
+        mData.flags |= msg.getInternalFlagBitmask();
+        if (mData.flags != oldFlags)
+            markItemModified(Change.MODIFIED_FLAGS);
 
-            if (msg.mData.tags != 0)
-                mInheritedTagSet.updateTags(msg.mData.tags, true);
-            if (msg.mData.flags != 0)
-                mInheritedTagSet.updateFlags(msg.mData.flags, true);
+        // update inherited tags
+        long oldTags = mData.tags;
+        mData.tags |= msg.getTagBitmask();
+        if (mData.tags != oldTags)
+            markItemModified(Change.MODIFIED_TAGS);
 
-            if (mData.flags != oldFlags)  markItemModified(Change.MODIFIED_FLAGS);
-            if (mData.tags != oldTags)    markItemModified(Change.MODIFIED_TAGS);
+        // update unread counts
+        if (msg.isUnread()) {
+            markItemModified(Change.MODIFIED_UNREAD);
+            updateUnread(child.mData.unreadCount);
         }
 
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS | Change.MODIFIED_METADATA);
@@ -661,7 +579,6 @@ public class Conversation extends MailItem {
     }
 
     @Override void removeChild(MailItem child) throws ServiceException {
-        // superclass removeChild() updates the unread count and child list
         super.removeChild(child);
 
         // remove the last message and the conversation goes away
@@ -670,23 +587,28 @@ public class Conversation extends MailItem {
             return;
         }
 
-        // update inherited tags, if applicable
-        if (child.mData.tags != 0 || child.mData.flags != 0) {
-            int oldFlags = mData.flags;
-            long oldTags = mData.tags;
-
-            if (child.mData.tags != 0)
-                mInheritedTagSet.updateTags(child.mData.tags, false);
-            if (child.mData.flags != 0)
-                mInheritedTagSet.updateFlags(child.mData.flags, false);
-
-            if (mData.flags != oldFlags)  markItemModified(Change.MODIFIED_FLAGS);
-            if (mData.tags != oldTags)    markItemModified(Change.MODIFIED_TAGS);
-        }
-
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
 
         if (!mMailbox.hasListeners(Session.Type.SOAP)) {
+            // update unread counts
+            if (child.isUnread()) {
+                markItemModified(Change.MODIFIED_UNREAD);
+                updateUnread(-child.mData.unreadCount);
+            }
+
+            // update inherited tags, if applicable
+            if (child.mData.tags != 0 || child.mData.flags != 0) {
+                int oldFlags = mData.flags;
+                long oldTags = mData.tags;
+
+                DbMailItem.completeConversation(mMailbox, mData);
+
+                if (mData.flags != oldFlags)
+                    markItemModified(Change.MODIFIED_FLAGS);
+                if (mData.tags != oldTags)
+                    markItemModified(Change.MODIFIED_TAGS);
+            }
+
             mEncodedSenders = null;
             mSenderList = null;
             mData.size--;
@@ -843,13 +765,10 @@ public class Conversation extends MailItem {
     }
 
 
-    private static final String CN_INHERITED_TAGS = "inherited";
-
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("conversation: {");
         appendCommonMembers(sb);
-        sb.append(CN_INHERITED_TAGS).append(": [").append(mInheritedTagSet.toString()).append("], ");
         sb.append("}");
         return sb.toString();
     }

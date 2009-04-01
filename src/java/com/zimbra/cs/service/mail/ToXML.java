@@ -572,7 +572,7 @@ public class ToXML {
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
                 if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(m, msg);
+                    MetadataCallback.postSerialization(m, msg);
             }
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
@@ -603,8 +603,10 @@ public class ToXML {
         boolean addSenders = (output == OutputParticipants.PUT_BOTH || !addRecips) && needToOutput(fields, Change.MODIFIED_SENDERS);
 
         Mailbox mbox = conv.getMailbox();
+        // if the caller might not be able to see all the messages (due to rights or \Deleted),
+        //   need to calculate some fields from the visible messages
         List<Message> msgs = null;
-        if ((octxt != null && octxt.isDelegatedRequest(mbox)) || (addSenders && conv.isTagged(Flag.ID_FLAG_DELETED)))
+        if ((octxt != null && octxt.isDelegatedRequest(mbox)) || conv.isTagged(Flag.ID_FLAG_DELETED))
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
 
         boolean noneVisible = msgs != null && msgs.isEmpty();
@@ -664,15 +666,13 @@ public class ToXML {
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
 
         if (needToOutput(fields, Change.MODIFIED_CHILDREN | Change.MODIFIED_SIZE)) {
-            int count = 0, nondeleted = 0;
-            if (msgs == null) {
-                count = conv.getMessageCount();
-                nondeleted = conv.getNondeletedCount();
-            } else {
+            int count = conv.getMessageCount(), nondeleted = count;
+            if (msgs != null) {
                 count = nondeleted = msgs.size();
-                for (Message msg : msgs)
+                for (Message msg : msgs) {
                     if (msg.isTagged(Flag.ID_FLAG_DELETED))
                         nondeleted--;
+                }
             }
 
             c.addAttribute(MailConstants.A_NUM, nondeleted);
@@ -707,8 +707,8 @@ public class ToXML {
      * @param parent  The Element to add the new <tt>&lt;m></tt> to.
      * @param ifmt    The formatter to sue when serializing item ids.
      * @param msg     The Message to serialize.
-     * @param part    If non-null, we'll serialuize this message/rfc822 subpart
-     *                of the specified Message instead of the Message itself.
+     * @param part    If non-null, serialize this message/rfc822 subpart of
+     *                the Message instead of the Message itself.
      * @param maxSize TODO
      * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
      *                  <tt>false</tt> to prefer text/plain parts.

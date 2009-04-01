@@ -203,8 +203,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    dateChanged;
         public int    modContent;
 
-        public String inheritedTags;
-
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
         public String getBlobDigest() {
             return blobDigest;
@@ -1670,10 +1668,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         // change our cached tags
         tagChanged(tag, newValue);
 
-        // tell our parent about the tag change (note: must happen before DbMailItem.alterTag)
-        if (parent != null)
-            parent.inheritedTagChanged(tag, newValue);
-
         // since we're adding/removing a tag, the tag's unread count may change
         if (tag.trackUnread() && mData.unreadCount > 0)
             tag.updateUnread((newValue ? 1 : -1) * mData.unreadCount);
@@ -1683,6 +1677,10 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // alter our tags in the DB
         DbMailItem.alterTag(this, tag, newValue);
+
+        // tell our parent about the tag change (note: must happen after DbMailItem.alterTag)
+        if (parent != null)
+            parent.inheritedTagChanged(tag, newValue);
     }
 
     final void alterSystemFlag(Flag flag, boolean newValue) throws ServiceException {
@@ -1701,12 +1699,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         // change our cached tags
         tagChanged(flag, newValue);
 
-        // tell our parent about the tag change (note: must happen before DbMailItem.alterTag)
-        if (parent != null)
-            parent.inheritedTagChanged(flag, newValue);
-
         // alter our tags in the DB
         DbMailItem.alterTag(flag, Arrays.asList(getId()), newValue);
+
+        // tell our parent about the tag change (note: must happen after DbMailItem.alterTag)
+        if (parent != null)
+            parent.inheritedTagChanged(flag, newValue);
     }
 
     /** Updates the object's in-memory state to reflect a {@link Tag} change.
@@ -1731,7 +1729,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    protected void inheritedTagChanged(Tag tag, boolean add)  { }
+    @SuppressWarnings("unused")
+    protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException  { }
 
     /** Updates the in-memory unread count for the item.  The base-class
      *  implementation does not cascade the change to the item's parent,
@@ -2259,20 +2258,15 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw MailServiceException.CANNOT_PARENT();
         if (mMailbox != child.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
-
-        // update unread counts
-        updateUnread(child.mData.unreadCount);
     }
 
+    @SuppressWarnings("unused")
     void removeChild(MailItem child) throws ServiceException {
         markItemModified(Change.MODIFIED_CHILDREN);
 
         // remove parent reference from the child
         if (child.mData.parentId == mId)
             child.mData.parentId = -1;
-
-        // update unread counts
-        updateUnread(-child.mData.unreadCount);
     }
 
     /** A record of all the relevant data about a set of items that we're
@@ -2383,11 +2377,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (scope == DeleteScope.CONTENTS_ONLY || info.incomplete) {
             // make sure to take the container's ID out of the list of deleted items
             info.itemIds.remove(getType(), mId);
-        } else {
-            // update parent item's child list
-            MailItem parent = getParent();
-            if (parent != null)
-                parent.removeChild(this);
         }
 
         delete(mMailbox, info, this, scope, writeTombstones);
@@ -2399,9 +2388,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             return;
 
         mbox.markItemDeleted(info.itemIds.getTypesMask(), info.itemIds.getAll());
+
+        MailItem parent = null;
         // when applicable, record the deleted MailItem (rather than just its id)
-        if (item != null && scope == DeleteScope.ENTIRE_ITEM && !info.incomplete)
+        if (item != null && scope == DeleteScope.ENTIRE_ITEM && !info.incomplete) {
             item.markItemDeleted();
+            parent = item.getParent();
+        }
 
         // update the mailbox's size
         mbox.updateSize(-info.size);
@@ -2426,28 +2419,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         // Log mailop statements if necessary
         if (ZimbraLog.mailop.isInfoEnabled()) {
             if (item != null) {
-                if (item instanceof VirtualConversation) {
+                if (item instanceof VirtualConversation)
                     ZimbraLog.mailop.info("Deleting Message (id=%d).", ((VirtualConversation) item).getMessageId());
-                } else {
-                    String contentString = "";
-                    if (scope == DeleteScope.CONTENTS_ONLY) {
-                        contentString = "contents of ";
-                    }
-                    ZimbraLog.mailop.info("Deleting %s%s.", contentString, getMailopContext(item));
-                }
+                else
+                    ZimbraLog.mailop.info("Deleting %s%s.", scope == DeleteScope.CONTENTS_ONLY ? "contents of " : "", getMailopContext(item));
             }
             
             // If there are any related items being deleted, log them in blocks of 200.
-            int itemId = 0;
-            if (item != null) {
-                itemId = Math.abs(item.getId()); // Use abs() for VirtualConversations
-            }
+            int itemId = item == null ? 0 : Math.abs(item.getId()); // Use abs() for VirtualConversations
             Set<Integer> idSet = new TreeSet<Integer>();
             for (int id : info.itemIds.getAll()) {
                 id = Math.abs(id); // Use abs() for VirtualConversations
-                if (id != itemId) {
+                if (id != itemId)
                     idSet.add(id);
-                }
                 if (idSet.size() >= 200) {
                     // More than 200 items.
                     ZimbraLog.mailop.info("Deleting items: %s.", StringUtil.join(",", idSet));
@@ -2472,6 +2456,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the deleted item(s) from the mailbox's cache
         if (item != null) {
             item.purgeCache(info, !info.incomplete && scope == DeleteScope.ENTIRE_ITEM);
+            if (parent != null)
+                parent.removeChild(item);
         } else if (!info.itemIds.isEmpty()) {
             // we're doing an old-item expunge or the like rather than a single delete/empty op
             info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
@@ -2479,9 +2465,10 @@ public abstract class MailItem implements Comparable<MailItem> {
                 info.modifiedIds.removeAll(info.cascadeIds);
             mbox.purge(TYPE_CONVERSATION);
             // if there are SOAP listeners, instantiate all modified conversations for notification purposes
-            if (!info.modifiedIds.isEmpty() && mbox.hasListeners(Session.Type.SOAP))
+            if (!info.modifiedIds.isEmpty() && mbox.hasListeners(Session.Type.SOAP)) {
                 for (MailItem conv : mbox.getItemById(info.modifiedIds, TYPE_CONVERSATION))
                     ((Conversation) conv).getSenderList();
+            }
         }
 
         // also delete any conversations whose messages have all been removed
@@ -2500,7 +2487,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // write a deletion record for later sync
         if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty())
             DbMailItem.writeTombstones(mbox, info.itemIds);
-        
+
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
     
@@ -2550,7 +2537,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
         }
 
-        List<MailItem> items = new ArrayList<MailItem>();
+        List<MailItem> items = new ArrayList<MailItem>(3);
         items.add(this);  items.addAll(loadRevisions());
         for (MailItem revision : items) {
             try {

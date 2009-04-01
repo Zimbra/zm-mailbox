@@ -1292,7 +1292,7 @@ public class Mailbox {
     }
 
     void cache(MailItem item) throws ServiceException {
-        if (item == null || (item.getFlagBitmask() & Flag.BITMASK_UNCACHED) != 0)
+        if (item == null || item.isTagged(Flag.ID_FLAG_UNCACHED))
             return;
 
         if (item instanceof Tag) {
@@ -1506,7 +1506,7 @@ public class Mailbox {
                     folder.saveFolderCounts(initial);
             }
 
-            mTagCache = new HashMap<Object, Tag>();
+            mTagCache = new HashMap<Object, Tag>(tagData.size() * 3);
             // create the tag objects and, as a side-effect, populate the new cache
             for (MailItem.UnderlyingData ud : tagData.keySet()) {
                 Tag tag = new Tag(this, ud);

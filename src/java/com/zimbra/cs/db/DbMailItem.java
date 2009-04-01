@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -2058,77 +2059,47 @@ public class DbMailItem {
         }
     }
 
-    private static void completeConversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        List<UnderlyingData> list = new ArrayList<UnderlyingData>();
-        list.add(data);
-        completeConversations(mbox, list);
+    public static void completeConversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        completeConversations(mbox, Arrays.asList(data));
     }
 
     private static void completeConversations(Mailbox mbox, List<UnderlyingData> convData) throws ServiceException {
         if (convData == null || convData.isEmpty())
             return;
-        Map<Integer, UnderlyingData> conversations = new HashMap<Integer, UnderlyingData>();
+        for (UnderlyingData data : convData) {
+            if (data.type != MailItem.TYPE_CONVERSATION)
+                throw ServiceException.FAILURE("attempting to complete a non-conversation", null);
+        }
+
+        Map<Integer, UnderlyingData> conversations = new HashMap<Integer, UnderlyingData>(Db.getINClauseBatchSize() * 3 / 2);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-
         for (int i = 0; i < convData.size(); i += Db.getINClauseBatchSize()) {
             try {
                 int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
-                stmt = conn.prepareStatement("SELECT parent_id, id, unread, flags, tags" +
+                stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tags" +
                         " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
-                        " ORDER BY parent_id");
+                        " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
                 if (!DebugConfig.disableMailboxGroups)
                     stmt.setInt(pos++, mbox.getId());
                 for (int index = i; index < i + count; index++) {
                     UnderlyingData data = convData.get(index);
-                    assert(data.type == MailItem.TYPE_CONVERSATION);
                     stmt.setInt(pos++, data.id);
                     conversations.put(data.id, data);
+                    // don't assume that the UnderlyingData structure was new...
+                    data.tags = data.flags = data.unreadCount = 0;
                 }
                 rs = stmt.executeQuery();
 
-                int lastConvId = -1;
-                List<Long> inheritedTags = new ArrayList<Long>();
-                int unreadCount = 0;
-
                 while (rs.next()) {
-                    int convId = rs.getInt(1);
-                    if (convId != lastConvId) {
-                        // New conversation.  Update stats for the last one and reset counters.
-                        if (lastConvId != -1) {
-                            // Update stats for the previous conversation
-                            UnderlyingData data = conversations.get(lastConvId);
-                            data.unreadCount   = unreadCount;
-                            data.inheritedTags = StringUtil.join(",", inheritedTags);
-                        }
-                        lastConvId = convId;
-                        inheritedTags.clear();
-                        unreadCount = 0;
-                    }
-
-                    // Read next row
-                    if (rs.getBoolean(3))
-                        unreadCount++;
-                    inheritedTags.add(-rs.getLong(4));
-                    inheritedTags.add(rs.getLong(5));
-                }
-
-                // Update the last conversation.
-                UnderlyingData data = conversations.get(lastConvId);
-                if (data != null) {
-                    data.unreadCount   = unreadCount;
-                    data.inheritedTags = StringUtil.join(",", inheritedTags);
-                } else {
-                    // Data error: no messages found
-                    StringBuilder msg = new StringBuilder("No messages found for conversations:");
-                    for (UnderlyingData ud : convData)
-                        msg.append(' ').append(ud.id);
-                    msg.append(".  lastConvId=").append(lastConvId);
-                    sLog.error(msg);
+                    UnderlyingData data = conversations.get(rs.getInt(1));
+                    assert(data != null);
+                    data.unreadCount += rs.getInt(2);
+                    data.flags       |= rs.getInt(3);
+                    data.tags        |= rs.getLong(4);
                 }
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("completing conversation data", e);
@@ -2136,6 +2107,8 @@ public class DbMailItem {
                 DbPool.closeResults(rs);
                 DbPool.closeStatement(stmt);
             }
+
+            conversations.clear();
         }
     }
 

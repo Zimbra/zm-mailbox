@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @author dkarp
@@ -48,7 +49,6 @@ public class VirtualConversation extends Conversation {
     @Override SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Message msg = msgs.get(0);
         mData = wrapMessage(msg);
-        mInheritedTagSet = new TagSet().updateFlags(msg.getFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
         return getSenderList();
     }
@@ -83,9 +83,10 @@ public class VirtualConversation extends Conversation {
         data.modMetadata = msg.getSavedSequence();
         data.modContent  = msg.getSavedSequence();
         data.size        = 1;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msg));
         data.unreadCount = msg.getUnreadCount();
-        data.inheritedTags = "-" + msg.mData.flags + ',' + msg.mData.tags;
+        data.flags       = msg.getInternalFlagBitmask();
+        data.tags        = msg.getTagBitmask();
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msg));
         return data;
     }
 
@@ -99,6 +100,13 @@ public class VirtualConversation extends Conversation {
 
     @Override void alterTag(Tag tag, boolean add) throws ServiceException {
         getMessage().alterTag(tag, add);
+    }
+
+    @Override protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException {
+        if (tag == null || add == isTagged(tag))
+            return;
+        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        tagChanged(tag, add);
     }
 
     @Override void addChild(MailItem child) throws ServiceException {
