@@ -50,7 +50,7 @@ public class IDNUtil {
         String parts[] = emailAddress.split("@");
         
         if (parts.length != 2)
-            throw ServiceException.INVALID_REQUEST("must be valid list address: "+emailAddress, null);
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
 
         String localPart = parts[0];
         String domain = parts[1];
@@ -62,7 +62,7 @@ public class IDNUtil {
         String parts[] = emailAddress.split("@");
         
         if (parts.length != 2)
-            throw ServiceException.INVALID_REQUEST("must be valid list address: "+emailAddress, null);
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
 
         String localPart = parts[0];
         String domain = parts[1];
@@ -115,5 +115,6 @@ public class IDNUtil {
         else
             System.out.println("\nbad!");
         
+        System.out.println(toAscii("abc@xyz"));
     }
 }
