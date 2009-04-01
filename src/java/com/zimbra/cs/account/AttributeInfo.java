@@ -374,7 +374,7 @@ public class AttributeInfo {
         }
     }
    
-    private static void validEmailAddress(String addr, boolean personal) throws ServiceException {
+    public static void validEmailAddress(String addr, boolean personal) throws ServiceException {
         if (addr.indexOf('@') == -1)
             throw AccountServiceException.INVALID_ATTR_VALUE("must include domain", null);
 
