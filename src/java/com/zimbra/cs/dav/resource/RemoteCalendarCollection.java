@@ -70,6 +70,9 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
 		if (target != null && Provisioning.onLocalServer(target))
 			mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
+		
+		// until we can proxy imapmodseq
+		mProps.remove(DavElements.E_GETCTAG);
     }
 
     @Override

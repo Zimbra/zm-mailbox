@@ -23,12 +23,14 @@ public class DavElements {
 	public static final String ZIMBRA_NS_STRING = "urn:ietf:params:xml:ns:zimbra";
 	public static final String XML_NS_STRING = "xml:";
 	public static final String APPLE_NS_STRING = "http://apple.com/ns/ical/";
+	public static final String CS_NS_STRING = "http://calendarserver.org/ns/";
 	
 	public static final Namespace WEBDAV_NS = Namespace.get("D", WEBDAV_NS_STRING);
 	public static final Namespace CALDAV_NS = Namespace.get("C", CALDAV_NS_STRING);
 	public static final Namespace ZIMBRA_NS = Namespace.get("Z", ZIMBRA_NS_STRING);
 	public static final Namespace XML_NS = Namespace.get("X", XML_NS_STRING);
 	public static final Namespace APPLE_NS = Namespace.get("A", APPLE_NS_STRING);
+	public static final Namespace CS_NS = Namespace.get("CS", CS_NS_STRING);
 
 	// general
 	public static final String LANG_EN_US = "en-us";
@@ -93,6 +95,7 @@ public class DavElements {
 	public static final String P_GETCONTENTLENGTH = "getcontentlength";
 	public static final String P_GETCONTENTTYPE = "getcontenttype";
 	public static final String P_GETCREATIONDATE = "getcreationdate";
+	public static final String P_GETCTAG = "getctag";
 	public static final String P_GETETAG = "getetag";
 	public static final String P_GETLASTMODIFIED = "getlastmodified";
 	public static final String P_GRANT = "grant";
@@ -260,6 +263,7 @@ public class DavElements {
 	public static final QName E_GETCONTENTLENGTH = QName.get(P_GETCONTENTLENGTH, WEBDAV_NS);
 	public static final QName E_GETCONTENTTYPE = QName.get(P_GETCONTENTTYPE, WEBDAV_NS);
 	public static final QName E_GETCREATIONDATE = QName.get(P_GETCREATIONDATE, WEBDAV_NS);
+	public static final QName E_GETCTAG = QName.get(P_GETCTAG, CS_NS);
 	public static final QName E_GETETAG = QName.get(P_GETETAG, WEBDAV_NS);
 	public static final QName E_GETLASTMODIFIED = QName.get(P_GETLASTMODIFIED, WEBDAV_NS);
 	public static final QName E_GRANT = QName.get(P_GRANT, WEBDAV_NS);
