@@ -177,6 +177,7 @@ public class Validators {
             
             Set<String> cosFeatures = getCosFeatures(prov, cosFeatureMap, desiredCosId, defaultCosId);
             Set<String> desiredFeatures = new HashSet<String>();
+            // add all new requested features
             for (Map.Entry<String,Object> entry : attrs.entrySet()) {
                 String k = entry.getKey();
                 if (featureLimitMap.containsKey(k)
@@ -184,6 +185,7 @@ public class Validators {
                         desiredFeatures.add(k);
                 }
             }
+            // add all features in new cos
             if (cosFeatures != null) {
                 for (String feature : cosFeatures) {
                     if (featureLimitMap.containsKey(feature))
@@ -193,12 +195,18 @@ public class Validators {
             if (ZimbraLog.account.isDebugEnabled())
                 ZimbraLog.account.debug("Desired features (incl. cos): %s + %s", desiredFeatures, cosFeatures);
             String originalCosId = null;
+            // remove all features in old cos
             if (account != null) {
                 originalCosId = account.getAttr(Provisioning.A_zimbraCOSId);
+                // be sure to fall back to default cos ID if none is set
+                // spurious counts will occur otherwise
+                if (originalCosId == null)
+                    originalCosId = defaultCosId;
                 Set<String> features = getCosFeatures(prov, cosFeatureMap, originalCosId, defaultCosId);
                 if (features != null)
                     desiredFeatures.removeAll(features);
             }
+            // remove all features in old account
             if (desiredFeatures.size() > 0) {
                 if (account != null) {
                     Map<String, Object> acctAttrs = account.getAttrs(false);
@@ -212,6 +220,10 @@ public class Validators {
             }
             if ((desiredCosId != null && !desiredCosId.equals(originalCosId)
                     && cosLimitMap.containsKey(desiredCosId)) || desiredFeatures.size() > 0) {
+                if (ZimbraLog.account.isDebugEnabled()) {
+                    ZimbraLog.account.debug("COS change info [%s:%s], desired features %s",
+                            originalCosId, desiredCosId, desiredFeatures);
+                }
                 buildDomainCounts(prov, domainName, defaultCosId, cosCountMap, featureCountMap, cosFeatureMap);
                 if (ZimbraLog.account.isDebugEnabled())
                     ZimbraLog.account.debug("COS/Feature limits: %s + %s", cosLimitMap, featureLimitMap);
