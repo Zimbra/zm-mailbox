@@ -279,6 +279,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
             ZimbraLog.account.warn("duplicate call to Provisioning.setInstance()");
         sProvisioning = prov;
     }
+    
+    public boolean idIsUUID() {
+        return true;
+    }
 
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
