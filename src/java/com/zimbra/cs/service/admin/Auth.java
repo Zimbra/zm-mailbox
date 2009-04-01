@@ -143,6 +143,7 @@ public class Auth extends AdminDocumentHandler {
                 Map<String, Object> authCtxt = new HashMap<String, Object>();
                 authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
                 authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
+                authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 checkAdmin(acct);
                 at = AuthProvider.getAuthToken(acct, true);

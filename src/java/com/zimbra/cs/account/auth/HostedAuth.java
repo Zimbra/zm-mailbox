@@ -39,10 +39,13 @@ public class HostedAuth extends ZimbraCustomAuth {
 	public static String HEADER_AUTH_STATUS = "Auth-Status";
 	//public static String HEADER_AUTH_SERVER = "Auth-Server";
 	//public static String HEADER_AUTH_PORT = "Auth-Port";
+	public static String HEADER_AUTH_USER_AGENT = "Auth-User-Agent";
 	
 	public static String AUTH_STATUS_OK = "OK";
 	
 	/**
+	 * zmprov md test.com zimbraAuthMech 'custom:hosted http://auth.customer.com:80'
+	 * 
 	 *  This custom auth module takes arguments in the following form:
 	 * {URL} [GET|POST - default is GET] [encryption method - defautl is plain] [auth protocol - default is imap] 
 	 * e.g.: http://auth.customer.com:80 GET
@@ -80,6 +83,9 @@ public class HostedAuth extends ZimbraCustomAuth {
 		    (AuthContext.Protocol)context.get(AuthContext.AC_PROTOCOL);
 		if (proto != null)
 		    method.addRequestHeader(HEADER_AUTH_PROTOCOL,proto.toString());
+		
+		if (context.get(AuthContext.AC_USER_AGENT)!=null)
+            method.addRequestHeader(HEADER_AUTH_USER_AGENT, context.get(AuthContext.AC_USER_AGENT).toString());
 		
         try {
             client.executeMethod(method);

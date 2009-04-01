@@ -34,6 +34,13 @@ public class AuthContext {
     public static final String AC_ACCOUNT_NAME_PASSEDIN = "anp";
     
     /*
+     * User agent sending in the auth request.
+     * 
+     * type: String
+     */
+    public static final String AC_USER_AGENT = "ua";
+    
+    /*
      * Protocol from which the auth request went in.
      * 
      * type: AuthContext.Protocol

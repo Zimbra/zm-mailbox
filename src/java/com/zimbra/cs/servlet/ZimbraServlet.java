@@ -426,8 +426,9 @@ public class ZimbraServlet extends HttpServlet {
         }
         try {
             Map<String, Object> authCtxt = new HashMap<String, Object>();
-            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, getRemoteIp(req));
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getRemoteIp(req));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, userPassedIn);
+            authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
             prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);
         } catch (ServiceException se) {
             if (sendChallenge) {
@@ -476,7 +477,7 @@ public class ZimbraServlet extends HttpServlet {
     	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
     
-    protected String getRemoteIp(HttpServletRequest req) {
+    public static String getRemoteIp(HttpServletRequest req) {
         String remoteAddr = req.getRemoteAddr();
                 
         String origIp = null;
