@@ -21,8 +21,10 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 public class CosId extends AttributeCallback {
@@ -31,12 +33,23 @@ public class CosId extends AttributeCallback {
     public void preModify(Map context, String attrName, Object attrValue,
             Map attrsToModify, Entry entry, boolean isCreate)
             throws ServiceException {
+        
+        validateCosId(attrsToModify, attrName);
+        
+        /*
+         * if zimbraDomainDefaultCOSId is being changed, will return at the 
+         * (entry instanceof Account) check.
+         * we can't invalidate the cos cache on account for all accounts 
+         * in the domain.
+         */
+        
         if (entry == null || isCreate)
             return;
         
         if (!(entry instanceof Account))
             return;
-            
+          
+        // zimbraCOSId on account
         Provisioning prov = Provisioning.getInstance();
         if (!(prov instanceof LdapProvisioning))
             return;
@@ -44,6 +57,28 @@ public class CosId extends AttributeCallback {
         Account acct = (Account)entry;
         LdapProvisioning ldapProv = (LdapProvisioning)prov;
         ldapProv.removeFromCache(acct);
+    }
+    
+    private void validateCosId(Map attrsToModify, String attrName) throws ServiceException {
+        
+        SingleValueMod mod = singleValueMod(attrsToModify, attrName);
+        if (mod.unsetting())
+            return;
+        else {
+            String cosId = mod.value();
+            Provisioning prov = Provisioning.getInstance();
+            /*
+             * hmm, not sure if YCC(CalendarProvisioning) also requires that 
+             * cos must exist when setting a cos id (e.g. zimbraDomainDefaultCOSId)
+             * skip for now.  Hack to use idIsUUID() for the check.
+             */
+            if (prov.idIsUUID()) {
+                Cos cos = prov.get(CosBy.id, cosId);
+                if (cos == null)
+                    throw ServiceException.INVALID_REQUEST("cos id " + cosId + 
+                            " does not point to a valid cos", null);
+            }
+        }
     }
 
     @Override
