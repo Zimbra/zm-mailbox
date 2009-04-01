@@ -123,6 +123,41 @@ public abstract class AttributeCallback {
         return svm;
     }
     
+    // TODO, remove the above singleValueMod in main and change all callsites to 
+    // use this one.  The above does not handle the case if someone does a -attrName value 
+    // for a single-valued attribute, a quite corner case.
+    protected SingleValueMod singleValueMod(Map attrsToModify, String attrName)  throws ServiceException {
+       
+        SingleValueMod svm = new SingleValueMod();
+        
+        Object v = attrsToModify.get("-" + attrName);
+        if (v != null) {
+            svm.mMod = SingleValueMod.Mod.UNSETTING;
+            return svm;
+        }
+        
+        Object value = attrsToModify.get(attrName);
+        if (value == null)
+            value = attrsToModify.get("+" + attrName);
+                
+        if (value == null)
+            svm.mMod = SingleValueMod.Mod.UNSETTING;
+        else if (!(value instanceof String))
+            throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
+        else {
+            // we have a String
+            String s = (String)value;
+            if ("".equals(s))
+                svm.mMod = SingleValueMod.Mod.UNSETTING;
+            else {
+                svm.mMod = SingleValueMod.Mod.SETTING;
+                svm.mValue = s;
+            }
+        }
+        
+        return svm;
+    }
+    
     /**
      * 
      * @param attrsToModify
