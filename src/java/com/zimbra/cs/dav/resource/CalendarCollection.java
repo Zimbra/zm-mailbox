@@ -102,6 +102,9 @@ public class CalendarCollection extends Collection {
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		
+		mCtag = "" + f.getImapMODSEQ();
+		setProperty(DavElements.E_GETCTAG, mCtag);
+		
 		byte color = f.getColor();
 		if (color >= COLOR_MAP.length)
 			color = 0;
@@ -125,6 +128,7 @@ public class CalendarCollection extends Collection {
 
     protected Map<String,DavResource> mAppts;
     protected boolean mMetadataOnly;
+    protected String mCtag;
     
 	/* Returns all the appointments specified in hrefs */
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
