@@ -1615,6 +1615,10 @@ public abstract class Provisioning {
             ZimbraLog.account.warn("duplicate call to Provisioning.setInstance()");
         sProvisioning = prov;
     }
+    
+    public boolean idIsUUID() {
+        return true;
+    }
 
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
