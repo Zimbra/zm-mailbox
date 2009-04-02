@@ -211,13 +211,17 @@ public class CalendarCollection extends Collection {
         ctxt.setCollectionPath(getUri());
 		if (range == null)
 			range = new TimeRange(getOwner());
+		long start = range.getStart();
+		long end = range.getEnd();
+		start = start == Long.MIN_VALUE ? -1 : start;
+		end = end == Long.MAX_VALUE ? -1 : end;
         if (!needCalendarData(ctxt)) {
         	ZimbraLog.dav.debug("METADATA only");
         	mMetadataOnly = true;
-        	for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), range.getStart(), range.getEnd()))
+        	for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), start, end))
         		appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
         } else {
-            for (CalendarItem calItem : mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), getId(), null))
+            for (CalendarItem calItem : mbox.getCalendarItemsForRange(ctxt.getOperationContext(), start, end, getId(), null))
                 appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
         }
         return appts;
