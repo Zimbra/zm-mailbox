@@ -92,6 +92,10 @@ public class Acl extends ResourceProperty {
 		return new CurrentUserPrivilegeSet(acl, owner);
 	}
 	
+	public static ResourceProperty getCurrentUserPrivilegeSet(short rights) {
+		return new CurrentUserPrivilegeSet(rights);
+	}
+	
 	public static ResourceProperty getAclRestrictions() {
 		return new AclRestrictions();
 	}
@@ -174,22 +178,29 @@ public class Acl extends ResourceProperty {
 	}
 	
 	protected Element addPrivileges(Element grant, short rights) {
+		grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_CURRENT_USER_PRIVILEGE_SET);
 		if ((rights & ACL.RIGHT_READ) > 0) {
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
-			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_CURRENT_USER_PRIVILEGE_SET);
 		}
 		if ((rights & ACL.RIGHT_WRITE) > 0) {
-			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_BIND);
-			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNBIND);
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE);
-			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_ACL);
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_CONTENT);
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_PROPERTIES);
 		}
-		if ((rights & ACL.RIGHT_ADMIN) > 0)
+		if ((rights & ACL.RIGHT_INSERT) > 0) {
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_BIND);
+		}
+		if ((rights & ACL.RIGHT_DELETE) > 0) {
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNBIND);
+		}
+		if ((rights & ACL.RIGHT_ADMIN) > 0) {
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNLOCK);
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_ACL);
+		}
+		/*
 		if ((rights & ACL.RIGHT_FREEBUSY) > 0)
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_FREE_BUSY);
+		 */
 		return grant;
 	}
 	
@@ -201,13 +212,13 @@ public class Acl extends ResourceProperty {
 		sRightsMap.put(DavElements.P_READ, ACL.RIGHT_READ);
 		sRightsMap.put(DavElements.P_READ_CURRENT_USER_PRIVILEGE_SET, ACL.RIGHT_READ);
 		sRightsMap.put(DavElements.P_READ_FREE_BUSY, RIGHT_UNSUPPORTED);
-		sRightsMap.put(DavElements.P_BIND, RIGHT_UNSUPPORTED);
-		sRightsMap.put(DavElements.P_UNBIND, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_BIND, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_UNBIND, ACL.RIGHT_WRITE);
 		sRightsMap.put(DavElements.P_WRITE, ACL.RIGHT_WRITE);
-		sRightsMap.put(DavElements.P_WRITE_ACL, RIGHT_UNSUPPORTED);
-		sRightsMap.put(DavElements.P_WRITE_CONTENT, RIGHT_UNSUPPORTED);
-		sRightsMap.put(DavElements.P_WRITE_PROPERTIES, RIGHT_UNSUPPORTED);
-		sRightsMap.put(DavElements.P_UNLOCK, RIGHT_UNSUPPORTED);
+		sRightsMap.put(DavElements.P_WRITE_ACL, ACL.RIGHT_ADMIN);
+		sRightsMap.put(DavElements.P_WRITE_CONTENT, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_WRITE_PROPERTIES, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_UNLOCK, ACL.RIGHT_ADMIN);
 	}
 	
 	private static class PrincipalCollectionSet extends ResourceProperty {
@@ -258,9 +269,15 @@ public class Acl extends ResourceProperty {
 	
 	private static class CurrentUserPrivilegeSet extends Acl {
 		private String mOwnerId;
+		private short mRights;
 		public CurrentUserPrivilegeSet(ACL acl, Account owner) {
 			super(DavElements.E_CURRENT_USER_PRIVILEGE_SET, acl, owner.getName());
 			mOwnerId = owner.getId();
+			mRights = -1;
+		}
+		public CurrentUserPrivilegeSet(short rights) {
+			super(DavElements.E_CURRENT_USER_PRIVILEGE_SET, null, null);
+			mRights = rights;
 		}
 
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
@@ -268,6 +285,15 @@ public class Acl extends ResourceProperty {
 			if (nameOnly)
 				return cups;
 
+			if (mRights > 0) {
+				// this is for the mountpoint.  all the privileges except for write-properties
+				// come from the remote folder.  write-properties is always enabled.
+				addPrivileges(cups, mRights);
+				if ((mRights & ACL.RIGHT_WRITE) == 0)
+					cups.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_PROPERTIES);
+				return cups;
+			}
+			
 			if (mAcl == null) {
 				// the requestor still has full permission if owner.
 				if (ctxt.getAuthAccount().getId().equals(mOwnerId))

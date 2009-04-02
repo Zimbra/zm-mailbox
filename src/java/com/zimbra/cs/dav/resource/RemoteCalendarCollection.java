@@ -39,8 +39,10 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.client.CalDavClient;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -71,7 +73,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		if (target != null && Provisioning.onLocalServer(target))
 			mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
 
-		getCollectionTag(ctxt);
+		getMountpointTarget(ctxt);
 		setProperty(DavElements.E_GETCTAG, mCtag);
     }
 
@@ -276,13 +278,18 @@ public class RemoteCalendarCollection extends CalendarCollection {
         return ZMailbox.getMailbox(zoptions);
     }
     
-    private void getCollectionTag(DavContext ctxt) {
+    private void getMountpointTarget(DavContext ctxt) {
         try {
             ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             ZMailbox zmbx = getRemoteMailbox(zat);
-            mCtag = "" + zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId)).getImapMODSEQ();
+            ZFolder folder = zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
+            if (folder == null)
+            	return;
+            mCtag = "" + folder.getImapMODSEQ();
+            String rights = folder.getEffectivePerms();
+            addProperty(Acl.getCurrentUserPrivilegeSet(ACL.stringToRights(rights)));
         } catch (Exception e) {
-        	ZimbraLog.dav.warn("can't get ctag", e);
+        	ZimbraLog.dav.warn("can't get mountpoint target", e);
         }
     }
     
