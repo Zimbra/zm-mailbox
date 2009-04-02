@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090326-2112 */
+    /* build: 5.0 pshao 20090402-1055 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3594,6 +3594,25 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=807)
     public static final String A_zimbraMailContentMaxSize = "zimbraMailContentMaxSize";
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public static final String A_zimbraMailCustomMetadataSectionCalculated = "zimbraMailCustomMetadataSectionCalculated";
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public static final String A_zimbraMailCustomMetadataSectionInlined = "zimbraMailCustomMetadataSectionInlined";
 
     /**
      * RFC822 email address of this recipient for local delivery

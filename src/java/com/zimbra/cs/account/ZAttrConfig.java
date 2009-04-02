@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090326-2112 */
+    /* build: 5.0 pshao 20090402-1055 */
 
     /**
      * RFC2256: descriptive information
@@ -9782,6 +9782,301 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailContentMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailContentMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @return zimbraMailCustomMetadataSectionCalculated, or ampty array if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public String[] getMailCustomMetadataSectionCalculated() {
+        return getMultiAttr(Provisioning.A_zimbraMailCustomMetadataSectionCalculated);
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param zimbraMailCustomMetadataSectionCalculated new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public void setMailCustomMetadataSectionCalculated(String[] zimbraMailCustomMetadataSectionCalculated) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param zimbraMailCustomMetadataSectionCalculated new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public Map<String,Object> setMailCustomMetadataSectionCalculated(String[] zimbraMailCustomMetadataSectionCalculated, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param zimbraMailCustomMetadataSectionCalculated new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public void addMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param zimbraMailCustomMetadataSectionCalculated new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public Map<String,Object> addMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param zimbraMailCustomMetadataSectionCalculated existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public void removeMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param zimbraMailCustomMetadataSectionCalculated existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public Map<String,Object> removeMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public void unsetMailCustomMetadataSectionCalculated() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections cannot be modified
+     * outside of a callback.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1001)
+    public Map<String,Object> unsetMailCustomMetadataSectionCalculated(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, "");
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @return zimbraMailCustomMetadataSectionInlined, or ampty array if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public String[] getMailCustomMetadataSectionInlined() {
+        return getMultiAttr(Provisioning.A_zimbraMailCustomMetadataSectionInlined);
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param zimbraMailCustomMetadataSectionInlined new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public void setMailCustomMetadataSectionInlined(String[] zimbraMailCustomMetadataSectionInlined) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param zimbraMailCustomMetadataSectionInlined new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public Map<String,Object> setMailCustomMetadataSectionInlined(String[] zimbraMailCustomMetadataSectionInlined, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param zimbraMailCustomMetadataSectionInlined new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public void addMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param zimbraMailCustomMetadataSectionInlined new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public Map<String,Object> addMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param zimbraMailCustomMetadataSectionInlined existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public void removeMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param zimbraMailCustomMetadataSectionInlined existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public Map<String,Object> removeMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
+        return attrs;
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public void unsetMailCustomMetadataSectionInlined() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * containing a list of all custom metadata sections that get inlined in
+     * serialized items in notifications, GetMsgResponse, SearchResponse,
+     * etc.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1000)
+    public Map<String,Object> unsetMailCustomMetadataSectionInlined(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, "");
         return attrs;
     }
 
