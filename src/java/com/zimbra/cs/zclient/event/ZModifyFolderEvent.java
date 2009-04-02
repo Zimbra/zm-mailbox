@@ -133,10 +133,20 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
 
     /**
      * @param defaultValue value to return if unchanged
-     * @return new rest URL or defaultValue if unchanged
+     * @return new IMAP UIDNEXT or defaultValue if unchanged
+     * @throws ServiceException
      */
-    public String getRestURL(String defaultValue) {
-        return mFolderEl.getAttribute(MailConstants.A_REST_URL, defaultValue);
+    public int getImapUIDNEXT(int defaultValue) throws ServiceException {
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_IMAP_UIDNEXT, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new IMAP MODSEQ or defaultValue if unchanged
+     * @throws ServiceException
+     */
+    public int getImapMODSEQ(int defaultValue) throws ServiceException {
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_IMAP_MODSEQ, defaultValue);
     }
 
     /**
@@ -183,7 +193,8 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
             if (getUnreadCount(-1) != -1) zjo.put("unreadCount", getUnreadCount(-1));
             if (getMessageCount(-1) != -1) zjo.put("messageCount", getMessageCount(-1));
             if (getDefaultView(null) != null) zjo.put("view", getDefaultView(null).name());
-            if (getRestURL(null) != null) zjo.put("restURL", getRestURL(null));
+            if (getImapUIDNEXT(-1) != -1) zjo.put("imapUIDNEXT", getImapUIDNEXT(-1));
+            if (getImapMODSEQ(-1) != -1) zjo.put("imapMODSEQ", getImapMODSEQ(-1));
             if (getRemoteURL(null) != null) zjo.put("url", getRemoteURL(null));
             if (getEffectivePerm(null) != null) zjo.put("effectivePermissions", getEffectivePerm(null));
             List<ZGrant> grants = getGrants(null);
@@ -194,7 +205,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
         }
     }
     
-    public String toString() {
+    @Override public String toString() {
         try {
             return String.format("[ZModifyFolderEvent %s]", getId());
         } catch (ServiceException e) {

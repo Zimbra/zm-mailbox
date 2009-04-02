@@ -171,6 +171,8 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
             elem.addAttribute(MailConstants.A_NUM, folder.getItemCount());
             elem.addAttribute(MailConstants.A_SIZE, folder.getTotalSize());
+            elem.addAttribute(MailConstants.A_IMAP_MODSEQ, folder.getImapMODSEQ());
+            elem.addAttribute(MailConstants.A_IMAP_UIDNEXT, folder.getImapUIDNEXT());
         }
 
         if (needToOutput(fields, Change.MODIFIED_URL)) {

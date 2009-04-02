@@ -1938,10 +1938,10 @@ abstract class ImapHandler extends ProtocolHandler {
 
                 messages = zfolder.getMessageCount();
                 recent = 0;
-                uidnext = -1;
+                uidnext = zfolder.getImapUIDNEXT();
                 uvv = ImapFolder.getUIDValidity(zfolder);
                 unread = zfolder.getUnreadCount();
-                modseq = -1;
+                modseq = zfolder.getImapMODSEQ();
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
