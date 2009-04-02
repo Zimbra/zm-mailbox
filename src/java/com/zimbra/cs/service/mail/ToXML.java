@@ -46,6 +46,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -198,9 +199,6 @@ public class ToXML {
                     encodeACL(elem, folder.getEffectiveACL(), exposeAclAccessKey);
             }
         }
-
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, folder);
         return elem;
     }
 
@@ -316,6 +314,9 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, folder.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA)) {
+            encodeAllCustomMetadata(elem, folder);
+        }
         return elem;
     }
 
@@ -331,8 +332,6 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_SORTBY, search.getSortField());
             elem.addAttribute(MailConstants.A_SEARCH_TYPES, search.getReturnTypes());
         }
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, search);
         return elem;
     }
 
@@ -351,17 +350,15 @@ public class ToXML {
             if (mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
                 elem.addAttribute(MailConstants.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
         }
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, mpt);
         return elem;
     }
 
-    public static Element encodeRestUrl(Element elt, MailItem item) {
+    public static Element encodeRestUrl(Element elem, MailItem item) {
         try {
-            return elt.addAttribute(MailConstants.A_REST_URL, UserServlet.getRestUrl(item));
+            return elem.addAttribute(MailConstants.A_REST_URL, UserServlet.getRestUrl(item));
         } catch (ServiceException se) {
             mLog.error("cannot generate REST url", se);
-            return elt;
+            return elem;
         }
     }
 
@@ -376,6 +373,47 @@ public class ToXML {
             if (!tags.equals("") || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailConstants.A_TAGS, tags);
         }
+    }
+
+    public static void encodeAllCustomMetadata(Element elem, MailItem item) {
+        List<String> sections = item.getCustomDataSections();
+        if (sections == null || sections.isEmpty())
+            return;
+
+        String[] inlined = null;
+        try {
+            inlined = Provisioning.getInstance().getConfig().getMailCustomMetadataSectionInlined();
+        } catch (ServiceException e) {
+            ZimbraLog.soap.warn("could not determine list of inlined custom metadata; stubbing instead");
+            inlined = new String[0];
+        }
+
+        outer: for (String section : sections) {
+            for (String inline : inlined) {
+                if (inline.equals(section)) {
+                    try {
+                        encodeCustomMetadata(elem, item.getCustomData(section));
+                    } catch (ServiceException e) {
+                        ZimbraLog.soap.warn("could not deserialize custom metadata; skipping (section '" + section + "', item " + new ItemId(item) + ")");
+                    }
+                    continue outer;
+                }
+            }
+
+            // not inlining this data, so just add a stub to show that it's there
+            elem.addElement(MailConstants.E_METADATA).addAttribute(MailConstants.A_SECTION, section);
+        }
+    }
+
+    public static Element encodeCustomMetadata(Element elem, CustomMetadata custom) {
+        if (custom == null)
+            return null;
+
+        Element serialized = elem.addElement(MailConstants.E_METADATA);
+        serialized.addAttribute(MailConstants.A_SECTION, custom.getSectionKey());
+        for (Map.Entry<String, String> entry : custom.entrySet())
+            serialized.addKeyValuePair(entry.getKey(), entry.getValue());
+        return serialized;
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter)
@@ -399,6 +437,8 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_DATE, contact.getDate());
             elem.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
         }
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            encodeAllCustomMetadata(elem, contact);
 
         if (!needToOutput(fields, Change.MODIFIED_CONTENT)) {
             if (summary) {
@@ -423,8 +463,6 @@ public class ToXML {
             }
 
             // stop here if we're not returning the actual contact content
-            if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, contact);
             return elem;
         }
 
@@ -469,8 +507,6 @@ public class ToXML {
             }
         }
 
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, contact);
         return elem;
     }
 
@@ -510,7 +546,7 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, note);
+            encodeAllCustomMetadata(elem, note);
         return elem;
     }
 
@@ -537,7 +573,7 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, tag);
+            encodeAllCustomMetadata(elem, tag);
         return elem;
     }
 
@@ -573,12 +609,8 @@ public class ToXML {
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
-                if (needToOutput(fields, Change.MODIFIED_METADATA))
-                    MetadataCallback.postSerialization(m, msg);
             }
         }
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(c, conv);
         return c;
     }
 
@@ -658,14 +690,15 @@ public class ToXML {
             c.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
         }
 
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(c, conv);
         return c;
     }
 
     private static Element encodeConversationCommon(Element parent, ItemIdFormatter ifmt, Conversation conv, List<Message> msgs, int fields) {
         Element c = parent.addElement(MailConstants.E_CONV);
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
+
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            encodeAllCustomMetadata(parent, conv);
 
         if (needToOutput(fields, Change.MODIFIED_CHILDREN | Change.MODIFIED_SIZE)) {
             int count = conv.getMessageCount(), nondeleted = count;
@@ -818,7 +851,6 @@ public class ToXML {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
         }
 
-        MetadataCallback.postSerialization(m, msg);
         return m;
     }
 
@@ -955,7 +987,7 @@ public class ToXML {
         setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
 
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, calItem);
+            encodeAllCustomMetadata(elem, calItem);
         return elem;
     }
 
@@ -1166,7 +1198,6 @@ public class ToXML {
             }
         }
 
-        MetadataCallback.postSerialization(m, msg);
         return m;
     }
 
@@ -1208,8 +1239,6 @@ public class ToXML {
             }
         }
 
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, msg);
         return elem;
     }
 
@@ -1229,6 +1258,8 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_CONV_ID, ifmt.formatItemId(msg.getConversationId()));
         }
         recordItemTags(elem, item, fields);
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            encodeAllCustomMetadata(parent, item);
 
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
@@ -1876,8 +1907,6 @@ public class ToXML {
     public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields) {
         Element elem = parent.addElement(MailConstants.E_WIKIWORD);
         encodeDocumentCommon(elem, ifmt, octxt, wiki, fields);
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, wiki);
         return elem;
     }
 
@@ -1889,8 +1918,6 @@ public class ToXML {
         Element elem = parent.addElement(MailConstants.E_DOC);
         encodeDocumentCommon(elem, ifmt, octxt, doc, fields);
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
-            MetadataCallback.postSerialization(elem, doc);
         return elem;
     }
 
@@ -1910,6 +1937,8 @@ public class ToXML {
             m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
         }
         recordItemTags(m, doc, fields);
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            encodeAllCustomMetadata(m, doc);
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             try {

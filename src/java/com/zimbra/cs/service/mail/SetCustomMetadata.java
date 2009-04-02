@@ -40,6 +40,10 @@ public class SetCustomMetadata extends MailDocumentHandler {
 
         Element meta = request.getElement(MailConstants.E_METADATA);
         String section = meta.getAttribute(MailConstants.A_SECTION);
+        section = section.trim();
+        if (section.length() == 0 || section.length() > 36)
+            throw ServiceException.INVALID_REQUEST("invalid length for custom metadata section name", null);
+
         CustomMetadata custom = new CustomMetadata(section);
         for (Element.KeyValuePair kvp : meta.listKeyValuePairs())
             custom.put(kvp.getKey(), kvp.getValue());

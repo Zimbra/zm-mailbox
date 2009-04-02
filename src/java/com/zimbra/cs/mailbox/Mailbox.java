@@ -5119,6 +5119,12 @@ public class Mailbox {
         try {
             beginTransaction("setCustomData", octxt, redoRecorder);
 
+            String[] calculated = Provisioning.getInstance().getConfig().getMailCustomMetadataSectionCalculated();
+            for (String forbidden : calculated) {
+                if (forbidden.equals(custom.getSectionKey()))
+                    throw ServiceException.PERM_DENIED("custom metadata section '" + custom.getSectionKey() + "' may only be calculated, not set");
+            }
+
             MailItem item = checkAccess(getItemById(itemId, type));
             if (!checkItemChangeID(item))
                 throw MailServiceException.MODIFY_CONFLICT();

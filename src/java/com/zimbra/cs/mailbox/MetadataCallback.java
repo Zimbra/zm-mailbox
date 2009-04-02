@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -160,61 +158,4 @@ public abstract class MetadataCallback {
      *         the just-added message.  Do <u>not</u> return <tt>null</tt> when
      *         no change is necessary; return <code>fromConv</code> instead. */
     protected abstract CustomMetadata addToConversation(CustomMetadata fromConv, CustomMetadata fromMsg);
-
-
-    /** Invokes all <code>MetadataCallback</code>s to add data to the XML/JSON
-     *  serialization of a <code>MailItem</code>.  The metadata gets added to
-     *  a new subelement named <tt>&lt;meta></tt> with a prepopulated attribute
-     *  <tt>section="{callback's-metadata-key}"</tt>.  Note that if the item
-     *  has no metadata associated with a callback's associated section key,
-     *  that callback is not executed.
-     * @see #isMetadataSerializer()
-     * @see #getMetadataSectionKey()
-     * @see #serializeMetadata(Element, MailItem, CustomMetadata)
-     * @return the passed-in <code>Element</code> */
-    public static Element postSerialization(Element parent, MailItem item) {
-        if (parent == null || item == null || sCallbacks.isEmpty())
-            return parent;
-
-        for (MetadataCallback callback : sCallbacks) {
-            // if there's no metadata, there's no serializing
-            CustomMetadata custom = null;
-            try {
-                if (callback.isMetadataSerializer())
-                    custom = item.getCustomData(callback.getMetadataSectionKey());
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("error decoding custom metadata; skipping this callback", e);
-            }
-            if (custom == null)
-                continue;
-
-            // create a subelement to serialize the metadata into
-            Element section = parent.addElement(MailConstants.E_METADATA);
-            section.addAttribute(MailConstants.A_SECTION, callback.getMetadataSectionKey());
-
-            // if the callback doesn't need to serialize, retroactively nuke that subelement
-            boolean serialized = callback.serializeMetadata(section, item, custom);
-            if (!serialized)
-                section.detach();
-        }
-        return parent;
-    }
-
-    /** Returns whether this <code>MetadataCallback</code> wants to add data
-     *  to the XML/JSON serialization of a MailItem.
-     * @see #postSerialization(Element, MailItem)
-     * @see #serializeMetadata(Element, MailItem, CustomMetadata) */
-    protected abstract boolean isMetadataSerializer();
-
-    /** Encodes the callback's associated hunk of metadata into the XML/JSON
-     *  serialization of a <code>MailItem</code>.
-     * @param section  An element of the form <tt>&lt;meta section="key"></tt>
-     *                 placed immediately within the item's serialization.
-     * @param item     The <code>MailItem</code> being serialized.
-     * @param custom   The set of metadata on the <code>item</code> associated
-     *                 with this callback's section key.
-     * @see #postSerialization(Element, MailItem)
-     * @return <tt>true</tt> if metadata was serialized, <tt>false</tt> if the
-     *         <tt>&lt;meta></tt> element is unchanged and should be removed. */
-    protected abstract boolean serializeMetadata(Element section, MailItem item, CustomMetadata custom);
 }

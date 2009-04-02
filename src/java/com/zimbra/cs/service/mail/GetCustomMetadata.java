@@ -47,12 +47,7 @@ public class GetCustomMetadata extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.GET_METADATA_RESPONSE);
         response.addAttribute(MailConstants.A_ID, ifmt.formatItemId(item));
-        if (custom != null) {
-            Element serialized = response.addElement(MailConstants.E_METADATA);
-            serialized.addAttribute(MailConstants.A_SECTION, custom.getSectionKey());
-            for (Map.Entry<String, String> entry : custom.entrySet())
-                serialized.addKeyValuePair(entry.getKey(), entry.getValue());
-        }
+        ToXML.encodeCustomMetadata(response, custom);
         return response;
     }
 }

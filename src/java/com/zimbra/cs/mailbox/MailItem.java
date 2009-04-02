@@ -374,13 +374,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         private String mSerializedValue;
 
         public CustomMetadata(String section) {
-            super();
-            mSectionKey = section;
+            this(section, null);
         }
 
         public CustomMetadata(String section, String serialized) {
-            super();
-            mSectionKey = section;
+            super(8);
+            mSectionKey = section.trim();
             mSerializedValue = serialized;
         }
 
@@ -442,6 +441,13 @@ public abstract class MailItem implements Comparable<MailItem> {
                     }
                 }
                 return null;
+            }
+
+            public List<String> listSections() {
+                List<String> sections = new ArrayList<String>(size());
+                for (Pair<String, String> entry : this)
+                    sections.add(entry.getFirst());
+                return sections;
             }
 
             public void removeSection(String key) {
@@ -657,6 +663,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (isUnread())
             flags = flags | Flag.BITMASK_UNREAD;
         return flags;
+    }
+
+    public List<String> getCustomDataSections() {
+        if (mExtendedData == null || mExtendedData.isEmpty())
+            return Collections.emptyList();
+        return mExtendedData.listSections();
     }
 
     /** Returns the requested set of non-Zimbra-standard metadata values in
