@@ -351,6 +351,8 @@ public class MailConstants {
     public static final String A_ESTIMATE_SIZE = "estimateSize";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
+    public static final String A_IMAP_MODSEQ = "i4ms";
+    public static final String A_IMAP_UIDNEXT = "i4next";
     public static final String A_TOTAL_SIZE = "total";
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
