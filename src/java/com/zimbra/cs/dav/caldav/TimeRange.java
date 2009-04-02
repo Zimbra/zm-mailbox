@@ -52,11 +52,11 @@ public class TimeRange {
 		}
 		long now = System.currentTimeMillis();
 		if (mStart == 0)
-			mStart = -1;
+			mStart = Long.MIN_VALUE;
 		else
 			mStart = now - mStart;
 		if (mEnd == 0)
-			mEnd = -1;
+			mEnd = Long.MAX_VALUE;
 		else
 			mEnd = now + mEnd;
 	}
@@ -72,9 +72,9 @@ public class TimeRange {
 				mEnd = parseDateWithUTCTime(s);
 		}
 		if (mStart == 0)
-			mStart = -1;
+			mStart = Long.MIN_VALUE;
 		if (mEnd == 0)
-			mEnd = -1;
+			mEnd = Long.MAX_VALUE;
 	}
 	
     private static long parseDateWithUTCTime(String time) {
