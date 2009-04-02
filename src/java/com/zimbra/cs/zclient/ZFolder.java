@@ -59,6 +59,8 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     private int mMessageCount;
     private String mParentId;
     private int mContentSequence;
+    private int mImapUIDNEXT;
+    private int mImapMODSEQ;
     private String mRemoteURL;
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
@@ -185,6 +187,8 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, View.conversation.name()));
         mContentSequence = (int) e.getAttributeLong(MailConstants.A_REVISION, -1);
+        mImapUIDNEXT = (int) e.getAttributeLong(MailConstants.A_IMAP_UIDNEXT, -1);
+        mImapMODSEQ = (int) e.getAttributeLong(MailConstants.A_IMAP_MODSEQ, -1);
         mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
@@ -240,6 +244,8 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
             mMessageCount = fevent.getMessageCount(mMessageCount);
             mDefaultView = fevent.getDefaultView(mDefaultView);
             mContentSequence = fevent.getContentSequence(mContentSequence);
+            mImapUIDNEXT = fevent.getImapUIDNEXT(mImapUIDNEXT);
+            mImapMODSEQ = fevent.getImapMODSEQ(mImapMODSEQ);
             mRemoteURL = fevent.getRemoteURL(mRemoteURL);
             mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
             mGrants = fevent.getGrants(mGrants);
@@ -395,6 +401,18 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     public int getContentSequence() {
         return mContentSequence;
     }
+
+    /** Returns a counter that increments each time an item is added to the folder.
+     */
+    public int getImapUIDNEXT() {
+        return mImapUIDNEXT;
+    }
+
+    /** Returns the sequence number for the last change that affected the folder's contents.
+     */
+    public int getImapMODSEQ() {
+        return mImapMODSEQ;
+    }
     
     /**
      *  checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*)
@@ -509,7 +527,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
         return jo;
     }
     
-    public String toString() {
+    @Override public String toString() {
         return ZJSONObject.toString(this);
     }
 
