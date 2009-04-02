@@ -31,7 +31,8 @@ import com.zimbra.common.util.ZimbraLog;
  * Miscellaneous utility methods to support SASL authentication.
  */
 public final class AuthenticatorUtil {
-    public static Account authenticate(String username, String authenticateId, String password, AuthContext.Protocol protocol, String origRemoteIp)
+    public static Account authenticate(String username, String authenticateId, String password, AuthContext.Protocol protocol, 
+            String origRemoteIp, String userAgent)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId);
@@ -44,6 +45,7 @@ public final class AuthenticatorUtil {
         Map<String, Object> authCtxt = new HashMap<String, Object>();
         authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, authenticateId);
+        authCtxt.put(AuthContext.AC_USER_AGENT, userAgent);
         prov.authAccount(authAccount, password, protocol, authCtxt);
 
         return authorize(authAccount, username, true);

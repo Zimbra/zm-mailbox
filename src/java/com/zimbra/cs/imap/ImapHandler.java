@@ -101,6 +101,7 @@ abstract class ImapHandler extends ProtocolHandler {
     protected ImapFolder      mSelectedFolder;
     private   String          mIdleTag;
     private   String          mOrigRemoteAddress;
+    private   String          mUserAgent;
     protected boolean         mGoodbyeSent;
     private   Set<ImapExtension> mActiveExtensions;
 
@@ -127,6 +128,10 @@ abstract class ImapHandler extends ProtocolHandler {
     
     protected void setOrigRemoteIpAddr(String ip) { mOrigRemoteAddress = ip; }
     
+    protected String getUserAgent() { return mUserAgent; }
+    
+    protected void setUserAgent(String ua) { mUserAgent = ua; }
+
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
 
     protected void handleParseException(ImapParseException e) throws IOException {
@@ -948,20 +953,45 @@ abstract class ImapHandler extends ProtocolHandler {
     //              statistical analysis and problem determination."
     boolean doID(String tag, Map<String, String> attrs) throws IOException {
         if (attrs != null) {
+            boolean ignore = false;
+            
             String origIp = attrs.get("X-ORIGINATING-IP");
             if (origIp != null) {
                 String curOrigRemoteIp = getOrigRemoteIpAddr();
                 if (curOrigRemoteIp == null) {
                     setOrigRemoteIpAddr(origIp);
                     ZimbraLog.addOrigIpToContext(origIp);
-                    ZimbraLog.imap.info("IMAP client identified as: " + attrs);
                 } else {
                     if (curOrigRemoteIp.equals(origIp))
                         ZimbraLog.imap.warn("IMAP ID with X-ORIGINATING-IP is allowed only once per session, command ignored");
                     else
                         ZimbraLog.imap.error("IMAP ID with X-ORIGINATING-IP is allowed only once per session, received different IP: " + origIp + ", command ignored");
+                    ignore = true;
                 }
-           } else
+            } 
+            
+            if (!ignore) {
+                String userAgent = attrs.get("name");
+                if (userAgent != null) {
+                    String version = attrs.get("version");
+                    if (version != null)
+                        userAgent = userAgent + "/" + version; // conform to the way ZimberSoapContext build ua
+                    
+                    String curUserAgent = getUserAgent();
+                    if (curUserAgent == null) {
+                        setUserAgent(userAgent);
+                        ZimbraLog.addUserAgentToContext(userAgent);
+                    } else {
+                        if (curUserAgent.equals(userAgent))
+                            ZimbraLog.imap.warn("IMAP ID with name/version is allowed only once per session, command ignored");
+                        else
+                            ZimbraLog.imap.error("IMAP ID with name/version is allowed only once per session, received different name/version: " + userAgent + ", command ignored");
+                        ignore = true;
+                    }
+                }
+            }
+            
+            if (!ignore)
                 ZimbraLog.imap.info("IMAP client identified as: " + attrs);
         }
 
@@ -1128,7 +1158,8 @@ abstract class ImapHandler extends ProtocolHandler {
             else if (ZimbraAuthenticator.MECHANISM.equals(mechanism))
                 acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
             else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, getOrigRemoteIpAddr());
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, 
+                        getOrigRemoteIpAddr(), getUserAgent());
             if (acct == null) {
                 sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;

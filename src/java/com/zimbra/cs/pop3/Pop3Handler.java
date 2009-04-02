@@ -576,7 +576,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             else if (MECHANISM_ZIMBRA.equals(mechanism))
                 acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
             else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr());
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), null);
             if (acct == null)
                 throw new Pop3CmdException(type + " failed");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))

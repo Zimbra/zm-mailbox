@@ -61,7 +61,7 @@ extends TestCase {
     private static final String IMAP_LOGOUT = "3 LOGOUT" + CRLF;
     private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server terminating connection";
     private static final String IMAP_LOGOUT_RESPONSE2 = "3 OK LOGOUT completed";
-    private static final String IMAP_ID = "4 ID (\"X-ORIGINATING-IP\" \"100.99.98.97\")" + CRLF;
+    private static final String IMAP_ID = "4 ID (\"X-ORIGINATING-IP\" \"100.99.98.97\" \"name\" \"foobar\" \"version\" \"1.0\")" + CRLF;
     private static final String IMAP_ID_RESPONSE1 = "\\* ID.*";
     private static final String IMAP_ID_RESPONSE2 = "4 OK ID completed";
     
