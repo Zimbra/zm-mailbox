@@ -70,9 +70,9 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
 		if (target != null && Provisioning.onLocalServer(target))
 			mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
-		
-		// until we can proxy imapmodseq
-		mProps.remove(DavElements.E_GETCTAG);
+
+		getCollectionTag(ctxt);
+		setProperty(DavElements.E_GETCTAG, mCtag);
     }
 
     @Override
@@ -275,6 +275,17 @@ public class RemoteCalendarCollection extends CalendarCollection {
         zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
         return ZMailbox.getMailbox(zoptions);
     }
+    
+    private void getCollectionTag(DavContext ctxt) {
+        try {
+            ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+            ZMailbox zmbx = getRemoteMailbox(zat);
+            mCtag = "" + zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId)).getImapMODSEQ();
+        } catch (Exception e) {
+        	ZimbraLog.dav.warn("can't get ctag", e);
+        }
+    }
+    
 	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		return "";  // XXX implement free/busy check on shared calendars.
 	}
