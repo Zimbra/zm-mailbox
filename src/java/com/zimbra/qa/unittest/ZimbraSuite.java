@@ -27,6 +27,7 @@ import junit.framework.TestSuite;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.extension.ExtensionUtil;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -96,6 +97,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.remove(clazz);
     }
 
+    @SuppressWarnings("unchecked")
     public static TestResult runUserTests(Element response, List<String> tests) throws ServiceException {
         TestSuite suite = new TestSuite();
         
@@ -116,7 +118,13 @@ public class ZimbraSuite extends TestSuite
                     }
                 } else {
                     // look it up by the full name
-                    suite.addTest(new TestSuite(Class.forName(test)));
+                    Class<? extends TestCase> testClass = null;
+                    try {
+                        testClass = Class.forName(test).asSubclass(TestCase.class);
+                    } catch (ClassNotFoundException e) {
+                        testClass = ExtensionUtil.findClass(test).asSubclass(TestCase.class);
+                    }
+                    suite.addTest(new TestSuite(testClass));
                 }
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Error instantiating test "+test, e);
