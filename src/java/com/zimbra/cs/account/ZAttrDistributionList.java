@@ -34,7 +34,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090402-1055 */
+    /* build: 5.0 pshao 20090403-1052 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -539,7 +539,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraAdminConsoleUIComponents, or ampty array if unset
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public String[] getAdminConsoleUIComponents() {
@@ -552,7 +552,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraAdminConsoleUIComponents new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public void setAdminConsoleUIComponents(String[] zimbraAdminConsoleUIComponents) throws com.zimbra.common.service.ServiceException {
@@ -568,7 +568,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public Map<String,Object> setAdminConsoleUIComponents(String[] zimbraAdminConsoleUIComponents, Map<String,Object> attrs) {
@@ -583,7 +583,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraAdminConsoleUIComponents new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public void addAdminConsoleUIComponents(String zimbraAdminConsoleUIComponents) throws com.zimbra.common.service.ServiceException {
@@ -599,7 +599,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public Map<String,Object> addAdminConsoleUIComponents(String zimbraAdminConsoleUIComponents, Map<String,Object> attrs) {
@@ -614,7 +614,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraAdminConsoleUIComponents existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public void removeAdminConsoleUIComponents(String zimbraAdminConsoleUIComponents) throws com.zimbra.common.service.ServiceException {
@@ -630,7 +630,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public Map<String,Object> removeAdminConsoleUIComponents(String zimbraAdminConsoleUIComponents, Map<String,Object> attrs) {
@@ -644,7 +644,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public void unsetAdminConsoleUIComponents() throws com.zimbra.common.service.ServiceException {
@@ -659,7 +659,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public Map<String,Object> unsetAdminConsoleUIComponents(Map<String,Object> attrs) {
@@ -677,7 +677,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraCreateTimestamp as Date, null if unset or unable to parse
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
@@ -689,7 +689,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraCreateTimestamp, or null if unset
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
@@ -702,7 +702,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraCreateTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
@@ -718,7 +718,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
@@ -733,7 +733,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraCreateTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public void setCreateTimestampAsString(String zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
@@ -749,7 +749,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestampAsString(String zimbraCreateTimestamp, Map<String,Object> attrs) {
@@ -763,7 +763,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public void unsetCreateTimestamp() throws com.zimbra.common.service.ServiceException {
@@ -778,7 +778,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
@@ -793,7 +793,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraDistributionListSendShareMessageFromAddress, or null if unset
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=811)
     public String getDistributionListSendShareMessageFromAddress() {
@@ -807,7 +807,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraDistributionListSendShareMessageFromAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=811)
     public void setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress) throws com.zimbra.common.service.ServiceException {
@@ -824,7 +824,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=811)
     public Map<String,Object> setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress, Map<String,Object> attrs) {
@@ -839,7 +839,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=811)
     public void unsetDistributionListSendShareMessageFromAddress() throws com.zimbra.common.service.ServiceException {
@@ -855,7 +855,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=811)
     public Map<String,Object> unsetDistributionListSendShareMessageFromAddress(Map<String,Object> attrs) {
@@ -871,7 +871,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraDistributionListSendShareMessageToNewMembers, or false if unset
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=810)
     public boolean isDistributionListSendShareMessageToNewMembers() {
@@ -886,7 +886,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraDistributionListSendShareMessageToNewMembers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=810)
     public void setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers) throws com.zimbra.common.service.ServiceException {
@@ -904,7 +904,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=810)
     public Map<String,Object> setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers, Map<String,Object> attrs) {
@@ -920,7 +920,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=810)
     public void unsetDistributionListSendShareMessageToNewMembers() throws com.zimbra.common.service.ServiceException {
@@ -937,7 +937,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=810)
     public Map<String,Object> unsetDistributionListSendShareMessageToNewMembers(Map<String,Object> attrs) {
@@ -1080,7 +1080,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @return zimbraIsAdminGroup, or false if unset
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=802)
     public boolean isIsAdminGroup() {
@@ -1093,7 +1093,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param zimbraIsAdminGroup new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=802)
     public void setIsAdminGroup(boolean zimbraIsAdminGroup) throws com.zimbra.common.service.ServiceException {
@@ -1109,7 +1109,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=802)
     public Map<String,Object> setIsAdminGroup(boolean zimbraIsAdminGroup, Map<String,Object> attrs) {
@@ -1123,7 +1123,7 @@ public class ZAttrDistributionList extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=802)
     public void unsetIsAdminGroup() throws com.zimbra.common.service.ServiceException {
@@ -1138,7 +1138,7 @@ public class ZAttrDistributionList extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=802)
     public Map<String,Object> unsetIsAdminGroup(Map<String,Object> attrs) {

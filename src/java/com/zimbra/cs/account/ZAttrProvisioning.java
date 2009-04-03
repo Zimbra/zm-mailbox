@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090402-1055 */
+    /* build: 5.0 pshao 20090403-1052 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1179,7 +1179,7 @@ public class ZAttrProvisioning {
     /**
      * UI components available for the authed admin in admin console
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=761)
     public static final String A_zimbraAdminConsoleUIComponents = "zimbraAdminConsoleUIComponents";
@@ -1188,7 +1188,7 @@ public class ZAttrProvisioning {
      * Zimlet Util will set this attribute based on the value in zimlet
      * definition XML file
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=803)
     public static final String A_zimbraAdminExtDisableUIUndeploy = "zimbraAdminExtDisableUIUndeploy";
@@ -1618,7 +1618,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra calendar resource object.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=753)
     public static final String A_zimbraCalendarResourceExtraObjectClass = "zimbraCalendarResourceExtraObjectClass";
@@ -1785,7 +1785,7 @@ public class ZAttrProvisioning {
     /**
      * attribute constraints TODO: fill all the constraints
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=766)
     public static final String A_zimbraConstraint = "zimbraConstraint";
@@ -1797,7 +1797,7 @@ public class ZAttrProvisioning {
      * attributes for GAL objects are mapped to Contact compatible attributes
      * via zimbraGalLdapAttrMap.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=760)
     public static final String A_zimbraContactAutoCompleteEmailFields = "zimbraContactAutoCompleteEmailFields";
@@ -1805,7 +1805,7 @@ public class ZAttrProvisioning {
     /**
      * maximum number of contact entries to return from an auto complete
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=827)
     public static final String A_zimbraContactAutoCompleteMaxResults = "zimbraContactAutoCompleteMaxResults";
@@ -1822,7 +1822,7 @@ public class ZAttrProvisioning {
      * ranking table are given the priority when generating the auto-complete
      * contact list.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=758)
     public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";
@@ -1830,7 +1830,7 @@ public class ZAttrProvisioning {
     /**
      * convertd URL
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=776)
     public static final String A_zimbraConvertdURL = "zimbraConvertdURL";
@@ -1838,7 +1838,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra cos object.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=754)
     public static final String A_zimbraCosExtraObjectClass = "zimbraCosExtraObjectClass";
@@ -1858,7 +1858,7 @@ public class ZAttrProvisioning {
     /**
      * time object was created
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=790)
     public static final String A_zimbraCreateTimestamp = "zimbraCreateTimestamp";
@@ -1884,7 +1884,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=788)
     public static final String A_zimbraDataSourceCaldavPollingInterval = "zimbraDataSourceCaldavPollingInterval";
@@ -1894,7 +1894,7 @@ public class ZAttrProvisioning {
      * data source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=819)
     public static final String A_zimbraDataSourceCalendarPollingInterval = "zimbraDataSourceCalendarPollingInterval";
@@ -1936,7 +1936,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=826)
     public static final String A_zimbraDataSourceGalPollingInterval = "zimbraDataSourceGalPollingInterval";
@@ -1958,7 +1958,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=768)
     public static final String A_zimbraDataSourceImapPollingInterval = "zimbraDataSourceImapPollingInterval";
@@ -1983,7 +1983,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=769)
     public static final String A_zimbraDataSourceLivePollingInterval = "zimbraDataSourceLivePollingInterval";
@@ -2034,7 +2034,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=767)
     public static final String A_zimbraDataSourcePop3PollingInterval = "zimbraDataSourcePop3PollingInterval";
@@ -2050,7 +2050,7 @@ public class ZAttrProvisioning {
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=770)
     public static final String A_zimbraDataSourceRssPollingInterval = "zimbraDataSourceRssPollingInterval";
@@ -2083,7 +2083,7 @@ public class ZAttrProvisioning {
      * book data source. If unset or 0, the data source will not be scheduled
      * for automated polling.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=789)
     public static final String A_zimbraDataSourceYabPollingInterval = "zimbraDataSourceYabPollingInterval";
@@ -2105,7 +2105,7 @@ public class ZAttrProvisioning {
      * Email address to put in from header for the share info email. If not
      * set, email address of the authenticated admin account will be used.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=811)
     public static final String A_zimbraDistributionListSendShareMessageFromAddress = "zimbraDistributionListSendShareMessageFromAddress";
@@ -2115,7 +2115,7 @@ public class ZAttrProvisioning {
      * member is added to the group. If not set, default is to send the
      * email.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=810)
     public static final String A_zimbraDistributionListSendShareMessageToNewMembers = "zimbraDistributionListSendShareMessageToNewMembers";
@@ -2167,7 +2167,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra domain object.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=755)
     public static final String A_zimbraDomainExtraObjectClass = "zimbraDomainExtraObjectClass";
@@ -2184,7 +2184,7 @@ public class ZAttrProvisioning {
     /**
      * ZimbraID of the domain that this component is registered under
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=741)
     public static final String A_zimbraDomainId = "zimbraDomainId";
@@ -2378,7 +2378,7 @@ public class ZAttrProvisioning {
      * whether a confirmation page should be display after an operation is
      * done in the UI
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=806)
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
@@ -2414,7 +2414,7 @@ public class ZAttrProvisioning {
     /**
      * enable end-user mail discarding defined in mail filters features
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=773)
     public static final String A_zimbraFeatureDiscardInFiltersEnabled = "zimbraFeatureDiscardInFiltersEnabled";
@@ -2489,7 +2489,7 @@ public class ZAttrProvisioning {
     /**
      * whether import export folder feature is enabled
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=750)
     public static final String A_zimbraFeatureImportExportFolderEnabled = "zimbraFeatureImportExportFolderEnabled";
@@ -2560,7 +2560,7 @@ public class ZAttrProvisioning {
     /**
      * whether to enforce mobile policy
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=833)
     public static final String A_zimbraFeatureMobilePolicyEnabled = "zimbraFeatureMobilePolicyEnabled";
@@ -2630,7 +2630,7 @@ public class ZAttrProvisioning {
     /**
      * whether the web UI shows UI elements related to read receipts
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=821)
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
@@ -2802,7 +2802,7 @@ public class ZAttrProvisioning {
     /**
      * zimbraId of GAL sync accounts
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=831)
     public static final String A_zimbraGalAccountId = "zimbraGalAccountId";
@@ -2824,7 +2824,7 @@ public class ZAttrProvisioning {
     /**
      * the last time at which a syncing attempt failed
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=829)
     public static final String A_zimbraGalLastFailedSyncTimestamp = "zimbraGalLastFailedSyncTimestamp";
@@ -2832,7 +2832,7 @@ public class ZAttrProvisioning {
     /**
      * the last time at which this GAL data source was successfully synced
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=828)
     public static final String A_zimbraGalLastSuccessfulSyncTimestamp = "zimbraGalLastSuccessfulSyncTimestamp";
@@ -2943,7 +2943,7 @@ public class ZAttrProvisioning {
     /**
      * GAL data source status
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=830)
     public static final String A_zimbraGalStatus = "zimbraGalStatus";
@@ -3076,7 +3076,7 @@ public class ZAttrProvisioning {
      * type of this GAl data source. zimbra - zimbra internal GAL. ldap -
      * external LDAP GAL.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=850)
     public static final String A_zimbraGalType = "zimbraGalType";
@@ -3305,7 +3305,7 @@ public class ZAttrProvisioning {
     /**
      * IM service
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=762)
     public static final String A_zimbraIMService = "zimbraIMService";
@@ -3369,7 +3369,7 @@ public class ZAttrProvisioning {
     /**
      * set to true for admin groups
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=802)
     public static final String A_zimbraIsAdminGroup = "zimbraIsAdminGroup";
@@ -3397,7 +3397,7 @@ public class ZAttrProvisioning {
     /**
      * set to true for system admin accounts
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=801)
     public static final String A_zimbraIsSystemAdminAccount = "zimbraIsSystemAdminAccount";
@@ -3539,7 +3539,7 @@ public class ZAttrProvisioning {
      * attribute of an account. If set to 0, the per user white list feature
      * is disabled.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=799)
     public static final String A_zimbraMailBlacklistMaxNumEntries = "zimbraMailBlacklistMaxNumEntries";
@@ -3581,7 +3581,7 @@ public class ZAttrProvisioning {
      * ChangePasswordRequest. If it set to FALSE the server will return an
      * error if an attempt is made to ChangePasswordRequest or AuthRequest.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=791)
     public static final String A_zimbraMailClearTextPasswordEnabled = "zimbraMailClearTextPasswordEnabled";
@@ -3590,7 +3590,7 @@ public class ZAttrProvisioning {
      * Maximum size in bytes for the &lt;content &gt; element in SOAP. Mail
      * content larger than this limit will be truncated.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=807)
     public static final String A_zimbraMailContentMaxSize = "zimbraMailContentMaxSize";
@@ -3709,7 +3709,7 @@ public class ZAttrProvisioning {
      * moved to the Trash folder. If FALSE, a message is purged from Trash
      * based on the date that it was added to the mailbox.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=748)
     public static final String A_zimbraMailPurgeUseChangeDateForTrash = "zimbraMailPurgeUseChangeDateForTrash";
@@ -3725,7 +3725,7 @@ public class ZAttrProvisioning {
      * will be set to the users address. If FALSE, the envelope sender will
      * be set to the From address of the redirected message.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=764)
     public static final String A_zimbraMailRedirectSetEnvelopeSender = "zimbraMailRedirectSetEnvelopeSender";
@@ -3802,7 +3802,7 @@ public class ZAttrProvisioning {
     /**
      * max number of bytes stored in the uncompressed blob cache on disk
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=825)
     public static final String A_zimbraMailUncompressedCacheMaxBytes = "zimbraMailUncompressedCacheMaxBytes";
@@ -3810,7 +3810,7 @@ public class ZAttrProvisioning {
     /**
      * max number of files in the uncompressed blob cache on disk
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=824)
     public static final String A_zimbraMailUncompressedCacheMaxFiles = "zimbraMailUncompressedCacheMaxFiles";
@@ -3827,7 +3827,7 @@ public class ZAttrProvisioning {
      * attribute of an account. If set to 0, the per user white list feature
      * is disabled.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=798)
     public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
@@ -3910,7 +3910,7 @@ public class ZAttrProvisioning {
      * whether to allow non-provisionable devices; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=834)
     public static final String A_zimbraMobilePolicyAllowNonProvisionableDevices = "zimbraMobilePolicyAllowNonProvisionableDevices";
@@ -3919,7 +3919,7 @@ public class ZAttrProvisioning {
      * whether to allow partial policy enforcement on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=835)
     public static final String A_zimbraMobilePolicyAllowPartialProvisioning = "zimbraMobilePolicyAllowPartialProvisioning";
@@ -3929,7 +3929,7 @@ public class ZAttrProvisioning {
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=839)
     public static final String A_zimbraMobilePolicyAllowSimpleDevicePassword = "zimbraMobilePolicyAllowSimpleDevicePassword";
@@ -3939,7 +3939,7 @@ public class ZAttrProvisioning {
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=840)
     public static final String A_zimbraMobilePolicyAlphanumericDevicePasswordRequired = "zimbraMobilePolicyAlphanumericDevicePasswordRequired";
@@ -3948,7 +3948,7 @@ public class ZAttrProvisioning {
      * require data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=847)
     public static final String A_zimbraMobilePolicyDeviceEncryptionEnabled = "zimbraMobilePolicyDeviceEncryptionEnabled";
@@ -3957,7 +3957,7 @@ public class ZAttrProvisioning {
      * whether to force pin on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=837)
     public static final String A_zimbraMobilePolicyDevicePasswordEnabled = "zimbraMobilePolicyDevicePasswordEnabled";
@@ -3967,7 +3967,7 @@ public class ZAttrProvisioning {
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=842)
     public static final String A_zimbraMobilePolicyDevicePasswordExpiration = "zimbraMobilePolicyDevicePasswordExpiration";
@@ -3978,7 +3978,7 @@ public class ZAttrProvisioning {
      * zimbraMobileDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=843)
     public static final String A_zimbraMobilePolicyDevicePasswordHistory = "zimbraMobilePolicyDevicePasswordHistory";
@@ -3988,7 +3988,7 @@ public class ZAttrProvisioning {
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=845)
     public static final String A_zimbraMobilePolicyMaxDevicePasswordFailedAttempts = "zimbraMobilePolicyMaxDevicePasswordFailedAttempts";
@@ -3998,7 +3998,7 @@ public class ZAttrProvisioning {
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=844)
     public static final String A_zimbraMobilePolicyMaxInactivityTimeDeviceLock = "zimbraMobilePolicyMaxInactivityTimeDeviceLock";
@@ -4008,7 +4008,7 @@ public class ZAttrProvisioning {
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=841)
     public static final String A_zimbraMobilePolicyMinDevicePasswordComplexCharacters = "zimbraMobilePolicyMinDevicePasswordComplexCharacters";
@@ -4018,7 +4018,7 @@ public class ZAttrProvisioning {
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=838)
     public static final String A_zimbraMobilePolicyMinDevicePasswordLength = "zimbraMobilePolicyMinDevicePasswordLength";
@@ -4028,7 +4028,7 @@ public class ZAttrProvisioning {
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=846)
     public static final String A_zimbraMobilePolicyPasswordRecoveryEnabled = "zimbraMobilePolicyPasswordRecoveryEnabled";
@@ -4037,7 +4037,7 @@ public class ZAttrProvisioning {
      * time interval in minutes before forcing device to refresh policy;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=836)
     public static final String A_zimbraMobilePolicyRefreshInterval = "zimbraMobilePolicyRefreshInterval";
@@ -4051,7 +4051,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAntiSpamLockMethod = "zimbraMtaAntiSpamLockMethod";
 
     /**
-     * Deprecated since: 6.0.0. deprecated in favor of
+     * Deprecated since: 6.0.0_BETA1. deprecated in favor of
      * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
      */
@@ -4156,7 +4156,7 @@ public class ZAttrProvisioning {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=796)
     public static final String A_zimbraMtaSaslAuthEnable = "zimbraMtaSaslAuthEnable";
@@ -4178,7 +4178,7 @@ public class ZAttrProvisioning {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=795)
     public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
@@ -4627,7 +4627,7 @@ public class ZAttrProvisioning {
      * whether calendar invite part in a forwarded email is auto-added to
      * calendar
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=686)
     public static final String A_zimbraPrefCalendarAllowForwardedInvite = "zimbraPrefCalendarAllowForwardedInvite";
@@ -4636,7 +4636,7 @@ public class ZAttrProvisioning {
      * whether calendar invite part with PUBLISH method is auto-added to
      * calendar
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=688)
     public static final String A_zimbraPrefCalendarAllowPublishMethodInvite = "zimbraPrefCalendarAllowPublishMethodInvite";
@@ -4657,7 +4657,7 @@ public class ZAttrProvisioning {
      * default visibility of the appointment when starting a new appointment
      * in the UI
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=832)
     public static final String A_zimbraPrefCalendarApptVisibility = "zimbraPrefCalendarApptVisibility";
@@ -4665,7 +4665,7 @@ public class ZAttrProvisioning {
     /**
      * automatically add appointments when invited
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=848)
     public static final String A_zimbraPrefCalendarAutoAddInvites = "zimbraPrefCalendarAutoAddInvites";
@@ -4692,7 +4692,7 @@ public class ZAttrProvisioning {
     /**
      * Forward a copy of calendar invites received to these users.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=851)
     public static final String A_zimbraPrefCalendarForwardInvitesTo = "zimbraPrefCalendarForwardInvitesTo";
@@ -4786,7 +4786,7 @@ public class ZAttrProvisioning {
      * permission to invite this user to a meeting, send an auto-decline
      * reply
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=849)
     public static final String A_zimbraPrefCalendarSendInviteDeniedAutoReply = "zimbraPrefCalendarSendInviteDeniedAutoReply";
@@ -4794,7 +4794,7 @@ public class ZAttrProvisioning {
     /**
      * whether to enable toaster notification for new mail
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=813)
     public static final String A_zimbraPrefCalendarToasterEnabled = "zimbraPrefCalendarToasterEnabled";
@@ -4846,7 +4846,7 @@ public class ZAttrProvisioning {
     /**
      * order of messages displayed within a conversation
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=818)
     public static final String A_zimbraPrefConversationOrder = "zimbraPrefConversationOrder";
@@ -4879,7 +4879,7 @@ public class ZAttrProvisioning {
     /**
      * whether folder color is enabled
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=771)
     public static final String A_zimbraPrefFolderColorEnabled = "zimbraPrefFolderColorEnabled";
@@ -5111,7 +5111,7 @@ public class ZAttrProvisioning {
     /**
      * whether to enable toaster notification for IM
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=814)
     public static final String A_zimbraPrefIMToasterEnabled = "zimbraPrefIMToasterEnabled";
@@ -5119,7 +5119,7 @@ public class ZAttrProvisioning {
     /**
      * last used yahoo id
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=757)
     public static final String A_zimbraPrefIMYahooId = "zimbraPrefIMYahooId";
@@ -5248,7 +5248,7 @@ public class ZAttrProvisioning {
     /**
      * whether to send read receipt
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=822)
     public static final String A_zimbraPrefMailSendReadReceipts = "zimbraPrefMailSendReadReceipts";
@@ -5289,7 +5289,7 @@ public class ZAttrProvisioning {
     /**
      * whether to enable toaster notification for new mail
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=812)
     public static final String A_zimbraPrefMailToasterEnabled = "zimbraPrefMailToasterEnabled";
@@ -5297,7 +5297,7 @@ public class ZAttrProvisioning {
     /**
      * whether mandatory spell check is enabled
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=749)
     public static final String A_zimbraPrefMandatorySpellCheckEnabled = "zimbraPrefMandatorySpellCheckEnabled";
@@ -5399,7 +5399,7 @@ public class ZAttrProvisioning {
     /**
      * where the message reading pane is displayed
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=804)
     public static final String A_zimbraPrefReadingPaneLocation = "zimbraPrefReadingPaneLocation";
@@ -5408,7 +5408,7 @@ public class ZAttrProvisioning {
      * address to put in reply-to header of read receipt messages, if it is
      * not set, then the compose identitys primary email address is used.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=823)
     public static final String A_zimbraPrefReadReceiptsToAddress = "zimbraPrefReadReceiptsToAddress";
@@ -5470,7 +5470,7 @@ public class ZAttrProvisioning {
     /**
      * whether end-user wants auto-complete from shared address books.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=759)
     public static final String A_zimbraPrefSharedAddrBookAutoCompleteEnabled = "zimbraPrefSharedAddrBookAutoCompleteEnabled";
@@ -5509,7 +5509,7 @@ public class ZAttrProvisioning {
     /**
      * whether standard client should operate in accessibility Mode
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=689)
     public static final String A_zimbraPrefStandardClientAccessibilityMode = "zimbraPrefStandardClientAccessibilityMode";
@@ -5614,7 +5614,7 @@ public class ZAttrProvisioning {
      * is the union of account/cos attr zimbraZimletAvailableZimlets and
      * domain attr zimbraZimletDomainAvailableZimlets
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=765)
     public static final String A_zimbraPrefZimlets = "zimbraPrefZimlets";
@@ -5807,7 +5807,7 @@ public class ZAttrProvisioning {
      * Time interval after which NGINX mail proxy will disconnect while
      * establishing an upstream IMAP/POP connection
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=797)
     public static final String A_zimbraReverseProxyConnectTimeout = "zimbraReverseProxyConnectTimeout";
@@ -6220,7 +6220,7 @@ public class ZAttrProvisioning {
     /**
      * Object classes to add when creating a zimbra server object.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=756)
     public static final String A_zimbraServerExtraObjectClass = "zimbraServerExtraObjectClass";
@@ -6228,7 +6228,7 @@ public class ZAttrProvisioning {
     /**
      * ZimbraID of the server that this component is running on
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=742)
     public static final String A_zimbraServerId = "zimbraServerId";
@@ -6299,7 +6299,7 @@ public class ZAttrProvisioning {
     /**
      * favicon for chameleon skin for the domain
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=800)
     public static final String A_zimbraSkinFavicon = "zimbraSkinFavicon";
@@ -6355,7 +6355,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to enable smtp debug trace
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=793)
     public static final String A_zimbraSmtpEnableTrace = "zimbraSmtpEnableTrace";
@@ -6567,7 +6567,7 @@ public class ZAttrProvisioning {
      * Prefixes of thread names. Each value is a column in threads.csv that
      * tracks the number of threads whose name starts with the given prefix.
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=792)
     public static final String A_zimbraStatThreadNamePrefix = "zimbraStatThreadNamePrefix";
@@ -6741,7 +6741,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP Category of the component
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=737)
     public static final String A_zimbraXMPPComponentCategory = "zimbraXMPPComponentCategory";
@@ -6749,7 +6749,7 @@ public class ZAttrProvisioning {
     /**
      * class name of the XMPP component
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=763)
     public static final String A_zimbraXMPPComponentClassName = "zimbraXMPPComponentClassName";
@@ -6757,7 +6757,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP Type of the component
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=739)
     public static final String A_zimbraXMPPComponentFeatures = "zimbraXMPPComponentFeatures";
@@ -6765,7 +6765,7 @@ public class ZAttrProvisioning {
     /**
      * Name of the XMPP Component
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=740)
     public static final String A_zimbraXMPPComponentName = "zimbraXMPPComponentName";
@@ -6773,7 +6773,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP Type of the component
      *
-     * @since ZCS 6.0.0
+     * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=738)
     public static final String A_zimbraXMPPComponentType = "zimbraXMPPComponentType";
