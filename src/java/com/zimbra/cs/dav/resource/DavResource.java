@@ -38,6 +38,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 
 /**
@@ -95,6 +96,8 @@ public abstract class DavResource {
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
 		if (isCollection())
 			addResourceType(DavElements.E_COLLECTION);
+		addProperty(Acl.getPrincipalCollectionSet());
+		addProperty(Acl.getCurrentUserPrincipal());
 	}
 	
 	public void setHref(String href) {

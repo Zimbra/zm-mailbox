@@ -74,6 +74,7 @@ public class DavElements {
 	public static final String P_COMP_FILTER = "comp-filter";
 	public static final String P_CONTENT_TYPE= "content-type";
 	public static final String P_CREATIONDATE = "creationdate";
+	public static final String P_CURRENT_USER_PRINCIPAL = "current-user-principal";
 	public static final String P_CURRENT_USER_PRIVILEGE_SET = "current-user-privilege-set";
 	
 	public static final String P_DENY = "deny";
@@ -244,6 +245,7 @@ public class DavElements {
 	public static final QName E_COMP = QName.get(P_COMP, CALDAV_NS);
 	public static final QName E_COMP_FILTER = QName.get(P_COMP_FILTER, CALDAV_NS);
 	public static final QName E_CREATIONDATE = QName.get(P_CREATIONDATE, WEBDAV_NS);
+	public static final QName E_CURRENT_USER_PRINCIPAL = QName.get(P_CURRENT_USER_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_CURRENT_USER_PRIVILEGE_SET = QName.get(P_CURRENT_USER_PRIVILEGE_SET, WEBDAV_NS);
 	
 	public static final QName E_DENY = QName.get(P_DENY, WEBDAV_NS);

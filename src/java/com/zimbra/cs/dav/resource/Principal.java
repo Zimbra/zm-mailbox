@@ -16,46 +16,36 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.property.CalDavProperty;
 
-public class User extends Principal {
+public class Principal extends DavResource {
 
-    public User(DavContext ctxt, String mainUrl) throws ServiceException {
-        this(ctxt.getAuthAccount(), mainUrl);
+    public Principal(Account authUser, String mainUrl) throws ServiceException {
+        super(mainUrl, getOwner(authUser, mainUrl));
+        if (!mainUrl.endsWith("/")) mainUrl = mainUrl + "/";
+        setProperty(DavElements.E_HREF, mainUrl);
+        mUri = mainUrl;
     }
     
-    public User(Account authUser, String url) throws ServiceException {
-    	super(authUser, url);
-        String user = getOwner();
-        addResourceType(DavElements.E_PRINCIPAL);
-        addProperty(CalDavProperty.getCalendarHomeSet(user));
-        addProperty(CalDavProperty.getScheduleInboxURL(user));
-        addProperty(CalDavProperty.getScheduleOutboxURL(user));
-        ArrayList<String> addrs = new ArrayList<String>();
-        for (String addr : authUser.getMailDeliveryAddress())
-            addrs.add(addr);
-        for (String alias : authUser.getMailAlias())
-            addrs.add(alias);
-        addrs.add(url);
-        addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
-        setProperty(DavElements.E_HREF, url);
-        String cn = authUser.getAttr(Provisioning.A_cn);
-        if (cn == null)
-            cn = authUser.getName();
-        setProperty(DavElements.E_DISPLAYNAME, cn);
-        mUri = url;
-    }
-    
+	protected static String getOwner(Account acct, String url) throws ServiceException {
+		String owner = acct.getName();
+		Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
+        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+        if (url.indexOf('@') < 0 && defaultDomain != null && defaultDomain.equalsIgnoreCase(acct.getDomainName()))
+        	owner = owner.substring(0, owner.indexOf('@'));
+        return owner;
+	}
+	
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);

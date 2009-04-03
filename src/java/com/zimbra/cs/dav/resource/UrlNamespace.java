@@ -27,6 +27,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -106,7 +107,11 @@ public class UrlNamespace {
         ZimbraLog.dav.debug("getPrincipalAtUrl");
         int index = url.indexOf(PRINCIPALS_PATH);
         if (index == -1 || url.endsWith(PRINCIPALS_PATH))
-            throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+			try {
+				return new Principal(ctxt.getAuthAccount(), url);
+			} catch (ServiceException se) {
+				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, se);
+			}
         index += PRINCIPALS_PATH.length();
         String name = url.substring(index);
         if (name.endsWith("/"))
@@ -117,7 +122,7 @@ public class UrlNamespace {
             // allow only the owner can access the principal URL for now.
             if (a == null || ctxt.getAuthAccount().compareTo(a) != 0)
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
-            return new User(url, a);
+            return new User(ctxt, url);
         } catch (ServiceException se) {
             throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
         }
@@ -125,7 +130,7 @@ public class UrlNamespace {
     
     public static DavResource getPrincipal(Account acct) throws DavException {
         try {
-            return new User(getPrincipalUrl(acct.getName()), acct);
+            return new User(acct, getPrincipalUrl(acct.getName()));
         } catch (ServiceException se) {
             throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
         }
@@ -136,6 +141,12 @@ public class UrlNamespace {
         ZimbraLog.dav.debug("getResource at "+user+" "+path);
 		if (path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		
+		if (user.equals(""))
+			try {
+				return new Principal(ctxt.getAuthAccount(), DavServlet.DAV_PATH);
+			} catch (ServiceException e) {
+			}
 		
 		String target = path.toLowerCase();
 		DavResource resource = null;
@@ -199,6 +210,18 @@ public class UrlNamespace {
         return URLUtil.urlEscape(getRawResourceUrl(rs));
 	}
     
+	public static String getPrincipalUrl(Account account) {
+		String owner = account.getName();
+		try {
+			Provisioning prov = Provisioning.getInstance();
+	        Config config = prov.getConfig();
+	        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+	        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(account.getDomainName()))
+	        	owner = owner.substring(0, owner.indexOf('@'));
+		} catch (ServiceException se) {
+		}
+        return getPrincipalUrl(owner);
+	}
     public static String getPrincipalUrl(String user) {
         return URLUtil.urlEscape(PRINCIPALS_PATH + user + "/");
     }

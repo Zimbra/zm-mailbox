@@ -60,7 +60,7 @@ public class Acl extends ResourceProperty {
 		props.add(getSupportedPrivilegeSet());
 		if (folder != null) {
 			props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
-			props.add(getPrincipalCollectionSet(folder.getAccount()));
+			props.add(getPrincipalCollectionSet());
 		}
 		props.add(getAcl(acl, owner));
 		props.add(getAclRestrictions());
@@ -100,8 +100,12 @@ public class Acl extends ResourceProperty {
 		return new AclRestrictions();
 	}
 	
-	public static ResourceProperty getPrincipalCollectionSet(Account acct) {
-		return new PrincipalCollectionSet(acct);
+	public static ResourceProperty getPrincipalCollectionSet() {
+		return new PrincipalCollectionSet();
+	}
+	
+	public static ResourceProperty getCurrentUserPrincipal() {
+		return new CurrentUserPrincipal();
 	}
 	
 	protected ACL mAcl;
@@ -222,16 +226,19 @@ public class Acl extends ResourceProperty {
 	}
 	
 	private static class PrincipalCollectionSet extends ResourceProperty {
-		public PrincipalCollectionSet(Account acct) {
+		public PrincipalCollectionSet() {
 			super(DavElements.E_PRINCIPAL_COLLECTION_SET);
 			setProtected(true);
+		}
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
 			try {
-				e.setText(UrlNamespace.getPrincipalCollectionUrl(acct));
+				e.setText(UrlNamespace.getPrincipalCollectionUrl(ctxt.getAuthAccount()));
 				mChildren.add(e);
 			} catch (ServiceException ex) {
 				ZimbraLog.dav.warn("can't generate principal-collection-url", ex);
 			}
+			return super.toElement(ctxt, parent, nameOnly);
 		}
 	}
 	private static class SupportedPrivilegeSet extends Acl {
@@ -316,6 +323,22 @@ public class Acl extends ResourceProperty {
 			return cups;
 		}
 	}
+	
+	/*
+	 * DAV:current-user-principal
+	 * RFC5397
+	 */
+	private static class CurrentUserPrincipal extends Acl {
+		public CurrentUserPrincipal() {
+			super(DavElements.E_CURRENT_USER_PRINCIPAL, null, null);
+		}
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			Element cup = super.toElement(ctxt, parent, true);
+			cup.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(ctxt.getAuthAccount()));
+			return cup;
+		}
+	}
+	
 	/*
 	 * DAV:acl-restrictions
 	 * RFC3744 section 5.6
