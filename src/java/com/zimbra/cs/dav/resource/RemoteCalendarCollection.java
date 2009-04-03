@@ -284,7 +284,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         try {
             ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             ZMailbox zmbx = getRemoteMailbox(zat);
-            ZFolder folder = zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
+            ZFolder folder = zmbx.getFolderById(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
             if (folder == null)
             	return;
             mCtag = "" + folder.getImapMODSEQ();
