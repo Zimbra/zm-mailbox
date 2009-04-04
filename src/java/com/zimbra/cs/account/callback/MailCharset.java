@@ -35,12 +35,9 @@ public class MailCharset extends AttributeCallback {
 
         String charset = null;
         SingleValueMod mod = singleValueMod(attrName, value);
-        if (mod.unsetting()) {
-            if (entry instanceof Cos)
-                throw ServiceException.INVALID_REQUEST("cannot unset " + Provisioning.A_zimbraPrefMailDefaultCharset + " on cos", null);
-            else
-                return;
-        } else
+        if (mod.unsetting())
+            return;
+        else
             charset = mod.value();
 
         

@@ -2257,7 +2257,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="469" name="zimbraPrefMailDefaultCharset" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="MailCharset">
-  <defaultCOSValue>UTF-8</defaultCOSValue>
   <desc>Default Charset for mail composing and parsing text</desc>
 </attr>
 
