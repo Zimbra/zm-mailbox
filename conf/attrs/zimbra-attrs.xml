@@ -4022,7 +4022,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for system admin accounts</desc>
 </attr>
 
-<attr id="802" name="zimbraIsAdminGroup" type="boolean" cardinality="single" optionalIn="distributionList" since="6.0.0_BETA1">
+<attr id="802" name="zimbraIsAdminGroup" type="boolean" cardinality="single" optionalIn="distributionList" since="6.0.0_BETA1" callback="AdminGroup">
   <desc>set to true for admin groups</desc>
 </attr>
 
