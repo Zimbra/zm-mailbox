@@ -223,6 +223,16 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
         if (getVersion().atLeast(1, 15)) {
             int num = in.readInt();
+            if (num > 10000) {
+                // Prior to redolog version 1.24 we had a problem in serialization code when ParsedMessage of
+                // an Invite was null.  This couldn't happen before blobless appointment feature was added in
+                // 5.0.16, but the bad serialization code has been around and so there was potential for
+                // creating bad redolog.  The problem tends to manifest during deserialization as OutOfMemoryError
+                // when allocating the mReplies ArrayList with a very large length.  Let's check for an arbitrarily
+                // big size (10000) to detect it, and cause the deserialization to skip it by throwing an
+                // exception.
+                throw new IOException("Replies count > 10000.  Looks like a corrupted pre-v1.24 redo entry.  Skipping");
+            }
             if (num < 0) {
                 // no replies list
                 mReplies = null;
