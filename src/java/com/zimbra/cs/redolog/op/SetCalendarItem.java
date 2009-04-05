@@ -223,7 +223,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
         if (getVersion().atLeast(1, 15)) {
             int num = in.readInt();
-            if (num > 10000) {
+            if (num > 10000 && !getVersion().atLeast(1, 24)) {
                 // Prior to redolog version 1.24 we had a problem in serialization code when ParsedMessage of
                 // an Invite was null.  This couldn't happen before blobless appointment feature was added in
                 // 5.0.16, but the bad serialization code has been around and so there was potential for
