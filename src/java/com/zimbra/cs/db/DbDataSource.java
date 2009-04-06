@@ -193,19 +193,14 @@ public class DbDataSource {
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
         try {
         	String dataSourceTable = getTableName(mbox);
-        	String mailItemTable = DbMailbox.qualifyTableName(mbox, "mail_item");
         	String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable+".mailbox_id = ? AND ";
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
             sb.append("DELETE FROM ");
             sb.append(dataSourceTable);
-            sb.append(" WHERE EXISTS ");
-            sb.append(" (SELECT * from ");
-            sb.append(mailItemTable);
             sb.append(" WHERE ");
             sb.append(IN_THIS_MAILBOX_AND);
-            sb.append(dataSourceTable).append(".item_id = ").append(mailItemTable).append(".id");
-            sb.append(" AND data_source_id = ? AND folder_id = ?)");
+            sb.append("  data_source_id = ? AND folder_id = ?)");
             stmt = conn.prepareStatement(sb.toString());
             int i = 1;
             i = DbMailItem.setMailboxId(stmt, mbox, i);
@@ -281,15 +276,11 @@ public class DbDataSource {
         ZimbraLog.datasource.debug("Get all mappings for %s in folder %d", ds.getName(), folderId);
         try {
         	String thisTable = getTableName(mbox);
-        	String mailItemTable = DbMailbox.qualifyTableName(mbox, "mail_item");
         	String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT item_id, remote_id, ").append(thisTable).append(".metadata FROM ");
             sb.append(thisTable);
-            sb.append(" INNER JOIN ");
-            sb.append(mailItemTable);
-            sb.append(" ON  ").append(thisTable).append(".item_id = ").append(mailItemTable).append(".id");
             sb.append(" WHERE ");
             sb.append(IN_THIS_MAILBOX_AND);
             sb.append("  data_source_id = ? AND folder_id = ?");
