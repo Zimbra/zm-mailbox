@@ -43,7 +43,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZSearchFolder;
 
-public class ImapPath {
+public class ImapPath implements Comparable<ImapPath> {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
 
     static Charset FOLDER_ENCODING_CHARSET;
@@ -163,15 +163,17 @@ public class ImapPath {
         }
     }
 
-    @Override
-    public boolean equals(Object obj) {
+    @Override public boolean equals(Object obj) {
         if (!(obj instanceof ImapPath))
             return super.equals(obj);
         return asImapPath().equalsIgnoreCase(((ImapPath) obj).asImapPath());
     }
 
-    @Override
-    public int hashCode() {
+    public int compareTo(ImapPath o) {
+        return asImapPath().compareToIgnoreCase(o.asImapPath());
+    }
+
+    @Override public int hashCode() {
         return (mOwner == null ? 0 : mOwner.toUpperCase().hashCode()) ^ mPath.toUpperCase().hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
     }
 

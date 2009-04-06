@@ -1373,7 +1373,7 @@ abstract class ImapHandler extends ProtocolHandler {
             if (cause.equals("CREATE failed"))
                 ZimbraLog.imap.warn(cause, e);
             else
-                ZimbraLog.imap.info(cause);
+                ZimbraLog.imap.info(cause + ": " + path);
             sendNO(tag, cause);
             return canContinue(e);
         }
@@ -1619,8 +1619,15 @@ abstract class ImapHandler extends ProtocolHandler {
 
         boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
 
-        Map<ImapPath, String> matches = new LinkedHashMap<ImapPath, String>();
+        Map<ImapPath, String> matches = new TreeMap<ImapPath, String>();
         try {
+            if (returnSubscribed)
+                remoteSubscriptions = mCredentials.listSubscriptions();
+
+            Map<ImapPath, ItemId> paths = new HashMap<ImapPath, ItemId>();
+            Set<ImapPath> selected = new HashSet<ImapPath>();
+            List<Pattern> patterns = new ArrayList<Pattern>(mailboxNames.size());
+
             for (String mailboxName : mailboxNames) {
                 // RFC 5258 3: "In particular, if an extended LIST command has multiple mailbox
                 //                   names and one (or more) of them is the empty string, the empty
@@ -1659,17 +1666,13 @@ abstract class ImapHandler extends ProtocolHandler {
                 if (acct == null)
                     continue;
 
-                if (returnSubscribed)
-                    remoteSubscriptions = mCredentials.listSubscriptions();
+                patterns.add(pattern);
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
-                Map<ImapPath, ItemId> paths = new LinkedHashMap<ImapPath, ItemId>();
                 accumulatePaths(patternPath.getOwnerMailbox(), owner, null, paths);
 
                 // get the set of folders matching the selection criteria (either all folders or subscribed folders)
-                Set<ImapPath> selected = paths.keySet();
                 if (selectSubscribed) {
-                    selected = new LinkedHashSet<ImapPath>();
                     for (ImapPath path : paths.keySet()) {
                         if (isPathSubscribed(path, remoteSubscriptions))
                             selected.add(path);
@@ -1682,30 +1685,42 @@ abstract class ImapHandler extends ProtocolHandler {
                                 selected.add(spath);
                         }
                     }
+                } else {
+                    selected.addAll(paths.keySet());
                 }
+            }
 
-                // return only the selected folders (and perhaps their parents) matching the pattern
-                for (ImapPath path : selected) {
-                    if (!matches.containsKey(path) && pathMatches(path, pattern)) {
+            // return only the selected folders (and perhaps their parents) matching the pattern
+            for (ImapPath path : selected) {
+                for (Pattern pattern : patterns) {
+                    if (pathMatches(path, pattern)) {
                         matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String());
-                        // RFC 5258 3.5: "Servers SHOULD ONLY return a non-matching mailbox name along with
-                        //                CHILDINFO if at least one matching child is not also being returned."
-                        continue;
+                        break;
                     }
+                }
+            }
 
-                    if (!selectRecursive)
+            if (selectRecursive) {
+                for (ImapPath path : selected) {
+                    // RFC 5258 3.5: "Servers SHOULD ONLY return a non-matching mailbox name along with
+                    //                CHILDINFO if at least one matching child is not also being returned."
+                    if (matches.containsKey(path))
                         continue;
+
                     String folderName = path.asZimbraPath();
                     for (int index = folderName.length() + 1; (index = folderName.lastIndexOf('/', index - 1)) != -1; ) {
                         ImapPath parent = new ImapPath(path.getOwner(), folderName.substring(0, index), mCredentials);
-                        if (pathMatches(parent, pattern)) {
-                            // use the already-resolved version of the parent ImapPath from the "paths" map if possible
-                            for (ImapPath cached : paths.keySet()) {
-                                if (cached.equals(parent)) {
-                                    parent = cached;  break;
+                        for (Pattern pattern : patterns) {
+                            if (pathMatches(parent, pattern)) {
+                                // use the already-resolved version of the parent ImapPath from the "paths" map if possible
+                                for (ImapPath cached : paths.keySet()) {
+                                    if (cached.equals(parent)) {
+                                        parent = cached;  break;
+                                    }
                                 }
+                                matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, remoteSubscriptions) + ") \"/\" " +
+                                                          parent.asUtf7String() + " (CHILDINFO (\"SUBSCRIBED\"))");
                             }
-                            matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + parent.asUtf7String() + " (\"CHILDINFO\" (\"SUBSCRIBED\"))");
                         }
                     }
                 }
@@ -1772,8 +1787,8 @@ abstract class ImapHandler extends ProtocolHandler {
                     continue;
                 ImapPath path = relativeTo == null ? new ImapPath(owner, folder, mCredentials) : new ImapPath(owner, folder, relativeTo);
                 if (path.isVisible()) {
-                    paths.put(path, path.asItemId());
-                    if (folder instanceof Mountpoint)
+                    boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
+                    if (folder instanceof Mountpoint && !alreadyTraversed)
                         accumulatePaths(path.getOwnerMailbox(), owner, path, paths);
                 }
             }
