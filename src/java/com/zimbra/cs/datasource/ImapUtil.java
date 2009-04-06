@@ -113,4 +113,8 @@ public final class ImapUtil {
                name.substring(0, INBOX_LEN).equalsIgnoreCase(INBOX) &&
                name.charAt(INBOX_LEN) == ld.getDelimiter();
     }
+
+    public static boolean isYahoo(ImapConnection ic) {
+        return ic.hasCapability("AUTH=XYMCOOKIEB64");
+    }
 }

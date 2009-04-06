@@ -88,10 +88,6 @@ class ImapFolderSync {
     // Max number of total per-item failures before we abort sync
     private static final int MAX_TOTAL_ERRORS = 10;
 
-
-    // This capability is specific to Yahoo's IMAP service
-    private static final String AUTH_XYMCOOKIEB64 = "AUTH=XYMCOOKIEB64";
-
     private static class Statistics {
         int flagsUpdatedLocally;
         int flagsUpdatedRemotely;
@@ -1168,7 +1164,7 @@ class ImapFolderSync {
     }
     
     private boolean isYahoo() {
-        return connection.hasCapability(AUTH_XYMCOOKIEB64);
+        return ImapUtil.isYahoo(connection);
     }
     
     private long getUidValidity() {
