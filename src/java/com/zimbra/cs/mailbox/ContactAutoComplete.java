@@ -258,29 +258,7 @@ public class ContactAutoComplete {
 	    	this.str = str;
 	    }
 	    public void handleContactAttrs(Map<String,? extends Object> attrs) throws ServiceException {
-	        String matchedEmail = null;
-        	for (String emailKey : mEmailKeys) {
-        		Object val = attrs.get(emailKey);
-    			if (val == null || !(val instanceof String))
-    				continue;
-        		String email = (String)val;
-    			if (email.toLowerCase().startsWith(str))
-            		matchedEmail = email;
-
-    			if (matchedEmail != null)
-    				break;
-        	}
-			if (matchedEmail == null) {
-        		ZimbraLog.gal.debug("gal entry has empty email address");
-        		return;
-			}
-			
-        	ContactEntry entry = new ContactEntry();
-        	entry.mEmail = matchedEmail;
-			entry.setName((String)attrs.get(Contact.A_fullName));
-        	entry.mFolderId = FOLDER_ID_GAL;
-        	result.addEntry(entry);
-			ZimbraLog.gal.debug("adding "+entry.getEmail());
+	    	addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result);
 	    }
 	    public void handleContact(Contact c) throws ServiceException {
 			ZimbraLog.gal.debug("gal entry: "+""+c.getId());
@@ -307,6 +285,51 @@ public class ContactAutoComplete {
 		if (query == null || text == null)
 			return false;
 		return text.toLowerCase().startsWith(query);
+	}
+	
+	private void addMatchedContacts(String query, Map<String,? extends Object> attrs, int folderId, ItemId id, AutoCompleteResult result) {
+    	String firstName = (String)attrs.get(Contact.A_firstName);
+    	String lastName = (String)attrs.get(Contact.A_lastName);
+    	String fullName = (String)attrs.get(Contact.A_fullName);
+    	String nickname = (String)attrs.get(Contact.A_nickname);
+        if (attrs.get(Contact.A_dlist) == null) {
+        	boolean nameMatches = 
+        		matches(query, firstName) ||
+                matches(query, lastName) ||
+                matches(query, fullName) ||
+                matches(query, nickname);
+        				
+        	for (String emailKey : mEmailKeys) {
+        		String email = (String)attrs.get(emailKey);
+        		if (email != null && (nameMatches || matches(query, email))) {
+        			ContactEntry entry = new ContactEntry();
+        			entry.mEmail = email;
+        			// use fullName if available
+        			if (fullName != null) {
+        				entry.setName(fullName);
+        			} else {
+        				// otherwise displayName is firstName." ".lastName
+        				entry.mLastName = lastName;
+        				if (entry.mLastName == null)
+        					entry.mLastName = "";
+        				entry.mDisplayName = (firstName == null) ? "" : firstName + " " + entry.mLastName;
+        			}
+        			entry.mId = id;
+        			entry.mFolderId = folderId;
+        			result.addEntry(entry);
+        			ZimbraLog.gal.debug("adding "+entry.getEmail());
+        		}
+        	}
+        } else {
+        	// distribution list
+        	ContactEntry entry = new ContactEntry();
+        	entry.mDisplayName = nickname;
+        	entry.mDlist = (String)attrs.get(Contact.A_dlist);
+        	entry.mId = id;
+        	entry.mFolderId = folderId;
+        	result.addEntry(entry);
+        	ZimbraLog.gal.debug("adding "+entry.getEmail());
+        }
 	}
 	
 	private void queryFolders(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
@@ -371,49 +394,8 @@ public class ContactAutoComplete {
                     }
                 } else
                 	continue;
-                
-            	String firstName = fields.get(Contact.A_firstName);
-            	String lastName = fields.get(Contact.A_lastName);
-            	String fullName = fields.get(Contact.A_fullName);
-            	String nickname = fields.get(Contact.A_nickname);
-                if (fields.get(Contact.A_dlist) == null) {
-                	boolean nameMatches = 
-                		matches(str, firstName) ||
-                        matches(str, lastName) ||
-                        matches(str, fullName) ||
-                        matches(str, nickname);
-                				
-                	for (String emailKey : mEmailKeys) {
-                		String email = fields.get(emailKey);
-                		if (email != null && (nameMatches || matches(str, email))) {
-                			ContactEntry entry = new ContactEntry();
-                			entry.mEmail = email;
-                			// use fullName if available
-                			if (fullName != null) {
-                				entry.setName(fullName);
-                			} else {
-                				// otherwise displayName is firstName." ".lastName
-                				entry.mLastName = lastName;
-                				if (entry.mLastName == null)
-                					entry.mLastName = "";
-                				entry.mDisplayName = (firstName == null) ? "" : firstName + " " + entry.mLastName;
-                			}
-                			entry.mId = id;
-                			entry.mFolderId = folderId;
-                			result.addEntry(entry);
-                			ZimbraLog.gal.debug("adding "+entry.getEmail());
-                		}
-                	}
-                } else {
-                	// distribution list
-                	ContactEntry entry = new ContactEntry();
-                	entry.mDisplayName = nickname;
-                	entry.mDlist = fields.get(Contact.A_dlist);
-                	entry.mId = id;
-                	entry.mFolderId = folderId;
-                	result.addEntry(entry);
-                	ZimbraLog.gal.debug("adding "+entry.getEmail());
-                }
+
+                addMatchedContacts(str, fields, folderId, id, result);
     			if (result.entries.size() == limit) {
             		ZimbraLog.gal.debug("mbox query result exceeded request limit "+limit);
     				result.canBeCached = false;
