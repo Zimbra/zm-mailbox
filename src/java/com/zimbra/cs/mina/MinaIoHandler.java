@@ -37,20 +37,20 @@ class MinaIoHandler implements IoHandler {
         this.mServer = server;
     }
 
-    public void sessionCreated(IoSession session) {
+    public void sessionCreated(IoSession session) throws IOException {
         if (MinaServer.isDebugEnabled()) {
             ZimbraLog.nio.debug("sessionCreated: session = %d", session.hashCode());
-        }
-        // Nothing to do here...
-    }
-
-    public void sessionOpened(IoSession session) throws IOException {
-        if (MinaServer.isDebugEnabled()) {
-            ZimbraLog.nio.debug("sessionOpened: session = %d", session.hashCode());
         }
         MinaHandler handler = mServer.createHandler(session);
         handler.connectionOpened();
         session.setAttribute(PROTOCOL_HANDLER, handler);
+    }
+
+    public void sessionOpened(IoSession session) {
+        if (MinaServer.isDebugEnabled()) {
+            ZimbraLog.nio.debug("sessionOpened: session = %d", session.hashCode());
+        }
+        // Nothing to do here...
     }
 
     public void sessionClosed(IoSession session) throws IOException {
