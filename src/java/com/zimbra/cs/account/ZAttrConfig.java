@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090403-1052 */
+    /* build: 5.0 pshao 20090406-1516 */
 
     /**
      * RFC2256: descriptive information

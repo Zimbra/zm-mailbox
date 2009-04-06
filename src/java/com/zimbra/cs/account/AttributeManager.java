@@ -1984,7 +1984,17 @@ public class AttributeManager {
                 values = ai.getDefaultCosValues();
                 break;
             case domain:
+                if (ai.hasFlag(AttributeFlag.domainInherited))
+                    values = ai.getGlobalConfigValues();
+                else
+                    return null;
+                break;
             case server:
+                if (ai.hasFlag(AttributeFlag.serverInherited))
+                    values = ai.getGlobalConfigValues();
+                else 
+                    return null;
+                break;
             case globalConfig:
                 values = ai.getGlobalConfigValues();
                 break;

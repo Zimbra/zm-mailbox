@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090403-1052 */
+    /* build: 5.0 pshao 20090406-1516 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -24230,11 +24230,11 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Default Charset for mail composing and parsing text
      *
-     * @return zimbraPrefMailDefaultCharset, or "UTF-8" if unset
+     * @return zimbraPrefMailDefaultCharset, or null if unset
      */
     @ZAttr(id=469)
     public String getPrefMailDefaultCharset() {
-        return getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, "UTF-8");
+        return getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
     }
 
     /**

@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090403-1052 */
+    /* build: 5.0 pshao 20090406-1516 */
 
     /**
      * RFC2256: descriptive information
@@ -8559,7 +8559,7 @@ public class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=97)
     public String[] getSmtpHostname() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraSmtpHostname); return value.length > 0 ? value : new String[] {"localhost"};
+        return getMultiAttr(Provisioning.A_zimbraSmtpHostname);
     }
 
     /**
@@ -8671,11 +8671,11 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * the SMTP server port to connect to when sending mail
      *
-     * @return zimbraSmtpPort, or "25" if unset
+     * @return zimbraSmtpPort, or null if unset
      */
     @ZAttr(id=98)
     public String getSmtpPort() {
-        return getAttr(Provisioning.A_zimbraSmtpPort, "25");
+        return getAttr(Provisioning.A_zimbraSmtpPort, null);
     }
 
     /**
@@ -8795,11 +8795,11 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * timeout value in seconds
      *
-     * @return zimbraSmtpTimeout, or 60 if unset
+     * @return zimbraSmtpTimeout, or -1 if unset
      */
     @ZAttr(id=99)
     public int getSmtpTimeout() {
-        return getIntAttr(Provisioning.A_zimbraSmtpTimeout, 60);
+        return getIntAttr(Provisioning.A_zimbraSmtpTimeout, -1);
     }
 
     /**
