@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -24,6 +25,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -427,6 +429,9 @@ public class CalendarUtils {
         if (tzId.equals("")) {
             return null;
         }
+
+        if (!DebugConfig.disableCalendarTZMatchByID)
+            tzId = TZIDMapper.canonicalize(tzId);
 
         zone = WellKnownTimeZones.getTimeZoneById(tzId);
 

@@ -151,9 +151,13 @@ public final class ParsedDateTime {
                     tz = localTZ;
 
                 if (tz != null) { // localTZ could have been null
+                    if (tzmap != null) {
+                        tzmap.add(tz);
+                        ICalTimeZone tzCanon = tzmap.getTimeZone(tz.getID());  // canonicalize
+                        if (tzCanon != null)
+                            tz = tzCanon;
+                    }
                     cal.setTimeZone(tz);
-                    if (tzmap != null)
-	                    tzmap.add(tz);
                 }
             }
 
@@ -537,18 +541,6 @@ public final class ParsedDateTime {
         return null;
     }
 
-    /**
-     * @return The full RFC2445 parameter string (ie "TZID=blah;") 
-     */
-    private String getTZParamString() {
-        String tzName = getTZName();
-        if (tzName != null) {
-            return "TZID="+tzName+":";
-        } else {
-            return "";
-        }
-    }
-    
     public GregorianCalendar getCalendarCopy() {
         return (GregorianCalendar)(mCal.clone());
     }
@@ -598,10 +590,15 @@ public final class ParsedDateTime {
     }
 
     public String toString() {
-        if (mHasTime)
-            return getTZParamString() + getDateTimePartString();
-        else
+        if (mHasTime) {
+            String tzName = getTZName();
+            if (tzName != null)
+                return "TZID=" + tzName + ":" + getDateTimePartString();
+            else
+                return getDateTimePartString();
+        } else {
             return "VALUE=DATE:" + getDateTimePartString(false);
+        }
     }
     
     public ZProperty toProperty(ICalTok tok, boolean useOutlookCompatMode) {

@@ -201,7 +201,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     }
 
 
-    private static final String FN_TZID             = "tzid";
+    static final String FN_TZID = "tzid";
     private static final String FN_STANDARD_OFFSET  = "so";
     private static final String FN_DAYLIGHT_OFFSET  = "do";
     private static final String FN_DAYTOSTD_DTSTART = "d2ss";
@@ -277,7 +277,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         } else
             tzid = "unknown time zone";
         ICalTimeZone newTz = new ICalTimeZone(tzid, m);
-        ICalTimeZone tz = lookupByRule(newTz);
+        ICalTimeZone tz = lookupByRule(newTz, false);
         return tz;
     }
     
@@ -532,7 +532,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         if (tz != null) return tz;
         ICalTimeZone newTz = new ICalTimeZone(
                 tzid, stdOffset, stdDtStart, stdRRule, stdTzname, dayOffset, dayDtStart, dayRRule, dayTzname);
-        tz = lookupByRule(newTz);
+        tz = lookupByRule(newTz, true);
         return tz;
     }
 
@@ -561,7 +561,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         ICalTimeZone tz = lookupByTZID(tzid);
         if (tz != null) return tz;
         ICalTimeZone newTz = new ICalTimeZone(tzid, standardOffset, standardOnset, standardTzname, daylightOffset, daylightOnset, daylightTzname);
-        tz = lookupByRule(newTz);
+        tz = lookupByRule(newTz, true);
         return tz;
     }
 
@@ -1283,7 +1283,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                 dayoffsetTime, daydtStart, dayrrule, dayTzname);
 
         if (!skipLookup)
-            newTz = lookupByRule(newTz);
+            newTz = lookupByRule(newTz, true);
         return newTz;
     }
 
@@ -1302,19 +1302,38 @@ public class ICalTimeZone extends SimpleTimeZone {
         return null;
     }
 
-    // Lookup a well-known time zone by DST rule.  A cloned object with given time zone's TZID
-    // is returned, or the original time zone object is no match was found.
-    // (No clone if TZID of input tz matches the TZID of the time zone looked up)
-    private static ICalTimeZone lookupByRule(ICalTimeZone tz) {
+    // Lookup a well-known time zone by DST rule.
+    private static ICalTimeZone lookupByRule(ICalTimeZone tz, boolean keepTZID) {
         if (!DebugConfig.disableCalendarTZMatchByRule) {
             ICalTimeZone match = WellKnownTimeZones.getBestMatch(tz);
-            String tzid = tz.getID();
             if (match != null) {
-                if (match.getID().equals(tzid))
+                if (keepTZID) {
+                    // Return the matched TZ, but using the TZID of the passed-in tz.
+                    String tzid = tz.getID();
+                    if (match.getID().equals(tzid))
+                        return match;
+                    else
+                        return match.cloneWithNewTZID(tzid);
+                } else {
+                    // Return the matched TZ.  TZID may be different than that of passed-in tz.
                     return match;
-                else
-                    return match.cloneWithNewTZID(tzid);
+                }
             }
+        }
+        // No match.  Return the TZ that was passed in.
+        return tz;
+    }
+
+    public static ICalTimeZone lookupMatchingWellKnownTZ(ICalTimeZone tz) {
+        if (!DebugConfig.disableCalendarTZMatchByID) {
+            ICalTimeZone match = WellKnownTimeZones.getTimeZoneById(tz.getID());
+            if (match != null)
+                return match;
+        }
+        if (!DebugConfig.disableCalendarTZMatchByRule) {
+            ICalTimeZone match = WellKnownTimeZones.getBestMatch(tz);
+            if (match != null)
+                return match;
         }
         return tz;
     }

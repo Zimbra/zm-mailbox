@@ -57,8 +57,7 @@ public class TimeZoneMap {
     	mAliasMap = new HashMap<String, String>();
         mLocalTZ = localTZ;
     }
-    
-    
+
     public boolean contains(ICalTimeZone tz) {
         if (tz != null)
             return mTzMap.containsKey(tz.getID());
@@ -133,6 +132,7 @@ public class TimeZoneMap {
      */
     public static TimeZoneMap decodeFromMetadata(Metadata meta, ICalTimeZone localTZ) throws ServiceException {
         Map map = meta.asMap();
+        Map<String, String> aliasMap = new HashMap<String, String>();
         ICalTimeZone[] tzlist = new ICalTimeZone[map.size()];
         // first time, find the tz's
         for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
@@ -141,8 +141,21 @@ public class TimeZoneMap {
             if (key != null && key.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
                 if (key.charAt(0) == '#') {
                     int idx = Integer.parseInt(key.substring(1));
-                    ICalTimeZone tz = ICalTimeZone.decodeFromMetadata((Metadata) entry.getValue());
-                    tzlist[idx] = tz;
+                    Metadata tzMeta = (Metadata) entry.getValue();
+                    String tzidMeta = tzMeta.get(ICalTimeZone.FN_TZID, null);
+                    if (tzidMeta != null) {
+                        ICalTimeZone tz = ICalTimeZone.decodeFromMetadata(tzMeta);
+                        if (tz != null) {
+                            String tzid = tz.getID();
+                            if (!DebugConfig.disableCalendarTZMatchByID)
+                                tzid = TZIDMapper.canonicalize(tzid);
+                            if (!tzidMeta.equals(tzid)) {
+                                aliasMap.put(tzidMeta, tzid);
+                                tz = WellKnownTimeZones.getTimeZoneById(tzid);
+                            }
+                            tzlist[idx] = tz;
+                        }
+                    }
                 }
             }
         }
@@ -152,7 +165,6 @@ public class TimeZoneMap {
             if (tz != null)
                 tzmap.put(tz.getID(), tz);
         }
-        Map<String, String> aliasMap = new HashMap<String, String>();
         // second time, build the real map
         for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Entry) it.next();
@@ -234,6 +246,9 @@ public class TimeZoneMap {
         tzId = sanitizeTZID(tzId);
         if (tzId.equals(""))
             return null;
+
+        if (!DebugConfig.disableCalendarTZMatchByID)
+            tzId = TZIDMapper.canonicalize(tzId);
 
         ICalTimeZone zone = getTimeZone(tzId);
         if (zone == null) {
