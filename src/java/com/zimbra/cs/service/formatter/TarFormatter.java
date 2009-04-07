@@ -195,7 +195,7 @@ public class TarFormatter extends Formatter {
                     for (MailItem mi : context.respListItems)
                         tos = saveItem(context, mi, fldrs, cnts, names, false, tos);
                 } catch (Exception e) {
-                    ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
+                    warn(e);
                 }
             } else if (context.target != null && !(context.target instanceof
                 Folder)) {
@@ -203,7 +203,7 @@ public class TarFormatter extends Formatter {
                     tos = saveItem(context, context.target, fldrs, cnts, names,
                         false, tos);
                 } catch (Exception e) {
-                    ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
+                    warn(e);
                 }
             } else {
                 ZimbraQueryResults results = null;
@@ -250,7 +250,7 @@ public class TarFormatter extends Formatter {
                                 false, tos);
                     }
                 } catch (Exception e) {
-                    ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
+                    warn(e);
                 } finally {
                     if (results != null)
                         results.doneWithSearchResults();
@@ -746,6 +746,13 @@ public class TarFormatter extends Formatter {
     }
 
     private String string(String s) { return s == null ? new String() : s; }
+
+    private void warn(Exception e) {
+        if (e.getCause() == null)
+            ZimbraLog.misc.warn("TarFormatter warning: %s", e);
+        else
+            ZimbraLog.misc.warn("TarFormatter warning: %s: %s", e, e.getCause().toString());
+    }
 
     private void addItem(Context context, Folder fldr,
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
