@@ -1,0 +1,129 @@
+Mountpoints collection objects where the content of the Mountpoints are located
+in another collection, in most cases in another mailbox.  Mountpoints are
+identified with <Y:mountpoint/> in resourcetype property.
+
+Also the following WebDAV attributes are set on the Mountpoint objects.
+
+mountpoint-target-privilege-set
+  - stores the ACL for the current user
+  
+mountpoint-target-URL
+  - contains the URL to the target collection that owns the content of the 
+    mountpoint
+
+The new attributes mountpoint, mountpoint-target-privilege-set and 
+mountpoint-target-URL are declared in Yahoo namespace "http://yahoo.com/ns/".
+
+Example WebDAV requests and responses:
+
+PROPFIND /dav/Jong/ HTTP/1.1
+Depth: 1
+Content-Type: application/xml; charset="utf-8"
+Content-Length: nnn
+
+<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:" xmlns:Y="http://yahoo.com/ns/">
+  <D:prop>
+    <D:resourcetype/>
+    <D:current-user-privilege-set/>
+    <Y:mountpoint-target-privilege-set/>
+    <Y:mountpoint-target-URL/>
+  </D:prop>
+</D:propfind>
+
+
+HTTP/1.1 207 Multi-Status
+Content-Type: text/xml; charset="utf-8"
+Content-Length: xxx
+
+<?xml version="1.0" encoding="utf-8" ?>
+<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" 
+               xmlns:Y="http://yahoo.com/ns/">
+  <D:response>
+    <D:href>/dav/Jong/Holidays/</D:href>
+    <D:propstat>
+      <D:prop>
+        <D:resourcetype>
+          <D:collection/>
+          <C:calendar/>
+          <Y:mountpoint/>
+        </D:resourcetype>
+        <D:current-user-privilege-set>
+          <D:privilege><D:read/></D:privilege>
+          <D:privilege><D:write-properties/></D:privilege>
+        </D:current-user-privilege-set>
+        <Y:mountpoint-target-privilege-set>
+          <D:privilege><D:read/></D:privilege>
+        </Y:mountpoint-target-privilege-set>
+        <Y:mountpoint-target-URL>
+          <D:href>/dav/HolidayCalendars/US/</D:href>
+        </Y:mountpoint-target-URL>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:response>
+  <D:response>
+    <D:href>/dav/Jong/FamilyCalendar/</D:href>
+    <D:propstat>
+      <D:prop>
+        <D:resourcetype>
+          <D:collection/>
+          <C:calendar/>
+          <Y:mountpoint/>
+        </D:resourcetype>
+        <D:current-user-privilege-set>
+          <D:privilege><D:read/></D:privilege>
+          <D:privilege><D:write-properties/></D:privilege>
+        </D:current-user-privilege-set>
+        <Y:mountpoint-target-privilege-set>
+          <D:privilege><D:read/></D:privilege>
+          <D:privilege><D:write-content/></D:privilege>
+        </Y:mountpoint-target-privilege-set>
+        <Y:mountpoint-target-URL>
+          <D:href>/dav/GroupCalendars/JongLee/</D:href>
+        </Y:mountpoint-target-URL>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:response>
+</D:multistatus>
+
+
+Alternatively the client can request the ACL for the current principal directly
+from the shared calendar.
+
+PROPFIND /dav/HolidayCalendars/US/ HTTP/1.1
+Depth: 0
+Content-Type: application/xml; charset="utf-8"
+Content-Length: nnn
+
+<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:">
+  <D:prop>
+    <D:resourcetype/>
+    <D:current-user-privilege-set/>
+  </D:prop>
+</D:propfind>
+
+HTTP/1.1 207 Multi-Status
+Content-Type: text/xml; charset="utf-8"
+Content-Length: xxx
+
+<?xml version="1.0" encoding="utf-8" ?>
+<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:response>
+    <D:href>/dav/HolidaysCalendars/US/</D:href>
+    <D:propstat>
+      <D:prop>
+        <D:resourcetype>
+          <D:collection/>
+          <C:calendar/>
+        </D:resourcetype>
+        <D:current-user-privilege-set>
+          <D:privilege><D:read/></D:privilege>
+        </D:current-user-privilege-set>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:response>
+</D:multistatus>

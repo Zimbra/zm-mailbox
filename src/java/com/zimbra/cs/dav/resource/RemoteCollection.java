@@ -23,29 +23,39 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.Acl;
+import com.zimbra.cs.dav.property.ResourceProperty;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class RemoteCollection extends Collection {
 
-    private String mRemoteId;
-    private int mItemId;
+    private String mRemoteOwnerId;
+    private int mRemoteId;
     private ArrayList<DavResource> mChildren;
+    private String mCtag;
     
     public RemoteCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
-        mRemoteId = mp.getOwnerId();
-        mItemId = mp.getRemoteId();
+        mRemoteOwnerId = mp.getOwnerId();
+        mRemoteId = mp.getRemoteId();
+		addResourceType(DavElements.E_MOUNTPOINT);
+		getMountpointTarget(ctxt);
+		setProperty(DavElements.E_GETCTAG, mCtag);
     }
 
     @Override
@@ -97,5 +107,34 @@ public class RemoteCollection extends Collection {
     @Override
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
         throw new DavException("can't create resource", HttpServletResponse.SC_FORBIDDEN);
+    }
+    static ZMailbox getRemoteMailbox(ZAuthToken zat, String ownerId) throws ServiceException {
+        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, ownerId);
+        if (target == null)
+        	return null;
+        ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
+        zoptions.setNoSession(true);
+        zoptions.setTargetAccount(ownerId);
+        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+        return ZMailbox.getMailbox(zoptions);
+    }
+    private void getMountpointTarget(DavContext ctxt) {
+        try {
+            ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+            ZMailbox zmbx = getRemoteMailbox(zat, mRemoteOwnerId);
+            ZFolder folder = zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
+            if (folder == null)
+            	return;
+            mCtag = "" + folder.getImapMODSEQ();
+            short rights = ACL.stringToRights(folder.getEffectivePerms());
+            addProperty(Acl.getCurrentUserPrivilegeSet(rights));
+            addProperty(Acl.getMountpointTargetPrivilegeSet(rights));
+            String targetUrl = UrlNamespace.getResourceUrl(Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId), folder.getPath() + "/");
+            ResourceProperty mp = new ResourceProperty(DavElements.E_MOUNTPOINT_TARGET_URL);
+            mp.addChild(DavElements.E_HREF).setText(targetUrl);
+            addProperty(mp);
+        } catch (Exception e) {
+        	ZimbraLog.dav.warn("can't get mountpoint target", e);
+        }
     }
 }

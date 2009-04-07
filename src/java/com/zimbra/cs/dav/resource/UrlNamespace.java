@@ -230,6 +230,10 @@ public class UrlNamespace {
     	return getAbsoluteUrl(acct, PRINCIPALS_PATH);
     }
     
+    public static String getResourceUrl(Account user, String path) throws ServiceException {
+    	return getAbsoluteUrl(user, DavServlet.DAV_PATH + "/" + user.getName() + path);
+    }
+    
     private static String getAbsoluteUrl(Account user, String path) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Domain domain = null;

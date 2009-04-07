@@ -20,17 +20,17 @@ import org.dom4j.QName;
 public class DavElements {
 	public static final String WEBDAV_NS_STRING = "DAV:";
 	public static final String CALDAV_NS_STRING = "urn:ietf:params:xml:ns:caldav";
-	public static final String ZIMBRA_NS_STRING = "urn:ietf:params:xml:ns:zimbra";
 	public static final String XML_NS_STRING = "xml:";
 	public static final String APPLE_NS_STRING = "http://apple.com/ns/ical/";
 	public static final String CS_NS_STRING = "http://calendarserver.org/ns/";
+	public static final String YAHOO_NS_STRING = "http://yahoo.com/ns/";
 	
 	public static final Namespace WEBDAV_NS = Namespace.get("D", WEBDAV_NS_STRING);
 	public static final Namespace CALDAV_NS = Namespace.get("C", CALDAV_NS_STRING);
-	public static final Namespace ZIMBRA_NS = Namespace.get("Z", ZIMBRA_NS_STRING);
 	public static final Namespace XML_NS = Namespace.get("X", XML_NS_STRING);
 	public static final Namespace APPLE_NS = Namespace.get("A", APPLE_NS_STRING);
 	public static final Namespace CS_NS = Namespace.get("CS", CS_NS_STRING);
+	public static final Namespace YAHOO_NS = Namespace.get("Y", YAHOO_NS_STRING);
 
 	// general
 	public static final String LANG_EN_US = "en-us";
@@ -126,6 +126,9 @@ public class DavElements {
 	public static final String P_MAX_INSTANCES = "max-instances";
 	public static final String P_MAX_RESOURCE_SIZE = "max-resource-size";
 	public static final String P_MIN_DATE_TIME = "min-date-time";
+	public static final String P_MOUNTPOINT = "mountpoint";
+	public static final String P_MOUNTPOINT_TARGET_PRIVILEGE_SET = "mountpoint-target-privilege-set";
+	public static final String P_MOUNTPOINT_TARGET_URL = "mountpoint-target-URL";
 	public static final String P_MKCALENDAR = "mkcalendar";
 	public static final String P_MULTISTATUS = "multistatus";
 	
@@ -284,6 +287,9 @@ public class DavElements {
 	public static final QName E_LOCKTYPE = QName.get(P_LOCKTYPE, WEBDAV_NS);
 	
 	public static final QName E_MATCH = QName.get(P_MATCH, WEBDAV_NS);
+	public static final QName E_MOUNTPOINT = QName.get(P_MOUNTPOINT, YAHOO_NS);
+	public static final QName E_MOUNTPOINT_TARGET_PRIVILEGE_SET = QName.get(P_MOUNTPOINT_TARGET_PRIVILEGE_SET, YAHOO_NS);
+	public static final QName E_MOUNTPOINT_TARGET_URL = QName.get(P_MOUNTPOINT_TARGET_URL, YAHOO_NS);
 	public static final QName E_MULTISTATUS = QName.get(P_MULTISTATUS, WEBDAV_NS);
 	
 	public static final QName E_NEED_PRIVILEGES = QName.get(P_NEED_PRIVILEGES, WEBDAV_NS);

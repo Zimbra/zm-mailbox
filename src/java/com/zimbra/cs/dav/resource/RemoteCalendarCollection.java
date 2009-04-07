@@ -40,6 +40,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.client.CalDavClient;
 import com.zimbra.cs.dav.property.Acl;
+import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
@@ -73,6 +74,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		if (target != null && Provisioning.onLocalServer(target))
 			mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
 
+		addResourceType(DavElements.E_MOUNTPOINT);
 		getMountpointTarget(ctxt);
 		setProperty(DavElements.E_GETCTAG, mCtag);
     }
@@ -122,7 +124,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
         if (target == null)
             return;
-        ZMailbox zmbx = getRemoteMailbox(authToken.toZAuthToken());
+        ZMailbox zmbx = RemoteCollection.getRemoteMailbox(authToken.toZAuthToken(), mRemoteOwnerId);
         ZFolder f = zmbx.getFolderById(new ItemId(mRemoteOwnerId, mRemoteId).toString());
         String path = f.getPath();
         String url = DavServlet.getDavUrl(target.getName());
@@ -206,7 +208,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
             if (target == null)
                 throw new DavException("can't create resource", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            ZMailbox zmbx = getRemoteMailbox(authToken.toZAuthToken());
+            ZMailbox zmbx = RemoteCollection.getRemoteMailbox(authToken.toZAuthToken(), mRemoteOwnerId);
             ZFolder f = zmbx.getFolderById(new ItemId(mRemoteOwnerId, mRemoteId).toString());
             
             @SuppressWarnings("unchecked")
@@ -248,7 +250,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
         try {
             ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-            ZMailbox zmbx = getRemoteMailbox(zat);
+            ZMailbox zmbx = RemoteCollection.getRemoteMailbox(zat, mRemoteOwnerId);
             zmbx.deleteItem(Integer.toString(id), null);
         } catch (AuthProviderException e) {
             throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
@@ -267,27 +269,21 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		return super.getMailbox(ctxt);
 	}
 	
-    private ZMailbox getRemoteMailbox(ZAuthToken zat) throws ServiceException {
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
-        if (target == null)
-        	return null;
-        ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
-        zoptions.setNoSession(true);
-        zoptions.setTargetAccount(mRemoteOwnerId);
-        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
-    }
-    
     private void getMountpointTarget(DavContext ctxt) {
         try {
             ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-            ZMailbox zmbx = getRemoteMailbox(zat);
+            ZMailbox zmbx = RemoteCollection.getRemoteMailbox(zat, mRemoteOwnerId);
             ZFolder folder = zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
             if (folder == null)
             	return;
             mCtag = "" + folder.getImapMODSEQ();
-            String rights = folder.getEffectivePerms();
-            addProperty(Acl.getCurrentUserPrivilegeSet(ACL.stringToRights(rights)));
+            short rights = ACL.stringToRights(folder.getEffectivePerms());
+            addProperty(Acl.getCurrentUserPrivilegeSet(rights));
+            addProperty(Acl.getMountpointTargetPrivilegeSet(rights));
+            String targetUrl = UrlNamespace.getResourceUrl(Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId), folder.getPath() + "/");
+            ResourceProperty mp = new ResourceProperty(DavElements.E_MOUNTPOINT_TARGET_URL);
+            mp.addChild(DavElements.E_HREF).setText(targetUrl);
+            addProperty(mp);
         } catch (Exception e) {
         	ZimbraLog.dav.warn("can't get mountpoint target", e);
         }

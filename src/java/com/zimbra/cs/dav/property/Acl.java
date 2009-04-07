@@ -96,6 +96,10 @@ public class Acl extends ResourceProperty {
 		return new CurrentUserPrivilegeSet(rights);
 	}
 	
+	public static ResourceProperty getMountpointTargetPrivilegeSet(short rights) {
+		return new MountpointTargetPrivilegeSet(rights);
+	}
+	
 	public static ResourceProperty getAclRestrictions() {
 		return new AclRestrictions();
 	}
@@ -321,6 +325,23 @@ public class Acl extends ResourceProperty {
 			}
 			
 			return cups;
+		}
+	}
+	
+	private static class MountpointTargetPrivilegeSet extends Acl {
+		private short mRights;
+		public MountpointTargetPrivilegeSet(short rights) {
+			super(DavElements.E_MOUNTPOINT_TARGET_PRIVILEGE_SET, null, null);
+			mRights = rights;
+		}
+
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			Element mtps = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return mtps;
+
+			addPrivileges(mtps, mRights);
+			return mtps;
 		}
 	}
 	
