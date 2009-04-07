@@ -175,7 +175,9 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
 
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-		ParsedMessage pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
+        ParsedMessage pm = null;
+        if (mData != null && mData.length > 0)
+            pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
 		mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm,
 		               mPreserveExistingAlarms, mDiscardExistingInvites, mAddRevision);
     }
