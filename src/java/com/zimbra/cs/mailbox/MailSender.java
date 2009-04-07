@@ -392,7 +392,8 @@ public class MailSender {
     private void logMessage(MimeMessage mm, ItemId origMsgId, List<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
-            StringBuilder msg = new StringBuilder("Sending message: ");
+            StringBuilder msg = new StringBuilder("Sending message to MTA at ")
+                .append(getSmtpHost(mm)).append(", port ").append(getSmtpPort(mm)).append(": ");
             try {
                 msg.append("Message-ID=" + mm.getMessageID());
             } catch (MessagingException e) {
@@ -406,6 +407,22 @@ public class MailSender {
                 msg.append(", replyType=" + replyType);
             ZimbraLog.smtp.info(msg);
         }
+    }
+    
+    private String getSmtpHost(MimeMessage mm) {
+        String host = "<unknown>";
+        if (mm instanceof FixedMimeMessage) {
+            host = ((FixedMimeMessage) mm).getSession().getProperty("mail.smtp.host");
+        }
+        return host;
+    }
+    
+    private String getSmtpPort(MimeMessage mm) {
+        String port = "<unknown>";
+        if (mm instanceof FixedMimeMessage) {
+            port = ((FixedMimeMessage) mm).getSession().getProperty("mail.smtp.port");
+        }
+        return port;
     }
 
     public static final String X_ORIGINATING_IP = "X-Originating-IP";
