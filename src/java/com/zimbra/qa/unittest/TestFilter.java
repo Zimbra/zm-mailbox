@@ -476,6 +476,10 @@ extends TestCase {
         doBodyContainsTest("text version of the attached message body", true);
         doBodyContainsTest("HTML version the attached message body", true);
         doBodyContainsTest("body of a plain attached message", true);
+        
+        // Make sure test is case-insensitive (bug 36905).
+        doBodyContainsTest("TeXt VeRsIoN", true);
+        doBodyContainsTest("hTmL vErSiOn", true);
     }
     
     private void doBodyContainsTest(String substring, boolean contains)

@@ -127,7 +127,8 @@ public class BodyTest extends AbstractTest {
                     InputStream in = null;
                     try {
                         in = mpi.getMimePart().getInputStream();
-                        if (contains(new BufferedReader(new InputStreamReader(in, charset)), substring)) {
+                        Reader reader = (charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset));
+                        if (contains(new BufferedReader(reader), substring)) {
                             return true;
                         }
                     } catch (Exception e) {
@@ -148,6 +149,8 @@ public class BodyTest extends AbstractTest {
                         }
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to test HTML body for substring '%s'", substring, e);
+                    } finally {
+                        ByteUtil.closeStream(in);
                     }
                 }
             }
@@ -159,7 +162,9 @@ public class BodyTest extends AbstractTest {
     throws IOException {
         String line = null;
         int matchIndex = 0;
+        substring = substring.toLowerCase(); // Do case-insensitive matching, like we do with headers.
         while ((line = reader.readLine()) != null) {
+            line = line.toLowerCase();
             for (int i = 0; i < line.length(); i++) {
                 if (matchIndex == substring.length()) {
                     return true;
