@@ -194,6 +194,7 @@ public class ContactAutoComplete {
 	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
 		ZimbraLog.gal.debug("querying "+str);
+		long t0 = System.currentTimeMillis();
 		AutoCompleteResult result = new AutoCompleteResult(limit);
 		if (limit <= 0)
 			return result;
@@ -202,14 +203,19 @@ public class ContactAutoComplete {
 			queryRankingTable(str, folders, limit, result);
 		if (result.entries.size() >= limit)
 			return result;
+		long t1 = System.currentTimeMillis();
 		
 		// search other folders
 		if (mIncludeGal)
 			queryGal(str, limit, result);
 		if (result.entries.size() >= limit)
 			return result;
+		long t2 = System.currentTimeMillis();
 		
 		queryFolders(str, folders, limit, result);
+		long t3 = System.currentTimeMillis();
+		
+		ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, gal="+(t2-t1)+"ms, folder="+(t3-t2)+"ms");
 		return result;
 	}
 	
