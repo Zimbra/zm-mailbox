@@ -23,7 +23,8 @@
 <right name="setDomainAdminAccountAndCalendarResourceAttrs" type="setAttrs" targetType="account,calresource">
   <desc>account and calendar resource attrs modifiable by domain admins for domain based access manager</desc>
   <attrs>
-    <a n="zimbraCOSId"/>    
+    <a n="zimbraCOSId"/>
+    <a n="zimbraIsDelegatedAdminAccount"/>
 ${ACCOUNT_AND_CALENDAR_RESOURCE_ATTRS}
   </attrs>
 </right>
