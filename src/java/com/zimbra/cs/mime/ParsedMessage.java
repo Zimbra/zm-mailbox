@@ -1000,7 +1000,7 @@ public class ParsedMessage {
         }
 
         String from = getSender();
-        String subject = getNormalizedSubject();
+        String subject = getSubject();
         String sortFrom = getParsedSender().getSortString();
         if (sortFrom == null)
             sortFrom = "";
