@@ -261,7 +261,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         }
     }
     
-    protected int getId() {
+    public int getId() {
     	return mRemoteId;
     }
     
