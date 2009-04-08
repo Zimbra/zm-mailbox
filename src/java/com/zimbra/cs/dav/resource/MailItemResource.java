@@ -208,7 +208,7 @@ public abstract class MailItemResource extends DavResource {
 		}
 	}
 	
-	protected int getId() {
+	public int getId() {
 		return mId;
 	}
 	
@@ -259,7 +259,7 @@ public abstract class MailItemResource extends DavResource {
 					UrlNamespace.addToRenamedResource(uri, this);
 					UrlNamespace.addToRenamedResource(uri.substring(0, uri.length()-1), this);
 				} catch (ServiceException se) {
-					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, se);
+					ctxt.getResponseProp().addPropError(DavElements.E_DISPLAYNAME, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
 				}
 				mDeadProps.remove(name);
 				continue;
@@ -273,7 +273,7 @@ public abstract class MailItemResource extends DavResource {
 					Mailbox mbox = getMailbox(ctxt);
 					mbox.setColor(ctxt.getOperationContext(), mId, mType, col);
 				} catch (ServiceException se) {
-					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, se);
+					ctxt.getResponseProp().addPropError(DavElements.E_CALENDAR_COLOR, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
 				}
 				mDeadProps.remove(name);
 				continue;
@@ -294,7 +294,8 @@ public abstract class MailItemResource extends DavResource {
 			configVal = new String(out.toByteArray(), "UTF-8");
 			
 			if (configVal.length() > PROP_LENGTH_LIMIT)
-				throw new DavException("unable to patch properties", DavProtocol.STATUS_INSUFFICIENT_STORAGE, null);
+				for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
+					ctxt.getResponseProp().addPropError(entry.getKey(), new DavException("prop length exceeded", DavProtocol.STATUS_INSUFFICIENT_STORAGE));
 		}
 		try {
 			Mailbox mbox = getMailbox(ctxt);

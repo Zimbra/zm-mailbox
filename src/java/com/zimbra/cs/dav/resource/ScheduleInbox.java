@@ -110,8 +110,10 @@ public class ScheduleInbox extends CalendarCollection {
 					urls.add(((Element)hrefs.next()).getText());
 				try {
 					updateCalendarFreeBusySet(ctxt, urls);
-				} catch (Exception e) {
-					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, e);
+				} catch (ServiceException e) {
+					ctxt.getResponseProp().addPropError(DavElements.E_CALENDAR_FREE_BUSY_SET, new DavException("error", DavProtocol.STATUS_FAILED_DEPENDENCY));
+				} catch (DavException e) {
+					ctxt.getResponseProp().addPropError(DavElements.E_CALENDAR_FREE_BUSY_SET, e);
 				}
 				if (newSet == null) {
 					newSet = new ArrayList<Element>(set);
@@ -137,8 +139,13 @@ public class ScheduleInbox extends CalendarCollection {
 			if (path.endsWith("/"))
 				path = path.substring(0, path.length()-1);
 			Folder f = folders.remove(path);
-			if (f == null)
-				throw new DavException("folder not found "+url, DavProtocol.STATUS_FAILED_DEPENDENCY);
+			if (f == null) {
+				// check for recently renamed folders
+				DavResource rs = UrlNamespace.checkRenamedResource(path);
+				if (rs == null || !rs.isCollection())
+					throw new DavException("folder not found "+url, DavProtocol.STATUS_FAILED_DEPENDENCY);
+				f = mbox.getFolderById(ctxt.getOperationContext(), ((MailItemResource)rs).getId());
+			}
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) == 0)
                 continue;
 			ZimbraLog.dav.debug("clearing EXCLUDE_FREEBUSY for "+path);

@@ -88,6 +88,7 @@ public class DavContext {
 	private DavResource mRequestedResource;
     private RequestType mRequestType;
     private String mCollectionPath;
+    private RequestProp mResponseProp;
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
@@ -98,17 +99,16 @@ public class DavContext {
 		Collection<QName> props;
 		HashMap<QName, DavException> errProps;
 
-		public RequestProp() {
+		public RequestProp(boolean no) {
 			props = new ArrayList<QName>();
 			errProps = new HashMap<QName, DavException>();
-			nameOnly = false;
+			nameOnly = no;
 			allProp = true;
 		}
 		
 		public RequestProp(Element top) {
-			this();
+			this(false);
 			
-			nameOnly = false;
 			allProp = false;
 			for (Object obj : top.elements()) {
 				if (!(obj instanceof Element))
@@ -129,7 +129,7 @@ public class DavContext {
 		}
 		
 		public RequestProp(Collection<Element> set, Collection<QName> remove) {
-			this();
+			this(false);
 			allProp = false;
 			for (Element e : set)
 				props.add(e.getQName());
@@ -151,7 +151,8 @@ public class DavContext {
 		}
 		public void addPropError(QName prop, DavException ex) {
 			allProp = false;
-			props.add(prop);
+			if (!props.contains(prop))
+				props.add(prop);
 			errProps.put(prop, ex);
 		}
 		public Map<QName, DavException> getErrProps() {
@@ -166,10 +167,18 @@ public class DavContext {
 		return sEmptyProp;
 	}
 	
+	public RequestProp getResponseProp() {
+		return mResponseProp;
+	}
+	
+	public void setResponseProp(RequestProp props) {
+		mResponseProp = props;
+	}
+	
 	protected static RequestProp sEmptyProp;
 	
 	static {
-		sEmptyProp = new RequestProp();
+		sEmptyProp = new RequestProp(false);
 	}
 	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp, Account authUser) {

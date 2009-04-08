@@ -49,16 +49,17 @@ public class PropPatch extends DavMethod {
 		if (!top.getName().equals(DavElements.P_PROPERTYUPDATE))
 			throw new DavException("msg "+top.getName()+" not allowed in PROPPATCH", HttpServletResponse.SC_BAD_REQUEST, null);
 		DavResource resource = ctxt.getRequestedResource();
-		RequestProp rp = handlePropertyUpdate(ctxt, top, resource);
+		handlePropertyUpdate(ctxt, top, resource);
 		DavResponse resp = ctxt.getDavResponse();
 		
-		resp.addResource(ctxt, resource, rp, false);
+		resp.addResource(ctxt, resource, ctxt.getResponseProp(), false);
 		sendResponse(ctxt);
 	}
-	public static RequestProp handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource) throws DavException, IOException {
+	public static void handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource) throws DavException, IOException {
 		HashSet<Element> set = new HashSet<Element>();
 		HashSet<QName> remove = new HashSet<QName>();
-		RequestProp rp = new RequestProp();
+		RequestProp rp = new RequestProp(true);
+		ctxt.setResponseProp(rp);
 		for (Object obj : top.elements()) {
 			if (!(obj instanceof Element))
 				continue;
@@ -87,6 +88,5 @@ public class PropPatch extends DavMethod {
 		}
 		
 		resource.patchProperties(ctxt, set, remove);
-		return rp;
 	}
 }

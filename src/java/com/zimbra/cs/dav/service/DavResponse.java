@@ -147,7 +147,7 @@ public class DavResponse {
 				DavException ex = errPropMap.get(name);
 				Element propstat = findPropstat(resp, propstatMap, ex.getStatus());
 				propstat.element(DavElements.E_PROP).addElement(name);
-				propstat.addElement(DavElements.E_RESPONSEDESCRIPTION).add(ex.getErrorMessage());
+				propstat.addElement(DavElements.E_RESPONSEDESCRIPTION).setText(ex.getMessage());
 			} else if (prop == null) {
 				findProp(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
 			} else {
@@ -185,7 +185,7 @@ public class DavResponse {
 		}
 		return propStat;
 	}
-
+	
 	/* Writes response XML Document to OutputStream. */
 	public void writeTo(OutputStream out) throws IOException {
 		if (ZimbraLog.dav.isDebugEnabled())
