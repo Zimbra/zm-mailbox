@@ -51,11 +51,8 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    /**
-     * treat domain admins equally
-     */
     public boolean isGeneralAdmin(AuthToken at) {
-        return at.isAdmin() || at.isDomainAdmin() || at.isSystemAdmin();
+        return at.isAdmin() || at.isDelegatedAdmin();
     }
     
     @Override
@@ -528,7 +525,12 @@ public class ACLAccessManager extends AccessManager {
      * @throws ServiceException
      */
     private boolean alwaysAllow(Account authedAcct, boolean asAdmin, Entry target) throws ServiceException {
-        return RightChecker.isSystemAdmin(authedAcct, asAdmin);
+        if (RightChecker.isSystemAdmin(authedAcct, asAdmin))
+            return true;
+        else if (!RightChecker.isDelegatedAdmin(authedAcct, asAdmin))
+            throw ServiceException.PERM_DENIED("not an eligible admin account");
+        else
+            return false;
     }
     
     // ================

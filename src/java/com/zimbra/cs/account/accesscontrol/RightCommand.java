@@ -598,7 +598,8 @@ public class RightCommand {
                 boolean isCDARight = CrossDomain.validateCrossDomainAdminGrant(right, granteeType);
                 if (!isCDARight &&
                     !RightChecker.isValidGranteeForAdminRights(granteeType, granteeEntry))
-                    throw ServiceException.INVALID_REQUEST("grantee must be an admin account or group", null);
+                    throw ServiceException.INVALID_REQUEST("grantee must be a delegated admin account or admin group, " +
+                            "it cannot be a global admin account.", null);
             }
         }
         

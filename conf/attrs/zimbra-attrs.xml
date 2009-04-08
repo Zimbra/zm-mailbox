@@ -4018,10 +4018,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>favicon for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="801" name="zimbraIsSystemAdminAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="6.0.0_BETA1">
-  <desc>set to true for system admin accounts</desc>
-</attr>
-
 <attr id="802" name="zimbraIsAdminGroup" type="boolean" cardinality="single" optionalIn="distributionList" since="6.0.0_BETA1" callback="AdminGroup">
   <desc>set to true for admin groups</desc>
 </attr>
@@ -4318,6 +4314,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="851" name="zimbraPrefCalendarForwardInvitesTo" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" since="6.0.0_BETA1">
   <desc>Forward a copy of calendar invites received to these users.</desc>
+</attr>
+
+<attr id="852" name="zimbraIsDelegatedAdminAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="6.0.0_BETA1">
+  <desc>set to true for delegated admin accounts</desc>
 </attr>
 
 <!-- 

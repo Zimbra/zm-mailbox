@@ -1217,7 +1217,6 @@
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Administrator' displayName 'Administrator' \
             zimbraIsAdminAccount TRUE \
-            zimbraIsSystemAdminAccount TRUE \
             zimbraAdminConsoleUIComponents cartBlancheUI \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
@@ -1229,13 +1228,6 @@
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             telephoneNumber '+1 650 555 0000'   
-        	ca sysadmin@${defaultdomain.name} test123 \
-            zimbraMailHost ${zimbra.server.hostname} \
-        	cn 'System Administrator' displayName 'System Administrator' \
-        	zimbraIsSystemAdminAccount TRUE \
-        	zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-        	zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-        	telephoneNumber '+1 650 555 0000'   
             ca user1@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Demo User One' \

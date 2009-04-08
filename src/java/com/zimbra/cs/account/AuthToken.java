@@ -62,7 +62,7 @@ public abstract class AuthToken {
 
     public abstract boolean isDomainAdmin();
     
-    public boolean isSystemAdmin() {
+    public boolean isDelegatedAdmin() {
         return false;
     }
     

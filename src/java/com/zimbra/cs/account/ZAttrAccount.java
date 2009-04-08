@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090406-1516 */
+    /* build: 5.0 pshao 20090407-2303 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -12155,6 +12155,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * set to true for delegated admin accounts
+     *
+     * @return zimbraIsDelegatedAdminAccount, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=852)
+    public boolean isIsDelegatedAdminAccount() {
+        return getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
+    }
+
+    /**
+     * set to true for delegated admin accounts
+     *
+     * @param zimbraIsDelegatedAdminAccount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=852)
+    public void setIsDelegatedAdminAccount(boolean zimbraIsDelegatedAdminAccount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, zimbraIsDelegatedAdminAccount ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set to true for delegated admin accounts
+     *
+     * @param zimbraIsDelegatedAdminAccount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=852)
+    public Map<String,Object> setIsDelegatedAdminAccount(boolean zimbraIsDelegatedAdminAccount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, zimbraIsDelegatedAdminAccount ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * set to true for delegated admin accounts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=852)
+    public void unsetIsDelegatedAdminAccount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set to true for delegated admin accounts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=852)
+    public Map<String,Object> unsetIsDelegatedAdminAccount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, "");
+        return attrs;
+    }
+
+    /**
      * set to true for domain admin accounts
      *
      * @return zimbraIsDomainAdminAccount, or false if unset
@@ -12213,78 +12285,6 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetIsDomainAdminAccount(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, "");
-        return attrs;
-    }
-
-    /**
-     * set to true for system admin accounts
-     *
-     * @return zimbraIsSystemAdminAccount, or false if unset
-     *
-     * @since ZCS 6.0.0_BETA1
-     */
-    @ZAttr(id=801)
-    public boolean isIsSystemAdminAccount() {
-        return getBooleanAttr(Provisioning.A_zimbraIsSystemAdminAccount, false);
-    }
-
-    /**
-     * set to true for system admin accounts
-     *
-     * @param zimbraIsSystemAdminAccount new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA1
-     */
-    @ZAttr(id=801)
-    public void setIsSystemAdminAccount(boolean zimbraIsSystemAdminAccount) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsSystemAdminAccount, zimbraIsSystemAdminAccount ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * set to true for system admin accounts
-     *
-     * @param zimbraIsSystemAdminAccount new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA1
-     */
-    @ZAttr(id=801)
-    public Map<String,Object> setIsSystemAdminAccount(boolean zimbraIsSystemAdminAccount, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsSystemAdminAccount, zimbraIsSystemAdminAccount ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * set to true for system admin accounts
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA1
-     */
-    @ZAttr(id=801)
-    public void unsetIsSystemAdminAccount() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsSystemAdminAccount, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * set to true for system admin accounts
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA1
-     */
-    @ZAttr(id=801)
-    public Map<String,Object> unsetIsSystemAdminAccount(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsSystemAdminAccount, "");
         return attrs;
     }
 

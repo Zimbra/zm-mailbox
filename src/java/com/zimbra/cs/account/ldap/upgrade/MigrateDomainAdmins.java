@@ -113,7 +113,7 @@ public class MigrateDomainAdmins extends LdapUpgrade {
                                              Provisioning.A_zimbraId,
                                              Provisioning.A_zimbraIsAdminAccount,
                                              Provisioning.A_zimbraIsDomainAdminAccount,
-                                             Provisioning.A_zimbraIsSystemAdminAccount};
+                                             Provisioning.A_zimbraIsDelegatedAdminAccount};
         
         String base = dit.mailBranchBaseDN();
         String query = "(&(objectclass=zimbraAccount)(zimbraIsDomainAdminAccount=TRUE))";
@@ -167,17 +167,23 @@ public class MigrateDomainAdmins extends LdapUpgrade {
     String getZimbraIdIfDomainOnlyAdmin(Attributes attrs) throws NamingException {
         String isAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
         String isDomainAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDomainAdminAccount);
-        String isSystemAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsSystemAdminAccount);
+        String isDelegatedAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDelegatedAdminAccount);
         
         if (LdapUtil.LDAP_TRUE.equals(isDomainAdmin) &&
-            !LdapUtil.LDAP_TRUE.equals(isAdmin) &&
-            !LdapUtil.LDAP_TRUE.equals(isSystemAdmin))
+            !LdapUtil.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
+            !LdapUtil.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
             return LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
         else
             return null;
     }
     
     private void grantRights(Domain domain, Account domainAdmin) throws ServiceException {
+        //
+        // turn it into a delegated admin
+        //
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
+        mProv.modifyAttrs(domainAdmin, attrs);
         
         //
         // domain rights

@@ -110,7 +110,7 @@ public abstract class TestACL extends TestCase {
             
             // create a system admin account
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraIsSystemAdminAccount, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
             String sysAdminEmail = getEmailAddr("sysadmin");
             mSysAdminAcct = mProv.createAccount(sysAdminEmail, PASSWORD, attrs);
                 

@@ -749,7 +749,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 4.1 Admin Accounts and Admin Groups
 
 4.1.1 System Admin Account
-      A "system admin account" is an account with the account attribute zimbraIsSystemAdminAccount set to TRUE.
+      A "system admin account" is an account with the account attribute zimbraIsAdminAccount set to TRUE.
 
       - A "system admin" is a "can do all" admin.  It is allowed for all admin SOAP commands, including 
         granting/revoking *any* right on *any* target to *any* admin/group.   
@@ -757,29 +757,34 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
       - When a right is checked, if the authed admin is a system admin, it is always allowed.  Server does *not* 
         check any ACL, whether positive or negative.  
       
-      - A system admin can create other system admins, by setting their zimbraIsSystemAdminAccount to TRUE.
+      - A system admin can create other system admins, by setting their zimbraIsAdminAccount to TRUE.
     
-      - Logically, a system admin should not received any grant(i.e. be the grantee of grants), because it is 
+      - A system admin should not received any grant(i.e. be the grantee of grants), because it is 
         already allowed for everything.  Granting to a system admin is considered an operational error.  
-        However, server does *not* enforce that a system admin cannot have any grants.  All grants to a 
-        system admin are simply ignored.
-      
-      - If a system admin with grants are "downgraded" to a regular admin, the grants will start take effects.
-        If a system admin with grants are "downgraded" to a regular non admin account, all grants will be ignored.
         
         
-4.1.2 (Regular) Admin Account and Admin Group
-      An "admin account" is an account with the account attribute zimbraIsAdminAccount set to TRUE.
+4.1.2 Delegated Admin Account and Admin Group
+      A "delegated admin account" is an account with the account attribute zimbraIsDelegatedAdminAccount set to TRUE.
       An "admin group" is a distribution list with the DL attribute zimbraIsAdminGroup set to TRUE.
       
-      - Only admin accounts and admin groups can be granted admin rights.
+      - Only delegated admin accounts and admin groups can be granted admin rights.
         (i.e. be the grantee of an admin grant.)
+        
+      - If a delegated admin is "promoted" to a system admin (setting zimbraIsAdminAccount to TRUE), all existing 
+        grants, including negative grants, will be *ignored*, and everythings will be allowed.  
+        Note: - server will not automatically set zimbraIsDelegatedAdminAccount to FALSE, nor will it 
+                enforce the admin to do so.  
+              - all grants will still be in tact, server will not automatically revoke all existing grants, 
+                nor will it enforce the admin to do so.
+              
+      - If a system admin is "demoted" to a delegated admin (setting zimbraIsAdminAccount to FALSE and 
+        zimbraIsDelegatedAdminAccount TO TRUE), if there are any existing grants, they will start to take effect.
         
       
 4.1.3 Grants Are Valid only When the Grantee's Admin Flag is On 
-      - When an account's zimbraIsAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
-        the admin account become invalid.  
-        When zimbraIsAdminAccount is changed from FALSE to TRUE, all existing grants automatically become 
+      - When an account's zimbraIsDelegatedAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
+        the delegated admin account become invalid.  
+        When zimbraIsDelegatedAdminAccount is changed from FALSE to TRUE, all existing grants automatically become 
         valid again.
 
       - When a group's zimbraIsAdminGroup is is changed from TRUE to FALSE, all existing grants to the admin 
@@ -965,7 +970,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
         </desc>
       </attr>
 
-- zimbraIsSystemAdminAccount
+- zimbraIsDelegatedAdminAccount
       see 4.
 
 - zimbraIsAdminGroup
@@ -1295,86 +1300,69 @@ the available UI components for the authed admin in admin console.
 ========================================
 
 10.1 Switch to the new Access Manager
-
-    Switching between the legacy domain based access manager and the new pure ACL based 
-    access manager is fully supported.  
-    
-    The two access managers check disjoint, non-conflicting bits of the authed account 
-    and target objects.  
+   
+    The new ACL based access manager and the legacy domain based access manager check disjoint, 
+    non-conflicting bits of the authed account and target objects.   This makes switching back 
+    and forth between the two access managers possible.  However keep in mind it is not an 
+    officially supported feature.  That is, after upgrading to GnR, the only officially supported 
+    permission checking scheme is the ACL based admin.
     
     The legacy domain based access manager looks at the authed account's zimbraIsAdminAccount 
     and zimbraIsDomainAdminAccount attributes.  It does *not* look at any ACL.
     
-    The new pure ACL based access manager looks at the authed account's zimbraIsAdminAccount, 
-    zimbraIsSystemAdminAccount, and for compatibility, the zimbraIsDomainAdminAccount.  If 
-    the authed account is zimbraIsAdminAccount or zimbraIsDomainAdminAccount, it checks ACLs 
-    granted to the account or any admin groups they are in.  If the authed account is 
-    zimbraIsSystemAdminAccount, it always allow it for any task, without checking any ACL.
+    The new pure ACL based access manager looks at the authed account's zimbraIsAdminAccount 
+    and zimbraIsDelegatedAdminAccount.  If zimbraIsAdminAccount is TRUE, everything is allowed, 
+    without checking any ACL.  Otherwise if zimbraIsDelegatedAdminAccount, it checks ACLs 
+    granted to the account or any admin groups it belongs.
     
     To use the legacy domain based access manager, do:
         zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.DomainACLAccessManager
     
-    To use the new pre ACL based access manager, do:
+    To use the new pure ACL based access manager, do:
         zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.ACLAccessManager
         
     then restart the server.
     
     *** Important note: the localconfig key has to be consistent across all servers, or else the 
-        behavior is unexpected.
-    
-    Currently ACLAccessManager(the new pure ACL based access manager) is the default on main build.  
-    For production, we can have the installer ask which access manager they want to use.
+        behavior is unexpected.  And again, only the pure ACL based access manager is officially 
+        supported.
     
 
 10.2 Migrating Current Admin Accounts
 
-10.2.1 For current admins (zimbraIsAdminAccount),
-      (A) If you want them to continue being the "can do all" admin, set the account attribute 
-          zimbraIsSystemAdminAccount to TRUE.
-          
-      (B) Otherwise, grant proper rights to them.
+10.2.1 For current global admins (zimbraIsAdminAccount),
+       Nothing needs to be done.  The zimbraIsAdminAccount attribute will continue to allow  
+       them to do anything.  
 
 10.2.2 For current domain admins (zimbraIsDomainAdminAccount),
-      (A) If you want them to continue doing what they used to be able to do with the domain 
-          based access manager, grant them the following combo rights:
-          - On their domain: domainAdminRights
-            e.g. 
+       (1) set zimbraIsDelegatedAdminAccount to TRUE
+       
+       (2) Grant the following rights to them.  These rights will give them exactly the 
+           same(no more no less) privilege they had in FRANKLIN.
+           
+           - On their domain: domainAdminRights
+             e.g. 
                 zmprov grr domain test.com usr domainadmin@test.com domainAdminRights
                 or use the admin console
           
-          - On COS's they used be able to see: domainAdminCosRights 
-            The domainAdminCosRights combo right contains rights allowing them to:
-            - see COS's visible to them in GetAllDomains
-            - do GetCos on COS's visible to them.
-            e.g.
+           - On COS's they used be able to see: domainAdminCosRights 
+             The domainAdminCosRights combo right contains rights allowing them to:
+             - see COS's visible to them in GetAllDomains
+             - do GetCos on COS's visible to them.
+             e.g.
                 zmprov grr cos cos1 usr domainadmin@test.com domainAdminCosRights
                 zmprov grr cos cos2 usr domainadmin@test.com domainAdminCosRights
                 or use the admin console
              
-          - On global grant: domainAdminZimletRights
-            The domainAdminZimletRights combo right contains rights allowing them to:
-            - see all zimlets in GetAllZimlets
-            - do GetZimlet on any zimlet.
-            e.g.
+           - On global grant: domainAdminZimletRights
+             The domainAdminZimletRights combo right contains rights allowing them to:
+             - see all zimlets in GetAllZimlets
+             - do GetZimlet on any zimlet.
+             e.g.
                 zmprov grr global usr domainadmin@test.com domainAdminZimletRights
-        
-      (B) Otherwise, grant proper rights to them.
 
-      Note: Do *not* set the zimbraIsAdminAccount on old domain admins, this is so we 
-            can go back and forth between the two access managers.   The  
-            zimbraIsDomainAdminAccount flag allows them to receive grants in the 
-            ACL access manager paradigm and being considered legitimate admins while 
-            checking ACLs.   In the realm of pure ACL based access manager, 
-            zimbraIsAdminAccount and zimbraIsDomainAdminAccount are treated identically.
-            They mark the account as a legitimate admin so they can be grantees of 
-            any admin rights, and their ACL will be effective during right checking.
-
-      Note: The combo rights for domain admins are generated by running through admin
-            SOAP handlers that are domainAuthSufficient and spitting out the rights 
-            they need.  Please let me know if you find any issues with them.
-
-      (C) enable the UIs for the domain admin, the following zimbraAdminConsoleUIComponents
-            should be set for regular domain admin:
+       (3) enable UIs for the domain admin, the following zimbraAdminConsoleUIComponents
+           should be set for regular domain admin:
 
              zimbraAdminConsoleUIComponents: accountListView
              zimbraAdminConsoleUIComponents: aliasListView
