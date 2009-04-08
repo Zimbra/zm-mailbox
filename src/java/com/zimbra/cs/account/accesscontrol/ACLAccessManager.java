@@ -139,7 +139,7 @@ public class ACLAccessManager extends AccessManager {
         
         Account authedAcct = getAccountFromAuthToken(at);
         
-        if (alwaysAllow(authedAcct, true, targetAccount))
+        if (alwaysAllow(authedAcct, true, targetAccount, null))
             return true;
         
         // TODO: how do we handle the use case "only certain (non-system) admins can 
@@ -200,7 +200,7 @@ public class ACLAccessManager extends AccessManager {
             boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
         
         // always allow system admin access
-        if (alwaysAllow(grantee, asAdmin, target))
+        if (alwaysAllow(grantee, asAdmin, target, rightNeeded))
             return true;
         
         // check pseudo rights
@@ -275,7 +275,7 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (alwaysAllow(grantee, asAdmin, target))
+        if (alwaysAllow(grantee, asAdmin, target, null))
             return true;
         
         return canGetAttrsInternal(grantee, target, attrsNeeded, false);
@@ -292,7 +292,7 @@ public class ACLAccessManager extends AccessManager {
     // this API does not check constraints
     public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (alwaysAllow(grantee, asAdmin, target))
+        if (alwaysAllow(grantee, asAdmin, target, null))
             return true;
         
         return canSetAttrsInternal(grantee, target, attrsNeeded, false);
@@ -308,7 +308,7 @@ public class ACLAccessManager extends AccessManager {
     // this API does check constraints
     public boolean canSetAttrs(Account grantee, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (alwaysAllow(grantee, asAdmin, target))
+        if (alwaysAllow(grantee, asAdmin, target, null))
             return true;
         
         RightChecker.AllowedAttrs allowedAttrs = RightChecker.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
@@ -363,7 +363,7 @@ public class ACLAccessManager extends AccessManager {
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) 
     throws ServiceException {
         
-        if (alwaysAllow(grantee, asAdmin, target))
+        if (alwaysAllow(grantee, asAdmin, target, rightNeeded))
             return true;
         
         boolean allowed = false;
@@ -524,13 +524,15 @@ public class ACLAccessManager extends AccessManager {
      * @return
      * @throws ServiceException
      */
-    private boolean alwaysAllow(Account authedAcct, boolean asAdmin, Entry target) throws ServiceException {
-        if (RightChecker.isSystemAdmin(authedAcct, asAdmin))
+    private boolean alwaysAllow(Account authedAcct, boolean asAdmin, Entry target, Right right) throws ServiceException {
+        if (RightChecker.isSystemAdmin(authedAcct, asAdmin)) {
             return true;
-        else if (!RightChecker.isDelegatedAdmin(authedAcct, asAdmin))
-            throw ServiceException.PERM_DENIED("not an eligible admin account");
-        else
-            return false;
+        } else if (right == null || !right.isUserRight()) {
+            // ensure the authed account must be a delegated admin if not checking a user right
+            if (!RightChecker.isDelegatedAdmin(authedAcct, asAdmin))
+                throw ServiceException.PERM_DENIED("not an eligible admin account");
+        }
+        return false;
     }
     
     // ================
