@@ -109,11 +109,10 @@ public class DataSource extends AccountProperty {
         String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, getDefaultImportClass(mType));
         if (val != null) {
             try {
-                Object di = (DataImport)Class.forName(val).getConstructor(DataSource.class).newInstance(this);
+                Object di = Class.forName(val).getConstructor(DataSource.class).newInstance(this);
                 if (di instanceof DataImport)
                     return (DataImport) di;
-                else
-                    ZimbraLog.account.error("Class "+val+" configured for DataSource "+getName()+" is not an instance of DataImport");
+                ZimbraLog.account.error("Class "+val+" configured for DataSource "+getName()+" is not an instance of DataImport");
             } catch (Exception e) {
                 ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource "+getName(), e);
             }
@@ -371,7 +370,6 @@ public class DataSource extends AccountProperty {
         return false;
     }
 
-    @SuppressWarnings("unused")
     public boolean checkPendingMessages() throws ServiceException {
         // Does nothing for online
         return false;
@@ -379,6 +377,10 @@ public class DataSource extends AccountProperty {
 
     public long getSyncFrequency() {
         return 0;
+    }
+
+    public Collection<DataSourceItem> getFolderMappings() throws ServiceException {
+        return DbDataSource.getAllMappingsInFolder(this, this.getFolderId());
     }
 
     public ImapFolderCollection getImapFolders() throws ServiceException {

@@ -34,11 +34,16 @@ import com.zimbra.cs.mailbox.Metadata;
 public class DbDataSource {
 
     public static class DataSourceItem {
-		public int itemId;
-		public String remoteId;
-		public Metadata md;
-		public DataSourceItem(int i, String r, Metadata m) { itemId = i; remoteId = r; md = m; }
+	public int itemId;
+	public String remoteId;
+	public Metadata md;
+	
+	public DataSourceItem(int i, String r, Metadata m) {
+	    itemId = i;
+	    remoteId = r;
+	    md = m;
 	}
+    }
 	
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
 
@@ -49,7 +54,7 @@ public class DbDataSource {
         String dataSourceId = ds.getId();
 
         if (item.remoteId == null)
-        	item.remoteId = "";
+            item.remoteId = "";
         
         ZimbraLog.datasource.debug("Adding mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
         
@@ -192,8 +197,8 @@ public class DbDataSource {
         PreparedStatement stmt = null;
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
         try {
-        	String dataSourceTable = getTableName(mbox);
-        	String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable+".mailbox_id = ? AND ";
+            String dataSourceTable = getTableName(mbox);
+            String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable+".mailbox_id = ? AND ";
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
             sb.append("DELETE FROM ");
@@ -216,7 +221,6 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	
     	return items;
     }
 
@@ -262,7 +266,6 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	
     	return items;
     }
     
@@ -275,8 +278,8 @@ public class DbDataSource {
         
         ZimbraLog.datasource.debug("Get all mappings for %s in folder %d", ds.getName(), folderId);
         try {
-        	String thisTable = getTableName(mbox);
-        	String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
+            String thisTable = getTableName(mbox);
+            String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT item_id, remote_id, ").append(thisTable).append(".metadata FROM ");
@@ -306,7 +309,6 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	
     	return items;
     }
 
@@ -355,7 +357,6 @@ public class DbDataSource {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        
         String remoteId = null;
     	Metadata md = null;
     	
@@ -378,7 +379,7 @@ public class DbDataSource {
             	remoteId = rs.getString(1);
             	String buf = rs.getString(2);
             	if (buf != null)
-            		md = new Metadata(buf);
+            	    md = new Metadata(buf);
             }
             rs.close();
             stmt.close();
@@ -389,7 +390,6 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	
     	return new DataSourceItem(itemId, remoteId, md);
     }
 
@@ -398,7 +398,6 @@ public class DbDataSource {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        
         int itemId = 0;
         Metadata md = null;
     	
@@ -432,7 +431,6 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	
     	return new DataSourceItem(itemId, remoteId, md);
     }
 

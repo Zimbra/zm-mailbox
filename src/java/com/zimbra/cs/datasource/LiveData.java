@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.datasource;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,13 +23,12 @@ import com.posisoft.jdavmail.JDAVContactGroup;
 import com.posisoft.jdavmail.JDAVContact.Fields;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Contact;
 import static com.zimbra.cs.mailbox.Contact.*;
 import com.zimbra.cs.mime.ParsedContact;
 
-public class LiveData extends DataSourceData {
+public class LiveData extends DataSourceMapping {
     private long localDate, remoteDate;
     private int flags;
     private String remoteFolderId;
@@ -39,6 +37,10 @@ public class LiveData extends DataSourceData {
     private static final String METADATA_KEY_FLAGS = "f";
     private static final String METADATA_KEY_FLAGS_OLD = "fgr";
     private static final String METADATA_KEY_FOLDER_REMOTE = "fr";
+    
+    public LiveData(DataSource ds, DataSourceItem dsi) throws ServiceException {
+        super(ds, dsi);
+    }
     
     public LiveData(DataSource ds, int itemID) throws ServiceException {
         super(ds, itemID);
@@ -57,12 +59,8 @@ public class LiveData extends DataSourceData {
         String remoteFolderId, long remoteDate, int flags) throws ServiceException {
         super(ds, localId, remoteId);
         setDates(localDate, remoteDate);
-        setFolderIds(remoteFolderId);
+        setRemoteFolderId(remoteFolderId);
         setFlags(flags);
-    }
-    
-    public LiveData(DataSource ds, DataSourceItem dsi) throws ServiceException {
-        super(ds, dsi);
     }
     
     long getLocalDate() { return localDate; }
@@ -73,22 +71,6 @@ public class LiveData extends DataSourceData {
     
     String getRemoteFolderId() { return remoteFolderId; }
 
-    public Map<Integer, LiveData> getFolderMapById() throws ServiceException {
-        return getFolderMapById(ds, dsi.itemId);
-    }
-    
-    public static Map<Integer, LiveData> getFolderMapById(DataSource ds, int
-        folderId) throws ServiceException {
-        Collection<DataSourceItem> dsMappings =
-            DbDataSource.getAllMappingsInFolder(ds, folderId);
-        Map<Integer, LiveData> dsFoldersById = new HashMap<Integer,
-            LiveData>();
-    
-        for (DataSourceItem dsMapping : dsMappings)
-            dsFoldersById.put(dsMapping.itemId, new LiveData(ds, dsMapping));
-        return dsFoldersById;
-    }
-    
     public void setDates(long localDate, long remoteDate) throws ServiceException {
         this.localDate = localDate;
         dsi.md.put(METADATA_KEY_DATE_LOCAL, Long.toString(localDate));
@@ -96,7 +78,7 @@ public class LiveData extends DataSourceData {
         dsi.md.put(METADATA_KEY_DATE_REMOTE, Long.toString(remoteDate));
     }
     
-    public void setFolderIds(String remoteFolderId) throws ServiceException {
+    public void setRemoteFolderId(String remoteFolderId) throws ServiceException {
         this.remoteFolderId = remoteFolderId;
         dsi.md.put(METADATA_KEY_FOLDER_REMOTE, remoteFolderId);
     }

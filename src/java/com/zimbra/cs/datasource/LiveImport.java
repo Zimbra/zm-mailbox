@@ -15,7 +15,9 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,6 +46,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.LiveData;
+import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -56,6 +59,39 @@ import com.zimbra.cs.mime.ParsedMessage;
 public class LiveImport extends MailItemImport {
     private Session session;
     private JDAVMailStore store;
+
+    private static class LiveFolderMapping extends DataSourceFolderMapping {
+        public LiveFolderMapping(DataSource ds, DataSourceItem dsi) throws ServiceException {
+            super(ds, dsi);
+        }
+        
+        public LiveFolderMapping(DataSource ds, int itemId) throws ServiceException {
+            super(ds, itemId);
+        }
+        
+        public LiveFolderMapping(DataSource ds, String remoteId) throws ServiceException {
+            super(ds, remoteId);
+        }
+        
+        public LiveFolderMapping(DataSource ds, int itemId, String remoteId) throws ServiceException {
+            super(ds, itemId, remoteId);
+        }
+        
+        public Map<Integer, LiveFolderMapping> getMappingsById() throws ServiceException {
+            return getMappingsById(ds, dsi.itemId);
+        }
+        
+        public static Map<Integer, LiveFolderMapping> getMappingsById(DataSource ds, int
+            folderId) throws ServiceException {
+            Collection<DataSourceItem> dsMappings = getMappings(ds, folderId);
+            Map<Integer, LiveFolderMapping> dsFoldersById = new HashMap<Integer,
+                LiveFolderMapping>();
+        
+            for (DataSourceItem dsMapping : dsMappings)
+                dsFoldersById.put(dsMapping.itemId, new LiveFolderMapping(ds, dsMapping));
+            return dsFoldersById;
+        }
+    }
 
     public LiveImport(DataSource ds) throws ServiceException {
         super(ds);
@@ -95,7 +131,7 @@ public class LiveImport extends MailItemImport {
         connect(ds);
         try {
             JDAVMailFolder remoteRootFolder = (JDAVMailFolder)store.getDefaultFolder();
-            Map<Integer, LiveData> dsFoldersById = LiveData.getFolderMapById(ds,
+            Map<Integer, LiveFolderMapping> dsFoldersById = LiveFolderMapping.getMappingsById(ds,
                 ds.getFolderId());
             com.zimbra.cs.mailbox.Folder localRootFolder = mbox.getFolderById(
                 octxt, ds.getFolderId());
@@ -104,7 +140,7 @@ public class LiveImport extends MailItemImport {
             // Handle new remote folders and moved/renamed/deleted local folders
             for (Folder folder : remoteFolders) {
                 JDAVMailFolder remoteFolder = (JDAVMailFolder)folder;
-                LiveData folderTracker = null;
+                LiveFolderMapping folderTracker = null;
                 com.zimbra.cs.mailbox.Folder localFolder = null;
                 String remotePath = remoteFolder.getFullName();
                 String knownPath = ds.matchKnownLocalPath(remotePath);
@@ -124,7 +160,7 @@ public class LiveImport extends MailItemImport {
                 ZimbraLog.datasource.debug("Processing Live folder " +
                     remoteFolder.getFullName());
                 try {
-                    folderTracker = new LiveData(ds, remoteFolder.getUID());
+                    folderTracker = new LiveFolderMapping(ds, remoteFolder.getUID());
                     try {
                         localFolder = mbox.getFolderById(octxt, folderTracker.getItemId());
                         if (!localFolder.getPath().equalsIgnoreCase(remotePath)) {
@@ -142,7 +178,7 @@ public class LiveImport extends MailItemImport {
                                 // Treat as a delete.
                                 ZimbraLog.datasource.info("Local folder was renamed to %s and moved outside the data source root.",
                                     localFolder.getPath());
-                                folderTracker.deleteFolder();
+                                folderTracker.delete();
                                 folderTracker = null;
                                 localFolder = null;
                             }
@@ -159,7 +195,7 @@ public class LiveImport extends MailItemImport {
                                 remoteFolder.getFullName());
                         }
                         dsFoldersById.remove(folderTracker.getItemId());
-                        folderTracker.deleteFolder();
+                        folderTracker.delete();
                         folderTracker = null;
                     }
                 } catch (NoSuchItemException e) {
@@ -176,7 +212,7 @@ public class LiveImport extends MailItemImport {
                         localFolder = mbox.createFolder(octxt, remotePath,
                             (byte)0, MailItem.TYPE_MESSAGE);
                     }
-                    folderTracker = new LiveData(ds, localFolder.getId(),
+                    folderTracker = new LiveFolderMapping(ds, localFolder.getId(),
                         remoteFolder.getUID());
                     folderTracker.add();
                     dsFoldersById.put(folderTracker.getItemId(), folderTracker);
@@ -184,7 +220,7 @@ public class LiveImport extends MailItemImport {
             }
             // Handle new local folders and deleted remote folders
             for (com.zimbra.cs.mailbox.Folder zimbraFolder : localRootFolder.getSubfolderHierarchy()) {
-                LiveData dsFolder = dsFoldersById.get(zimbraFolder.getId());
+                LiveFolderMapping dsFolder = dsFoldersById.get(zimbraFolder.getId());
 
                 if (zimbraFolder.getId() == localRootFolder.getId())
                     continue;
@@ -198,7 +234,7 @@ public class LiveImport extends MailItemImport {
                         zimbraFolder.getName());
                     if (dsFolder != null) {
 	                dsFoldersById.remove(dsFolder.getItemId());
-	                dsFolder.deleteFolder();
+	                dsFolder.delete();
                     }
                     continue;
                 }
@@ -212,7 +248,7 @@ public class LiveImport extends MailItemImport {
                         try {
                             JDAVMailFolder remoteFolder = createJavaMailFolder(jmPath);
                             
-                            dsFolder = new LiveData(ds, zimbraFolder.getId(),
+                            dsFolder = new LiveFolderMapping(ds, zimbraFolder.getId(),
                                 remoteFolder.getUID());
                             dsFolder.add();
                             dsFoldersById.put(dsFolder.getItemId(), dsFolder);
@@ -244,12 +280,12 @@ public class LiveImport extends MailItemImport {
                                  throw e;
                          }
                          dsFoldersById.remove(dsFolder.getItemId());
-                         dsFolder.deleteFolder();
+                         dsFolder.delete();
                      }
                 }
             }
             // Import data for all folders that exist on both sides
-            for (LiveData dsFolder : dsFoldersById.values()) {
+            for (LiveFolderMapping dsFolder : dsFoldersById.values()) {
                 try {
                     importFolder(ds, octxt, remoteFolders, dsFolder);
                 } catch (MessagingException e) {
@@ -331,7 +367,7 @@ public class LiveImport extends MailItemImport {
     }
 
     private void importFolder(DataSource ds, OperationContext octxt,
-        Folder[] remoteFolders, LiveData dsFolder) throws IOException,
+        Folder[] remoteFolders, LiveFolderMapping dsFolder) throws IOException,
         MessagingException, ServiceException {
         int folderId = dsFolder.getItemId();
         com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(
@@ -475,7 +511,7 @@ public class LiveImport extends MailItemImport {
                         remoteMsg.getMessageID());
                     mbox.move(octxt, ld.getDataSourceItem().itemId,
                         MailItem.TYPE_MESSAGE, folderId);
-                    ld.setFolderIds(remoteFolder.getUID());
+                    ld.setRemoteFolderId(remoteFolder.getUID());
                     numMoved++;
                     updated = true;
                 }
@@ -574,7 +610,7 @@ public class LiveImport extends MailItemImport {
                             setRemoteFlags(remoteMsg, localMsg.getFlagBitmask());
                             trackedMsg.setDates(localMsg.getChangeDate(), trackedMsg.getRemoteDate());
                         }
-                        trackedMsg.setFolderIds(remoteFolder.getUID());
+                        trackedMsg.setRemoteFolderId(remoteFolder.getUID());
                         trackedMsg.setFlags(localMsg.getFlagBitmask() & flagBitmasks);
                         trackedMsg.update();
                     }
@@ -597,7 +633,7 @@ public class LiveImport extends MailItemImport {
     private void importContacts(DataSource ds, OperationContext octxt) throws
         IOException, MessagingException, ServiceException {
         JDAVContactFolder contactFolder = store.getContactFolder();
-        LiveData folderTracker = null;
+        LiveFolderMapping folderTracker = null;
         Set<Integer> localIds = new HashSet<Integer>();
         int numMatched = 0;
         int numUpdated = 0;
@@ -627,7 +663,7 @@ public class LiveImport extends MailItemImport {
                 ds.getFolderId()).getPath() + "/" + remotePath;
         ZimbraLog.datasource.debug("Processing Live contacts folder");
         try {
-            folderTracker = new LiveData(ds, contactFolder.getName());
+            folderTracker = new LiveFolderMapping(ds, contactFolder.getName());
             try {
                 localFolder = mbox.getFolderById(octxt, folderTracker.getItemId());
                 localIds.addAll(mbox.listItemIds(octxt, MailItem.TYPE_CONTACT,
@@ -641,13 +677,13 @@ public class LiveImport extends MailItemImport {
                     } else {
                         ZimbraLog.datasource.info("Local folder was renamed to %s and moved outside the data source root.",
                             localFolder.getPath());
-                        folderTracker.deleteFolder();
+                        folderTracker.delete();
                         folderTracker = null;
                         localFolder = null;
                     }
                 }
             } catch (NoSuchItemException e) {
-                folderTracker.deleteFolder();
+                folderTracker.delete();
                 folderTracker = null;
             }
         } catch (NoSuchItemException e) {
@@ -660,7 +696,7 @@ public class LiveImport extends MailItemImport {
                 localFolder = mbox.createFolder(octxt, remotePath,
                     (byte)0, MailItem.TYPE_CONTACT);
             }
-            folderTracker = new LiveData(ds, localFolder.getId(),
+            folderTracker = new LiveFolderMapping(ds, localFolder.getId(),
                 contactFolder.getName());
             folderTracker.add();
         }

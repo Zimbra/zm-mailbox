@@ -23,25 +23,25 @@ import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 
-public class DataSourceData {
+public class DataSourceMapping {
     protected DataSource ds;
     protected DataSourceItem dsi;
     
-    public DataSourceData(DataSource ds, DataSourceItem dsi) throws ServiceException {
+    public DataSourceMapping(DataSource ds, DataSourceItem dsi) throws ServiceException {
         this.ds = ds;
         this.dsi = dsi;
         parseMetaData();
     }
     
-    public DataSourceData(DataSource ds, int itemId) throws ServiceException {
+    public DataSourceMapping(DataSource ds, int itemId) throws ServiceException {
         this.ds = ds;
         dsi = DbDataSource.getMapping(ds, itemId);
-        if (dsi.itemId == 0)
+        if (dsi.remoteId == null)
             throw MailServiceException.NO_SUCH_ITEM(itemId);
         parseMetaData();
     }
     
-    public DataSourceData(DataSource ds, String remoteId) throws ServiceException {
+    public DataSourceMapping(DataSource ds, String remoteId) throws ServiceException {
         this.ds = ds;
         dsi = DbDataSource.getReverseMapping(ds, remoteId);
         if (dsi.itemId == 0)
@@ -49,9 +49,9 @@ public class DataSourceData {
         parseMetaData();
     }
     
-    public DataSourceData(DataSource ds, int localId, String remoteId) throws ServiceException {
+    public DataSourceMapping(DataSource ds, int itemId, String remoteId) throws ServiceException {
         this.ds = ds;
-        dsi = new DataSourceItem(localId, remoteId, new Metadata());
+        dsi = new DataSourceItem(itemId, remoteId, new Metadata());
     }
     
     public int getItemId() { return dsi.itemId; }
@@ -62,6 +62,10 @@ public class DataSourceData {
     
     public DataSourceItem getDataSourceItem() { return dsi; }
     
+    public void setItemId(int itemId) { dsi.itemId = itemId; }
+    
+    public void setRemoteId(String remoteId) { dsi.remoteId = remoteId; }
+    
     public void add() throws ServiceException {
         DbDataSource.addMapping(ds, dsi);
     }
@@ -70,25 +74,11 @@ public class DataSourceData {
         delete(ds, dsi.itemId);
     }
     
-    public void deleteFolder() throws ServiceException {
-        deleteAllMappingsInFolder();
-        delete();
-    }
-    
-    public void deleteAllMappingsInFolder() throws ServiceException {
-        deleteAllMappingsInFolder(ds, dsi.itemId);
-    }
-    
     public static void delete(DataSource ds, int itemId) throws ServiceException {
         ArrayList<Integer> toDelete = new ArrayList<Integer>(1);
 
         toDelete.add(itemId);
         DbDataSource.deleteMappings(ds, toDelete);
-    }
-    
-    public static void deleteAllMappingsInFolder(DataSource ds, int itemId)
-        throws ServiceException {
-        DbDataSource.deleteAllMappingsInFolder(ds, itemId);
     }
     
     public void set() throws ServiceException {
