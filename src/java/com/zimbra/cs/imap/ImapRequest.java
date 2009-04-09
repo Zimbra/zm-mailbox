@@ -468,7 +468,7 @@ abstract class ImapRequest {
             throw new ImapParseException(mTag, "invalid date format");
 
         Calendar cal = new GregorianCalendar();
-        cal.set(Calendar.DST_OFFSET, 0);
+        cal.clear();
 
         int pos = 0, count;
         if (datetime && dateStr.charAt(0) == ' ')
@@ -493,6 +493,7 @@ abstract class ImapRequest {
             int zonehrs = validateDigits(dateStr, pos, 2, cal, -1);  pos += 2;
             int zonemins = validateDigits(dateStr, pos, 2, cal, -1);  pos += 2;
             cal.set(Calendar.ZONE_OFFSET, (zonesign ? 1 : -1) * (60 * zonehrs + zonemins) * 60000);
+            cal.set(Calendar.DST_OFFSET, 0);
         }
 
         if (pos != dateStr.length())
