@@ -30,16 +30,19 @@ import org.testng.annotations.Test;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
@@ -59,6 +62,7 @@ extends TestCase {
         cleanUp();
         mOriginalMaxContacts = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries);
     }
+    
     /**
      * Confirms that volumeId is not set for contacts.
      */
@@ -67,11 +71,43 @@ extends TestCase {
     throws Exception {
         Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND volume_id IS NOT NULL",
+        String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND volume_id IS NOT NULL",
             DbMailItem.getMailItemTableName(mbox), MailItem.TYPE_CONTACT);
         DbResults results = DbUtil.executeQuery(sql);
         int count = results.getInt(1);
         assertEquals("Found non-null volumeId values for contacts", 0, count);
+    }
+    
+    /**
+     * Tests {@link Attachment#getContent()} (bug 36974).
+     */
+    @Test(groups = {"Server"})
+    public void testGetAttachmentContent()
+    throws Exception {
+        // Create a contact with an attachment.
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put("fullName", NAME_PREFIX + " testAttachments");
+        
+        String attachment1Text = "attachment 1";
+        int timeout = (int) Constants.MILLIS_PER_MINUTE;
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
+        
+        String attachment1Id = zmbox.uploadAttachment("attachment.txt", attachment1Text.getBytes(), "text/plain", timeout);
+        Map<String, ZAttachmentInfo> attachmentMap = new HashMap<String, ZAttachmentInfo>();
+        ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
+        attachmentMap.put("attachment1", info);
+        zmbox.createContact(folderId, null, attrs, attachmentMap);
+
+        // Call getContent() on all attachments.
+        Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        for (Contact contact : mbox.getContactList(null, Mailbox.ID_FOLDER_CONTACTS)) {
+            List<Attachment> attachments = contact.getAttachments();
+            for (Attachment attach : attachments) {
+                attach.getContent();
+            }
+        }
     }
     
     /**

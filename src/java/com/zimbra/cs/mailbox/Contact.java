@@ -18,17 +18,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.session.PendingModifications.Change;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,13 +32,22 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.SharedInputStream;
+import javax.mail.internet.MimePart;
 import javax.mail.util.ByteArrayDataSource;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @author dkarp
@@ -286,12 +284,6 @@ public class Contact extends MailItem {
             mDataHandler = dataHandler;
             mFieldName = field;
         }
-        
-        Attachment(Metadata meta) throws ServiceException {
-            this(null, meta.get(FN_CTYPE), meta.get(FN_FIELD), meta.get(FN_NAME));
-            setPartName(meta.get(FN_PART));
-            mSize = (int) meta.getLong(FN_SIZE);
-        }
 
         public void setPartName(String name)  { mPartName = name; }
         public void setSize(int size)         { mSize = size; }
@@ -316,10 +308,10 @@ public class Contact extends MailItem {
          */
         public InputStream getInputStream()
         throws IOException {
-            if (mDataHandler == null) {
-                return null;
+            if (mDataHandler != null) {
+                return mDataHandler.getInputStream();
             }
-            return mDataHandler.getInputStream();
+            return null;
         }
         
         public OutputStream getOutputStream()  { throw new UnsupportedOperationException(); }
@@ -329,9 +321,15 @@ public class Contact extends MailItem {
          */
         public byte[] getContent()
         throws IOException {
+            InputStream in = null;
             byte[] content = null;
-            if (mDataHandler != null) {
-                content = ByteUtil.getContent(getInputStream(), mSize);
+            try {
+                in = getInputStream();
+                if (in != null) {
+                    content = ByteUtil.getContent(in, mSize);
+                }
+            } finally {
+                ByteUtil.closeStream(in);
             }
             return content;
         }
@@ -339,21 +337,6 @@ public class Contact extends MailItem {
         public String getFilename()  { return mDataHandler.getName(); }
         public String getPartName()  { return mPartName; }
         public DataHandler getDataHandler() { return mDataHandler; }
-
-        /**
-         * Returns a stream the content of an attachment that's owned by a <tt>Contact</tt>.
-         */
-        public InputStream getInputStream(Contact con)
-        throws ServiceException, IOException, MessagingException {
-            return Mime.getMimePart(con.getMimeMessage(false), mPartName).getInputStream();
-        }
-        
-        /**
-         * Returns the content of an attachment that's owned by a <tt>Contact</tt>.
-         */
-        public byte[] getContent(Contact con) throws ServiceException, IOException, MessagingException {
-            return ByteUtil.getContent(getInputStream(con), mSize);
-        }
 
         private static final String FN_SIZE = "size", FN_NAME = "name", FN_PART = "part", FN_CTYPE = "ctype", FN_FIELD = "field";
 
@@ -405,6 +388,11 @@ public class Contact extends MailItem {
         return new ArrayList<Attachment>(mAttachments);
     }
 
+    /**
+     * Returns the <tt>MimeMessage</tt> for this contact.
+     * @throws ServiceException if no <tt>MimeMessage</tt> exists or there
+     * was an error retrieving it
+     */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
         return MessageCache.getMimeMessage(this, runConverters);
     }
@@ -801,8 +789,18 @@ public class Contact extends MailItem {
             MetadataList mlAttach = meta.getList(Metadata.FN_ATTACHMENTS, true);
             if (mlAttach != null) {
                 mAttachments = new ArrayList<Attachment>(mlAttach.size());
-                for (int i = 0; i < mlAttach.size(); i++)
-                    mAttachments.add(new Attachment(mlAttach.getMap(i)));
+                for (int i = 0; i < mlAttach.size(); i++) {
+                    Metadata attachMeta = mlAttach.getMap(i);
+                    String fieldName = attachMeta.get(Attachment.FN_FIELD);
+                    String partName = attachMeta.get(Attachment.FN_PART);
+                    int size = (int) attachMeta.getLong(Attachment.FN_SIZE);
+                    DataHandler dh = new DataHandler(new AttachmentDataSource(this, partName));
+                    Attachment attachment = new Attachment(dh, fieldName);
+                    attachment.setPartName(partName);
+                    attachment.setSize(size);
+                    mAttachments.add(attachment);
+                }
+
             }
         }
 

@@ -448,7 +448,7 @@ public class VCard {
                         String field = "PHOTO;ENCODING=B";
                         if (attach.getContentType().startsWith("image/"))
                             field += ";TYPE=" + attach.getContentType().substring(6).toUpperCase();
-                        String encoded = new String(Base64.encodeBase64Chunked(attach.getContent(con))).trim().replace("\r\n", "\r\n ");
+                        String encoded = new String(Base64.encodeBase64Chunked(attach.getContent())).trim().replace("\r\n", "\r\n ");
                         sb.append(field).append(":\r\n ").append(encoded).append("\r\n");
                     }
                 } catch (OutOfMemoryError e) {
