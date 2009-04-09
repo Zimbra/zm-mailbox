@@ -228,7 +228,7 @@ public class Conversation extends MailItem {
         data.id          = id;
         data.type        = TYPE_CONVERSATION;
         data.folderId    = Mailbox.ID_FOLDER_CONVERSATIONS;
-        data.subject     = msgs.length > 0 ? msgs[0].getNormalizedSubject() : "";
+        data.subject     = msgs.length > 0 ? msgs[0].getSubject() : "";
         data.date        = date;
         data.size        = msgs.length;
         data.unreadCount = unread;
