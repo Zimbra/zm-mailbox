@@ -228,7 +228,8 @@ public class TarFormatter extends Formatter {
                             tos = saveItem(context, item, fldrs, cnts, names,
                                 false, tos);
                     }
-                    conversations = true;
+                    if (types == null || types.equals(""))
+                        conversations = true;
                     query = "is:local";
                 }
                 try {
