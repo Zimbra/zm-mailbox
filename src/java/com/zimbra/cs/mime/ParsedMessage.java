@@ -1389,6 +1389,10 @@ public class ParsedMessage {
         return subject;
     }
 
+    public static boolean isReply(String subject) {
+        return trimPrefixes(subject).getSecond();
+    }
+
 
     private static void testNormalization(String[] test) {
         String raw = test[0], normalized = test[1], description = test[3];
