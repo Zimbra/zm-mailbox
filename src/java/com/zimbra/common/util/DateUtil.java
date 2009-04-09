@@ -92,6 +92,29 @@ public class DateUtil {
     private static final String[] DAY_NAME = new String[] { "", "Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, " };
     private static final String[] MONTH_NAME = new String[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
+    public static String toImapDateTime(Date date) {
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(date);
+
+        int tzoffset = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / 60000;
+        char tzsign = tzoffset > 0 ? '+' : '-';
+        tzoffset = Math.abs(tzoffset);
+
+        StringBuilder sb = new StringBuilder(40);
+        append2DigitNumber(sb, cal.get(Calendar.DAY_OF_MONTH)).append('-');
+        sb.append(MONTH_NAME[cal.get(Calendar.MONTH)]).append('-');
+        sb.append(cal.get(Calendar.YEAR)).append(' ');
+
+        append2DigitNumber(sb, cal.get(Calendar.HOUR_OF_DAY)).append(':');
+        append2DigitNumber(sb, cal.get(Calendar.MINUTE)).append(':');
+        append2DigitNumber(sb, cal.get(Calendar.SECOND)).append(' ');
+
+        sb.append(tzsign);
+        append2DigitNumber(sb, tzoffset / 60);
+        append2DigitNumber(sb, tzoffset % 60);
+        return sb.toString();
+    }
+
     public static String toRFC822Date(Date date) {
         Calendar cal = new GregorianCalendar();
         cal.setTime(date);
@@ -600,6 +623,8 @@ public class DateUtil {
         System.out.println(parseRFC2822Date("21 Nov 97 09::06 GMT", new Date()));
         System.out.println(parseRFC2822Date("21 nOV 97 09:55:06 R", new Date()));
         System.out.println(parseRFC2822Date("21 11 06 09:55:06 GMT", new Date()));
+
+        System.out.println(toImapDateTime(new Date()));
 
         /*
         System.out.println("20070318050124Z" + "-default = " +  parseGeneralizedTime("20070318050124Z"));
