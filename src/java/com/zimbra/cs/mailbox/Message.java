@@ -646,10 +646,10 @@ public class Message extends MailItem {
                             // which should be allowed to happen.
                             boolean ignore = false;
                             Invite defInv = calItem.getDefaultInviteOrNull();
-                            if (defInv != null && defInv.isOrganizer())
-                                ignore = acct.equals(cur.getOrganizerAccount());
                             if (defInv != null && defInv.isOrganizer()) {
-                                if (acct.equals(cur.getOrganizerAccount()))
+                                ZOrganizer org = cur.getOrganizer();
+                                String orgAddress = org != null ? org.getAddress() : null;
+                                if (AccountUtil.addressMatchesAccount(acct, orgAddress))
                                     ignore = !acct.getBooleanAttr(
                                             Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, false);
                             }
