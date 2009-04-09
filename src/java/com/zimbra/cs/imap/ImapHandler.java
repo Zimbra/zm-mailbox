@@ -3040,6 +3040,11 @@ abstract class ImapHandler extends ProtocolHandler {
 
         LinkedHashMap<Integer, List<ImapMessage>> threads = new LinkedHashMap<Integer, List<ImapMessage>>();
         try {
+            // RFC 5256 3: "The searched messages are sorted by base subject and then
+            //              by the sent date.  The messages are then split into separate
+            //              threads, with each thread containing messages with the same
+            //              base subject text.  Finally, the threads are sorted by the
+            //              sent date of the first message in the thread."
             ZimbraQueryResults zqr = runSearch(i4search, i4folder, SortBy.DATE_ASCENDING, Mailbox.SearchResultMode.PARENT);
             try {
                 for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
