@@ -194,7 +194,7 @@ public class SQLite extends Db {
         recordAttachedDatabase(conn, dbname);
     }
 
-    private void attachDatabase(Connection conn, String dbname) throws SQLException {
+    void attachDatabase(Connection conn, String dbname) throws SQLException {
         PreparedStatement stmt = null;
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();
@@ -279,11 +279,11 @@ public class SQLite extends Db {
     }
 
 
-    public static String getDatabaseFilename(String dbname) {
+    public String getDatabaseFilename(String dbname) {
         return LC.zimbra_home.value() + File.separator + "sqlite" + File.separator + dbname + ".db";
     }
 
-    static final class SQLiteConfig extends DbPool.PoolConfig {
+    final class SQLiteConfig extends DbPool.PoolConfig {
         SQLiteConfig() {
             mDriverClassName = "org.sqlite.JDBC";
             mPoolSize = DEFAULT_CONNECTION_POOL_SIZE;
@@ -304,7 +304,7 @@ public class SQLite extends Db {
             ZimbraLog.misc.info("setting connection pool size to " + mPoolSize);
         }
 
-        private static Properties getSQLiteProperties() {
+        private Properties getSQLiteProperties() {
             Properties props = new Properties();
             props.setProperty("shared_cache", "true");
             return props;
@@ -336,8 +336,7 @@ public class SQLite extends Db {
 
             Writer output = new BufferedWriter(new FileWriter(outFile));
             output.write(outStr);
-            if (output != null)
-                output.close();
+            output.close();
         } catch (IOException e){
             System.out.println("ERROR - caught exception at\n");
             e.printStackTrace();
