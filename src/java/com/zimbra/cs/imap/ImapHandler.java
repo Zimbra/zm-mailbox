@@ -21,7 +21,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URLEncoder;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -34,6 +33,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -88,7 +88,6 @@ abstract class ImapHandler extends ProtocolHandler {
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
-    private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
     private DateFormat mZimbraFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
     protected ImapConfig      mConfig;
@@ -115,22 +114,19 @@ abstract class ImapHandler extends ProtocolHandler {
         mConfig = (ImapConfig) server.getConfig();
     }
 
-    DateFormat getTimeFormat()   { return mTimeFormat; }
-    DateFormat getZimbraFormat() { return mZimbraFormat; }
+    DateFormat getZimbraFormat()  { return mZimbraFormat; }
 
     ImapCredentials getCredentials()  { return mCredentials; }
 
-    public boolean isSSLEnabled() { return mConfig.isSSLEnabled(); }
+    public boolean isSSLEnabled()  { return mConfig.isSSLEnabled(); }
 
-    public ImapConfig getConfig() { return mConfig; }
-    
-    protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
-    
-    protected void setOrigRemoteIpAddr(String ip) { mOrigRemoteAddress = ip; }
-    
-    protected String getUserAgent() { return mUserAgent; }
-    
-    protected void setUserAgent(String ua) { mUserAgent = ua; }
+    public ImapConfig getConfig()  { return mConfig; }
+
+    protected String getOrigRemoteIpAddr()         { return mOrigRemoteAddress; }
+    protected void setOrigRemoteIpAddr(String ip)  { mOrigRemoteAddress = ip; }
+
+    protected String getUserAgent()         { return mUserAgent; }
+    protected void setUserAgent(String ua)  { mUserAgent = ua; }
 
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
 
@@ -3251,7 +3247,7 @@ abstract class ImapHandler extends ProtocolHandler {
                     result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);  empty = false;
                 }
                 if ((attributes & FETCH_INTERNALDATE) != 0) {
-                    result.print((empty ? "" : " ") + "INTERNALDATE \"" + mTimeFormat.format(new Date(item.getDate())) + '"');  empty = false;
+                    result.print((empty ? "" : " ") + "INTERNALDATE \"" + DateUtil.toImapDateTime(new Date(item.getDate())) + '"');  empty = false;
                 }
                 if ((attributes & FETCH_RFC822_SIZE) != 0) {
                     result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));  empty = false;
