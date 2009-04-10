@@ -1464,7 +1464,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         if (fromAddress == null || fromDisplay == null) {
             InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
             if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
-            // if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
+            if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
         }
         attrs.put(A_zimbraPrefIdentityId, account.getId());
 
