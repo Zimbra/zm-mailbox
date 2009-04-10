@@ -125,6 +125,7 @@ public class ImapImport extends MailItemImport {
         try {
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
             ImapFolderCollection imapFolders = ds.getImapFolders();
+//            ImapFolderCollection imapFolders = ImapFolder.getImapFolders(ds);
 
             com.zimbra.cs.mailbox.Folder localRootFolder =
                 mbox.getFolderById(null, ds.getFolderId());
@@ -171,7 +172,7 @@ public class ImapImport extends MailItemImport {
                         localFolder = mbox.getFolderById(null, folderTracker.getItemId());
                     } catch (NoSuchItemException e) {
                         ZimbraLog.datasource.info("Local folder %s was deleted.  Deleting remote folder %s.",
-                            folderTracker.getLocalPath(), folderTracker.getRemotePath());
+                            folderTracker.getLocalPath(), folderTracker.getRemoteId());
                         // Folder was deleted locally, so we'll need to delete
                         // the remote one as well.  Check whether the folder is open
                         // and exists, in case deleting this folder's parent implicitly
@@ -186,7 +187,7 @@ public class ImapImport extends MailItemImport {
                         ds.deleteImapFolder(folderTracker);
                     }
 
-                    if (folderTracker.getUidValidity() == null) {
+                    if (folderTracker.getUidValidity() == -1) {
                         // Migrate old data created before we added the uid_validity column
                         ZimbraLog.datasource.info("Initializing UIDVALIDITY of %s to %d", remoteFolder.getFullName(), remoteUvv);
                         folderTracker.setUidValidity(remoteUvv);
@@ -299,12 +300,12 @@ public class ImapImport extends MailItemImport {
                 	if (imapFolder.getUidValidity() != 0) { //otherwise it's a \Noselect
 	                    // Already know about this folder. See if it still exists on
 	                    // the remote server.
-	                    Folder jmFolder = store.getFolder(imapFolder.getRemotePath());
+	                    Folder jmFolder = store.getFolder(imapFolder.getRemoteId());
 	                    if (!jmFolder.exists()) {
 	                        // Folder was deleted on the remote server, so we'll
 	                        // need to delete it locally.
 	                        ZimbraLog.datasource.info("Remote folder %s was deleted.  Deleting local folder %s.",
-	                            imapFolder.getRemotePath(), zimbraFolder.getPath());
+	                            imapFolder.getRemoteId(), zimbraFolder.getPath());
 	                        mbox.delete(null, zimbraFolder.getId(), zimbraFolder.getType());
 	                        ds.deleteImapFolder(imapFolder);
 	                        imapFolders.remove(imapFolder);
@@ -339,7 +340,7 @@ public class ImapImport extends MailItemImport {
 
                 // Don't import folder unless full sync requested or there are
                 // new messages in the folder (uidnext has advanced).
-                Status status = folderStatus.get(imapFolder.getRemotePath());
+                Status status = folderStatus.get(imapFolder.getRemoteId());
                 if (!fullSync && status != null) {
                     long trackedUid = imapFolder.getUidNext();
                     if (trackedUid != -1 && status.uidnext != -1 &&
@@ -349,15 +350,15 @@ public class ImapImport extends MailItemImport {
                 }
 
                 ZimbraLog.datasource.info("Importing from IMAP folder %s to local folder %s",
-                    imapFolder.getRemotePath(), imapFolder.getLocalPath());
+                    imapFolder.getRemoteId(), imapFolder.getLocalPath());
                 if (imapFolder.getUidValidity() != 0) {
                     try {
                         for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
                             if (importFolder(imapFolder)) break;
                     } catch (MessagingException e) {
-                        ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
+                        ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemoteId(), e);
                     } catch (ServiceException e) {
-                        ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
+                        ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemoteId(), e);
                     }
                 }
             }
@@ -578,7 +579,7 @@ public class ImapImport extends MailItemImport {
         throws MessagingException, IOException, ServiceException {
         // Instantiate folders
         com.sun.mail.imap.IMAPFolder remoteFolder =
-            (com.sun.mail.imap.IMAPFolder) store.getFolder(trackedFolder.getRemotePath());
+            (com.sun.mail.imap.IMAPFolder) store.getFolder(trackedFolder.getRemoteId());
         try {
             remoteFolder.open(Folder.READ_WRITE);
         } catch (ReadOnlyFolderException e) {
@@ -654,8 +655,8 @@ public class ImapImport extends MailItemImport {
                 ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
 
                 if (localIds.contains(trackedMsg.getItemId())) {
-                    int localFlags = trackedMsg.getFlags();
-                    int trackedFlags = trackedMsg.getTrackedFlags();
+                    int localFlags = trackedMsg.getLocalFlags();
+                    int trackedFlags = trackedMsg.getFlags();
                     int remoteFlags = getZimbraFlags(remoteMsg.getFlags());
                     int flags = getNewFlags(localFlags, trackedFlags, remoteFlags);
                     boolean updated = false;

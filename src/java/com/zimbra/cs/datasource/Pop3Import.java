@@ -40,13 +40,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -244,7 +242,6 @@ public class Pop3Import extends MailItemImport {
 
     private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
     throws ServiceException, IOException {
-        Mailbox mbox = dataSource.getMailbox();
         com.zimbra.cs.mailbox.Message msg = null;
         if (isOffline()) {
             msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);

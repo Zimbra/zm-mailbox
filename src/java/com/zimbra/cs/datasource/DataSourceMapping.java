@@ -49,18 +49,23 @@ public class DataSourceMapping {
         parseMetaData();
     }
     
-    public DataSourceMapping(DataSource ds, int itemId, String remoteId) throws ServiceException {
+    public DataSourceMapping(DataSource ds, int folderId, int itemId, String remoteId)
+        throws ServiceException {
         this.ds = ds;
-        dsi = new DataSourceItem(itemId, remoteId, new Metadata());
+        dsi = new DataSourceItem(folderId, itemId, remoteId, new Metadata());
     }
-    
-    public int getItemId() { return dsi.itemId; }
-    
-    public String getRemoteId() { return dsi.remoteId; }
     
     public DataSource getDataSource() { return ds; }
     
     public DataSourceItem getDataSourceItem() { return dsi; }
+    
+    public int getFolderId() { return dsi.folderId; }
+
+    public int getItemId() { return dsi.itemId; }
+    
+    public String getRemoteId() { return dsi.remoteId; }
+    
+    public void setFolderId(int folderId) { dsi.folderId = folderId; }
     
     public void setItemId(int itemId) { dsi.itemId = itemId; }
     

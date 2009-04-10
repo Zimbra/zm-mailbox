@@ -14,22 +14,57 @@
  */
 package com.zimbra.cs.datasource;
 
-public class ImapMessage {
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 
-    private long mUid;
-    private int mItemId;
-    private int mFlags;
-    private int mTrackedFlags;
+public class ImapMessage extends DataSourceMapping {
+    private int flags;
+    private int localFlags;
+    private long uid;
+    private static final String METADATA_KEY_FLAGS = "f";
+    private static final String METADATA_KEY_UID = "u";
     
-    public ImapMessage(long uid, int itemId, int flags, int trackedFlags) {
-        mUid = uid;
-        mItemId = itemId;
-        mFlags = flags;
-        mTrackedFlags = trackedFlags;
+    public ImapMessage(DataSource ds, DataSourceItem dsi) throws ServiceException {
+        super(ds, dsi);
     }
     
-    public long getUid() { return mUid; }
-    public int getItemId() { return mItemId; }
-    public int getFlags() { return mFlags; }
-    public int getTrackedFlags() { return mTrackedFlags; }
+    public ImapMessage(DataSource ds, int itemId) throws ServiceException {
+        super(ds, itemId);
+    }
+    
+    public ImapMessage(DataSource ds, int folderId, long uid) throws ServiceException {
+        super(ds, remoteId(folderId, uid));
+    }
+    
+    public ImapMessage(DataSource ds, int folderId, int itemId, int flags,
+        long uid, int localFlags) throws ServiceException {
+        super(ds, folderId, itemId, remoteId(folderId, uid));
+        setFlags(flags);
+        setUid(uid);
+    }
+
+    public int getFlags() { return flags; }
+    
+    public int getLocalFlags() { return localFlags; }
+    
+    public long getUid() { return uid; }
+
+    public void setFlags(int flags) {
+        dsi.md.put(METADATA_KEY_FLAGS, this.flags = flags);
+    }
+
+    public void setUid(long uid) {
+        dsi.md.put(METADATA_KEY_UID, this.uid = uid);
+        setRemoteId(remoteId(dsi.folderId, uid));
+    }
+
+    protected void parseMetaData() throws ServiceException {
+        flags = (int)dsi.md.getLong(METADATA_KEY_FLAGS, 0);
+        uid = dsi.md.getLong(METADATA_KEY_UID, 0);
+    }
+
+    private static String remoteId(int folderId, long uid) {
+        return Integer.toString(folderId) + "_" + Long.toString(uid); 
+    }
 }

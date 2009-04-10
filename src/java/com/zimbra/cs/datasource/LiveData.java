@@ -50,14 +50,15 @@ public class LiveData extends DataSourceMapping {
         super(ds, remoteID);
     }
     
-    public LiveData(DataSource ds, int localId, String remoteId) throws
-        ServiceException {
-        super(ds, localId, remoteId);
+    public LiveData(DataSource ds, int folderId, int localId, String remoteId)
+        throws  ServiceException {
+        super(ds, folderId, localId, remoteId);
     }
     
-    public LiveData(DataSource ds, int localId, long localDate, String remoteId,
-        String remoteFolderId, long remoteDate, int flags) throws ServiceException {
-        super(ds, localId, remoteId);
+    public LiveData(DataSource ds, int folderId, int localId, long localDate,
+        String remoteId, String remoteFolderId, long remoteDate, int flags)
+        throws ServiceException {
+        super(ds, folderId, localId, remoteId);
         setDates(localDate, remoteDate);
         setRemoteFolderId(remoteFolderId);
         setFlags(flags);

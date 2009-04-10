@@ -224,8 +224,8 @@ public class DbImapMessage {
     public static int getLocalMessageId(Mailbox mbox, int localFolderId, long remoteUid)
     throws ServiceException {
         ZimbraLog.datasource.debug(
-                "Getting local message id for tracked message: mboxId=%d, localFolderId=%d, remoteUid=%d",
-                mbox.getId(), localFolderId, remoteUid);
+            "Getting local message id for tracked message: mboxId=%d, localFolderId=%d, remoteUid=%d",
+            mbox.getId(), localFolderId, remoteUid);
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -250,14 +250,14 @@ public class DbImapMessage {
         }
     }
 
-    public static Pair<ImapMessage, Integer> getImapMessage(Mailbox mbox, int itemId)
+    public static Pair<ImapMessage, Integer> getImapMessage(Mailbox mbox, DataSource ds, int itemId)
         throws ServiceException {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-        	String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
-        	String IN_IMAP_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = ? AND";
+            String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
+            String IN_IMAP_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = ? AND";
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "SELECT imap.uid, imap.flags as tflags, imap.imap_folder_id, mi.unread, mi.flags " +
@@ -277,7 +277,7 @@ public class DbImapMessage {
                 int folderId = rs.getInt("imap_folder_id");
                 flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
                 return new Pair<ImapMessage, Integer>
-                    (new ImapMessage(uid, itemId, flags, tflags), folderId);
+                    (new ImapMessage(ds, -1, itemId, tflags, uid, flags), folderId);
             }
             return null;
         } catch (SQLException e) {
@@ -289,7 +289,7 @@ public class DbImapMessage {
         }
     }
 
-    public static List<ImapMessage> getMovedMessages(Mailbox mbox, int folderId)
+    public static List<ImapMessage> getMovedMessages(Mailbox mbox, DataSource ds, int folderId)
         throws ServiceException {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -314,7 +314,7 @@ public class DbImapMessage {
                 int unread = rs.getInt("unread");
                 int tflags = rs.getInt("tflags");
                 flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
-                msgs.add(new ImapMessage(uid, itemId, flags, tflags));
+                msgs.add(new ImapMessage(ds, -1, itemId, tflags, uid, flags));
             }
             rs.close();
             stmt.close();
@@ -339,8 +339,8 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-        	String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
-        	String IN_IMAP_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = ? AND";
+            String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
+            String IN_IMAP_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = ? AND";
             conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
@@ -361,7 +361,7 @@ public class DbImapMessage {
                 int unread = rs.getInt("unread");
                 int tflags = rs.getInt("tflags");
                 flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
-                imapMessages.add(new ImapMessage(uid, itemId, flags, tflags));
+                imapMessages.add(new ImapMessage(ds, -1, itemId, tflags, uid, flags));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get IMAP message data", e);
@@ -372,7 +372,7 @@ public class DbImapMessage {
         }
 
         ZimbraLog.datasource.debug("Found %d tracked IMAP messages for %s",
-            imapMessages.size(), imapFolder.getRemotePath());
+            imapMessages.size(), imapFolder.getRemoteId());
         return imapMessages;
     }
 
@@ -391,8 +391,8 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-        	String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
-        	String IN_MI_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ? AND";
+            String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
+            String IN_MI_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ? AND";
             conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(

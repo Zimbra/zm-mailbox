@@ -180,6 +180,7 @@ public class ImapSync extends MailItemImport {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         trackedFolders = dataSource.getImapFolders();
+        //trackedFolders = ImapFolder.getImapFolders(dataSource);
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
         syncLocalFolders(getLocalFolders());
@@ -314,15 +315,16 @@ public class ImapSync extends MailItemImport {
      */
     String getLocalPath(ListData ld) {
         String remotePath = ld.getMailbox();
-        char delimiter = ld.getDelimiter();
+        char localDelimiter = ld.getDelimiter();
         String relativePath = ld.getMailbox();
-        if (delimiter != '/' && (remotePath.indexOf(delimiter) >= 0 ||
+        
+        if (localDelimiter != '/' && (remotePath.indexOf(localDelimiter) >= 0 ||
                                  remotePath.indexOf('/') >= 0)) {
             // Change remote path to use our separator
-            String[] parts = remotePath.split("\\" + delimiter);
+            String[] parts = remotePath.split("\\" + localDelimiter);
             for (int i = 0; i < parts.length; i++) {
                 // TODO Handle case where separator is not valid in Zimbra folder name
-                parts[i] = parts[i].replace('/', delimiter);
+                parts[i] = parts[i].replace('/', localDelimiter);
             }
             relativePath = StringUtil.join("/", parts);
         }

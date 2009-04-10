@@ -34,11 +34,13 @@ import com.zimbra.cs.mailbox.Metadata;
 public class DbDataSource {
 
     public static class DataSourceItem {
+        public int folderId;
 	public int itemId;
 	public String remoteId;
 	public Metadata md;
 	
-	public DataSourceItem(int i, String r, Metadata m) {
+	public DataSourceItem(int f, int i, String r, Metadata m) {
+	    folderId = f;
 	    itemId = i;
 	    remoteId = r;
 	    md = m;
@@ -65,22 +67,24 @@ public class DbDataSource {
             sb.append(getTableName(mbox));
             sb.append(" (");
             sb.append(DbMailItem.MAILBOX_ID);
-            sb.append("data_source_id, item_id, remote_id, metadata) VALUES (");
+            sb.append("data_source_id, item_id, folder_id, remote_id, metadata) VALUES (");
             sb.append(DbMailItem.MAILBOX_ID_VALUE);
-            sb.append("?, ?, ?, ?)");
+            sb.append("?, ?, ?, ?, ?)");
             if (Db.supports(Db.Capability.ON_DUPLICATE_KEY)) {
-            	sb.append(" ON DUPLICATE KEY UPDATE data_source_id = ?, item_id = ?, remote_id = ?, metadata = ?");
+            	sb.append(" ON DUPLICATE KEY UPDATE data_source_id = ?, item_id = ?, folder_id = ?, remote_id = ?, metadata = ?");
             }
             stmt = conn.prepareStatement(sb.toString());
             int i = 1;
             i = DbMailItem.setMailboxId(stmt, mbox, i);
             stmt.setString(i++, dataSourceId);
             stmt.setInt(i++, item.itemId);
+            stmt.setInt(i++, item.folderId);
             stmt.setString(i++, item.remoteId);
             stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
             if (Db.supports(Db.Capability.ON_DUPLICATE_KEY)) {
                 stmt.setString(i++, dataSourceId);
                 stmt.setInt(i++, item.itemId);
+                stmt.setInt(i++, item.folderId);
                 stmt.setString(i++, item.remoteId);
                 stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
             }
@@ -110,11 +114,12 @@ public class DbDataSource {
             StringBuilder sb = new StringBuilder();
             sb.append("UPDATE ");
             sb.append(getTableName(mbox));
-            sb.append(" SET remote_id = ?, metadata = ? WHERE ");
+            sb.append(" SET folder_id = ?, remote_id = ?, metadata = ? WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
             sb.append(" item_id = ?");
             stmt = conn.prepareStatement(sb.toString());
             int i = 1;
+            stmt.setInt(i++, item.folderId);
             stmt.setString(i++, item.remoteId);
             stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
             i = DbMailItem.setMailboxId(stmt, mbox, i);
@@ -240,7 +245,7 @@ public class DbDataSource {
         try {
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
-            sb.append("SELECT item_id, remote_id, metadata FROM ");
+            sb.append("SELECT item_id, folder_id, remote_id, metadata FROM ");
             sb.append(getTableName(mbox));
             sb.append(" WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
@@ -252,10 +257,10 @@ public class DbDataSource {
             rs = stmt.executeQuery();
             while (rs.next()) {
             	Metadata md = null;
-            	String buf = rs.getString(3);
+            	String buf = rs.getString(4);
             	if (buf != null)
             		md = new Metadata(buf);
-            	items.add(new DataSourceItem(rs.getInt(1), rs.getString(2), md));
+            	items.add(new DataSourceItem(rs.getInt(2), rs.getInt(1), rs.getString(3), md));
             }
             rs.close();
             stmt.close();
@@ -298,7 +303,7 @@ public class DbDataSource {
             	String buf = rs.getString(3);
             	if (buf != null)
             		md = new Metadata(buf);
-            	items.add(new DataSourceItem(rs.getInt(1), rs.getString(2), md));
+            	items.add(new DataSourceItem(folderId, rs.getInt(1), rs.getString(2), md));
             }
             rs.close();
             stmt.close();
@@ -340,7 +345,7 @@ public class DbDataSource {
             while (rs.next()) {
                 String s = rs.getString(3);
                 Metadata md = s != null ? new Metadata(s) : null;
-                items.add(new DataSourceItem(rs.getInt(1), rs.getString(2), md));
+                items.add(new DataSourceItem(folderId, rs.getInt(1), rs.getString(2), md));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get mapping for data source " + ds.getName(), e);
@@ -355,6 +360,7 @@ public class DbDataSource {
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
+        int folderId = -1;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String remoteId = null;
@@ -364,7 +370,7 @@ public class DbDataSource {
         try {
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
-            sb.append("SELECT remote_id, metadata FROM ");
+            sb.append("SELECT folder_id, remote_id, metadata FROM ");
             sb.append(getTableName(mbox));
             sb.append(" WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
@@ -376,8 +382,9 @@ public class DbDataSource {
             stmt.setInt(i++, itemId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-            	remoteId = rs.getString(1);
-            	String buf = rs.getString(2);
+                folderId = rs.getInt(1);
+            	remoteId = rs.getString(2);
+            	String buf = rs.getString(3);
             	if (buf != null)
             	    md = new Metadata(buf);
             }
@@ -390,12 +397,13 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	return new DataSourceItem(itemId, remoteId, md);
+    	return new DataSourceItem(folderId, itemId, remoteId, md);
     }
 
     public static DataSourceItem getReverseMapping(DataSource ds, String remoteId) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
+        int folderId = -1;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         int itemId = 0;
@@ -405,7 +413,7 @@ public class DbDataSource {
         try {
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
-            sb.append("SELECT item_id, metadata FROM ");
+            sb.append("SELECT item_id, folder_id, metadata FROM ");
             sb.append(getTableName(mbox));
             sb.append(" WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
@@ -418,7 +426,8 @@ public class DbDataSource {
             rs = stmt.executeQuery();
             if (rs.next()) {
             	itemId = rs.getInt(1);
-            	String buf = rs.getString(2);
+            	folderId = rs.getInt(2);
+            	String buf = rs.getString(3);
             	if (buf != null)
             		md = new Metadata(buf);
             }
@@ -431,7 +440,7 @@ public class DbDataSource {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    	return new DataSourceItem(itemId, remoteId, md);
+    	return new DataSourceItem(folderId, itemId, remoteId, md);
     }
 
     public static String getTableName(Mailbox mbox) {

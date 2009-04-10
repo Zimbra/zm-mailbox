@@ -26,7 +26,6 @@ import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 
 public class DbImapFolder {
 
@@ -62,7 +61,7 @@ public class DbImapFolder {
                 if (rs.wasNull())
                     uidValidity = null;
 
-                ImapFolder imapFolder = new ImapFolder(mbox.getId(), itemId, ds.getId(), localPath, remotePath, uidValidity);
+                ImapFolder imapFolder = new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
                 imapFolders.add(imapFolder);
             }
         } catch (SQLException e) {
@@ -85,8 +84,8 @@ public class DbImapFolder {
         try {
             conn = DbPool.getConnection(mbox);
 
-        ZimbraLog.datasource.debug(
-            "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
+            ZimbraLog.datasource.debug(
+                "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
             itemId, localPath, remotePath, uidValidity);
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
@@ -101,8 +100,7 @@ public class DbImapFolder {
             stmt.setLong(pos++, uidValidity);
             stmt.executeUpdate();
             conn.commit();
-            
-            return new ImapFolder(mbox.getId(), itemId, ds.getId(), localPath, remotePath, uidValidity);
+            return new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to store IMAP message data", e);
         } finally {
@@ -116,7 +114,7 @@ public class DbImapFolder {
      */
     public static void updateImapFolder(ImapFolder imapFolder)
     throws ServiceException {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(imapFolder.getMailboxId());
+        Mailbox mbox = imapFolder.getDataSource().getMailbox();
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -129,10 +127,10 @@ public class DbImapFolder {
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? AND item_id = ?");
             int pos = 1;
             stmt.setString(pos++, imapFolder.getLocalPath());
-            stmt.setString(pos++, imapFolder.getRemotePath());
+            stmt.setString(pos++, imapFolder.getRemoteId());
             stmt.setLong(pos++, imapFolder.getUidValidity());
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, imapFolder.getDataSourceId());
+            stmt.setString(pos++, imapFolder.getDataSource().getId());
             stmt.setInt(pos++, imapFolder.getItemId());
             int numRows = stmt.executeUpdate();
             if (numRows != 1) {

@@ -35,7 +35,7 @@ public class DataSourceFolderMapping extends DataSourceMapping {
     }
     
     public DataSourceFolderMapping(DataSource ds, int itemId, String remoteId) throws ServiceException {
-        super(ds, itemId, remoteId);
+        super(ds, ds.getFolderId(), itemId, remoteId);
     }
 
     @Override

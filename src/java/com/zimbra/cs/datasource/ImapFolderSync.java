@@ -142,7 +142,7 @@ class ImapFolderSync {
         localFolder = new LocalFolder(mailbox, folder);
         tracker = imapSync.getTrackedFolders().getByItemId(folder.getId());
         if (tracker != null) { //was in sync
-            remoteFolder = new RemoteFolder(connection, tracker.getRemotePath());
+            remoteFolder = new RemoteFolder(connection, tracker.getRemoteId());
             if (!remoteFolder.exists()) {
                 remoteFolder.info("folder was deleted");
                 if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
@@ -178,15 +178,15 @@ class ImapFolderSync {
         if (remotePath == null) {
             return null; // not eligible for synchronization
         }
-        RemoteFolder remoteFolder = new RemoteFolder(connection, remotePath);
+        RemoteFolder newFolder = new RemoteFolder(connection, remotePath);
         try {
-            remoteFolder.create();
+            newFolder.create();
         } catch (CommandFailedException e) {
             syncFolderFailed(folder.getId(), remotePath,
                              "Unable to create remote folder", e);
             return null;
         }
-        return remoteFolder;
+        return newFolder;
     }
 
     /*
@@ -340,7 +340,7 @@ class ImapFolderSync {
         int folderId = localFolder.getId();
         for (int id : deletedIds) {
             clearError(id);
-            Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
+            Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, ds, id);
             if (pair != null && pair.getSecond() == folderId) {
                 DbImapMessage.deleteImapMessage(mailbox, folderId, id);
                 long uid = pair.getFirst().getUid();
@@ -370,15 +370,15 @@ class ImapFolderSync {
         int msgId = msg.getId();
         int msgFolderId = msg.getFolderId();
         Pair<ImapMessage, Integer> pair =
-            DbImapMessage.getImapMessage(mailbox, msgId);
+            DbImapMessage.getImapMessage(mailbox, ds, msgId);
         if (pair != null) {
-            ImapMessage tracker = pair.getFirst();
+            ImapMessage msgTracker = pair.getFirst();
             int trackedFolderId = pair.getSecond();
             if (msgFolderId == trackedFolderId) {
                 if (trackedFolderId == folderId) {
                     // Case 1: Message flags changed. Update remote flags.
-                    int flags = tracker.getTrackedFlags();
-                    updateFlags(tracker, SyncUtil.zimbraToImapFlags(flags));
+                    int flags = msgTracker.getFlags();
+                    updateFlags(msgTracker, SyncUtil.zimbraToImapFlags(flags));
                 } else {
                     // Case 4: Message moved from another folder. Let move be
                     // handled when source folder is processed.
@@ -388,7 +388,7 @@ class ImapFolderSync {
                 // if UIDPLUS available, otherwise just delete the message
                 // remotely and let the new local message be appended when
                 // the destination folder is processed.
-                if (!moveMessage(tracker)) {
+                if (!moveMessage(msgTracker)) {
                     deletedIds.add(msgId);
                 }
             }
@@ -481,7 +481,7 @@ class ImapFolderSync {
                 return false;
             }
             tracker.setLocalPath(localPath);
-            tracker.setRemotePath(newRemotePath);
+            tracker.setRemoteId(newRemotePath);
             ds.updateImapFolder(tracker);
         } else {
             // Folder was moved outside of the data source root, or
@@ -552,7 +552,7 @@ class ImapFolderSync {
             remoteFolder.debug("Appending new message with item id %d", id);
             try {
                 // Bug 27924: delete tracker from source folder if it exists
-                Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
+                Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, ds, id);
                 if (pair != null) {
                     DbImapMessage.deleteImapMessage(mailbox, pair.getSecond(), id);
                 }
@@ -602,7 +602,7 @@ class ImapFolderSync {
             Date date = SyncUtil.getInternalDate(msg, mm);
             try {
                 // Bug 27924: delete tracker from source folder if it exists
-                Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
+                Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, ds, id);
                 if (pair != null) {
                     DbImapMessage.deleteImapMessage(mailbox, pair.getSecond(), id);
                 }
@@ -804,8 +804,8 @@ class ImapFolderSync {
     private void updateFlags(ImapMessage msg, Flags flags)
         throws ServiceException, IOException {
         int id = msg.getItemId();
-        int localFlags = msg.getFlags();
-        int trackedFlags = msg.getTrackedFlags();
+        int localFlags = msg.getLocalFlags();
+        int trackedFlags = msg.getFlags();
         int remoteFlags = SyncUtil.imapToZimbraFlags(flags);
         int newLocalFlags = mergeFlags(localFlags, trackedFlags, remoteFlags);
         int newRemoteFlags = SyncUtil.imapFlagsOnly(newLocalFlags);
@@ -1062,7 +1062,7 @@ class ImapFolderSync {
 
     private void moveMessages() throws IOException, ServiceException {
         List<ImapMessage> msgs =
-            DbImapMessage.getMovedMessages(mailbox, localFolder.getId());
+            DbImapMessage.getMovedMessages(mailbox, ds, localFolder.getId());
         if (!msgs.isEmpty()) {
             for (ImapMessage msg : msgs) {
                 moveMessage(msg);
@@ -1087,12 +1087,12 @@ class ImapFolderSync {
         ImapFolder folderTracker = trackedFolders.getByItemId(fid);
         String remotePath;
         if (folderTracker != null) {
-            remotePath = folderTracker.getRemotePath();
+            remotePath = folderTracker.getRemoteId();
         } else {
             // If remote folder does not exist, then create it on demand
-            RemoteFolder remoteFolder = createRemoteFolder(folder);
-            if (remoteFolder == null) return false;
-            remotePath = remoteFolder.getPath();
+            RemoteFolder newFolder = createRemoteFolder(folder);
+            if (newFolder == null) return false;
+            remotePath = newFolder.getPath();
         }
         CopyResult cr;
         try {
@@ -1125,7 +1125,7 @@ class ImapFolderSync {
         DbImapMessage.deleteImapMessage(mailbox, localFolder.getId(), msg.getId());
         long uid = Long.parseLong(cr.getToUids());
         DbImapMessage.storeImapMessage(
-            mailbox, fid, uid, msg.getId(), msgTracker.getTrackedFlags());
+            mailbox, fid, uid, msg.getId(), msgTracker.getFlags());
         // This bit of ugliness is to make sure we update target folder sync state
         // to reflect UID that was just added
         ImapFolderSync syncedFolder = imapSync.getSyncedFolder(fid);
