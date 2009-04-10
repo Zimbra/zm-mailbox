@@ -77,6 +77,10 @@ public class ZSignature implements Comparable, ToZJSONObject {
     public String getType() {
         return mType;
     }
+
+    public void setType(String type) {
+        mType = type;
+    }
     
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
