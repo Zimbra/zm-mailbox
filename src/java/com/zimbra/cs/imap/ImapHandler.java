@@ -88,8 +88,6 @@ abstract class ImapHandler extends ProtocolHandler {
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
-    private DateFormat mZimbraFormat = DateFormat.getDateInstance(DateFormat.SHORT);
-
     protected ImapConfig      mConfig;
     protected OutputStream    mOutputStream;
     protected Authenticator   mAuthenticator;
@@ -113,8 +111,6 @@ abstract class ImapHandler extends ProtocolHandler {
         super(server);
         mConfig = (ImapConfig) server.getConfig();
     }
-
-    DateFormat getZimbraFormat()  { return mZimbraFormat; }
 
     ImapCredentials getCredentials()  { return mCredentials; }
 

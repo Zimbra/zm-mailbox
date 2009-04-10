@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.imap;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,15 +59,15 @@ abstract class ImapSearch {
     static abstract class LogicalOperation extends ImapSearch {
         List<ImapSearch> mChildren = new ArrayList<ImapSearch>();
 
-        boolean canBeRunLocally() {
+        LogicalOperation addChild(ImapSearch i4search) {
+            mChildren.add(i4search);  return this;
+        }
+
+        @Override boolean canBeRunLocally() {
             for (ImapSearch i4search : mChildren)
                 if (!i4search.canBeRunLocally())
                     return false;
             return true;
-        }
-
-        LogicalOperation addChild(ImapSearch i4search) {
-            mChildren.add(i4search);  return this;
         }
 
         @Override boolean requiresMODSEQ() {
@@ -80,14 +81,14 @@ abstract class ImapSearch {
     static class AndOperation extends LogicalOperation {
         AndOperation(ImapSearch... children)  { super();  for (ImapSearch i4search : children) addChild(i4search); }
 
-        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
+        @Override String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             StringBuilder search = new StringBuilder("(");
             for (ImapSearch i4search : mChildren)
                 search.append(search.length() == 1 ? "" : " ").append(i4search.toZimbraSearch(i4folder));
             return search.append(')').toString();
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             ImapMessageSet matched = null;
             for (ImapSearch i4search : mChildren) {
                 if (matched == null)
@@ -104,14 +105,14 @@ abstract class ImapSearch {
     static class OrOperation extends LogicalOperation {
         OrOperation(ImapSearch... children)  { super();  for (ImapSearch i4search : children) addChild(i4search); }
 
-        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
+        @Override String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             StringBuilder search = new StringBuilder("(");
             for (ImapSearch i4search : mChildren)
                 search.append(search.length() == 1 ? "(" : " or (").append(i4search.toZimbraSearch(i4folder)).append(')');
             return search.append(')').toString();
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             ImapMessageSet matched = null;
             for (ImapSearch i4search : mChildren) {
                 if (matched == null)
@@ -129,11 +130,11 @@ abstract class ImapSearch {
         NotOperation()                  { super(); }
         NotOperation(ImapSearch child)  { super();  addChild(child); }
 
-        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
+        @Override String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             return '-' + mChildren.get(0).toZimbraSearch(i4folder);
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             ImapMessageSet matches = i4folder.getAllMessages();
             matches.removeAll(mChildren.get(0).evaluate(i4folder));
             return matches;
@@ -141,15 +142,15 @@ abstract class ImapSearch {
     }
 
     static class AllSearch extends ImapSearch {
-        boolean canBeRunLocally()                     { return true; }
-        String toZimbraSearch(ImapFolder i4folder)    { return "item:all"; }
-        ImapMessageSet evaluate(ImapFolder i4folder)  { return i4folder.getAllMessages(); }
+        @Override boolean canBeRunLocally()                     { return true; }
+        @Override String toZimbraSearch(ImapFolder i4folder)    { return "item:all"; }
+        @Override ImapMessageSet evaluate(ImapFolder i4folder)  { return i4folder.getAllMessages(); }
     }
 
     static class NoneSearch extends ImapSearch {
-        boolean canBeRunLocally()                     { return true; }
-        String toZimbraSearch(ImapFolder i4folder)    { return "item:none"; }
-        ImapMessageSet evaluate(ImapFolder i4folder)  { return new ImapMessageSet(); }
+        @Override boolean canBeRunLocally()                     { return true; }
+        @Override String toZimbraSearch(ImapFolder i4folder)    { return "item:none"; }
+        @Override ImapMessageSet evaluate(ImapFolder i4folder)  { return new ImapMessageSet(); }
     }
 
     static class SequenceSearch extends ImapSearch {
@@ -158,13 +159,13 @@ abstract class ImapSearch {
         private boolean mIsUidSearch;
         SequenceSearch(String tag, String subSequence, boolean byUID)  { mTag = tag;  mSubSequence = subSequence;  mIsUidSearch = byUID; }
 
-        boolean canBeRunLocally()  { return true; }
+        @Override boolean canBeRunLocally()  { return true; }
 
-        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
+        @Override String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             return sequenceAsSearchTerm(i4folder, evaluate(i4folder), true);
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             return i4folder.getSubsequence(mTag, mSubSequence, mIsUidSearch, true);
         }
     }
@@ -173,9 +174,9 @@ abstract class ImapSearch {
         private String mFlagName;
         FlagSearch(String flagName)  { mFlagName = flagName; }
 
-        boolean canBeRunLocally()  { return true; }
+        @Override boolean canBeRunLocally()  { return true; }
 
-        String toZimbraSearch(ImapFolder i4folder) {
+        @Override String toZimbraSearch(ImapFolder i4folder) {
             ImapFlag i4flag = i4folder.getFlagByName(mFlagName);
             if (i4flag == null)
                 return "item:none";
@@ -185,7 +186,7 @@ abstract class ImapSearch {
             return prefix + sequenceAsSearchTerm(i4folder, i4folder.getFlaggedMessages(i4flag), true) + suffix;
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             ImapFlag i4flag = i4folder.getFlagByName(mFlagName);
             if (i4flag == null)
                 return new ImapMessageSet();
@@ -210,20 +211,20 @@ abstract class ImapSearch {
         private long mTimestamp;
         DateSearch(Relation relation, Date date)  { mDate = date;  mTimestamp = date.getTime();  mRelation = relation; }
 
-        boolean canBeRunLocally() {
+        @Override boolean canBeRunLocally() {
             return mTimestamp < 0 || mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH;
         }
 
-        String toZimbraSearch(ImapFolder i4folder)  {
+        @Override String toZimbraSearch(ImapFolder i4folder)  {
             if (mTimestamp < 0)
                 return (mRelation == Relation.after ? "item:all" : "item:none");
             else if (mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH)
                 return (mRelation == Relation.before ? "item:all" : "item:none");
             else
-                return mRelation + i4folder.getHandler().getZimbraFormat().format(mDate);
+                return mRelation + DateFormat.getDateInstance(DateFormat.SHORT).format(mDate);
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             if (mTimestamp < 0)
                 return (mRelation == Relation.after ? i4folder.getAllMessages() : new ImapMessageSet());
             else if (mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH)
@@ -238,9 +239,9 @@ abstract class ImapSearch {
         private int mOffset;
         RelativeDateSearch(DateSearch.Relation relation, int offset)  { mOffset = offset;  mRelation = relation; }
 
-        boolean canBeRunLocally()                   { return false; }
-        String toZimbraSearch(ImapFolder i4folder)  { return mRelation.toString() + (System.currentTimeMillis() - mOffset * Constants.MILLIS_PER_SECOND); }
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override boolean canBeRunLocally()                   { return false; }
+        @Override String toZimbraSearch(ImapFolder i4folder)  { return mRelation.toString() + (System.currentTimeMillis() - mOffset * Constants.MILLIS_PER_SECOND); }
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
     }
@@ -249,9 +250,9 @@ abstract class ImapSearch {
         private int mChangedSince;
         ModifiedSearch(int changeId)  { mChangedSince = changeId; }
 
-        @Override boolean requiresMODSEQ()  { return true; }
-        boolean canBeRunLocally()           { return false; }
-        String toZimbraSearch(ImapFolder i4folder) {
+        @Override boolean requiresMODSEQ()   { return true; }
+        @Override boolean canBeRunLocally()  { return false; }
+        @Override String toZimbraSearch(ImapFolder i4folder) {
             ImapFlagCache i4cache = i4folder.getTagset();
             StringBuilder query = new StringBuilder("(modseq:>").append(mChangedSince);
             if (i4cache.getMaximumModseq() > mChangedSince) {
@@ -261,7 +262,7 @@ abstract class ImapSearch {
             }
             return query.append(')').toString();
         }
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
     }
@@ -272,9 +273,9 @@ abstract class ImapSearch {
         private long mSize;
         SizeSearch(Relation relation, long size)  { mSize = size;  mRelation = relation; }
 
-        boolean canBeRunLocally()                   { return false; }
-        String toZimbraSearch(ImapFolder i4folder)  { return mRelation + ":" + mSize; }
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override boolean canBeRunLocally()                   { return false; }
+        @Override String toZimbraSearch(ImapFolder i4folder)  { return mRelation + ":" + mSize; }
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
     }
@@ -283,9 +284,9 @@ abstract class ImapSearch {
         private String mValue;
         ContentSearch(String value)  { mValue = value; }
 
-        boolean canBeRunLocally()                   { return mValue.trim().equals(""); }
-        String toZimbraSearch(ImapFolder i4folder)  { return stringAsSearchTerm(mValue); }
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override boolean canBeRunLocally()                   { return mValue.trim().equals(""); }
+        @Override String toZimbraSearch(ImapFolder i4folder)  { return stringAsSearchTerm(mValue); }
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             if (canBeRunLocally())
                 return i4folder.getAllMessages();
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
@@ -335,14 +336,14 @@ abstract class ImapSearch {
             mValue = value;  mHeader = header;
         }
 
-        boolean canBeRunLocally()  { return false; }
-        String toZimbraSearch(ImapFolder i4folder) {
+        @Override boolean canBeRunLocally()  { return false; }
+        @Override String toZimbraSearch(ImapFolder i4folder) {
             String value = stringAsSearchTerm(mValue);
             if ((mHeader == Header.FROM || mHeader == Header.TO || mHeader == Header.CC) && mValue.indexOf('@') == -1)
                 value += " or " + stringAsSearchTerm('@' + mValue);
             return mHeader + ":(" + value + ")";
         }
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        @Override ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
     }
