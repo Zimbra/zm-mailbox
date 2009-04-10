@@ -56,6 +56,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.ProvUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -383,15 +384,10 @@ public class ZimletUtil {
 		return LC.zimlet_directory.value();
 	}
 
-	public static void flushCache() throws ZimletException, IOException {
+	public static void flushCache() throws ZimletException {
 		try {
-			String[] argv = { "-z", "flushCache", "zimlet" };
-			ProvUtil.main(argv);
-		}
-		catch (ParseException e) {
-			throw ZimletException.CANNOT_FLUSH_CACHE(e);
-		}
-		catch (ServiceException e) {
+		    Provisioning.getInstance().flushCache(CacheEntryType.zimlet, null);
+		} catch (ServiceException e) {
 			throw ZimletException.CANNOT_FLUSH_CACHE(e);
 		}
 	}
@@ -1224,7 +1220,7 @@ public class ZimletUtil {
                 mAttachmentId = postAttachment(mUploadURL, zimlet, data, url.getHost());
                 
                 soapDeployZimlet();
-                ZimbraLog.zimlet.info("Deploy initiated.  (check the servers mailbox.log for the status)");
+                ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
             } catch (Exception e) {
                 ZimbraLog.zimlet.info("deploy failed on " + mAdminURL, e);
                 if (e instanceof ServiceException)
