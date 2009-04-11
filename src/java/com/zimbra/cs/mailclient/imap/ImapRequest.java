@@ -19,6 +19,7 @@ package com.zimbra.cs.mailclient.imap;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
+import com.zimbra.cs.mailclient.util.DateUtil;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -161,8 +162,8 @@ public class ImapRequest {
     }
 
     // Format is dd-MMM-yyyy HH:mm:ss Z
-    private String toInternalDate(Date date) {
-        return new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z").format(date);
+    private static String toInternalDate(Date date) {
+        return DateUtil.toImapDateTime(date);
     }
     
     private void writeList(ImapOutputStream out, List list)
@@ -248,5 +249,10 @@ public class ImapRequest {
         } else { // Atom, Flags, Object 
             sb.append(param.toString());
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Date date = new Date();
+        System.out.println("new = " + toInternalDate(date));
     }
 }
