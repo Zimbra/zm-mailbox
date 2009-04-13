@@ -134,19 +134,27 @@ public class Acl extends ResourceProperty {
 		if (mAcl == null)
 			return acl;
 
+		Account ownerAccount = null;
+		Account authAccount = ctxt.getAuthAccount();
+		try {
+			ownerAccount = Provisioning.getInstance().get(Provisioning.AccountBy.name, mOwner);
+		} catch (ServiceException se) {
+		}
         for (Grant g : mAcl.getGrants()) {
 			try {
-				if (g.getGrantedRights(ctxt.getAuthAccount()) == 0)
+				if (ownerAccount != null && authAccount.compareTo(ownerAccount) != 0 && g.getGrantedRights(authAccount) == 0)
 					continue;
 				Element ace = acl.addElement(DavElements.E_ACE);
 				Element principal = ace.addElement(DavElements.E_PRINCIPAL);
 				Element e;
 				switch (g.getGranteeType()) {
 				case ACL.GRANTEE_USER:
-				case ACL.GRANTEE_GUEST:
-					// maybe use different href for guest and internal users.
 					e = principal.addElement(DavElements.E_HREF);
 					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_USER));
+					break;
+				case ACL.GRANTEE_GUEST:
+					e = principal.addElement(DavElements.E_HREF);
+					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_GUEST));
 					break;
 				case ACL.GRANTEE_KEY:
 					// 30049 TODO
