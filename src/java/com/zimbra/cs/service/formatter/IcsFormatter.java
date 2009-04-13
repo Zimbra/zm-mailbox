@@ -98,7 +98,7 @@ public class IcsFormatter extends Formatter {
 
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
-        boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
+        boolean needAppleICalHacks = Browser.APPLE_ICAL.equals(browser);  // bug 15549
         OperationContext octxt = new OperationContext(context.authAccount, context.isUsingAdminPrivileges());
         FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
                 context.resp.getWriter(),
@@ -106,7 +106,7 @@ public class IcsFormatter extends Formatter {
         try {
             context.targetMailbox.writeICalendarForCalendarItems(
                     fileBufferedWriter, octxt, calItems,
-                    useOutlookCompatMode, true, forceOlsonTZID, true);
+                    useOutlookCompatMode, true, needAppleICalHacks, true);
         } finally {
             fileBufferedWriter.finish();
         }

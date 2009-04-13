@@ -179,14 +179,14 @@ public class ZCalendar {
             toICalendar(w, false);
         }
 
-        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
+        public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
             w.write("BEGIN:VCALENDAR");
             w.write(LINE_BREAK);
             for (ZProperty prop : mProperties)
-                prop.toICalendar(w, forceOlsonTZID);
+                prop.toICalendar(w, needAppleICalHacks);
             
             for (ZComponent comp : mComponents)
-                comp.toICalendar(w, forceOlsonTZID);
+                comp.toICalendar(w, needAppleICalHacks);
 
             w.write("END:VCALENDAR");
         }
@@ -306,17 +306,24 @@ public class ZCalendar {
             toICalendar(w, false);
         }
 
-        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
+        public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
             w.write("BEGIN:");
             String name = escape(mName);
             w.write(name);
             w.write(LINE_BREAK);
             
-            for (ZProperty prop : mProperties) 
-                prop.toICalendar(w, forceOlsonTZID);
+            for (ZProperty prop : mProperties) {
+                // If we're dealing with Apple iCal, don't generate the X-ALT-DESC property.
+                // iCal can't handle it when the value is too long.  (Exact threshold is unknown,
+                // but we've seen the failure with a 19KB sample.)  iCal doesn't support x-props anyway,
+                // so there is no loss of functionality.
+                if (needAppleICalHacks && ICalTok.X_ALT_DESC.equals(prop.getToken()))
+                    continue;
+                prop.toICalendar(w, needAppleICalHacks);
+            }
 
-            for (ZComponent comp : mComponents) 
-                comp.toICalendar(w, forceOlsonTZID);
+            for (ZComponent comp : mComponents)
+                comp.toICalendar(w, needAppleICalHacks);
             
             w.write("END:");
             w.write(name);
@@ -534,12 +541,12 @@ public class ZCalendar {
             toICalendar(w, false);
         }
 
-        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
+        public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
             StringWriter sw = new StringWriter();
             
             sw.write(escape(mName));
             for (ZParameter param: mParameters)
-                param.toICalendar(sw, forceOlsonTZID);
+                param.toICalendar(sw, needAppleICalHacks);
 
             sw.write(':');
             if (mValue != null) {
@@ -556,7 +563,7 @@ public class ZCalendar {
                         noEscape = true;
                         break;
                     }
-                    if (forceOlsonTZID && mTok.equals(ICalTok.TZID)) {
+                    if (needAppleICalHacks && mTok.equals(ICalTok.TZID)) {
                         // bug 15549: Apple iCal refuses to work with anything other than Olson TZIDs.
                         value = TZIDMapper.canonicalize(value);
                     }
@@ -637,7 +644,7 @@ public class ZCalendar {
             toICalendar(w, false);
         }
 
-        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
+        public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
             w.write(';');
             w.write(escape(mName));
             w.write('=');
@@ -655,7 +662,7 @@ public class ZCalendar {
                 w.write('\"');
             } else if (ICalTok.TZID.equals(mTok)) {
                 String value = maValue;
-                if (forceOlsonTZID) {
+                if (needAppleICalHacks) {
                     // bug 15549: Apple iCal refuses to work with anything other than Olson TZIDs.
                     value = TZIDMapper.canonicalize(value);
                 }

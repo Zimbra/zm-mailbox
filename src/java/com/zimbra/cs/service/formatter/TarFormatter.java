@@ -429,7 +429,7 @@ public class TarFormatter extends Formatter {
                 List<CalendarItem> calItems = new ArrayList<CalendarItem>();
                 Collection<Instance> instances = ci.expandInstances(
                     context.getStartTime(), context.getEndTime(), false);
-                boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);
+                boolean needAppleICalHacks = Browser.APPLE_ICAL.equals(browser);
                 boolean useOutlookCompatMode = Browser.IE.equals(browser);
                 OperationContext octxt = new OperationContext(context.authAccount,
                     context.isUsingAdminPrivileges());
@@ -439,7 +439,7 @@ public class TarFormatter extends Formatter {
                     calItems.add(ci);
                     context.targetMailbox.writeICalendarForCalendarItems(
                         writer, octxt, calItems, useOutlookCompatMode, true,
-                        forceOlsonTZID, true);
+                        needAppleICalHacks, true);
                     data = writer.toString().getBytes(charset);
                 }
             } else if (mi instanceof Contact) {

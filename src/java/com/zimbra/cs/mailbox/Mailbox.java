@@ -3283,7 +3283,7 @@ public class Mailbox {
 
     public synchronized void writeICalendarForCalendarItems(
             Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
-            boolean useOutlookCompatMode, boolean ignoreErrors, boolean forceOlsonTZID,
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
             boolean trimCalItemsList)
     throws ServiceException {
         try {
@@ -3291,11 +3291,11 @@ public class Mailbox {
 
             ZProperty prop;
             prop = new ZProperty(ICalTok.PRODID, ZCalendar.sZimbraProdID);
-            prop.toICalendar(writer, forceOlsonTZID);
+            prop.toICalendar(writer, needAppleICalHacks);
             prop = new ZProperty(ICalTok.VERSION, ZCalendar.sIcalVersion);
-            prop.toICalendar(writer, forceOlsonTZID);
+            prop.toICalendar(writer, needAppleICalHacks);
             prop = new ZProperty(ICalTok.METHOD, ICalTok.PUBLISH.toString());
-            prop.toICalendar(writer, forceOlsonTZID);
+            prop.toICalendar(writer, needAppleICalHacks);
 
             // timezones
             ICalTimeZone localTz = ICalTimeZone.getAccountTimeZone(getAccount()); 
@@ -3305,7 +3305,7 @@ public class Mailbox {
             // iterate the tzmap and add all the VTimeZone's 
             for (Iterator<ICalTimeZone> iter = tzmap.tzIterator(); iter.hasNext(); ) {
                 ICalTimeZone tz = iter.next();
-                tz.newToVTimeZone().toICalendar(writer, forceOlsonTZID);
+                tz.newToVTimeZone().toICalendar(writer, needAppleICalHacks);
             }
             tzmap = null;  // help keep memory consumption low
 
@@ -3332,7 +3332,7 @@ public class Mailbox {
                                 throw e;
                         }
                         if (comp != null)
-                            comp.toICalendar(writer, forceOlsonTZID);
+                            comp.toICalendar(writer, needAppleICalHacks);
                     }
                 }
             }
@@ -3345,14 +3345,14 @@ public class Mailbox {
 
     public synchronized void writeICalendarForRange(
             Writer writer, OperationContext octxt, long start, long end, int folderId,
-            boolean useOutlookCompatMode, boolean ignoreErrors, boolean forceOlsonTZID)
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("writeICalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
             writeICalendarForCalendarItems(
-                    writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, forceOlsonTZID, true);
+                    writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, true);
         } finally {
             endTransaction(success);
         }
