@@ -178,7 +178,8 @@ public class UrlNamespace {
     public static final String PRINCIPALS_PATH = "/" + PRINCIPALS + "/" + PRINCIPAL_USERS + "/";
 	
 	public static final String ACL_USER   = PRINCIPALS_PATH;
-	public static final String ACL_GROUP  = "/" + PRINCIPALS + "/" + "group" + "/";
+	public static final String ACL_GUEST  = "/" + PRINCIPALS + "/" + "guests" + "/";
+	public static final String ACL_GROUP  = "/" + PRINCIPALS + "/" + "groups" + "/";
 	public static final String ACL_COS    = "/" + PRINCIPALS + "/" + "cos" + "/";
 	public static final String ACL_DOMAIN = "/" + PRINCIPALS + "/" + "domain" + "/";
     
