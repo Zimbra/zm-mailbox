@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090407-2303 */
+    /* build: 5.0 pshao 20090413-1639 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3820,6 +3820,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=340)
     public static final String A_zimbraMailURL = "zimbraMailURL";
+
+    /**
+     * Used to control whether Java NIO direct buffers are used. Value is
+     * propagated to Jetty configuration. In the future, other NIO pieces
+     * (IMAP/POP/LMTP) will also honor this.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1002)
+    public static final String A_zimbraMailUseDirectBuffers = "zimbraMailUseDirectBuffers";
 
     /**
      * Maximum number of entries for per user white list. This restricts the

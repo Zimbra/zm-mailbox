@@ -4335,5 +4335,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>containing a list of all custom metadata sections cannot be modified outside of a callback.</desc>
 </attr>
 
+<attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>
+    Used to control whether Java NIO direct buffers are used. 
+    Value is propagated to Jetty configuration.  In the future, other NIO pieces
+    (IMAP/POP/LMTP) will also honor this.
+  </desc>
+</attr>
+
 
 </attrs>
