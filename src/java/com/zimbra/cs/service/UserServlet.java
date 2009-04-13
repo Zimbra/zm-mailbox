@@ -208,6 +208,9 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String AUTH_DEFAULT = "co,ba,qp"; // all three
 
+    public static final String HTTP_URL = "http_url";
+    public static final String HTTP_STATUS_CODE = "http_code";
+    
     private static HashMap<String, Formatter> mFormatters;
     private static HashMap<String, Formatter> mDefaultFormatters;
 
@@ -1453,7 +1456,9 @@ public class UserServlet extends ZimbraServlet {
             else if (statusCode != HttpStatus.SC_OK && 
             		statusCode != HttpStatus.SC_CREATED &&
             		statusCode != HttpStatus.SC_NO_CONTENT)
-                throw ServiceException.RESOURCE_UNREACHABLE(method.getStatusText(), null);
+                throw ServiceException.RESOURCE_UNREACHABLE(method.getStatusText(), null,
+                		new ServiceException.InternalArgument(HTTP_URL, url, ServiceException.Argument.Type.STR),
+                		new ServiceException.InternalArgument(HTTP_STATUS_CODE, statusCode, ServiceException.Argument.Type.NUM));
 
             List<Header> headers = new ArrayList<Header>(Arrays.asList(method.getResponseHeaders()));
             headers.add(new Header("X-Zimbra-Http-Status", ""+statusCode));
