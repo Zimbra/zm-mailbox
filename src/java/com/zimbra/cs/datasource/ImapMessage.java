@@ -41,6 +41,7 @@ public class ImapMessage extends DataSourceMapping {
         long uid, int localFlags) throws ServiceException {
         super(ds, folderId, itemId, remoteId(folderId, uid));
         setFlags(flags);
+        this.localFlags = localFlags;
         setUid(uid);
     }
 
