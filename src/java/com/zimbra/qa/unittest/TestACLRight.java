@@ -356,7 +356,7 @@ public class TestACLRight extends TestACL {
         expectedAttrs.add(Provisioning.A_zimbraQuotaWarnMessage);
         expectedAttrs.add(Provisioning.A_displayName);
         expectedAttrs.add(Provisioning.A_description);
-        expected = RightChecker.ALLOW_SOME_ATTRS(expectedAttrs);
+        expected = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(expectedAttrs);
         verify(GA, TA, SET, expected);
         
         // 2. domain attrs
@@ -364,7 +364,7 @@ public class TestACLRight extends TestACL {
         expectedAttrs.add(Provisioning.A_description);
         expectedAttrs.add(Provisioning.A_zimbraMailStatus);
         expectedAttrs.add(Provisioning.A_zimbraGalMode);
-        expected = RightChecker.ALLOW_SOME_ATTRS(expectedAttrs);
+        expected = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(expectedAttrs);
         verify(GA, TD, SET, expected);
     }
     

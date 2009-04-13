@@ -5639,9 +5639,19 @@ public class LdapProvisioning extends Provisioning {
     }
 
     @Override
-    public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
-                                                           GranteeBy granteeBy, String grantee,
-                                                           boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+    public RightCommand.AllEffectiveRights getAllEffectiveRights(
+            String granteeType, GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+        return RightCommand.getAllEffectiveRights(this, 
+                                                  granteeType, granteeBy, grantee, 
+                                                  expandSetAttrs, expandGetAttrs);
+    }
+    
+    @Override
+    public RightCommand.EffectiveRights getEffectiveRights(
+            String targetType, TargetBy targetBy, String target,
+            GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getEffectiveRights(this, 
                                                targetType, targetBy, target, 
                                                granteeBy, grantee, 

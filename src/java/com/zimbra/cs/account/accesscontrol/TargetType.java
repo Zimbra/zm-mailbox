@@ -33,6 +33,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
@@ -51,18 +52,19 @@ import com.zimbra.cs.account.Zimlet;
 
 
 public enum TargetType {
-    account(true,           AttributeClass.account,          "Account"),
-    calresource(true,       AttributeClass.calendarResource, "CalendarResource"),
-    cos(true,               AttributeClass.cos,              "Cos"),
-    dl(true,                AttributeClass.distributionList, "DistributionList"),
-    domain(true,            AttributeClass.domain,           "Domain"),
-    server(true,            AttributeClass.server,           "Server"),
-    xmppcomponent(true,     AttributeClass.xmppComponent,    "XMPPComponent"),
-    zimlet(true,            AttributeClass.zimletEntry,      "Zimlet"),
-    config(false,           AttributeClass.globalConfig,     "GlobalConfig"),
-    global(false,           AttributeClass.aclTarget,        "GlobalGrant");
+    account(true,       true,    AttributeClass.account,          "Account"),
+    calresource(true,   true,    AttributeClass.calendarResource, "CalendarResource"),
+    cos(true,           false,   AttributeClass.cos,              "Cos"),
+    dl(true,            true,    AttributeClass.distributionList, "DistributionList"),
+    domain(true,        false,   AttributeClass.domain,           "Domain"),
+    server(true,        false,   AttributeClass.server,           "Server"),
+    xmppcomponent(true, false,   AttributeClass.xmppComponent,    "XMPPComponent"),
+    zimlet(true,        false,   AttributeClass.zimletEntry,      "Zimlet"),
+    config(false,       false,   AttributeClass.globalConfig,     "GlobalConfig"),
+    global(false,       false,   AttributeClass.aclTarget,        "GlobalGrant");
     
     private boolean mNeedsTargetIdentity;
+    private boolean mIsDomained;
     private AttributeClass mAttrClass;
     private String mPrettyName;
     
@@ -98,8 +100,9 @@ public enum TargetType {
      * @param applicableTargetTypes target types of rights that can be granted on this target type
      *                              if null, all target types
      */
-    TargetType(boolean NeedsTargetIdentity, AttributeClass attrClass, String prettyName) {
+    TargetType(boolean NeedsTargetIdentity, boolean isDomained, AttributeClass attrClass, String prettyName) {
         mNeedsTargetIdentity = NeedsTargetIdentity;
+        mIsDomained = isDomained;
         mAttrClass = attrClass;
         mPrettyName = prettyName;
     }
@@ -341,6 +344,14 @@ public enum TargetType {
             throw ServiceException.FAILURE("internal error", null);
     }
 
+    boolean isDomained() {
+        return mIsDomained;
+    }
+    
+    public static String getId(Entry target) {
+        return (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
+    }
+    
     public static Domain getTargetDomain(Provisioning prov, Entry target) throws ServiceException{
         
         if (target instanceof CalendarResource) {

@@ -144,7 +144,7 @@ public abstract class TargetIterator{
                     // Do not even go there if we are a pseudo object,
                     // just create an empty AclGroups and all our TargetIterator
                     // flow will be the same.
-                    if (RightChecker.PseudoZimbraId.isPseudoZimrbaId(((Account)mTarget).getId()))
+                    if (mTarget instanceof PseudoTarget.PseudoAccount)    
                         mGroups = new AclGroups();
                     else        
                         mGroups =  mProv.getAclGroups((Account)mTarget, false);
@@ -160,7 +160,17 @@ public abstract class TargetIterator{
                 
             } else if (mCurTargetType == TargetType.domain) {
                 mCurTargetType = TargetType.global;
-                grantedOn = mProv.getDomain((Account)mTarget);
+                
+                Domain pseudoDomain = null;
+                if (mTarget instanceof PseudoTarget.PseudoAccount)
+                    pseudoDomain = ((PseudoTarget.PseudoAccount)mTarget).getPseudoDomain();
+                else if (mTarget instanceof PseudoTarget.PseudoCalendarResource)
+                    pseudoDomain = ((PseudoTarget.PseudoCalendarResource)mTarget).getPseudoDomain();
+                
+                if (pseudoDomain != null)
+                    grantedOn = next();
+                else
+                    grantedOn = mProv.getDomain((Account)mTarget);
                 
             } else if (mCurTargetType == TargetType.global) {
                 mNoMore = true;
@@ -198,7 +208,7 @@ public abstract class TargetIterator{
                     // Do not even go there if we are a pseudo object,
                     // just create an empty AclGroups and all our TargetIterator
                     // flow will be the same.
-                    if (RightChecker.PseudoZimbraId.isPseudoZimrbaId(((DistributionList)mTarget).getId()))
+                    if (mTarget instanceof PseudoTarget.PseudoDistributionList)
                         mGroups = new AclGroups();
                     else        
                         mGroups =  mProv.getAclGroups((DistributionList)mTarget, false);
@@ -214,7 +224,15 @@ public abstract class TargetIterator{
                 
             } else if (mCurTargetType == TargetType.domain) {
                 mCurTargetType = TargetType.global;
-                grantedOn = mProv.getDomain((DistributionList)mTarget);
+                
+                Domain pseudoDomain = null;
+                if (mTarget instanceof PseudoTarget.PseudoDistributionList)
+                    pseudoDomain = ((PseudoTarget.PseudoDistributionList)mTarget).getPseudoDomain();
+                
+                if (pseudoDomain != null)
+                    grantedOn = next();
+                else
+                    grantedOn = mProv.getDomain((DistributionList)mTarget);
                 
             } else if (mCurTargetType == TargetType.global) {
                 mNoMore = true;

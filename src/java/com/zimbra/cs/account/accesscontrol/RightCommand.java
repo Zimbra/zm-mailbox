@@ -15,6 +15,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +202,6 @@ public class RightCommand {
     
     public static class EffectiveRights {
         private static final SortedMap<String, EffectiveAttr> EMPTY_MAP = new TreeMap<String, EffectiveAttr>();
-        private static final List<String> EMPTY_LIST = new ArrayList<String>();
         
         String mTargetType;
         String mTargetId;
@@ -209,20 +209,22 @@ public class RightCommand {
         String mGranteeId;
         String mGranteeName;
         
+        String mDigest;
+        
         // preset
-        List<String> mPresetRights = new ArrayList<String>();
+        List<String> mPresetRights = new ArrayList<String>();       // sorted by right name
         
         // setAttrs
         boolean mCanSetAllAttrs = false;
-        SortedMap<String, EffectiveAttr> mCanSetAttrs = EMPTY_MAP;
+        SortedMap<String, EffectiveAttr> mCanSetAttrs = EMPTY_MAP;  // sorted by attr name
         
         // getAttrs
         boolean mCanGetAllAttrs = false;
-        SortedMap<String, EffectiveAttr> mCanGetAttrs = EMPTY_MAP;
+        SortedMap<String, EffectiveAttr> mCanGetAttrs = EMPTY_MAP;  // sorted by attr name 
         
         EffectiveRights(String targetType, String targetId, String targetName, String granteeId, String granteeName) {
             mTargetType = targetType;
-            mTargetId = targetId;
+            mTargetId = targetId==null ? "" : targetId;
             mTargetName = targetName;
             mGranteeId = granteeId;
             mGranteeName = granteeName;
@@ -233,6 +235,49 @@ public class RightCommand {
                 fromXML_CreateObjectAttrs(parent);
             else
                 fromXML_EffectiveRights(parent);
+        }
+        
+        private boolean hasSameRights(EffectiveRights other) {
+            return getDigest().equals(other.getDigest());
+        }
+        
+        /*
+         * digest is in the format of:
+         * 
+         * preset:{hash-code-of-mPresetRights};setAttrs:all|{hash-code-of-key-list-of-mCanSetAttrs};getAttrs:all|{hash-code-of-key-list-of-mCanGetAttrs}
+         * 
+         * Note: for set/get attrs rights, defaults and constraints(i.e. data in EffectiveAttr) are not included in the computation.  
+         * As long as the attr list are equal, the two rights are consider equal.
+         */
+        private String getDigest() {
+            if (mDigest != null)
+                return mDigest;
+            
+            StringBuilder rights = new StringBuilder();
+            
+            // preset rights
+            rights.append("preset:" + mPresetRights.hashCode() + ";");
+
+            // setAttrs rights
+            rights.append("setAttrs:");
+            if (mCanSetAllAttrs)
+                rights.append("all;");
+            else {
+                List<String> attrs = new ArrayList<String>(mCanSetAttrs.keySet());
+                rights.append(attrs.hashCode() + ";");
+            }
+            
+            // getAttrs rights
+            rights.append("getAttrs:");
+            if (mCanGetAllAttrs)
+                rights.append("all;");
+            else {
+                List<String> attrs = new ArrayList<String>(mCanGetAttrs.keySet());
+                rights.append(attrs.hashCode() + ";");
+            }
+            
+            mDigest = rights.toString();
+            return mDigest;
         }
         
         private void fromXML_EffectiveRights(Element parent) throws ServiceException {
@@ -423,6 +468,138 @@ public class RightCommand {
         public SortedMap<String, EffectiveAttr> canGetAttrs() { return mCanGetAttrs; }
     }
     
+    /*
+     * an assembly of target entries on which a grantee bear the same set of rights
+     * 
+     * e.g. account-1, account-2, account-3: right A, B, C
+     */
+    public static class RightAggregation {
+        // target entries
+        // <id, name> pairs
+        Map<String, String> mEntries;
+        
+        // effective rights
+        EffectiveRights mRights;
+        
+        public Map<String, String> entries() { return mEntries; }
+        public EffectiveRights effectiveRights() { return mRights; }
+        
+        private RightAggregation(String id, String name, EffectiveRights rights) {
+            mEntries = new HashMap<String, String>();
+            mEntries.put(id, name);
+            mRights = rights;
+        }
+        
+        private void addEntry(String id, String name) {
+            mEntries.put(id, name);
+        }
+        
+        private boolean hasSameRights(EffectiveRights er) {
+            return mRights.hasSameRights(er);
+        }
+    }
+    
+    /*
+     * aggregation of all effective rights executable on a target type
+     */
+    public static class RightsByTargetType {
+        //
+        // effective rights on all entries of a target type 
+        // e.g. rights A, B, C
+        //
+        EffectiveRights mAll = null;;
+        
+        //
+        // e.g. account-1, account-2, account-3: rights A
+        //      account-4, account-5:            rights B
+        //      account-6:                       rights X, Y
+        //
+        Set<RightAggregation> mEntries = new HashSet<RightAggregation>();
+        
+        public EffectiveRights all() { return mAll; }
+        public Set<RightAggregation> entries() { return mEntries; }
+        
+        void setAll(EffectiveRights er) {
+            mAll = er;
+        }
+        
+        protected static void add(Set<RightAggregation> entries, String id, String name, EffectiveRights er) {
+            for (RightAggregation ra : entries) {
+                if (ra.hasSameRights(er)) {
+                    ra.addEntry(id, name);
+                    return;
+                }
+            }
+            entries.add(new RightAggregation(id, name, er));
+        }
+        
+        private void addEntry(String id, String name, EffectiveRights er) {
+            add(mEntries, id, name, er);
+        }
+    }
+    
+    /*
+     * aggregation of all effective rights executable on a "domained"
+     * (i.e. entries can be aggregated by a domain) target type:
+     * account, calresource, dl
+     * 
+     * e.g.
+     *     all accounts: rights A, B, C
+     *     
+     *     all accounts in domain-1, domain-2: rights A, B
+     *     all accounts in domain-3:           rights B, C, D
+     *     
+     *     account-1, account-2, account-3: rights A
+     *     account-4, account-5:            rights B
+     *     account-6:                       rights X, Y
+     * 
+     */
+    public static class DomainedRightsByTargetType extends RightsByTargetType {
+        //
+        // effective rights on all entries of a target type in a domain
+        //
+        // e.g. all accounts in domain-1, domain-2: rights A, B
+        //      all accounts in domain-3:           rights B, C, D
+        //
+        Set<RightAggregation> mDomains = new HashSet<RightAggregation>();
+        
+        public Set<RightAggregation> domains() { return mDomains; }
+        
+        void addDomainEntry(String domainId, String domainName, EffectiveRights er) {
+            add(mDomains, domainId, domainName, er);
+        }
+    }
+    
+    public static class AllEffectiveRights {
+        Map<TargetType, RightsByTargetType> mRightsByTargetType = new HashMap<TargetType, RightsByTargetType>();
+        
+        AllEffectiveRights() {
+            for (TargetType tt : TargetType.values()) {
+                if (tt.isDomained())
+                    mRightsByTargetType.put(tt, new DomainedRightsByTargetType());
+                else
+                    mRightsByTargetType.put(tt, new RightsByTargetType());
+                
+            }
+        }
+        
+        public Map<TargetType, RightsByTargetType> rightsByTargetType() { return mRightsByTargetType; }
+        
+        void setAll(TargetType targetType, EffectiveRights er) {
+            mRightsByTargetType.get(targetType).setAll(er);
+        }
+        
+        void addEntry(TargetType targetType, String id, String name, EffectiveRights er) {
+            mRightsByTargetType.get(targetType).addEntry(id, name, er);
+        }
+        
+        void addDomainEntry(TargetType targetType, String domainId, String domainName, EffectiveRights er) {
+            DomainedRightsByTargetType drbtt = (DomainedRightsByTargetType)mRightsByTargetType.get(targetType);
+            drbtt.addDomainEntry(domainId, domainName, er);
+        }
+    }
+
+    
     public static Right getRight(String rightName) throws ServiceException {
         verifyAccessManager();
         return RightManager.getInstance().getRight(rightName);
@@ -515,6 +692,20 @@ public class RightCommand {
         return am.canPerform((Account)granteeEntry, targetEntry, r, false, attrs, true, via);
     }
     
+    public static AllEffectiveRights getAllEffectiveRights(Provisioning prov,
+            String granteeType, GranteeBy granteeBy, String grantee, 
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+        verifyAccessManager();
+
+        // grantee
+        GranteeType gt = GranteeType.fromCode(granteeType);
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+        
+        AllEffectiveRights aer = new AllEffectiveRights();
+        RightChecker.getAllEffectiveRights(granteeEntry, expandSetAttrs, expandGetAttrs, aer);
+        return aer;
+    }
+    
     public static EffectiveRights getEffectiveRights(Provisioning prov,
                                                      String targetType, TargetBy targetBy, String target,
                                                      GranteeBy granteeBy, String grantee,
@@ -531,10 +722,10 @@ public class RightCommand {
         // granteeEntry right must be an Account
         Account granteeAcct = (Account)granteeEntry;
         
-        String targetId = (targetEntry instanceof NamedEntry)? ((NamedEntry)targetEntry).getId() : "";
-        EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel(), granteeAcct.getId(), granteeAcct.getName());
+        EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
+                granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(granteeAcct, targetEntry, expandSetAttrs, expandGetAttrs, er);
+        RightChecker.getEffectiveRights(Grantee.makeGrantee(granteeAcct), targetEntry, expandSetAttrs, expandGetAttrs, er);
         return er;
     }
     
@@ -547,7 +738,7 @@ public class RightCommand {
         verifyAccessManager();
         
         TargetType tt = TargetType.fromString(targetType);
-        Entry targetEntry = RightChecker.createPseudoTarget(prov, tt, domainBy, domainStr, cosBy, cosStr);
+        Entry targetEntry = PseudoTarget.createPseudoTarget(prov, tt, domainBy, domainStr, false, cosBy, cosStr);
        
         // grantee
         GranteeType gt = GranteeType.GT_USER;
@@ -555,10 +746,10 @@ public class RightCommand {
         // granteeEntry right must be an Account
         Account granteeAcct = (Account)granteeEntry;
         
-        String targetId = (targetEntry instanceof NamedEntry)? ((NamedEntry)targetEntry).getId() : "";
-        EffectiveRights er = new EffectiveRights(targetType, targetId, targetEntry.getLabel(), granteeAcct.getId(), granteeAcct.getName());
+        EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
+                granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(granteeAcct, targetEntry, true, true, er);
+        RightChecker.getEffectiveRights(Grantee.makeGrantee(granteeAcct), targetEntry, true, true, er);
         return er;
     }
     

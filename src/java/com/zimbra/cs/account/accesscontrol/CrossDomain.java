@@ -90,7 +90,7 @@ public class CrossDomain {
             // return false so ACL granted on this inherited DL target
             // will be ignored
             ZimbraLog.acl.warn("cannot get domain for dl " + grantedOn.getName() + 
-                    " which checking cross doamin right");
+                    " for checking cross doamin right");
             return false;  
         } 
         

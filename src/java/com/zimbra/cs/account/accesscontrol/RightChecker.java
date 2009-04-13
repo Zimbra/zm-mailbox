@@ -62,6 +62,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
+import com.zimbra.cs.account.accesscontrol.RightCommand.RightAggregation;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
@@ -82,6 +85,17 @@ public class RightChecker {
         private Result mResult;
         private Set<String> mAllowSome;
 
+        public static final AllowedAttrs ALLOW_ALL_ATTRS() {
+            return new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null);
+        }
+        
+        public static final AllowedAttrs DENY_ALL_ATTRS() {
+            return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null);
+        }
+        
+        public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome) {
+            return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
+        }
         
         private AllowedAttrs(Result result, Set<String> allowSome) {
             mResult = result;
@@ -111,18 +125,7 @@ public class RightChecker {
         }
     }
     
-    public static final AllowedAttrs ALLOW_ALL_ATTRS() {
-        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_ALL, null);
-    }
-    
-    public static final AllowedAttrs DENY_ALL_ATTRS() {
-        return new AllowedAttrs(AllowedAttrs.Result.DENY_ALL, null);
-    }
-    
-    public static AllowedAttrs ALLOW_SOME_ATTRS(Set<String> allowSome) {
-        return new AllowedAttrs(AllowedAttrs.Result.ALLOW_SOME, allowSome);
-    }
-    
+   
     private static class SeenRight {
         private boolean mSeenRight;
         
@@ -545,17 +548,14 @@ public class RightChecker {
      * @throws ServiceException
      */
     // public only for unittest
-    public static AllowedAttrs accessibleAttrs(Account grantee, Entry target, 
+    public static AllowedAttrs accessibleAttrs(Grantee grantee, Entry target, 
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
+        if (grantee == null)
+            return AllowedAttrs.DENY_ALL_ATTRS();
         
         Provisioning prov = Provisioning.getInstance();
         
-        Domain granteeDomain = prov.getDomain(grantee);
-        // if we ever get here, the grantee must have a domain
-        if (granteeDomain == null)
-            throw ServiceException.FAILURE("internal error", null);
-        
-        Set<String> granteeIds = setupGranteeIds(grantee);
+        Set<String> granteeIds = grantee.getIdAndGroupIds();
         TargetType targetType = TargetType.getTargetType(target);
         
         Map<String, Integer> allowSome = new HashMap<String, Integer>();
@@ -602,7 +602,12 @@ public class RightChecker {
                     if (acl == null)
                         continue;
                     
-                    boolean skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
+                    boolean skipPositiveGrants = false;
+                    // check cross domain right if we are checking rights for an account
+                    // skip cross domain rights if we are checking rights for a group, because
+                    // members in the group can be in different domains, no point checking it.
+                    if (grantee.isAccount())
+                        skipPositiveGrants = !crossDomainOK(prov, grantee.getAccount(), grantee.getDomain(), 
                             targetDomain, (DistributionList)grantedOn);
                     
                     // don't check yet, collect all acls on all target groups
@@ -660,9 +665,9 @@ public class RightChecker {
         
         AttributeClass klass = TargetType.getAttributeClass(target);
         
-        if (car== CollectAttrsResult.ALLOW_ALL)
+        if (car == CollectAttrsResult.ALLOW_ALL)
             result = processAllowAll(allowSome, denySome, klass);
-        else if (car== CollectAttrsResult.DENY_ALL)
+        else if (car == CollectAttrsResult.DENY_ALL)
             result = processDenyAll(allowSome, denySome, klass);
         else {
             // now allowSome and denySome contain attrs allowed/denied and their shortest distance 
@@ -674,7 +679,7 @@ public class RightChecker {
                         allowSome.remove(attr);
                 }
             }
-            result = ALLOW_SOME_ATTRS(allowSome.keySet());
+            result = AllowedAttrs.ALLOW_SOME_ATTRS(allowSome.keySet());
         }
         
         // computeCanDo(result, target, rightNeeded, attrs);
@@ -685,10 +690,10 @@ public class RightChecker {
     private static AllowedAttrs processDenyAll(Map<String, Integer> allowSome, Map<String, Integer> denySome, 
             AttributeClass klass) throws ServiceException {
         if (allowSome.isEmpty())
-            return DENY_ALL_ATTRS();
+            return AllowedAttrs.DENY_ALL_ATTRS();
         else {
             Set<String> allowed = allowSome.keySet();
-            return ALLOW_SOME_ATTRS(allowed);
+            return AllowedAttrs.ALLOW_SOME_ATTRS(allowed);
         }
     }
 
@@ -696,7 +701,7 @@ public class RightChecker {
             AttributeClass klass) throws ServiceException {
         
         if (denySome.isEmpty()) {
-            return ALLOW_ALL_ATTRS();
+            return AllowedAttrs.ALLOW_ALL_ATTRS();
         } else {
             // get all attrs that can appear on the target entry
             Set<String> allowed = new HashSet<String>();
@@ -705,7 +710,7 @@ public class RightChecker {
             // remove denied from all
             for (String d : denySome.keySet())
                 allowed.remove(d);
-            return ALLOW_SOME_ATTRS(allowed);
+            return AllowedAttrs.ALLOW_SOME_ATTRS(allowed);
         }
     }
     
@@ -981,25 +986,28 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    static RightCommand.EffectiveRights getEffectiveRights(
-            Account grantee, Entry target,
+    static void getEffectiveRights(
+            Grantee grantee, Entry target,
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
 
+        if (grantee == null)
+            return;
+        
         Set<Right> presetRights;
         AllowedAttrs allowSetAttrs;
         AllowedAttrs allowGetAttrs;
         
-        if (isSystemAdmin(grantee, true)) {
+        if (grantee.isAccount() && isSystemAdmin(grantee.getAccount(), true)) {
             // all preset rights on the target type
             TargetType targetType = TargetType.getTargetType(target);
             presetRights = getAllExecutablePresetRights(targetType);
             
             // all attrs on the target type
-            allowSetAttrs = ALLOW_ALL_ATTRS();
+            allowSetAttrs = AllowedAttrs.ALLOW_ALL_ATTRS();
             
             // all attrs on the target type
-            allowGetAttrs = ALLOW_ALL_ATTRS();
+            allowGetAttrs = AllowedAttrs.ALLOW_ALL_ATTRS();
             
         } else {    
             // get effective preset rights
@@ -1038,8 +1046,6 @@ public class RightChecker {
         } else if (allowGetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
             result.setCanGetAttrs(fillDefault(target, allowGetAttrs));
         }
-        
-        return result;
     }
     
     private static List<String> setToSortedList(Set<String> set) {
@@ -1085,16 +1091,11 @@ public class RightChecker {
         return effAttrs;
     }
     
-    private static Set<Right> getEffectivePresetRights(Account grantee, Entry target) throws ServiceException {
+    private static Set<Right> getEffectivePresetRights(Grantee grantee, Entry target) throws ServiceException {
         
-       Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
         
-        Domain granteeDomain = prov.getDomain(grantee);
-        // if we ever get here, the grantee must have a domain
-        if (granteeDomain == null)
-            throw ServiceException.FAILURE("internal error", null);
-        
-        Set<String> granteeIds = setupGranteeIds(grantee);
+        Set<String> granteeIds = grantee.getIdAndGroupIds();
         TargetType targetType = TargetType.getTargetType(target);
         
         Map<Right, Integer> allowed = new HashMap<Right, Integer>();
@@ -1132,7 +1133,12 @@ public class RightChecker {
                 if (acl == null)
                     continue;
                     
-                boolean skipPositiveGrants = !crossDomainOK(prov, grantee, granteeDomain, 
+                boolean skipPositiveGrants = false;
+                // check cross domain right if we are checking rights for an account
+                // skip cross domain rights if we are checking rights for a group, because
+                // members in the group can be in different domains, no point checking it.
+                if (grantee.isAccount())
+                    skipPositiveGrants = !crossDomainOK(prov, grantee.getAccount(), grantee.getDomain(), 
                         targetDomain, (DistributionList)grantedOn);
                 
                 // don't check yet, collect all acls on all target groups
@@ -1264,23 +1270,6 @@ public class RightChecker {
     //
     // util methods
     //
-    private static Set<String> setupGranteeIds(Account grantee) throws ServiceException {
-        Set<String> granteeIds = new HashSet<String>();
-        Provisioning prov = Provisioning.getInstance();
-        
-        if (!isValidGranteeForAdminRights(GranteeType.GT_USER, grantee))
-            return granteeIds;  // return empty Set
-        
-        // get only admin groups
-        AclGroups granteeGroups = prov.getAclGroups(grantee, true);
-        
-        // setup grantees ids 
-        granteeIds.add(grantee.getId());
-        granteeIds.addAll(granteeGroups.groupIds());
-        
-        return granteeIds;
-    }
-    
     private static String getActualAttrName(String attr) {
         if (attr.charAt(0) == '+' || attr.charAt(0) == '-')
             return attr.substring(1);
@@ -1345,7 +1334,7 @@ public class RightChecker {
      * @param attrsNeeded attrs needed to be set.  Cannot be null, must specify which attrs/values to set
      * @return
      */
-    static boolean canSetAttrs(AllowedAttrs attrsAllowed, Account grantee, Entry target, 
+    static boolean canSetAttrs(AllowedAttrs attrsAllowed, Grantee grantee, Entry target, 
             Map<String, Object> attrsNeeded) throws ServiceException {
         
         if (attrsNeeded == null)
@@ -1395,93 +1384,7 @@ public class RightChecker {
         }
         return true;
     }
-
-    /*
-     * construct a pseudo target
-     */
-    static Entry createPseudoTarget(Provisioning prov,
-            TargetType targetType, 
-            DomainBy domainBy, String domainStr,
-            CosBy cosBy, String cosStr) throws ServiceException {
-        
-        Entry targetEntry = null;
-        Config config = prov.getConfig();
-        
-        String zimbraId = PseudoZimbraId.getPseudoZimbraId();
-        Map<String, Object> attrMap = new HashMap<String, Object>();
-        attrMap.put(Provisioning.A_zimbraId, zimbraId);
-        
-        Domain domain = null;
-        if (targetType == TargetType.account ||
-            targetType == TargetType.calresource ||
-            targetType == TargetType.dl) {
-            
-            // need a domain
-            
-            if (domainBy == null || domainStr == null)
-                throw ServiceException.INVALID_REQUEST("domainBy and domain identifier is required", null);
     
-            domain = prov.get(domainBy, domainStr);
-            if (domain == null)
-                throw AccountServiceException.NO_SUCH_DOMAIN(domainStr);
-        }
-        
-        switch (targetType) {
-        case account:
-        case calresource:
-            Cos cos = null;
-            if (cosBy != null && cosStr != null) {
-                cos = prov.get(cosBy, cosStr);
-                if (cos == null)
-                    throw AccountServiceException.NO_SUCH_COS(cosStr);
-                attrMap.put(Provisioning.A_zimbraCOSId, cos.getId());
-            } else {
-                String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = prov.get(CosBy.id, domainCosId);
-                if (cos == null) cos = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
-            }
-            
-            if (targetType == TargetType.account)
-                targetEntry = new Account("pseudo@"+domain.getName(),
-                                           zimbraId,
-                                           attrMap,
-                                           cos.getAccountDefaults(),
-                                           prov);
-            else
-                targetEntry = new CalendarResource("pseudo@"+domain.getName(),
-                                           zimbraId,
-                                           attrMap,
-                                           cos.getAccountDefaults(),
-                                           prov);
-            break;
-            
-        case cos:  
-            targetEntry = new Cos("pseudocos", zimbraId, attrMap, prov);
-            break;
-        case dl:
-            targetEntry = new DistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov);
-            DistributionList dl = (DistributionList)targetEntry;
-            dl.turnToAclGroup();
-            break;
-        case domain:
-            targetEntry = new Domain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
-            break;
-        case server:  
-            targetEntry = new Server("pseudo.pseudo", zimbraId, attrMap, config.getServerDefaults(), prov);
-            break;
-        case xmppcomponent:
-            targetEntry = new XMPPComponent("pseudo", zimbraId, attrMap, prov);
-            break;
-        case zimlet:
-            targetEntry = new Zimlet("pseudo", zimbraId, attrMap, prov);
-            break;
-        default: 
-            throw ServiceException.INVALID_REQUEST("unsupported target for createPseudoTarget", null);
-        }
-        
-        return targetEntry;
-    }
-
     /**
      * returns if grantee is an admin account or admin group
      * 
@@ -1508,18 +1411,6 @@ public class RightChecker {
     
     static boolean isDelegatedAdmin(Account acct, boolean asAdmin) {
         return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false));
-    }
-    
-    static class PseudoZimbraId {
-        private static final String PSEUDO_ZIMBRA_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-        
-        static String getPseudoZimbraId() {
-            return PSEUDO_ZIMBRA_ID;
-        }
-        
-        static boolean isPseudoZimrbaId(String zid) {
-            return (PSEUDO_ZIMBRA_ID.equals(zid));
-        }
     }
     
     static class SearchGrantResult {
@@ -1818,7 +1709,7 @@ public class RightChecker {
             return;
         
         // get the set of zimbraId of the grantees to search for
-        Set<String> granteeIdsToSearch = setupGranteeIds(grantor);
+        Set<String> granteeIdsToSearch = Grantee.makeGrantee(grantor).getIdAndGroupIds();
         
         Set<SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
         
@@ -1830,6 +1721,170 @@ public class RightChecker {
         
         // all is well, or else PERM_DENIED would've been thrown in one of the checkDenied calls
         // yes, you can grant the rightToGrant on targetToGrant.
+    }
+    
+    private static void computeRightsInheritedFromGlobalGrant(Provisioning prov, Grantee grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+        
+        for (TargetType tt : TargetType.values()) {
+            Entry targetEntry;
+            if (tt == TargetType.global)
+                targetEntry = prov.getGlobalGrant();
+            else if (tt == TargetType.config)
+                targetEntry = prov.getConfig();
+            else
+                targetEntry = PseudoTarget.createPseudoTarget(prov, tt, null, null, true, null, null);
+            
+            EffectiveRights er = new EffectiveRights(
+                    tt.getCode(), TargetType.getId(targetEntry), targetEntry.getLabel(), 
+                    grantee.getId(), grantee.getName());
+            
+            RightChecker.getEffectiveRights(grantee, targetEntry, expandSetAttrs, expandGetAttrs, er);
+            
+            aer.setAll(tt, er);
+        }
+    }
+    
+    private static void computeRightsInheritedFromDomain(
+            Provisioning prov, Grantee grantee, 
+            TargetType targetType, Domain grantedOnDomain,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+        
+        String domainId = TargetType.getId(grantedOnDomain);
+        String domainName = grantedOnDomain.getLabel();
+        
+        // create a pseudo object(account, cr, dl) in this domain
+        Entry pseudoTarget = PseudoTarget.createPseudoTarget(prov, targetType, DomainBy.id, grantedOnDomain.getId(), false, null, null);
+        
+        // get effective rights on the pseudo target
+        EffectiveRights er = new EffectiveRights(
+                targetType.getCode(), TargetType.getId(pseudoTarget), pseudoTarget.getLabel(), 
+                grantee.getId(), grantee.getName());
+        RightChecker.getEffectiveRights(grantee, pseudoTarget, expandSetAttrs, expandGetAttrs, er);
+        
+        // add to the domianed scope in AllEffectiveRights
+        aer.addDomainEntry(targetType, domainId, domainName, er);
+    }
+    
+    private static void computeRightsInheritedFromDomain(Provisioning prov, Grantee grantee, Domain grantedOnDomain,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+        
+        computeRightsInheritedFromDomain(
+                prov, grantee, TargetType.account, grantedOnDomain, expandSetAttrs, expandGetAttrs, aer);
+        
+        computeRightsInheritedFromDomain(
+                prov, grantee, TargetType.calresource, grantedOnDomain, expandSetAttrs, expandGetAttrs, aer);
+        
+        computeRightsInheritedFromDomain(
+                prov, grantee, TargetType.dl, grantedOnDomain, expandSetAttrs, expandGetAttrs, aer);
+    }
+    
+    /*
+     * For now, we do not have a group scope in AllEffectiveRights. 
+     * 
+     * All entries in a group are expanded to an entry in AllEffectiveRights.
+     * This should be eaier for the client, because client does not need to 
+     * figure out if an account belongs to a group.
+     */
+    private static void computeRightsInheritedFromGroup(
+            Provisioning prov, Grantee grantee, 
+            TargetType targetType, DistributionList grantedOnGroup,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+        
+        /*
+        // create a pseudo object(account, cr, dl) in this group
+        // use the group's domain
+        Entry pseudoTarget = PseudoTarget.createPseudoTarget(prov, targetType, 
+                DomainBy.id, prov.getDomain(grantedOnGroup).getId(), false, null, null);
+        
+        EffectiveRights er = new EffectiveRights(
+                targetType.getCode(), TargetType.getId(pseudoTarget), pseudoTarget.getLabel(), 
+                grantee.getId(), grantee.getName());
+        RightChecker.getEffectiveRights(grantee, pseudoTarget, expandSetAttrs, expandGetAttrs, er);
+        
+        // grantedOnGroup is an  AclGroup, which contains only upward membership, not downward membership.
+        // re-get the DistributionList object, which has the downward membership.
+        DistributionList dl = prov.get(DistributionListBy.id, grantedOnGroup.getId());
+        String[] members = dl.getAllMembers();  // todo, get indirect members
+        
+        for (String memberName : members) {
+            aer.addEntry(targetType, id, name, er);
+        }
+        */
+     }
+    
+    private static void computeRightsInheritedFromGroup(Provisioning prov, Grantee grantee, DistributionList grantedOnGroup,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+        
+        computeRightsInheritedFromGroup(
+                prov, grantee, TargetType.account, grantedOnGroup, expandSetAttrs, expandGetAttrs, aer);
+        
+        computeRightsInheritedFromGroup(
+                prov, grantee, TargetType.calresource, grantedOnGroup, expandSetAttrs, expandGetAttrs, aer);
+        
+        computeRightsInheritedFromGroup(
+                prov, grantee, TargetType.dl, grantedOnGroup, expandSetAttrs, expandGetAttrs, aer);
+    }
+    
+    private static void computeRightsOnEntry(Provisioning prov, Grantee grantee, 
+            TargetType grantedOnTargetType, Entry grantedOnEntry,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+        String targetId = TargetType.getId(grantedOnEntry);
+        String targetName = grantedOnEntry.getLabel();
+        
+        EffectiveRights er = new EffectiveRights(
+                grantedOnTargetType.getCode(), targetId, targetName, grantee.getId(), grantee.getName());
+        
+        RightChecker.getEffectiveRights(grantee, grantedOnEntry, expandSetAttrs, expandGetAttrs, er);
+        aer.addEntry(grantedOnTargetType, targetId, targetName, er);
+    }
+    
+    /**
+     * 
+     * @param grantee an Account or a group
+     * @throws ServiceException
+     */
+    static void getAllEffectiveRights(NamedEntry granteeEntry, 
+            boolean expandSetAttrs, boolean expandGetAttrs,
+            AllEffectiveRights aer) throws ServiceException {
+        
+        Grantee grantee = Grantee.makeGrantee(granteeEntry);
+        if (grantee == null)
+            return;
+        
+        Provisioning prov = Provisioning.getInstance();
+        // we want all target types
+        Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
+
+        // get the set of zimbraId of the grantees to search for
+        Set<String> granteeIdsToSearch = grantee.getIdAndGroupIds();
+        
+        Set<SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        
+        // staging for group grants
+        Set<SearchGrantResult> grantsOnGroup = new HashSet<SearchGrantResult>();
+        
+        for (SearchGrantResult grant : sgr) {
+            Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
+            Entry grantedOnEntry = grantsOnTarget.getFirst();
+            ZimbraACL acl = grantsOnTarget.getSecond();
+            TargetType targetType = TargetType.getTargetType(grantedOnEntry);
+            
+            if (targetType == TargetType.global)
+                computeRightsInheritedFromGlobalGrant(prov, grantee, expandSetAttrs, expandGetAttrs, aer);
+            else
+                computeRightsOnEntry(prov, grantee, targetType, grantedOnEntry, expandSetAttrs, expandGetAttrs, aer);
+            
+            if (targetType == TargetType.domain)
+                computeRightsInheritedFromDomain(prov, grantee, (Domain)grantedOnEntry, expandSetAttrs, expandGetAttrs, aer);
+            else if (targetType == TargetType.dl)
+                grantsOnGroup.add(grant);
+        }
+        
+        for (SearchGrantResult grant : grantsOnGroup) {
+            // todo
+        }
+        
     }
 
 }

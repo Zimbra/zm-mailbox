@@ -54,7 +54,6 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -84,7 +83,6 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveAttr;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
@@ -357,6 +355,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
+        GET_ALL_EFFECTIVE_RIGHTS("getAllEffectiveRights", "gaer", "{grantee-type} {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 2, 4),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
         GET_ALL_RIGHTS("getAllRights", "gar", "[-v] [{target-type}]", Category.RIGHT, 0, 2),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
@@ -735,6 +734,9 @@ public class ProvUtil implements DebugListener {
             break;
         case CHECK_RIGHT:
             doCheckRight(args);
+            break;
+        case GET_ALL_EFFECTIVE_RIGHTS:
+            doGetAllEffectiveRights(args);
             break;
         case GET_EFFECTIVE_RIGHTS:
             doGetEffectiveRights(args);
@@ -3304,6 +3306,85 @@ public class ProvUtil implements DebugListener {
         }
     }
     
+    private void doGetAllEffectiveRights(String[] args) throws ServiceException, ArgException {
+        RightArgs ra = new RightArgs(args);
+        
+        if (mProv instanceof LdapProvisioning) {
+            // must provide grantee info
+            getRightArgsGrantee(ra, true);
+        } else {
+            // has more args, use it for the requested grantee
+            if (ra.mCurPos < args.length)
+                getRightArgsGrantee(ra, false);
+        }
+        
+        boolean expandSetAttrs = false;
+        boolean expandGetAttrs = false;
+        
+        // if there are more args, see if they are expandSetAttrs/expandGetAttrs
+        for (int i= ra.mCurPos; i < args.length; i++) {
+            if ("expandSetAttrs".equals(args[i]))
+                expandSetAttrs = true;
+            else if ("expandGetAttrs".equals(args[i]))
+                expandGetAttrs = true;
+            else
+                throw new ArgException("unrecognized arg: " + args[i]);
+        }
+        
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+    
+        RightCommand.AllEffectiveRights allEffRights = mProv.getAllEffectiveRights(
+                ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
+        
+        // TODO System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
+        
+        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : allEffRights.rightsByTargetType().entrySet()) {
+            dumpRightsByTargetType(rightsByTargetType.getKey(), rightsByTargetType.getValue(), expandSetAttrs, expandGetAttrs);
+        }
+    }
+    
+    private void dumpRightsByTargetType(TargetType targetType, RightCommand.RightsByTargetType rightsByTargetType, 
+            boolean expandSetAttrs, boolean expandGetAttrs) {
+        System.out.println("------------------------------------------------------------------");
+        System.out.println("Target type: " + targetType.getCode());
+        System.out.println("------------------------------------------------------------------");
+        
+        RightCommand.EffectiveRights er = rightsByTargetType.all();
+        if (er != null) {
+            System.out.println("On all " + targetType.getPrettyName() + " entries");
+            dumpEffectiveRight(er, expandSetAttrs, expandGetAttrs);
+        }
+        
+        if (rightsByTargetType instanceof RightCommand.DomainedRightsByTargetType) {
+            RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rightsByTargetType;
+            
+            for (RightCommand.RightAggregation rightsByDomain : domainedRights.domains()) {
+                dumpRightAggregation(targetType, rightsByDomain, true, expandSetAttrs, expandGetAttrs);
+            }
+        }
+        
+        for (RightCommand.RightAggregation rightsByEntry : rightsByTargetType.entries()) {
+            dumpRightAggregation(targetType, rightsByEntry, false, expandSetAttrs, expandGetAttrs);
+        }
+    }
+    
+    private void dumpRightAggregation(TargetType targetType, 
+            RightCommand.RightAggregation rightAggr, boolean domainScope,
+            boolean expandSetAttrs, boolean expandGetAttrs) {
+        Map<String, String> entries = rightAggr.entries();
+        RightCommand.EffectiveRights er = rightAggr.effectiveRights();
+        
+        for (Map.Entry<String, String> entry : entries.entrySet()) {
+            String id = entry.getKey();
+            String name = entry.getValue();
+            if (domainScope)
+                System.out.println("On " + targetType.getCode() + " entries on domain " + name + " (" + id + ")");
+            else
+                System.out.println("On " + targetType.getCode() + " " + name + " (" + id + ")");
+        }
+        dumpEffectiveRight(er, expandSetAttrs, expandGetAttrs);
+    }
+    
     private void doGetEffectiveRights(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
         getRightArgsTarget(ra);
@@ -3337,12 +3418,17 @@ public class ProvUtil implements DebugListener {
                                                                           granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
         
         System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
-       
-        System.out.println("================");
-        System.out.println("Preset rights");
-        System.out.println("================");
-        if (effRights.presetRights() != null) {
-            for (String r : effRights.presetRights())
+        dumpEffectiveRight(effRights, expandSetAttrs, expandGetAttrs);
+    }
+    
+    private void dumpEffectiveRight(RightCommand.EffectiveRights effRights, boolean expandSetAttrs, boolean expandGetAttrs) {
+        
+        List<String> presetRights = effRights.presetRights();
+        if (presetRights != null && presetRights.size() > 0) {
+            System.out.println("================");
+            System.out.println("Preset rights");
+            System.out.println("================");
+            for (String r : presetRights)
                 System.out.println("    " + r);
         }
         
@@ -3353,11 +3439,14 @@ public class ProvUtil implements DebugListener {
         System.out.println();
     }
     
-    private void displayAttrs(String op, boolean expandAll, boolean allAttrs, SortedMap<String, EffectiveAttr> attrs) {
+    private void displayAttrs(String op, boolean expandAll, boolean allAttrs, SortedMap<String, RightCommand.EffectiveAttr> attrs) {
+        if (!allAttrs && attrs.size()==0)
+            return;
+        
         String format = "    %-50s %-30s\n";
         System.out.println();
         System.out.println("=========================");
-        System.out.println(op + " attributess rights");
+        System.out.println(op + " attributes rights");
         System.out.println("=========================");
         if (allAttrs)
             System.out.println("Can " + op + " all attributes");

@@ -24,7 +24,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -1660,35 +1659,47 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                              GranteeBy granteeBy, String grantee,
-                              String right, Map<String, Object> attrs,
-                              AccessManager.ViaGrant via) throws ServiceException {
+    public boolean checkRight(
+            String targetType, TargetBy targetBy, String target,
+            GranteeBy granteeBy, String grantee,
+            String right, Map<String, Object> attrs,
+            AccessManager.ViaGrant via) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public RightCommand.AllEffectiveRights getAllEffectiveRights(
+            String granteeType, GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
-    public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
-                                                           GranteeBy granteeBy, String grantee,
-                                                           boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+    public RightCommand.EffectiveRights getEffectiveRights(
+            String targetType, TargetBy targetBy, String target,
+            GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public EffectiveRights getCreateObjectAttrs(String targetType,
-                                                DomainBy domainBy, String domainStr,
-                                                CosBy cosBy, String cosStr,
-                                                GranteeBy granteeBy, String grantee) throws ServiceException {
+    public RightCommand.EffectiveRights getCreateObjectAttrs(
+            String targetType,
+            DomainBy domainBy, String domainStr,
+            CosBy cosBy, String cosStr,
+            GranteeBy granteeBy, String grantee) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
             
-    public abstract RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException;
+    public abstract RightCommand.ACL getGrants(
+            String targetType, TargetBy targetBy, String target) throws ServiceException;
             
-    public abstract void grantRight(String targetType, TargetBy targetBy, String target,
-                                    String granteeType, GranteeBy granteeBy, String grantee,
-                                    String right, RightModifier rightModifier) throws ServiceException;
+    public abstract void grantRight(
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            String right, RightModifier rightModifier) throws ServiceException;
     
-    public abstract void revokeRight(String targetType, TargetBy targetBy, String target,
-                                     String granteeType, GranteeBy granteeBy, String grantee,
-                                     String right, RightModifier rightModifier) throws ServiceException;
+    public abstract void revokeRight(
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            String right, RightModifier rightModifier) throws ServiceException;
     
 
 
