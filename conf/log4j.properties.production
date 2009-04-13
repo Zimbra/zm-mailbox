@@ -86,6 +86,4 @@ log4j.logger.zimbra.wbxml=DEBUG,WBXML
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
 log4j.logger.com.zimbra=INFO
-log4j.additivity.zimbra.slogger=FALSE
-log4j.logger.zimbra.slogger=INFO,SYSLOG
 

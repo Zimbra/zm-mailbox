@@ -59,7 +59,6 @@
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
-          <Set name="KeyPassword">zimbra</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               <Item>SSL_RSA_WITH_DES_CBC_SHA</Item>
@@ -84,7 +83,6 @@
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
-          <Set name="KeyPassword">zimbra</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               <Item>SSL_RSA_WITH_DES_CBC_SHA</Item>
