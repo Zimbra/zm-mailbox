@@ -510,15 +510,10 @@ public class ToXML {
         return elem;
     }
 
-    private static void encodeContactAttachment(Element elem, Attachment attach)
-    throws ServiceException {
+    private static void encodeContactAttachment(Element elem, Attachment attach) {
         Element.KeyValuePair kvp = elem.addKeyValuePair(attach.getName(), null);
         kvp.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());
-        try {
-            kvp.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to encode attachment", e);
-        }
+        kvp.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
     }
 
     public static Element encodeNote(Element parent, ItemIdFormatter ifmt, Note note) {

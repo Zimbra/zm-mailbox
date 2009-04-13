@@ -447,12 +447,7 @@ public class ParsedContact {
                 // part.
                 Document doc = handler.getDocument();
                 if (doc != null) {
-                    try {
-                        doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(attach.getSize()), Field.Store.YES, Field.Index.NO));
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("Unable to analyze attachment", e);
-                    }
-                    
+                    doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(attach.getSize()), Field.Store.YES, Field.Index.NO));
                     mLuceneDocuments.add(doc);
                 }
             }

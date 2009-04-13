@@ -30,9 +30,7 @@ import java.util.Map;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimePart;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.json.JSONArray;
@@ -41,6 +39,7 @@ import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -251,7 +250,7 @@ public class Contact extends MailItem {
 
     public static class Attachment implements DataSource {
         private DataHandler mDataHandler;
-        private Integer mSize;
+        private int mSize;
         private String mFieldName;
         private String mPartName;
 
@@ -269,39 +268,46 @@ public class Contact extends MailItem {
             } else {
                 ctype = ctype.toLowerCase();
             }
+            if (content == null) {
+                content = new byte[0];
+            }
             ByteArrayDataSource ds = new ByteArrayDataSource(content, ctype); 
             if (filename != null) {
                 ds.setName(filename);
             } else {
                 ds.setName("unknown");
             }
-            mDataHandler = new DataHandler(ds);
-            mSize = content == null ? 0 : content.length;
-            mFieldName = field;
+            init(new DataHandler(ds), field, content.length);
         }
 
-        public Attachment(DataHandler dataHandler, String field) {
+        public Attachment(DataHandler dataHandler, String field)
+        throws IOException {
+            int size = (int) ByteUtil.getDataLength(dataHandler.getInputStream());
+            init(dataHandler, field, size);
+        }
+        
+        public Attachment(DataHandler dataHandler, String field, int size) {
+            init(dataHandler, field, size);
+        }
+
+        private void init(DataHandler dataHandler, String field, int size) {
+            if (dataHandler == null) {
+                throw new NullPointerException("dataHandler cannot be null");
+            }
+            if (StringUtil.isNullOrEmpty(field)) {
+                throw new NullPointerException("field cannot be null or empty");
+            }
             mDataHandler = dataHandler;
             mFieldName = field;
+            mSize = size;
         }
-
+        
         public void setPartName(String name)  { mPartName = name; }
-        public void setSize(int size)         { mSize = size; }
         
         public String getContentType()        { return mDataHandler.getContentType(); }
         public String getName()               { return mFieldName; }
+        public int getSize()                  { return mSize; }
         
-        public int getSize()
-        throws IOException {
-            if (mSize == null) {
-                if (mDataHandler != null) {
-                    mSize = (int) ByteUtil.getDataLength(mDataHandler.getInputStream());
-                } else {
-                    mSize = 0;
-                }
-            }
-            return mSize;
-        }
         /**
          * Returns an <tt>InputStream</tt> to this attachment's content, or <tt>null</tt>
          * if there is no content.
@@ -795,9 +801,8 @@ public class Contact extends MailItem {
                     String partName = attachMeta.get(Attachment.FN_PART);
                     int size = (int) attachMeta.getLong(Attachment.FN_SIZE);
                     DataHandler dh = new DataHandler(new AttachmentDataSource(this, partName));
-                    Attachment attachment = new Attachment(dh, fieldName);
+                    Attachment attachment = new Attachment(dh, fieldName, size);
                     attachment.setPartName(partName);
-                    attachment.setSize(size);
                     mAttachments.add(attachment);
                 }
 

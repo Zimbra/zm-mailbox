@@ -136,7 +136,7 @@ public class CreateContact extends MailDocumentHandler  {
         if (attachId != null) {
             Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
             UploadDataSource uds = new UploadDataSource(up);
-            return new Attachment(new DataHandler(uds), name); 
+            return new Attachment(new DataHandler(uds), name, (int) up.getSize());
         }
 
         int itemId = (int) elt.getAttributeLong(MailConstants.A_ID, -1);
@@ -152,7 +152,7 @@ public class CreateContact extends MailDocumentHandler  {
                             int partNum = Integer.parseInt(part) - 1;
                             if (partNum >= 0 && partNum < contact.getAttachments().size()) {
                                 Attachment att = contact.getAttachments().get(partNum);
-                                return new Attachment(att.getDataHandler(), name);
+                                return new Attachment(att.getDataHandler(), name, att.getSize());
                             }
                         } catch (NumberFormatException nfe) { }
                         throw ServiceException.INVALID_REQUEST("invalid contact part number: " + part, null);
@@ -174,14 +174,14 @@ public class CreateContact extends MailDocumentHandler  {
                         }
                     } else {
                         DataSource ds = new MessageDataSource(msg);
-                        return new Attachment(new DataHandler(ds), name);
+                        return new Attachment(new DataHandler(ds), name, (int) msg.getSize());
                     }
                 } else if (item instanceof Document) {
                     Document doc = (Document) item;
                     if (part != null && !part.equals(""))
                         throw MailServiceException.NO_SUCH_PART(part);
                     DataSource ds = new DocumentDataSource(doc);
-                    return new Attachment(new DataHandler(ds), name);
+                    return new Attachment(new DataHandler(ds), name, (int) doc.getSize());
                 }
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("error attaching existing item data", ioe);

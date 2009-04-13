@@ -796,6 +796,25 @@ extends Assert {
         assertEquals(context + " attributes", getAttributesAsString(expectedAttrs), getAttributesAsString(actualAttrs));
     }
     
+    /**
+     * Asserts that two byte arrays are equal.
+     */
+    public static void assertEquals(byte[] expected, byte[] actual) {
+        if (expected == null && actual == null) {
+            return;
+        }
+        if (expected == null) {
+            Assert.fail("expected was null but actual was not.");
+        }
+        if (actual == null) {
+            Assert.fail("expected was not null but actual was.");
+        }
+        assertEquals("Arrays have different length.", expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals("Data mismatch at byte " + i, expected[i], actual[i]);
+        }
+    }
+    
     private static String getElementNames(List<Element> elements) {
         StringBuilder buf = new StringBuilder();
         for (Element e : elements) {

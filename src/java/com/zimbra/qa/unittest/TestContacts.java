@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.activation.DataHandler;
+import javax.mail.util.ByteArrayDataSource;
+
 import junit.framework.TestCase;
 
 import org.testng.TestNG;
@@ -30,7 +33,6 @@ import org.testng.annotations.Test;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -132,6 +134,38 @@ extends TestCase {
             }
         }
         assertEquals("Unexpected contact number", 3, i);
+    }
+    
+    /**
+     * Tests the server-side {@link Attachment} class.
+     */
+    @Test
+    public void testServerAttachment()
+    throws Exception {
+        // Specify the attachment size.
+        byte[] data = "test".getBytes();
+        ByteArrayDataSource ds = new ByteArrayDataSource(data, "text/plain");
+        ds.setName("attachment.txt");
+        DataHandler dh = new DataHandler(ds);
+        Attachment attach = new Attachment(dh,  "attachment", data.length);
+        
+        // Don't specify the attachment size.
+        attach = new Attachment(dh,  "attachment");
+        checkServerAttachment(data, attach);
+        
+        // Create attachment from byte[].
+        attach = new Attachment(data, "text/plain", "attachment", "attachment.txt");
+        checkServerAttachment(data, attach);
+    }
+    
+    private void checkServerAttachment(byte[] expected, Attachment attach)
+    throws Exception {
+        TestUtil.assertEquals(expected, attach.getContent());
+        TestUtil.assertEquals(expected, ByteUtil.getContent(attach.getInputStream(), 4));
+        assertEquals(expected.length, attach.getSize());
+        assertEquals("text/plain", attach.getContentType());
+        assertEquals("attachment", attach.getName());
+        assertEquals("attachment.txt", attach.getFilename());
     }
     
     @Test
