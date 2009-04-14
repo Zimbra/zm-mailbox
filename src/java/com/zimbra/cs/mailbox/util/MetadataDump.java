@@ -363,6 +363,7 @@ public class MetadataDump {
             System.err.println();
             System.err.println();
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }
