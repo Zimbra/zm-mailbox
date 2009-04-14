@@ -37,13 +37,14 @@
     -->    
     <Call name="addConnector">
       <Arg>
-          <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
-            <Set name="port"><SystemProperty name="jetty.port" default="7070"/></Set>
-            <Set name="maxIdleTime">30000</Set>
-	    <Set name="lowResourceMaxIdleTime">1000</Set>
-            <Set name="Acceptors">2</Set>
-            <Set name="confidentialPort">7443</Set>
-          </New>
+        <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <Set name="port"><SystemProperty name="jetty.port" default="7070"/></Set>
+          <Set name="useDirectBuffers">false</Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set>
+          <Set name="confidentialPort">7443</Set>
+        </New>
       </Arg>
     </Call>
 
@@ -54,8 +55,9 @@
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7443</Set>
+          <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
-	  <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -79,8 +81,9 @@
       <Arg>
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
+          <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
-	  <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -107,6 +110,7 @@
       <Arg>
         <New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
           <Set name="Port">7072</Set>
+          <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
