@@ -84,16 +84,18 @@ public class DeployZimlet extends AdminDocumentHandler {
 		Upload upload;
 		Progress progress;
 		ZAuthToken auth;
-		public DeployThread(Upload up, Progress pr, ZAuthToken au) {
+		boolean flushCache;
+		public DeployThread(Upload up, Progress pr, ZAuthToken au, boolean flush) {
 			upload = up;
 			progress = pr;
 			auth = au;
+			flushCache = flush;
 		}
 		public void run() {
 			Server s = null;
 			try {
 				s = Provisioning.getInstance().getLocalServer();
-				ZimletUtil.deployZimlet(new ZimletFile(upload.getName(), upload.getInputStream()), progress, auth);
+				ZimletUtil.deployZimlet(new ZimletFile(upload.getName(), upload.getInputStream()), progress, auth, flushCache);
 			} catch (Exception e) {
 				ZimbraLog.zimlet.info("deploy", e);
 				if (s != null)
@@ -109,14 +111,14 @@ public class DeployZimlet extends AdminDocumentHandler {
 		mProgressMap = new LRUMap(20);
 	}
 	
-	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth) throws ServiceException {
+	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth, boolean flushCache) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(aid);
 
         Progress pr = new Progress((auth != null));
         mProgressMap.put(aid, pr);
-        Runnable action = new DeployThread(up, pr, auth);
+        Runnable action = new DeployThread(up, pr, auth, flushCache);
         new Thread(action).start();
 	}
 	
@@ -127,21 +129,38 @@ public class DeployZimlet extends AdminDocumentHandler {
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
 		String aid = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-		
+		Boolean flushCache = request.getAttributeBool(AdminConstants.A_FLUSH, false);
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
 		    
-		    for (Server server : Provisioning.getInstance().getAllServers())
-		        checkRight(zsc, context, server, Admin.R_deployZimlet);
-		    
-			deploy(zsc, aid, zsc.getRawAuthToken());
+		    for (Server server : Provisioning.getInstance().getAllServers()) {
+		    	checkRight(zsc, context, server, Admin.R_deployZimlet);
+		    }
+		        
+			deploy(zsc, aid, zsc.getRawAuthToken(), flushCache);
+			if(flushCache) {
+				if (ZimbraLog.misc.isDebugEnabled()) {
+					ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
+				}				
+				checkRight(zsc, context, Provisioning.getInstance().getLocalServer(), Admin.R_flushCache);
+				FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+			}
+
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
 		    
 		    Server localServer = Provisioning.getInstance().getLocalServer();
 		    checkRight(zsc, context, localServer, Admin.R_deployZimlet);
 		    
-			deploy(zsc, aid, null);
+			deploy(zsc, aid, null, false);
+			
+			if(flushCache) {
+				if (ZimbraLog.misc.isDebugEnabled()) {
+					ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
+				}								
+				checkRight(zsc, context, localServer, Admin.R_flushCache);
+				FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+			}
 		} else {
 			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 		}

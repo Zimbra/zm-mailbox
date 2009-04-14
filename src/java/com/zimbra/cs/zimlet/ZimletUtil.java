@@ -393,11 +393,16 @@ public class ZimletUtil {
 	 * @param zf
 	 * @param listener
 	 * @param auth
+	 * @param flushCache
 	 * @throws IOException
 	 * @throws ZimletException
 	 * @throws ServiceException
 	 */
 	public static void deployZimlet(ZimletFile zf, DeployListener listener, ZAuthToken auth) throws IOException, ZimletException, ServiceException {
+		deployZimlet(zf,listener,auth,false);
+	}
+	
+	public static void deployZimlet(ZimletFile zf, DeployListener listener, ZAuthToken auth, boolean flushCache) throws IOException, ZimletException, ServiceException {
 		Server localServer = Provisioning.getInstance().getLocalServer();
 		try {
 			deployZimlet(zf);
@@ -415,7 +420,7 @@ public class ZimletUtil {
 		// deploy on the rest of the servers
 		byte[] data = zf.toByteArray();
 		ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
-		soapUtil.deployZimlet(zf.getName(), data, listener);
+		soapUtil.deployZimlet(zf.getName(), data, listener,flushCache);
 	}
 	
 	enum Action { INSTALL, UPGRADE, REPAIR };
@@ -1124,8 +1129,12 @@ public class ZimletUtil {
 			mRunningInServer = true;
 			mProv = Provisioning.getInstance();
 		}
-				
+		
 		public void deployZimlet(String zimlet, byte[] data, DeployListener listener) throws ServiceException {
+			deployZimlet(zimlet,data,listener,false);
+		}
+		
+		public void deployZimlet(String zimlet, byte[] data, DeployListener listener, boolean flushCache) throws ServiceException {
 			List<Server> allServers = mProv.getAllServers();
 			for (Server server : allServers) {
 				// localhost is already taken care of.
@@ -1136,7 +1145,7 @@ public class ZimletUtil {
 					continue;
 				}
 				ZimbraLog.zimlet.info("Deploying on " + server.getName());
-				deployZimletOnServer(zimlet, data, server, listener);
+				deployZimletOnServer(zimlet, data, server, listener, flushCache);
 			}
 		}
 		
@@ -1168,8 +1177,11 @@ public class ZimletUtil {
 				}
 			}
         }
-        
         public void deployZimletOnServer(String zimlet, byte[] data) throws ServiceException {
+        	deployZimletOnServer(zimlet,data,false);
+        }
+        
+        public void deployZimletOnServer(String zimlet, byte[] data, boolean flushCache) throws ServiceException {
             mTransport = null;
             try {
                 mTransport = new SoapHttpTransport(mAdminURL);
@@ -1178,7 +1190,7 @@ public class ZimletUtil {
                 URL url = new URL(mUploadURL);
                 mAttachmentId = postAttachment(mUploadURL, zimlet, data, url.getHost());
                 
-                soapDeployZimlet();
+                soapDeployZimlet(flushCache);
                 ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
             } catch (Exception e) {
                 ZimbraLog.zimlet.info("deploy failed on " + mAdminURL, e);
@@ -1191,8 +1203,11 @@ public class ZimletUtil {
                     mTransport.shutdown();
             }                        
         }
+        public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
+        	deployZimletOnServer(zimlet, data, server, listener, false);
+        }
         
-		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
+		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener, boolean flushCache) throws ServiceException {
 			mTransport = null;
 			try {
 				String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
@@ -1208,7 +1223,7 @@ public class ZimletUtil {
 				mAttachmentId = postAttachment(uploadUrl, zimlet, data, server.getName());
 				
 				// deploy
-				soapDeployZimlet();
+				soapDeployZimlet(flushCache);
 				ZimbraLog.zimlet.info("Deploy initiated.  (check the servers mailbox.log for the status)");
 				if (listener != null)
 					listener.markFinished(server);
@@ -1226,9 +1241,10 @@ public class ZimletUtil {
 			}
 		}
 		
-		private void soapDeployZimlet() throws ServiceException, IOException {
+		private void soapDeployZimlet(boolean flushCache) throws ServiceException, IOException {
 			XMLElement req = new XMLElement(AdminConstants.DEPLOY_ZIMLET_REQUEST);
 			req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
+			req.addAttribute(AdminConstants.A_FLUSH, flushCache);
 			req.addElement(MailConstants.E_CONTENT).addAttribute(MailConstants.A_ATTACHMENT_ID, mAttachmentId);
 			mTransport.invoke(req);
 		}

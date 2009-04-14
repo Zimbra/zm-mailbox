@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,14 +27,19 @@ import javax.servlet.ServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -123,5 +129,14 @@ public class FlushCache extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_flushCache);
+    }
+    
+    public static void flushChacheOnServer(Server server,ZimbraSoapContext zsc,String cacheType) throws ServiceException, IOException {
+		String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+		SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
+		mTransport.setAuthToken(zsc.getRawAuthToken());
+		XMLElement req = new XMLElement(AdminConstants.FLUSH_CACHE_REQUEST);
+		req.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, cacheType);
+		mTransport.invoke(req);		
     }
 }
