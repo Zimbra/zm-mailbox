@@ -90,6 +90,7 @@ public class GalSearchConfig {
 				mBindPassword = ds.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword, mBindPassword);
 				mKerberosPrincipal = ds.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal, mKerberosPrincipal);
 				mKerberosKeytab = ds.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab, mKerberosKeytab);
+				mPageSize = ds.getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, mPageSize);
 			}
 			String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
 			if (attrs.length > 0)
@@ -125,6 +126,7 @@ public class GalSearchConfig {
 		mFilter = "(&("+mFilter+")(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 		mSearchBase = LdapUtil.getZimbraSearchBase(domain, op);
 		mGalType = GalType.zimbra;
+		mPageSize = 1000;
 	}
 	
 	private boolean isConfigComplete() {
@@ -153,6 +155,7 @@ public class GalSearchConfig {
             mBindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
             mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
+			mPageSize = domain.getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, 1000);
             if (isConfigComplete())
             	break;
         case search:
@@ -166,6 +169,7 @@ public class GalSearchConfig {
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
             mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey);
+			mPageSize = domain.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 1000);
         	break;
         case autocomplete:
             mUrl = domain.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
@@ -178,6 +182,7 @@ public class GalSearchConfig {
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
             mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey);
+			mPageSize = domain.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 1000);
         	break;
         }
         if (mFilter != null && mFilter.indexOf("(") == -1)
@@ -197,6 +202,7 @@ public class GalSearchConfig {
 	protected String mKerberosPrincipal;
 	protected String mKerberosKeytab;
 	protected String mTokenizeKey;
+	protected int mPageSize;
 	protected LdapGalMapRules mRules;
 	
 	public GalOp getOp() {
@@ -231,6 +237,9 @@ public class GalSearchConfig {
 	}
 	public String getKerberosKeytab() {
 		return mKerberosKeytab;
+	}
+	public int getPageSize() {
+		return mPageSize;
 	}
 	public LdapGalMapRules getRules() {
 		return mRules;

@@ -360,7 +360,7 @@ public class DbDataSource {
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
-        int folderId = -1;
+        int folderId = 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String remoteId = null;
@@ -403,7 +403,7 @@ public class DbDataSource {
     public static DataSourceItem getReverseMapping(DataSource ds, String remoteId) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
-        int folderId = -1;
+        int folderId = 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         int itemId = 0;

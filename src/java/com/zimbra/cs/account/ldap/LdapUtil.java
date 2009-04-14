@@ -941,7 +941,7 @@ public class LdapUtil {
                         cfg.getBindDn(), cfg.getBindPassword(), "external GAL");
             
             searchGal(zlc,
-                      params.getPageSize(),
+                      cfg.getPageSize(),
                       cfg.getSearchBase(),
                       params.generateLdapQuery(),
                       params.getLimit(),
