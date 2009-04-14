@@ -4344,5 +4344,34 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1003" name="zimbraBackupSkipSearchIndex" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, do not backup search index during a full backup</desc>
+</attr>
+
+<attr id="1004" name="zimbraBackupSkipBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, do not backup blobs (HSM or not) during a full backup</desc>
+</attr>
+
+<attr id="1005" name="zimbraBackupSkipHsmBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, do not backup blobs on secondary (HSM) volumes during a full backup</desc>
+</attr>
+
+<attr id="1006" name="zimbraMailboxMoveSkipSearchIndex" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, exclude search index from mailbox move</desc>
+</attr>
+
+<attr id="1007" name="zimbraMailboxMoveSkipBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, exclude blobs (HSM or not) from mailbox move</desc>
+</attr>
+
+<attr id="1008" name="zimbraMailboxMoveSkipHsmBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, exclude blobs on secondary (HSM) volumes from mailbox move</desc>
+</attr>
 
 </attrs>

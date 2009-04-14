@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090413-1639 */
+    /* build: 5.0 jhahm 20090413-1714 */
 
     /**
      * RFC2256: descriptive information
@@ -2413,6 +2413,227 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetBackupReportEmailSubjectPrefix(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupReportEmailSubjectPrefix, "");
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup blobs (HSM or not) during a full backup
+     *
+     * @return zimbraBackupSkipBlobs, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1004)
+    public boolean isBackupSkipBlobs() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupSkipBlobs, false);
+    }
+
+    /**
+     * if true, do not backup blobs (HSM or not) during a full backup
+     *
+     * @param zimbraBackupSkipBlobs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1004)
+    public void setBackupSkipBlobs(boolean zimbraBackupSkipBlobs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipBlobs, zimbraBackupSkipBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, do not backup blobs (HSM or not) during a full backup
+     *
+     * @param zimbraBackupSkipBlobs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1004)
+    public Map<String,Object> setBackupSkipBlobs(boolean zimbraBackupSkipBlobs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipBlobs, zimbraBackupSkipBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup blobs (HSM or not) during a full backup
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1004)
+    public void unsetBackupSkipBlobs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipBlobs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, do not backup blobs (HSM or not) during a full backup
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1004)
+    public Map<String,Object> unsetBackupSkipBlobs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipBlobs, "");
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * backup
+     *
+     * @return zimbraBackupSkipHsmBlobs, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1005)
+    public boolean isBackupSkipHsmBlobs() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupSkipHsmBlobs, false);
+    }
+
+    /**
+     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * backup
+     *
+     * @param zimbraBackupSkipHsmBlobs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1005)
+    public void setBackupSkipHsmBlobs(boolean zimbraBackupSkipHsmBlobs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipHsmBlobs, zimbraBackupSkipHsmBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * backup
+     *
+     * @param zimbraBackupSkipHsmBlobs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1005)
+    public Map<String,Object> setBackupSkipHsmBlobs(boolean zimbraBackupSkipHsmBlobs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipHsmBlobs, zimbraBackupSkipHsmBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * backup
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1005)
+    public void unsetBackupSkipHsmBlobs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipHsmBlobs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * backup
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1005)
+    public Map<String,Object> unsetBackupSkipHsmBlobs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipHsmBlobs, "");
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup search index during a full backup
+     *
+     * @return zimbraBackupSkipSearchIndex, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1003)
+    public boolean isBackupSkipSearchIndex() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupSkipSearchIndex, false);
+    }
+
+    /**
+     * if true, do not backup search index during a full backup
+     *
+     * @param zimbraBackupSkipSearchIndex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1003)
+    public void setBackupSkipSearchIndex(boolean zimbraBackupSkipSearchIndex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipSearchIndex, zimbraBackupSkipSearchIndex ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, do not backup search index during a full backup
+     *
+     * @param zimbraBackupSkipSearchIndex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1003)
+    public Map<String,Object> setBackupSkipSearchIndex(boolean zimbraBackupSkipSearchIndex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipSearchIndex, zimbraBackupSkipSearchIndex ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup search index during a full backup
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1003)
+    public void unsetBackupSkipSearchIndex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipSearchIndex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, do not backup search index during a full backup
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1003)
+    public Map<String,Object> unsetBackupSkipSearchIndex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSkipSearchIndex, "");
         return attrs;
     }
 
@@ -11177,6 +11398,222 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailUseDirectBuffers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailUseDirectBuffers, "");
+        return attrs;
+    }
+
+    /**
+     * if true, exclude blobs (HSM or not) from mailbox move
+     *
+     * @return zimbraMailboxMoveSkipBlobs, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1007)
+    public boolean isMailboxMoveSkipBlobs() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxMoveSkipBlobs, false);
+    }
+
+    /**
+     * if true, exclude blobs (HSM or not) from mailbox move
+     *
+     * @param zimbraMailboxMoveSkipBlobs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1007)
+    public void setMailboxMoveSkipBlobs(boolean zimbraMailboxMoveSkipBlobs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipBlobs, zimbraMailboxMoveSkipBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, exclude blobs (HSM or not) from mailbox move
+     *
+     * @param zimbraMailboxMoveSkipBlobs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1007)
+    public Map<String,Object> setMailboxMoveSkipBlobs(boolean zimbraMailboxMoveSkipBlobs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipBlobs, zimbraMailboxMoveSkipBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, exclude blobs (HSM or not) from mailbox move
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1007)
+    public void unsetMailboxMoveSkipBlobs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipBlobs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, exclude blobs (HSM or not) from mailbox move
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1007)
+    public Map<String,Object> unsetMailboxMoveSkipBlobs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipBlobs, "");
+        return attrs;
+    }
+
+    /**
+     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     *
+     * @return zimbraMailboxMoveSkipHsmBlobs, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1008)
+    public boolean isMailboxMoveSkipHsmBlobs() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxMoveSkipHsmBlobs, false);
+    }
+
+    /**
+     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     *
+     * @param zimbraMailboxMoveSkipHsmBlobs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1008)
+    public void setMailboxMoveSkipHsmBlobs(boolean zimbraMailboxMoveSkipHsmBlobs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipHsmBlobs, zimbraMailboxMoveSkipHsmBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     *
+     * @param zimbraMailboxMoveSkipHsmBlobs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1008)
+    public Map<String,Object> setMailboxMoveSkipHsmBlobs(boolean zimbraMailboxMoveSkipHsmBlobs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipHsmBlobs, zimbraMailboxMoveSkipHsmBlobs ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1008)
+    public void unsetMailboxMoveSkipHsmBlobs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipHsmBlobs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1008)
+    public Map<String,Object> unsetMailboxMoveSkipHsmBlobs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipHsmBlobs, "");
+        return attrs;
+    }
+
+    /**
+     * if true, exclude search index from mailbox move
+     *
+     * @return zimbraMailboxMoveSkipSearchIndex, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1006)
+    public boolean isMailboxMoveSkipSearchIndex() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxMoveSkipSearchIndex, false);
+    }
+
+    /**
+     * if true, exclude search index from mailbox move
+     *
+     * @param zimbraMailboxMoveSkipSearchIndex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1006)
+    public void setMailboxMoveSkipSearchIndex(boolean zimbraMailboxMoveSkipSearchIndex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipSearchIndex, zimbraMailboxMoveSkipSearchIndex ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, exclude search index from mailbox move
+     *
+     * @param zimbraMailboxMoveSkipSearchIndex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1006)
+    public Map<String,Object> setMailboxMoveSkipSearchIndex(boolean zimbraMailboxMoveSkipSearchIndex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipSearchIndex, zimbraMailboxMoveSkipSearchIndex ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, exclude search index from mailbox move
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1006)
+    public void unsetMailboxMoveSkipSearchIndex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipSearchIndex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, exclude search index from mailbox move
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1006)
+    public Map<String,Object> unsetMailboxMoveSkipSearchIndex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveSkipSearchIndex, "");
         return attrs;
     }
 

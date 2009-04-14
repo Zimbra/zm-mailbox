@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090413-1639 */
+    /* build: 5.0 jhahm 20090413-1714 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1455,6 +1455,31 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=461)
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
+
+    /**
+     * if true, do not backup blobs (HSM or not) during a full backup
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1004)
+    public static final String A_zimbraBackupSkipBlobs = "zimbraBackupSkipBlobs";
+
+    /**
+     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * backup
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1005)
+    public static final String A_zimbraBackupSkipHsmBlobs = "zimbraBackupSkipHsmBlobs";
+
+    /**
+     * if true, do not backup search index during a full backup
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1003)
+    public static final String A_zimbraBackupSkipSearchIndex = "zimbraBackupSkipSearchIndex";
 
     /**
      * Default backup target path
@@ -3549,6 +3574,30 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=346)
     public static final String A_zimbraMailboxLocationBeforeMove = "zimbraMailboxLocationBeforeMove";
+
+    /**
+     * if true, exclude blobs (HSM or not) from mailbox move
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1007)
+    public static final String A_zimbraMailboxMoveSkipBlobs = "zimbraMailboxMoveSkipBlobs";
+
+    /**
+     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1008)
+    public static final String A_zimbraMailboxMoveSkipHsmBlobs = "zimbraMailboxMoveSkipHsmBlobs";
+
+    /**
+     * if true, exclude search index from mailbox move
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1006)
+    public static final String A_zimbraMailboxMoveSkipSearchIndex = "zimbraMailboxMoveSkipSearchIndex";
 
     /**
      * RFC822 email address for senders outbound messages
