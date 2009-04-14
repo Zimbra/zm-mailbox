@@ -1333,6 +1333,7 @@ public class ToXML {
         }
 
         Element e = parent.addElement(MailConstants.E_INVITE_COMPONENT);
+        e.addAttribute(MailConstants.A_CAL_METHOD, invite.getMethod());
 
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
 
@@ -1564,36 +1565,40 @@ public class ToXML {
                 // We have an invite that wasn't auto-added.
                 Invite invCi = info.getInvite();
                 if (invCi != null) {
-                    CalendarItem calItem = null;
-                    try {
-                        calItem = mbox.getCalendarItemByUid(octxt, invCi.getUid());
-                    } catch (MailServiceException.NoSuchItemException e) {
-                        // ignore
-                    } catch (ServiceException e) {
-                        // eat PERM_DENIED
-                        if (e.getCode() != ServiceException.PERM_DENIED)
-                            throw e;
-                    }
-                    if (calItem != null) {
-                        // See if the messsage's invite is outdated.
-                        Invite invCurr = calItem.getInvite(invCi.getRecurId());
-                        if (invCurr != null) {
-                            if (invCi.isSameOrNewerVersion(invCurr)) {
-                                // Invite is new or same as what's in the appointment.  Show it even if
-                                // appointment is in Trash folder.
-                                invite = invCi;
+                    if (!Invite.isOrganizerMethod(invCi.getMethod())) {
+                        invite = invCi;
+                    } else {
+                        CalendarItem calItem = null;
+                        try {
+                            calItem = mbox.getCalendarItemByUid(octxt, invCi.getUid());
+                        } catch (MailServiceException.NoSuchItemException e) {
+                            // ignore
+                        } catch (ServiceException e) {
+                            // eat PERM_DENIED
+                            if (e.getCode() != ServiceException.PERM_DENIED)
+                                throw e;
+                        }
+                        if (calItem != null) {
+                            // See if the messsage's invite is outdated.
+                            Invite invCurr = calItem.getInvite(invCi.getRecurId());
+                            if (invCurr != null) {
+                                if (invCi.isSameOrNewerVersion(invCurr)) {
+                                    // Invite is new or same as what's in the appointment.  Show it even if
+                                    // appointment is in Trash folder.
+                                    invite = invCi;
+                                } else {
+                                    // Outdated.  Don't show it.
+                                    invite = null;
+                                }
                             } else {
-                                // Outdated.  Don't show it.
-                                invite = null;
+                                // New invite.  Show it even if appointment is in Trash folder.
+                                invite = invCi;
                             }
                         } else {
-                            // New invite.  Show it even if appointment is in Trash folder.
+                            // Appointment doesn't exist.  The invite in the message should be displayed and the
+                            // user can manually add the appointment.
                             invite = invCi;
                         }
-                    } else {
-                        // Appointment doesn't exist.  The invite in the message should be displayed and the
-                        // user can manually add the appointment.
-                        invite = invCi;
                     }
                 }
             }

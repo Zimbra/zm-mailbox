@@ -477,15 +477,12 @@ public class Message extends MailItem {
             autoAddNew = acct.isPrefCalendarAutoAddInvites();
         }
 
-        boolean isRequestingMethod =
-            ICalTok.REQUEST.toString().equals(method) || ICalTok.PUBLISH.toString().equals(method) ||
-            ICalTok.CANCEL.toString().equals(method) || ICalTok.ADD.toString().equals(method) ||
-            ICalTok.DECLINECOUNTER.toString().equals(method);
+        boolean isOrganizerMethod = Invite.isOrganizerMethod(method);
         if (!invites.isEmpty() && intendedForMe) {
             // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
             // namely REQUEST/PUBLISH/CANCEL/ADD/DECLINECOUNTER.  REPLY/REFRESH/COUNTER don't undergo
             // the check because they are not organizer-to-attendee methods.
-            if (isRequestingMethod) {
+            if (isOrganizerMethod) {
                 String senderEmail;
                 Account senderAcct = null;
                 boolean onBehalfOf = false;
@@ -579,7 +576,7 @@ public class Message extends MailItem {
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
             if (!allowOrganizerAlarm) {
                 cur.clearAlarms();
-                if (cur.isEvent()) {  // only for VEVENTs
+                if (cur.isEvent() && isOrganizerMethod) {  // only for VEVENTs
                     int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
                             Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
                     int hoursBefore = 0;
@@ -679,8 +676,15 @@ public class Message extends MailItem {
                             }
                         }
                     }
-                    
-                    if (calItem != null) {
+
+                    if (intendedForMe && !isOrganizerMethod && folderId != Mailbox.ID_FOLDER_SENT) {
+                        // If it's a reply, add the invite to metadata.  This way ZWC can display info
+                        // if top-level was text/calendar.
+                        CalendarItemInfo info = new CalendarItemInfo(cur.getComponentNum(), cur);
+                        mCalendarItemInfos.add(info);
+                        updatedMetadata = true;
+                    } else if (calItem != null) {
+                        // Just save a reference to the calendar item in metadata.
                         CalendarItemInfo info = new CalendarItemInfo(calItem.getId(), cur.getComponentNum());
                         mCalendarItemInfos.add(info);
                         updatedMetadata = true;
@@ -716,7 +720,7 @@ public class Message extends MailItem {
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward calendar reply emails.  Only forward request emails.
         // Don't forward the message being added to Sent folder.
-        if (intendedForMe && isRequestingMethod && folderId != Mailbox.ID_FOLDER_SENT) {
+        if (intendedForMe && isOrganizerMethod && folderId != Mailbox.ID_FOLDER_SENT) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();

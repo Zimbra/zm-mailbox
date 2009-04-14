@@ -2347,6 +2347,36 @@ public class Invite {
         return retval;
     }
 
+    /**
+     * Returns true if method is organizer-originated method, namely
+     * PUBLISH, REQUEST, ADD, CANCEL or DECLINECOUNTER.
+     * @return
+     */
+    public static boolean isOrganizerMethod(String method) {
+        ICalTok methodTok = ICalTok.lookup(method);
+        return isOrganizerMethod(methodTok);
+    }
+
+    public static boolean isOrganizerMethod(ICalTok method) {
+        boolean isRequesting;
+        if (method != null) {
+            switch (method) {
+            case REQUEST:
+            case PUBLISH:
+            case CANCEL:
+            case ADD:
+            case DECLINECOUNTER:
+                isRequesting = true;
+                break;
+            default:
+                isRequesting = false;
+            }
+        } else {
+            isRequesting = true;
+        }
+        return isRequesting;
+    }
+
     public void sanitize(boolean throwException) throws ServiceException {
         if ((mUid == null || mUid.length() == 0) && throwException)
             throw ServiceException.INVALID_REQUEST("missing UID", null);
@@ -2368,7 +2398,7 @@ public class Invite {
         }
 
         // ORGANIZER is required if there is at least one ATTENDEE.
-        if (hasOtherAttendees() && !hasOrganizer()) {
+        if (isOrganizerMethod(mMethod) && hasOtherAttendees() && !hasOrganizer()) {
             if (throwException)
                 throw ServiceException.INVALID_REQUEST("ORGANIZER missing when ATTENDEEs are present", null);
             else
