@@ -66,9 +66,32 @@ public final class ListData {
             delimiter = delim.charAt(0);
         }
         is.skipChar(' ');
-        mailbox = MailboxName.decode(is.readAString()).toString();
+        String s = is.peekChar() == '"' ? readQuoted(is) : is.readAString();
+        mailbox = MailboxName.decode(s).toString();
     }
 
+    /*
+     * Bug 37101: Workaround for Exchange IMAP which can return mailbox names
+     * containing unescaped double quotes.
+     */
+    private static String readQuoted(ImapInputStream is) throws IOException {
+        is.skipChar('"');
+        StringBuilder sb = new StringBuilder();
+        while (is.peekChar() != '\r') {
+            char c = is.readChar();
+            if (c == '\\') {
+                c = is.readChar();
+            }
+            sb.append(c);
+        }
+        String s = sb.toString();
+        if (!s.endsWith("\"")) {
+            throw new ParseException(
+                "Unexpected end of line while reading QUOTED string");
+        }
+        return s.substring(0, s.length() - 1);
+    }
+    
     private static Flags readFlags(ImapInputStream is) throws IOException {
         Flags flags = Flags.read(is);
         int count = 0;

@@ -1021,7 +1021,7 @@ class ImapFolderSync {
     private ParsedMessage parseMessage(ImapData body, MessageData md)
         throws ServiceException, MessagingException, IOException {
         Date date = md.getInternalDate();
-        Long time = date != null ? (Long) date.getTime() : null;
+        Long time = date != null ? date.getTime() : null;
         boolean indexAttachments = mailbox.attachmentsIndexingEnabled();
         if (body.isLiteral()) {
             File file = ((Literal) body).getFile();
