@@ -33,13 +33,14 @@
     <!-- HTTPBEGIN -->
     <Call name="addConnector">
       <Arg>
-          <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
-            <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
-            <Set name="maxIdleTime">30000</Set>
-	    <Set name="lowResourceMaxIdleTime">1000</Set>
-            <Set name="Acceptors">2</Set>
-            <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
-          </New>
+        <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set> 
+          <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+        </New>
       </Arg>
     </Call>
     <!-- HTTPEND -->
@@ -50,6 +51,7 @@
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
@@ -73,6 +75,7 @@
       <Arg>
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set>
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
@@ -88,19 +91,20 @@
       </Arg>
     </Call>
 
-	<!-- =============================================================== -->
-	<!-- Extension port                                                  -->
-	<!-- =============================================================== -->
-	<Call name="addConnector">
-		<Arg>
-		<New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
-			<Set name="Port">7072</Set>
-			<Set name="maxIdleTime">30000</Set>
-			<Set name="lowResourceMaxIdleTime">1000</Set>
-			<Set name="Acceptors">2</Set>
-		</New>
-		</Arg>
-	</Call>
+    <!-- =============================================================== -->
+    <!-- Extension port                                                  -->
+    <!-- =============================================================== -->
+    <Call name="addConnector">
+      <Arg>
+        <New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <Set name="Port">7072</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set>
+        </New>
+      </Arg>
+    </Call>
 
     <!-- =========================================================== -->
     <!-- Set handler Collection Structure                            --> 
