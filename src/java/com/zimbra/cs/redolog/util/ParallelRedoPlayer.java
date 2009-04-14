@@ -29,12 +29,13 @@ public class ParallelRedoPlayer extends RedoPlayer {
     private PlayerThread[] mPlayerThreads;
 
     public ParallelRedoPlayer(boolean writable, int numThreads, int queueCapacity) {
-        this(writable, false, false, numThreads, queueCapacity);
+        this(writable, false, false, false, numThreads, queueCapacity);
     }
 
-    public ParallelRedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors,
+    public ParallelRedoPlayer(boolean writable, boolean unloggedReplay,
+                              boolean ignoreReplayErrors, boolean skipDeleteOps,
                               int numThreads, int queueCapacity) {
-        super(writable, unloggedReplay, ignoreReplayErrors);
+        super(writable, unloggedReplay, ignoreReplayErrors, skipDeleteOps);
         ZimbraLog.redolog.debug("Starting ParallelRedoPlayer");
         numThreads = Math.max(numThreads, 1);
         mPlayerThreads = new PlayerThread[numThreads];

@@ -64,16 +64,18 @@ public class RedoPlayer {
     private boolean mWritable;
     private boolean mUnloggedReplay;
     private boolean mIgnoreReplayErrors;
+    private boolean mSkipDeleteOps;
 
     public RedoPlayer(boolean writable) {
-        this(writable, false, false);
+        this(writable, false, false, false);
     }
 
-    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors) {
+    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors, boolean skipDeleteOps) {
 		mOpsMap = new LinkedHashMap<TransactionId, RedoableOp>(INITIAL_MAP_SIZE);
         mWritable = writable;
         mUnloggedReplay = unloggedReplay;
         mIgnoreReplayErrors = ignoreReplayErrors;
+        mSkipDeleteOps = skipDeleteOps;
     }
 
     public void shutdown() {
@@ -313,18 +315,22 @@ public class RedoPlayer {
                         }
                 	}
                 	if (allowRedo) {
-                        try {
-                            if (mLog.isDebugEnabled())
-                                mLog.debug("Redoing: " + prepareOp.toString());
-                            prepareOp.setUnloggedReplay(mUnloggedReplay);
-                            playOp(prepareOp);
-                        } catch(Exception e) {
-                            if (!ignoreReplayErrors())
-                                throw ServiceException.FAILURE("Error executing redoOp", e);
-                            else
-                                ZimbraLog.redolog.warn(
-                                        "Ignoring error during redo log replay: " + e.getMessage(), e);
-                        }
+                	    if (mSkipDeleteOps && prepareOp.isDeleteOp()) {
+                	        mLog.info("Skipping delete op: " + prepareOp.toString());
+                	    } else {
+                            try {
+                                if (mLog.isDebugEnabled())
+                                    mLog.debug("Redoing: " + prepareOp.toString());
+                                prepareOp.setUnloggedReplay(mUnloggedReplay);
+                                playOp(prepareOp);
+                            } catch(Exception e) {
+                                if (!ignoreReplayErrors())
+                                    throw ServiceException.FAILURE("Error executing redoOp", e);
+                                else
+                                    ZimbraLog.redolog.warn(
+                                            "Ignoring error during redo log replay: " + e.getMessage(), e);
+                            }
+                	    }
                 	}
                 }
             }

@@ -741,4 +741,8 @@ public abstract class RedoableOp {
     	}
     	return clz;
     }
+
+    public boolean isDeleteOp() {
+        return false;
+    }
 }

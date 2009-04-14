@@ -125,4 +125,9 @@ public class MoveItem extends RedoableOp {
         // No extra checking needed because Mailbox.move() is already idempotent.
         mbox.move(getOperationContext(), mIds, mType, mDestId, tcon);
 	}
+
+    @Override
+    public boolean isDeleteOp() {
+        return mDestId == Mailbox.ID_FOLDER_TRASH;
+    }
 }

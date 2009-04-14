@@ -55,4 +55,9 @@ public class PurgeImapDeleted extends RedoableOp {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.purgeImapDeleted(getOperationContext());
     }
+
+    @Override
+    public boolean isDeleteOp() {
+        return true;
+    }
 }

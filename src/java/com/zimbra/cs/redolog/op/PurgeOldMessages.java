@@ -75,4 +75,9 @@ public class PurgeOldMessages extends RedoableOp {
     protected void deserializeData(RedoLogInput in) {
         // no members to deserialize
     }
+
+    @Override
+    public boolean isDeleteOp() {
+        return true;
+    }
 }

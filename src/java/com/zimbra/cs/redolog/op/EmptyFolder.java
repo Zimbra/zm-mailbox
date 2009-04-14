@@ -70,4 +70,9 @@ public class EmptyFolder extends RedoableOp {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         mbox.emptyFolder(getOperationContext(), mId, mSubfolders);
     }
+
+    @Override
+    public boolean isDeleteOp() {
+        return true;
+    }
 }

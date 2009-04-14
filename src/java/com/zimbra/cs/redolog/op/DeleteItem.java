@@ -108,4 +108,9 @@ public class DeleteItem extends RedoableOp {
                 mLog.info("Some of the items being deleted were already deleted from mailbox " + mboxId);
         }
 	}
+
+    @Override
+    public boolean isDeleteOp() {
+        return true;
+    }
 }
