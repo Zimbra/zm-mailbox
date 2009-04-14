@@ -90,8 +90,8 @@ final class LocalFolder {
         boolean sync = !flags.isNoselect();
         if (((bits & Flag.BITMASK_SYNCFOLDER) != 0) != sync) {
             debug("Setting sync flag to " + sync);
-            alterTag(Flag.ID_FLAG_SYNC, sync);
             alterTag(Flag.ID_FLAG_SYNCFOLDER, sync);
+            alterTag(Flag.ID_FLAG_SYNC, sync);
         }
         if (folder.getDefaultView() != MailItem.TYPE_MESSAGE) {
             debug("Setting default view to TYPE_MESSAGE");
