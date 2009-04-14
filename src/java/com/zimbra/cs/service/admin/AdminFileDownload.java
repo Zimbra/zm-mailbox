@@ -78,7 +78,7 @@ public class AdminFileDownload  extends ZimbraServlet {
                 }
 
                 resp.setHeader("Expires", "Tue, 24 Jan 2000 20:46:50 GMT");
-                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+//                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
                 resp.setStatus(resp.SC_OK);
                 resp.setContentType("application/x-download");
                 resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
@@ -95,7 +95,7 @@ public class AdminFileDownload  extends ZimbraServlet {
                 String types = req.getParameter("types") ;
                 
                 resp.setHeader("Expires", "Tue, 24 Jan 2000 20:46:50 GMT");
-                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+//                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
                 resp.setStatus(resp.SC_OK);
                 resp.setContentType("application/x-download");
                 resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
