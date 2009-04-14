@@ -1036,7 +1036,7 @@ public class LC {
         mailboxd_java_heap_memory_percent.setDefault("30");
 
         mailboxd_java_options = new KnownKey("mailboxd_java_options");
-        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1");
+        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
 
         mailboxd_java_home = new KnownKey("mailboxd_java_home");
         mailboxd_java_home.setDefault("${zimbra_java_home}");
