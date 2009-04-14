@@ -155,18 +155,18 @@ public class TZIDMapper {
             "(GMT-07.00) Chihuahua / La Paz / Mazatlan - Old",
             "(GMT-07.00) Chihuahua / La Paz / Mazatlan");
         map("US/Mountain", "America/Denver", "(GMT-07.00) Mountain Time (US & Canada)");
-        map("America/Guatemala", null, "(GMT-06.00) Central America");
+        map("America/Guatemala", "America/Guatemala", "(GMT-06.00) Central America");
         map("US/Central", "America/Chicago", "(GMT-06.00) Central Time (US & Canada)");
         map("America/Mexico_City", "America/Mexico_City", "(GMT-06.00) Guadalajara / Mexico City / Monterrey - New",
             "(GMT-06.00) Guadalajara / Mexico City / Monterrey - Old",
             "(GMT-06.00) Guadalajara / Mexico City / Monterrey");
-        map("Canada/Saskatchewan", "America/Guatemala", "(GMT-06.00) Saskatchewan");
+        map("Canada/Saskatchewan", "America/Regina", "(GMT-06.00) Saskatchewan");
         map("America/Bogota", null, "(GMT-05.00) Bogota / Lima / Quito / Rio Branco",
             "(GMT-05.00) Bogota / Lima / Quito");
         map("US/Eastern", "America/New_York", "(GMT-05.00) Eastern Time (US & Canada)");
         map("US/East-Indiana", "America/Jamaica", "(GMT-05.00) Indiana (East)");
         map("America/Caracas", null, "(GMT-04.30) Caracas");
-        map("Canada/Eastern", "America/Glace_Bay", "(GMT-04.00) Atlantic Time (Canada)");
+        map("Canada/Atlantic", "America/Halifax", "(GMT-04.00) Atlantic Time (Canada)");
         map("America/Guyana", null, "(GMT-04.00) Georgetown");
         map("America/La_Paz", null, "(GMT-04.00) La Paz",
                 "(GMT-04.00) Caracas / La Paz");
