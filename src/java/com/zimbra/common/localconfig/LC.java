@@ -368,6 +368,7 @@ public class LC {
 
     public static final KnownKey zmstat_log_directory;
     public static final KnownKey zmstat_interval;
+    public static final KnownKey zmstat_disk_interval;
     
     public static final KnownKey zimbra_noop_default_timeout;
     public static final KnownKey zimbra_noop_min_timeout;
@@ -1218,6 +1219,9 @@ public class LC {
 
         zmstat_interval = new KnownKey("zmstat_interval");
         zmstat_interval.setDefault("30");
+        
+        zmstat_disk_interval = new KnownKey("zmstat_interval");
+        zmstat_disk_interval.setDefault("600");
 
         zimbra_noop_default_timeout = new KnownKey("zimbra_noop_default_timeout", "300");
         zimbra_noop_min_timeout = new KnownKey("zimbra_noop_min_timeout", "30");
