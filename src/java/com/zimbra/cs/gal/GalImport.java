@@ -90,7 +90,7 @@ public class GalImport extends MailItemImport {
 			folderMapping.md.put(TYPE, FOLDER);
 			DbDataSource.addMapping(ds, folderMapping);
 		}
-		String syncToken = fullSync ? null : folderMapping.md.get(SYNCTOKEN, null);
+		String syncToken = fullSync ? "" : folderMapping.md.get(SYNCTOKEN, "");
         HashMap<String,DataSourceItem> allMappings = new HashMap<String,DataSourceItem>();
         if (fullSync || force)
 	        for (DataSourceItem dsItem : DbDataSource.getAllMappings(ds))
