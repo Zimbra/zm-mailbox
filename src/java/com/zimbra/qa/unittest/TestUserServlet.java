@@ -16,6 +16,7 @@ package com.zimbra.qa.unittest;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -51,42 +52,28 @@ extends TestCase {
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
-        byte[] tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz");
-        verifyTarball(tarball, true, true);
-        tarball = null; // Drop reference to avoid OOME.
-
-        tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&body=1");
-        verifyTarball(tarball, true, true);
-        tarball = null; // Drop reference to avoid OOME.
-
-        tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&body=0");
-        verifyTarball(tarball, true, false);
-        tarball = null; // Drop reference to avoid OOME.
-
-        tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&meta=1");
-        verifyTarball(tarball, true, true);
-        tarball = null; // Drop reference to avoid OOME.
-
-        tarball = TestUtil.getRESTResource(mbox, "//?fmt=tgz&meta=0");
-        verifyTarball(tarball, false, true);
+        verifyTarball(mbox, "//?fmt=tgz", true, true);
+        verifyTarball(mbox, "//?fmt=tgz&body=1", true, true);
+        verifyTarball(mbox, "//?fmt=tgz&body=0", true, false);
+        verifyTarball(mbox, "//?fmt=tgz&meta=1", true, true);
+        verifyTarball(mbox, "//?fmt=tgz&meta=0", false, true);
     }
     
-    private void verifyTarball(byte[] data, boolean hasMeta, boolean hasBody)
+    private void verifyTarball(ZMailbox mbox, String relativePath, boolean hasMeta, boolean hasBody)
     throws Exception {
-        assertTrue("No data", data.length > 0);
-        
-        TarInputStream in = new TarInputStream(new GZIPInputStream(new ByteArrayInputStream(data)), "UTF-8");
+        InputStream in = mbox.getRESTResource(relativePath);
+        TarInputStream tarIn = new TarInputStream(new GZIPInputStream(in), "UTF-8");
         TarEntry entry = null;
         boolean foundMeta = false;
         boolean foundMessage = false;
-        while ((entry = in.getNextEntry()) != null) {
+        while ((entry = tarIn.getNextEntry()) != null) {
             if (entry.getName().endsWith(".meta")) {
                 assertTrue("Fround " + entry.getName(), hasMeta);
                 foundMeta = true;
             }
             if (entry.getName().endsWith(".eml")) {
                 byte[] content = new byte[(int) entry.getSize()];
-                assertEquals(content.length, in.read(content));
+                assertEquals(content.length, tarIn.read(content));
                 MimeMessage message = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
@@ -97,7 +84,7 @@ extends TestCase {
                 foundMessage = true;
             }
         }
-        in.close();
+        tarIn.close();
         assertTrue(foundMessage);
         if (hasMeta) {
             assertTrue(foundMeta);
@@ -108,25 +95,21 @@ extends TestCase {
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
-        byte[] zipFile = TestUtil.getRESTResource(mbox, "/Inbox/?fmt=zip");
-        verifyZipFile(zipFile, true);
-        zipFile = TestUtil.getRESTResource(mbox, "/Inbox/?fmt=zip&body=1");
-        verifyZipFile(zipFile, true);
-        zipFile = TestUtil.getRESTResource(mbox, "/Inbox/?fmt=zip&body=0");
-        verifyZipFile(zipFile, false);
+        verifyZipFile(mbox, "/Inbox/?fmt=zip", true);
+        verifyZipFile(mbox, "/Inbox/?fmt=zip&body=1", true);
+        verifyZipFile(mbox, "/Inbox/?fmt=zip&body=0", false);
     }
     
-    private void verifyZipFile(byte[] data, boolean hasBody)
+    private void verifyZipFile(ZMailbox mbox, String relativePath, boolean hasBody)
     throws Exception {
-        assertTrue("No data", data.length > 0);
-        
-        ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(data));
+        InputStream in = mbox.getRESTResource(relativePath);
+        ZipInputStream zipIn = new ZipInputStream(in);
         ZipEntry entry;
         boolean foundMessage = false;
-        while ((entry = in.getNextEntry()) != null) {
+        while ((entry = zipIn.getNextEntry()) != null) {
             if (entry.getName().endsWith(".eml")) {
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                ByteUtil.copy(in, false, buf, true);
+                ByteUtil.copy(zipIn, false, buf, true);
                 byte[] content = buf.toByteArray();
                 MimeMessage message = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
@@ -138,7 +121,7 @@ extends TestCase {
                 foundMessage = true;
             }
         }
-        in.close();
+        zipIn.close();
         assertTrue(foundMessage);
     }
     

@@ -843,13 +843,6 @@ extends Assert {
         return testng;
     }
     
-    public static byte[] getRESTResource(ZMailbox mbox, String relativePath)
-    throws Exception {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        mbox.getRESTResource(relativePath, buf, false, null, null, 10);
-        return buf.toByteArray();
-    }
-    
     public static String getHeaderValue(ZMailbox mbox, ZMessage msg, String headerName)
     throws Exception {
         String content = msg.getContent();
