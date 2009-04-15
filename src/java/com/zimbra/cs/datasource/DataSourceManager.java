@@ -78,6 +78,8 @@ public class DataSourceManager {
             return new RssImport(ds);
         case gal:
             return new GalImport(ds);
+        case cal:
+            return new RssImport(ds);
         default:
             throw new IllegalArgumentException(
                 "Unknown data import type: " + ds.getType());

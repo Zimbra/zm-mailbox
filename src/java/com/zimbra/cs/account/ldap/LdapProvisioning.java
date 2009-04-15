@@ -5269,6 +5269,7 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.TOO_MANY_DATA_SOURCES();
         
         dataSourceAttrs.put(A_zimbraDataSourceName, dsName); // must be the same
+        dataSourceAttrs.put(Provisioning.A_zimbraDataSourceType, dsType.toString());
 
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
 

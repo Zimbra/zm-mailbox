@@ -29,6 +29,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.zclient.ZCalDataSource;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -150,22 +151,27 @@ public class TestDataSource extends TestCase {
         assertEquals("2h", cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval));
     }
     
-    // XXX bburtin: renamed method for bug 28438, so that the test doesn't run and
-    // we don't get false positives. 
-    public void xtestRss()
+    public void testRss()
     throws Exception {
         // Create folder.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
-        String urlString = "http://feeds.feedburner.com/zimbra";
-        ZFolder folder = mbox.createFolder(parentId, NAME_PREFIX + " testRss", null, null, null, urlString);
+        String urlString = "http://feeds.theonion.com/theonion/weekly";
+        ZFolder folder;
+        try {
+            folder = mbox.createFolder(parentId, NAME_PREFIX + " testRss", null, null, null, urlString);
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.RESOURCE_UNREACHABLE, e.getCode());
+            ZimbraLog.test.warn("Unable to test RSS data source for %s: %s.", urlString, e);
+            return;
+        }
 
         // Get the data source that was implicitly created.
-        ZRssDataSource ds = getRssDataSource(mbox, folder.getId());
+        ZRssDataSource ds = (ZRssDataSource) getDataSource(mbox, folder.getId());
         assertNotNull(ds);
         
         // Test data source.  If the test fails, skip validation so we don't
-        // get false positives when the Zimbra RSS feed is down or the test
+        // get false positives when the feed is down or the test
         // is running on a box that's not connected to the internet.
         String error = mbox.testDataSource(ds);
         if (error != null) {
@@ -177,16 +183,58 @@ public class TestDataSource extends TestCase {
         List<ZDataSource> list = new ArrayList<ZDataSource>();
         list.add(ds);
         mbox.importData(list);
-        waitForRssData(mbox, folder);
+        waitForData(mbox, folder);
         
         // Delete folder, import data, and make sure that the data source was deleted.
         mbox.deleteFolder(folder.getId());
         mbox.importData(list);
-        ds = getRssDataSource(mbox, folder.getId());
+        ds = (ZRssDataSource) getDataSource(mbox, folder.getId());
+        assertNull(ds);
+    }
+
+    // XXX bburtin: disabled test due to bug 37222 (unable to parse Google calendar).
+    public void xtestCal()
+    throws Exception {
+        // Create folder.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
+        String urlString = "http://www.google.com/calendar/ical/k2kh7ncij3s05dog63g0o0n254%40group.calendar.google.com/public/basic.ics";
+        ZFolder folder;
+        try {
+            folder = mbox.createFolder(parentId, NAME_PREFIX + " testCal", ZFolder.View.appointment, null, null, urlString);
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.RESOURCE_UNREACHABLE, e.getCode());
+            ZimbraLog.test.warn("Unable to test calendar data source for %s: %s", urlString, e.toString());
+            return;
+        }
+
+        // Get the data source that was implicitly created.
+        ZCalDataSource ds = (ZCalDataSource) getDataSource(mbox, folder.getId());
+        assertNotNull(ds);
+        
+        // Test data source.  If the test fails, skip validation so we don't
+        // get false positives when the feed is down or the test
+        // is running on a box that's not connected to the internet.
+        String error = mbox.testDataSource(ds);
+        if (error != null) {
+            ZimbraLog.test.warn("Unable to test iCal data source for %s: %s.", urlString, error);
+            return;
+        }
+        
+        // Import data and confirm that the folder is not empty.
+        List<ZDataSource> list = new ArrayList<ZDataSource>();
+        list.add(ds);
+        mbox.importData(list);
+        waitForData(mbox, folder);
+        
+        // Delete folder, import data, and make sure that the data source was deleted.
+        mbox.deleteFolder(folder.getId());
+        mbox.importData(list);
+        ds = (ZCalDataSource) getDataSource(mbox, folder.getId());
         assertNull(ds);
     }
     
-    private void waitForRssData(ZMailbox mbox, ZFolder folder)
+    private void waitForData(ZMailbox mbox, ZFolder folder)
     throws Exception {
         for (int i = 1; i <= 10; i++) {
             mbox.noOp();
@@ -196,14 +244,14 @@ public class TestDataSource extends TestCase {
             }
             Thread.sleep(500);
         }
-        fail("No messages found in folder " + folder.getPath());
+        fail("No items found in folder " + folder.getPath());
     }
 
-    private ZRssDataSource getRssDataSource(ZMailbox mbox, String folderId)
+    private ZDataSource getDataSource(ZMailbox mbox, String folderId)
     throws ServiceException {
         for (ZDataSource i : mbox.getAllDataSources()) {
             if (i instanceof ZRssDataSource && ((ZRssDataSource) i).getFolderId().equals(folderId)) {
-                return (ZRssDataSource) i;
+                return i;
             }
         }
         return null;

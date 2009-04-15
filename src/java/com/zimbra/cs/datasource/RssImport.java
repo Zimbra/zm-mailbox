@@ -29,6 +29,9 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 
+/**
+ * Imports data for RSS and remote calendar folders.
+ */
 public class RssImport implements DataImport {
 
     private DataSource mDataSource;
@@ -44,7 +47,7 @@ public class RssImport implements DataImport {
             mbox.getFolderById(null, folderId);
             mbox.synchronizeFolder(null, folderId);
         } catch (NoSuchItemException e) {
-            ZimbraLog.datasource.info("Folder %d was deleted.  Deleting RSS data source %s.",
+            ZimbraLog.datasource.info("Folder %d was deleted.  Deleting data source %s.",
                 folderId, mDataSource.getName());
             mbox.getAccount().deleteDataSource(mDataSource.getId());
         }

@@ -6140,7 +6140,8 @@ public class Mailbox {
             DataSource ds = null;
             List<DataSource> dataSources = prov.getAllDataSources(account);
             for (DataSource i : dataSources) {
-                if (i.getType() == DataSource.Type.rss && i.getFolderId() == folder.getId()) {
+                if (i.getFolderId() == folder.getId() &&
+                    (i.getType() == DataSource.Type.rss || i.getType() == DataSource.Type.cal)) {
                     ds = i;
                     break;
                 }
@@ -6161,7 +6162,18 @@ public class Mailbox {
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_TRUE);
                 attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(folder.getId()));
-                ds = prov.createDataSource(account, DataSource.Type.rss, "RSS-" + folder.getId(), attrs);
+                
+                DataSource.Type type;
+                String name;
+                if (folder.getDefaultView() == MailItem.TYPE_APPOINTMENT) {
+                    type = DataSource.Type.cal;
+                    name = "CAL-" + folder.getId();
+                } else {
+                    type = DataSource.Type.rss;
+                    name = "RSS-" + folder.getId();
+                }
+                
+                ds = prov.createDataSource(account, type, name, attrs);
                 DataSourceManager.updateSchedule(account.getId(), ds.getId());
             }
         } catch (ServiceException e) {

@@ -54,6 +54,7 @@ public class DataSourceCallback extends AttributeCallback {
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceRssPollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceCaldavPollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceYabPollingInterval);
+        INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceCalendarPollingInterval);
     }
     
     /**
@@ -73,10 +74,11 @@ public class DataSourceCallback extends AttributeCallback {
         }
         if (INTERVAL_ATTRS.contains(attrName)) {
             context.put(KEY_INTERVAL_CHANGED, willIntervalChange(attrName, attrValue, entry));
-        }
-        if (attrName.equals(Provisioning.A_zimbraDataSourceEnabled)) {
+        } else if (attrName.equals(Provisioning.A_zimbraDataSourceEnabled)) {
             String oldValue = entry.getAttr(Provisioning.A_zimbraDataSourceEnabled);
             context.put(KEY_INTERVAL_CHANGED, StringUtil.equal(oldValue, (String) attrValue));
+        } else {
+            context.put(KEY_INTERVAL_CHANGED, false);
         }
     }
     

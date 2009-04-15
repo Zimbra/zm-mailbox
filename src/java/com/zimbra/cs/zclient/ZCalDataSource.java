@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -25,21 +25,20 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.Type;
 
-
-public class ZRssDataSource implements ZDataSource, ToZJSONObject {
+public class ZCalDataSource implements ZDataSource, ToZJSONObject {
 
     private String mId;
     private String mName;
     private String mFolderId;
     private boolean mEnabled;
     
-    public ZRssDataSource(String name, String folderId, boolean enabled) {
+    public ZCalDataSource(String name, String folderId, boolean enabled) {
         mName = name;
         mFolderId = folderId;
         mEnabled = enabled;
     }
     
-    public ZRssDataSource(Element e)
+    public ZCalDataSource(Element e)
     throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
@@ -65,7 +64,7 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
     }
 
     public Type getType() {
-        return Type.rss;
+        return Type.cal;
     }
     
     public String getFolderId() {
@@ -77,7 +76,7 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
     }
 
     public Element toElement(Element parent) {
-        Element src = parent.addElement(MailConstants.E_DS_RSS);
+        Element src = parent.addElement(MailConstants.E_DS_CAL);
         if (mId != null) src.addAttribute(MailConstants.A_ID, mId);
         src.addAttribute(MailConstants.A_NAME, mName);
         src.addAttribute(MailConstants.A_DS_IS_ENABLED, mEnabled);
@@ -86,7 +85,7 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
     }
 
     public Element toIdElement(Element parent) {
-        Element src = parent.addElement(MailConstants.E_DS_RSS);
+        Element src = parent.addElement(MailConstants.E_DS_CAL);
         src.addAttribute(MailConstants.A_ID, mId);
         return src;
     }
@@ -99,5 +98,4 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
         zjo.put("folderId", mFolderId);
         return zjo;
     }
-
 }

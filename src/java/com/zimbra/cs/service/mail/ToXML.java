@@ -2037,6 +2037,8 @@ public class ToXML {
             return MailConstants.E_DS_RSS;
         case gal:
             return MailConstants.E_DS_GAL;
+        case cal:
+            return MailConstants.E_DS_CAL;
         default:
             return MailConstants.E_DS_UNKNOWN;
         }
