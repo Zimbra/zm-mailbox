@@ -482,7 +482,7 @@ public final class MailboxIndex
         mTextIndex.deleteIndex();
     }
 
-    public void indexMailItem(Mailbox mbox, IndexItem redo, boolean deleteFirst, List<Document> docList, MailItem mi) 
+    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<Document> docList, MailItem mi) 
     throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {
@@ -491,12 +491,16 @@ public final class MailboxIndex
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    mTextIndex.addDocument(redo, docs, indexId, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
+                    mTextIndex.addDocument(docs, indexId, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMailItem caught IOException", e);
             }
         }
+    }
+
+    void indexingCompleted(List<Integer> ids, boolean succeeded) {
+        mMailbox.indexingCompleted(ids, succeeded);
     }
 
     /**

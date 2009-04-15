@@ -50,7 +50,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -192,7 +191,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         }
     }
 
-    public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
+    public void addDocument(Document[] docs, int indexId, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
@@ -241,9 +240,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                     } // synchronized(doc)
                 } // foreach Document
 
-                if (redoOp != null) {
-                    mUncommittedRedoOps.add(redoOp);
-                }
+                mUncommittedItems.add(indexId);
                 
                 // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
                 // however we also track the number of uncomitted-operations on the index, and will force a 
@@ -635,35 +632,17 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         IndexWriter writer = mIndexWriter;
         mIndexWriter = null;
 
-        boolean success = true;
+        boolean success = false;
         try {
             // Flush all changes to file system before committing redos.
             writer.close();
+            success = true;
         } catch (IOException e) {
             success = false;
             sLog.error("Caught Exception " + e + " in Lucene23Index.closeIndexWriter", e);
-            // TODO: Is it okay to eat up the exception?
         } finally {
-            // Write commit entries to redo log for all IndexItem entries
-            // whose changes were written to disk by mIndexWriter.close()
-            // above.
-            for (Iterator<IndexItem> iter = mUncommittedRedoOps.iterator(); iter.hasNext();) {
-                IndexItem op = iter.next();
-                if (success) {
-                    if (op.commitAllowed())
-                        op.commit();
-                    else {
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("IndexItem (" + op +
-                            ") not allowed to commit yet; attaching to parent operation");
-                        }
-                        op.attachToParent();
-                    }
-                } else
-                    op.abort();
-                iter.remove();
-            }
-            assert(mUncommittedRedoOps.size() == 0);
+            mMbidx.indexingCompleted(mUncommittedItems, success);
+            mUncommittedItems.clear();
         }
     }
     
@@ -808,7 +787,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         assert(mIndexWriterMutex.isHeldByCurrentThread());
         mIndexWriterMutex.unlock();
         
-        if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
+        if (mUncommittedItems.size() > sMaxUncommittedOps) {
             if (sLog.isDebugEnabled()) {
                 sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
             }
@@ -1048,7 +1027,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
     private MailboxIndex mMbidx;
-    private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
+    private List<Integer>mUncommittedItems = new ArrayList<Integer>();
     static abstract class DocEnumInterface {
         void maxDocNo(int num) {};
         abstract boolean onDocument(Document doc, boolean isDeleted);

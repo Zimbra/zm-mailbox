@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -47,8 +46,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.stats.ZimbraPerf;
 
 
 /**
@@ -57,7 +54,6 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILuceneIndex, ITextIndex{
 
-    
     static {
         System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z23FSDirectory");
     }
@@ -170,7 +166,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
-    public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
+    public void addDocument(Document[] docs, int indexId, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
@@ -218,9 +214,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                     } // synchronized(doc)
                 } // foreach Document
 
-                if (redoOp != null) {
-                    mUncommittedRedoOps.add(redoOp);
-                }
+                mUncommittedItems.add(indexId);
                 
                 // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
                 // however we also track the number of uncomitted-operations on the index, and will force a 
@@ -680,7 +674,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     
     private void doneWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
-        if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
+        if (mUncommittedItems.size() > sMaxUncommittedOps) {
             if (sLog.isDebugEnabled()) {
                 sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
             }
@@ -787,35 +781,20 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         IndexWriter writer = mIndexWriter;
         mIndexWriter = null;
 
-        boolean success = true;
+        boolean success = false;
         try {
             // Flush all changes to file system before committing redos.
             writer.close();
+            success = true;
         } catch (IOException e) {
-            success = false;
             sLog.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
             // TODO: Is it okay to eat up the exception?
         } finally {
             // Write commit entries to redo log for all IndexItem entries
             // whose changes were written to disk by mIndexWriter.close()
             // above.
-            for (Iterator<IndexItem> iter = mUncommittedRedoOps.iterator(); iter.hasNext();) {
-                IndexItem op = iter.next();
-                if (success) {
-                    if (op.commitAllowed())
-                        op.commit();
-                    else {
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("IndexItem (" + op +
-                            ") not allowed to commit yet; attaching to parent operation");
-                        }
-                        op.attachToParent();
-                    }
-                } else
-                    op.abort();
-                iter.remove();
-            }
-            assert(mUncommittedRedoOps.size() == 0);
+            mMbidx.indexingCompleted(mUncommittedItems, success);
+            mUncommittedItems.clear();
         }
     }
     
@@ -849,7 +828,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
     private MailboxIndex mMbidx;
-    private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
+    //private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
+    private List<Integer> mUncommittedItems = new ArrayList<Integer>(); 
     
     
     static abstract class DocEnumInterface {
