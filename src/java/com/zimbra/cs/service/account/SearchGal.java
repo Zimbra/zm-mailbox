@@ -20,17 +20,11 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.FileBufferedWriter;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -66,6 +60,7 @@ public class SearchGal extends AccountDocumentHandler {
             type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
+        String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
 
         String query = null;
         if (n.compareTo(".") != 0)
@@ -75,6 +70,8 @@ public class SearchGal extends AccountDocumentHandler {
         params.setRequest(request);
         params.setQuery(query);
         params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
+        if (galAcctId != null)
+        	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         GalSearchControl gal = new GalSearchControl(params);
         gal.search();
         return params.getResultCallback().getResponse();
@@ -83,80 +80,5 @@ public class SearchGal extends AccountDocumentHandler {
     @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
-    }
-
-    public static void toXML(Element response, SearchGalResult result) throws ServiceException {
-        response.addAttribute(AccountConstants.A_MORE, result.getHadMore());
-        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.getTokenizeKey());
-        
-        addContacts(response, result);
-    }
-    
-    public static void addContacts(Element response, SearchGalResult result) throws ServiceException {
-        
-        ZimbraLog.gal.debug("GAL result total entries:" + result.getNumMatches());
-        
-        if (isLarge(result))
-            response.setIsLarge();   
-        
-        if (!(result instanceof Provisioning.VisitorSearchGalResult)) {
-            for (GalContact contact : result.getMatches())
-                addContact(response, contact);
-        }
-    }
-    
-    public static void addContact(Element response, GalContact contact) {
-        Element cn = response.addElement(MailConstants.E_CONTACT);
-        cn.addAttribute(MailConstants.A_ID, contact.getId());
-        Map<String, Object> attrs = contact.getAttrs();
-        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++)
-                    cn.addKeyValuePair(entry.getKey(), sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            } else {
-                cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            }
-        }
-    }
-    
-    /*
-     * we've got a big result
-     */
-    private static boolean isLarge(SearchGalResult result) {
-        /*
-        <cn id="uid=user1,ou=people,dc=phoebe,dc=mac">
-            <a n="workPhone">+1 650 555 1111</a>
-            <a n="objectClass">organizationalPerson</a>
-            <a n="objectClass">zimbraAccount</a>
-            <a n="objectClass">amavisAccount</a>
-            <a n="modifyTimeStamp">20080906173522Z</a>
-            <a n="createTimeStamp">20080906173432Z</a>
-            <a n="zimbraId">acc886ee-2f45-47c1-99f3-6f28703d1f13</a>
-            <a n="fullName">Demo User One</a>
-            <a n="email">user1@phoebe.mac</a>
-            <a n="lastName">user1</a>
-        </cn>
-        */
-        // average gal entry size in SOAP
-        final int GAL_ENTRY_AVG_SIZE = 600;  // bytes
-        int maxInMemSize = LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE);
-        int numEntries = result.getNumMatches();
-        
-        return numEntries * GAL_ENTRY_AVG_SIZE > maxInMemSize;
-    }
-    
-    
-    public static class GalContactVisitor implements GalContact.Visitor {
-        Element mResponse;
-        
-        GalContactVisitor(Element response) {
-            mResponse = response;
-        }
-        
-        public void visit(GalContact gc) {
-            addContact(mResponse, gc);
-        }
     }
 }

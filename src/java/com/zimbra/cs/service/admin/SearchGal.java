@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -59,6 +60,7 @@ public class SearchGal extends AdminDocumentHandler {
         String domain = request.getAttribute(AdminConstants.A_DOMAIN);
         String typeStr = request.getAttribute(AdminConstants.A_TYPE, "account");
         String token = request.getAttribute(AdminConstants.A_TOKEN, null);
+        String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
 
         Provisioning.GAL_SEARCH_TYPE type;
         if (typeStr.equals("all"))
@@ -82,6 +84,8 @@ public class SearchGal extends AdminDocumentHandler {
         params.setRequest(request);
         params.setQuery(n);
         params.setResponseName(AdminConstants.SEARCH_GAL_RESPONSE);
+        if (galAcctId != null)
+        	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         GalSearchControl gal = new GalSearchControl(params);
         if (token != null)
         	gal.sync();

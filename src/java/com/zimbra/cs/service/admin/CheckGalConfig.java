@@ -29,7 +29,6 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.Check;
-import com.zimbra.cs.service.account.SearchGal;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -71,7 +70,7 @@ public class CheckGalConfig extends AdminDocumentHandler {
             List<GalContact> contacts = ((Check.GalResult)r).getContacts();
             if (contacts != null) {
                 for (GalContact contact : contacts) {
-                    SearchGal.addContact(response, contact);
+                    AutoCompleteGal.addContact(response, contact);
                 }
             }
         }

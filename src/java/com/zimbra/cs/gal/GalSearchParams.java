@@ -36,11 +36,12 @@ public class GalSearchParams {
 	private int mLimit;
 	private int mPageSize;
 	private String mQuery;
-	private String mToken;
+	private GalSyncToken mSyncToken;
 	private SearchGalResult mResult;
 	private ZimbraSoapContext mSoapContext;
 	
 	private Account mAccount;
+	private Account mGalSyncAccount;
 	private Domain mDomain;
     private SearchParams mSearchParams;
     private GalSearchResultCallback mResultCallback;
@@ -90,7 +91,11 @@ public class GalSearchParams {
 	}
 	
 	public String getSyncToken() {
-		return mToken;
+		return mSyncToken.getLdapTimestamp();
+	}
+	
+	public GalSyncToken getGalSyncToken() {
+		return mSyncToken;
 	}
 	
 	public SearchGalResult getResult() {
@@ -99,6 +104,10 @@ public class GalSearchParams {
 	
 	public Account getAccount() {
 		return mAccount;
+	}
+	
+	public Account getGalSyncAccount() {
+		return mGalSyncAccount;
 	}
 	
 	public Domain getDomain() throws ServiceException {
@@ -149,7 +158,7 @@ public class GalSearchParams {
 	}
 	
 	public void setToken(String token) {
-		mToken = token;
+		mSyncToken = new GalSyncToken(token);
 	}
 	
 	public void setGalResult(SearchGalResult result) {
@@ -197,6 +206,11 @@ public class GalSearchParams {
 	
 	public String generateLdapQuery() throws ServiceException {
 		assert(mConfig != null);
-        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, mToken, false);
+		String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp() : null;
+        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, false);
+	}
+	
+	public void setGalSyncAccount(Account acct) {
+		mGalSyncAccount = acct;
 	}
 }

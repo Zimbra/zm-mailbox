@@ -49,11 +49,14 @@ public class SyncGal extends AccountDocumentHandler {
         }
         
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
+        String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
 
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setToken(tokenAttr);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
+        if (galAcctId != null)
+        	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         GalSearchControl gal = new GalSearchControl(params);
         gal.sync();
         return params.getResultCallback().getResponse();

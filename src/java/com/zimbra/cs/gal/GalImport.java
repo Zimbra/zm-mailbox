@@ -67,7 +67,7 @@ public class GalImport extends MailItemImport {
 
 	private static final String TYPE = "t";
 	private static final String FOLDER = "f";
-	private static final String SYNCTOKEN = "st";
+	public static final String SYNCTOKEN = "st";
 	
 	private void setStatus(boolean success) throws ServiceException {
 		Date now = new Date();

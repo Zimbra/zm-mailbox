@@ -1004,6 +1004,14 @@ public class LdapUtil {
         }
         return timeA.compareTo(timeB) > 0 ? timeA : timeB;
     }
+    public static String getEarlierTimestamp(String timeA, String timeB) {
+        if (timeA == null) {
+            return timeB;
+        } else if (timeB == null) {
+            return timeA;
+        }
+        return timeA.compareTo(timeB) < 0 ? timeA : timeB;
+    }
 
     public static void main(String args[]) throws NamingException, ServiceException {
 
