@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -185,41 +186,57 @@ public class ItemId {
     throws ServiceException {
         Map<String, List<Integer>> foldersMap = new HashMap<String, List<Integer>>();
         for (ItemId iidFolder : folderIids) {
-            int folderId = iidFolder.getId();
             String targetAccountId = iidFolder.getAccountId();
-            if (mbox.getAccountId().equals(targetAccountId)) {
-                boolean isMountpoint = true;
-                int hopCount = 0;
-                // resolve local mountpoint to a real folder; deal with possible mountpoint chain
-                while (isMountpoint && hopCount < ZimbraSoapContext.MAX_HOP_COUNT) {
-                    Folder folder = mbox.getFolderById(octxt, folderId);
-                    isMountpoint = folder instanceof Mountpoint;
-                    if (isMountpoint) {
-                        Mountpoint mp = (Mountpoint) folder;
-                        folderId = mp.getRemoteId();
-                        if (!mp.isLocal()) {
-                            // done resolving if pointing to a different account
-                            targetAccountId = mp.getOwnerId();
-                            Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId);
-                            if (targetAcct == null) {
-                                throw MailServiceException.NO_SUCH_MOUNTPOINT(
-                                        mp.getId(), mp.getOwnerId(), mp.getRemoteId(),
-                                        AccountServiceException.NO_SUCH_ACCOUNT(targetAccountId));
+            int folderId = iidFolder.getId();
+            try {
+                if (mbox.getAccountId().equals(targetAccountId)) {
+                    boolean isMountpoint = true;
+                    int hopCount = 0;
+                    // resolve local mountpoint to a real folder; deal with possible mountpoint chain
+                    while (isMountpoint && hopCount < ZimbraSoapContext.MAX_HOP_COUNT) {
+                        Folder folder = mbox.getFolderById(octxt, folderId);
+                        isMountpoint = folder instanceof Mountpoint;
+                        if (isMountpoint) {
+                            Mountpoint mp = (Mountpoint) folder;
+                            folderId = mp.getRemoteId();
+                            if (!mp.isLocal()) {
+                                // done resolving if pointing to a different account
+                                targetAccountId = mp.getOwnerId();
+                                Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId);
+                                if (targetAcct == null) {
+                                    throw MailServiceException.NO_SUCH_MOUNTPOINT(
+                                            mp.getId(), mp.getOwnerId(), mp.getRemoteId(),
+                                            AccountServiceException.NO_SUCH_ACCOUNT(targetAccountId));
+                                }
+                                break;
                             }
-                            break;
+                            hopCount++;
                         }
-                        hopCount++;
                     }
+                    if (hopCount >= ZimbraSoapContext.MAX_HOP_COUNT)
+                        throw ServiceException.TOO_MANY_HOPS();
                 }
-                if (hopCount >= ZimbraSoapContext.MAX_HOP_COUNT)
-                    throw ServiceException.TOO_MANY_HOPS();
+                List<Integer> folderList = foldersMap.get(targetAccountId);
+                if (folderList == null) {
+                    folderList = new ArrayList<Integer>();
+                    foldersMap.put(targetAccountId, folderList);
+                }
+                folderList.add(folderId);
+            } catch (ServiceException e) {
+                String ecode = e.getCode();
+                ItemIdFormatter ifmt = new ItemIdFormatter(targetAccountId, targetAccountId, false);
+                if (ecode.equals(ServiceException.PERM_DENIED)) {
+                    // share permission was revoked
+                    ZimbraLog.calendar.warn(
+                            "Ignorable permission error " + ifmt.formatItemId(folderId), e);
+                } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
+                    // shared calendar folder was deleted by the owner
+                    ZimbraLog.calendar.warn(
+                            "Ignoring deleted folder " + ifmt.formatItemId(folderId));
+                } else {
+                    throw e;
+                }
             }
-            List<Integer> folderList = foldersMap.get(targetAccountId);
-            if (folderList == null) {
-                folderList = new ArrayList<Integer>();
-                foldersMap.put(targetAccountId, folderList);
-            }
-            folderList.add(folderId);
         }
         return foldersMap;
     }
