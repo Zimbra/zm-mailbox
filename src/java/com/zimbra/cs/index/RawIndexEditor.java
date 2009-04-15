@@ -100,7 +100,7 @@ public class RawIndexEditor {
         } else {
             dateStr = DateField.stringToDate(dateStr).toString();
         }
-        String sizeStr = d.get(LuceneFields.L_SIZE);
+        String sizeStr = d.get(LuceneFields.L_SORT_SIZE);
         if (sizeStr == null) {
             sizeStr = "";
         }

@@ -685,8 +685,7 @@ abstract class ImapHandler extends ProtocolHandler {
                             // FIXME: DATE sorts on INTERNALDATE, not the Date header
                             else if (key.equals("DATE"))         sort = desc ? SortBy.DATE_DESCENDING : SortBy.DATE_ASCENDING;
                             else if (key.equals("FROM"))         sort = desc ? SortBy.NAME_DESCENDING : SortBy.NAME_ASCENDING;
-                            // FIXME: SIZE sort not implemented
-                            else if (key.equals("SIZE"))         sort = SortBy.NONE;
+                            else if (key.equals("SIZE"))         sort = desc ? SortBy.SIZE_DESCENDING : SortBy.SIZE_ASCENDING;
                             else if (key.equals("SUBJECT"))      sort = desc ? SortBy.SUBJ_DESCENDING : SortBy.SUBJ_ASCENDING;
                             // FIXME: TO sort not implemented
                             else if (key.equals("TO"))           sort = SortBy.NONE;

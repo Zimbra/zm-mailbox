@@ -87,6 +87,9 @@ public abstract class ZimbraHit
             case NAME_ASCENDING:
             case NAME_DESCENDING:
                 return getName().toUpperCase();
+            case SIZE_ASCENDING:
+            case SIZE_DESCENDING: /* 5K...4K...3K...*/
+                return getSize();
             case SCORE_DESCENDING:
                 return getScore();
             case TASK_DUE_ASCENDING:
@@ -111,6 +114,7 @@ public abstract class ZimbraHit
     protected Mailbox mMailbox;
     protected ZimbraQueryResultsImpl mResults;
     protected long mCachedDate = -1;
+    protected long mCachedSize = -1;
     protected String mCachedName = null;
     protected String mCachedSubj = null;
     private float mScore = (float) 1.0;
@@ -137,7 +141,7 @@ public abstract class ZimbraHit
      * @return
      * @throws ServiceException
      */
-    abstract long getSize() throws ServiceException ;
+    abstract long getSize() throws ServiceException;
 
 
     /**
@@ -217,6 +221,20 @@ public abstract class ZimbraHit
                  * method that seems to give us the same results as the sorts from SQL server -- esp the [] characters 
                  */
                 retVal = (getName().toUpperCase().compareTo(other.getName().toUpperCase()));
+                break;
+            case SIZE_ASCENDING:
+                if (dumpComp) {
+                    System.out.println("Comparing SizeAsc: \""+getSize()+"\" to \"" + other.getSize()+"\"");
+                    System.out.println("\tMySubj: \""+getSubject()+"\" other: \"" + other.getSubject()+"\"");
+                }
+                retVal = (other.getSize() - getSize());
+                break;
+            case SIZE_DESCENDING:
+                if (dumpComp) {
+                    System.out.println("Comparing SizeDesc: \""+getSize()+"\" to \"" + other.getSize()+"\"");
+                    System.out.println("\tMySubj: \""+getSubject()+"\" other: \"" + other.getSubject()+"\"");
+                }
+                retVal = (other.getSize() - getSize());
                 break;
             case SCORE_DESCENDING:
                 if (dumpComp) {
@@ -333,6 +351,10 @@ public abstract class ZimbraHit
             case SUBJ_DESCENDING:
                 mCachedSubj = (String) sortKey;
                 break;
+            case SIZE_ASCENDING:
+            case SIZE_DESCENDING:
+                mCachedSize = ((Long) sortKey).longValue();
+                break;
         }
     }
 
@@ -353,22 +375,18 @@ public abstract class ZimbraHit
      * 
      * @param sortOrder
      */
-    static Comparator getSortAndIdComparator(SortBy sortOrder) {
+    static Comparator<ZimbraHit> getSortAndIdComparator(SortBy sortOrder) {
         return new ZimbraHitSortAndIdComparator(sortOrder); 
     }
 
-    private static class ZimbraHitSortAndIdComparator implements Comparator 
-    {
+    private static class ZimbraHitSortAndIdComparator implements Comparator<ZimbraHit> {
         SortBy mSortOrder;
 
         ZimbraHitSortAndIdComparator(SortBy sortOrder){
             mSortOrder = sortOrder;
         }
 
-        public int compare(Object o1, Object o2) {
-            ZimbraHit lhs = (ZimbraHit)o1;
-            ZimbraHit rhs = (ZimbraHit)o2;
-
+        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
             try {
                 int retVal = lhs.compareBySortField(mSortOrder, rhs);
                 if (retVal == 0) {

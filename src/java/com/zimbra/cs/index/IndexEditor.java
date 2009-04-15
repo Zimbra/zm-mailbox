@@ -455,7 +455,7 @@ public class IndexEditor {
             Date dt = DateField.stringToDate(dateStr);
             dateStr = dt.toString()+" ("+dt.getTime()+")";
         }
-        String sizeStr = d.get(LuceneFields.L_SIZE);
+        String sizeStr = d.get(LuceneFields.L_SORT_SIZE);
         if (sizeStr == null) {
             sizeStr = "";
         }
@@ -1214,6 +1214,12 @@ public class IndexEditor {
                 } else if (command.equals("sort nd")) {
                     sortOrder = SortBy.NAME_DESCENDING;
                     outputStream.println("---->Search order = NAME_DESCENDING");
+                } else if (command.equals("sort za")) {
+                    sortOrder = SortBy.SIZE_ASCENDING;
+                    outputStream.println("---->Search order = SIZE_ASCENDING");
+                } else if (command.equals("sort zd")) {
+                    sortOrder = SortBy.SIZE_DESCENDING;
+                    outputStream.println("---->Search order = SIZE_DESCENDING");
                 } else if (command.equals("q") || command.equals("query")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
                     doQuery(runner,false, MailboxIndex.SEARCH_RETURN_MESSAGES);

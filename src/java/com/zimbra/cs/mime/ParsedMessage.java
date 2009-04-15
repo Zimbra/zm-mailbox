@@ -1028,9 +1028,6 @@ public class ParsedMessage {
 
         document.add(new Field(LuceneFields.L_CONTENT, text, Field.Store.NO, Field.Index.TOKENIZED));
 
-        String sizeStr = Integer.toString(getMimeMessage().getSize());
-        document.add(new Field(LuceneFields.L_SIZE, sizeStr, Field.Store.YES, Field.Index.NO));
-
         try {
             MimeHandler.getObjects(text, document);
         } catch (ObjectHandlerException e) {

@@ -1093,7 +1093,7 @@ public final class ZimbraQuery {
     public static class SizeQuery extends BaseQuery
     {
         private String mSizeStr;
-        private int mSize;
+        private long mSize;
 
         public SizeQuery(Analyzer analyzer, int modifier, int target, String size) throws ParseException {
             super(modifier, target);
@@ -1135,12 +1135,11 @@ public final class ZimbraQuery {
                 mSizeStr = mSizeStr.substring(0,mSizeStr.length()-1);
             }
 
-
             mSize = Integer.parseInt(mSizeStr) * multiplier;
 
 //          System.out.println("Size of \""+size+"\" parsed to "+mSize);
 
-            mSizeStr = ZimbraAnalyzer.SizeTokenFilter.EncodeSize(mSize);
+            mSizeStr = ZimbraAnalyzer.SizeTokenFilter.encodeSize(mSize);
             if (mSizeStr == null) {
                 mSizeStr = "";
             }

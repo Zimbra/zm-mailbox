@@ -39,7 +39,6 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 /***
  * 
@@ -169,7 +168,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                     fieldName.equals(LuceneFields.L_MIMETYPE)) 
         {
             return new MimeTypeTokenFilter(CommaSeparatedTokenStream(reader));
-        } else if (fieldName.equals(LuceneFields.L_SIZE)) {
+        } else if (fieldName.equals(LuceneFields.L_SORT_SIZE)) {
             return new SizeTokenFilter(new NumberTokenStream(reader));
         } else if (fieldName.equals(LuceneFields.L_H_FROM) 
                     || fieldName.equals(LuceneFields.L_H_TO) 
@@ -469,8 +468,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             super(in);
         }
 
-        public static String EncodeSize(String size) 
-        {
+        public static String encodeSize(String size) {
             return size;
 //          try {
 //          return EncodeSize(Long.parseLong(size));
@@ -479,7 +477,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
 //          return null;
 //          }
         }
-        public static String EncodeSize(long lsize) {
+        public static String encodeSize(long lsize) {
 //          String encoded;
 //          try {
 //          encoded = Long.toString(lsize, Character.MAX_RADIX);
@@ -494,22 +492,21 @@ public class ZimbraAnalyzer extends StandardAnalyzer
 //          }
 //          toRet.append(encoded);
 //          return toRet.toString();
-            return Integer.toString((int)lsize);
+            return Long.toString(lsize);
         }
 
-        public static long DecodeSize(String size) {
+        public static long decodeSize(String size) {
 //          return Long.parseLong(size, Character.MAX_RADIX);
-            return Integer.parseInt(size);
+            return Long.parseLong(size);
         }
 
-        public org.apache.lucene.analysis.Token next() throws IOException 
-        {
+        @Override public org.apache.lucene.analysis.Token next() throws IOException {
             org.apache.lucene.analysis.Token t = input.next();
             if (t == null) {
                 return null;
             }
 
-            String sizeFieldStr = EncodeSize(t.termText());
+            String sizeFieldStr = encodeSize(t.termText());
             if (sizeFieldStr == null) {
                 return next();
             }
@@ -962,7 +959,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             str = "123 26 1000000 100000000 1,000,000,000 1,000,000,000,000,000";
             System.out.println("\nMimeTypeTokenFilter:\n-------------------------");
             StringReader reader = new StringReader(str);
-            TokenStream filter1 = la.tokenStream(LuceneFields.L_SIZE, reader);
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_SORT_SIZE, reader);
 
 //          int  i = 1;
             Token tok = null;

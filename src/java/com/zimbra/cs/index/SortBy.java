@@ -26,6 +26,8 @@ public enum SortBy {
     SUBJ_DESCENDING ("subjDesc", SortCriterion.SUBJECT, SortDirection.DESCENDING),
     NAME_ASCENDING  ("nameAsc",  SortCriterion.SENDER,  SortDirection.ASCENDING),
     NAME_DESCENDING ("nameDesc", SortCriterion.SENDER,  SortDirection.DESCENDING),
+    SIZE_ASCENDING  ("sizeAsc",  SortCriterion.SIZE,    SortDirection.ASCENDING), 
+    SIZE_DESCENDING ("sizeDesc", SortCriterion.SIZE,    SortDirection.DESCENDING),
     SCORE_DESCENDING("score",    SortCriterion.DATE,    SortDirection.DESCENDING),
 
     // wiki "natural order" sorts not exposed via SOAP
@@ -44,7 +46,7 @@ public enum SortBy {
     ;
 
     public static enum SortCriterion {
-        DATE, SENDER, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER
+        DATE, SENDER, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE
     }
 
     public static enum SortDirection {

@@ -469,8 +469,9 @@ public final class MailboxIndex
                 types[i] = MailItem.TYPE_TASK;
             } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
                 types[i] = MailItem.TYPE_WIKI;
-            } else 
+            } else {
                 throw ServiceException.INVALID_REQUEST("unknown groupBy: "+strs[i], null);
+            }
         }
 
         return types;
@@ -490,7 +491,7 @@ public final class MailboxIndex
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    mTextIndex.addDocument(redo, docs, indexId, mi.getDate(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
+                    mTextIndex.addDocument(redo, docs, indexId, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMailItem caught IOException", e);

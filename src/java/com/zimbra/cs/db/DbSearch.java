@@ -83,6 +83,9 @@ public class DbSearch {
                 case NAME_NATURAL_ORDER:
                     result.sortkey = rs.getString(COLUMN_SORTKEY);
                     break;
+                case SIZE:
+                    result.sortkey = new Long(rs.getInt(COLUMN_SORTKEY));
+                    break;
                 case NONE:
                     // note that there's no sort column in the result set for SORT_NONE
                     break;
@@ -124,15 +127,16 @@ public class DbSearch {
 
             public int compare(SearchResult o1, SearchResult o2) {
                 switch (mSort.getCriterion()) {
+                    case SIZE:
                     case DATE:
                         long date1 = (Long) o1.sortkey;
                         long date2 = (Long) o2.sortkey;
                         if (date1 != date2) {
                             long diff;
                             if (mSort.getDirection() == SortDirection.DESCENDING) {
-                                diff = date2-date1;
+                                diff = date2 - date1;
                             } else {
-                                diff = date1-date2;    
+                                diff = date1 - date2;
                             }
                             return (diff > 0) ? 1 : -1;
                         }
@@ -142,7 +146,7 @@ public class DbSearch {
                         break;
                     default:
                         throw new UnsupportedOperationException("SearchResultComparator not implemented " +
-                                                                " for anything except for DATE right now. " +
+                                                                " for anything except for DATE and SIZE right now. " +
                                                                 " Feel free to fix it!"); 
                 }
                 if (mSort.getDirection() == SortDirection.DESCENDING) {
@@ -192,6 +196,7 @@ public class DbSearch {
             case NAME_NATURAL_ORDER:
             case NAME:     str = "mi.name";     stringVal = true;  break;
             case ID:       str = "mi.id";    break;
+            case SIZE:     str = "mi.size";  break;
             case DATE:
             default:       str = "mi.date";  break; 
             case NONE:     return null;
@@ -551,10 +556,9 @@ public class DbSearch {
                                             DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                             int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
-
         // this monstrosity for bug 31343
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                        sort.getCriterion() != SortCriterion.DATE || 
+                        (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) || 
                         NodeType.OR != node.getNodeType()) {
             // do it the old way
             return searchInternal(result, conn, node, mbox, sort, offset, limit, extra);

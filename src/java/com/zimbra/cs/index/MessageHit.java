@@ -93,7 +93,6 @@ public class MessageHit extends ZimbraHit {
                 String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
                 if (dateStr != null) {
                     mCachedDate = DateField.stringToTime(dateStr);
-                    
                     return mCachedDate;
                 }
             }
@@ -141,13 +140,17 @@ public class MessageHit extends ZimbraHit {
     }
 
     public long getSize() throws ServiceException {
-//        if (mDoc != null) {
-        if (false) {
-            String sizeStr = mDoc.get(LuceneFields.L_SIZE);
-            return (int) ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
-        } else {
-            return getMessage().getSize();
+        if (mCachedSize == -1) {
+            if (mMessage == null && mDoc != null) {
+                String sizeStr = mDoc.get(LuceneFields.L_SORT_SIZE);
+                if (sizeStr != null) {
+                    mCachedSize = ZimbraAnalyzer.SizeTokenFilter.decodeSize(sizeStr);
+                    return mCachedSize;
+                }
+            }
+            mCachedSize = getMessage().getSize();
         }
+        return mCachedSize;
     }
 
     public boolean isTagged(Tag tag) throws ServiceException {

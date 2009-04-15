@@ -53,6 +53,12 @@ public class LuceneFields {
     @Deprecated
     public static final String L_DATE = L_SORT_DATE;
 
+    /** size of document "size:" searches, "larger:" and "smaller:"*/
+    public static final String L_SORT_SIZE = "l.size";
+
+    @Deprecated
+    public static final String L_SIZE = L_SORT_SIZE;
+
     
     /*********************************
      *  
@@ -102,9 +108,6 @@ public class LuceneFields {
      * MIME-type of blob  "type:" searches
      **/
     public static final String L_MIMETYPE = "type";
-    
-    /** size of document "size:" searches, "larger:" and "smaller:"*/
-    public static final String L_SIZE = "l.size";
     
     /** version */
     public static final String L_VERSION = "l.version";

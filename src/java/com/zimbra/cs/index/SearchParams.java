@@ -454,6 +454,16 @@ public final class SearchParams implements Cloneable {
                     case SUBJ_DESCENDING:
                         addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
                         break;
+                    case SIZE_ASCENDING:
+                        // hackaround because "size:>=" doesn't parse but "size:>" does
+                        sortVal = "" + (Long.parseLong(sortVal) - 1);
+                        addedPart = "size:"+quote(">", sortVal)+(endSortVal!=null ? " size:"+quote("<", endSortVal) : "");
+                        break;
+                    case SIZE_DESCENDING:
+                        // hackaround because "size:<=" doesn't parse but "size:<" does
+                        sortVal = "" + (Long.parseLong(sortVal) + 1);
+                        addedPart = "size:"+quote("<", sortVal)+(endSortVal!=null ? " size:"+quote(">", endSortVal) : "");
+                        break;
                     case NAME_ASCENDING:
                         addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
                         break;

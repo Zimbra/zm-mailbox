@@ -193,7 +193,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     }
 
     public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
-        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
+        long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
         
@@ -210,19 +210,22 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                     synchronized (doc) {
                         doc.removeFields(LuceneFields.L_SORT_SUBJECT);
                         doc.removeFields(LuceneFields.L_SORT_NAME);
-                        //                                                                                                  store, index, tokenize
+                        //                                                                          store, index, tokenize
                         doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         doc.add(new Field(LuceneFields.L_SORT_NAME,    sortSender, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         
                         doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
                         doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
-                        
+
                         // If this doc is shared by mult threads, then the date might just be wrong,
                         // so remove and re-add the date here to make sure the right one gets written!
                         doc.removeFields(LuceneFields.L_SORT_DATE);
                         String dateString = DateField.timeToString(receivedDate);
                         doc.add(new Field(LuceneFields.L_SORT_DATE, dateString, Field.Store.YES, Field.Index.UN_TOKENIZED));
-                        
+
+                        doc.removeFields(LuceneFields.L_SORT_SIZE);
+                        doc.add(new Field(LuceneFields.L_SORT_SIZE, Long.toString(size), Field.Store.YES, Field.Index.NO));
+
                         if (null == doc.get(LuceneFields.L_ALL)) {
                             doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
                         }
@@ -505,6 +508,14 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                         break;
                     case NAME_ASCENDING:
                         mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case SIZE_DESCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, true));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case SIZE_ASCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, false));
                         mLatestSortBy = searchOrder;
                         break;
                     case SCORE_DESCENDING:

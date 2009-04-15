@@ -171,7 +171,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     }
 
     public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
-        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
+        long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
     
@@ -187,7 +187,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                     synchronized (doc) {
                         doc.removeFields(LuceneFields.L_SORT_SUBJECT);
                         doc.removeFields(LuceneFields.L_SORT_NAME);
-                        //                                                                                                  store, index, tokenize
+                        //                                                                   store, index, tokenize
                         doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         doc.add(new Field(LuceneFields.L_SORT_NAME,    sortSender, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         
@@ -199,7 +199,10 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         doc.removeFields(LuceneFields.L_SORT_DATE);
                         String dateString = DateField.timeToString(receivedDate);
                         doc.add(new Field(LuceneFields.L_SORT_DATE, dateString, Field.Store.YES, Field.Index.UN_TOKENIZED));
-                        
+
+                        doc.removeFields(LuceneFields.L_SORT_SIZE);
+                        doc.add(new Field(LuceneFields.L_SORT_SIZE, Long.toString(size), Field.Store.YES, Field.Index.NO));
+
                         if (null == doc.get(LuceneFields.L_ALL)) {
                             doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
                         }
@@ -472,11 +475,19 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
                         mLatestSortBy = searchOrder;
                         break;
+                    case SIZE_DESCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, true));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case SIZE_ASCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, false));
+                        mLatestSortBy = searchOrder;
+                        break;
                     case SCORE_DESCENDING:
                         return null;
                     default:
                         mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
-                       mLatestSortBy = SortBy.DATE_ASCENDING;
+                        mLatestSortBy = SortBy.DATE_ASCENDING;
                 }
             }
             return mLatestSort;

@@ -140,8 +140,8 @@ public final class MessagePartHit extends ZimbraHit {
 
     public long getSize() {
         if (mDoc != null) {
-            String sizeStr = mDoc.get(LuceneFields.L_SIZE);
-            long sizeLong = ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
+            String sizeStr = mDoc.get(LuceneFields.L_SORT_SIZE);
+            long sizeLong = ZimbraAnalyzer.SizeTokenFilter.decodeSize(sizeStr);
             return (int) sizeLong;
         } else {
             assert(false);// should never have a parthit without a document

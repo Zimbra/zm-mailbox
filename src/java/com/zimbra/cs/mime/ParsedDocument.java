@@ -93,7 +93,6 @@ public class ParsedDocument {
             mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
             try {
             	mDocument = handler.getDocument();
-            	mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
             	mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
