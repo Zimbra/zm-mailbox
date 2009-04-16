@@ -68,7 +68,8 @@ public class ZimbraIM {
 
             ZimbraLocationManager locMgr = ZimbraLocationManager.getInstance();
             
-            XMPPServer srv = new XMPPServer(locMgr, domainStrs);
+            String[] excludedCiphers = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraSSLExcludeCipherSuites);
+            XMPPServer srv = new XMPPServer(excludedCiphers, locMgr, domainStrs);
             InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());
             
             Interop.getInstance().start(XMPPServer.getInstance(), XMPPServer.getInstance().getInternalComponentManager());
