@@ -44,12 +44,16 @@ public class DataSourceFolderMapping extends DataSourceMapping {
         super.delete();
     }
     
+    public void deleteMappings() throws ServiceException {
+        deleteMappings(ds, dsi.itemId);
+    }
+    
     public static void deleteMappings(DataSource ds, int itemId)
         throws ServiceException {
         DbDataSource.deleteAllMappingsInFolder(ds, itemId);
     }
     
-    public Collection<?> getMappings() throws ServiceException {
+    public Collection<DataSourceItem> getMappings() throws ServiceException {
         return getMappings(ds, dsi.itemId);
     }
 

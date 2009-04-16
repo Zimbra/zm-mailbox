@@ -20,7 +20,7 @@ import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 
 public class ImapMessage extends DataSourceMapping {
     private int flags;
-    private int localFlags;
+    private int localFlags = -1;
     private long uid;
     private static final String METADATA_KEY_FLAGS = "f";
     private static final String METADATA_KEY_UID = "u";
@@ -38,16 +38,27 @@ public class ImapMessage extends DataSourceMapping {
     }
     
     public ImapMessage(DataSource ds, int folderId, int itemId, int flags,
-        long uid, int localFlags) throws ServiceException {
+        long uid) throws ServiceException {
         super(ds, folderId, itemId, remoteId(folderId, uid));
         setFlags(flags);
-        this.localFlags = localFlags;
         setUid(uid);
+    }
+
+    public ImapMessage(DataSource ds, int folderId, int itemId, int flags,
+        long uid, int localFlags) throws ServiceException {
+        this(ds, folderId, itemId, flags, uid);
+        this.localFlags = localFlags;
     }
 
     public int getFlags() { return flags; }
     
-    public int getLocalFlags() { return localFlags; }
+    public int getLocalFlags() throws ServiceException {
+        if (localFlags >= 0)
+            return localFlags;
+        com.zimbra.cs.mailbox.Message localMsg = ds.getMailbox().getMessageById(null,
+            dsi.itemId);
+        return localMsg.getFlagBitmask();
+    }
     
     public long getUid() { return uid; }
 

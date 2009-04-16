@@ -24,7 +24,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -76,15 +75,17 @@ public class ImapSync extends MailItemImport {
     }
 
     public ImapFolder createFolderTracker(int itemId, String localPath,
-                                          String remotePath, long uidValidity)
-        throws ServiceException {
-        ImapFolder tracker = dataSource.createImapFolder(itemId, localPath, remotePath, uidValidity);
+        String remotePath, long uidValidity) throws ServiceException {
+        ImapFolder tracker = new ImapFolder(dataSource, itemId, remotePath,
+            localPath, uidValidity);
+        
+        tracker.add();
         trackedFolders.add(tracker);
         return tracker;
     }
 
     public void deleteFolderTracker(ImapFolder tracker) throws ServiceException {
-        DbImapFolder.deleteImapFolder(mbox, dataSource, tracker);
+        tracker.delete();
         trackedFolders.remove(tracker);
     }
 
@@ -179,7 +180,7 @@ public class ImapSync extends MailItemImport {
         if (dataSource.isOffline() && fullSync) {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
-        trackedFolders = dataSource.getImapFolders();
+        trackedFolders = ImapFolder.getFolders(dataSource);
         //trackedFolders = ImapFolder.getImapFolders(dataSource);
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));

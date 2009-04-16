@@ -60,7 +60,6 @@ import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbImapMessage;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -124,8 +123,7 @@ public class ImapImport extends MailItemImport {
         DataSource ds = getDataSource();
         try {
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
-            ImapFolderCollection imapFolders = ds.getImapFolders();
-//            ImapFolderCollection imapFolders = ImapFolder.getImapFolders(ds);
+            ImapFolderCollection imapFolders = ImapFolder.getFolders(ds);
 
             com.zimbra.cs.mailbox.Folder localRootFolder =
                 mbox.getFolderById(null, ds.getFolderId());
@@ -184,14 +182,14 @@ public class ImapImport extends MailItemImport {
                             remoteFolder.delete(true);
                         }
                         imapFolders.remove(folderTracker);
-                        ds.deleteImapFolder(folderTracker);
+                        folderTracker.delete();
                     }
 
                     if (folderTracker.getUidValidity() == -1) {
                         // Migrate old data created before we added the uid_validity column
                         ZimbraLog.datasource.info("Initializing UIDVALIDITY of %s to %d", remoteFolder.getFullName(), remoteUvv);
                         folderTracker.setUidValidity(remoteUvv);
-                        ds.updateImapFolder(folderTracker);
+                        folderTracker.update();
                     }
 
                     if (localFolder != null) {
@@ -206,13 +204,13 @@ public class ImapImport extends MailItemImport {
                                 renameJavaMailFolder(remoteFolder, jmPath);
                                 // XXX What about new remote path?s
                                 folderTracker.setLocalPath(localFolder.getPath());
-                                ds.updateImapFolder(folderTracker);
+                                folderTracker.update();
                             } else {
                                 // Folder was moved outside the data source root, or folder setting is changed to "not to sync"
                                 // Treat as a delete.
                                 ZimbraLog.datasource.info("Local folder %s was renamed to %s and moved outside the data source root.",
                                     folderTracker.getLocalPath(), localFolder.getPath());
-                                ds.deleteImapFolder(folderTracker);
+                                folderTracker.delete();
                                 imapFolders.remove(folderTracker);
                                 folderTracker = null;
                                 localFolder = null;
@@ -221,7 +219,7 @@ public class ImapImport extends MailItemImport {
                             // UIDVALIDITY value changed.  Save any new local messages to remote folder.
                             ZimbraLog.datasource.info("UIDVALIDITY of remote folder %s has changed from %d to %d.  Resyncing from scratch.",
                                 remoteFolder.getFullName(), folderTracker.getUidValidity(), remoteUvv);
-                            List<Integer> newLocalIds = DbImapMessage.getNewLocalMessageIds(mbox, folderTracker.getItemId());
+                            List<Integer> newLocalIds = folderTracker.getNewMessageIds();
                             if (newLocalIds.size() > 0) {
                                 ZimbraLog.datasource.info("Copying %d messages from local folder %s to remote folder.",
                                     newLocalIds.size(), localFolder.getPath());
@@ -244,8 +242,8 @@ public class ImapImport extends MailItemImport {
                             // Empty local folder so that it will be resynced later and store the new UIDVALIDITY value.
                             mbox.emptyFolder(null, localFolder.getId(), false);
                             folderTracker.setUidValidity(remoteUvv);
-                            ds.updateImapFolder(folderTracker);
-                            DbImapMessage.deleteImapMessages(mbox, folderTracker.getItemId());
+                            folderTracker.update();
+                            folderTracker.deleteMappings();
                         }
                     }
                 }
@@ -266,8 +264,9 @@ public class ImapImport extends MailItemImport {
 	                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
 	                            MailItem.TYPE_UNKNOWN);
 	                    }
-	                    folderTracker = ds.createImapFolder(localFolder.getId(),
-	                        localFolder.getPath(), remoteFolder.getFullName(), remoteUvv);
+	                    folderTracker = new ImapFolder(ds, localFolder.getId(),
+	                        remoteFolder.getFullName(), localFolder.getPath(), remoteUvv);
+	                    folderTracker.add();
 	                    imapFolders.add(folderTracker);
                     }
                 }
@@ -290,7 +289,7 @@ public class ImapImport extends MailItemImport {
                     ImapFolder imapFolder = imapFolders.getByItemId(zimbraFolder.getId());
                     if (imapFolder != null) {
 	                    imapFolders.remove(imapFolder);
-	                    ds.deleteImapFolder(imapFolder);
+	                    imapFolder.delete();
                     }
                     continue;
                 }
@@ -307,7 +306,7 @@ public class ImapImport extends MailItemImport {
 	                        ZimbraLog.datasource.info("Remote folder %s was deleted.  Deleting local folder %s.",
 	                            imapFolder.getRemoteId(), zimbraFolder.getPath());
 	                        mbox.delete(null, zimbraFolder.getId(), zimbraFolder.getType());
-	                        ds.deleteImapFolder(imapFolder);
+	                        imapFolder.delete();
 	                        imapFolders.remove(imapFolder);
 	                    }
                 	}
@@ -326,9 +325,10 @@ public class ImapImport extends MailItemImport {
                         } else {
                             ZimbraLog.datasource.warn("Unable to create remote folder: " + jmFolder.getFullName());
                         }
-	                    imapFolder = ds.createImapFolder(zimbraFolder.getId(),
-	                        zimbraFolder.getPath(), jmFolder.getFullName(), uidValidity);
-	                    imapFolders.add(imapFolder);
+	                imapFolder = new ImapFolder(ds, zimbraFolder.getId(),
+	                    jmFolder.getFullName(), zimbraFolder.getPath(), uidValidity);
+	                imapFolder.add();
+	                imapFolders.add(imapFolder);
                     }
                 }
             }
@@ -623,7 +623,7 @@ public class ImapImport extends MailItemImport {
          */
 
         // Get stored message ID'S
-        final ImapMessageCollection trackedMsgs = DbImapMessage.getImapMessages(mbox, ds, trackedFolder);
+        final ImapMessageCollection trackedMsgs = trackedFolder.getMessages();
         final Set<Integer> localIds = new HashSet<Integer>();
         addMailItemIds(localIds, localFolder.getId(), MailItem.TYPE_MESSAGE);
         addMailItemIds(localIds, localFolder.getId(), MailItem.TYPE_CHAT);
@@ -671,7 +671,8 @@ public class ImapImport extends MailItemImport {
                         updated = true;
                     }
                     if (flags != trackedFlags) {
-                        DbImapMessage.setFlags(mbox, trackedMsg.getItemId(), flags);
+                        trackedMsg.setFlags(flags);
+                        trackedMsg.update();
                         updated = true;
                     }
                     if (updated) {
@@ -689,7 +690,7 @@ public class ImapImport extends MailItemImport {
                     ZimbraLog.datasource.debug("Message %d was deleted locally.  Deleting remote copy.", uid);
                     remoteMsg.setFlag(Flags.Flag.DELETED, true);
                     numDeletedRemotely++;
-                    DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), trackedMsg.getItemId());
+                    trackedMsg.delete();
                 }
             }
         }
@@ -732,7 +733,7 @@ public class ImapImport extends MailItemImport {
                         if (trackedMsg != null) {
                             ZimbraLog.datasource.debug(
                                 "Matched fetched message to local with checksum %x (UID = %x", cksum, uid);
-                            DbImapMessage.setUid(mbox, trackedMsg.getItemId(), uid);
+                            trackedMsg.setUid(uid);
                             localIds.remove(trackedMsg.getItemId());
                         }
                     } else {
@@ -743,7 +744,10 @@ public class ImapImport extends MailItemImport {
                         com.zimbra.cs.mailbox.Message localMsg = addMessage(null, pm, localFolder.getId(), flags);
 
                         if (localMsg != null) {
-                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, localMsg.getId(), flags);
+                            ImapMessage trackedMsg = new ImapMessage(ds, trackedFolder.getItemId(),
+                                localMsg.getId(), flags, uid, localMsg.getFlagBitmask());
+                            
+                            trackedMsg.add();
                         }
                     }
                     fetchCount.incrementAndGet();
@@ -761,7 +765,7 @@ public class ImapImport extends MailItemImport {
                 ImapMessage tracker = trackedMsgs.getByItemId(localId);
                 mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
                 numDeletedLocally++;
-                DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), tracker.getItemId());
+                tracker.delete();
             } else {
                 ZimbraLog.datasource.debug("Found new local message %d.  Creating remote copy.", localId);
                 com.zimbra.cs.mailbox.Message localMsg = mbox.getMessageById(null, localId);
@@ -771,11 +775,13 @@ public class ImapImport extends MailItemImport {
                 AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
                 assert newUids != null && newUids.length == 1;
                 long uid = newUids[0] != null ? newUids[0].uid : -localId;
-                numAddedRemotely++;
                 // If no UID returned by APPEND, then store the message locally with a negative UID.
                 // When we sync again we will calculate the checksum of remote message and use that
                 // to find the corresponding local entry and update the UID with the correct value.
-                DbImapMessage.storeImapMessage(mbox, localFolder.getId(), uid, localId, flags);
+                ImapMessage tracker = new ImapMessage(ds, localFolder.getId(), localId, flags, uid);
+                
+                numAddedRemotely++;
+                tracker.add();
                 if (uid < 0) {
                     runAgain = true; // Sync this folder again since APPEND did not give back a UID
                 }
@@ -785,7 +791,7 @@ public class ImapImport extends MailItemImport {
         // Discard local messages with unassigned UIDs that were not matched to
         // any fetched email based on checksum (must have been deleted on remote server).
         for (ImapMessage trackedMsg : noUidMsgs.values()) {
-            DbImapMessage.deleteImapMessage(mbox, localFolder.getId(), trackedMsg.getItemId());
+            trackedMsg.delete();
         }
         remoteFolder.close(true);
 
@@ -798,10 +804,8 @@ public class ImapImport extends MailItemImport {
         return !runAgain;
     }
 
-    private static ParsedMessage getParsedMessage(ImapData id,
-                                                  Long receivedDate,
-                                                  boolean indexAttachments)
-            throws IOException, ServiceException {
+    private static ParsedMessage getParsedMessage(ImapData id, Long receivedDate,
+        boolean indexAttachments) throws IOException, ServiceException {
         if (id.isLiteral()) {
             Literal lit = (Literal) id;
             File f = lit.getFile();

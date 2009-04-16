@@ -361,7 +361,7 @@ public class DbImapMessage {
                 int unread = rs.getInt("unread");
                 int tflags = rs.getInt("tflags");
                 flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
-                imapMessages.add(new ImapMessage(ds, -1, itemId, tflags, uid, flags));
+                imapMessages.add(new ImapMessage(ds, imapFolder.getItemId(), itemId, tflags, uid, flags));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get IMAP message data", e);

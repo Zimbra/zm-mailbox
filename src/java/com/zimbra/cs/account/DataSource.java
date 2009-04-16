@@ -38,10 +38,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.datasource.CalDavDataImport;
-import com.zimbra.cs.datasource.ImapFolder;
-import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.datasource.SyncState;
-import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.gal.GalImport;
@@ -383,26 +380,17 @@ public class DataSource extends AccountProperty {
         return DbDataSource.getAllMappingsInFolder(this, this.getFolderId());
     }
 
-    public ImapFolderCollection getImapFolders() throws ServiceException {
-        return DbImapFolder.getImapFolders(getMailbox(), this);
-    }
-
-    public void deleteImapFolder(ImapFolder folder) throws ServiceException {
-        DbImapFolder.deleteImapFolder(getMailbox(), this, folder);
+    /*
+    public void deleteFolderMapping(DataSourceFolderMapping folder) throws ServiceException {
+        folder.delete();
         clearSyncState(folder.getItemId());
     }
 
-    public void updateImapFolder(ImapFolder folder) throws ServiceException {
-        DbImapFolder.updateImapFolder(folder);
+    public void updateFolderMapping(DataSourceFolderMapping folder) throws ServiceException {
+        folder.update();
         clearSyncState(folder.getItemId());
     }
-
-    public ImapFolder createImapFolder(int itemId, String localPath,
-                                       String remotePath, long uidValidity)
-        throws ServiceException {
-        return DbImapFolder.createImapFolder(
-            getMailbox(), this, itemId, localPath, remotePath, uidValidity);
-    }
+    */
 
     // Overridden by OfflineDataSource
     public boolean hasSyncState(int folderId) { return false; }
@@ -425,10 +413,6 @@ public class DataSource extends AccountProperty {
     
     public Mailbox getMailbox() throws ServiceException {
         return MailboxManager.getInstance().getMailboxByAccount(getAccount());
-    }
-    
-    public Collection<DataSourceItem> getItemMappings() throws ServiceException {
-    	return DbDataSource.getAllMappings(this);
     }
     
     public void deleteItemMappings() throws ServiceException {

@@ -211,7 +211,7 @@ public class DbDataSource {
             sb.append(dataSourceTable);
             sb.append(" WHERE ");
             sb.append(IN_THIS_MAILBOX_AND);
-            sb.append("  data_source_id = ? AND folder_id = ?)");
+            sb.append("  data_source_id = ? AND folder_id = ?");
             stmt = conn.prepareStatement(sb.toString());
             int i = 1;
             i = DbMailItem.setMailboxId(stmt, mbox, i);

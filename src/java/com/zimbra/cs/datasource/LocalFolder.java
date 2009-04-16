@@ -16,32 +16,28 @@
  */
 package com.zimbra.cs.datasource;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.db.DbImapMessage;
-import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.Log;
-
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
+import com.zimbra.cs.mailclient.imap.ListData;
 
 final class LocalFolder {
     private final Mailbox mbox;
     private final String path;
     private Folder folder;
-
     private static final Log LOG = ZimbraLog.datasource;
 
-    public static LocalFolder fromId(Mailbox mbox, int id)
-        throws ServiceException {
+    public static LocalFolder fromId(Mailbox mbox, int id) throws ServiceException {
         try {
             return new LocalFolder(mbox, mbox.getFolderById(null, id));
         } catch (MailServiceException.NoSuchItemException e) {
@@ -49,7 +45,7 @@ final class LocalFolder {
         }
     }
     
-    LocalFolder(Mailbox mbox, String path) {
+    LocalFolder(Mailbox mbox, String path) throws ServiceException {
         this.mbox = mbox;
         this.path = path;
     }
@@ -62,9 +58,8 @@ final class LocalFolder {
 
     public void delete() throws ServiceException {
         debug("deleting folder");
-        Folder folder;
         try {
-            folder = getFolder();
+            getFolder();
         } catch (MailServiceException.NoSuchItemException e) {
             return;
         }
@@ -77,7 +72,7 @@ final class LocalFolder {
     }
 
     public void checkFlags(ListData ld) throws ServiceException {
-        Folder folder = getFolder();
+        getFolder();
         if (folder.getId() < 256) return; // Ignore system folder
         // debug("Updating flags (remote = %s)", ld.getMailbox());
         Flags flags = ld.getFlags();
@@ -134,21 +129,15 @@ final class LocalFolder {
         } catch (MailServiceException.NoSuchItemException e) {
             debug("message with id %d not found", id);
         }
-        DbImapMessage.deleteImapMessage(mbox, getId(), id);
     }
 
     public void emptyFolder() throws ServiceException {
         mbox.emptyFolder(null, getId(), false);
-        DbImapMessage.deleteImapMessages(mbox, getId());
     }
     
     public Set<Integer> getMessageIds() throws ServiceException {
         return new HashSet<Integer>(
             mbox.listItemIds(null, MailItem.TYPE_MESSAGE, folder.getId()));
-    }
-
-    public List<Integer> getNewMessageIds() throws ServiceException {
-        return DbImapMessage.getNewLocalMessageIds(mbox, getId());    
     }
 
     public Folder getFolder() throws ServiceException {
