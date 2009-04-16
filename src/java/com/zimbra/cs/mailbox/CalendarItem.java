@@ -1283,7 +1283,8 @@ public abstract class CalendarItem extends MailItem {
         boolean isCancel = newInvite.isCancel();
 
         boolean skipPrivateCheck = shouldSkipPrivateCheck(newInvite);
-        if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE, authAccount, asAdmin, skipPrivateCheck))
+        short rightsNeeded = isCancel ? (short) (ACL.RIGHT_DELETE | ACL.RIGHT_WRITE) : ACL.RIGHT_WRITE;
+        if (!canAccess(rightsNeeded, authAccount, asAdmin, skipPrivateCheck))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
 
         // Don't allow moving a private appointment on behalf of another user,
@@ -3275,6 +3276,13 @@ public abstract class CalendarItem extends MailItem {
             }
         }
         return super.canAccess(rightsNeeded, authuser, asAdmin);
+    }
+
+    public void checkCancelPermission(Account authAccount, boolean asAdmin, Invite cancelInv)
+    throws ServiceException {
+        boolean skipPrivateCheck = shouldSkipPrivateCheck(cancelInv);
+        if (!canAccess((short) (ACL.RIGHT_DELETE | ACL.RIGHT_WRITE), authAccount, asAdmin, skipPrivateCheck))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions to cancel this calendar item");
     }
 
     // If we're adding a private invite, we must make sure the authenticated user has permission to

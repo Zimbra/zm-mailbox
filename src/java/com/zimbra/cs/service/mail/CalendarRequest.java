@@ -365,6 +365,12 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     //
                     // This order has a problem when there's an attachment, but cancel requests should not
                     // have an attachment, so we're okay.
+
+                    // Before sending email, make sure the requester has permission to cancel.
+                    CalendarItem calItem = mbox.getCalendarItemByUid(octxt, csd.mInvite.getUid());
+                    if (calItem != null)
+                        calItem.checkCancelPermission(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), csd.mInvite);
+
                     if (!csd.mDontNotifyAttendees)
                         msgId = mbox.getMailSender().sendMimeMessage(
                                 octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
