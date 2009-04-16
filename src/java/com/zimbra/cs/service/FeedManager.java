@@ -175,7 +175,7 @@ public class FeedManager {
                 case 'B':  case 'b':
                     Reader reader = new InputStreamReader(content, charset.toString());
                     List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
-                    List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true);
+                    List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true, true, null);
                     // handle missing UIDs on remote calendars by generating them as needed
                     for (Invite inv : invites)
                     	if (inv.getUid() == null)
