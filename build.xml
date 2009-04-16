@@ -569,6 +569,7 @@
     </target>
 
     <target name="enable-im">
+        <antcall target="stop-webserver"/>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-l -v mcf zimbraXMPPEnabled TRUE"/>
         </java>
@@ -578,24 +579,23 @@
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-l -v mc default zimbraFeatureInstantNotify TRUE"/>
         </java>
+        <antcall target="start-webserver"/>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="cxc conference ${defaultdomain.name} ${zimbra.server.hostname} org.jivesoftware.wildfire.muc.spi.MultiUserChatServerImpl conference text"/>
         </java>
-        <antcall target="stop-webserver"/>
-        <antcall target="start-webserver"/>
     </target>
 
     <target name="disable-im">
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="false">
+            <arg line="dxc conference.${defaultdomain.name}"/>
+        </java>
+        <antcall target="stop-webserver"/>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-l -v mc default zimbraFeatureIMEnabled FALSE"/>
         </java>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-l -v mcf zimbraXMPPEnabled FALSE"/>
         </java>
-        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="false">
-            <arg line="dxc conference.${defaultdomain.name}"/>
-        </java>
-        <antcall target="stop-webserver"/>
         <antcall target="start-webserver"/>
     </target>
 
