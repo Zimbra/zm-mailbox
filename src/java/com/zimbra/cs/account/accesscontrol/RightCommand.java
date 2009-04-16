@@ -241,6 +241,12 @@ public class RightCommand {
             return getDigest().equals(other.getDigest());
         }
         
+        private boolean hasNoRight() {
+            return (mPresetRights.isEmpty() &&
+                    (!mCanSetAllAttrs && mCanSetAttrs.isEmpty()) &&
+                    (!mCanGetAllAttrs && mCanGetAttrs.isEmpty()));
+        }
+        
         /*
          * digest is in the format of:
          * 
@@ -474,24 +480,41 @@ public class RightCommand {
      * e.g. account-1, account-2, account-3: right A, B, C
      */
     public static class RightAggregation {
-        // target entries
-        // <id, name> pairs
-        Map<String, String> mEntries;
+        // target names
+        Set<String> mEntries;
         
         // effective rights
         EffectiveRights mRights;
         
-        public Map<String, String> entries() { return mEntries; }
+        public Set<String> entries() { return mEntries; }
         public EffectiveRights effectiveRights() { return mRights; }
         
-        private RightAggregation(String id, String name, EffectiveRights rights) {
-            mEntries = new HashMap<String, String>();
-            mEntries.put(id, name);
+        private RightAggregation(String name, EffectiveRights rights) {
+            mEntries = new HashSet<String>();
+            mEntries.add(name);
             mRights = rights;
         }
         
-        private void addEntry(String id, String name) {
-            mEntries.put(id, name);
+        private RightAggregation(Set<String> names, EffectiveRights rights) {
+            mEntries = new HashSet<String>();
+            mEntries.addAll(names);
+            mRights = rights;
+        }
+        
+        private void addEntry(String name) {
+            mEntries.add(name);
+        }
+        
+        private void addEntries(Set<String> names) {
+            mEntries.addAll(names);
+        }
+        
+        private boolean hasEntry(String name) {
+            return mEntries.contains(name);
+        }
+        
+        private void removeEntry(String name) {
+            mEntries.remove(name);
         }
         
         private boolean hasSameRights(EffectiveRights er) {
@@ -523,18 +546,45 @@ public class RightCommand {
             mAll = er;
         }
         
-        protected static void add(Set<RightAggregation> entries, String id, String name, EffectiveRights er) {
+        protected static void add(Set<RightAggregation> entries, String name, EffectiveRights er) {
+            // if the entry is already in one of the RightAggregation, remove it
+            for (RightAggregation ra : entries) {
+                if (ra.hasEntry(name)) {
+                    ra.removeEntry(name);
+                    break;
+                }
+            }
+            
+            // add the entry to an aggregation if there is one with the same rights
+            // otherwise create a new aggregation
             for (RightAggregation ra : entries) {
                 if (ra.hasSameRights(er)) {
-                    ra.addEntry(id, name);
+                    ra.addEntry(name);
                     return;
                 }
             }
-            entries.add(new RightAggregation(id, name, er));
+            entries.add(new RightAggregation(name, er));
         }
         
-        private void addEntry(String id, String name, EffectiveRights er) {
-            add(mEntries, id, name, er);
+        protected static void addAggregation(Set<RightAggregation> entries, Set<String> names, EffectiveRights er) {
+            
+            // add the entry to an aggregation if there is one with the same rights
+            // otherwise create a new aggregation
+            for (RightAggregation ra : entries) {
+                if (ra.hasSameRights(er)) {
+                    ra.addEntries(names);
+                    return;
+                }
+            }
+            entries.add(new RightAggregation(names, er));
+        }
+        
+        private void addEntry(String name, EffectiveRights er) {
+            add(mEntries, name, er);
+        }
+        
+        private void addAggregation(Set<String> names, EffectiveRights er) {
+            addAggregation(mEntries, names, er);
         }
     }
     
@@ -565,8 +615,8 @@ public class RightCommand {
         
         public Set<RightAggregation> domains() { return mDomains; }
         
-        void addDomainEntry(String domainId, String domainName, EffectiveRights er) {
-            add(mDomains, domainId, domainName, er);
+        void addDomainEntry(String domainName, EffectiveRights er) {
+            add(mDomains, domainName, er);
         }
     }
     
@@ -579,23 +629,34 @@ public class RightCommand {
                     mRightsByTargetType.put(tt, new DomainedRightsByTargetType());
                 else
                     mRightsByTargetType.put(tt, new RightsByTargetType());
-                
             }
         }
         
         public Map<TargetType, RightsByTargetType> rightsByTargetType() { return mRightsByTargetType; }
         
         void setAll(TargetType targetType, EffectiveRights er) {
+            if (er.hasNoRight())
+                return;
             mRightsByTargetType.get(targetType).setAll(er);
         }
         
-        void addEntry(TargetType targetType, String id, String name, EffectiveRights er) {
-            mRightsByTargetType.get(targetType).addEntry(id, name, er);
+        void addEntry(TargetType targetType, String name, EffectiveRights er) {
+            if (er.hasNoRight())
+                return;
+            mRightsByTargetType.get(targetType).addEntry(name, er);
+        }
+
+        void addAggregation(TargetType targetType, Set<String> names, EffectiveRights er) {
+            if (er.hasNoRight())
+                return;
+            mRightsByTargetType.get(targetType).addAggregation(names, er);
         }
         
-        void addDomainEntry(TargetType targetType, String domainId, String domainName, EffectiveRights er) {
+        void addDomainEntry(TargetType targetType, String domainName, EffectiveRights er) {
+            if (er.hasNoRight())
+                return;
             DomainedRightsByTargetType drbtt = (DomainedRightsByTargetType)mRightsByTargetType.get(targetType);
-            drbtt.addDomainEntry(domainId, domainName, er);
+            drbtt.addDomainEntry(domainName, er);
         }
     }
 

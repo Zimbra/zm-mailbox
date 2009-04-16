@@ -26,12 +26,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -66,9 +60,9 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightAggregation;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class RightChecker {
 
@@ -1418,10 +1412,39 @@ public class RightChecker {
         Set<String> objectClass;
         String[] zimbraACE;
         
-        SearchGrantResult(Attributes attrs) throws NamingException {
-            zimbraId = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
-            objectClass = new HashSet<String>(Arrays.asList(LdapUtil.getMultiAttrString(attrs, Provisioning.A_objectClass)));
-            zimbraACE = LdapUtil.getMultiAttrString(attrs, Provisioning.A_zimbraACE);
+        private String[] getMultiAttrString(Map<String, Object> attrs, String attrName) {
+            Object obj = attrs.get(attrName);
+            if (obj instanceof String) {
+                String[] values = new String[1];
+                values[0] = (String)obj;
+                return values;
+            } else
+                return (String[])obj;
+            
+        }
+        
+        private SearchGrantResult(Map<String, Object> attrs) {
+            zimbraId = (String)attrs.get(Provisioning.A_zimbraId);
+            objectClass = new HashSet<String>(Arrays.asList(getMultiAttrString(attrs, Provisioning.A_objectClass)));
+            zimbraACE = getMultiAttrString(attrs, Provisioning.A_zimbraACE);
+        }
+        
+        private String getTargetId() {
+            return zimbraId;
+        }
+        
+    }
+    
+    private static class SearchGrantVisitor implements LdapUtil.SearchLdapVisitor {
+        Map<String, SearchGrantResult> mResult; 
+        
+        SearchGrantVisitor(Map<String, SearchGrantResult> result) {
+            mResult = result;
+        }
+
+        public void visit(String dn, Map<String, Object> attrs) {
+            SearchGrantResult sgr = new SearchGrantResult(attrs);
+            mResult.put(sgr.getTargetId(), sgr);
         }
     }
       
@@ -1435,10 +1458,8 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    private static Set<SearchGrantResult> searchGrants(Provisioning prov, 
+    private static Map<String, SearchGrantResult> searchGrants(Provisioning prov, 
             Set<TargetType> targetTypes, Set<String> granteeIds) throws ServiceException {
-        
-        Set<SearchGrantResult> result = new HashSet<SearchGrantResult>();
         
         Pair<String, Set<String>> baseAndOcs = TargetType.getSearchBaseAndOCs(prov, targetTypes);
 
@@ -1464,45 +1485,10 @@ public class RightChecker {
                                              Provisioning.A_objectClass,
                                              Provisioning.A_zimbraACE};
         
-        int maxResults = 0; // no limit
-        ZimbraLdapContext zlc = null; 
         
-        try {
-            zlc = new ZimbraLdapContext(true, false);  // use master, do not use connection pool
-            
-            SearchControls searchControls =
-                new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
-
-            //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
-            byte[] cookie = null;
-
-            NamingEnumeration ne = null;
-            
-            try {
-                do {
-                    zlc.setPagedControl(pageSize, cookie, true);
-
-                    ne = zlc.searchDir(base, query.toString(), searchControls);
-                    while (ne != null && ne.hasMore()) {
-                        SearchResult sr = (SearchResult) ne.nextElement();
-                        String dn = sr.getNameInNamespace();
-
-                        Attributes attrs = sr.getAttributes();
-                        result.add(new SearchGrantResult(attrs));
-                    }
-                    cookie = zlc.getCookie();
-                } while (cookie != null);
-            } finally {
-                if (ne != null) ne.close();
-            }
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to search grants", e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("unable to search grants", e);
-        } finally {
-            ZimbraLdapContext.closeContext(zlc);
-        }
+        Map<String, SearchGrantResult> result = new HashMap<String, SearchGrantResult>();
+        SearchGrantVisitor visitor = new SearchGrantVisitor(result);
+        LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
         
         return result;
     }
@@ -1625,10 +1611,10 @@ public class RightChecker {
      * @throws ServiceException
      */
     static void checkDenied(Provisioning prov, Entry targetToGrant, Right rightToGrant,
-            Set<SearchGrantResult> sgr, 
+            Map<String, SearchGrantResult> sgr, 
             String granteeId, Set<String> granteeGroups) throws ServiceException {
         
-        for (SearchGrantResult grant : sgr) {
+        for (SearchGrantResult grant : sgr.values()) {
             Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
             Entry grantedOnEntry = grantsOnTarget.getFirst();
             
@@ -1711,8 +1697,8 @@ public class RightChecker {
         // get the set of zimbraId of the grantees to search for
         Set<String> granteeIdsToSearch = Grantee.makeGrantee(grantor).getIdAndGroupIds();
         
-        Set<SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
-        
+        Map<String, SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+                
         // check grants granted to the grantor
         checkDenied(prov, targetToGrant, rightToGrant, sgr, grantor.getId(), null);
         
@@ -1763,7 +1749,7 @@ public class RightChecker {
         RightChecker.getEffectiveRights(grantee, pseudoTarget, expandSetAttrs, expandGetAttrs, er);
         
         // add to the domianed scope in AllEffectiveRights
-        aer.addDomainEntry(targetType, domainId, domainName, er);
+        aer.addDomainEntry(targetType, domainName, er);
     }
     
     private static void computeRightsInheritedFromDomain(Provisioning prov, Grantee grantee, Domain grantedOnDomain,
@@ -1780,50 +1766,60 @@ public class RightChecker {
     }
     
     /*
-     * For now, we do not have a group scope in AllEffectiveRights. 
+     * We do not have a group scope in AllEffectiveRights. 
      * 
-     * All entries in a group are expanded to an entry in AllEffectiveRights.
-     * This should be eaier for the client, because client does not need to 
-     * figure out if an account belongs to a group.
+     * Reasons:
+     *     1. If we return somethings like: 
+     *           have effective rights X, Y, Z on members in groups A, B, C
+     *           have effective rights P, Q, R on members in groups M, N
+     *        then client will have to figure out if an account/cr/dl are in which groups.   
+     *    
+     *     2. If a group-ed(i.e. account/cr/dl) are in multiple groups, that's even messier  
+     *        for the client (admin console).
+     *    
+     * Instead, we classify group-ed entries in groups with grants into "shapes", and 
+     * represent them in a RightAggregation, like:
+     *       - has effective rights X, Y on accounts user1, user5, user8
+     *       - has effective rights X on accounts user2, user3, user4   
+     *       - has effective rights on calendar resources cr1, cr88
+     *       - has effective rights on distribution lists dl38, dl99     
      */
-    private static void computeRightsInheritedFromGroup(
-            Provisioning prov, Grantee grantee, 
-            TargetType targetType, DistributionList grantedOnGroup,
-            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
+    private static void computeRightsOnGroupShape(Provisioning prov, Grantee grantee, 
+            TargetType targetType, Set<GroupShape> groupShapes,
+            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer,
+            Set<String> entriesHasGrants) throws ServiceException {
         
-        /*
-        // create a pseudo object(account, cr, dl) in this group
-        // use the group's domain
-        Entry pseudoTarget = PseudoTarget.createPseudoTarget(prov, targetType, 
-                DomainBy.id, prov.getDomain(grantedOnGroup).getId(), false, null, null);
-        
-        EffectiveRights er = new EffectiveRights(
-                targetType.getCode(), TargetType.getId(pseudoTarget), pseudoTarget.getLabel(), 
-                grantee.getId(), grantee.getName());
-        RightChecker.getEffectiveRights(grantee, pseudoTarget, expandSetAttrs, expandGetAttrs, er);
-        
-        // grantedOnGroup is an  AclGroup, which contains only upward membership, not downward membership.
-        // re-get the DistributionList object, which has the downward membership.
-        DistributionList dl = prov.get(DistributionListBy.id, grantedOnGroup.getId());
-        String[] members = dl.getAllMembers();  // todo, get indirect members
-        
-        for (String memberName : members) {
-            aer.addEntry(targetType, id, name, er);
+        for (GroupShape shape : groupShapes) {
+            // get any one member in the shape and use that as a pilot target to get 
+            // an EffectiveRights.  Note, the pilot target entry itself cannot have 
+            // any grants or else it will not result in the same EffectiveRights for 
+            // the group shape.  Entries have grants will be recorded in stage 3; and 
+            // will overwrite the entry rights recorded here.
+            //
+            // if for some reason the member cannot be found (e.g. account is deleted 
+            // but somehow not removed from a group, l=not likely though), just skip 
+            // to use another one in the shape.
+            //
+            //
+            
+            Entry target = null;
+            EffectiveRights er = null;
+            for (String memberName : shape.getMembers()) {
+                target = TargetType.lookupTarget(prov, targetType, TargetBy.name, memberName, false);
+                if (target != null) {
+                    String targetId = TargetType.getId(target);
+                    if (!entriesHasGrants.contains(targetId)) {
+                        er = new EffectiveRights(
+                                targetType.getCode(), targetId, target.getLabel(), grantee.getId(), grantee.getName());
+                        RightChecker.getEffectiveRights(grantee, target, expandSetAttrs, expandGetAttrs, er);
+                        break;
+                    } // else the member itself has grants, skip it for being used as a pilot target entry
+                }
+            }
+            
+            if (er != null)
+                aer.addAggregation(targetType, shape.getMembers(), er);
         }
-        */
-     }
-    
-    private static void computeRightsInheritedFromGroup(Provisioning prov, Grantee grantee, DistributionList grantedOnGroup,
-            boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer) throws ServiceException {
-        
-        computeRightsInheritedFromGroup(
-                prov, grantee, TargetType.account, grantedOnGroup, expandSetAttrs, expandGetAttrs, aer);
-        
-        computeRightsInheritedFromGroup(
-                prov, grantee, TargetType.calresource, grantedOnGroup, expandSetAttrs, expandGetAttrs, aer);
-        
-        computeRightsInheritedFromGroup(
-                prov, grantee, TargetType.dl, grantedOnGroup, expandSetAttrs, expandGetAttrs, aer);
     }
     
     private static void computeRightsOnEntry(Provisioning prov, Grantee grantee, 
@@ -1836,7 +1832,232 @@ public class RightChecker {
                 grantedOnTargetType.getCode(), targetId, targetName, grantee.getId(), grantee.getName());
         
         RightChecker.getEffectiveRights(grantee, grantedOnEntry, expandSetAttrs, expandGetAttrs, er);
-        aer.addEntry(grantedOnTargetType, targetId, targetName, er);
+        aer.addEntry(grantedOnTargetType, targetName, er);
+    }
+    
+    private static class Visitor implements LdapUtil.SearchLdapVisitor {
+        private String mNameAttr;
+        
+        // set of names
+        private Set<String> mNames = new HashSet<String>();
+
+        Visitor(String nameAttr) {
+            mNameAttr = nameAttr;
+        }
+        
+        public void visit(String dn, Map<String, Object> attrs) {
+            mNames.add((String)attrs.get(mNameAttr));
+        }
+        
+        private Set<String> getResult() {
+            return mNames;
+        }
+    }
+    
+    private static Set<String> getAllGroups(Provisioning prov) throws ServiceException {
+        String base = ((LdapProvisioning)prov).getDIT().mailBranchBaseDN();
+        String query = LdapFilter.allDistributionLists();
+        String[] returnAttrs = new String[] {Provisioning.A_mail};
+        
+        Visitor visitor = new Visitor(Provisioning.A_mail);
+        LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
+        return visitor.getResult();
+    }
+    
+    private static Set<String> getAllCalendarResources(Provisioning prov) throws ServiceException {
+        String base = ((LdapProvisioning)prov).getDIT().mailBranchBaseDN();
+        String query = LdapFilter.allCalendarResources();
+        String[] returnAttrs = new String[] {Provisioning.A_zimbraMailDeliveryAddress};
+        
+        Visitor visitor = new Visitor(Provisioning.A_zimbraMailDeliveryAddress);
+        LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
+        return visitor.getResult();
+    }
+    
+    private static void getAllGroupMembers(
+            Provisioning prov,
+            DistributionList group,
+            Set<String> allGroups, Set<String> allCalendarResources, 
+            AllGroupMembers result) 
+    throws ServiceException {
+        
+        Set<String> members = group.getAllMembersSet();
+        Set<String> accountMembers = new HashSet<String>(members);  // make a copy, assumcing all members are account
+                
+        // expand if a member is a group
+        for (String member : members) {
+            // if member is a group, remove it from the result
+            // and expand the group if it has not been expanded yet
+            if (allGroups.contains(member)) {
+                // remove it from the accountMembers
+                accountMembers.remove(member);
+                
+                // haven't expaned this group yet
+                if (!result.getMembers(TargetType.dl).contains(member)) {
+                    result.getMembers(TargetType.dl).add(member);
+                    DistributionList grp = prov.get(DistributionListBy.name, member);
+                    if (grp != null) {
+                        getAllGroupMembers(prov, grp, allGroups, allCalendarResources, result);
+                    }
+                }
+            } else if (allCalendarResources.contains(member)) {
+                accountMembers.remove(member);
+                result.getMembers(TargetType.calresource).add(member);
+            }
+        }
+        result.getMembers(TargetType.account).addAll(accountMembers);
+    }
+    
+    private static class AllGroupMembers {
+        String mGroupName; // name of the group
+        
+        AllGroupMembers(String groupName) {
+            mGroupName = groupName;
+        }
+        
+        Set<String> mAccounts = new HashSet<String>();
+        Set<String> mCalendarResources = new HashSet<String>();
+        Set<String> mDistributionLists = new HashSet<String>();
+        
+        String getGroupName() {
+            return mGroupName;
+        }
+        
+        Set<String> getMembers(TargetType targetType) throws ServiceException {
+            switch (targetType) {
+            case account:
+                return mAccounts;
+            case calresource:
+                return mCalendarResources;
+            case dl:    
+                return mDistributionLists;
+            }
+            throw ServiceException.FAILURE("internal error", null);
+        }
+    }
+    
+    /*
+     * represents a "shape" of groups.  Entries in the same "shape" belong to 
+     * all groups in the shape.
+     * 
+     * e.g. if we are calculating shapes for group A, B, C, D, the possible shapes are:
+     *      A, B, C, D, AB, AC, AD, BC, BD, CD, ABC, ABD, ACD, BCD, ABCD
+     *      
+     *      If groups are shaped in the order of A, B, C, D, the resulting shapes(at most) would look like:
+     *      (numbers are the order a shape is spawn.)
+     *      
+     *      when members in group A is being shaped: A(1)
+     *      when members in group B is being shaped: A(1)                      AB(2)                           B(3)
+     *      when members in group C is being shaped: A(1)        AC(4)         AB(2)          ABC(5)           B(3)         BC(6)          C(7)
+     *      when members in group D is being shaped: A(1) AD(8)  AC(4) ACD(9)  AB(2) ABD(10)  ABC(5) ABCD(11)  B(3) BD(12)  BC(6) BCD(13)  C(7) CD(14)  D(15)
+     *      
+     */
+    private static class GroupShape {
+        Set<String> mGroups = new HashSet<String>();   // groups all entries in mMembers are a member of
+        Set<String> mMembers = new HashSet<String>();  // members belongs to all entries of mGroups
+        
+        private void addGroups(Set<String> groups) {
+            mGroups.addAll(groups);
+        }
+        
+        private void addGroup(String group) {
+            mGroups.add(group);
+        }
+        
+        private Set<String> getGroups() {
+            return mGroups;
+        }
+        
+        private void addMembers(Set<String> members) {
+            mMembers.addAll(members);
+        }
+        
+        private void addMember(String member) {
+            mMembers.add(member);
+        }
+        
+        private Set<String> getMembers() {
+            return mMembers;
+        }
+        
+        private boolean removeMemberIfPresent(String member) {
+            if (mMembers.contains(member)) {
+                mMembers.remove(member);
+                return true;
+            } else
+                return false;
+        }
+        
+        private boolean hasMembers() {
+            return !mMembers.isEmpty();
+        }
+        
+        static void shapeMembers(TargetType targetType, Set<GroupShape> shapes, AllGroupMembers group) throws ServiceException {
+
+            // Stage newly spawn GroupShape's in a seperate Set so 
+            // we don't add entries to shapes while iterating through it.
+            // Add entries in the new Set back into shapes after iterating 
+            // through it for this group. 
+            // 
+            Set<GroupShape> newShapes = new HashSet<GroupShape>();
+                
+            // holds members in the group being shaped that 
+            // do not belong to any shapes in the current discovered shapes
+            GroupShape newShape = new GroupShape();
+            newShape.addGroup(group.getGroupName());
+            newShape.addMembers(group.getMembers(targetType));
+               
+            for (GroupShape shape : shapes) {
+                // holds intersect of members in this shape and 
+                // in the group being shaped.
+                GroupShape intersectShape = new GroupShape();
+                    
+                for (String member : group.getMembers(targetType)) {
+                    if (shape.removeMemberIfPresent(member)) {
+                        intersectShape.addMember(member);
+                        newShape.removeMemberIfPresent(member);
+                    }
+                }
+                    
+                if (intersectShape.hasMembers()) {
+                    // found a new shape
+                        
+                    // describe it
+                    intersectShape.addGroups(shape.getGroups());
+                    intersectShape.addGroup(group.getGroupName());
+                        
+                    // keep it 
+                    newShapes.add(intersectShape);
+                }
+                // no intersect, toss the intersectShape
+            }
+                
+            // add newly spawn GroupShape's in shapes
+            shapes.addAll(newShapes);
+                
+            // add the new shape that contain members that are not in 
+            // any other shapes 
+            if (newShape.hasMembers())
+                shapes.add(newShape);
+                
+        }
+    }
+    
+    private static AllGroupMembers getAllGroupMembers(Provisioning prov, DistributionList group) throws ServiceException {
+        /*
+         * get all groups and crs in the front and use the Set.contains method
+         * to test if a member name is a cr/group
+         * 
+         * much more efficient than doing Provisioning.get(...), which has a lot
+         * more overhead and may cause extra LDAP searches if the entry is not in cache. 
+         */
+        Set<String> allGroups = getAllGroups(prov);
+        Set<String> allCalendarResources = getAllCalendarResources(prov);
+        
+        AllGroupMembers allMembers = new AllGroupMembers(group.getName());
+        getAllGroupMembers(prov, group, allGroups, allCalendarResources, allMembers);
+        
+        return allMembers;
     }
     
     /**
@@ -1859,12 +2080,20 @@ public class RightChecker {
         // get the set of zimbraId of the grantees to search for
         Set<String> granteeIdsToSearch = grantee.getIdAndGroupIds();
         
-        Set<SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        Map<String, SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
         
         // staging for group grants
-        Set<SearchGrantResult> grantsOnGroup = new HashSet<SearchGrantResult>();
+        Set<DistributionList> groupsWithGrants = new HashSet<DistributionList>();
         
-        for (SearchGrantResult grant : sgr) {
+        //
+        // Stage1
+        //
+        // process grants granted on inheritable entries:
+        //     globalgrant - populate the "all" field in AllEffectiveRights
+        //     domains     - populate the "all entries in this domain" field in AllEffectiveRights
+        //     groups      - remember the groups and process them in stage 2.
+        //
+        for (SearchGrantResult grant : sgr.values()) {
             Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
             Entry grantedOnEntry = grantsOnTarget.getFirst();
             ZimbraACL acl = grantsOnTarget.getSecond();
@@ -1872,19 +2101,169 @@ public class RightChecker {
             
             if (targetType == TargetType.global)
                 computeRightsInheritedFromGlobalGrant(prov, grantee, expandSetAttrs, expandGetAttrs, aer);
-            else
-                computeRightsOnEntry(prov, grantee, targetType, grantedOnEntry, expandSetAttrs, expandGetAttrs, aer);
-            
-            if (targetType == TargetType.domain)
+            else if (targetType == TargetType.domain)
                 computeRightsInheritedFromDomain(prov, grantee, (Domain)grantedOnEntry, expandSetAttrs, expandGetAttrs, aer);
             else if (targetType == TargetType.dl)
-                grantsOnGroup.add(grant);
+                groupsWithGrants.add((DistributionList)grantedOnEntry);
         }
         
-        for (SearchGrantResult grant : grantsOnGroup) {
-            // todo
+        //
+        // Stage 2
+        //
+        // process group grants
+        //
+        // first, shape all members in all groups with grants into "shapes"
+        //
+        Set<GroupShape> accountShapes = new HashSet<GroupShape>();
+        Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
+        Set<GroupShape> distributionListShapes = new HashSet<GroupShape>();
+        for (DistributionList group : groupsWithGrants) {
+            // group is an AclGroup, which contains only upward membership, not downward membership.
+            // re-get the DistributionList object, which has the downward membership.
+            DistributionList dl = prov.get(DistributionListBy.id, group.getId());
+            AllGroupMembers allMembers = getAllGroupMembers(prov, dl);
+            GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
+            GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
+            GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembers);
         }
         
+        //
+        // then, for each group shape, generate a RightAggregation and record in the AllEffectiveRights
+        // if any of the entries in a shape also have grants as an individual, the effective rigths for 
+        // those entries will be replaced in stage 3.
+        //
+        computeRightsOnGroupShape(prov, grantee, TargetType.account, accountShapes, expandSetAttrs, expandGetAttrs, aer, sgr.keySet());
+        computeRightsOnGroupShape(prov, grantee, TargetType.calresource, calendarResourceShapes, expandSetAttrs, expandGetAttrs, aer, sgr.keySet());
+        computeRightsOnGroupShape(prov, grantee, TargetType.dl, distributionListShapes, expandSetAttrs, expandGetAttrs, aer, sgr.keySet());
+        
+        //
+        // Stage 3
+        //
+        // process grants on the granted entry
+        //
+        for (SearchGrantResult grant : sgr.values()) {
+            Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
+            Entry grantedOnEntry = grantsOnTarget.getFirst();
+            ZimbraACL acl = grantsOnTarget.getSecond();
+            TargetType targetType = TargetType.getTargetType(grantedOnEntry);
+            
+            if (targetType != TargetType.global)
+                computeRightsOnEntry(prov, grantee, targetType, grantedOnEntry, expandSetAttrs, expandGetAttrs, aer);
+        }
     }
 
+    
+    /*
+     * ==========
+     * unit tests
+     * ==========
+     */
+    private static void groupTest() throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        DistributionList dl = prov.get(DistributionListBy.name, "group1@phoebe.mac");
+        AllGroupMembers allMembers = getAllGroupMembers(prov, dl);
+        
+        System.out.println("\naccounts");
+        for (String member : allMembers.getMembers(TargetType.account))
+            System.out.println("  " + member);
+        
+        System.out.println("\ncalendar resources");
+        for (String member : allMembers.getMembers(TargetType.calresource))
+            System.out.println("  " + member);
+        
+        System.out.println("\ngroups");
+        for (String member : allMembers.getMembers(TargetType.dl))
+            System.out.println("  " + member);
+    }
+    
+    private static void setupShapeTest() throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        
+        // create test
+        String domainName = "test.com";
+        Domain domain = prov.createDomain(domainName, new HashMap<String, Object>());
+        
+        DistributionList groupA = prov.createDistributionList("groupA@"+domainName, new HashMap<String, Object>());
+        DistributionList groupB = prov.createDistributionList("groupB@"+domainName, new HashMap<String, Object>());
+        DistributionList groupC = prov.createDistributionList("groupC@"+domainName, new HashMap<String, Object>());
+        DistributionList groupD = prov.createDistributionList("groupD@"+domainName, new HashMap<String, Object>());
+        
+        String pw = "test123";
+        Account A = prov.createAccount("A@"+domainName, pw, null);
+        Account B = prov.createAccount("B@"+domainName, pw, null);
+        Account C = prov.createAccount("C@"+domainName, pw, null);
+        Account D = prov.createAccount("D@"+domainName, pw, null);
+        Account AB = prov.createAccount("AB@"+domainName, pw, null);
+        Account AC = prov.createAccount("AC@"+domainName, pw, null);
+        Account AD = prov.createAccount("AD@"+domainName, pw, null);
+        Account BC = prov.createAccount("BC@"+domainName, pw, null);
+        Account BD = prov.createAccount("BD@"+domainName, pw, null);
+        Account CD = prov.createAccount("CD@"+domainName, pw, null);
+        Account ABC = prov.createAccount("ABC@"+domainName, pw, null);
+        Account ABD = prov.createAccount("ABD@"+domainName, pw, null);
+        Account ACD = prov.createAccount("ACD@"+domainName, pw, null);
+        Account BCD = prov.createAccount("BCD@"+domainName, pw, null);
+        Account ABCD = prov.createAccount("ABCD@"+domainName, pw, null);
+        
+        groupA.addMembers(new String[]{A.getName(), 
+                                       AB.getName(), AC.getName(), AD.getName(),
+                                       ABC.getName(), ABD.getName(), ACD.getName(),
+                                       ABCD.getName()});
+        
+        groupB.addMembers(new String[]{B.getName(), 
+                                       AB.getName(), BC.getName(), BD.getName(),
+                                       ABC.getName(), ABD.getName(), BCD.getName(),
+                                       ABCD.getName()});
+        
+        groupC.addMembers(new String[]{C.getName(), 
+                                       AC.getName(), BC.getName(), CD.getName(),
+                                       ABC.getName(), ACD.getName(), BCD.getName(),
+                                       ABCD.getName()});
+        
+        groupD.addMembers(new String[]{D.getName(), 
+                                       AD.getName(), BD.getName(), CD.getName(),
+                                       ABD.getName(), ACD.getName(), BCD.getName(),
+                                       ABCD.getName()});
+    }
+    
+    private static void shapeTest() throws ServiceException {
+        // setupShapeTest();
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        // create test
+        Set<DistributionList> groupsWithGrants = new HashSet<DistributionList>();
+        String domainName = "test.com";
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupA@"+domainName));
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupB@"+domainName));
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupC@"+domainName));
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupD@"+domainName));
+        
+        Set<GroupShape> accountShapes = new HashSet<GroupShape>();
+        Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
+        Set<GroupShape> distributionListShapes = new HashSet<GroupShape>();
+        
+        for (DistributionList group : groupsWithGrants) {
+            // group is an AclGroup, which contains only upward membership, not downward membership.
+            // re-get the DistributionList object, which has the downward membership.
+            DistributionList dl = prov.get(DistributionListBy.id, group.getId());
+            AllGroupMembers allMembers = getAllGroupMembers(prov, dl);
+            GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
+            GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
+            GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembers);
+        }
+        
+        int count = 1;
+        for (GroupShape shape : accountShapes) {
+            System.out.println("\n" + count++);
+            for (String group : shape.getGroups())
+                System.out.println("group " + group);
+            for (String member : shape.getMembers())
+                System.out.println("    " + member);
+        }
+    }
+    
+    public static void main(String[] args) throws ServiceException {
+        shapeTest();
+    }
 }

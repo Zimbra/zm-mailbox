@@ -3371,16 +3371,14 @@ public class ProvUtil implements DebugListener {
     private void dumpRightAggregation(TargetType targetType, 
             RightCommand.RightAggregation rightAggr, boolean domainScope,
             boolean expandSetAttrs, boolean expandGetAttrs) {
-        Map<String, String> entries = rightAggr.entries();
+        Set<String> entries = rightAggr.entries();
         RightCommand.EffectiveRights er = rightAggr.effectiveRights();
         
-        for (Map.Entry<String, String> entry : entries.entrySet()) {
-            String id = entry.getKey();
-            String name = entry.getValue();
+        for (String entry : entries) {
             if (domainScope)
-                System.out.println("On " + targetType.getCode() + " entries on domain " + name + " (" + id + ")");
+                System.out.println("On " + targetType.getCode() + " entries on domain " + entry);
             else
-                System.out.println("On " + targetType.getCode() + " " + name + " (" + id + ")");
+                System.out.println("On " + targetType.getCode() + " " + entry);
         }
         dumpEffectiveRight(er, expandSetAttrs, expandGetAttrs);
     }

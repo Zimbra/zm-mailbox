@@ -18,6 +18,7 @@ package com.zimbra.cs.account;
 import com.zimbra.common.service.ServiceException;
 
 import java.util.Map;
+import java.util.Set;
 
 public class DistributionList extends ZAttrDistributionList {
     
@@ -69,6 +70,13 @@ public class DistributionList extends ZAttrDistributionList {
             throw ServiceException.FAILURE("internal error", null);
         
         return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
+    }
+    
+    public Set<String> getAllMembersSet() throws ServiceException {
+        if (mIsAclGroup)
+            throw ServiceException.FAILURE("internal error", null);
+        
+        return getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
     }
     
     public String[] getAliases() throws ServiceException {

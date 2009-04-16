@@ -217,6 +217,10 @@ public enum TargetType {
         return mAttrClass;
     }
     
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
+        return lookupTarget(prov, targetType, targetBy, target, true);
+    }
+    
     /**
      * central place where a target should be loaded
      * 
@@ -227,43 +231,43 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    public static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
+    static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target, boolean mustFind) throws ServiceException {
         Entry targetEntry = null;
         
         switch (targetType) {
         case account:
             targetEntry = prov.get(AccountBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(target); 
             break;
         case calresource:
             targetEntry = prov.get(CalendarResourceBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
             break;
         case dl:
             targetEntry = prov.getAclGroup(DistributionListBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
             break;
         case domain:
             targetEntry = prov.get(DomainBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_DOMAIN(target); 
             break;
         case cos:
             targetEntry = prov.get(CosBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_COS(target); 
             break;
         case server:
             targetEntry = prov.get(ServerBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_SERVER(target); 
             break;
         case xmppcomponent:
             targetEntry = prov.get(XMPPComponentBy.fromString(targetBy.name()), target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(target); 
             break;    
         case zimlet:
@@ -271,7 +275,7 @@ public enum TargetType {
             if (zimletBy != ZimletBy.name)
                 throw ServiceException.INVALID_REQUEST("zimlet must be by name", null);
             targetEntry = prov.getZimlet(target);
-            if (targetEntry == null)
+            if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_ZIMLET(target); 
             break;
         case config:

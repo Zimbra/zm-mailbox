@@ -639,6 +639,53 @@ public class LdapUtil {
          
          return LdapProvisioning.expandStr(bindDnRule, vars);
       }
+      
+      public static interface SearchLdapVisitor {
+          public void visit(String dn, Map<String, Object> attrs);
+      }
+      
+      public static void searchLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
+          
+          int maxResults = 0; // no limit
+          ZimbraLdapContext zlc = null; 
+          int numModified = 0;
+          
+          try {
+              zlc = new ZimbraLdapContext(useMaster, false);  // do not use connection pool
+              
+              SearchControls searchControls =
+                  new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
+
+              //Set the page size and initialize the cookie that we pass back in subsequent pages
+              int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+              byte[] cookie = null;
+
+              NamingEnumeration ne = null;
+              
+              try {
+                  do {
+                      zlc.setPagedControl(pageSize, cookie, true);
+
+                      ne = zlc.searchDir(base, query, searchControls);
+                      while (ne != null && ne.hasMore()) {
+                          SearchResult sr = (SearchResult) ne.nextElement();
+                          String dn = sr.getNameInNamespace();
+                          Attributes attrs = sr.getAttributes();
+                          visitor.visit(dn, LdapUtil.getAttrs(attrs));
+                      }
+                      cookie = zlc.getCookie();
+                  } while (cookie != null);
+              } finally {
+                  if (ne != null) ne.close();
+              }
+          } catch (NamingException e) {
+              throw ServiceException.FAILURE("unable to search ldap", e);
+          } catch (IOException e) {
+              throw ServiceException.FAILURE("unable to search ldap", e);
+          } finally {
+              ZimbraLdapContext.closeContext(zlc);
+          }
+      }
 
       public static void searchGal(ZimbraLdapContext zlc,
                                    int pageSize,

@@ -61,6 +61,10 @@ public class LdapFilter {
     /*
      * calendar resource
      */
+    public static String allCalendarResources() {
+        return "(objectclass=zimbraCalendarResource)";
+    }
+    
     public static String calendarResourceByForeignPrincipal(String foreignPrincipal) {
         return "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" + FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")";
     }
@@ -113,6 +117,10 @@ public class LdapFilter {
     /*
      * distribution list
      */
+    public static String allDistributionLists() {
+        return "(objectclass=zimbraDistributionList)";
+    }
+    
     public static String distributionListById(String id) {
         return "(&(zimbraId=" + id + ")" + FILTER_DISTRIBUTION_LIST_OBJECTCLASS + ")";
     }
@@ -250,6 +258,11 @@ public class LdapFilter {
                     LdapFilter.adminAccountByRDN(prov.getDIT().accountNamingRdnAttr(), "{admin name}"));
         
         // calendar resource
+        printFilter("all calendar resources",
+                "admin console, zmprov",
+                prov.getDIT().mailBranchBaseDN(),
+                LdapFilter.allCalendarResources());
+        
         printFilter("calendar resource by foreign principal",
                     "general",
                     prov.getDIT().mailBranchBaseDN(),
@@ -297,7 +310,12 @@ public class LdapFilter {
                     "account DN",
                     LdapFilter.dataSourceByName("{data source name}"));
         
-        // distributuion list
+        // distribution list
+        printFilter("all distribution lists",
+                "admin console, zmprov",
+                prov.getDIT().mailBranchBaseDN(),
+                LdapFilter.allDistributionLists());
+        
         printFilter("distributuion list by id",
                     "general",
                     prov.getDIT().mailBranchBaseDN(),
