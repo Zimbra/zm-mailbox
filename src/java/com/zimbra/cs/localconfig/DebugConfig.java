@@ -129,6 +129,8 @@ public class DebugConfig {
     public static boolean disableCalendarTZMatchByID;
     public static boolean disableCalendarTZMatchByRule;
 
+    public static boolean forceMimeConvertersForCalendarBlobs;
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -168,6 +170,8 @@ public class DebugConfig {
 
         disableCalendarTZMatchByID = booleanValue("debug_disable_calendar_tz_match_by_id", false);
         disableCalendarTZMatchByRule = booleanValue("debug_disable_calendar_tz_match_by_rule", false);
+
+        forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {

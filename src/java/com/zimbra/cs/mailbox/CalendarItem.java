@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -2817,15 +2818,17 @@ public abstract class CalendarItem extends MailItem {
             mm = new MimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 
-            try {
-                for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
-                    visitor.newInstance().accept(mm);
-            } catch (Exception e) {
-                // If the conversion bombs for any reason, revert to the original
-                ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
-                is = getRawMessage();
-                mm = new MimeMessage(JMSession.getSession(), is);
-                ByteUtil.closeStream(is);
+            if (DebugConfig.forceMimeConvertersForCalendarBlobs) {
+                try {
+                    for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
+                        visitor.newInstance().accept(mm);
+                } catch (Exception e) {
+                    // If the conversion bombs for any reason, revert to the original
+                    ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
+                    is = getRawMessage();
+                    mm = new MimeMessage(JMSession.getSession(), is);
+                    ByteUtil.closeStream(is);
+                }
             }
             
             // it'll be multipart/digest
