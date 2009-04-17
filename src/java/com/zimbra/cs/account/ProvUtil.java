@@ -2192,6 +2192,9 @@ public class ProvUtil implements DebugListener {
     }
 
     private void doSearchCalendarResources(String[] args) throws ServiceException {
+        if (!(mProv instanceof LdapProvisioning))
+            throwLdapOnly();
+        
         boolean verbose = false;
         int i = 1;
 
