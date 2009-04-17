@@ -113,6 +113,8 @@ public class DebugConfig {
     // chance of OOME when there is a huge result.
     public static boolean disableGalSyncVisitor;
 
+    public static boolean forceMimeConvertersForCalendarBlobs;
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -146,6 +148,8 @@ public class DebugConfig {
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
         
         disableGalSyncVisitor = booleanValue("debug_disable_gal_sync_visitor", false);
+
+        forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
