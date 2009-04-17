@@ -17,14 +17,8 @@ package com.zimbra.cs.service.wiki;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.MailDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class WikiDocumentHandler extends MailDocumentHandler {
@@ -50,19 +44,6 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 	        }
 		}
 		return null;
-	}
-	
-	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
-		ItemId fid = getRequestedFolder(request, zsc);
-		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId(), zsc.getAuthToken());
-		String accountId = requestedAccount.getId();
-		WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
-		if (fid == null) {
-			return Wiki.getInstance(ctxt, accountId);
-		} else if (!fid.belongsTo(requestedAccount)) {
-			accountId = fid.getAccountId();
-		}
-		return Wiki.getInstance(ctxt, accountId, fid.getId());
 	}
 	
 	protected void checkNotebookEnabled(ZimbraSoapContext zsc) throws ServiceException {

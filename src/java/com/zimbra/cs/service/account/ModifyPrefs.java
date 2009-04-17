@@ -28,7 +28,7 @@ import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.service.formatter.WikiFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,7 +58,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
                 throw ServiceException.PERM_DENIED("forwarding not enabled");
         }
         if (prefs.containsKey(Provisioning.A_zimbraPrefLocale)) {
-			Wiki.expireAll();
+			WikiFormatter.expireCache();
         }
 
         // call modifyAttrs and pass true to checkImmutable

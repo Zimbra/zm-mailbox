@@ -33,6 +33,8 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -49,8 +51,6 @@ import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -103,15 +103,31 @@ public class SaveDocument extends WikiDocumentHandler {
             int itemId = (id == null ? 0 : new ItemId(id, zsc).getId());
             int ver = (int) docElem.getAttributeLong(MailConstants.A_VERSION, 0);
 
-            WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
-            WikiPage page = null;
+    		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
+            Document docItem = null;
+            WikiPage.WikiContext ctxt = new WikiPage.WikiContext(octxt, zsc.getAuthToken());
+            InputStream is = null;
             try {
-            	page = WikiPage.create(doc.name, getAuthor(zsc), doc.contentType, doc.getInputStream());
+            	is = doc.getInputStream();
             } catch (IOException e) {
-                throw ServiceException.FAILURE("can't save document", e);
+            	throw ServiceException.FAILURE("can't save document", e);
             }
-        	Wiki.addPage(ctxt, page, itemId, ver, fid);
-            Document docItem = page.getWikiItem(ctxt);
+    		if (itemId == 0) {
+    			// create a new page
+    			docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), is, MailItem.TYPE_DOCUMENT);
+    		} else {
+    			// add a new revision
+    			WikiPage oldPage = WikiPage.findPage(ctxt, zsc.getRequestedAccountId(), itemId);
+    			if (oldPage == null)
+    				throw new WikiServiceException.NoSuchWikiException("page id="+id+" not found");
+    			if (oldPage.getLastVersion() != ver) {
+    				throw MailServiceException.MODIFY_CONFLICT(
+    						new Argument(MailConstants.A_NAME, doc.name, Argument.Type.STR),
+    						new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
+    						new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
+    			}
+    			docItem = mbox.addDocumentRevision(octxt, itemId, MailItem.TYPE_DOCUMENT, is, getAuthor(zsc), doc.name);
+    		}
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
             Element m = response.addElement(MailConstants.E_DOC);

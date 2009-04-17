@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -37,9 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.wiki.PageCache;
-import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiPage;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiTemplate;
 
 public class WikiFormatter extends Formatter {
@@ -70,7 +69,7 @@ public class WikiFormatter extends Formatter {
     }
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
-    	WikiContext ctxt = createWikiContext(context);
+    	WikiPage.WikiContext ctxt = createWikiContext(context);
     	String template = null;
         String v = context.params.get(UserServlet.QP_VERSION);
         if (v == null) {
@@ -91,7 +90,7 @@ public class WikiFormatter extends Formatter {
 	}
     
     private void handleWikiHistory(Context context, WikiItem wiki) throws IOException, ServiceException {
-    	WikiContext ctxt = createWikiContext(context);
+    	WikiPage.WikiContext ctxt = createWikiContext(context);
     	String template = null;
        	WikiTemplate wt = getTemplate(context, wiki.getMailbox().getAccountId(), wiki.getFolderId(), VERSION);
        	template = wt.getComposedPage(ctxt, wiki, VERSION_CHROME);
@@ -107,41 +106,40 @@ public class WikiFormatter extends Formatter {
     private WikiTemplate getTemplate(Context context, WikiItem item) throws ServiceException {
     	return getTemplate(context, item.getMailbox().getAccountId(), item.getFolderId(), item.getWikiWord());
     }
-    private WikiTemplate getTemplate(Context context, Folder folder, String name) throws ServiceException {
-    	return getTemplate(context, folder.getMailbox().getAccountId(), folder.getId(), name);
-    }
     private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws ServiceException {
         int ver = -1;
         String v = context.params.get(UserServlet.QP_VERSION);
         if (v != null)
             ver = Integer.parseInt(v);
         
-    	WikiContext wctxt = createWikiContext(context);
-    	Wiki wiki = Wiki.getInstance(wctxt, accountId, Integer.toString(folderId));
-    	WikiPage page = wiki.lookupWikiRevision(wctxt, name, ver);
-        if (page != null)
-            return page.getTemplate(wctxt);
-        
-        return wiki.getTemplate(wctxt, name);
+    	WikiPage.WikiContext wctxt = createWikiContext(context);
+        MailItem item = context.targetMailbox.getItemByPath(context.opContext, name, folderId);
+        int id = item.getId();
+        if (ver != -1)
+        	item = context.targetMailbox.getItemRevision(context.opContext, id, MailItem.TYPE_DOCUMENT, ver);
+    	WikiPage page = WikiPage.create((Document)item);
+    	return page.getTemplate(wctxt);
     }
     private WikiTemplate getDefaultTOC() {
     	return WikiTemplate.getDefaultTOC();
     }
     
-    private WikiContext createWikiContext(Context context) {
-    	return new WikiContext(context.opContext, 
+    private WikiPage.WikiContext createWikiContext(Context context) {
+    	return new WikiPage.WikiContext(context.opContext, 
     			context.cookieAuthHappened ? context.authToken : null,
     			context.getView(), context.locale);
     }
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
-    	WikiContext ctxt = createWikiContext(context);
+    	WikiPage.WikiContext ctxt = createWikiContext(context);
     	String key = sCache.generateKey(context.opContext.getAuthenticatedUser(), folder);
     	String template = sCache.getPage(key);
     	if (template == null) {
-        	WikiTemplate wt = getTemplate(context, folder, TOC);
-        	
-        	if (wt == null)
+    		WikiPage chromePage = WikiPage.findTemplate(ctxt, folder.getAccount().getId(), TOC);
+        	WikiTemplate wt = null;
+        	if (chromePage == null)
         		wt = getDefaultTOC();
+        	else
+        		wt = chromePage.getTemplate(ctxt);
         	
         	template = wt.getComposedPage(ctxt, folder, CHROME);
     		//sCache.addPage(key, template);
@@ -265,7 +263,6 @@ public class WikiFormatter extends Formatter {
         	context.resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
         	context.resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
         }
-        // clear the wiki cache because we just went straight to the Mailbox
-        Wiki.expireNotebook(folder);
+        WikiFormatter.expireCacheItem(folder);
 	}
 }

@@ -22,9 +22,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.mail.ItemAction;
-import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -43,9 +43,8 @@ public class WikiAction extends ItemAction {
     		if (id.indexOf(",") > 0)
     			throw WikiServiceException.ERROR("cannot use more than one id for rename");
     		String name = action.getAttribute(MailConstants.A_NAME);
-    		WikiContext ctxt = new WikiContext(getOperationContext(zsc, context), zsc.getAuthToken());
-    		Wiki wiki = Wiki.getInstance(ctxt, zsc.getRequestedAccountId());
-    		wiki.renameDocument(ctxt, Integer.parseInt(id), name, author.getName());
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(author);
+			mbox.rename(getOperationContext(zsc, context), Integer.parseInt(id), MailItem.TYPE_DOCUMENT, name);
     		successes = id;
         } else {
         	successes = handleCommon(context, request, operation, MailItem.TYPE_WIKI);

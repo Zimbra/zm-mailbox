@@ -30,9 +30,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiPage;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetWiki extends WikiDocumentHandler {
@@ -58,27 +55,10 @@ public class GetWiki extends WikiDocumentHandler {
 
         if (word != null) {
         	ItemId fid = getRequestedFolder(request, zsc);
-        	if (fid == null)
-        		fid = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
-        	WikiContext wctxt = new WikiContext(octxt, zsc.getAuthToken());
-        	WikiPage wikiPage = Wiki.findWikiPageByPath(wctxt, zsc.getRequestedAccountId(), fid.getId(), word, traverse == 1);
-        	try {
-        		Document doc = wikiPage.getWikiItem(wctxt);
-            	if (doc.getType() != MailItem.TYPE_WIKI) {
-            		throw WikiServiceException.NOT_WIKI_ITEM(word);
-            	}
-            	wikiItem = (WikiItem) doc;
-        	} catch (Exception e) {
-        		if (wikiPage == null) {
-        			throw new WikiServiceException.NoSuchWikiException(word);
-        		}
-        		Element wikiElem = ToXML.encodeWikiPage(response, wikiPage);
-        		String contents = wikiPage.getContents(wctxt);
-        		if (contents != null && contents != "") {
-        			wikiElem.addAttribute(MailConstants.A_BODY, contents, Element.Disposition.CONTENT);
-        		}
-        		return response;
-        	}
+            MailItem item = mbox.getItemByPath(octxt, word, fid.getId());
+            if (!(item instanceof WikiItem))
+                throw WikiServiceException.NOT_WIKI_ITEM(word);
+            wikiItem = (WikiItem) item;
         } else if (id != null) {
         	ItemId iid = new ItemId(id, zsc);
         	wikiItem = mbox.getWikiById(octxt, iid.getId());

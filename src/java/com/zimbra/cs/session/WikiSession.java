@@ -15,10 +15,14 @@
 package com.zimbra.cs.session;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.service.formatter.WikiFormatter;
 
 /*
  * WikiSession acts as a conduit between the Mailboxes and the wiki caches,
@@ -33,7 +37,13 @@ public class WikiSession extends Session {
 	public static WikiSession getInstance() throws ServiceException {
 		synchronized (WikiSession.class) {
 			if (sSession == null) {
-				sSession = new WikiSession(Wiki.getDefaultWikiAccount().getId());
+				Provisioning prov = Provisioning.getInstance();
+				Config globalConfig = prov.getConfig();
+				String defaultAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount);
+				if (defaultAcct == null)
+					return null;
+				Account acct = prov.get(AccountBy.name, defaultAcct);
+				sSession = new WikiSession(acct.getId());
 			}
 		}
 		return sSession;
@@ -88,13 +98,13 @@ public class WikiSession extends Session {
 		if (obj == null)
 			return;
 		if (obj instanceof Document) {
-			Wiki.expireTemplate((Document) obj);
+			WikiFormatter.expireCache();
 		}
 		if (obj instanceof Folder) {
-			Wiki.expireNotebook((Folder) obj);
+			WikiFormatter.expireCache();
 		}
 		if (obj instanceof Mailbox) {
-			Wiki.expireAll();
+			WikiFormatter.expireCache();
 		}
 	}
     

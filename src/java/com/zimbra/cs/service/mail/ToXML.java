@@ -73,7 +73,6 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.wiki.WikiPage;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentDisposition;
@@ -1961,26 +1960,6 @@ public class ToXML {
 
         return m;
     }
-
-    public static Element encodeWikiPage(Element parent, WikiPage page) {
-        Element m = parent.addElement(MailConstants.E_WIKIWORD);
-        m.addAttribute(MailConstants.A_NAME, page.getWikiWord());
-        m.addAttribute(MailConstants.A_ID, page.getId());
-        m.addAttribute(MailConstants.A_REST_URL, page.getRestUrl());
-        //m.addAttribute(MailService.A_SIZE, page.getSize());
-        m.addAttribute(MailConstants.A_DATE, page.getModifiedDate());
-        m.addAttribute(MailConstants.A_FOLDER, page.getFolderId());
-        m.addAttribute(MailConstants.A_VERSION, page.getLastVersion());
-        m.addAttribute(MailConstants.A_CREATOR, page.getCreator());
-        m.addAttribute(MailConstants.A_CREATED_DATE, page.getCreatedDate());
-        m.addAttribute(MailConstants.A_LAST_EDITED_BY, page.getLastEditor());
-        m.addAttribute(MailConstants.A_MODIFIED_DATE, page.getModifiedDate());
-        String frag = page.getFragment();
-        if (frag != null && !frag.equals(""))
-            m.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
-        return m;
-    }
-
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element m;
         

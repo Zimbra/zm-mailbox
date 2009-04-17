@@ -23,20 +23,26 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.wiki.WikiPage.WikiContext;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
-import com.zimbra.cs.wiki.Wiki.WikiUrl;
 
 /**
  * WikiTemplate is a parsed Wiki page.  Each parsed tokens represent either
@@ -77,16 +83,18 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public static WikiTemplate findTemplate(Context ctxt, String name)
 	throws ServiceException {
-    	Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
-    	return wiki.getTemplate(ctxt.wctxt, name);
+        WikiPage page = WikiPage.findTemplate(ctxt.wctxt, ctxt.item.getAccount().getId(), name);
+        if (page == null)
+        	page = WikiPage.missingPage(name);
+        return page.getTemplate(ctxt.wctxt);
 	}
 	
-	public String toString(WikiContext ctxt, MailItem item)
+	public String toString(WikiPage.WikiContext ctxt, MailItem item)
 	throws ServiceException, IOException {
 		return toString(new Context(ctxt, item, this));
 	}
 
-	public String toString(WikiContext ctxt, MailItem item, MailItem latestVersionItem)
+	public String toString(WikiPage.WikiContext ctxt, MailItem item, MailItem latestVersionItem)
 	throws ServiceException, IOException {
 		return toString(new Context(ctxt, item, this, latestVersionItem));
 	}
@@ -113,15 +121,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		return mModifiedTime;
 	}
 	
-	public String getComposedPage(WikiContext ctxt, MailItem item, String chrome)
+	public String getComposedPage(WikiPage.WikiContext wctxt, MailItem item, String chrome)
 	throws ServiceException, IOException {
-		return getComposedPage(new Context(ctxt, item, this), chrome);
-	}
-	
-	public String getComposedPage(Context ctxt, String chrome)
-	throws ServiceException, IOException {
-		Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
-		WikiTemplate chromeTemplate = wiki.getTemplate(ctxt.wctxt, chrome);
+		Context ctxt = new Context(wctxt, item, this);
+		WikiPage chromePage = WikiPage.findTemplate(ctxt.wctxt, item.getAccount().getId(), chrome);
+		if (chromePage == null)
+			chromePage = WikiPage.missingPage(chrome);
+		WikiTemplate chromeTemplate = chromePage.getTemplate(ctxt.wctxt);
 		String templateVal;
 
 		if (ctxt.item instanceof WikiItem)
@@ -193,6 +199,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	private List<Token> mTokens;
 	private String mTemplate;
+	
+	private static final int WIKI_FOLDER_ID = 12;
 	
 	public static class Token {
 		public static final String sWIKLETTAG = "wiklet";
@@ -354,16 +362,16 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			this(copy.wctxt, copy.item, copy.itemTemplate);
 			this.locale = copy.wctxt.locale;
 		}
-		public Context(WikiContext wc, MailItem it, WikiTemplate itt) {
+		public Context(WikiPage.WikiContext wc, MailItem it, WikiTemplate itt) {
 			this(wc, it, itt, null);
 			this.locale = wc.locale;
 		}
-		public Context(WikiContext wc, MailItem it, WikiTemplate itt, MailItem tit) {
+		public Context(WikiPage.WikiContext wc, MailItem it, WikiTemplate itt, MailItem tit) {
 			wctxt = wc; item = it; itemTemplate = itt; content = null; latestVersionItem = tit;
 			this.locale = wc.locale;
 		}		
 		
-		public WikiContext wctxt;
+		public WikiPage.WikiContext wctxt;
 		public MailItem item;
 		public WikiTemplate itemTemplate;
 		public Token token;
@@ -389,12 +397,12 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		throws ServiceException, IOException {
 			StringBuffer buf = new StringBuffer();
 			for (MailItem item : list) {
-				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
+				WikiTemplate t = findTemplate(ctxt, itemTemplate);
 				buf.append(t.toString(ctxt.wctxt, item));
 			}
 			Context newCtxt = new Context(ctxt);
 			newCtxt.content = buf.toString();
-			WikiTemplate body = WikiTemplate.findTemplate(newCtxt, bodyTemplate);
+			WikiTemplate body = findTemplate(ctxt, bodyTemplate);
 
 			return body.toString(newCtxt);
 		}
@@ -695,7 +703,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				path.append("/");
 				for (MailItem item : list) {
 					String name = item.getName();
-					if(item.getId() == Wiki.WIKI_FOLDER_ID) {
+					if(item.getId() == WIKI_FOLDER_ID) {
                         MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
                         String msgText = msgWiklet.getMessage(name, ctxt);
                         if(msgText !=null && !msgText.equals("")) {
@@ -758,7 +766,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	    @Override public String apply(Context ctxt) {
             String mText = ctxt.item.getName();
-            if(ctxt.item.getId() == Wiki.WIKI_FOLDER_ID) {
+            if(ctxt.item.getId() == WIKI_FOLDER_ID) {
                  MsgWiklet  msgWiklet =  (MsgWiklet) Wiklet.get("MSG");
                  String msgText = msgWiklet.getMessage(mText, ctxt);
                  if(msgText != null && !msgText.equals("")) {
@@ -1161,7 +1169,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
 				}
 				if (url != null) {
-                    if((ctxt.item.getId() == Wiki.WIKI_FOLDER_ID)) {
+                    if((ctxt.item.getId() == WIKI_FOLDER_ID)) {
                         MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
                         String msgText = msgWiklet.getMessage(title, ctxt);
                         if(msgText !=null && !msgText.equals("")) {
@@ -1217,6 +1225,176 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			} catch (Exception e) {
 				return "";
 			}
+		}
+	}
+	static class WikiUrl {
+		public WikiUrl(MailItem item) {
+			this(item.getName(), item.getFolderId());
+			if (item instanceof Folder)
+				mIsFolder = true;
+		}
+		public WikiUrl(String url) {
+			// url must be in absolute form
+			this(url, -1);
+		}
+		public WikiUrl(String url, int currentPos) {
+			// url can be in absolute or relative form.
+			mUrl = url;
+			mId = currentPos;
+			parse();
+		}
+		private int mId;
+		private String mUrl;
+		private String mFilename;
+		private List<String> mTokens;
+		private boolean mIsFolder;
+		
+		private void parse() {
+			mTokens = new ArrayList<String>();
+			int begin = 0, end = 0;
+			if (mUrl.startsWith("//")) {
+				begin = 2;
+				end = mUrl.indexOf('/', begin);
+				mTokens.add("//");
+				mTokens.add(mUrl.substring(begin, end));
+				begin = end;
+			} else if (mUrl.startsWith("/")) {
+				mTokens.add("/");
+			} else {
+				if (mId == -1)
+					throw new IllegalArgumentException("not absolute url: " + mUrl);
+				mTokens.add(Integer.toString(mId));
+			}
+			mTokens.add(mUrl.substring(begin));
+			begin = mUrl.lastIndexOf("/");
+			if (begin > 0)
+				mFilename = mUrl.substring(begin+1);
+			else
+				mFilename = mUrl;
+		}
+		public String getFullUrl(WikiContext ctxt, String referenceAccount) throws ServiceException {
+			if (mUrl != null && mUrl.startsWith("http://"))
+				return mUrl;
+			Account ownerAccount = getOwnerAccount(referenceAccount);
+			return UserServlet.getRestUrl(ownerAccount)
+							+ getPath(ctxt, ownerAccount);
+		}
+		public Account getOwnerAccount(String referenceAccount) throws ServiceException {
+			return (inAnotherMailbox()) ? 
+					Provisioning.getInstance().get(AccountBy.name, mTokens.get(1))
+					: (referenceAccount == null) ? null : Provisioning.getInstance().get(AccountBy.id, referenceAccount);
+		}
+		public String getPath(WikiContext ctxt, Account acct) throws ServiceException {
+			// sanity check
+			if (!isAbsolute() && mId < 1) {
+				throw WikiServiceException.INVALID_PATH(mUrl);
+			}
+			
+			StringBuilder p = new StringBuilder();
+			if (inAnotherMailbox() || acct == null) {
+				// take the absolute url in the path.
+				p.append(mTokens.get(2));
+			} else if (isAbsolute()) {
+				// take the path as is.
+				p.append(mUrl);
+			} else if (Provisioning.onLocalServer(acct)) {
+				// calculate absolute path based on current location
+				Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+				Folder f = mbox.getFolderById(ctxt.octxt, mId);
+				p.append(f.getPath());
+				if (p.charAt(p.length() - 1) != '/')
+					p.append("/");
+				p.append(mUrl);
+			} else {
+				// we know the account, and remote folder id, and relative path
+				// from the remote folder.  we can do something like getFolder
+				// and then calculate REST from the result.  for now treat
+				// this case as unreachable.
+				throw WikiServiceException.INVALID_PATH(mUrl);
+			}
+			return normalizePath(p.toString());
+		}
+		public String getFolderPath(WikiContext ctxt, String referenceAccount) throws ServiceException {
+			Account acct = getOwnerAccount(referenceAccount);
+			String url = getPath(ctxt, acct);
+			int index = url.lastIndexOf('/');
+			if (index > 0) {
+				return url.substring(0, index);
+			}
+			return "/";
+		}
+		/*
+		 * get rid of /./ and /../ in the path.
+		 * and encode ' ', '\'' characters.
+		 */
+		private String normalizePath(String path) throws ServiceException {
+			List<String> tokens = new ArrayList<String>();
+			StringTokenizer tok = new StringTokenizer(path, "/");
+			while (tok.hasMoreElements()) {
+				String token = tok.nextToken();
+				if (token.equals("."))
+					continue;
+				else if (token.equals("..")) {
+					if (tokens.isEmpty()) {
+						throw WikiServiceException.INVALID_PATH(path);
+					}
+					tokens.remove(tokens.size() - 1);
+				} else
+					tokens.add(token);
+			}
+			if (tokens.isEmpty()) {
+				return "/";
+			}
+			if (path.endsWith("/"))
+				tokens.add("");
+			StringBuilder newPath = new StringBuilder();
+			for (String token : tokens) {
+				newPath.append("/").append(urlEscape(token));
+			}
+			if (mIsFolder)
+				newPath.append("/");
+			return newPath.toString();
+		}
+		private String urlEscape(String str) {
+			// rfc 2396 url escape.
+			// currently escaping ' and " only
+			if (str.indexOf(' ') == -1 && str.indexOf('\'') == -1 && str.indexOf('"') == -1 &&  str.indexOf('#') == -1 && str.indexOf('?') == -1)
+				return str;
+			StringBuilder buf = new StringBuilder();
+			for (char c : str.toCharArray()) {
+				if (c == ' ')
+					buf.append("%20");
+				else if (c == '"')
+					buf.append("%22");
+				else if (c == '\'')
+					buf.append("%27");
+				else if (c == '#')
+					buf.append("%23");			
+				else if (c == '?')
+					buf.append("%3F");
+				else buf.append(c);
+			}
+			return buf.toString();
+		}
+		public boolean isAbsolute() {
+			return (mTokens != null &&
+					mTokens.get(0).startsWith("/"));
+		}
+		public boolean inAnotherMailbox() {
+			return (mTokens != null &&
+					mTokens.get(0).equals("//"));
+		}
+		public String getToken(int pos) {
+			return mTokens.get(pos);
+		}
+		public String getFilename() {
+			return mFilename;
+		}
+		public String getUrl() {
+			return mUrl;
+		}
+		public String toString() {
+			return "wikiUrl: " + mUrl + " in folderId" + mId;
 		}
 	}
 }

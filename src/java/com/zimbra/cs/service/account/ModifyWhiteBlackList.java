@@ -22,11 +22,9 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyWhiteBlackList extends AccountDocumentHandler {

@@ -95,7 +95,6 @@ import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemData;
-import com.zimbra.cs.wiki.Wiki;
 
 public class TarFormatter extends Formatter {
     private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
@@ -1380,7 +1379,7 @@ public class TarFormatter extends Formatter {
                     mbox.setDate(oc, newItem.getId(), type,
                         te.getModTime().getTime());
                     if (type == MailItem.TYPE_WIKI)
-                        Wiki.expireNotebook(fldr);
+                        WikiFormatter.expireCacheItem(fldr);
                 }
                 break;
             case MailItem.TYPE_MESSAGE:

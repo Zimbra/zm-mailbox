@@ -26,8 +26,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
+import com.zimbra.cs.wiki.WikiPage;
 
 /**
  * Represents Notebook / Wiki item.
@@ -38,12 +37,12 @@ import com.zimbra.cs.wiki.Wiki.WikiContext;
 public class Notebook extends MailItemResource {
 
 	private Document mDoc;
-	private WikiContext mWctxt;
+	private WikiPage.WikiContext mWctxt;
 
 	public Notebook(DavContext ctxt, Document doc) throws ServiceException {
 		super(ctxt, doc);
 		mDoc = doc;
-		mWctxt = new WikiContext(ctxt.getOperationContext(), null);
+		mWctxt = new WikiPage.WikiContext(ctxt.getOperationContext(), null);
 		setCreationDate(doc.getDate());
 		setLastModifiedDate(doc.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, doc.getName());
@@ -58,8 +57,8 @@ public class Notebook extends MailItemResource {
 		try {
 			if (mDoc.getType() == MailItem.TYPE_DOCUMENT)
 				return mDoc.getContentStream();
-			Wiki wiki = Wiki.getInstance(mWctxt, mDoc.getAccount().getId(), mDoc.getFolderId());
-			String val = wiki.getTemplate(mWctxt, mDoc.getName()).getComposedPage(mWctxt, mDoc, "_Template");
+			WikiPage page = WikiPage.create(mDoc);
+			String val = page.getTemplate(mWctxt).getComposedPage(mWctxt, mDoc, "_Template");
 			StringBuilder buf = new StringBuilder();
 			buf.append("<html><head>");
 			buf.append("<title>").append(mDoc.getName()).append("</title>");
