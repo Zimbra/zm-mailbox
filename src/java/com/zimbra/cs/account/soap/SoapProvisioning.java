@@ -2051,6 +2051,30 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
+    public RightCommand.AllEffectiveRights getAllEffectiveRights(
+            String granteeType, GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_EFFECTIVE_RIGHTS_REQUEST);
+        
+        String expandAttrs = null;
+        if (expandSetAttrs && expandGetAttrs)
+            expandAttrs = "setAttrs,getAttrs";
+        else if (expandSetAttrs)
+            expandAttrs = "setAttrs";
+        else if (expandGetAttrs)
+            expandAttrs = "getAttrs";
+        
+        if (expandAttrs != null)        
+            req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAttrs);
+        
+        if (granteeType != null && granteeBy != null && grantee != null)
+            toXML(req, granteeType, granteeBy, grantee);
+        
+        Element resp = invoke(req);
+        return RightCommand.AllEffectiveRights.fromXML(resp);
+    }
+    
+    @Override
     public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
                                                            GranteeBy granteeBy, String grantee,
                                                            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
@@ -2072,7 +2096,7 @@ public class SoapProvisioning extends Provisioning {
             toXML(req, null, granteeBy, grantee);
         
         Element resp = invoke(req);
-        return new RightCommand.EffectiveRights(resp, false);
+        return RightCommand.EffectiveRights.fromXML_EffectiveRights(resp);
     }
     
     @Override
@@ -2103,7 +2127,7 @@ public class SoapProvisioning extends Provisioning {
         */
         
         Element resp = invoke(req);
-        return new RightCommand.EffectiveRights(resp, true);
+        return RightCommand.EffectiveRights.fromXML_CreateObjectAttrs(resp);
     }
     
     @Override

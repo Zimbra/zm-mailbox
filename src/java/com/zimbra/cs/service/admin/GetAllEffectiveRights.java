@@ -33,7 +33,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetEffectiveRights  extends RightDocumentHandler {
+public class GetAllEffectiveRights extends RightDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -41,26 +41,17 @@ public class GetEffectiveRights  extends RightDocumentHandler {
         Pair<Boolean, Boolean> expandAttrs = parseExpandAttrs(request);
         boolean expandSetAttrs = expandAttrs.getFirst();
         boolean expandGetAttrs = expandAttrs.getSecond();
-        
-        Element eTarget = request.getElement(AdminConstants.E_TARGET);
-        String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
-        TargetBy targetBy = null;
-        String target = null;
-        if (TargetType.fromString(targetType).needsTargetIdentity()) {
-            targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
-            target = eTarget.getText();
-        }
             
         Element eGrantee = request.getOptionalElement(AdminConstants.E_GRANTEE);
+        String granteeType;
         GranteeBy granteeBy;
         String grantee;
         if (eGrantee != null) {
-            String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
-            if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER)
-                throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
+            granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
             granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
             grantee = eGrantee.getText();
         } else {
+            granteeType = GranteeType.GT_USER.getCode();
             granteeBy = GranteeBy.id;
             grantee = zsc.getRequestedAccountId();  
         }
@@ -68,14 +59,13 @@ public class GetEffectiveRights  extends RightDocumentHandler {
         if (!grantee.equals(zsc.getAuthtokenAccountId()))
             checkCheckRightRight(zsc, granteeBy, grantee);
         
-        RightCommand.EffectiveRights er = RightCommand.getEffectiveRights(
+        RightCommand.AllEffectiveRights aer = RightCommand.getAllEffectiveRights(
                 Provisioning.getInstance(),
-                targetType, targetBy, target,
-                granteeBy, grantee,
+                granteeType, granteeBy, grantee, 
                 expandSetAttrs, expandGetAttrs);
         
-        Element resp = zsc.createElement(AdminConstants.GET_EFFECTIVE_RIGHTS_RESPONSE);
-        er.toXML_getEffectiveRights(resp);
+        Element resp = zsc.createElement(AdminConstants.GET_ALL_EFFECTIVE_RIGHTS_RESPONSE);
+        aer.toXML(resp);
         return resp;
     }
 

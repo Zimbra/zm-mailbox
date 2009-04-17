@@ -145,7 +145,7 @@
          
 ----------------------------------------------------------
 
-    Returns all *effective* rights the authenticated admin has on the specified target entry.
+    Returns *effective* rights the authenticated admin has on the specified target entry.
         
     Effective rights are the rights the admin is actually allowed.  It is the net result of 
     applying ACL checking rules given the target and grantee.  Specifically denied rights 
@@ -251,7 +251,7 @@ if <grantee> is omitted, it means the account identified by the auth token.
          
 ----------------------------------------------------------
       
-      Returns attributes, with defaults and constratints if any,  that can be set by the authed admin when an 
+      Returns attributes, with defaults and constraints if any,  that can be set by the authed admin when an 
       object is created.
       
       GetCreateObjectAttrsRequest returns the equivalent of setAttrs portion of GetEffectiveRightsResponse.
@@ -320,6 +320,284 @@ e.g. 2 creating a server:
     </setAttrs>
 </GetCreateObjectAttrsResponse>
     
+----------------------------------------------------------
+      returns all effective rights 
+      
+<GetAllEffectiveRightsRequest>
+  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+</GetAllEffectiveRightsRequest> 
+
+       
+<GetAllEffectiveRightsResponse>
+  <grantee id="{grantee-id}" name="{grantee-name}">
+  <target type="{target-type}">
+    {right-specifiers}
+  </target>+
+</GetAllEffectiveRightsResponse>  
+  
+{right-specifiers} = 
+    - if target type is account, calresource, dl: {domained-entries-right-specifiers}
+    - otherwise: {non-domained-entries-right-specifiers}
+  
+{domained-entries-right-specifiers} = 
+    <all>
+      {effective-rights}
+    </all>
+    [<inDomains>
+       <domain name="{domain-name}">+
+        {effective-rights}
+     <inDomains>]+
+    [<entries>
+       <entry name="{name}">+
+       {effective-rights}
+     </entries>]+
+     
+{non-domained-entries-right-specifiers} = 
+    <all>
+      {effective-rights}
+    </all>
+    [<entries>
+       <entry name="{name}">+
+       {effective-rights}
+     </entries>]+     
+       
+{effective-rights} = 
+    <rights>
+        <right n="..."/>+
+        <setAttrs>
+            <a n="..."/>+
+        </setAttrs>
+        <getAttrs>
+            <a n="..."/>+
+        </getAttrs>
+    </rights>
+
+    
+e.g.
+
+    <GetAllEffectiveRightsRequest xmlns="urn:zimbraAdmin">
+      <grantee type="usr" by="name">admin1@test.com</grantee>
+    </GetAllEffectiveRightsRequest>
+    
+    <GetAllEffectiveRightsResponse xmlns="urn:zimbraAdmin">
+      <grantee name="admin1@test.com" id="a13b4659-ea6a-4050-bb58-65a9559138d1"/>
+      <target type="cos">
+        <entries>
+          <entry name="cos2"/>
+          <entry name="cos1"/>
+          <rights>
+            <right n="assignCos"/>
+            <right n="listCos"/>
+            <setAttrs/>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+        <entries>
+          <entry name="cos3"/>
+          <entry name="cos4"/>
+          <rights>
+            <right n="deleteCos"/>
+            <setAttrs all="1"/>
+          </rights>
+        </entries>
+      </target>
+      <target type="zimlet">
+        <all>
+          <right n="listZimlet"/>
+          <setAttrs/>
+          <getAttrs all="1"/>
+        </all>
+      </target>
+      <target type="account">
+        <inDomains>
+          <domain name="domain1.com"/>
+          <domain name="domain2.com"/>
+          <rights>
+            <right n="addAccountAlias"/>
+            <right n="adminLoginAs"/>
+            <setAttrs>
+              <a n="c"/>
+              ...
+              <a n="zimbraAccountCalendarUserType"/>
+              <a n="zimbraAccountStatus"/>
+              <a n="zimbraAdminAuthTokenLifetime">
+                <default>
+                  <v>12h</v>
+                </default>
+              </a>
+              <a n="zimbraAdminSavedSearches"/>
+              ...
+              <a n="zimbraZimletAvailableZimlets">
+                <default>
+                  <v>com_zimbra_ymemoticons</v>
+                  <v>com_zimbra_local</v>
+                </default>
+              </a>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <inDomains>
+          <domain name="domain3.com"/>
+          <domain name="domain4.com"/>
+          <rights>
+            <right n="renameAccount"/>
+            <right n="adminLoginAs"/>
+            <setAttrs>
+              <a n="zimbraAccountCalendarUserType"/>
+              <a n="zimbraAccountStatus"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <entries>
+          <entry name="user1@domain1.com"/>
+          <entry name="user2@domain1.com"/>
+          <rights>
+            <right n="renameAccount"/>
+            <setAttrs>
+              <a n="zimbraAccountStatus"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+        <entries>
+          <entry name="user3@domain1.com"/>
+          <entry name="user4@domain1.com"/>
+          <rights>
+            <right n="addAccountAlias"/>
+            <right n="removeAccountAlias"/>
+            <right n="setAccountPassword"/>
+            <setAttrs>
+            </setAttrs>
+            <getAttrs/>
+          </rights>
+        </entries>
+      </target>
+      <target type="calresource">
+        <inDomains>
+          <domain name="domain1.com"/>
+          <domain name="domain2.com"/>
+          <rights>
+            <right n="addCalendarResourceAlias"/>
+            <right n="deleteCalendarResource"/>
+            <right n="listCalendarResource"/>
+            <right n="purgeCalendarResourceCalendarCache"/>
+            <right n="removeCalendarResourceAlias"/>
+            <right n="renameCalendarResource"/>
+            <right n="setCalendarResourcePassword"/>
+            <setAttrs>
+              <a n="c"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+      </target>
+      <target type="xmppcomponent"/>
+      <target type="server"/>
+      <target type="config"/>
+      <target type="global"/>
+      <target type="domain">
+        <entries>
+          <entry name="domain1.com"/>
+          <entry name="domain2.com"/>
+          <rights>
+            <right n="accessGAL"/>
+            <right n="checkDomainMXRecord"/>
+            <right n="countAccount"/>
+            <right n="createAccount"/>
+            <right n="createAlias"/>
+            <right n="createCalendarResource"/>
+            <right n="createDistributionList"/>
+            <right n="deleteAlias"/>
+            <right n="listDomain"/>
+            <setAttrs>
+              <a n="description"/>
+              <a n="zimbraAdminConsoleLoginURL"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+      </target>
+      <target type="dl">
+        <inDomains>
+          <domain name="domain1.com"/>
+          <domain name="domain2.com"/>
+          <rights>
+            <right n="addDistributionListAlias"/>
+            <right n="addDistributionListMember"/>
+            <right n="deleteDistributionList"/>
+            <right n="getDistributionListMembership"/>
+            <right n="getDistributionListShareInfo"/>
+            <right n="listDistributionList"/>
+            <right n="publishDistributionListShareInfo"/>
+            <right n="removeDistributionListAlias"/>
+            <right n="removeDistributionListMember"/>
+            <right n="renameDistributionList"/>
+            <right n="viewDistributionListAdminUI"/>
+            <setAttrs>
+              <a n="cn"/>
+              <a n="description"/>
+              <a n="displayName"/>
+              <a n="zimbraHideInGal"/>
+              <a n="zimbraLocale"/>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <inDomains>
+          <domain name="domain3.com"/>
+          <rights>
+            <right n="publishDistributionListShareInfo"/>
+            <setAttrs>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <entries>
+          <entry name="dl1@domain1.com"/>
+          <entry name="dl2@domain1.com"/>
+          <rights>
+            <right n="addDistributionListAlias"/>
+            <right n="addDistributionListMember"/>
+            <setAttrs>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+        <entries>
+          <entry name="dl3@domain1.com"/>
+          <entry name="dl4@domain1.com"/>
+          <rights>
+            <setAttrs>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+      </target>
+    </GetAllEffectiveRightsResponse>
+
     
 ----------------------------------------------------------
       returns the union of the zimbraAdminConsoleUIComponents values on the 

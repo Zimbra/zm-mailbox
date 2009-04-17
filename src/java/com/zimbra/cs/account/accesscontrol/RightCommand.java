@@ -230,11 +230,7 @@ public class RightCommand {
             mGranteeName = granteeName;
         }
         
-        public EffectiveRights(Element parent, boolean isCreateObjectAttrs) throws ServiceException {
-            if (isCreateObjectAttrs)
-                fromXML_CreateObjectAttrs(parent);
-            else
-                fromXML_EffectiveRights(parent);
+        private EffectiveRights() {
         }
         
         private boolean hasSameRights(EffectiveRights other) {
@@ -286,53 +282,71 @@ public class RightCommand {
             return mDigest;
         }
         
-        private void fromXML_EffectiveRights(Element parent) throws ServiceException {
+        public static EffectiveRights fromXML_EffectiveRights(Element parent) throws ServiceException {
+            
+            EffectiveRights er = new EffectiveRights();
+            
             //
             // grantee
             //
             Element eGrantee = parent.getElement(AdminConstants.E_GRANTEE);
-            mGranteeId = eGrantee.getAttribute(AdminConstants.A_ID);
-            mGranteeName= eGrantee.getAttribute(AdminConstants.A_NAME);
+            er.mGranteeId = eGrantee.getAttribute(AdminConstants.A_ID);
+            er.mGranteeName= eGrantee.getAttribute(AdminConstants.A_NAME);
             
             //
             // target
             //
             Element eTarget = parent.getElement(AdminConstants.E_TARGET);
-            mTargetType = eTarget.getAttribute(AdminConstants.A_TYPE);
-            mTargetId = eTarget.getAttribute(AdminConstants.A_ID);
-            mTargetName= eTarget.getAttribute(AdminConstants.A_NAME);
+            er.mTargetType = eTarget.getAttribute(AdminConstants.A_TYPE);
+            er.mTargetId = eTarget.getAttribute(AdminConstants.A_ID);
+            er.mTargetName= eTarget.getAttribute(AdminConstants.A_NAME);
             
-            // preset rights
-            mPresetRights = new ArrayList<String>();
-            for (Element eRight : eTarget.listElements(AdminConstants.E_RIGHT)) {
-                mPresetRights.add(eRight.getAttribute(AdminConstants.A_N));
-            }
-                
-            // setAttrs
-            Element eSetAttrs = eTarget.getElement(AdminConstants.E_SET_ATTRS);
-            if (eSetAttrs.getAttributeBool(AdminConstants.A_ALL, false))
-                mCanSetAllAttrs = true;
+            fromXML(er, eTarget);
             
-            mCanSetAttrs = fromXML(eSetAttrs);
-            
-            // getAttrs
-            Element eGetAttrs = eTarget.getElement(AdminConstants.E_GET_ATTRS);
-            if (eGetAttrs.getAttributeBool(AdminConstants.A_ALL, false))
-                mCanGetAllAttrs = true;
-                
-            mCanGetAttrs = fromXML(eGetAttrs);
+            return er;
         }
         
-        private void fromXML_CreateObjectAttrs(Element parent) throws ServiceException {
+        public static EffectiveRights fromXML_CreateObjectAttrs(Element parent) throws ServiceException {
+            EffectiveRights er = new EffectiveRights();
+            
             // setAttrs
             Element eSetAttrs = parent.getElement(AdminConstants.E_SET_ATTRS);
             if (eSetAttrs.getAttributeBool(AdminConstants.A_ALL, false))
-                mCanSetAllAttrs = true;
+                er.mCanSetAllAttrs = true;
             
-            mCanSetAttrs = fromXML(eSetAttrs);
+            er.mCanSetAttrs = fromXML_attrs(eSetAttrs);
+            
+            return er;
         }
         
-        private TreeMap<String, EffectiveAttr> fromXML(Element eAttrs) throws ServiceException {
+        private static EffectiveRights fromXML(EffectiveRights er, Element eParent) throws ServiceException {
+            if (er == null)
+                er = new EffectiveRights();
+            
+            // preset rights
+            er.mPresetRights = new ArrayList<String>();
+            for (Element eRight : eParent.listElements(AdminConstants.E_RIGHT)) {
+                er.mPresetRights.add(eRight.getAttribute(AdminConstants.A_N));
+            }
+                
+            // setAttrs
+            Element eSetAttrs = eParent.getElement(AdminConstants.E_SET_ATTRS);
+            if (eSetAttrs.getAttributeBool(AdminConstants.A_ALL, false))
+                er.mCanSetAllAttrs = true;
+            
+            er.mCanSetAttrs = fromXML_attrs(eSetAttrs);
+            
+            // getAttrs
+            Element eGetAttrs = eParent.getElement(AdminConstants.E_GET_ATTRS);
+            if (eGetAttrs.getAttributeBool(AdminConstants.A_ALL, false))
+                er.mCanGetAllAttrs = true;
+                
+            er.mCanGetAttrs = fromXML_attrs(eGetAttrs);
+            
+            return er;
+        }
+        
+        private static TreeMap<String, EffectiveAttr> fromXML_attrs(Element eAttrs) throws ServiceException {
             TreeMap<String, EffectiveAttr> attrs = new TreeMap<String, EffectiveAttr>();
             
             AttributeManager am = AttributeManager.getInstance();
@@ -394,24 +408,25 @@ public class RightCommand {
             eTarget.addAttribute(AdminConstants.A_ID, mTargetId);
             eTarget.addAttribute(AdminConstants.A_NAME, mTargetName);
             
-            // preset rights
-            for (String r : mPresetRights) {
-                Element eRight = eTarget.addElement(AdminConstants.E_RIGHT).addAttribute(AdminConstants.A_N, r);
-            }
-            
-            // setAttrs
-            toXML(eTarget, AdminConstants.E_SET_ATTRS, mCanSetAllAttrs, mCanSetAttrs);
-
-            // getAttrs
-            toXML(eTarget, AdminConstants.E_GET_ATTRS, mCanGetAllAttrs, mCanGetAttrs);
-           
+            toXML(eTarget);
         }
         
         public void toXML_getCreateObjectAttrs(Element parent) {
-            
             // setAttrs
             toXML(parent, AdminConstants.E_SET_ATTRS, mCanSetAllAttrs, mCanSetAttrs);
+        }
+        
+        private void toXML(Element eParent) {
+            // preset rights
+            for (String r : mPresetRights) {
+                Element eRight = eParent.addElement(AdminConstants.E_RIGHT).addAttribute(AdminConstants.A_N, r);
+            }
             
+            // setAttrs
+            toXML(eParent, AdminConstants.E_SET_ATTRS, mCanSetAllAttrs, mCanSetAttrs);
+
+            // getAttrs
+            toXML(eParent, AdminConstants.E_GET_ATTRS, mCanGetAllAttrs, mCanGetAttrs);
         }
         
         private void toXML(Element parent, String elemName, boolean allAttrs, SortedMap<String, EffectiveAttr> attrs) {
@@ -501,6 +516,10 @@ public class RightCommand {
             mRights = rights;
         }
         
+        private EffectiveRights getRights() {
+            return mRights;
+        }
+        
         private void addEntry(String name) {
             mEntries.add(name);
         }
@@ -586,6 +605,10 @@ public class RightCommand {
         private void addAggregation(Set<String> names, EffectiveRights er) {
             addAggregation(mEntries, names, er);
         }
+        
+        public boolean hasNoRight() {
+            return mAll == null && mEntries.isEmpty();
+        }
     }
     
     /*
@@ -618,12 +641,22 @@ public class RightCommand {
         void addDomainEntry(String domainName, EffectiveRights er) {
             add(mDomains, domainName, er);
         }
+        
+        public boolean hasNoRight() {
+            return super.hasNoRight() && mDomains.isEmpty();
+        }
     }
     
     public static class AllEffectiveRights {
+        String mGranteeId;
+        String mGranteeName;
+        
         Map<TargetType, RightsByTargetType> mRightsByTargetType = new HashMap<TargetType, RightsByTargetType>();
         
-        AllEffectiveRights() {
+        AllEffectiveRights(String granteeId, String granteeName) {
+            mGranteeId = granteeId;
+            mGranteeName = granteeName;
+            
             for (TargetType tt : TargetType.values()) {
                 if (tt.isDomained())
                     mRightsByTargetType.put(tt, new DomainedRightsByTargetType());
@@ -657,6 +690,105 @@ public class RightCommand {
                 return;
             DomainedRightsByTargetType drbtt = (DomainedRightsByTargetType)mRightsByTargetType.get(targetType);
             drbtt.addDomainEntry(domainName, er);
+        }
+        
+        public static AllEffectiveRights fromXML(Element parent) throws ServiceException {
+            Element eGrantee = parent.getElement(AdminConstants.E_GRANTEE);
+            String granteeId = eGrantee.getAttribute(AdminConstants.A_ID);
+            String granteeName = eGrantee.getAttribute(AdminConstants.A_NAME);
+        
+            AllEffectiveRights aer = new AllEffectiveRights(granteeId, granteeName);
+            
+            for (Element eTarget : parent.listElements(AdminConstants.E_TARGET)) {
+                TargetType targetType = TargetType.fromString(eTarget.getAttribute(AdminConstants.A_TYPE));
+                RightsByTargetType rbtt = aer.mRightsByTargetType.get(targetType);
+                
+                Element eAll = eTarget.getOptionalElement(AdminConstants.E_ALL);
+                if (eAll != null) {
+                    rbtt.mAll = EffectiveRights.fromXML(null, eAll);
+                }
+                
+                if (rbtt instanceof DomainedRightsByTargetType) {
+                    DomainedRightsByTargetType drbtt = (DomainedRightsByTargetType)rbtt;
+                    for (Element eInDomains : eTarget.listElements(AdminConstants.E_IN_DOMAINS)) {
+                        Set<String> domains = new HashSet<String>();
+                        for (Element eDomain : eInDomains.listElements(AdminConstants.E_DOMAIN)) {
+                            String domain = eDomain.getAttribute(AdminConstants.A_NAME);
+                            domains.add(domain);
+                        }
+                        Element eRights = eInDomains.getElement(AdminConstants.E_RIGHTS);
+                        EffectiveRights er = EffectiveRights.fromXML(null, eRights);
+                        RightAggregation ra = new RightAggregation(domains, er);
+                        drbtt.mDomains.add(ra);
+                    }
+                }
+                
+                for (Element eEntries : eTarget.listElements(AdminConstants.E_ENTRIES)) {
+                    Set<String> entries = new HashSet<String>();
+                    for (Element eEntry : eEntries.listElements(AdminConstants.E_ENTRY)) {
+                        String entry = eEntry.getAttribute(AdminConstants.A_NAME);
+                        entries.add(entry);
+                    }
+                    Element eRights = eEntries.getElement(AdminConstants.E_RIGHTS);
+                    EffectiveRights er = EffectiveRights.fromXML(null, eRights);
+                    RightAggregation ra = new RightAggregation(entries, er);
+                    rbtt.mEntries.add(ra);
+                }
+            }
+
+            return aer;
+        }
+        
+        public void toXML(Element parent) {
+            //
+            // grantee
+            //
+            Element eGrantee = parent.addElement(AdminConstants.E_GRANTEE);
+            eGrantee.addAttribute(AdminConstants.A_ID, mGranteeId);
+            eGrantee.addAttribute(AdminConstants.A_NAME, mGranteeName);
+            
+            //
+            // rights by target type
+            //
+            for (Map.Entry<TargetType, RightsByTargetType> rightsByTargetType : mRightsByTargetType.entrySet()) {
+                TargetType targetType = rightsByTargetType.getKey();
+                RightsByTargetType rbtt = rightsByTargetType.getValue();
+                
+                Element eTarget = parent.addElement(AdminConstants.E_TARGET);
+                eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
+                
+                EffectiveRights er = rbtt.all();
+                if (er != null) {
+                    Element eAll = eTarget.addElement(AdminConstants.E_ALL);
+                    er.toXML(eAll);
+                }
+                
+                if (rbtt instanceof DomainedRightsByTargetType) {
+                    DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rbtt;
+                    
+                    for (RightAggregation rightsByDomains : domainedRights.domains()) {
+                        Element eInDomains = eTarget.addElement(AdminConstants.E_IN_DOMAINS);
+                        for (String domain : rightsByDomains.entries()) {
+                            Element eDomain = eInDomains.addElement(AdminConstants.E_DOMAIN);
+                            eDomain.addAttribute(AdminConstants.A_NAME, domain);
+                        }
+                        Element eRights = eInDomains.addElement(AdminConstants.E_RIGHTS);
+                        er = rightsByDomains.getRights();
+                        er.toXML(eRights);
+                    }
+                }
+                
+                for (RightAggregation rightsByEntries : rbtt.entries()) {
+                    Element eEntries = eTarget.addElement(AdminConstants.E_ENTRIES);
+                    for (String entry : rightsByEntries.entries()) {
+                        Element eEntry = eEntries.addElement(AdminConstants.E_ENTRY);
+                        eEntry.addAttribute(AdminConstants.A_NAME, entry);
+                    }
+                    Element eRights = eEntries.addElement(AdminConstants.E_RIGHTS);
+                    er = rightsByEntries.getRights();
+                    er.toXML(eRights);
+                }
+            }
         }
     }
 
@@ -762,7 +894,7 @@ public class RightCommand {
         GranteeType gt = GranteeType.fromCode(granteeType);
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         
-        AllEffectiveRights aer = new AllEffectiveRights();
+        AllEffectiveRights aer = new AllEffectiveRights(granteeEntry.getId(), granteeEntry.getName());
         RightChecker.getAllEffectiveRights(granteeEntry, expandSetAttrs, expandGetAttrs, aer);
         return aer;
     }

@@ -19,6 +19,7 @@ package com.zimbra.cs.service.admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
@@ -70,4 +71,23 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
         checkRight(zsc, granteeAcct, Admin.R_checkRight);
     }
     
+    protected Pair<Boolean, Boolean> parseExpandAttrs(Element request) throws ServiceException {
+        String expandAttrs = request.getAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, null);
+        boolean expandSetAttrs = false;
+        boolean expandGetAttrs = false;
+        if (expandAttrs != null) {
+            String[] eas = expandAttrs.split(",");
+            for (String e : eas) {
+                String exp = e.trim();
+                if (exp.equals("setAttrs"))
+                    expandSetAttrs = true;
+                else if (exp.equals("getAttrs"))
+                    expandGetAttrs = true;
+                else
+                    throw ServiceException.INVALID_REQUEST("invalid " + AdminConstants.A_EXPAND_ALL_ATTRS + " value: " + exp, null);
+            }
+        }
+        
+        return new Pair<Boolean, Boolean>(expandSetAttrs, expandGetAttrs);
+    }
 }

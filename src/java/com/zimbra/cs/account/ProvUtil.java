@@ -3315,7 +3315,7 @@ public class ProvUtil implements DebugListener {
         } else {
             // has more args, use it for the requested grantee
             if (ra.mCurPos < args.length)
-                getRightArgsGrantee(ra, false);
+                getRightArgsGrantee(ra, true);
         }
         
         boolean expandSetAttrs = false;
@@ -3336,35 +3336,35 @@ public class ProvUtil implements DebugListener {
         RightCommand.AllEffectiveRights allEffRights = mProv.getAllEffectiveRights(
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
         
-        // TODO System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
-        
         for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : allEffRights.rightsByTargetType().entrySet()) {
-            dumpRightsByTargetType(rightsByTargetType.getKey(), rightsByTargetType.getValue(), expandSetAttrs, expandGetAttrs);
+            RightCommand.RightsByTargetType rbtt = rightsByTargetType.getValue();
+            if (!rbtt.hasNoRight())
+                dumpRightsByTargetType(rightsByTargetType.getKey(), rbtt, expandSetAttrs, expandGetAttrs);
         }
     }
     
-    private void dumpRightsByTargetType(TargetType targetType, RightCommand.RightsByTargetType rightsByTargetType, 
+    private void dumpRightsByTargetType(TargetType targetType, RightCommand.RightsByTargetType rbtt, 
             boolean expandSetAttrs, boolean expandGetAttrs) {
         System.out.println("------------------------------------------------------------------");
         System.out.println("Target type: " + targetType.getCode());
         System.out.println("------------------------------------------------------------------");
         
-        RightCommand.EffectiveRights er = rightsByTargetType.all();
+        RightCommand.EffectiveRights er = rbtt.all();
         if (er != null) {
             System.out.println("On all " + targetType.getPrettyName() + " entries");
             dumpEffectiveRight(er, expandSetAttrs, expandGetAttrs);
         }
         
-        if (rightsByTargetType instanceof RightCommand.DomainedRightsByTargetType) {
-            RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rightsByTargetType;
+        if (rbtt instanceof RightCommand.DomainedRightsByTargetType) {
+            RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rbtt;
             
-            for (RightCommand.RightAggregation rightsByDomain : domainedRights.domains()) {
-                dumpRightAggregation(targetType, rightsByDomain, true, expandSetAttrs, expandGetAttrs);
+            for (RightCommand.RightAggregation rightsByDomains : domainedRights.domains()) {
+                dumpRightAggregation(targetType, rightsByDomains, true, expandSetAttrs, expandGetAttrs);
             }
         }
         
-        for (RightCommand.RightAggregation rightsByEntry : rightsByTargetType.entries()) {
-            dumpRightAggregation(targetType, rightsByEntry, false, expandSetAttrs, expandGetAttrs);
+        for (RightCommand.RightAggregation rightsByEntries : rbtt.entries()) {
+            dumpRightAggregation(targetType, rightsByEntries, false, expandSetAttrs, expandGetAttrs);
         }
     }
     
@@ -3376,7 +3376,7 @@ public class ProvUtil implements DebugListener {
         
         for (String entry : entries) {
             if (domainScope)
-                System.out.println("On " + targetType.getCode() + " entries on domain " + entry);
+                System.out.println("On " + targetType.getCode() + " entries in domain " + entry);
             else
                 System.out.println("On " + targetType.getCode() + " " + entry);
         }
