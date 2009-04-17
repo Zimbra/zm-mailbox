@@ -52,8 +52,8 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	return mResponse;
     }
     
-    public void handleContact(Contact c) throws ServiceException {
-		ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    public Element handleContact(Contact c) throws ServiceException {
+		return ToXML.encodeContact(mResponse, mFormatter, c, true, null);
     }
     
     public void handleContact(GalContact c) throws ServiceException {

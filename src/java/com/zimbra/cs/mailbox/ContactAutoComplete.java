@@ -266,9 +266,10 @@ public class ContactAutoComplete {
 	    public void handleContactAttrs(Map<String,? extends Object> attrs) throws ServiceException {
 	    	addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result);
 	    }
-	    public void handleContact(Contact c) throws ServiceException {
+	    public Element handleContact(Contact c) throws ServiceException {
 			ZimbraLog.gal.debug("gal entry: "+""+c.getId());
 	        handleContactAttrs(c.getFields());
+	        return null;
 	    }
 	    public void visit(GalContact c) throws ServiceException {
 			ZimbraLog.gal.debug("gal entry: "+""+c.getId());

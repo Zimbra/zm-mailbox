@@ -238,8 +238,11 @@ public class GalSearchControl {
 				if (num == limit)
 					break;
                 ZimbraHit hit = pager.getNextHit();
-                if (hit instanceof ContactHit)
-                	callback.handleContact(((ContactHit)hit).getContact());
+                if (hit instanceof ContactHit) {
+                	Element contactElem = callback.handleContact(((ContactHit)hit).getContact());
+                	if (contactElem != null)
+                		contactElem.addAttribute(MailConstants.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
+                }
                 num++;
 			}
             callback.setSortBy(zqr.getSortBy().toString());
