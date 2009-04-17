@@ -361,6 +361,8 @@ public class AdminConstants {
     public static final QName GET_RIGHT_RESPONSE = QName.get("GetRightResponse", NAMESPACE);
     public static final QName GET_ADMIN_CONSOLE_UI_COMP_REQUEST = QName.get("GetAdminConsoleUICompRequest", NAMESPACE);
     public static final QName GET_ADMIN_CONSOLE_UI_COMP_RESPONSE = QName.get("GetAdminConsoleUICompResponse", NAMESPACE);
+    public static final QName GET_ALL_EFFECTIVE_RIGHTS_REQUEST = QName.get("GetAllEffectiveRightsRequest", NAMESPACE);
+    public static final QName GET_ALL_EFFECTIVE_RIGHTS_RESPONSE = QName.get("GetAllEffectiveRightsResponse", NAMESPACE);
     public static final QName GET_ALL_RIGHTS_REQUEST = QName.get("GetAllRightsRequest", NAMESPACE);
     public static final QName GET_ALL_RIGHTS_RESPONSE = QName.get("GetAllRightsResponse", NAMESPACE);
     public static final QName GET_EFFECTIVE_RIGHTS_REQUEST = QName.get("GetEffectiveRightsRequest", NAMESPACE);
@@ -613,14 +615,17 @@ public class AdminConstants {
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     
     // right
+    public static final String E_ALL         = "all";
     public static final String E_ATTRS       = "attrs";
     public static final String E_CMD         = "cmd";
     public static final String E_CONSTRAINT  = "constraint";
     public static final String E_DEFAULT     = "default";
     public static final String E_DESC        = "desc";
+    public static final String E_ENTRIES     = "entries";
     public static final String E_GET_ATTRS   = "getAttrs";
     public static final String E_GRANT       = "grant";
     public static final String E_GRANTEE     = "grantee";
+    public static final String E_IN_DOMAINS  = "inDomains";
     public static final String E_MAX         = "max";
     public static final String E_MIN         = "min";
     public static final String E_NOTE        = "note";
