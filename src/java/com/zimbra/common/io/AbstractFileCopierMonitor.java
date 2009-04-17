@@ -50,6 +50,7 @@ public abstract class AbstractFileCopierMonitor implements FileCopierCallback {
                 wait();
             } catch (InterruptedException e) {}
         }
+        mWaiting = false;
     }
 
     public synchronized void denyFutureOperations() {
@@ -66,9 +67,5 @@ public abstract class AbstractFileCopierMonitor implements FileCopierCallback {
 
     public synchronized long getPending() {
         return mRequested - mCompleted;
-    }
-
-    public synchronized boolean isFinished() {
-        return mWaiting == true && mCompleted >= mRequested;
     }
 }

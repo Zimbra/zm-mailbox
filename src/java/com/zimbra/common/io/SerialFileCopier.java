@@ -17,6 +17,7 @@
 
 package com.zimbra.common.io;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import com.zimbra.common.util.FileUtil;
@@ -29,6 +30,7 @@ class SerialFileCopier implements FileCopier {
 
     private boolean mUseNIO;
     private int mCopyBufSizeOIO;
+    private boolean mIgnoreMissingSource;
 
     SerialFileCopier(boolean useNIO, int copyBufSizeOIO) {
         ZimbraLog.io.debug(
@@ -61,15 +63,28 @@ class SerialFileCopier implements FileCopier {
         // do nothing
     }
 
+    public synchronized void setIgnoreMissingSource(boolean ignore) {
+        mIgnoreMissingSource = ignore;
+    }
+
+    private synchronized boolean ignoreMissingSource() {
+        return mIgnoreMissingSource;
+    }
+
     public void copy(File src, File dest,
                      FileCopierCallback cb, Object cbarg)
     throws IOException {
         FileUtil.ensureDirExists(dest.getParentFile());
-        if (mUseNIO) {
-            FileUtil.copy(src, dest);
-        } else {
-            byte[] buf = new byte[mCopyBufSizeOIO];
-            FileUtil.copyOIO(src, dest, buf);
+        try {
+            if (mUseNIO) {
+                FileUtil.copy(src, dest);
+            } else {
+                byte[] buf = new byte[mCopyBufSizeOIO];
+                FileUtil.copyOIO(src, dest, buf);
+            }
+        } catch (FileNotFoundException e) {
+            if (!ignoreMissingSource())
+                throw e;
         }
     }
 
@@ -77,14 +92,20 @@ class SerialFileCopier implements FileCopier {
                              FileCopierCallback cb, Object cbarg)
     throws IOException {
         copy(src, dest, cb, cbarg);
-        dest.setReadOnly();
+        if (dest.exists())
+            dest.setReadOnly();
     }
 
     public void link(File real, File link,
                      FileCopierCallback cb, Object cbarg)
     throws IOException {
         FileUtil.ensureDirExists(link.getParentFile());
-        IO.link(real.getAbsolutePath(), link.getAbsolutePath());
+        try {
+            IO.link(real.getAbsolutePath(), link.getAbsolutePath());
+        } catch (FileNotFoundException e) {
+            if (!ignoreMissingSource())
+                throw e;
+        }
     }
 
     public void move(File oldPath, File newPath,

@@ -29,6 +29,7 @@ abstract class AbstractAsyncFileCopier implements FileCopier {
     private static final int MAX_QUEUE_SIZE = 100000;
 
     private BlockingQueue<FileTask> mQueue;
+    private boolean mIgnoreMissingSource;
 
     protected AbstractAsyncFileCopier(int queueCapacity) {
         int qsize = queueCapacity > 0
@@ -69,6 +70,14 @@ abstract class AbstractAsyncFileCopier implements FileCopier {
 
     public boolean isAsync() {
         return true;
+    }
+
+    public synchronized void setIgnoreMissingSource(boolean ignore) {
+        mIgnoreMissingSource = ignore;
+    }
+
+    protected synchronized boolean ignoreMissingSource() {
+        return mIgnoreMissingSource;
     }
 
     public void copy(File src, File dest,

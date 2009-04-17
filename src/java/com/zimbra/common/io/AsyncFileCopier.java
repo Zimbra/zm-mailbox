@@ -17,6 +17,7 @@
 
 package com.zimbra.common.io;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import com.zimbra.common.util.FileUtil;
@@ -143,29 +144,58 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
 
         private void copy(File src, File dest) throws IOException {
             FileUtil.ensureDirExists(dest.getParentFile());
-            if (mUseNIO)
-                FileUtil.copy(src, dest);
-            else
-                FileUtil.copyOIO(src, dest, mCopyBuffer);
+            try {
+                if (mUseNIO)
+                    FileUtil.copy(src, dest);
+                else
+                    FileUtil.copyOIO(src, dest, mCopyBuffer);
+                if (ZimbraLog.io.isDebugEnabled())
+                    ZimbraLog.io.debug("Copied " + src.getAbsolutePath() + " to " + dest.getAbsolutePath());
+            } catch (FileNotFoundException e) {
+                if (!ignoreMissingSource())
+                    throw e;
+            }
         }
 
         private void copyReadOnly(File src, File dest) throws IOException {
             copy(src, dest);
-            dest.setReadOnly();
+            if (dest.exists())
+                dest.setReadOnly();
         }
 
         private void link(File file, File link) throws IOException {
             FileUtil.ensureDirExists(link.getParentFile());
-            IO.link(file.getAbsolutePath(), link.getAbsolutePath());
+            try {
+                IO.link(file.getAbsolutePath(), link.getAbsolutePath());
+                if (ZimbraLog.io.isDebugEnabled())
+                    ZimbraLog.io.debug("Created link " + link.getAbsolutePath() + " to file " + file.getAbsolutePath());
+            } catch (FileNotFoundException e) {
+                if (!ignoreMissingSource())
+                    throw e;
+            }
         }
 
         private void move(File oldPath, File newPath) throws IOException {
             FileUtil.ensureDirExists(newPath.getParentFile());
-            oldPath.renameTo(newPath);
+            boolean moved = oldPath.renameTo(newPath);
+            if (moved) {
+                if (ZimbraLog.io.isDebugEnabled())
+                    ZimbraLog.io.debug("Moved " + oldPath.getAbsolutePath() + " to " + newPath.getAbsolutePath());
+            } else {
+                if (ZimbraLog.io.isDebugEnabled())
+                    ZimbraLog.io.debug("Failed to move " + oldPath.getAbsolutePath() + " to " + newPath.getAbsolutePath());
+            }
         }
 
         private void delete(File file) throws IOException {
-            file.delete();
+            boolean deleted = file.delete();
+            if (deleted) {
+                if (ZimbraLog.io.isDebugEnabled())
+                    ZimbraLog.io.debug("Deleted " + file.getAbsolutePath());
+            } else {
+                if (ZimbraLog.io.isDebugEnabled())
+                    ZimbraLog.io.debug("Failed to delete " + file.getAbsolutePath());
+            }
         }
     }
 }

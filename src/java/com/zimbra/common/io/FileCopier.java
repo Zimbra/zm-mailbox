@@ -27,6 +27,8 @@ public interface FileCopier {
 
     public void shutdown() throws IOException;
 
+    public void setIgnoreMissingSource(boolean ignore);
+
     /**
      * Copy src to dest.
      * @param src

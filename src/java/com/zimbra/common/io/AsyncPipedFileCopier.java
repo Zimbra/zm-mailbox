@@ -18,6 +18,7 @@
 package com.zimbra.common.io;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -344,6 +345,9 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                                     "): incomplete transfer expected=" +
                                     expected + " written=" + written); 
                         }
+                    } catch (FileNotFoundException e) {
+                        if (!ignoreMissingSource())
+                            throw e;
                     } finally {
                         ByteUtil.closeStream(fin);
                     }
@@ -366,7 +370,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
 
             private void link(File file, File link) throws IOException {
                 FileUtil.ensureDirExists(link.getParentFile());
-                IO.link(file.getAbsolutePath(), link.getAbsolutePath());
+                try {
+                    IO.link(file.getAbsolutePath(), link.getAbsolutePath());
+                } catch (FileNotFoundException e) {
+                    if (!ignoreMissingSource())
+                        throw e;
+                }
             }
 
             private void move(File oldPath, File newPath) throws IOException {
