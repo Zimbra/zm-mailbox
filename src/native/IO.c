@@ -69,12 +69,16 @@ Java_com_zimbra_znative_IO_link0(JNIEnv *env,
     (*env)->GetByteArrayRegion(env, jnewpath, 0, newlen, (jbyte *)newpath);
 
     if (link(oldpath, newpath) == 0) {
-	return;
+        return;
     } else {
         char msg[2048];
         snprintf(msg, sizeof(msg), "link(%s, %s): %s", oldpath, newpath, 
                  strerror(errno));
-        ZimbraThrowIOE(env, msg);
+        if (errno == ENOENT) {
+            ZimbraThrowFNFE(env, msg);
+        } else {
+            ZimbraThrowIOE(env, msg);
+        }
     }
 }
 
@@ -105,7 +109,11 @@ JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_linkCount0
     } else {
         char msg[2048];
         snprintf(msg, sizeof(msg), "stat(%s): %s", path, strerror(errno));
-        ZimbraThrowIOE(env, msg);
+        if (errno == ENOENT) {
+            ZimbraThrowFNFE(env, msg);
+        } else {
+            ZimbraThrowIOE(env, msg);
+        }
         return -1;
     }
 } 
@@ -169,7 +177,11 @@ JNIEXPORT void JNICALL Java_com_zimbra_znative_IO_chmod0
     if (chmod(path, (mode_t)mode) != 0) {
         char msg[2048];
         snprintf(msg, sizeof(msg), "chmod(%s): %s", path, strerror(errno));
-        ZimbraThrowIOE(env, msg);
+        if (errno == ENOENT) {
+            ZimbraThrowFNFE(env, msg);
+        } else {
+            ZimbraThrowIOE(env, msg);
+        }
     }
 } 
 

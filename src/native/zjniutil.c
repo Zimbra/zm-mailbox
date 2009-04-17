@@ -46,6 +46,14 @@ ZimbraThrowIOE(JNIEnv *env, const char *msg)
 }
 
 void
+ZimbraThrowFNFE(JNIEnv *env, const char *msg)
+{
+    jclass cls = (*env)->FindClass(env, "java/io/FileNotFoundException");
+    if (cls != 0) /* Otherwise an exception has already been thrown */
+        (*env)->ThrowNew(env, cls, msg);
+}
+
+void
 ZimbraThrowOFE(JNIEnv *env, const char  *msg)
 {
     jclass cls = (*env)->FindClass(env, "com/zimbra/znative/OperationFailedException");
