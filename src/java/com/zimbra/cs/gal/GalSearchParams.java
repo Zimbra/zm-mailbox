@@ -91,6 +91,8 @@ public class GalSearchParams {
 	}
 	
 	public String getSyncToken() {
+		if (mSyncToken == null)
+			return null;
 		return mSyncToken.getLdapTimestamp();
 	}
 	
