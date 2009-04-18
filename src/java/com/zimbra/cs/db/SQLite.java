@@ -343,4 +343,8 @@ public class SQLite extends Db {
             System.exit(-1);
         }
     }
+
+    @Override public void flushToDisk() {
+        // not really implemented
+    }
 }

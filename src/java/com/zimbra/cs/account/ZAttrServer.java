@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090414-1932 */
+    /* build: 5.0 jhahm 20090418-0050 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -10184,6 +10184,88 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetRedoLogArchiveDir(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRedoLogArchiveDir, "");
+        return attrs;
+    }
+
+    /**
+     * how many seconds worth of committed redo ops to re-execute during
+     * crash recovery; related to mysql parameter
+     * innodb_flush_log_at_trx_commit=0
+     *
+     * @return zimbraRedoLogCrashRecoveryLookbackSec, or 10 if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1009)
+    public int getRedoLogCrashRecoveryLookbackSec() {
+        return getIntAttr(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, 10);
+    }
+
+    /**
+     * how many seconds worth of committed redo ops to re-execute during
+     * crash recovery; related to mysql parameter
+     * innodb_flush_log_at_trx_commit=0
+     *
+     * @param zimbraRedoLogCrashRecoveryLookbackSec new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1009)
+    public void setRedoLogCrashRecoveryLookbackSec(int zimbraRedoLogCrashRecoveryLookbackSec) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, Integer.toString(zimbraRedoLogCrashRecoveryLookbackSec));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how many seconds worth of committed redo ops to re-execute during
+     * crash recovery; related to mysql parameter
+     * innodb_flush_log_at_trx_commit=0
+     *
+     * @param zimbraRedoLogCrashRecoveryLookbackSec new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1009)
+    public Map<String,Object> setRedoLogCrashRecoveryLookbackSec(int zimbraRedoLogCrashRecoveryLookbackSec, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, Integer.toString(zimbraRedoLogCrashRecoveryLookbackSec));
+        return attrs;
+    }
+
+    /**
+     * how many seconds worth of committed redo ops to re-execute during
+     * crash recovery; related to mysql parameter
+     * innodb_flush_log_at_trx_commit=0
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1009)
+    public void unsetRedoLogCrashRecoveryLookbackSec() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how many seconds worth of committed redo ops to re-execute during
+     * crash recovery; related to mysql parameter
+     * innodb_flush_log_at_trx_commit=0
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1009)
+    public Map<String,Object> unsetRedoLogCrashRecoveryLookbackSec(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, "");
         return attrs;
     }
 

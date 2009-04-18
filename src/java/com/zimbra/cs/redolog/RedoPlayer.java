@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
@@ -49,8 +47,6 @@ import com.zimbra.cs.redolog.op.StoreIncomingBlob;
  * @author jhahm
  */
 public class RedoPlayer {
-
-    private static Log mLog = LogFactory.getLog(RedoPlayer.class);
 
     private static final int INITIAL_MAP_SIZE = 1000;
 
@@ -82,13 +78,11 @@ public class RedoPlayer {
         mOpsMap.clear();
     }
 
-	public void scanLog(File logfile,
-            boolean redoCommitted,
-            Map<Integer, Integer> mboxIDsMap,
-            long startTime)
-	throws IOException, ServiceException {
-        scanLog(logfile, redoCommitted, mboxIDsMap, startTime, Long.MAX_VALUE);
-	}
+    public void scanLog(File logfile, boolean redoCommitted, Map<Integer, Integer> mboxIDsMap,
+                        long startTime, long endTime)
+    throws IOException, ServiceException {
+        scanLog(logfile, redoCommitted, mboxIDsMap, startTime, endTime, Long.MAX_VALUE);
+    }
 
 	/**
 	 * Scans a redo log file.  An op that is neither committed nor aborted is
@@ -108,13 +102,15 @@ public class RedoPlayer {
      *                   this time.
      * @param endTime    Only process ops whose commit time is before (but not
      *                   at) this time.
+     * @param ignoreCommitsAtOrAfter Ops that were committed at or after this timestamp are ignored.
+     *                               They will not be replayed even when redoCommitted=true.  They will
+     *                               be considered uncommitted, and thus will become eligible for replay
+     *                               during crash recovery.  For uses other than crash recovery, pass
+     *                               Long.MAX_VALUE to not ignore any committed ops.
 	 * @throws IOException
 	 */
-	public void scanLog(File logfile,
-                        boolean redoCommitted,
-                        Map<Integer, Integer> mboxIDsMap,
-                        long startTime,
-                        long endTime)
+	private void scanLog(File logfile, boolean redoCommitted, Map<Integer, Integer> mboxIDsMap,
+                         long startTime, long endTime, long ignoreCommitsAtOrAfter)
     throws IOException, ServiceException {
 		FileLogReader logReader = new FileLogReader(logfile, mWritable);
 		logReader.open();
@@ -133,10 +129,10 @@ public class RedoPlayer {
 				//
 				// We have scan to the end of the file to know with certainty we've gone past the time limit.
 
-				if (mLog.isDebugEnabled())
-					mLog.debug("Read: " + op);
+				if (ZimbraLog.redolog.isDebugEnabled())
+				    ZimbraLog.redolog.debug("Read: " + op);
 
-                processOp(op, redoCommitted, mboxIDsMap, startTime, endTime);
+                processOp(op, redoCommitted, mboxIDsMap, startTime, endTime, ignoreCommitsAtOrAfter);
 			}
 		} catch (IOException e) {
 			// The IOException could be a real I/O problem or it could mean
@@ -145,7 +141,7 @@ public class RedoPlayer {
 			// assume the second case and truncate the file after the last
 			// successfully read item.
 
-            mLog.warn("IOException while reading redolog file", e);
+		    ZimbraLog.redolog.warn("IOException while reading redolog file", e);
 
 			long size = logReader.getSize();
 			if (lastPosition < size) {
@@ -156,11 +152,11 @@ public class RedoPlayer {
                     logfile.getAbsolutePath() +
                     ".";
                 if (mWritable) {
-                    mLog.warn(msg + "  File will be truncated to " +
+                    ZimbraLog.redolog.warn(msg + "  File will be truncated to " +
                               lastPosition + " bytes.");
                     logReader.truncate(lastPosition);
                 } else
-                    mLog.warn(msg);
+                    ZimbraLog.redolog.warn(msg);
 			}
 		} finally {
 			logReader.close();
@@ -177,7 +173,8 @@ public class RedoPlayer {
                                  boolean redoCommitted,
                                  Map<Integer, Integer> mboxIDsMap,
                                  long startTime,
-                                 long endTime)
+                                 long endTime,
+                                 long ignoreCommitsAtOrAfter)
     throws ServiceException {
 
         if (op.isStartMarker()) {
@@ -186,7 +183,7 @@ public class RedoPlayer {
                 if (mHasOrphanOps) {
                     RedoableOp x = (RedoableOp) mOrphanOps.remove(op.getTransactionId());
                     if (x != null)
-                        mLog.error("Detected out-of-order insertion of change record for orphans commit/abort: change=" + op + ", orphan=" + x);
+                        ZimbraLog.redolog.error("Detected out-of-order insertion of change record for orphans commit/abort: change=" + op + ", orphan=" + x);
                 }
             }
         } else {
@@ -200,7 +197,7 @@ public class RedoPlayer {
                     synchronized (mOpsMapGuard) {
                         if (mOpsMap.size() != txns.size()) {
                             // Unexpected discrepancy
-                            if (mLog.isDebugEnabled()) {
+                            if (ZimbraLog.redolog.isDebugEnabled()) {
                                 StringBuffer sb1 = new StringBuffer("Current Uncommitted Ops: ");
                                 StringBuffer sb2 = new StringBuffer("Checkpoint Uncommitted Ops: ");
                                 int i = 0;
@@ -217,7 +214,7 @@ public class RedoPlayer {
                                         sb2.append(", ");
                                     sb2.append(id);
                                 }
-                                mLog.info("Checkpoint discrepancy: # current uncommitted ops = " + mOpsMap.size() +
+                                ZimbraLog.redolog.info("Checkpoint discrepancy: # current uncommitted ops = " + mOpsMap.size() +
                                           ", # checkpoint uncommitted ops = " + txns.size() +
                                           "\nMAP DUMP:\n" + sb1.toString() + "\n" + sb2.toString());
                             }
@@ -227,7 +224,7 @@ public class RedoPlayer {
                     synchronized (mOpsMapGuard) {
                         if (mOpsMap.size() != 0) {
                             // Unexpected discrepancy
-                            if (mLog.isDebugEnabled()) {
+                            if (ZimbraLog.redolog.isDebugEnabled()) {
                                 StringBuffer sb1 = new StringBuffer("Current Uncommitted Ops: ");
                                 int i = 0;
                                 for (Iterator it = mOpsMap.keySet().iterator(); it.hasNext(); i++) {
@@ -236,7 +233,7 @@ public class RedoPlayer {
                                         sb1.append(", ");
                                     sb1.append(id);
                                 }
-                                mLog.info("Checkpoint discrepancy: # current uncommitted ops = " +
+                                ZimbraLog.redolog.info("Checkpoint discrepancy: # current uncommitted ops = " +
                                           mOpsMap.size() + " instead of 0\nMAP DUMP:\n" +
                                           sb1.toString());
                             }
@@ -244,94 +241,100 @@ public class RedoPlayer {
                     }
                 }
             } else if (op.isEndMarker()) {
-                // Encountered COMMIT or ABORT.  Discard the
-                // corresponding op from map, and optionally execute the committed op.
-                RedoableOp prepareOp;
-                synchronized (mOpsMapGuard) {
-                    prepareOp = (RedoableOp) mOpsMap.remove(op.getTransactionId());
-                    if (prepareOp == null) {
-                        mHasOrphanOps = true;
-                        mLog.error("Commit/abort record encountered before corresponding change record (" + op + ")");
-                        TransactionId tid = op.getTransactionId();
-                        RedoableOp x = (RedoableOp) mOrphanOps.get(tid);
-                        if (x != null)
-                        	mLog.error("Op [" + op + "] is already in orphans map: value=" + x);
-                        mOrphanOps.put(tid, op);
+                // Ignore if op is a commit and its timestamp is at or after ignoreCommitsAtOrAfter.
+                // In other words, don't ignore if op is a rollback OR its timestamp is before ignoreCommitsAtOrAfter.
+                boolean isCommitOp = op instanceof CommitTxn;
+                long opTstamp = op.getTimestamp();
+                if (!isCommitOp || opTstamp < ignoreCommitsAtOrAfter) {
+                    // Encountered COMMIT or ABORT.  Discard the
+                    // corresponding op from map, and optionally execute the committed op.
+                    RedoableOp prepareOp;
+                    synchronized (mOpsMapGuard) {
+                        prepareOp = (RedoableOp) mOpsMap.remove(op.getTransactionId());
+                        if (prepareOp == null) {
+                            mHasOrphanOps = true;
+                            ZimbraLog.redolog.error("Commit/abort record encountered before corresponding change record (" + op + ")");
+                            TransactionId tid = op.getTransactionId();
+                            RedoableOp x = (RedoableOp) mOrphanOps.get(tid);
+                            if (x != null)
+                                ZimbraLog.redolog.error("Op [" + op + "] is already in orphans map: value=" + x);
+                            mOrphanOps.put(tid, op);
+                        }
                     }
-                }
-
-                if (redoCommitted && prepareOp != null && (op instanceof CommitTxn) &&
-                	(startTime == -1 || prepareOp.getTimestamp() >= startTime) &&
-                	op.getTimestamp() < endTime) {
-                	boolean allowRedo = false;
-                	if (mboxIDsMap == null) {
-                		// Caller doesn't care which mailbox(es) the op is for.
-                		allowRedo = true;
-                	} else {
-                        int opMailboxId = prepareOp.getMailboxId();
-                        if (prepareOp instanceof StoreIncomingBlob) {
-                            assert(opMailboxId == RedoableOp.MAILBOX_ID_ALL);
-                        	// special case for StoreIncomingBlob op that has
-                        	// a list of mailbox IDs.
-                            StoreIncomingBlob storeOp = (StoreIncomingBlob) prepareOp;
-                        	List<Integer> list = storeOp.getMailboxIdList();
-                        	if (list != null) {
-	                        	Set<Integer> opMboxIds = new HashSet<Integer>(list);
+    
+                    if (redoCommitted && prepareOp != null && isCommitOp &&
+                    	(startTime == -1 || prepareOp.getTimestamp() >= startTime) &&
+                    	opTstamp < endTime) {
+                    	boolean allowRedo = false;
+                    	if (mboxIDsMap == null) {
+                    		// Caller doesn't care which mailbox(es) the op is for.
+                    		allowRedo = true;
+                    	} else {
+                            int opMailboxId = prepareOp.getMailboxId();
+                            if (prepareOp instanceof StoreIncomingBlob) {
+                                assert(opMailboxId == RedoableOp.MAILBOX_ID_ALL);
+                            	// special case for StoreIncomingBlob op that has
+                            	// a list of mailbox IDs.
+                                StoreIncomingBlob storeOp = (StoreIncomingBlob) prepareOp;
+                            	List<Integer> list = storeOp.getMailboxIdList();
+                            	if (list != null) {
+    	                        	Set<Integer> opMboxIds = new HashSet<Integer>(list);
+                                    for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
+                                        if (opMboxIds.contains(entry.getKey())) {
+                                            allowRedo = true;
+                                            // Replace the mailbox ID list in the op.  We're
+                                            // replaying it only for the target mailbox ID we're
+                                            // interested in.
+                                            List<Integer> newList =
+                                                new ArrayList<Integer>(mboxIDsMap.values());
+                                            storeOp.setMailboxIdList(newList);
+                                            break;
+                                        }
+                                    }
+                            	} else {
+                            		// Prior to redolog version 1.0 StoreIncomingBlob
+                            		// didn't keep track of mailbox list.  Always recreate
+                            		// the blob since we don't know which mailboxes will
+                            		// need it.
+                            		allowRedo = true;
+                            	}
+                            } else if (opMailboxId == RedoableOp.MAILBOX_ID_ALL) {
+                            	// This case should be checked after StoreIncomingBlob
+                            	// case because StoreIncomingBlob has mailbox ID of
+                            	// MAILBOX_ID_ALL.
+                            	allowRedo = true;
+                            } else {
                                 for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
-                                    if (opMboxIds.contains(entry.getKey())) {
+                                    if (opMailboxId == entry.getKey().intValue()) {
+                                        if (entry.getValue() != null) {
+                                            // restore to a different mailbox
+                                            prepareOp.setMailboxId(entry.getValue().intValue());
+                                        }
                                         allowRedo = true;
-                                        // Replace the mailbox ID list in the op.  We're
-                                        // replaying it only for the target mailbox ID we're
-                                        // interested in.
-                                        List<Integer> newList =
-                                            new ArrayList<Integer>(mboxIDsMap.values());
-                                        storeOp.setMailboxIdList(newList);
                                         break;
                                     }
                                 }
-                        	} else {
-                        		// Prior to redolog version 1.0 StoreIncomingBlob
-                        		// didn't keep track of mailbox list.  Always recreate
-                        		// the blob since we don't know which mailboxes will
-                        		// need it.
-                        		allowRedo = true;
-                        	}
-                        } else if (opMailboxId == RedoableOp.MAILBOX_ID_ALL) {
-                        	// This case should be checked after StoreIncomingBlob
-                        	// case because StoreIncomingBlob has mailbox ID of
-                        	// MAILBOX_ID_ALL.
-                        	allowRedo = true;
-                        } else {
-                            for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
-                                if (opMailboxId == entry.getKey().intValue()) {
-                                    if (entry.getValue() != null) {
-                                        // restore to a different mailbox
-                                        prepareOp.setMailboxId(entry.getValue().intValue());
-                                    }
-                                    allowRedo = true;
-                                    break;
+                            }
+                    	}
+                    	if (allowRedo) {
+                    	    if (mSkipDeleteOps && prepareOp.isDeleteOp()) {
+                    	        ZimbraLog.redolog.info("Skipping delete op: " + prepareOp.toString());
+                    	    } else {
+                                try {
+                                    if (ZimbraLog.redolog.isDebugEnabled())
+                                        ZimbraLog.redolog.debug("Redoing: " + prepareOp.toString());
+                                    prepareOp.setUnloggedReplay(mUnloggedReplay);
+                                    playOp(prepareOp);
+                                } catch(Exception e) {
+                                    if (!ignoreReplayErrors())
+                                        throw ServiceException.FAILURE("Error executing redoOp", e);
+                                    else
+                                        ZimbraLog.redolog.warn(
+                                                "Ignoring error during redo log replay: " + e.getMessage(), e);
                                 }
-                            }
-                        }
-                	}
-                	if (allowRedo) {
-                	    if (mSkipDeleteOps && prepareOp.isDeleteOp()) {
-                	        mLog.info("Skipping delete op: " + prepareOp.toString());
-                	    } else {
-                            try {
-                                if (mLog.isDebugEnabled())
-                                    mLog.debug("Redoing: " + prepareOp.toString());
-                                prepareOp.setUnloggedReplay(mUnloggedReplay);
-                                playOp(prepareOp);
-                            } catch(Exception e) {
-                                if (!ignoreReplayErrors())
-                                    throw ServiceException.FAILURE("Error executing redoOp", e);
-                                else
-                                    ZimbraLog.redolog.warn(
-                                            "Ignoring error during redo log replay: " + e.getMessage(), e);
-                            }
-                	    }
-                	}
+                    	    }
+                    	}
+                    }
                 }
             }
         }
@@ -364,12 +367,23 @@ public class RedoPlayer {
         if (!redoLog.exists())
         	return 0;
 
+        long lookBackTstamp = Long.MAX_VALUE;
+        long lookBackDuration = RedoConfig.redoLogCrashRecoveryLookbackSec() * 1000;
+        if (lookBackDuration > 0) {
+            // Guess the last op's timestamp.  Use the log file's last modified time.  Sanity check it by
+            // going no earlier than first op time written in the log.
+            long logLastModTime = redoLog.lastModified();
+            long firstOpTstamp = (new FileLogReader(redoLog)).getHeader().getLastOpTstamp();
+            long lastOpTstamp = Math.max(logLastModTime, firstOpTstamp);
+            lookBackTstamp = lastOpTstamp - lookBackDuration;
+        }
+
         // scanLog can truncate the current redo.log if it finds junk data at the end
         // from the previous crash.  Close log writer before scanning and reopen after
         // so we don't accidentally undo the truncation on the next write to the log.
         LogWriter logWriter = redoLogMgr.getLogWriter();
         logWriter.close();
-        scanLog(redoLog, false, null, 0);
+        scanLog(redoLog, false, null, Long.MIN_VALUE, Long.MAX_VALUE, lookBackTstamp);
         logWriter.open();
 
 		int numOps;
@@ -377,13 +391,13 @@ public class RedoPlayer {
         	numOps = mOpsMap.size();
         }
 		if (numOps == 0) {
-			mLog.info("No uncommitted transactions to redo");
+		    ZimbraLog.redolog.info("No uncommitted transactions to redo");
 			return 0;
 		}
 
         synchronized (mOpsMapGuard) {
             Set entrySet = mOpsMap.entrySet();
-            mLog.info("Redoing " + numOps + " uncommitted transactions");
+            ZimbraLog.redolog.info("Redoing " + numOps + " uncommitted transactions");
     		for (Iterator it = entrySet.iterator(); it.hasNext(); ) {
                 Map.Entry entry = (Entry) it.next();
                 RedoableOp op = (RedoableOp) entry.getValue();
@@ -391,20 +405,20 @@ public class RedoPlayer {
                     continue;
 
                 if (op.deferCrashRecovery()) {
-                    mLog.info("Deferring crash recovery to after startup: " + op);
+                    ZimbraLog.redolog.info("Deferring crash recovery to after startup: " + op);
                     postStartupRecoveryOps.add(op);
                     continue;
                 }
 
-                if (mLog.isInfoEnabled())
-    				mLog.info("REDOING: " + op);
+                if (ZimbraLog.redolog.isInfoEnabled())
+                    ZimbraLog.redolog.info("REDOING: " + op);
     
     			boolean success = false;
                 try {
     	            op.redo();
     	            success = true;
                 } catch (Exception e) {
-                    mLog.error("Redo failed for [" + op + "]." +
+                    ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
                                "  Backend state of affected item is indeterminate." +
                                "  Marking operation as aborted and moving on.", e);
                 } finally {

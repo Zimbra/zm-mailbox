@@ -262,4 +262,7 @@ public abstract class Db {
     }
 
     abstract String getIFNULLClause(String expr1, String expr2);
+
+    /** Force the database engine to flush committed changes to physical disk. */
+    public abstract void flushToDisk();
 }

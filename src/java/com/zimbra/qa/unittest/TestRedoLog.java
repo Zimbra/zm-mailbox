@@ -77,7 +77,7 @@ extends TestCase {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         Mailbox destMbox = MailboxManager.getInstance().getMailboxByAccount(destAccount); 
         idMap.put(sourceMbox.getId(), destMbox.getId());
-        player.scanLog(getRedoLogFile(), true, idMap, startTime);
+        player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE);
         
         // Get destination message and compare content.
         List<Integer> destIds = TestUtil.search(destMbox, "in:inbox " + NAME_PREFIX, MailItem.TYPE_MESSAGE);

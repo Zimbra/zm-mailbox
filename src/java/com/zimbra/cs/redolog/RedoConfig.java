@@ -70,6 +70,10 @@ public class RedoConfig {
         mRedoLogFsyncIntervalMS =
             config.getLongAttr(Provisioning.A_zimbraRedoLogFsyncIntervalMS,
                                D_REDOLOG_FSYNC_INTERVAL_MS);
+
+        mRedoLogCrashRecoveryLookbackSec =
+            config.getLongAttr(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec,
+                               D_REDOLOG_CRASH_RECOVERY_LOOKBACK_SEC);
     }
 
 
@@ -160,5 +164,21 @@ public class RedoConfig {
      */
     public static synchronized long redoLogFsyncIntervalMS() {
         return theInstance.mRedoLogFsyncIntervalMS;
+    }
+
+    private long mRedoLogCrashRecoveryLookbackSec;
+    private static final long D_REDOLOG_CRASH_RECOVERY_LOOKBACK_SEC = 10;
+    /**
+     * This parameter is also related to running mysql with innodb_flush_log_at_trx_commit=0.
+     * When recovering from a crash, mysql may not have the committed changes from roughly the last second. 
+     * ZCS must re-execute enough past operations to bring mysql into consistent state.
+     * 
+     * This parameter controls how long to look back.  Default is 10 seconds.  Crash recovery normally
+     * re-executes only pending changes.  But with this parameter committed changes within the last 10
+     * seconds are also re-executed.
+     * @return
+     */
+    public static synchronized long redoLogCrashRecoveryLookbackSec() {
+        return theInstance.mRedoLogCrashRecoveryLookbackSec;
     }
 }

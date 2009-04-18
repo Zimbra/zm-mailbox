@@ -38,6 +38,7 @@ import com.zimbra.common.util.ZimbraLog;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.FileLogReader;
@@ -119,7 +120,7 @@ public class RedoLogManager {
     private int mCounter;
 
 
-	public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
+    public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
 		mEnabled = false;
         mShuttingDown = false;
         mRecoveryMode = false;
@@ -583,9 +584,14 @@ public class RedoLogManager {
 		try {
 			if (isRolloverNeeded(force)) {
 				mLog.debug("Redo log rollover started");
+
+				// Force the database to persist the committed changes to disk.
+                // This is very important when running mysql with innodb_flush_log_at_trx_commit=0 (or 2).
+                Db.getInstance().flushToDisk();
+
                 if (!skipCheckpoint)
     				checkpoint();
-				synchronized (mActiveOps) {
+                synchronized (mActiveOps) {
                     rolledOverFile = mLogWriter.rollover(mActiveOps);
 					mInitialLogSize = mLogWriter.getSize();
 				}
@@ -594,7 +600,7 @@ public class RedoLogManager {
 		} catch (IOException e) {
 			mLog.error("IOException during redo log rollover");
 			signalFatalError(e);
-		} finally {
+        } finally {
 			writeLock.release();
 		}
 

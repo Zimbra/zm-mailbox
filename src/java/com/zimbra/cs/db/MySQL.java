@@ -205,4 +205,50 @@ public class MySQL extends Db {
         	System.exit(-1);
         }
     }
+
+    private final String sTableName = "zimbra.flush_enforcer";
+    private final String sCreateTable =
+        "CREATE TABLE IF NOT EXISTS " + sTableName + " (dummy_column INTEGER) ENGINE = InnoDB";
+    private final String sDropTable = "DROP TABLE IF EXISTS " + sTableName;
+
+    @Override public synchronized void flushToDisk() {
+        // Create a table and then drop it.  We take advantage of the fact that innodb will call
+        // log_buffer_flush_to_disk() during CREATE TABLE or DELETE TABLE.
+        Connection conn = null;
+        PreparedStatement createStmt = null;
+        PreparedStatement dropStmt = null;
+        boolean success = false;
+        try {
+            try {
+                conn = DbPool.getMaintenanceConnection();
+                createStmt = conn.prepareStatement(sCreateTable);
+                dropStmt = conn.prepareStatement(sDropTable);
+                createStmt.executeUpdate();
+                dropStmt.executeUpdate();
+                success = true;
+            } finally {
+                DbPool.quietCloseStatement(createStmt);
+                DbPool.quietCloseStatement(dropStmt);
+                if (conn != null)
+                    conn.commit();
+                DbPool.quietClose(conn);
+            }
+        } catch (SQLException e) {
+            // If there's an error, let's just log it but not bubble up the exception.
+            ZimbraLog.dbconn.warn("ignoring error while forcing mysql to flush innodb log to disk", e);
+        } catch (ServiceException e) {
+            // If there's an error, let's just log it but not bubble up the exception.
+            ZimbraLog.dbconn.warn("ignoring error while forcing mysql to flush innodb log to disk", e);
+        } finally {
+            if (!success) {
+                // There was an error.
+                // The whole point of this method is to force innodb to flush its log.  Innodb is
+                // supposed to be flushing roughly every second in its master thread, so let's simply
+                // wait a few seconds to give the master thread a chance.
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e1) {}
+            }
+        }
+    }
 }

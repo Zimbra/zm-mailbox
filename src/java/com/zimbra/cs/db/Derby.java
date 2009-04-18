@@ -231,4 +231,8 @@ public class Derby extends Db {
             System.exit(-1);
         }
     }
+
+    @Override public void flushToDisk() {
+        // not really implemented
+    }
 }

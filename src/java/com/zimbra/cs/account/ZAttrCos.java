@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090414-1932 */
+    /* build: 5.0 jhahm 20090418-0050 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1276,13 +1276,13 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Batch size to use when indexing data
      *
-     * @return zimbraBatchedIndexingSize, or 0 if unset
+     * @return zimbraBatchedIndexingSize, or 20 if unset
      *
      * @since ZCS 5.0.3
      */
     @ZAttr(id=619)
     public int getBatchedIndexingSize() {
-        return getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
+        return getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 20);
     }
 
     /**

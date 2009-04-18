@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090414-1932 */
+    /* build: 5.0 jhahm 20090418-0050 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5749,6 +5749,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=76)
     public static final String A_zimbraRedoLogArchiveDir = "zimbraRedoLogArchiveDir";
+
+    /**
+     * how many seconds worth of committed redo ops to re-execute during
+     * crash recovery; related to mysql parameter
+     * innodb_flush_log_at_trx_commit=0
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1009)
+    public static final String A_zimbraRedoLogCrashRecoveryLookbackSec = "zimbraRedoLogCrashRecoveryLookbackSec";
 
     /**
      * whether logs are delete on rollover or archived
