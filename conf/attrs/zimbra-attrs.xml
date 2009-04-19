@@ -83,6 +83,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                 part.
     emailp......valid email address. must have a "@" and personal part
                 is optional.
+    cs_emailp...comma-separated valid email addresses . each address must have a "@" 
+                and personal part is optional.
     id..........^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
     integer.....32 bit signed, min/max checked
     port........0-65535
@@ -128,7 +130,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                                 if not set on COS, inherit from domain
     idn....................can contain Internationalized Domain Names (IDN). 
                            For attributes that are either:
-	                           - of type email or emailp, or
+	                           - of type email or emailp or cs_emailp, or
 	                           - has idn flag
                            server will convert the values to unicode in utf8
                            encoding in SOAP responses.
@@ -1665,7 +1667,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable end-user mail forwarding features</desc>
 </attr>
 
-<attr id="343" name="zimbraPrefMailForwardingAddress" type="emailp" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+<attr id="343" name="zimbraPrefMailForwardingAddress" type="cs_emailp" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 

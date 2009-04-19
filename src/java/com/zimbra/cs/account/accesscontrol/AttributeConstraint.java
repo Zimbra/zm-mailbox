@@ -347,6 +347,7 @@ class AttributeConstraint {
             return new GentimeConstraint(attrName);
         case TYPE_EMAIL:
         case TYPE_EMAILP:
+        case TYPE_CS_EMAILP:
         case TYPE_ENUM:
         case TYPE_ID:
             return new AttributeConstraint(attrName);

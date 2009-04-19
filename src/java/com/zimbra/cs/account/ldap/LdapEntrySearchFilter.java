@@ -18,6 +18,7 @@ package com.zimbra.cs.account.ldap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
@@ -121,8 +122,9 @@ public class LdapEntrySearchFilter {
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("failed to get AttributeManager instance", e);
             }
-            if (attrMgr != null && attrMgr.isEmailOrIDN(term.getLhs()))
-                rhs = IDNUtil.toAscii(rhs);
+            
+            IDNType idnType = AttributeManager.idnType(attrMgr, term.getLhs());
+            rhs = IDNUtil.toAscii(rhs, idnType);
             
             return rhs;
         }

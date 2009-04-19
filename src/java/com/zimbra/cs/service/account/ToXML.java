@@ -23,6 +23,7 @@ import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -119,17 +120,17 @@ public class ToXML {
             if (name.equalsIgnoreCase(Provisioning.A_userPassword))
                 value = "VALUE-BLOCKED";
             
-            boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(name);
+            IDNType idnType = AttributeManager.idnType(attrMgr, name);
 
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
                     // e.addKeyValuePair(name, sv[i], AccountConstants.E_A, key);
-                    encodeAttr(e, name, sv[i], AccountConstants.E_A, key, isIDN);
+                    encodeAttr(e, name, sv[i], AccountConstants.E_A, key, idnType);
                 }
             } else if (value instanceof String) {
                 // e.addKeyValuePair(name, (String) value, AccountConstants.E_A, key);
-                encodeAttr(e, name, (String) value, AccountConstants.E_A, key, isIDN);
+                encodeAttr(e, name, (String) value, AccountConstants.E_A, key, idnType);
             }
         }       
     }
@@ -159,7 +160,7 @@ public class ToXML {
             if (reqAttrs != null && !reqAttrs.contains(name))
                 continue;
             
-            boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(name);
+            IDNType idnType = AttributeManager.idnType(attrMgr, name);
 
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
@@ -169,7 +170,7 @@ public class ToXML {
                     pref.addAttribute(key, name);
                     pref.setText(sv[i]);
                     */
-                    encodeAttrOld(e, name, sv[i], AccountConstants.E_A, key, isIDN);
+                    encodeAttrOld(e, name, sv[i], AccountConstants.E_A, key, idnType);
                 }
             } else if (value instanceof String) {
                 /*
@@ -182,7 +183,7 @@ public class ToXML {
                 if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
                     value = TZIDMapper.canonicalize((String) value);
 
-                encodeAttrOld(e, name, (String) value, AccountConstants.E_A, key, isIDN);
+                encodeAttrOld(e, name, (String) value, AccountConstants.E_A, key, idnType);
             }
         }       
     }
@@ -286,8 +287,9 @@ public class ToXML {
         return e;
     }
     
-    public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, boolean isIDN) {
-        KeyValuePair kvPair = parent.addKeyValuePair(key, IDNUtil.toUnicode(value), eltname, attrname);
+    public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, 
+            IDNType idnType) {
+        KeyValuePair kvPair = parent.addKeyValuePair(key, IDNUtil.toUnicode(value, idnType), eltname, attrname);
         
         /*
         if (isIDN) {
@@ -296,10 +298,11 @@ public class ToXML {
         */
     }
     
-    public static Element encodeAttrOld(Element parent, String key, String value, String eltname, String attrname, boolean isIDN) {
+    public static Element encodeAttrOld(Element parent, String key, String value, String eltname, String attrname, 
+            IDNType idnType) {
         Element e = parent.addElement(eltname);
         e.addAttribute(attrname, key);
-        e.setText(IDNUtil.toUnicode(value));
+        e.setText(IDNUtil.toUnicode(value, idnType));
         
         /*
         if (isIDN) {

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.zimbra.cs.account.AttributeManager.IDNType;
 
 public abstract class Entry implements ToZJSONObject {
 
@@ -185,16 +186,16 @@ public abstract class Entry implements ToZJSONObject {
                 
         Set<String> keySet = new HashSet<String>(attrs.keySet());
         for (String key : keySet) {
-            boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(key);
-            if (isIDN) {
+            IDNType idnType = AttributeManager.idnType(attrMgr, key);
+            if (idnType.isEmailOrIDN()) {
                 Object value = attrs.get(key);
                 if (value instanceof String[]) {
                     String sv[] = (String[]) value;
                     for (int i=0; i<sv.length; i++) {
-                        sv[i] = IDNUtil.toUnicode(sv[i]);
+                        sv[i] = IDNUtil.toUnicode(sv[i], idnType);
                     }
                 } else if (value instanceof String){
-                    attrs.put(key, IDNUtil.toUnicode((String)value));
+                    attrs.put(key, IDNUtil.toUnicode((String)value, idnType));
                 }
             }
         }
@@ -347,11 +348,11 @@ public abstract class Entry implements ToZJSONObject {
         String[] values = getMultiAttr(name, true);
         
         AttributeManager attrMgr = getAttributeManager();
-        boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(name);
-        if (isIDN && values != null) {
+        IDNType idnType = AttributeManager.idnType(attrMgr, name);
+        if (idnType.isEmailOrIDN() && values != null) {
             String[] unicodeValues = new String[values.length];
             for (int i=0; i<values.length; i++)
-                unicodeValues[i] = IDNUtil.toUnicode(values[i]);
+                unicodeValues[i] = IDNUtil.toUnicode(values[i], idnType);
             return unicodeValues;
         } else
             return values;

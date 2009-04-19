@@ -24,6 +24,7 @@ public enum AttributeType {
     TYPE_GENTIME("gentime"),
     TYPE_EMAIL("email"),
     TYPE_EMAILP("emailp"),
+    TYPE_CS_EMAILP("cs_emailp"),
     TYPE_ENUM("enum"),
     TYPE_ID("id"),
     TYPE_INTEGER("integer"),

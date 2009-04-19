@@ -302,6 +302,13 @@ public class AttributeInfo {
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);              
             validEmailAddress(value, true);
             return;
+        case TYPE_CS_EMAILP:
+            if (value.length() > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);              
+            String[] emails = value.split(",");
+            for (String email : emails)
+                validEmailAddress(email, true);
+            return;
         case TYPE_ENUM:
             if (mEnumSet.contains(value))
                 return;

@@ -833,14 +833,40 @@ public class AttributeManager {
     	mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).add(attr);
     }
 
-    public boolean isEmailOrIDN(String attr) {
+    public static enum IDNType {
+        email,     // attr type is email
+        emailp,    // attr type is emailp
+        cs_emailp, // attr type is cs_emailp
+        idn,       // attr has idn flag
+        none;      // attr is not of type smail, emailp, cs_emailp, nor does it has idn flag
+        
+        public boolean isEmailOrIDN() {
+            return this != none;
+        }
+    }
+    
+    public static IDNType idnType(AttributeManager am, String attr) {
+        if (am == null)
+            return IDNType.none;
+        else
+            return am.idnType(attr);
+    }
+    
+    private IDNType idnType(String attr) {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null) {
             AttributeType at = ai.getType();
-            return (at == AttributeType.TYPE_EMAIL || at == AttributeType.TYPE_EMAILP ||
-                    mFlagToAttrsMap.get(AttributeFlag.idn).contains(attr));
-        } else
-            return false;
+            if (at == AttributeType.TYPE_EMAIL)
+                return IDNType.email;
+            else if (at == AttributeType.TYPE_EMAILP)
+                return IDNType.emailp;
+            else if (at == AttributeType.TYPE_CS_EMAILP)
+                return IDNType.cs_emailp;
+            else if (mFlagToAttrsMap.get(AttributeFlag.idn).contains(attr))
+                return IDNType.idn;
+        }
+
+        return IDNType.none;
     }
 
     public boolean inVersion(String attr, String version) throws ServiceException {
@@ -956,7 +982,7 @@ public class AttributeManager {
             if (info != null) {
                 // IDN unicode to ACE conversion needs to happen before checkValue or else
                 // regex attrs will be rejected by checkValue
-                if (isEmailOrIDN(name)) {
+                if (idnType(name).isEmailOrIDN()) {
                     mIDNCallback.preModify(context, name, value, attrs, entry, isCreate);
                     value = attrs.get(name);
                 }
@@ -1222,6 +1248,7 @@ public class AttributeManager {
             break;
         case TYPE_EMAIL:
         case TYPE_EMAILP:
+        case TYPE_CS_EMAILP:
             syntax = "1.3.6.1.4.1.1466.115.121.1.26{256}";
             equality = "caseIgnoreIA5Match";
             substr = "caseIgnoreSubstringsMatch";
