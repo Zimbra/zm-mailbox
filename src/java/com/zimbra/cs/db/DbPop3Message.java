@@ -18,8 +18,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -94,6 +96,40 @@ public class DbPop3Message {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
+    }
+
+    /**
+     * Returns the map of persisted itemId to UID mappings
+     */
+    public static Map<Integer, String> getMappings(Mailbox mbox,
+        String dataSourceId) throws ServiceException {
+        Map<Integer, String> mappings = new HashMap<Integer, String>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        ZimbraLog.mailbox.debug("get all POP mappings for %s", dataSourceId);
+        try {
+            conn = DbPool.getConnection(mbox);
+            stmt = conn.prepareStatement(
+                "SELECT item_id, uid FROM " + getTableName(mbox) +
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + " data_source_id = ?");
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, dataSourceId);
+            rs = stmt.executeQuery();
+            while (rs.next())
+                mappings.put(rs.getInt(1), rs.getString(2));
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get UID's", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        ZimbraLog.mailbox.debug("Found %d POP mappings for %s", mappings.size(),
+            dataSourceId);
+        return mappings;
     }
 
     /**

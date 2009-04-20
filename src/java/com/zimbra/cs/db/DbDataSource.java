@@ -474,7 +474,7 @@ public class DbDataSource {
                 for (String uid : curIds)
                     stmt.setString(i++, uid);
             	rs = stmt.executeQuery();
-            	if (rs.next()) {
+            	while (rs.next()) {
             		itemId = rs.getInt(1);
             		remoteId = rs.getString(2);
             		folderId = rs.getInt(3);

@@ -105,6 +105,7 @@ public class ModifyDataSource extends MailDocumentHandler {
                     LdapUtil.getBooleanString(newValue));
                 Mailbox mbox = getRequestedMailbox(zsc);
                 DbPop3Message.deleteUids(mbox, ds.getId());
+                ds.deleteItemMappings();
             }
         }
         

@@ -42,7 +42,7 @@ import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.datasource.PopMessage;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
@@ -166,7 +166,6 @@ public class Pop3Import extends MailItemImport {
         DataSource ds = getDataSource();
         POP3Folder folder = (POP3Folder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
-
         Message[] msgs = folder.getMessages();
 
         // Bail out if there are no messages
@@ -222,7 +221,9 @@ public class Pop3Import extends MailItemImport {
                 com.zimbra.cs.mailbox.Message msg = addMessage(pm);
 
                 if (msg != null && dataSource.leaveOnServer()) {
-                    DbPop3Message.storeUid(mbox, dataSource.getId(), folder.getUID(pop3Msg), msg.getId());
+                    PopMessage msgTracker = new PopMessage(dataSource, msg.getId(), uid);
+                    
+                    msgTracker.add();
                 }
             } finally {
                 pop3Msg.dispose();
@@ -268,8 +269,10 @@ public class Pop3Import extends MailItemImport {
         }
 
         // Remove UID's of messages that we already downloaded
-        Set<String> existingUids =
-            DbPop3Message.getMatchingUids(mbox, ds, uidsToFetch);
+        String uidArray[] = new String[uidsToFetch.size()];
+        Set<String> existingUids = PopMessage.getMatchingUids(ds,
+            uidsToFetch.toArray(uidArray));
+        
         uidsToFetch.removeAll(existingUids);
         return uidsToFetch;
     }
