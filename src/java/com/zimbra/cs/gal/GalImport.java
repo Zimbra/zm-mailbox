@@ -36,6 +36,7 @@ import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mime.ParsedContact;
@@ -162,12 +163,31 @@ public class GalImport extends MailItemImport {
 			this.fid = fid;
 			this.force = force;
 		}
+		
+		private String[] FILE_AS_STR_KEYS = {
+			Contact.A_fullName,
+			Contact.A_email,
+			Contact.A_email2,
+			Contact.A_email3
+		};
+		
+		private void addFileAsStr(Map<String,Object> attrs) {
+	        for (String key : FILE_AS_STR_KEYS) {
+	        	Object fileAsStr = attrs.get(key);
+	        	if (fileAsStr != null && fileAsStr instanceof String) {
+	        		attrs.put(Contact.A_fileAs, Contact.FA_EXPLICIT+":"+(String)fileAsStr);
+	        		return;
+	        	}
+	        }
+		}
+		
 		public void visit(GalContact contact) throws ServiceException {
 			Map<String,Object> attrs = contact.getAttrs();
 			String id = contact.getId();
 			ZimbraLog.gal.debug("processing gal contact "+id);
 			DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
 	        String modifiedDate = (String) contact.getAttrs().get("modifyTimeStamp");
+	        addFileAsStr(attrs);
 	    	if (dsItem.itemId == 0) {
 	    		ZimbraLog.gal.debug("creating new contact "+id);
 	    		dsItem.remoteId = id;
