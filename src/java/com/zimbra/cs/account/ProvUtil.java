@@ -414,7 +414,7 @@ public class ProvUtil implements DebugListener {
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
-        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
+        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE),        
@@ -1598,9 +1598,12 @@ public class ProvUtil implements DebugListener {
 		String sortAscending  = (String) attrs.get("sortAscending");
 		boolean isSortAscending = (sortAscending != null) ? "1".equalsIgnoreCase(sortAscending) : true;    
 
+        /*
         String attrsStr = (String)attrs.get("attrs");
-		String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
-
+        String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
+        */
+        String[] attrsToGet = null;
+		
         String typesStr = (String) attrs.get("types");
         int flags = Provisioning.SA_ACCOUNT_FLAG|Provisioning.SA_ALIAS_FLAG|Provisioning.SA_DISTRIBUTION_LIST_FLAG|Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         
