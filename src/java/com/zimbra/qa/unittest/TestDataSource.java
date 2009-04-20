@@ -107,6 +107,44 @@ public class TestDataSource extends TestCase {
         }
     }
     
+    /**
+     * Tests {@link DataSource#isScheduled()}.
+     */
+    public void testIsScheduled()
+    throws Exception {
+        // Create data source
+        Provisioning prov = Provisioning.getInstance();
+        Account account = TestUtil.getAccount(USER_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceHost, "testhost");
+        attrs.put(Provisioning.A_zimbraDataSourcePort, "0");
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
+        attrs.put(Provisioning.A_zimbraDataSourcePassword, "testpass");
+        attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, DataSource.ConnectionType.cleartext.toString());
+        String name = NAME_PREFIX + " testNegativePollingInterval";
+        DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, name, attrs);
+        
+        // Test polling interval not set.
+        ds = account.getDataSourceByName(name);
+        assertFalse(ds.isScheduled());
+        
+        // Test polling interval = 0.
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "0");
+        prov.modifyDataSource(account, ds.getId(), attrs);
+        ds = account.getDataSourceByName(name);
+        assertFalse(ds.isScheduled());
+
+        // Test polling interval > 0.
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "365d");
+        prov.modifyDataSource(account, ds.getId(), attrs);
+        ds = account.getDataSourceByName(name);
+        assertTrue(ds.isScheduled());
+    }
+    
     public void testMigratePollingInterval()
     throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);

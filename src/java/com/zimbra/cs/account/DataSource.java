@@ -214,6 +214,11 @@ public class DataSource extends AccountProperty {
                 return 0;
             }
         }
+        
+        if (interval < 0) {
+            // Getters return -1 when the interval is not set.
+            return 0;
+        }
 
         // Don't allow anyone to poll more frequently than zimbraDataSourceMinPollingInterval
         // or 10 seconds, whichever is greater.
@@ -270,7 +275,7 @@ public class DataSource extends AccountProperty {
      */
     public boolean isScheduled()
     throws ServiceException {
-        return getPollingInterval() != 0;
+        return getPollingInterval() > 0;
     }
 
     /**

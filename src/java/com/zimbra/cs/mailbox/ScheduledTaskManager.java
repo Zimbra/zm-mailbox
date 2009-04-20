@@ -103,6 +103,9 @@ public class ScheduledTaskManager {
             long delay = Math.abs(sRandom.nextLong()) % task.getIntervalMillis();
             sScheduler.schedule(getKey(task), task, true, task.getIntervalMillis(), delay);
         } else {
+            if (task.getExecTime() == null) {
+                throw ServiceException.FAILURE("Exec time not set for scheduled task.", null);
+            }
             long delay = task.getExecTime().getTime() - System.currentTimeMillis();
             if (delay < 0) {
                 delay = 0;
