@@ -125,7 +125,7 @@ public class TestPreAuthServlet extends TestCase {
         System.out.println(Provisioning.A_zimbraPasswordLockoutFailureTime + ": ");
         String[] failureTime = acct.getMultiAttr(Provisioning.A_zimbraPasswordLockoutFailureTime);
         for (String ft : failureTime)
-            System.out.println("    " + acct.getAttr(Provisioning.A_zimbraPasswordLockoutFailureTime));
+            System.out.println("    " + ft);
         
         return acct;
     }
