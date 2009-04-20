@@ -14,23 +14,21 @@
  */
 package com.zimbra.cs.mailclient.pop3;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.security.auth.login.LoginException;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+
+import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
-import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.util.Ascii;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Arrays;
-
-import org.apache.log4j.Logger;
-import org.apache.commons.codec.binary.Base64;
-
-import javax.security.auth.login.LoginException;
 
 public final class Pop3Connection extends MailConnection {
     private Pop3Capabilities capabilities;
@@ -190,7 +188,7 @@ public final class Pop3Connection extends MailConnection {
         return -1;
     }
 
-    public List<Integer> getMessageSizes() throws IOException {
+    public Integer[] getMessageSizes() throws IOException {
         Integer[] sizes = new Integer[messageCount];
         Pop3Response res = sendCommandCheckStatus(LIST, null);
         try {
@@ -213,7 +211,7 @@ public final class Pop3Connection extends MailConnection {
                 throw new CommandFailedException(
                     LIST, "Invalid LIST response: " + line);
             }
-            return Arrays.asList(sizes);
+            return sizes;
         } finally {
             res.dispose();
         }
@@ -232,7 +230,7 @@ public final class Pop3Connection extends MailConnection {
         return null;
     }
 
-    public List<String> getMessageUids() throws IOException {
+    public String[] getMessageUids() throws IOException {
         String[] uids = new String[messageCount];
         Pop3Response res = sendCommandCheckStatus(UIDL, null);
         try {
@@ -255,7 +253,7 @@ public final class Pop3Connection extends MailConnection {
                 throw new CommandFailedException(
                     LIST, "Invalid UIDL response: " + line);
             }
-            return Arrays.asList(uids);
+            return uids;
         } finally {
             res.dispose();
         }

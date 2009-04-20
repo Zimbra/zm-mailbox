@@ -14,16 +14,17 @@
  */
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
-import org.apache.log4j.BasicConfigurator;
-import com.zimbra.cs.mailclient.pop3.Pop3Connection;
-import com.zimbra.cs.mailclient.pop3.Pop3Config;
-import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
-import com.zimbra.cs.mailclient.util.SSLUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+
+import junit.framework.TestCase;
+
+import org.apache.log4j.BasicConfigurator;
+
+import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
+import com.zimbra.cs.mailclient.pop3.Pop3Config;
+import com.zimbra.cs.mailclient.pop3.Pop3Connection;
+import com.zimbra.cs.mailclient.util.SSLUtil;
 
 public class TestPop3Client extends TestCase {
     private Pop3Config config;
@@ -82,21 +83,21 @@ public class TestPop3Client extends TestCase {
 
     public void testGetMessageSizes() throws Exception {
         login();
-        List<Integer> sizes = connection.getMessageSizes();
+        Integer[] sizes = connection.getMessageSizes();
         assertNotNull(sizes);
-        assertEquals(connection.getMessageCount(), sizes.size());
-        for (int i = 0; i < sizes.size(); i++) {
-            assertEquals(sizes.get(i), (Integer) connection.getMessageSize(i + 1));
+        assertEquals(connection.getMessageCount(), sizes.length);
+        for (int i = 0; i < sizes.length; i++) {
+            assertEquals(sizes[i], (Integer)connection.getMessageSize(i + 1));
         }
     }
 
     public void testGetMessageUids() throws Exception {
         login();
-        List<String> uids = connection.getMessageUids();
+        String[] uids = connection.getMessageUids();
         assertNotNull(uids);
-        assertEquals(connection.getMessageCount(), uids.size());
-        for (int i = 0; i < uids.size(); i++) {
-            assertEquals(uids.get(i), connection.getMessageUid(i + 1));
+        assertEquals(connection.getMessageCount(), uids.length);
+        for (int i = 0; i < uids.length; i++) {
+            assertEquals(uids[i], connection.getMessageUid(i + 1));
         }
     }
 

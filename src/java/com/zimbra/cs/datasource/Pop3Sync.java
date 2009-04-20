@@ -14,44 +14,42 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.cs.mailclient.pop3.Pop3Connection;
-import com.zimbra.cs.mailclient.pop3.Pop3Config;
-import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
-import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.db.DbPop3Message;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.SSLSocketFactoryManager;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.service.RemoteServiceException;
-import com.zimbra.common.localconfig.LC;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.security.auth.login.LoginException;
-import java.io.IOException;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.Set;
-import java.util.List;
-import java.util.Date;
-import java.text.ParseException;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.RemoteServiceException;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.SSLSocketFactoryManager;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
+import com.zimbra.cs.mailclient.pop3.Pop3Config;
+import com.zimbra.cs.mailclient.pop3.Pop3Connection;
+import com.zimbra.cs.mime.ParsedMessage;
 
 public class Pop3Sync extends MailItemImport {
     private final Pop3Connection connection;
     private final boolean attachmentsIndexingEnabled;
-    private final byte[] buffer = new byte[4096];
     private final MailDateFormat mdf = new MailDateFormat();
 
     private static final boolean DEBUG = LC.javamail_pop3_debug.booleanValue();
@@ -138,7 +136,7 @@ public class Pop3Sync extends MailItemImport {
         } catch (Exception e) {
             connection.close();
             throw ServiceException.FAILURE(
-                "Unable to connect to IMAP server: " + dataSource, e);
+                "Unable to connect to POP3 server: " + dataSource, e);
         }
         if (dataSource.leaveOnServer()) {
             checkHasUIDL();
@@ -153,44 +151,47 @@ public class Pop3Sync extends MailItemImport {
     
     private void fetchAndDeleteMessages()
         throws ServiceException, MessagingException, IOException {
-        int count = connection.getMessageCount();
-        LOG.info("Found %d new message(s) on remote server", count);
-        for (int msgno = count; msgno > 0; --msgno) {
+        Integer sizes[] = connection.getMessageSizes();
+        
+        LOG.info("Found %d new message(s) on remote server", sizes.length);
+        for (int msgno = sizes.length; msgno > 0; --msgno) {
             LOG.debug("Fetching message number %d", msgno);
-            fetchAndAddMessage(msgno, null);
+            fetchAndAddMessage(msgno, sizes[msgno - 1], null);
             connection.deleteMessage(msgno);
         }
     }
 
     private void fetchAndRetainMessages()
         throws ServiceException, MessagingException, IOException {
-        List<String> uids = connection.getMessageUids();
+        String[] uids = connection.getMessageUids();
         Set<String> existingUids =
-            DbPop3Message.getMatchingUids(mbox, dataSource, uids);
-        int count = uids.size() - existingUids.size();
+            DbPop3Message.getMatchingUids(mbox, dataSource, Arrays.asList(uids));
+        int count = uids.length - existingUids.size();
+        
         LOG.info("Found %d new message(s) on remote server", count);
         if (count == 0) {
             return; // No new messages
         }
-        if (poppingSelf(uids.get(0))) {
+        if (poppingSelf(uids[0])) {
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
-        for (int msgno = uids.size(); msgno > 0; --msgno) {
-            String uid = uids.get(msgno - 1);
+        for (int msgno = uids.length; msgno > 0; --msgno) {
+            String uid = uids[msgno - 1];
+            
             if (!existingUids.contains(uid)) {
                 LOG.debug("Fetching message with uid %s", uid);
-                fetchAndAddMessage(msgno, uid);
+                fetchAndAddMessage(msgno, connection.getMessageSize(msgno), uid);
             }
         }
     }
 
-    private void fetchAndAddMessage(int msgno, String uid)
+    private void fetchAndAddMessage(int msgno, int size, String uid)
         throws ServiceException, MessagingException, IOException {
         try {
             InputStream is = connection.getMessage(msgno);
             try {
-                addMessage(is, uid);
+                addMessage(is, size, uid);
             } finally {
                 is.close();
             }
@@ -199,21 +200,16 @@ public class Pop3Sync extends MailItemImport {
         }
     }
 
-    private void addMessage(InputStream is, String uid)
+    private void addMessage(InputStream is, int size, String uid)
         throws ServiceException, MessagingException, IOException {
-        File tmp = newTempFile(is);
-        try {
-            ParsedMessage pm = new ParsedMessage(tmp, null, attachmentsIndexingEnabled);
-            Date date = getDateHeader(pm.getMimeMessage(), "Date");
-            if (date != null) {
-                pm.setReceivedDate(date.getTime());
-            }
-            Message msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
-            if (msg != null && uid != null) {
-                DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msg.getId());
-            }
-        } finally {
-            tmp.delete();
+        ParsedMessage pm = new ParsedMessage(is, size, null, attachmentsIndexingEnabled);
+        Date date = getDateHeader(pm.getMimeMessage(), "Date");
+        if (date != null) {
+            pm.setReceivedDate(date.getTime());
+        }
+        Message msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+        if (msg != null && uid != null) {
+            DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msg.getId());
         }
     }
     
@@ -231,26 +227,6 @@ public class Pop3Sync extends MailItemImport {
         return null;
     }
     
-    private File newTempFile(InputStream is) throws IOException {
-        File tmp = File.createTempFile("pop", null);
-        tmp.deleteOnExit();
-        try {
-            OutputStream os = new FileOutputStream(tmp);
-            try {
-                int len;
-                while ((len = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, len);
-                }
-            } finally {
-                os.close();
-            }
-        } catch (IOException e) {
-            tmp.delete();
-            throw e;
-        }
-        return tmp;
-    }
-
     private boolean poppingSelf(String uid)
         throws ServiceException {
         Matcher matcher = PATTERN_ZIMBRA_UID.matcher(uid);
