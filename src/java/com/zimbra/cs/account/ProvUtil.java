@@ -3342,6 +3342,10 @@ public class ProvUtil implements DebugListener {
         RightCommand.AllEffectiveRights allEffRights = mProv.getAllEffectiveRights(
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
         
+        System.out.println(allEffRights.granteeType() + 
+                allEffRights.granteeName() + "(" + allEffRights.granteeId() + ")" + 
+                " has the following rights:");
+        
         for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : allEffRights.rightsByTargetType().entrySet()) {
             RightCommand.RightsByTargetType rbtt = rightsByTargetType.getValue();
             if (!rbtt.hasNoRight())

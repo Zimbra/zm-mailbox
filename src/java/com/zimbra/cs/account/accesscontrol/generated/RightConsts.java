@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090330-2219 */
+    /* build: 5.0 pshao 20090421-1009 */
 
 
     /*
@@ -137,9 +137,14 @@ public class RightConsts {
     public static final String RT_checkHealth = "checkHealth";
 
     /**
-     * check if the account has a specific right
+     * check if the group has any effective rights
      */
-    public static final String RT_checkRight = "checkRight";
+    public static final String RT_checkRightGrp = "checkRightGrp";
+
+    /**
+     * check if the account has a specific or any effective rights
+     */
+    public static final String RT_checkRightUsr = "checkRightUsr";
 
     /**
      * configure admin UI components

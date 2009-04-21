@@ -53,22 +53,28 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
     /**
      * check the checkRight right
      * 
-     * check if the authed admin has the checkRight right on the user it is
+     * check if the authed admin has the checkRight right on the user/group it is
      * checking right for.
      * 
      * @param zsc
      * @param granteeBy
      * @param grantee
      */
-    protected void checkCheckRightRight(ZimbraSoapContext zsc, GranteeBy granteeBy, String grantee) throws ServiceException {
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), GranteeType.GT_USER, granteeBy, grantee);  
-        Account granteeAcct = (Account)granteeEntry;
+    protected void checkCheckRightRight(ZimbraSoapContext zsc, 
+            GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
+        NamedEntry granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), 
+                granteeType, granteeBy, grantee);  
         
         // call checkRight instead of checkAccountRight because there is no 
         // backward compatibility issue for this SOAP.
         //
-        // Note: granteeAcct is the target for the R_checkRight right here
-        checkRight(zsc, granteeAcct, Admin.R_checkRight);
+        // Note: granteeEntry is the target for the R_checkRight{Usr}/{Grp} right here
+        if (granteeType == GranteeType.GT_USER)
+            checkRight(zsc, granteeEntry, Admin.R_checkRightUsr);
+        else if (granteeType == GranteeType.GT_GROUP)
+            checkRight(zsc, granteeEntry, Admin.R_checkRightGrp);
+        else
+            throw ServiceException.PERM_DENIED("invalid grantee type for check right:" + granteeType.getCode());
     }
     
     protected Pair<Boolean, Boolean> parseExpandAttrs(Element request) throws ServiceException {

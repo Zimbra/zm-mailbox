@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090330-2219 */
+    /* build: 5.0 pshao 20090421-1009 */
 
 
     public static AdminRight R_accessGAL;
@@ -46,7 +46,8 @@ public class AdminRights {
     public static AdminRight R_checkExternalAuthConfig;
     public static AdminRight R_checkExternalGALConfig;
     public static AdminRight R_checkHealth;
-    public static AdminRight R_checkRight;
+    public static AdminRight R_checkRightGrp;
+    public static AdminRight R_checkRightUsr;
     public static AdminRight R_configureAdminUI;
     public static AdminRight R_configureCosConstraint;
     public static AdminRight R_configureExternalAuth;
@@ -170,7 +171,8 @@ public class AdminRights {
         R_checkExternalAuthConfig              = rm.getAdminRight(Right.RT_checkExternalAuthConfig);
         R_checkExternalGALConfig               = rm.getAdminRight(Right.RT_checkExternalGALConfig);
         R_checkHealth                          = rm.getAdminRight(Right.RT_checkHealth);
-        R_checkRight                           = rm.getAdminRight(Right.RT_checkRight);
+        R_checkRightGrp                        = rm.getAdminRight(Right.RT_checkRightGrp);
+        R_checkRightUsr                        = rm.getAdminRight(Right.RT_checkRightUsr);
         R_configureAdminUI                     = rm.getAdminRight(Right.RT_configureAdminUI);
         R_configureCosConstraint               = rm.getAdminRight(Right.RT_configureCosConstraint);
         R_configureExternalAuth                = rm.getAdminRight(Right.RT_configureExternalAuth);

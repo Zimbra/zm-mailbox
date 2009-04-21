@@ -1408,9 +1408,26 @@ public class RightChecker {
     }
     
     static class SearchGrantResult {
+        String cn;
         String zimbraId;
         Set<String> objectClass;
         String[] zimbraACE;
+        
+        String dump() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SearchGrantResult: ");
+            sb.append("cn=" + cn);
+            sb.append("zimbraId=" + zimbraId);
+            sb.append(", objectClass=[");
+            for (String oc : objectClass)
+                sb.append(oc + ", ");
+            sb.append("]");
+            sb.append(", zimbraACE=[");
+            for (String ace : zimbraACE)
+                sb.append(ace + ", ");
+            
+            return sb.toString();
+        }
         
         private String[] getMultiAttrString(Map<String, Object> attrs, String attrName) {
             Object obj = attrs.get(attrName);
@@ -1424,15 +1441,19 @@ public class RightChecker {
         }
         
         private SearchGrantResult(Map<String, Object> attrs) {
+            cn = (String)attrs.get(Provisioning.A_cn);
             zimbraId = (String)attrs.get(Provisioning.A_zimbraId);
             objectClass = new HashSet<String>(Arrays.asList(getMultiAttrString(attrs, Provisioning.A_objectClass)));
             zimbraACE = getMultiAttrString(attrs, Provisioning.A_zimbraACE);
         }
         
         private String getTargetId() {
-            return zimbraId;
+            // urg! zimlet does not have an id, use cn.
+            // need to return something for the map key for SearchGrantVisitor.visit
+            // id is only used for grants granted on group-ed entries (account, cr, dl)
+            // in computeRightsOnGroupShape
+            return zimbraId!=null?zimbraId:cn;
         }
-        
     }
     
     private static class SearchGrantVisitor implements LdapUtil.SearchLdapVisitor {
@@ -1481,7 +1502,8 @@ public class RightChecker {
         
         String query = "(&" + granteeQuery + ocQuery + ")";
         
-        String returnAttrs[] = new String[] {Provisioning.A_zimbraId,
+        String returnAttrs[] = new String[] {Provisioning.A_cn,
+                                             Provisioning.A_zimbraId,
                                              Provisioning.A_objectClass,
                                              Provisioning.A_zimbraACE};
         
@@ -1500,7 +1522,8 @@ public class RightChecker {
      * @param sgr
      * @return
      */
-    private static Pair<Entry, ZimbraACL> getGrants(Provisioning prov, SearchGrantResult sgr) {
+    private static Pair<Entry, ZimbraACL> getGrants(Provisioning prov, SearchGrantResult sgr) 
+    throws ServiceException {
         
         TargetType tt;
         if (sgr.objectClass.contains(AttributeClass.calendarResource.getOCName()))
@@ -1523,21 +1546,23 @@ public class RightChecker {
             tt = TargetType.config;
         else if (sgr.objectClass.contains(AttributeClass.aclTarget.getOCName()))
             tt = TargetType.global;
-        else
-            return null;
+        else 
+            throw ServiceException.FAILURE("cannot determine target type from SearchGrantResult. " + sgr.dump(), null);
         
         Entry entry = null;
         try {
-            entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
+            if (tt == TargetType.zimlet)
+                entry = TargetType.lookupTarget(prov, tt, TargetBy.name, sgr.cn);
+            else
+                entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
             if (entry == null) {
                 ZimbraLog.acl.warn("canot find target by id " + sgr.zimbraId);
-                return null;
+                throw ServiceException.FAILURE("canot find target by id " + sgr.zimbraId + ". " + sgr.dump(), null);
             }
             ZimbraACL acl = new ZimbraACL(sgr.zimbraACE, tt, entry.getLabel());
             return new Pair<Entry, ZimbraACL>(entry, acl);
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("canot find target by id " + sgr.zimbraId, e);
-            return null;
+            throw ServiceException.FAILURE("canot find target by id " + sgr.zimbraId + ". " + sgr.dump(), null);
         }
     }
            

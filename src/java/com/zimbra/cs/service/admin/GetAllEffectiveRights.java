@@ -56,8 +56,9 @@ public class GetAllEffectiveRights extends RightDocumentHandler {
             grantee = zsc.getRequestedAccountId();  
         }
         
+        GranteeType gt = GranteeType.fromCode(granteeType);
         if (!grantee.equals(zsc.getAuthtokenAccountId()))
-            checkCheckRightRight(zsc, granteeBy, grantee);
+            checkCheckRightRight(zsc, gt, granteeBy, grantee);
         
         RightCommand.AllEffectiveRights aer = RightCommand.getAllEffectiveRights(
                 Provisioning.getInstance(),
@@ -71,6 +72,10 @@ public class GetAllEffectiveRights extends RightDocumentHandler {
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_checkRight);
+        relatedRights.add(Admin.R_checkRightUsr);
+        relatedRights.add(Admin.R_checkRightGrp);
+        
+        notes.add("If grantee to check for is an account, needs the " + Admin.R_checkRightUsr.getName() + " right");
+        notes.add("If grantee to check for is a group, needs the " + Admin.R_checkRightGrp.getName() + " right");
     }
 }

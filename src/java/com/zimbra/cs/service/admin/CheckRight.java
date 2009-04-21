@@ -70,7 +70,7 @@ public class CheckRight extends RightDocumentHandler {
         GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
         
-        checkCheckRightRight(zsc, granteeBy, grantee);
+        checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
@@ -80,7 +80,7 @@ public class CheckRight extends RightDocumentHandler {
         Map<String, Object> attrs = (eAttrs==null)? null : AdminService.getAttrs(request);
         
         if (!grantee.equals(zsc.getAuthtokenAccountId()))
-            checkCheckRightRight(zsc, granteeBy, grantee);
+            checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
         
         ViaGrant via = new ViaGrant();
         boolean result = RightCommand.checkRight(Provisioning.getInstance(),
@@ -113,7 +113,7 @@ public class CheckRight extends RightDocumentHandler {
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_checkRight);
+        relatedRights.add(Admin.R_checkRightUsr);
     }
 
 }

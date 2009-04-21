@@ -648,12 +648,14 @@ public class RightCommand {
     }
     
     public static class AllEffectiveRights {
+        String mGranteeType;
         String mGranteeId;
         String mGranteeName;
         
         Map<TargetType, RightsByTargetType> mRightsByTargetType = new HashMap<TargetType, RightsByTargetType>();
         
-        AllEffectiveRights(String granteeId, String granteeName) {
+        AllEffectiveRights(String granteeType, String granteeId, String granteeName) {
+            mGranteeType = granteeType;
             mGranteeId = granteeId;
             mGranteeName = granteeName;
             
@@ -664,6 +666,12 @@ public class RightCommand {
                     mRightsByTargetType.put(tt, new RightsByTargetType());
             }
         }
+        
+        public String granteeType() { return mGranteeType; }
+        
+        public String granteeId() { return mGranteeId; }
+        
+        public String granteeName() { return mGranteeName; }
         
         public Map<TargetType, RightsByTargetType> rightsByTargetType() { return mRightsByTargetType; }
         
@@ -694,10 +702,11 @@ public class RightCommand {
         
         public static AllEffectiveRights fromXML(Element parent) throws ServiceException {
             Element eGrantee = parent.getElement(AdminConstants.E_GRANTEE);
+            String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
             String granteeId = eGrantee.getAttribute(AdminConstants.A_ID);
             String granteeName = eGrantee.getAttribute(AdminConstants.A_NAME);
         
-            AllEffectiveRights aer = new AllEffectiveRights(granteeId, granteeName);
+            AllEffectiveRights aer = new AllEffectiveRights(granteeType, granteeId, granteeName);
             
             for (Element eTarget : parent.listElements(AdminConstants.E_TARGET)) {
                 TargetType targetType = TargetType.fromString(eTarget.getAttribute(AdminConstants.A_TYPE));
@@ -744,6 +753,7 @@ public class RightCommand {
             // grantee
             //
             Element eGrantee = parent.addElement(AdminConstants.E_GRANTEE);
+            eGrantee.addAttribute(AdminConstants.A_TYPE, mGranteeType);
             eGrantee.addAttribute(AdminConstants.A_ID, mGranteeId);
             eGrantee.addAttribute(AdminConstants.A_NAME, mGranteeName);
             
@@ -894,7 +904,7 @@ public class RightCommand {
         GranteeType gt = GranteeType.fromCode(granteeType);
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         
-        AllEffectiveRights aer = new AllEffectiveRights(granteeEntry.getId(), granteeEntry.getName());
+        AllEffectiveRights aer = new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
         RightChecker.getAllEffectiveRights(granteeEntry, expandSetAttrs, expandGetAttrs, aer);
         return aer;
     }

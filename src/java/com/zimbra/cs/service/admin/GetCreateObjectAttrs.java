@@ -62,7 +62,7 @@ public class GetCreateObjectAttrs extends RightDocumentHandler {
         String grantee = zsc.getRequestedAccountId();
         
         if (!grantee.equals(zsc.getAuthtokenAccountId()))
-            checkCheckRightRight(zsc, granteeBy, grantee);
+            checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
         
         RightCommand.EffectiveRights er = RightCommand.getCreateObjectAttrs(Provisioning.getInstance(),
                                                                             targetType,
@@ -79,6 +79,6 @@ public class GetCreateObjectAttrs extends RightDocumentHandler {
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_checkRight);
+        relatedRights.add(Admin.R_checkRightUsr);
     }
 }
