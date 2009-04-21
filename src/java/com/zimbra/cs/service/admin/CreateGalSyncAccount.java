@@ -70,6 +70,10 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
 	    GalMode type = GalMode.fromString(typeStr);
 	    Domain domain = prov.getDomainByName(domainStr);
+	    
+	    if (domain == null)
+	    	throw AccountServiceException.NO_SUCH_DOMAIN(domainStr);
+	    
 	    Account account = null;
 	    try {
 	    	account = prov.get(AccountBy.fromString(acctKey), acctValue, zsc.getAuthToken());
