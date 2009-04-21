@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.dom4j.Element;
+import org.dom4j.QName;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -91,14 +92,21 @@ public class CalDavClient extends WebDavClient {
 		return mCalendarHomeSet;
 	}
 	
-	public Map<String,String> getCalendars() throws IOException, DavException {
-		HashMap<String,String> calendars = new HashMap<String,String>();
+	private static Collection<QName> CALENDAR_PROPS;
+	static {
+		CALENDAR_PROPS = new ArrayList<QName>();
+		CALENDAR_PROPS.add(DavElements.E_DISPLAYNAME);
+		CALENDAR_PROPS.add(DavElements.E_RESOURCETYPE);
+		CALENDAR_PROPS.add(DavElements.E_GETCTAG);
+	}
+	public Map<String,DavObject> getCalendars() throws IOException, DavException {
+		HashMap<String,DavObject> calendars = new HashMap<String,DavObject>();
 		for (String calHome : mCalendarHomeSet) {
-			for (DavObject obj : listObjects(calHome, null)) {
+			for (DavObject obj : listObjects(calHome, CALENDAR_PROPS)) {
 				String href = obj.getHref();
 				String displayName = obj.getDisplayName();
 				if (obj.isCalendarFolder() && displayName != null && href != null)
-					calendars.put(displayName, href);
+					calendars.put(displayName, obj);
 			}
 		}
 		return calendars;

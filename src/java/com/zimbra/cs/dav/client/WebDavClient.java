@@ -66,17 +66,19 @@ public class WebDavClient {
 	public Collection<DavObject> listObjects(String path, Collection<QName> extraProps) throws IOException, DavException {
 		DavRequest propfind = DavRequest.PROPFIND(path);
 		propfind.setDepth(Depth.one);
-		propfind.addRequestProp(DavElements.E_DISPLAYNAME);
-		propfind.addRequestProp(DavElements.E_RESOURCETYPE);
-		propfind.addRequestProp(DavElements.E_CREATIONDATE);
-		propfind.addRequestProp(DavElements.E_GETCONTENTLENGTH);
-		propfind.addRequestProp(DavElements.E_GETCONTENTLANGUAGE);
-		propfind.addRequestProp(DavElements.E_GETCONTENTTYPE);
-		propfind.addRequestProp(DavElements.E_GETETAG);
-		propfind.addRequestProp(DavElements.E_GETLASTMODIFIED);
-		if (extraProps != null)
+		if (extraProps == null) {
+			propfind.addRequestProp(DavElements.E_DISPLAYNAME);
+			propfind.addRequestProp(DavElements.E_RESOURCETYPE);
+			propfind.addRequestProp(DavElements.E_CREATIONDATE);
+			propfind.addRequestProp(DavElements.E_GETCONTENTLENGTH);
+			propfind.addRequestProp(DavElements.E_GETCONTENTLANGUAGE);
+			propfind.addRequestProp(DavElements.E_GETCONTENTTYPE);
+			propfind.addRequestProp(DavElements.E_GETETAG);
+			propfind.addRequestProp(DavElements.E_GETLASTMODIFIED);
+		} else {
 			for (QName p : extraProps)
 				propfind.addRequestProp(p);
+		}
 		return sendMultiResponseRequest(propfind);
 	}
 	

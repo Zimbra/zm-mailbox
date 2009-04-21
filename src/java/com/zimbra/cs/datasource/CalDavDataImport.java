@@ -29,8 +29,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.client.CalDavClient;
+import com.zimbra.cs.dav.client.DavObject;
 import com.zimbra.cs.dav.client.CalDavClient.Appointment;
 import com.zimbra.cs.dav.client.DavRequest;
 import com.zimbra.cs.db.DbDataSource;
@@ -54,6 +56,7 @@ public class CalDavDataImport extends MailItemImport {
 	private static final String METADATA_TYPE_FOLDER = "f";
 	private static final String METADATA_TYPE_APPOINTMENT = "a";
 	private static final String METADATA_KEY_ETAG = "e";
+	private static final String METADATA_KEY_CTAG = "c";
 	private static final int DEFAULT_FOLDER_FLAGS = Flag.flagsToBitmask("#");
 	
 	private CalDavClient mClient;
@@ -172,7 +175,7 @@ public class CalDavDataImport extends MailItemImport {
     	ArrayList<Integer> ret = new ArrayList<Integer>();
     	DataSource ds = getDataSource();
 		CalDavClient client = getClient();
-		Map<String,String> calendars = client.getCalendars();
+		Map<String,DavObject> calendars = client.getCalendars();
 		OperationContext octxt = new Mailbox.OperationContext(mbox);
 		Folder rootFolder = mbox.getFolderById(octxt, getRootFolderId(ds));
 		HashMap<String,DataSourceItem> allFolders = getAllFolderMappings(ds);
@@ -181,7 +184,9 @@ public class CalDavDataImport extends MailItemImport {
 		for (int itemId : mbox.getTombstones(lastSync).getAll())
 			deleted.add(itemId);
 		for (String name : calendars.keySet()) {
-			String url = calendars.get(name);
+			DavObject obj = calendars.get(name);
+			String ctag = obj.getPropertyText(DavElements.E_GETCTAG);
+			String url = obj.getHref();
 			DataSourceItem f = allFolders.get(url);
 			if (f == null)
 				f = new DataSourceItem(0, 0, url, null);
@@ -222,6 +227,8 @@ public class CalDavDataImport extends MailItemImport {
 				f.folderId = folder.getFolderId();
 				f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
+				if (ctag != null)
+					f.md.put(METADATA_KEY_CTAG, ctag);
 				f.remoteId = url;
 		    	mbox.setSyncDate(octxt, folder.getId(), mbox.getLastChangeID());
 				DbDataSource.addMapping(ds, f);
@@ -231,6 +238,8 @@ public class CalDavDataImport extends MailItemImport {
 				f.remoteId = url;
 	    		f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
+				if (ctag != null)
+					f.md.put(METADATA_KEY_CTAG, ctag);
 				DbDataSource.addMapping(ds, f);
 			}
 			String fname = folder.getName();
@@ -242,7 +251,14 @@ public class CalDavDataImport extends MailItemImport {
         			ZimbraLog.datasource.warn("folder rename failed", e);
         		}
 			}
-			ret.add(f.itemId);
+			if (ctag != null) {
+				String oldctag = f.md.get(METADATA_KEY_CTAG, null);
+				if (!ctag.equals(oldctag)) {
+					ret.add(f.itemId);
+					f.md.put(METADATA_KEY_CTAG, ctag);
+					DbDataSource.updateMapping(ds, f);
+				}
+			}
 			allFolders.remove(url);
 		}
 		if (!allFolders.isEmpty()) {
@@ -426,12 +442,14 @@ public class CalDavDataImport extends MailItemImport {
     }
     private MailItem applyRemoteItem(RemoteItem remoteItem, Folder where) throws ServiceException, IOException {
     	if (!(remoteItem instanceof RemoteCalendarItem)) {
-    		ZimbraLog.datasource.warn("applyRemoteItem: note a calendar item: ", remoteItem);
+    		ZimbraLog.datasource.warn("applyRemoteItem: not a calendar item: ", remoteItem);
     		return null;
     	}
     	RemoteCalendarItem item = (RemoteCalendarItem) remoteItem;
     	DataSource ds = getDataSource();
     	DataSourceItem dsItem = DbDataSource.getReverseMapping(ds, item.href);
+    	OperationContext octxt = new Mailbox.OperationContext(mbox);
+    	MailItem mi = null;
     	boolean isStale = false;
     	if (dsItem.md == null) {
     		dsItem.md = new Metadata();
@@ -441,6 +459,11 @@ public class CalDavDataImport extends MailItemImport {
     		isStale = true;
     	} else {
         	String etag = dsItem.md.get(METADATA_KEY_ETAG, null);
+        	try {
+        		mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
+        	} catch (MailServiceException.NoSuchItemException se) {
+        		ZimbraLog.datasource.warn("applyRemoteItem: calendar item not found: ", remoteItem);
+        	}
         	if (item.etag == null) {
         		ZimbraLog.datasource.warn("No Etag returned for item %s", item.href);
         		isStale = true;
@@ -450,9 +473,9 @@ public class CalDavDataImport extends MailItemImport {
         	} else {
         		isStale = !item.etag.equals(etag);
         	}
+        	if (mi == null)
+        		isStale = true;
     	}
-    	OperationContext octxt = new Mailbox.OperationContext(mbox);
-    	MailItem mi = null;
     	if (isStale && item.status == Status.deleted) {
         	ZimbraLog.datasource.debug("Deleting appointment %s", item.href);
         	mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
@@ -505,7 +528,6 @@ public class CalDavDataImport extends MailItemImport {
     		DbDataSource.addMapping(ds, dsItem);
     	} else {
         	ZimbraLog.datasource.debug("Appointment up to date %s", item.href);
-    		mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
     	}
     	return mi;
     }
