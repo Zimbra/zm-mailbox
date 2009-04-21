@@ -196,6 +196,36 @@ public class DbDataSource {
         }
     }
 
+    public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("DELETE FROM ");
+            sb.append(getTableName(mbox));
+            sb.append(" WHERE ");
+            sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+            sb.append(" data_source_id = ? AND");
+            sb.append(" item_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int i = 1;
+            i = DbMailItem.setMailboxId(stmt, mbox, i);
+            stmt.setString(i++, ds.getId());
+            stmt.setInt(i++, itemId);
+            int numRows = stmt.executeUpdate();
+            conn.commit();
+            ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
     	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();

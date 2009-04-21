@@ -65,9 +65,9 @@ public class CalDavDataImport extends MailItemImport {
     public void importData(List<Integer> folderIds, boolean fullSync)
     throws ServiceException {
     	try {
+        	mbox.beginTrackingSync();
         	if (folderIds == null)
         		folderIds = syncFolders();
-        	mbox.beginTrackingSync();
         	OperationContext octxt = new Mailbox.OperationContext(mbox);
         	for (int fid : folderIds) {
             	Folder syncFolder = mbox.getFolderById(octxt, fid);
@@ -159,6 +159,15 @@ public class CalDavDataImport extends MailItemImport {
     	return ds.getFolderId();
     }
     
+    protected HashMap<String,DataSourceItem> getAllFolderMappings(DataSource ds) throws ServiceException {
+		Collection<DataSourceItem> allFolders = DbDataSource.getAllMappingsInFolder(ds, getRootFolderId(ds));
+		HashMap<String,DataSourceItem> folders = new HashMap<String,DataSourceItem>();
+		for (DataSourceItem f : allFolders)
+			if (f.remoteId != null)
+				folders.put(f.remoteId, f);
+		return folders;
+    }
+    
     private List<Integer> syncFolders() throws ServiceException, IOException, DavException {
     	ArrayList<Integer> ret = new ArrayList<Integer>();
     	DataSource ds = getDataSource();
@@ -166,11 +175,26 @@ public class CalDavDataImport extends MailItemImport {
 		Map<String,String> calendars = client.getCalendars();
 		OperationContext octxt = new Mailbox.OperationContext(mbox);
 		Folder rootFolder = mbox.getFolderById(octxt, getRootFolderId(ds));
+		HashMap<String,DataSourceItem> allFolders = getAllFolderMappings(ds);
+		List<Integer> deleted = new ArrayList<Integer>();
+    	int lastSync = (int)rootFolder.getLastSyncDate();
+		for (int itemId : mbox.getTombstones(lastSync).getAll())
+			deleted.add(itemId);
 		for (String name : calendars.keySet()) {
 			String url = calendars.get(name);
-			DataSourceItem f = DbDataSource.getReverseMapping(ds, url);
+			DataSourceItem f = allFolders.get(url);
+			if (f == null)
+				f = new DataSourceItem(0, 0, url, null);
 			Folder folder = null;
 			if (f.itemId != 0) {
+				// check if the folder was deleted
+				if (deleted.contains(f.itemId)) {
+					allFolders.remove(url);
+					DbDataSource.deleteMapping(ds, f.itemId);
+					DbDataSource.deleteAllMappingsInFolder(ds, f.itemId);
+					deleteRemoteFolder(url);
+					continue;
+				}
 				// check if the folder is valid
 				try {
 					folder = mbox.getFolderById(octxt, f.itemId);
@@ -195,6 +219,7 @@ public class CalDavDataImport extends MailItemImport {
 					folder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, DEFAULT_FOLDER_FLAGS, (byte)0, null);
 				
 				f.itemId = folder.getId();
+				f.folderId = folder.getFolderId();
 				f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
 				f.remoteId = url;
@@ -202,6 +227,7 @@ public class CalDavDataImport extends MailItemImport {
 				DbDataSource.addMapping(ds, f);
 			} else if (f.md == null) {
 	    		ZimbraLog.datasource.warn("syncFolders: empty metadata for item %d", f.itemId);
+				f.folderId = folder.getFolderId();
 				f.remoteId = url;
 	    		f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
@@ -217,8 +243,30 @@ public class CalDavDataImport extends MailItemImport {
         		}
 			}
 			ret.add(f.itemId);
+			allFolders.remove(url);
+		}
+		if (!allFolders.isEmpty()) {
+			// handle deleted folders
+			ArrayList<Integer> fids = new ArrayList<Integer>();
+			int[] fidArray = new int[allFolders.size()];
+			int i = 0;
+			for (DataSourceItem f : allFolders.values()) {
+				fids.add(f.itemId);
+				fidArray[i++] = f.itemId;
+				DbDataSource.deleteAllMappingsInFolder(ds, f.itemId);
+			}
+			DbDataSource.deleteMappings(ds, fids);
+			try {
+				mbox.delete(octxt, fidArray, MailItem.TYPE_FOLDER, null);
+			} catch (ServiceException e) {
+    			ZimbraLog.datasource.warn("folder delete failed", e);
+			}
 		}
 		return ret;
+    }
+    private void deleteRemoteFolder(String url) throws ServiceException, IOException, DavException {
+		ZimbraLog.datasource.debug("deleteRemoteFolder: deleting remote folder %s", url);
+		getClient().sendRequest(DavRequest.DELETE(url));
     }
     private boolean pushDelete(Collection<Integer> itemIds) throws ServiceException, IOException, DavException {
     	DataSource ds = getDataSource();
@@ -453,6 +501,7 @@ public class CalDavDataImport extends MailItemImport {
     		mi = mbox.setCalendarItem(octxt, where.getId(), 0, 0,
     				main, exceptions, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
     		dsItem.itemId = mi.getId();
+    		dsItem.folderId = mi.getFolderId();
     		DbDataSource.addMapping(ds, dsItem);
     	} else {
         	ZimbraLog.datasource.debug("Appointment up to date %s", item.href);

@@ -324,6 +324,10 @@ public interface CalendarObject {
         public String getUid() {
             return mUid;
         }
+        
+        public boolean hasContent(DavContext ctxt) {
+        	return true;
+        }
     }
 	
 	public static class RemoteCalendarObject extends DavResource implements CalendarObject {
