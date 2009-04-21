@@ -32,10 +32,11 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.datasource.PopMessage;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
@@ -184,8 +185,18 @@ public class Pop3Sync extends MailItemImport {
         try {
             InputStream is = connection.getMessage(msgno);
             ParsedMessage pm = new ParsedMessage(is, size, null, attachmentsIndexingEnabled);
-            Message msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+            Message msg = null;
+            
+            if (isOffline()) {
+                msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+            } else {
+                Integer localId = getFirstLocalId(RuleManager.applyRulesToIncomingMessage(
+                    mbox, pm, dataSource.getEmailAddress(),
+                    new SharedDeliveryContext(), dataSource.getFolderId()));
 
+                if (localId != null)
+                    msg = mbox.getMessageById(null, localId);
+            }
             if (msg != null && uid != null) {
                 PopMessage msgTracker = new PopMessage(dataSource, msg.getId(), uid);
                 
