@@ -76,6 +76,7 @@ public class ImapImport extends MailItemImport {
     private final UidFetch uidFetch;
     private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
     private IMAPStore store;
+    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|]");
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_MESSAGE_MEMORY_SIZE =
@@ -502,6 +503,7 @@ public class ImapImport extends MailItemImport {
         	}
         	relativePath = StringUtil.join("/", parts);
         }
+        relativePath = ILLEGAL_FOLDER_CHARS.matcher(relativePath).replaceAll("_");
 
         String zimbraPath = ds.matchKnownLocalPath(relativePath);
         if (zimbraPath == null) {
