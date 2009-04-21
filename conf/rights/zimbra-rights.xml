@@ -96,8 +96,8 @@
   </desc>
 </right>
 
-<right name="checkRight" type="preset" targetType="account">
-  <desc>check if the account has a specific right</desc>
+<right name="checkRightUsr" type="preset" targetType="account">
+  <desc>check if the account has a specific or any effective rights</desc>
 </right> 
 
 <right name="getMailboxInfo" type="preset" targetType="account">
@@ -373,6 +373,10 @@
                  distribution list rights
 ========================================================
 -->
+
+<right name="checkRightGrp" type="preset" targetType="dl">
+  <desc>check if the group has any effective rights</desc>
+</right> 
 
 <right name="getDistributionList" type="getAttrs" targetType="dl">
   <desc>get all distribution list attributes</desc>
