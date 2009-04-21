@@ -255,39 +255,43 @@ public class GalSyncAccountUtil {
             cli.setDataSourceId(cl.getOptionValue('d'));
 		setup();
 		int cmd = lookupCmd(args[0]);
-		switch (cmd) {
-		case TRICKLE_SYNC:
-			cli.syncGalAccount();
-			break;
-		case FULL_SYNC:
-			cli.setFullSync();
-			cli.syncGalAccount();
-			break;
-		case FORCE_SYNC:
-			cli.setForceSync();
-			cli.syncGalAccount();
-			break;
-		case CREATE_ACCOUNT:
-			String acctName = cl.getOptionValue('a');
-			String dsName = cl.getOptionValue('n');
-			String domain = cl.getOptionValue('x');
-			String type = cl.getOptionValue('t');
-			String folderName = cl.getOptionValue('f');
-			String pollingInterval = cl.getOptionValue('p');
-			if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
+		try {
+			switch (cmd) {
+			case TRICKLE_SYNC:
+				cli.syncGalAccount();
+				break;
+			case FULL_SYNC:
+				cli.setFullSync();
+				cli.syncGalAccount();
+				break;
+			case FORCE_SYNC:
+				cli.setForceSync();
+				cli.syncGalAccount();
+				break;
+			case CREATE_ACCOUNT:
+				String acctName = cl.getOptionValue('a');
+				String dsName = cl.getOptionValue('n');
+				String domain = cl.getOptionValue('x');
+				String type = cl.getOptionValue('t');
+				String folderName = cl.getOptionValue('f');
+				String pollingInterval = cl.getOptionValue('p');
+				if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
+					usage();
+				for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
+					System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
+				break;
+			case DELETE_ACCOUNT:
+				String name = cl.getOptionValue('a');
+				String id = cl.getOptionValue('i');
+				if (name == null && id == null)
+					usage();
+				cli.deleteGalSyncAccount(name, id);
+				break;
+			default:
 				usage();
-			for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
-				System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
-			break;
-		case DELETE_ACCOUNT:
-			String name = cl.getOptionValue('a');
-			String id = cl.getOptionValue('i');
-			if (name == null && id == null)
-				usage();
-			cli.deleteGalSyncAccount(name, id);
-			break;
-		default:
-			usage();
+			}
+		} catch (ServiceException se) {
+			System.out.println("Error: "+se.getMessage());
 		}
 	}
 }
