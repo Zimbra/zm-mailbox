@@ -77,6 +77,7 @@ public class DavElements {
 	public static final String P_CURRENT_USER_PRINCIPAL = "current-user-principal";
 	public static final String P_CURRENT_USER_PRIVILEGE_SET = "current-user-privilege-set";
 	
+	public static final String P_DEFAULT_CALENDAR = "default-calendar";
 	public static final String P_DENY = "deny";
 	public static final String P_DENY_BEFORE_GRANT = "deny-before-grant";
 	public static final String P_DEPTH = "depth";
@@ -251,6 +252,7 @@ public class DavElements {
 	public static final QName E_CURRENT_USER_PRINCIPAL = QName.get(P_CURRENT_USER_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_CURRENT_USER_PRIVILEGE_SET = QName.get(P_CURRENT_USER_PRIVILEGE_SET, WEBDAV_NS);
 	
+	public static final QName E_DEFAULT_CALENDAR = QName.get(P_DEFAULT_CALENDAR, YAHOO_NS);
 	public static final QName E_DENY = QName.get(P_DENY, WEBDAV_NS);
 	public static final QName E_DENY_BEFORE_GRANT = QName.get(P_DENY_BEFORE_GRANT, WEBDAV_NS);
 	public static final QName E_DEPTH = QName.get(P_DEPTH, WEBDAV_NS);
