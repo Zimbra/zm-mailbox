@@ -63,17 +63,21 @@ public class FlushCache extends AdminDocumentHandler {
         
         Element eCache = request.getElement(AdminConstants.E_CACHE);
         String type = eCache.getAttribute(AdminConstants.A_TYPE);
-        
-	    if (type.equals("zimlet")) {
+        boolean nonEntry = false; 
+	    if (type.contains("zimlet")) {
 	        FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
 	    }
-        if (type.equals("skin")) {
+        if (type.contains("skin")) {
+        	nonEntry = true;
             SkinUtil.flushSkinCache();
             FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
         }
-        else if (type.equals("locale"))
+        if (type.contains("locale")) {
+        	nonEntry = true;
             L10nUtil.flushLocaleCache();
-        else {
+        }
+        
+        if(!nonEntry) {
             List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
             CacheEntry[] entries = null;
             if (eEntries.size() > 0) {

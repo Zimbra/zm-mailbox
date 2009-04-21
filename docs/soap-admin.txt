@@ -2023,6 +2023,7 @@ in soap-waitset.txt
   entries of the type for that its cache entry is to be flushed.  
   If no <entry> is given, all enties of the type will be flushed from cache.
 
+  type can contain a combination of skin, locale and zimlet. E.g. type='skin,locale,zimlet' or type='zimletskin'
 <FlushCacheResponse/>
 
 
