@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090419-1205 */
+    /* build: 5.0 pshao 20090421-1355 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -520,6 +520,24 @@ public class ZAttrProvisioning {
         public boolean isDateDesc() { return this == dateDesc;}
     }
 
+    public static enum PrefConvReadingPaneLocation {
+        right("right"),
+        bottom("bottom"),
+        off("off");
+        private String mValue;
+        private PrefConvReadingPaneLocation(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefConvReadingPaneLocation fromString(String s) throws ServiceException {
+            for (PrefConvReadingPaneLocation value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isRight() { return this == right;}
+        public boolean isBottom() { return this == bottom;}
+        public boolean isOff() { return this == off;}
+    }
+
     public static enum PrefDedupeMessagesSentToSelf {
         dedupeAll("dedupeAll"),
         dedupeNone("dedupeNone"),
@@ -648,7 +666,8 @@ public class ZAttrProvisioning {
 
     public static enum PrefReadingPaneLocation {
         right("right"),
-        bottom("bottom");
+        bottom("bottom"),
+        off("off");
         private String mValue;
         private PrefReadingPaneLocation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -660,6 +679,7 @@ public class ZAttrProvisioning {
         }
         public boolean isRight() { return this == right;}
         public boolean isBottom() { return this == bottom;}
+        public boolean isOff() { return this == off;}
     }
 
     public static enum PrefReplyIncludeOriginalText {
@@ -4911,6 +4931,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefConversationOrder = "zimbraPrefConversationOrder";
 
     /**
+     * where the message reading pane is displayed in conv view
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public static final String A_zimbraPrefConvReadingPaneLocation = "zimbraPrefConvReadingPaneLocation";
+
+    /**
      * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
      */
     @ZAttr(id=144)
@@ -5450,13 +5478,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
 
     /**
-     * whether reading pane is shown by default
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor of
+     * zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation.
+     * Orig desc: whether reading pane is shown by default
      */
     @ZAttr(id=394)
     public static final String A_zimbraPrefReadingPaneEnabled = "zimbraPrefReadingPaneEnabled";
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
      * @since ZCS 6.0.0_BETA1
      */

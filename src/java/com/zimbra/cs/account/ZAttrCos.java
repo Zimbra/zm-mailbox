@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090419-1205 */
+    /* build: 5.0 pshao 20090421-1355 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14847,6 +14847,137 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @return zimbraPrefConvReadingPaneLocation, or ZAttrProvisioning.PrefConvReadingPaneLocation.bottom if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public ZAttrProvisioning.PrefConvReadingPaneLocation getPrefConvReadingPaneLocation() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefConvReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefConvReadingPaneLocation.bottom : ZAttrProvisioning.PrefConvReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefConvReadingPaneLocation.bottom; }
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @return zimbraPrefConvReadingPaneLocation, or "bottom" if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public String getPrefConvReadingPaneLocationAsString() {
+        return getAttr(Provisioning.A_zimbraPrefConvReadingPaneLocation, "bottom");
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @param zimbraPrefConvReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public void setPrefConvReadingPaneLocation(ZAttrProvisioning.PrefConvReadingPaneLocation zimbraPrefConvReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, zimbraPrefConvReadingPaneLocation.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @param zimbraPrefConvReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public Map<String,Object> setPrefConvReadingPaneLocation(ZAttrProvisioning.PrefConvReadingPaneLocation zimbraPrefConvReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, zimbraPrefConvReadingPaneLocation.toString());
+        return attrs;
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @param zimbraPrefConvReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public void setPrefConvReadingPaneLocationAsString(String zimbraPrefConvReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, zimbraPrefConvReadingPaneLocation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @param zimbraPrefConvReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public Map<String,Object> setPrefConvReadingPaneLocationAsString(String zimbraPrefConvReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, zimbraPrefConvReadingPaneLocation);
+        return attrs;
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public void unsetPrefConvReadingPaneLocation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the message reading pane is displayed in conv view
+     *
+     * <p>Valid values: [bottom, off, right]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1010)
+    public Map<String,Object> unsetPrefConvReadingPaneLocation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, "");
+        return attrs;
+    }
+
+    /**
      * order of messages displayed within a conversation
      *
      * <p>Valid values: [dateDesc, dateAsc]
@@ -19286,7 +19417,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether reading pane is shown by default
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor of
+     * zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation.
+     * Orig desc: whether reading pane is shown by default
      *
      * @return zimbraPrefReadingPaneEnabled, or true if unset
      */
@@ -19296,7 +19429,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether reading pane is shown by default
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor of
+     * zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation.
+     * Orig desc: whether reading pane is shown by default
      *
      * @param zimbraPrefReadingPaneEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19309,7 +19444,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether reading pane is shown by default
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor of
+     * zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation.
+     * Orig desc: whether reading pane is shown by default
      *
      * @param zimbraPrefReadingPaneEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19323,7 +19460,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether reading pane is shown by default
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor of
+     * zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation.
+     * Orig desc: whether reading pane is shown by default
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -19335,7 +19474,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether reading pane is shown by default
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor of
+     * zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation.
+     * Orig desc: whether reading pane is shown by default
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19348,9 +19489,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefReadingPaneLocation, or ZAttrProvisioning.PrefReadingPaneLocation.bottom if unset and/or has invalid value
      *
@@ -19362,9 +19503,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefReadingPaneLocation, or "bottom" if unset
      *
@@ -19376,9 +19517,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19393,9 +19534,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19411,9 +19552,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19428,9 +19569,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19446,9 +19587,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19462,9 +19603,9 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the message reading pane is displayed
+     * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

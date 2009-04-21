@@ -1890,8 +1890,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The registered name of the Zimbra Analyzer Extension for this account to use</desc>
 </attr>
 
-<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" deprecatedSince="6.0.0_BETA2">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <deprecateDesc>deprecated in favor of zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation</deprecateDesc>
   <desc>whether reading pane is shown by default</desc>
 </attr>
 
@@ -4029,9 +4030,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Zimlet Util will set this attribute based on the value in zimlet definition XML file</desc>
 </attr>
 
-<attr id="804" name="zimbraPrefReadingPaneLocation" type="enum" value="bottom,right" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
+<attr id="804" name="zimbraPrefReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
   <defaultCOSValue>bottom</defaultCOSValue>
-  <desc>where the message reading pane is displayed</desc>
+  <desc>where the message reading pane is displayed in list views</desc>
 </attr>
 
 <attr id="806" name="zimbraFeatureConfirmationPageEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_BETA1">
@@ -4381,6 +4382,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1009" name="zimbraRedoLogCrashRecoveryLookbackSec" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>10</globalConfigValue>
   <desc>how many seconds worth of committed redo ops to re-execute during crash recovery; related to mysql parameter innodb_flush_log_at_trx_commit=0</desc>
+</attr>
+
+<attr id="1010" name="zimbraPrefConvReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
+  <defaultCOSValue>bottom</defaultCOSValue>
+  <desc>where the message reading pane is displayed in conv view</desc>
 </attr>
 
 </attrs>
