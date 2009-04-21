@@ -351,6 +351,9 @@ public class L10nUtil {
     }
     
     public static void flushLocaleCache() {
+    	if (ZimbraLog.misc.isDebugEnabled()) {
+    		ZimbraLog.misc.debug("L10nUtil: flushing locale cache");
+    	}
         LocalizedClientLocales.flushCache();
     }
     
