@@ -2291,3 +2291,12 @@ Notes:
     is a significant change in the configuration, such as filter, attribute map,
     or search base.
     
+----------------------------
+ 
+<DeleteGalSyncAccountRequest>
+  <account by="id|name">...</account>
+</DeleteGalSyncAccountRequest>
+
+<DeleteGalSyncAccountResponse/>
+
+Remove its zimbraGalAccountId from the domain, then deletes the account.

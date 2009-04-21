@@ -19,10 +19,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -48,10 +48,14 @@ public class DeleteGalSyncAccount extends AdminDocumentHandler {
         String acctValue = acctElem.getText();
 
         Account account = prov.get(AccountBy.fromString(acctKey), acctValue);
+		if (account == null)
+			throw AccountServiceException.NO_SUCH_ACCOUNT(acctValue);
 		String id = account.getId();
 		HashSet<String> acctIds = new HashSet<String>();
 		Domain domain = prov.getDomain(account);
 		Collections.addAll(acctIds, domain.getGalAccountId());
+		if (!acctIds.contains(id))
+			throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 		acctIds.remove(id);
 		HashMap<String,Object> attrs = new HashMap<String,Object>();
 		attrs.put(Provisioning.A_zimbraGalAccountId, acctIds);
