@@ -29,6 +29,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -2648,8 +2650,16 @@ public class ZMailboxUtil implements DebugListener {
         } else {
             encoded.append(unencoded);
         }
-        if (queryString != null)
-            encoded.append(queryString);
+        if (queryString != null) {
+            String encodedQuery;
+            try {
+                URI uri = new URI(null, null, null, queryString.substring(1), null); 
+                encodedQuery = uri.toString();  
+            } catch (URISyntaxException e) {
+                encodedQuery = queryString;
+            }
+            encoded.append(encodedQuery);
+        }    
         return encoded.toString();
     }
 
