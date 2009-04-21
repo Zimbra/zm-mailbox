@@ -622,11 +622,12 @@ import and export of addressbook.
 ----------------------------
 
 
- <SearchGalRequest [type="{type}"]>
+ <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]>
+  [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ] 
    <name>...</name>
  </SearchGalRequest>
  
- <SearchGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
+ <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </SearchGalResponse>
 
@@ -646,6 +647,8 @@ import and export of addressbook.
            "all" for combination of both types
            if omitted, defaults to "all"
            
+  see SearchRequest for use of cursor.
+  
 ----------------------------
 
  <AutoCompleteGalRequest [type="{type}"] limit="limit-returned">
