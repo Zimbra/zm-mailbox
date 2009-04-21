@@ -801,7 +801,14 @@ public class Message extends MailItem {
                 // because of bug 8263, we sometimes have fragments that are incorrect;
                 //   check them here and correct them if necessary
                 String fragment = pm.getFragment();
-                if (!getFragment().equals(fragment == null ? "" : fragment))
+                boolean fragmentChanged = !getFragment().equals(fragment == null ? "" : fragment);
+
+                // because of changes to normalization algorithm (notably bug 28536), normalized subject may be wrong;
+                //   check here and correct if necessary
+                String subject = pm.getNormalizedSubject();
+                boolean subjectChanged = !getNormalizedSubject().equals(subject == null ? "" : subject);
+
+                if (fragmentChanged || subjectChanged)
                     getMailbox().reanalyze(getId(), getType(), pm);
             }
             
@@ -836,29 +843,23 @@ public class Message extends MailItem {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         }
 
+        MailItem parent = getParent();
+
         // make sure the SUBJECT is correct
         if (!getSubject().equals(pm.getSubject()))
             markItemModified(Change.MODIFIED_SUBJECT);
-        boolean subjectChanged = !getNormalizedSubject().equals(pm.getNormalizedSubject());
         mRawSubject = pm.getSubject();
         mData.subject = pm.getNormalizedSubject();
 
         // the fragment may have changed
         mFragment = pm.getFragment();
 
-        // handle the message's PARENT
-        boolean parentChanged = false;
-        MailItem parent = getParent();
-        if (subjectChanged && mData.parentId != -mId) {
-            mData.parentId = -mId;
-            parentChanged = true;
-        }
-
         // make sure the "attachments" FLAG is correct
         boolean hadAttachment = (mData.flags & Flag.BITMASK_ATTACHED) != 0;
         mData.flags &= ~Flag.BITMASK_ATTACHED;
-        if (pm.hasAttachments())
+        if (pm.hasAttachments()) {
             mData.flags |= Flag.BITMASK_ATTACHED;
+        }
         if (hadAttachment != pm.hasAttachments()) {
             markItemModified(Change.MODIFIED_FLAGS);
             parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_ATTACHED), pm.hasAttachments());
@@ -890,10 +891,7 @@ public class Message extends MailItem {
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
 
-        // if the message is part of a real conversation, need to break it out
-        if (parentChanged)
-            parent.removeChild(this);
-        else if (parent instanceof VirtualConversation)
+        if (parent instanceof VirtualConversation)
             ((VirtualConversation) parent).recalculateMetadata(Arrays.asList(new Message[] { this } ));
     }
 
