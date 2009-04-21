@@ -51,7 +51,7 @@ public class Conversation extends MailItem {
      * 
      * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
-        return super.getSubject();
+        return ParsedMessage.normalize(getSubject());
     }
 
     @Override public String getSender() {
@@ -259,7 +259,7 @@ public class Conversation extends MailItem {
     }
 
     @Override void detach() throws ServiceException {
-        close(Mailbox.getHash(getSubject()));
+        close(Mailbox.getHash(getNormalizedSubject()));
     }
 
     /** Updates the unread state of all messages in the conversation.
