@@ -89,6 +89,9 @@ public class CalendarCollection extends Collection {
 
 		addResourceType(DavElements.E_CALENDAR);
 		
+		if (f.getId() == Mailbox.ID_FOLDER_CALENDAR)
+			addResourceType(DavElements.E_DEFAULT_CALENDAR);
+			
 		// the display name can be a user friendly string like "John Smith's Calendar".
 		// but the problem is the name may be too long to fit into the field in UI.
 		Locale lc = acct.getLocale();
