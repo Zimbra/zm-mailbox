@@ -2177,6 +2177,14 @@ public class ZMailbox implements ToZJSONObject {
             if (params.getMax() != null) {
                 msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, params.getMax());
             }
+            //header request bug:33054
+            String reqHdrs = params.getReqHeaders();
+            if (reqHdrs != null && reqHdrs.length() > 0) {
+                for (String hdrName : reqHdrs.split(",")) {
+                    Element headerEl = msgEl.addElement(MailConstants.A_HEADER);
+                    headerEl.addAttribute(MailConstants.A_ATTRIBUTE_NAME, hdrName);
+                }
+            }
             ZMessage zm = new ZMessage(invoke(req).getElement(MailConstants.E_MSG), this);
             cm = new CachedMessage();
             cm.zm = zm;

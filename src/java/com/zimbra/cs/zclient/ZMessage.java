@@ -17,6 +17,8 @@ package com.zimbra.cs.zclient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.json.JSONException;
 
@@ -68,7 +70,6 @@ public class ZMessage implements ZItem, ToZJSONObject {
         }
     }
   
-
     private String mId;
     private String mFlags;
     private String mSubject;
@@ -91,7 +92,8 @@ public class ZMessage implements ZItem, ToZJSONObject {
     private ZInvite mInvite;
     private ZShare mShare;
     private ZMailbox mMailbox;
-        
+    private Map<String, String> mReqHdrs;
+    
     public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
@@ -121,6 +123,16 @@ public class ZMessage implements ZItem, ToZJSONObject {
         for (Element emailEl: e.listElements(MailConstants.E_EMAIL)) {
             mAddresses.add(new ZEmailAddress(emailEl));
         }
+
+        //request headers
+        mReqHdrs = new HashMap<String,String>();
+        Element attrsEl = e.getOptionalElement("_attrs");
+        if(attrsEl != null) {
+            for (Element.Attribute eHdr : attrsEl.listAttributes()) {
+                mReqHdrs.put(eHdr.getKey(),eHdr.getValue());
+            }       
+        }
+
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
         if (mp != null)
             mMimeStructure = new ZMimePart(null, mp);
@@ -242,6 +254,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         zjo.put("isRepliedTo", isRepliedTo());
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
+        zjo.putMap("requestHeaders", mReqHdrs);        
         return zjo;
     }
 
@@ -281,6 +294,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return mConversationId;
     }
 
+    public Map<String,String> getRequestHeader() {
+        return mReqHdrs;
+    }
+    
     public List<ZEmailAddress> getEmailAddresses() {
         return mAddresses;
     }

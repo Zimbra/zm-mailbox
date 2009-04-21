@@ -26,7 +26,8 @@ public class ZGetMessageParams {
     private boolean mRawContent;
     private String mPart;
     private Integer mMax;
-
+    private String mRequestHeaders;
+    
     public ZGetMessageParams() { }
 
     public boolean isWantHtml() {
@@ -93,6 +94,13 @@ public class ZGetMessageParams {
             return mId.hashCode();
     }
 
+    public void setReqHeaders(String reqHeaders) {
+        this.mRequestHeaders = reqHeaders;
+    }
+
+    public String getReqHeaders() {
+        return this.mRequestHeaders;
+    }
     /**
      *
      * @return true if get message params are equal.
