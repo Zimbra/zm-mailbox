@@ -169,6 +169,12 @@ public class ImapImport extends MailItemImport {
                 if (folderTracker != null) {
                     try {
                         localFolder = mbox.getFolderById(null, folderTracker.getItemId());
+                        if (folderTracker.getUidValidity() == -1) {
+                            // Migrate old data created before we added the uid_validity column
+                            ZimbraLog.datasource.info("Initializing UIDVALIDITY of %s to %d", remoteFolder.getFullName(), remoteUvv);
+                            folderTracker.setUidValidity(remoteUvv);
+                            folderTracker.update();
+                        }
                     } catch (NoSuchItemException e) {
                         ZimbraLog.datasource.info("Local folder %s was deleted.  Deleting remote folder %s.",
                             folderTracker.getLocalPath(), folderTracker.getRemoteId());
@@ -180,23 +186,20 @@ public class ImapImport extends MailItemImport {
                             remoteFolder.close(true);
                         }
                         if (remoteFolder.exists()) {
-                            remoteFolder.delete(true);
+                            try {
+                                remoteFolder.delete(true);
+                            } catch (Exception ee) {
+                                ZimbraLog.datasource.warn("Unable to delete remote folder %s", remoteFolder.getFullName(), ee);
+                            }
                         }
                         imapFolders.remove(folderTracker);
                         folderTracker.delete();
                     }
 
-                    if (folderTracker.getUidValidity() == -1) {
-                        // Migrate old data created before we added the uid_validity column
-                        ZimbraLog.datasource.info("Initializing UIDVALIDITY of %s to %d", remoteFolder.getFullName(), remoteUvv);
-                        folderTracker.setUidValidity(remoteUvv);
-                        folderTracker.update();
-                    }
-
                     if (localFolder != null) {
                         if (!localFolder.getPath().equals(folderTracker.getLocalPath())) {
                                 // Folder path does not match
-                        	String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, remoteFolder.getSeparator());
+                            String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, remoteFolder.getSeparator());
                             if (jmPath != null && isParent(localRootFolder, localFolder)) {
                                 // Folder has a new name/path but is still under the
                                 // data source root
@@ -307,8 +310,8 @@ public class ImapImport extends MailItemImport {
 	                        ZimbraLog.datasource.info("Remote folder %s was deleted.  Deleting local folder %s.",
 	                            imapFolder.getRemoteId(), zimbraFolder.getPath());
 	                        mbox.delete(null, zimbraFolder.getId(), zimbraFolder.getType());
+                                imapFolders.remove(imapFolder);
 	                        imapFolder.delete();
-	                        imapFolders.remove(imapFolder);
 	                    }
                 	}
                 } else {
@@ -317,19 +320,24 @@ public class ImapImport extends MailItemImport {
                     	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
                         IMAPFolder jmFolder = (IMAPFolder) store.getFolder(jmPath);
                         long uidValidity = 0;
-                        if (jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES)) {
-                            uidValidity = jmFolder.getUIDValidity();
-                            // bug 35554: If server omits UIDVALIDITY then assume a value of 1
-                            if (uidValidity <= 0) {
-                                uidValidity = 1;
+                        
+                        try {
+                            if (jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES)) {
+                                uidValidity = jmFolder.getUIDValidity();
+                                // bug 35554: If server omits UIDVALIDITY then assume a value of 1
+                                if (uidValidity <= 0) {
+                                    uidValidity = 1;
+                                }
+                                imapFolder = new ImapFolder(ds, zimbraFolder.getId(),
+                                    jmFolder.getFullName(), zimbraFolder.getPath(), uidValidity);
+                                imapFolder.add();
+                                imapFolders.add(imapFolder);
+                            } else {
+                                ZimbraLog.datasource.warn("Unable to create remote folder %s", jmPath);
                             }
-                        } else {
-                            ZimbraLog.datasource.warn("Unable to create remote folder: " + jmFolder.getFullName());
+                        } catch (Exception e) {
+                            ZimbraLog.datasource.warn("Unable to create remote folder %s", jmPath, e);
                         }
-	                imapFolder = new ImapFolder(ds, zimbraFolder.getId(),
-	                    jmFolder.getFullName(), zimbraFolder.getPath(), uidValidity);
-	                imapFolder.add();
-	                imapFolders.add(imapFolder);
                     }
                 }
             }
