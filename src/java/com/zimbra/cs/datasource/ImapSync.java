@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.regex.Pattern;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
@@ -52,6 +53,7 @@ public class ImapSync extends MailItemImport {
     private Map<Integer, ImapFolderSync> syncedFolders;
     // Optional mail client authenticator (default is plaintext login)
     private Authenticator authenticator;
+    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|]");
 
     private static final boolean DEBUG =
         Boolean.getBoolean("ZimbraDataSourceImapDebug") ||
@@ -328,6 +330,8 @@ public class ImapSync extends MailItemImport {
             }
             relativePath = StringUtil.join("/", parts);
         }
+        relativePath = ILLEGAL_FOLDER_CHARS.matcher(relativePath).replaceAll("_");
+        
         String zimbraPath = dataSource.matchKnownLocalPath(relativePath);
         if ("".equals(zimbraPath)) {
             return null; // Do not synchronize folder
