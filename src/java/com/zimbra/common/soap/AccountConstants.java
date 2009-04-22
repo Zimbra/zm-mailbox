@@ -151,6 +151,7 @@ public class AccountConstants {
     public static final String A_N = "n";
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
+    public static final String A_ID_ONLY = "idOnly";
     public static final String A_BY = "by";
     public static final String A_TYPE = "type";
     public static final String A_LIMIT = "limit";
