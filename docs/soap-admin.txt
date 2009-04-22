@@ -791,10 +791,13 @@ are returned.  If the stat name is invalid, returns a SOAP fault.
 <GetServiceStatusRequest/>
 
 <GetServiceStatusResponse>
-<status server="..." service="..." t="{date-time}">{value}</status>*
+  <timezone id="{timezone-id}" displayName="{timezone-display-name}"></timezone>
+  <status server="..." service="..." t="{date-time}">{value}</status>*
 </GetServiceStatusResponse>
 
-{date-time} format is number of seconds in 1970, utc time.
+{timezone-id}             timezone id, e.g "America/Los_Angeles"
+{timezone-display-name}   timezone display anme, e.g. "Pacific Standard Time"
+{date-time}               format is number of seconds in 1970, utc time.
 
 -----------------------------
 

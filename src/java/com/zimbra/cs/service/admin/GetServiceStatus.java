@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -66,6 +67,12 @@ public class GetServiceStatus extends AdminDocumentHandler {
             return proxyRequest(request, context, monitorServer, zsc);
 
         Element response = zsc.createElement(AdminConstants.GET_SERVICE_STATUS_RESPONSE);
+        
+        TimeZone tz = TimeZone.getDefault();
+        Element eTimeZone = response.addElement(AdminConstants.E_TIMEZONE);
+        eTimeZone.addAttribute(AdminConstants.A_TIMEZONE_ID, tz.getID());
+        eTimeZone.addAttribute(AdminConstants.A_TIMEZONE_DISPLAYNAME, tz.getDisplayName());
+        
         boolean loggerEnabled = false;
         Server local = prov.getLocalServer();
         String[] services = local.getMultiAttr(Provisioning.A_zimbraServiceEnabled);
