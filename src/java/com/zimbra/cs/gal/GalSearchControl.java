@@ -138,7 +138,7 @@ public class GalSearchControl {
 			// if the presented sync token is old LDAP timestamp format, we need to sync
 			// against LDAP server to keep the client up to date.
 			GalSyncToken gst = mParams.getGalSyncToken();
-			if (gst.hasMailboxSyncToken())
+			if (gst.doMailboxSync())
 				return;
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
@@ -285,7 +285,7 @@ public class GalSearchControl {
 				DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
 				syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
     		}
-			if (token.hasMailboxSyncToken()) {
+			if (token.doMailboxSync()) {
 				Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, token.getChangeId(galAcct.getId()), MailItem.TYPE_CONTACT, folderIds);
 				// don't return everything at once - bug 37167
 	            int count = 0;

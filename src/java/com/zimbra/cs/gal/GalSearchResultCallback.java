@@ -31,6 +31,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 public class GalSearchResultCallback implements GalContact.Visitor {
     private Element mResponse;
 	private ItemIdFormatter mFormatter;
+	private boolean mIdOnly;
     
     public GalSearchResultCallback(GalSearchParams params) {
     	reset(params);
@@ -42,6 +43,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
         	mFormatter = new ItemIdFormatter(params.getSoapContext());
     	}
     	params.setGalResult(SearchGalResult.newSearchGalResult(this));
+    	mIdOnly = params.isIdOnly();
     }
     
     public void visit(GalContact c) throws ServiceException {
@@ -53,7 +55,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     }
     
     public Element handleContact(Contact c) throws ServiceException {
-		return ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    	if (mIdOnly)
+            return mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
+    	else
+    		return ToXML.encodeContact(mResponse, mFormatter, c, true, null);
     }
     
     public void handleContact(GalContact c) throws ServiceException {

@@ -50,11 +50,13 @@ public class SyncGal extends AccountDocumentHandler {
         
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
+        boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);
 
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setToken(tokenAttr);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
+        params.setIdOnly(idOnly);
         if (galAcctId != null)
         	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         GalSearchControl gal = new GalSearchControl(params);

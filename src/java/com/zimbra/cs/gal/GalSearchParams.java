@@ -48,6 +48,7 @@ public class GalSearchParams {
     private Element mRequest;
     private QName mResponse;
     private DataSource mDataSource;
+    private boolean mIdOnly;
 	
 	public GalSearchParams(Account account) {
         mAccount = account;
@@ -139,6 +140,10 @@ public class GalSearchParams {
 		return mResponse;
 	}
 	
+	public boolean isIdOnly() {
+		return mIdOnly;
+	}
+	
 	public void setSearchConfig(GalSearchConfig config) {
 		mConfig = config;
 	}
@@ -214,5 +219,9 @@ public class GalSearchParams {
 	
 	public void setGalSyncAccount(Account acct) {
 		mGalSyncAccount = acct;
+	}
+	
+	public void setIdOnly(boolean idOnly) {
+		mIdOnly = idOnly;
 	}
 }

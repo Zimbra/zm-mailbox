@@ -72,8 +72,8 @@ public class GalSyncToken {
 		return 0;
 	}
 	
-	public boolean hasMailboxSyncToken() {
-		return mChangeIdMap.size() > 0;
+	public boolean doMailboxSync() {
+		return mLdapTimestamp.equals("") || mChangeIdMap.size() > 0;
 	}
 	
 	public void merge(GalSyncToken that) {

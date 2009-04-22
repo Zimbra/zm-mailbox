@@ -30,6 +30,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -131,6 +132,8 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    }
 	    
 	    int folderId = contactFolder.getId();
+	    
+        mbox.grantAccess(null, folderId, domain.getId(), ACL.GRANTEE_DOMAIN, ACL.stringToRights("r"), null);
 	    
 	    // check if there is another datasource already that maps to the same contact folder.
 	    for (DataSource ds : account.getAllDataSources())
