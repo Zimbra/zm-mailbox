@@ -522,6 +522,10 @@ public class AdminConstants {
     public static final String A_QUEUE_ITEM = "qi";
     public static final String A_OP = "op";
 
+    public static final String E_TIMEZONE = "timezone";
+    public static final String A_TIMEZONE_ID = "id";
+    public static final String A_TIMEZONE_DISPLAYNAME = "displayName";
+    
     public static final String A_HEALTHY = "healthy";
     public static final String A_SIZE = "s";
     public static final String A_SERVICE = "service";
@@ -529,6 +533,7 @@ public class AdminConstants {
     public static final String A_TIME = "time";
     public static final String A_TYPES = "types";
     public static final String A_NUM_TABLES = "numTables";
+    
 
     public static final String A_NUM_EXECUTED = "numExecuted";
     public static final String A_NUM_SUCCEEDED= "numSucceeded";
