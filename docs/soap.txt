@@ -694,12 +694,17 @@ import and export of addressbook.
 
 ----------------------------
 
- <SyncGalRequest token="[{previous-token}]"/>
+ <SyncGalRequest [token="{previous-token}] [idOnly={true|false}]"/>
  
  <SyncGalResponse token="{new-token}">
    <cn>...</cn>*
  </SyncGalResponse>
 
+  If the request has idOnly set to true, then the response will contain
+  id attribute without all the contact fields populated.  The sync client
+  then should make batch request to the server to fetch the contact fields
+  with <GetContactsRequest/>.
+  
 ----------------------------
 
  <SearchCalendarResourcesRequest
