@@ -35,6 +35,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
@@ -247,4 +248,64 @@ public class WebDavClient {
 	private String mPassword;
 	private HttpClient mClient;
 	private boolean mDebugEnabled = false;
+	
+	public static void main(String[] args) throws Exception {
+		WebDavClient cl = new WebDavClient("http://localhost:7070", "tester");
+		cl.setDebugEnabled(true);
+		cl.setCredential("user2", "test123");
+		DavRequest req = checkacl2();
+		cl.sendMultiResponseRequest(req);
+	}
+	
+	private static DavRequest timerange() {
+		DavRequest req = DavRequest.CALENDARQUERY("/dav/user1@jylee-macbook.zimbra.com/Calendar");
+		req.addRequestProp(DavElements.E_GETETAG);
+		req.addRequestProp(DavElements.E_RESOURCETYPE);
+		Element filter = req.getRequestMessage().getRootElement().element(DavElements.E_FILTER);
+		Element comp = filter.element(DavElements.E_COMP_FILTER).addElement(DavElements.E_COMP_FILTER);
+		comp.addAttribute(DavElements.P_NAME, "VEVENT");
+		comp.addElement(DavElements.E_TIME_RANGE).addAttribute(DavElements.P_START, "20090308T000000Z");
+		return req;
+	}
+	
+	private static DavRequest propfind() {
+		DavRequest req = DavRequest.PROPFIND("/dav/user1@jylee-macbook.zimbra.com/Inbox");
+		req.addRequestProp(DavElements.E_CALENDAR_FREE_BUSY_SET);
+		return req;
+	}
+	
+	private static DavRequest proppatch() {
+		DavRequest req = DavRequest.PROPPATCH("/dav/user1@jylee-macbook.zimbra.com/Inbox");
+    	Element el = DocumentHelper.createElement(DavElements.E_CALENDAR_FREE_BUSY_SET);
+    	req.getRequestMessage().getRootElement().element(DavElements.E_SET).element(DavElements.E_PROP).add(el);
+    	el.addElement(DavElements.E_HREF).setText("/dav/user1/Calendar");
+    	el.addElement(DavElements.E_HREF).setText("/dav/user1/Tasks");
+    	el.addElement(DavElements.E_HREF).setText("/dav/user1/Home");
+    	el.addElement(DavElements.E_HREF).setText("/dav/user1/Work");
+    	//el.addElement(DavElements.E_HREF).setText("/dav/user1/Misc");
+		return req;
+	}
+
+	private static DavRequest checkacl() {
+		DavRequest req = DavRequest.PROPFIND("/dav/user1@jylee-macbook.zimbra.com/readwrite");
+		req.addRequestProp(DavElements.E_CURRENT_USER_PRIVILEGE_SET);
+		return req;
+	}
+	
+	private static DavRequest checkmp() {
+		DavRequest req = DavRequest.PROPFIND("/dav/user1@jylee-macbook.zimbra.com/");
+		req.setDepth(Depth.one);
+		req.addRequestProp(DavElements.E_RESOURCETYPE);
+		req.addRequestProp(DavElements.E_CURRENT_USER_PRIVILEGE_SET);
+		req.addRequestProp(DavElements.E_MOUNTPOINT_TARGET_PRIVILEGE_SET);
+		req.addRequestProp(DavElements.E_MOUNTPOINT_TARGET_URL);
+		return req;
+	}
+
+	private static DavRequest checkacl2() {
+		DavRequest req = DavRequest.PROPFIND("/dav/user1@jylee-macbook.zimbra.com/shared");
+		req.addRequestProp(DavElements.E_ACL);
+		return req;
+	}
+	
 }

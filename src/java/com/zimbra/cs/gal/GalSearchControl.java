@@ -139,7 +139,7 @@ public class GalSearchControl {
 			// if the presented sync token is old LDAP timestamp format, we need to sync
 			// against LDAP server to keep the client up to date.
 			GalSyncToken gst = mParams.getGalSyncToken();
-			if (gst.doMailboxSync())
+			if (mParams.isIdOnly() || gst.doMailboxSync())
 				return;
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
@@ -286,7 +286,7 @@ public class GalSearchControl {
 				DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
 				syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
     		}
-			if (token.doMailboxSync()) {
+			if (mParams.isIdOnly() || token.doMailboxSync()) {
 				int changeId = token.getChangeId(galAcct.getId());
 	    		List<Integer> deleted = mbox.getTombstones(changeId).getAll();
 				Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
@@ -301,8 +301,9 @@ public class GalSearchControl {
 						ZimbraLog.gal.debug("processing #"+count);
 				}
 
-				for (int itemId : deleted)
-					callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
+				if (changeId > 0)
+					for (int itemId : deleted)
+						callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
 			}
 			GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
 			ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
