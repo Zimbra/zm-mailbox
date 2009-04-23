@@ -118,6 +118,14 @@ http://localhost:7070
 </pre>
 
 
+=== Set up the JDK for command line tools ===
+
+Command-line tools like zmprov, zmmailbox, zmsoap, etc., depend
+on the JDK to be in /opt/zimbra/java.  Either download the JDK
+and extract there, or create a symbolic link to your existing
+JDK location.
+
+
 === Install Mail Transfer Agent ===
 
 In order to send mail to/from users in the Zimbra product
