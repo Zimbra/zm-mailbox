@@ -202,11 +202,11 @@ public abstract class SoapTransport {
         return mResponseProto == null ? mRequestProto : mResponseProto;
     }
 
-    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) {
+    protected Element generateSoapMessage(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) {
     	if (raw) {
             if (mDebugListener != null)
                 mDebugListener.sendSoapMessage(document);
-    		return SoapProtocol.toString(document, mPrettyPrint);
+    		return document;
         }
 
         // don't use the default protocol version if it's incompatible with the passed-in request
@@ -239,7 +239,7 @@ public abstract class SoapTransport {
         Element envelope = proto.soapEnvelope(document, context);
         if (mDebugListener != null)
             mDebugListener.sendSoapMessage(envelope);
-        return SoapProtocol.toString(envelope, getPrettyPrint());
+        return envelope;
     }
 
     Element parseSoapResponse(String envelopeStr, boolean raw) throws SoapParseException, SoapFaultException {

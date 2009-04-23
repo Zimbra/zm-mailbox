@@ -40,6 +40,7 @@ import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 
 import org.dom4j.ElementHandler;
@@ -55,6 +56,12 @@ public class SoapHttpTransport extends SoapTransport {
     private String mUri;
 	private HttpClient mClient;
     private Map<String, String> mCustomHeaders;
+    private HttpDebugListener mHttpDebugListener;
+    
+    public interface HttpDebugListener {
+        public void sendSoapMessage(PostMethod postMethod, Element envelope);
+        public void receiveSoapMessage(PostMethod postMethod, Element envelope);
+    }
     
     public String toString() { 
         return "SoapHTTPTransport(uri="+mUri+")";
@@ -129,6 +136,14 @@ public class SoapHttpTransport extends SoapTransport {
     	connMgr.setConnectionStaleCheckingEnabled(connectionStaleCheckEnabled);
     	mClient = new HttpClient(sDefaultParams, connMgr);
     	commonInit(uri);
+    }
+    
+    public void setHttpDebugListener(HttpDebugListener listener) {
+        mHttpDebugListener = listener;
+    }
+
+    public HttpDebugListener getHttpDebugListener() {
+        return mHttpDebugListener;
     }
 
     /**
@@ -258,7 +273,8 @@ public class SoapHttpTransport extends SoapTransport {
             if (getClientIp() != null)
                 method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
 
-            String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+            Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+            String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
             method.setRequestBody(soapMessage);
             method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
     	
@@ -270,6 +286,9 @@ public class SoapHttpTransport extends SoapTransport {
                     method.setRequestHeader(entry.getKey(), entry.getValue());
                 }
             }
+            
+            if (mHttpDebugListener != null)
+                mHttpDebugListener.sendSoapMessage(method, soapReq);
             
             for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
                 try {
@@ -293,7 +312,12 @@ public class SoapHttpTransport extends SoapTransport {
                     return null;
                 } else {
                     responseStr = ByteUtil.getContent(reader, (int)method.getResponseContentLength(), false);
-                    return parseSoapResponse(responseStr, raw);
+                    Element soapResp = parseSoapResponse(responseStr, raw);
+                    
+                    if (mHttpDebugListener != null)
+                        mHttpDebugListener.receiveSoapMessage(method, soapReq);
+                    
+                    return soapResp;
                 }
             } catch (SoapFaultException x) {
             	//attach request/response to the exception and rethrow for downstream consumption
