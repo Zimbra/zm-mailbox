@@ -165,6 +165,12 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             }
         }
     }
+    
+    public void beginBatchOperation() {
+    }
+
+    public void endBatchOperation() {
+    }
 
     public void addDocument(Document[] docs, int indexId, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {

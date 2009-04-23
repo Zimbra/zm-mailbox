@@ -262,6 +262,14 @@ public final class MailboxIndex
     public void flush() {
         mTextIndex.flush();
     }
+    
+    public void beginBatchOperation() {
+        mTextIndex.beginBatchOperation();
+    }
+    
+    public void endBatchOperation() {
+        mTextIndex.endBatchOperation();
+    }
 
     /**
      * @param itemIds array of itemIds to be deleted

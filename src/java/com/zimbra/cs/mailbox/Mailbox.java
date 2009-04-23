@@ -6929,8 +6929,10 @@ public class Mailbox {
 
         boolean allGood = false;
         try {
-            
             if (indexingNeeded) {
+                if (mMailboxIndex != null)
+                    mMailboxIndex.beginBatchOperation();
+                
                 // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary)
                 // here, just in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new HashMap<MailItem, MailboxChange.IndexItemEntry>();
@@ -7007,8 +7009,8 @@ public class Mailbox {
                     } catch (Exception e) {
                         if (numIndexingExceptions == 0) {
                             // log the first exception at INFO level, but log the rest of them at DEBUG
-                            if (ZimbraLog.index.isDebugEnabled())
-                                ZimbraLog.index.debug("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
+                            if (ZimbraLog.index.isInfoEnabled())
+                                ZimbraLog.index.info("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
                         } else {
                             if (ZimbraLog.index.isDebugEnabled())
                                 ZimbraLog.index.debug("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
@@ -7066,6 +7068,9 @@ public class Mailbox {
             
             allGood = true;
         } finally {
+            if (indexingNeeded && mMailboxIndex != null)
+                mMailboxIndex.endBatchOperation();
+                
             if (!allGood) {
                 // We will get here if indexing commit failed.
                 // (Database commit hasn't happened.)

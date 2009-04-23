@@ -22,13 +22,16 @@ import org.apache.lucene.document.Document;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
-import com.zimbra.cs.redolog.op.IndexItem;
 
 /**
  * Currently, only the index-write APIs are fully abstracted from Lucene.  The search APIs
  * use ILuceneIndex directly.
  */
 interface ITextIndex {
+    
+    void beginBatchOperation();
+    
+    void endBatchOperation();
 
     /**
      * Store the specified MailItem in the Index.  If deleteFirst is false, then we are sure that
