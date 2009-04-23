@@ -536,6 +536,9 @@ public class ZMailboxUtil implements DebugListener {
         initCommands();
     }
 
+    /*
+     * called when sm command is embeded in zmprov
+     */
     public void selectMailbox(String targetAccount, SoapProvisioning prov) throws ServiceException {
         if (prov == null) {
             throw ZClientException.CLIENT_ERROR("can only select mailbox after adminAuthenticate", null);
@@ -543,12 +546,11 @@ public class ZMailboxUtil implements DebugListener {
             mProv = prov;
         }
         mMbox = null; //make sure to null out current value so if select fails any further ops will fail
-        SoapTransport.DebugListener listener = mDebug ? this : null;
         mMailboxName = targetAccount;
         ZMailbox.Options options = prov.getMailboxOptions(AccountBy.name, mMailboxName, 60*60*24);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
-        options.setDebugListener(listener);
+        options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener()); // use the same debug listener used by zmprov
         mMbox = ZMailbox.getMailbox(options);
         dumpMailboxConnect();
         mPrompt = String.format("mbox %s> ", mMbox.getName());
@@ -2631,7 +2633,7 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println(envelope.prettyPrint());
         stdout.println("===============================");
     }
-
+    
     public static String encodeURL(String unencoded) throws ServiceException {
         // Look for a query string.  It's supposed to be URL encoded already, so encode only what comes before.
         String queryString = null;

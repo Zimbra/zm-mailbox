@@ -27,6 +27,7 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
@@ -94,7 +95,7 @@ public class SoapProvisioning extends Provisioning {
         private String mUri;
         private int mTimeout = 60000;
         private int mRetryCount = -1;
-        private SoapTransport.DebugListener mDebugListener;
+        private SoapTransport.DebugListener mDebugListener;  
         private boolean mLocalConfigAuth;
 
         public Options() {
@@ -157,6 +158,7 @@ public class SoapProvisioning extends Provisioning {
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
+    private HttpDebugListener mHttpDebugListener;
 
     public SoapProvisioning() {
 
@@ -259,6 +261,16 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setDebugListener(mDebugListener);
     }
 
+    public void soapSetHttpTransportDebugListener(HttpDebugListener listener) {
+        mHttpDebugListener = listener;
+        if (mTransport != null)
+            mTransport.setHttpDebugListener(listener);
+    }
+    
+    public HttpDebugListener soapGetHttpTransportDebugListener() {
+        return mHttpDebugListener;
+    }
+    
     public ZAuthToken getAuthToken() {
         return mAuthToken;
     }

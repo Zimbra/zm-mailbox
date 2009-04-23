@@ -45,13 +45,15 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
@@ -104,15 +106,21 @@ import com.zimbra.cs.zclient.ZMailboxUtil;
 /**
  * @author schemers
  */
-public class ProvUtil implements DebugListener {
+public class ProvUtil implements HttpDebugListener {
     
     private static final String ERR_VIA_SOAP_ONLY = "can only be used with SOAP";
     private static final String ERR_VIA_LDAP_ONLY = "can only be used with  \"zmprov -l/--ldap\"";
     private static final String ERR_INVALID_ARG_EV = "arg -e is invalid unless -v is also specified";
  
+    enum SoapDebugLevel {
+        none,    // no SOAP debug
+        normal,  // SOAP request and response payload
+        high;    // SOAP payload and http transport header
+    }
+    
     private boolean mInteractive = false;
     private boolean mVerbose = false;
-    private boolean mDebug = false;
+    private SoapDebugLevel mDebug = SoapDebugLevel.none;
     private boolean mUseLdap = LC.zimbra_zmprov_default_to_ldap.booleanValue(); 
     private boolean mUseLdapMaster = false;
     private String mAccount = null;
@@ -126,7 +134,7 @@ public class ProvUtil implements DebugListener {
     private Provisioning mProv;
     private BufferedReader mReader;
     
-    public void setDebug(boolean debug) { mDebug = debug; }
+    public void setDebug(SoapDebugLevel debug) { mDebug = debug; }
     
     public void setVerbose(boolean verbose) { mVerbose = verbose; }
     
@@ -527,7 +535,9 @@ public class ProvUtil implements DebugListener {
         } else {
             SoapProvisioning sp = new SoapProvisioning();            
             sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
-            if (mDebug) sp.soapSetTransportDebugListener(this);
+            if (mDebug != SoapDebugLevel.none) 
+                sp.soapSetHttpTransportDebugListener(this);
+            
             if (mAccount != null && mPassword != null)
                 sp.soapAdminAuthenticate(mAccount, mPassword);
             else if (mAuthToken != null)
@@ -979,7 +989,7 @@ public class ProvUtil implements DebugListener {
                 throwSoapOnly();
              ZMailboxUtil util = new ZMailboxUtil();
              util.setVerbose(mVerbose);
-             util.setDebug(mDebug);
+             util.setDebug(mDebug != SoapDebugLevel.none);
              boolean smInteractive = mInteractive && args.length < 3;
              util.setInteractive(smInteractive);
              util.selectMailbox(args[1], (SoapProvisioning) mProv);
@@ -2574,7 +2584,8 @@ public class ProvUtil implements DebugListener {
         options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for account/password");        
         options.addOption("v", "verbose", false, "verbose mode");
-        options.addOption("d", "debug", false, "debug mode");
+        options.addOption("d", "debug", false, "debug mode (SOAP request and response payload)");
+        options.addOption("D", "debughigh", false, "debug mode (SOAP req/resp payload and http headers)");
         options.addOption("m", "master", false, "use LDAP master (has to be used with --ldap)");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
@@ -2636,7 +2647,16 @@ public class ProvUtil implements DebugListener {
         if (cl.hasOption('P')) {
             pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
         }
-        if (cl.hasOption('d')) pu.setDebug(true);
+        
+        if (cl.hasOption('d') && cl.hasOption('D')) {
+            printError("error: cannot specify both -d and -D at the same time");
+            System.exit(2);
+        }
+        if (cl.hasOption('D')) 
+            pu.setDebug(SoapDebugLevel.high);
+        else if (cl.hasOption('d')) 
+            pu.setDebug(SoapDebugLevel.normal);
+        
         
         if (!pu.useLdap() && cl.hasOption('m')) {
             printError("error: cannot specify -m when -l is not specified");
@@ -3623,21 +3643,38 @@ public class ProvUtil implements DebugListener {
 
     private long mSendStart;
     
-    public void receiveSoapMessage(Element envelope) {
-        long end = System.currentTimeMillis();        
+    public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
         System.out.printf("======== SOAP RECEIVE =========\n");
+        
+        if (mDebug == SoapDebugLevel.high) {
+            Header[] headers = postMethod.getResponseHeaders();
+            for (Header header : headers) {
+                System.out.println(header.toString().trim()); // trim the ending crlf
+            }
+            System.out.println();
+        }
+        
+        long end = System.currentTimeMillis();        
         System.out.println(envelope.prettyPrint());
         System.out.printf("=============================== (%d msecs)\n", end-mSendStart);
-        
     }
 
-    public void sendSoapMessage(Element envelope) {
-        mSendStart = System.currentTimeMillis();
+    public void sendSoapMessage(PostMethod postMethod, Element envelope) {
         System.out.println("========== SOAP SEND ==========");
+        
+        if (mDebug == SoapDebugLevel.high) {
+            Header[] headers = postMethod.getRequestHeaders();
+            for (Header header : headers) {
+                System.out.println(header.toString().trim()); // trim the ending crlf
+            }
+            System.out.println();
+        }
+        
+        mSendStart = System.currentTimeMillis();
+        
         System.out.println(envelope.prettyPrint());
         System.out.println("===============================");
     }
-
     
     void throwSoapOnly() throws ServiceException {
         throw ServiceException.INVALID_REQUEST(ERR_VIA_SOAP_ONLY, null);

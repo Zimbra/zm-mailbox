@@ -65,6 +65,7 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.VoiceConstants;
@@ -162,6 +163,7 @@ public class ZMailbox implements ToZJSONObject {
         private SoapProtocol mResponseProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapProtocol mRequestProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapTransport.DebugListener mDebugListener;
+        private SoapHttpTransport.HttpDebugListener mHttpDebugListener;
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
@@ -272,8 +274,11 @@ public class ZMailbox implements ToZJSONObject {
         public void setRequestProtocol(SoapProtocol proto) { mRequestProtocol = proto; }
 
         public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
-        public void setDebugListener(SoapTransport.DebugListener liistener) { mDebugListener = liistener; }
+        public void setDebugListener(SoapTransport.DebugListener listener) { mDebugListener = listener; }
 
+        public SoapHttpTransport.HttpDebugListener getHttpDebugListener() { return mHttpDebugListener; }
+        public void setHttpDebugListener(SoapHttpTransport.HttpDebugListener listener) { mHttpDebugListener = listener; }
+        
         public boolean getNoSession() { return mNoSession; }
         public void setNoSession(boolean noSession) { mNoSession = noSession; }
 
@@ -412,7 +417,10 @@ public class ZMailbox implements ToZJSONObject {
     private void initPreAuth(Options options) {
         mIdToItem = new HashMap<String, ZItem>();
         setSoapURI(options);
-        if (options.getDebugListener() != null) mTransport.setDebugListener(options.getDebugListener());
+        if (options.getDebugListener() != null) 
+            mTransport.setDebugListener(options.getDebugListener());
+        else if (options.getHttpDebugListener() != null) 
+            mTransport.setHttpDebugListener(options.getHttpDebugListener());
     }
 
     private void initTargetAccount(String key, AccountBy by) {
