@@ -1,0 +1,110 @@
+this is an example of debugging sqlite3 native code when running on a
+production ZCS jetty install.
+
+1) Build a debug version of sqlitejdbc.
+   
+   1.1) download it
+
+   1.2) patch it to allow debug symbols
+
+        $ diff -r sqlitejdbc sqlitejdbc-ours
+        diff -r sqlitejdbc/Makefile sqlitejdbc-ours/Makefile
+        39d38
+        <       $(STRIP) build/$(target)/$(LIBNAME)
+        diff -r sqlitejdbc/Makefile.common sqlitejdbc-ours/Makefile.common
+        61c61
+        < Default_CFLAGS    := -I$(JAVA_HOME)/include -Os -fPIC
+        ---
+        > Default_CFLAGS    := -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -Os -fPIC -g
+
+   1.3) make
+
+   1.4) cd build
+
+   1.5) mv Default-x86_64/libsqlitejdbc.so linux-amd64.lib
+
+   1.6) jar uvf sqlitejdbc-v054-native.jar linux-amd64.lib
+
+   1.7) cp sqlitejdbc-v054-native.jar /opt/zimbra/lib/jars/
+
+   1.8) cp sqlitejdbc-v054-native.jar /opt/zimbra/jetty-6.1.15/common/lib/
+
+2) Setup /opt/zimbra/.gdbinit as root and chown it to zimbra:zimbra:
+
+   $ cat /opt/zimbra/.gdbinit 
+   set history filename /var/tmp/zimbra_gdb_history
+   set history save on
+   set history expansion on
+   echo \n
+   echo \n
+   echo .gdbinit executed!\n
+   $
+
+3) Make sure no low ports are in use.  In a standard install you may
+   have to swap 80/443 with something like this:
+
+   $ zmprov -l ms qa24.lab.zimbra.com \
+                  zimbraMailPort 8080 \
+                  zimbraMailProxyPort 80 \
+                  zimbraMailSSLPort 8443 \
+                  zimbraMailSSLProxyPort 443
+
+4) Copy/paste and save your jetty command when the process starts
+   normally.  Then take out the jetty-setuid.xml from the arguments
+   (gdb doesn't seem to work across setuid).  What you save should
+   look something like this:
+
+   -Xms4784m -Xmx4784m -client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -Xss256k -Djava.io.tmpdir=/opt/zimbra/mailboxd/work -Djava.library.path=/opt/zimbra/lib -Djava.endorsed.dirs=/opt/zimbra/mailboxd/common/endorsed -Dzimbra.config=/opt/zimbra/conf/localconfig.xml -Djetty.home=/opt/zimbra/mailboxd -DSTART=/opt/zimbra/mailboxd/etc/start.config -jar /opt/zimbra/mailboxd/start.jar /opt/zimbra/mailboxd/etc/jetty.properties /opt/zimbra/mailboxd/etc/jetty.xml
+
+5) gdb /opt/zimbra/java/bin/java
+
+   5.1) let gdb know where sqlite3/sqlitejdbc source code is:
+
+         (gdb) directory /var/tmp/sqlitejdbc/sqlitejdbc
+         (gdb) directory /var/tmp/sqlitejdbc/sqlitejdbc/build/sqlite-3.6.3-Default-x86_64
+
+   5.2) tell gdb that you will be setting a breakpoint in a shared
+        library that will be loaded later on:
+
+         (gdb) set breakpoint pending on
+ 
+   5.3) ask gdb to set a breakpoint in the sqlitejdbc or sqlite3:
+
+         (gdb) break Java_org_sqlite_NativeDB__1open
+
+   5.4) run the program with the long jetty argument list:
+
+         (gdb) run -Xms4784m ... /opt/zimbra/mailboxd/etc/jetty.xml
+
+   5.5) You will hit a SIGSEGV pretty soon.  This is the JVM doing
+        NullPointerException checks with SIGSEGVs.
+
+         Program received signal SIGSEGV, Segmentation fault.
+         0x0000002a99470d10 in ?? ()
+
+        Tell gdb to not stop for JVM handled signals, and to pass it
+        on to the program:
+        
+         (gdb) handle SIGSEGV SIG33 nostop noprint
+         Signal        Stop      Print   Pass to program Description
+         SIGSEGV       No        No      Yes             Segmentation fault
+         SIG33         No        No      Yes             Real-time event 33
+
+         (gdb) continue
+
+   5.6) If you get stopped with a SIGTRAP in dl_init_internal, just
+         "continue"
+
+   5.7) You will hit your breakpoint after this.
+
+   5.8) You can not relaunch the program with "run".  Within the same
+        gdb session, if you do subsequent (second, third...) runs, the
+        pending breakpoint stuff doesn't seem to work.  Just exit gdb,
+        and start over.  (That's why saving history in .gdbinit is so
+        important).
+
+
+
+
+
+
