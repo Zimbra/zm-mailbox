@@ -26,6 +26,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 
 public class GalSearchResultCallback implements GalContact.Visitor {
@@ -67,6 +68,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     
     public void handleElement(Element e) throws ServiceException {
     	mResponse.addElement(e.detach());
+    }
+    
+    public void handleDeleted(ItemId id) {
+    	mResponse.addElement(MailConstants.E_DELETED).addAttribute(MailConstants.A_ID, id.toString());
     }
     
     protected HashMap<String,Object> parseContactElement(Element e) {

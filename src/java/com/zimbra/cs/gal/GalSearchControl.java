@@ -48,6 +48,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.service.util.ItemId;
 
 public class GalSearchControl {
 	private GalSearchParams mParams;
@@ -286,8 +287,10 @@ public class GalSearchControl {
 				syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
     		}
 			if (token.doMailboxSync()) {
-				Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, token.getChangeId(galAcct.getId()), MailItem.TYPE_CONTACT, folderIds);
-				// don't return everything at once - bug 37167
+				int changeId = token.getChangeId(galAcct.getId());
+	    		List<Integer> deleted = mbox.getTombstones(changeId).getAll();
+				Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
+
 	            int count = 0;
 				for (int itemId : changed.getFirst()) {
 					MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
@@ -297,7 +300,9 @@ public class GalSearchControl {
 					if (count % 100 == 0)
 						ZimbraLog.gal.debug("processing #"+count);
 				}
-				// XXX deleted items
+
+				for (int itemId : deleted)
+					callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
 			}
 			GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
 			ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
@@ -329,6 +334,9 @@ public class GalSearchControl {
 			Element resp = transport.invokeWithoutSession(req.detach());
 			GalSearchResultCallback callback = mParams.getResultCallback();
 			Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
+			while (iter.hasNext())
+				callback.handleElement(iter.next());
+			iter = resp.elementIterator(MailConstants.E_DELETED);
 			while (iter.hasNext())
 				callback.handleElement(iter.next());
 			GalSyncToken newToken = new GalSyncToken(resp.getAttribute(MailConstants.A_TOKEN));
