@@ -58,7 +58,11 @@ public final class AuthenticatorUtil {
             ZimbraLog.account.warn("authentication failed (no account associated with Kerberos principal " + principal + ')');
             return null;
         }
-        return authorize(authAccount, username, true);
+        
+        Account targetAcct = authorize(authAccount, username, true);
+        if (targetAcct != null)
+            prov.accountAuthed(authAccount);
+        return targetAcct;
     }
 
     public static Account authenticateZToken(String username, String authenticateId, String authtoken) throws ServiceException {
@@ -85,7 +89,10 @@ public final class AuthenticatorUtil {
             return null;
 
         // if necessary, check that the authenticated user can authorize as the target user
-        return authorize(authAccount, username, at.isAdmin() || at.isDomainAdmin());
+        Account targetAcct = authorize(authAccount, username, at.isAdmin() || at.isDomainAdmin());
+        if (targetAcct != null)
+            prov.accountAuthed(authAccount);
+        return targetAcct;
     }
 
     private static Account authorize(Account authAccount, String username, boolean asAdmin) throws ServiceException {

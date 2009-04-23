@@ -3184,6 +3184,8 @@ public class LdapProvisioning extends Provisioning {
         AuthMechanism authMech = AuthMechanism.makeInstance(acct);
         verifyPassword(acct, password, authMech, authCtxt);
 
+        // true:  authenticating 
+        // false: changing password (we do *not* want to update last login in this case)
         if (!checkPasswordPolicy)
             return;
 
@@ -3208,6 +3210,11 @@ public class LdapProvisioning extends Provisioning {
         // update/check last logon
         updateLastLogon(acct);
         
+    }
+    
+    @Override
+    public void accountAuthed(Account acct) throws ServiceException {
+        updateLastLogon(acct);
     }
     
     private void updateLastLogon(Account acct) throws ServiceException {

@@ -769,6 +769,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto) throws ServiceException;
     
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
+    
+    public void accountAuthed(Account acct) throws ServiceException {
+        // noop by default
+    }
 
     public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, 
                                         String preAuth,
