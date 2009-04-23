@@ -698,6 +698,7 @@ import and export of addressbook.
  
  <SyncGalResponse token="{new-token}">
    <cn>...</cn>*
+   <deleted id="{itemId}">*
  </SyncGalResponse>
 
   If the request has idOnly set to true, then the response will contain
