@@ -819,10 +819,7 @@ public class ZimletUtil {
 			try {
 				zd = zimlets[i].getZimletDescription();
 				boolean isExtension = (zd != null && zd.isExtension());
-				if (!everything && isExtension) {
-					continue;
-				}
-				if (isExtension) {
+				if (isExtension && everything) {
 					System.out.print(" (ext)");
 				}
 			} catch (Exception e) {
