@@ -423,7 +423,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="46" name="zimbraGalMode" type="enum" value="zimbra,both,ldap" cardinality="single" optionalIn="domain">
-  <desc>should be internal (query internal only), external (external only), or both</desc>
+  <desc>
+    valid modes are "zimbra" (query internal directory only), "ldap" (query
+    external directory only), or "both" (query internal and external directory)
+  </desc>
+
 </attr>
 
 <attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain">
