@@ -455,9 +455,9 @@ extends Assert {
     }
 
     public static void runTest(Class<?> testClass) {
-        ZimbraLog.test.info("Starting unit test %s.", testClass.getName());
-
         TestNG testng = TestUtil.newTestNG();
+        ZimbraLog.test.info("Starting unit test %s.\nSee %s/index.html for results.",
+            testClass.getName(), testng.getOutputDirectory());
         TestListenerAdapter listener = new TestListenerAdapter();
         testng.addListener(listener);
         testng.addListener(new TestLogger());
