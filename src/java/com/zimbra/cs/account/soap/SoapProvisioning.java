@@ -407,10 +407,16 @@ public class SoapProvisioning extends Provisioning {
                 a.setText((String)value);
             } else if (value instanceof String[]) {
                 String[] values = (String[]) value;
-                for (String v: values) {
+                if (values.length == 0) {
+                    // an empty array == removing the attr
                     Element  a = req.addElement(AdminConstants.E_A);
                     a.addAttribute(AdminConstants.A_N, key);
-                    a.setText((String)v);
+                } else {
+                    for (String v: values) {
+                        Element  a = req.addElement(AdminConstants.E_A);
+                        a.addAttribute(AdminConstants.A_N, key);
+                        a.setText((String)v);
+                    }
                 }
             } else if (value == null) {
                 Element  a = req.addElement(AdminConstants.E_A);
@@ -2287,7 +2293,9 @@ public class SoapProvisioning extends Provisioning {
         prov.soapZimbraAdminAuthenticate();
 
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        acctAttrs.put("zimbraForeignPrincipal", null);
+        // acctAttrs.put("zimbraForeignPrincipal", null);
+        acctAttrs.put("zimbraForeignPrincipal", new String[0]);
+        // acctAttrs.put("zimbraForeignPrincipal", new String[]{"aaa", "bbb"});
         Account acct = prov.get(AccountBy.name, "user1");
         prov.modifyAttrs(acct, acctAttrs);
     }
