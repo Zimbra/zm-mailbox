@@ -241,10 +241,6 @@ public class DataSource extends AccountProperty {
      */
     private void migratePollingIntervalIfNecessary(Provisioning prov, Account account)
     throws ServiceException {
-        if (!(prov instanceof LdapProvisioning)) {
-            // Only run migration on the server
-            return;
-        }
         // Migrate Account value.
         String oldInterval = account.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, false);
         if (!StringUtil.isNullOrEmpty(oldInterval)) {
