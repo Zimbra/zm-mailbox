@@ -841,21 +841,19 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
+            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement((Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT") + " INTO " + getConversationTableName(item) +
+            stmt = conn.prepareStatement(command + " INTO " + getConversationTableName(item) +
                         "(" + mailbox_id + "hash, conv_id)" +
-                        " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?)" +
-                        (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE conv_id = ?" : ""));
+                        " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?)");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, item.getId());
-            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY))
-                stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
                     DbPool.closeStatement(stmt);
 
@@ -2925,8 +2923,9 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
+            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement((Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT") + " INTO " + getCalendarItemTableName(mbox) +
+            stmt = conn.prepareStatement(command + " INTO " + getCalendarItemTableName(mbox) +
                         " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
                         " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)" +
                         (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE uid = ?, item_id = ?, start_time = ?, end_time = ?" : ""));
@@ -2945,7 +2944,7 @@ public class DbMailItem {
             }
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
                     DbPool.closeStatement(stmt);
 

@@ -63,7 +63,7 @@ public class MySQL extends Db {
             case ON_DUPLICATE_KEY:           return true;
             case ON_UPDATE_CASCADE:          return true;
             case READ_COMMITTED_ISOLATION:   return true;
-            case REPLACE_INTO:               return false;
+            case REPLACE_INTO:               return true;
             case UNIQUE_NAME_INDEX:          return true;
             case REQUEST_UTF8_UNICODE_COLLATION: return true;            
         }

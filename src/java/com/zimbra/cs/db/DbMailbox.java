@@ -515,8 +515,9 @@ public class DbMailbox {
                 // We try INSERT first even though it's the less common case, to avoid MySQL
                 // deadlock.  See bug 19404 for more info.
                 try {
-                    stmt = conn.prepareStatement("INSERT INTO " + qualifyZimbraTableName(mbox, TABLE_METADATA) +
-                            " (" + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") + "section, metadata) " +
+                    String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
+                    stmt = conn.prepareStatement(command + " INTO " + qualifyZimbraTableName(mbox, TABLE_METADATA) +
+                            " (" + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") + "section, metadata)" +
                             " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?)");
                     int pos = 1;
                     if (!DebugConfig.disableMailboxGroups)
