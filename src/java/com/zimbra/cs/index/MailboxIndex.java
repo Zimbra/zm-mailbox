@@ -508,7 +508,8 @@ public final class MailboxIndex
     }
 
     void indexingCompleted(List<Integer> ids, boolean succeeded) {
-        mMailbox.indexingCompleted(ids, succeeded);
+        if (ids.size() > 0)
+            mMailbox.indexingCompleted(ids, succeeded);
     }
 
     /**

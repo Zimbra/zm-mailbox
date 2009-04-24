@@ -478,9 +478,30 @@ public class Mailbox {
                 try {
                     getOperationConnection();
                     Flag indexingDeferredFlag = getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED);
-                    // if we were successful, then the flag is UNSET, otherwise the flag is SET
-                    DbMailItem.alterTag(indexingDeferredFlag, ids, !succeeded);
-                    incrementIndexDeferredCount(-1 * ids.size());
+
+                    
+                    List<Integer> uncachedItemIds = new ArrayList<Integer>();
+                    
+                    for (Iterator<Integer> iter = ids.iterator(); iter.hasNext();) {
+                        // if the item is in the item cache, then lets go through the MailItem itself so the 
+                        // cached copy gets updated
+                        Integer id = iter.next();
+                        MailItem item = getCachedItem(id, MailItem.TYPE_UNKNOWN);
+                        incrementIndexDeferredCount(-1);
+                        if (item != null) {
+                            // if we were successful, then the flag is UNSET, otherwise the flag is SET
+                            item.alterSystemFlag(indexingDeferredFlag, !succeeded);
+                            iter.remove();
+                        } else {
+                            uncachedItemIds.add(id);
+                        }
+                    }
+                    
+                    // for all the items that aren't in the cache
+                    if (uncachedItemIds.size() > 0) {
+                        DbMailItem.alterTag(indexingDeferredFlag, uncachedItemIds, !succeeded);
+                        incrementIndexDeferredCount(-1 * uncachedItemIds.size());
+                    }
                     success = true;
                 } finally {
                     endTransaction(success);
