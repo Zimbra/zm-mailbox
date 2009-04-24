@@ -1357,9 +1357,9 @@ public class ZMailboxUtil implements DebugListener {
             stdout.format("[%n%s%n]%n", sb.toString());
 
         } else {
-            String format = "%11.11s  %6.6s  %s%n";
-            stdout.format(format, "Permissions", "Type",   "Display");
-            stdout.format(format, "-----------", "------", "-------");
+            String format = "%11.11s  %8.8s  %s%n";
+            stdout.format(format, "Permissions", "Type",     "Display");
+            stdout.format(format, "-----------", "--------", "-------");
 
             for (ZGrant g : f.getGrants()) {
                 GranteeType gt = g.getGranteeType();
