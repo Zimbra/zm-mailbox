@@ -278,6 +278,8 @@ public class ImapImport extends MailItemImport {
 
             // Handle new local folders and deleted remote folders
             for (com.zimbra.cs.mailbox.Folder zimbraFolder : localRootFolder.getSubfolderHierarchy()) {
+                if (zimbraFolder.getDefaultView() != MailItem.TYPE_MESSAGE)
+                    continue;
                 if (zimbraFolder.getId() == localRootFolder.getId()) {
                     // Root folder is always empty
                     continue;
@@ -665,7 +667,7 @@ public class ImapImport extends MailItemImport {
                 ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
 
                 if (localIds.contains(trackedMsg.getItemId())) {
-                    int localFlags = trackedMsg.getLocalFlags();
+                    int localFlags = trackedMsg.getItemFlags();
                     int trackedFlags = trackedMsg.getFlags();
                     int remoteFlags = getZimbraFlags(remoteMsg.getFlags());
                     int flags = getNewFlags(localFlags, trackedFlags, remoteFlags);

@@ -821,7 +821,7 @@ class ImapFolderSync {
     private void updateFlags(ImapMessage msg, Flags flags)
         throws ServiceException, IOException {
         int id = msg.getItemId();
-        int localFlags = msg.getLocalFlags();
+        int localFlags = msg.getItemFlags();
         int trackedFlags = msg.getFlags();
         int remoteFlags = SyncUtil.imapToZimbraFlags(flags);
         int newLocalFlags = mergeFlags(localFlags, trackedFlags, remoteFlags);

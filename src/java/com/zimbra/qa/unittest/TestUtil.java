@@ -17,7 +17,6 @@ package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -73,7 +72,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
@@ -646,12 +644,12 @@ extends Assert {
             parentId = parent.getId();
         }
         
-        return mbox.createFolder(parentId, name, null, null, null, null);
+        return mbox.createFolder(parentId, name, ZFolder.View.message, null, null, null);
     }
     
     public static ZFolder createFolder(ZMailbox mbox, String parentId, String folderName)
     throws ServiceException {
-        return mbox.createFolder(parentId, folderName, null, null, null, null);
+        return mbox.createFolder(parentId, folderName, ZFolder.View.message, null, null, null);
     }
     
     /**

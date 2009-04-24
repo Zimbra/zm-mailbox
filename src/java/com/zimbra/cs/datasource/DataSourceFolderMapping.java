@@ -57,10 +57,19 @@ public class DataSourceFolderMapping extends DataSourceMapping {
         return getMappings(ds, dsi.itemId);
     }
 
+    public Collection<DataSourceItem> getMappingsAndFlags() throws ServiceException {
+        return getMappingsAndFlags(ds, dsi.itemId);
+    }
+
     public static Collection<DataSourceItem> getMappings(DataSource ds, int
         folderId) throws ServiceException {
         return DbDataSource.getAllMappingsInFolder(ds, folderId);
     }
 
+    public static Collection<DataSourceItem> getMappingsAndFlags(DataSource ds, int
+        folderId) throws ServiceException {
+        return DbDataSource.getAllMappingsAndFlagsInFolder(ds, folderId);
+    }
+    
     protected void parseMetaData() throws ServiceException {}
 }

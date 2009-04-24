@@ -86,7 +86,7 @@ public class ImapFolder extends DataSourceFolderMapping {
     }
     
     public ImapMessageCollection getMessages() throws ServiceException {
-        Collection<DataSourceItem> mappings = getMappings(ds, getItemId());
+        Collection<DataSourceItem> mappings = getMappingsAndFlags(ds, getItemId());
         ImapMessageCollection imc = new ImapMessageCollection();
 
         for (DataSourceItem mapping : mappings)
@@ -95,7 +95,7 @@ public class ImapFolder extends DataSourceFolderMapping {
     }
     
     public List<Integer> getNewMessageIds() throws ServiceException {
-        Collection<DataSourceItem> mappings = getMappings(ds, getItemId());
+        Collection<DataSourceItem> mappings = getMappingsAndFlags(ds, getItemId());
         Mailbox mbox = ds.getMailbox();
         List<Integer> allIds = mbox.listItemIds(mbox.getOperationContext(),
             MailItem.TYPE_MESSAGE, getItemId());

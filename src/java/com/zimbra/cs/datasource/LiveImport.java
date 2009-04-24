@@ -426,7 +426,7 @@ public class LiveImport extends MailItemImport {
                     remoteDate = remoteMsg.getSentDate();
                 try {
                     ld = new LiveData(ds, remoteMsg.getMessageID());
-                    localId = ld.getDataSourceItem().itemId;
+                    localId = ld.getItemId();
                 } catch (NoSuchItemException e) {
                     ZimbraLog.datasource.debug("Found new remote message %s. Creating local copy.",
                         remoteMsg.getMessageID());
@@ -509,8 +509,7 @@ public class LiveImport extends MailItemImport {
                 } else {
                     ZimbraLog.datasource.debug("Message with UID %s was moved remotely. Moving local copy.",
                         remoteMsg.getMessageID());
-                    mbox.move(octxt, ld.getDataSourceItem().itemId,
-                        MailItem.TYPE_MESSAGE, folderId);
+                    mbox.move(octxt, ld.getItemId(), MailItem.TYPE_MESSAGE, folderId);
                     ld.setRemoteFolderId(remoteFolder.getUID());
                     numMoved++;
                     updated = true;
@@ -561,7 +560,7 @@ public class LiveImport extends MailItemImport {
                     trackedMsg.set();
                     numAddedRemotely++;
                 } else {
-                    String remoteId = trackedMsg.getDataSourceItem().remoteId;
+                    String remoteId = trackedMsg.getRemoteId();
 
                     if (trackedMsg.getRemoteFolderId().equals(remoteFolder.getUID())) {
                         ZimbraLog.datasource.debug("Message with UID %s was deleted remotely. Deleting local copy.",

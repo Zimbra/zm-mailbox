@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.datasource;
 
-import java.util.ArrayList;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbDataSource;
@@ -49,12 +47,19 @@ public class DataSourceMapping {
         parseMetaData();
     }
     
-    public DataSourceMapping(DataSource ds, int folderId, int itemId, String remoteId)
-        throws ServiceException {
+    public DataSourceMapping(DataSource ds, int folderId, int itemId, String
+        remoteId) throws ServiceException {
         this.ds = ds;
         dsi = new DataSourceItem(folderId, itemId, remoteId, new Metadata());
     }
     
+    public DataSourceMapping(DataSource ds, int folderId, int itemId, String
+        remoteId, int localFlags) throws ServiceException {
+        this.ds = ds;
+        dsi = new DataSourceItem(folderId, itemId, remoteId, new Metadata(),
+            localFlags);
+    }
+
     public DataSource getDataSource() { return ds; }
     
     public DataSourceItem getDataSourceItem() { return dsi; }
@@ -63,11 +68,22 @@ public class DataSourceMapping {
 
     public int getItemId() { return dsi.itemId; }
     
+    public int getItemFlags() throws ServiceException {
+        if (dsi.itemFlags == -1) {
+            com.zimbra.cs.mailbox.Message localMsg =
+                ds.getMailbox().getMessageById(null, dsi.itemId);
+            dsi.itemFlags = localMsg.getFlagBitmask();
+        }
+        return dsi.itemFlags;
+    }
+    
     public String getRemoteId() { return dsi.remoteId; }
     
     public void setFolderId(int folderId) { dsi.folderId = folderId; }
     
     public void setItemId(int itemId) { dsi.itemId = itemId; }
+    
+    public void setItemFlags(int itemFlags) { dsi.itemFlags = itemFlags; }
     
     public void setRemoteId(String remoteId) { dsi.remoteId = remoteId; }
     
@@ -76,14 +92,7 @@ public class DataSourceMapping {
     }
     
     public void delete() throws ServiceException {
-        delete(ds, dsi.itemId);
-    }
-    
-    public static void delete(DataSource ds, int itemId) throws ServiceException {
-        ArrayList<Integer> toDelete = new ArrayList<Integer>(1);
-
-        toDelete.add(itemId);
-        DbDataSource.deleteMappings(ds, toDelete);
+        DbDataSource.deleteMapping(ds, dsi.itemId);
     }
     
     public void set() throws ServiceException {

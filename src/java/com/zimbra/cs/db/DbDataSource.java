@@ -28,6 +28,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 
@@ -39,6 +40,7 @@ public class DbDataSource {
 	public int itemId;
 	public String remoteId;
 	public Metadata md;
+	public int itemFlags = -1;
 	
 	public DataSourceItem(int f, int i, String r, Metadata m) {
 	    folderId = f;
@@ -46,6 +48,11 @@ public class DbDataSource {
 	    remoteId = r;
 	    md = m;
 	}
+
+        public DataSourceItem(int f, int i, String r, Metadata m, int fl) {
+            this(f, i, r, m);
+            itemFlags = fl;
+        }
     }
 	
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
@@ -346,6 +353,56 @@ public class DbDataSource {
             DbPool.quietClose(conn);
         }
     	return items;
+    }
+
+    public static Collection<DataSourceItem> getAllMappingsAndFlagsInFolder(DataSource ds, int folderId) throws ServiceException {
+        Mailbox mbox = ds.getMailbox();
+        ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        ZimbraLog.datasource.debug("Get all mappings for %s in folder %d", ds.getName(), folderId);
+        try {
+            String thisTable = getTableName(mbox);
+            String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
+            String MBOX_JOIN = DebugConfig.disableMailboxGroups ? " " : thisTable + ".mailbox_id = mi.mailbox_id AND ";
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT item_id, remote_id, ").append(thisTable).append(".metadata, mi.unread, mi.flags FROM ");
+            sb.append(thisTable);
+            sb.append("  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox)).append(" mi ");
+            sb.append("  ON " ).append(MBOX_JOIN).append(thisTable).append(".item_id = mi.id ");
+            sb.append(" WHERE ");
+            sb.append(IN_THIS_MAILBOX_AND);
+            sb.append("  data_source_id = ? AND ").append(thisTable).append(".folder_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int i = 1;
+            i = DbMailItem.setMailboxId(stmt, mbox, i);
+            stmt.setString(i++, ds.getId());
+            stmt.setInt(i++, folderId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Metadata md = null;
+                String buf = rs.getString(3);
+                int unread = rs.getInt(4);
+                int flags = rs.getInt(5);
+                
+                if (buf != null)
+                    md = new Metadata(buf);
+                flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
+                items.add(new DataSourceItem(folderId, rs.getInt(1), rs.getString(2), md, flags));
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get mapping for dataSource "+ds.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return items;
     }
 
     public static Collection<DataSourceItem> getAllMappingsForRemoteIdPrefix(DataSource ds, int folderId, String prefix)
