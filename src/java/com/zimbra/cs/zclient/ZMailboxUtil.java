@@ -367,7 +367,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
         GET_PERMISSION("getPermission", "gp", "[right1 [right2...]]", "get rights currently granted", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
-                O_OUTPUT_FILE, O_START_TIME, O_END_TIME),
+                O_OUTPUT_FILE, O_START_TIME, O_END_TIME, O_URL),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|key {name} [{access key}]|all|public {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
@@ -398,7 +398,7 @@ public class ZMailboxUtil implements DebugListener {
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 1),
         POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2,
-                O_CONTENT_TYPE, O_IGNORE_ERROR, O_PRESERVE_ALARMS),
+                O_CONTENT_TYPE, O_IGNORE_ERROR, O_PRESERVE_ALARMS, O_URL),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
@@ -2672,7 +2672,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
-            mMbox.getRESTResource(encodeURL(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), 0);
+            mMbox.getRESTResource(encodeURL(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), 0, urlOpt(false));
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
@@ -2684,7 +2684,7 @@ public class ZMailboxUtil implements DebugListener {
         try {
             File file = new File(args[1]);
             mMbox.postRESTResource(encodeURL(args[0]), new FileInputStream(file), true, file.length(),
-                    contentTypeOpt(), ignoreAndContinueOnErrorOpt(), preserveAlarmsOpt(), 0);
+                    contentTypeOpt(), ignoreAndContinueOnErrorOpt(), preserveAlarmsOpt(), 0, urlOpt(false));
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
         }

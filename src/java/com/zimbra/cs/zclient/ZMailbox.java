@@ -2434,6 +2434,17 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public URI getRestURI(String relativePath) throws ServiceException {
+        return getRestURI(relativePath, null);
+    }
+    
+    /**
+     * returns a rest URL relative to this mailbox.
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
+     * @param alternateUrl alternate url to connect to
+     * @return URI of path
+     * @throws ServiceException on error
+     */
+    private URI getRestURI(String relativePath, String alternateUrl) throws ServiceException {
         String pathPrefix = "/";
         if (relativePath.startsWith("/")) {
             pathPrefix = "";
@@ -2441,6 +2452,12 @@ public class ZMailbox implements ToZJSONObject {
         
         try {
             String restURI = getAccountInfo(false).getRestURLBase();
+            if (alternateUrl != null) {
+                // parse the URI and extract path
+                URI uri = new URI(restURI);
+                restURI = alternateUrl + uri.getPath();
+            }
+            
             if (restURI == null) {
                 URI uri = new URI(mTransport.getURI());
                 return  uri.resolve("/home/" + getName() + pathPrefix + relativePath);
@@ -2458,15 +2475,16 @@ public class ZMailbox implements ToZJSONObject {
      * @param os the stream to send the output to
      * @param closeOs whether or not to close the output stream when done
      * @param msecTimeout connection timeout
+     * @param alternateUrl alternate url to connect to
      * @throws ServiceException on error
      */
     public void getRESTResource(
             String relativePath, OutputStream os, boolean closeOs,
-            String startTimeArg, String endTimeArg, int msecTimeout)
+            String startTimeArg, String endTimeArg, int msecTimeout, String alternateUrl)
     throws ServiceException {
         InputStream in = null;
         try {
-            in = getRESTResource(relativePath, startTimeArg, endTimeArg, msecTimeout);
+            in = getRESTResource(relativePath, startTimeArg, endTimeArg, msecTimeout, alternateUrl);
             ByteUtil.copy(in, false, os, closeOs);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("Unable to get " + relativePath, e);
@@ -2475,7 +2493,8 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-    private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg, int msecTimeout)
+    private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg, 
+            int msecTimeout, String alternateUrl)
     throws ServiceException {
         GetMethod get = null;
         URI uri = null;
@@ -2497,7 +2516,7 @@ public class ZMailbox implements ToZJSONObject {
                     relativePath = relativePath + "&end=" + encodedArg;
             }
 
-            uri = getRestURI(relativePath);
+            uri = getRestURI(relativePath, alternateUrl);
             HttpClient client = getHttpClient(uri);
 
             if (msecTimeout > 0)
@@ -2529,7 +2548,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     public InputStream getRESTResource(String relativePath)
     throws ServiceException {
-        return getRESTResource(relativePath, null, null, getTimeout());
+        return getRESTResource(relativePath, null, null, getTimeout(), null);
     }
 
     /**
@@ -2542,11 +2561,12 @@ public class ZMailbox implements ToZJSONObject {
      * @param ignoreAndContinueOnError if true, set optional ignore=1 query string parameter
      * @param preserveAlarms if true, set optional preserveAlarms=1 query string parameter
      * @param msecTimeout connection timeout in milliseconds, or <tt>-1</tt> for no timeout
+     * @param url alternate url to connect to
      * @throws ServiceException on error
      */
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
                                  String contentType, boolean ignoreAndContinueOnError, boolean preserveAlarms,
-                                 int msecTimeout)
+                                 int msecTimeout, String alternateUrl)
     throws ServiceException {
         PostMethod post = null;
 
@@ -2563,7 +2583,7 @@ public class ZMailbox implements ToZJSONObject {
                 else
                     relativePath = relativePath + "&preserveAlarms=1";
             }
-            URI uri = getRestURI(relativePath);
+            URI uri = getRestURI(relativePath, alternateUrl);
             HttpClient client = getHttpClient(uri);
 
             if (msecTimeout > 0)
@@ -2605,7 +2625,7 @@ public class ZMailbox implements ToZJSONObject {
                                  String contentType,
                                  int msecTimeout)
     throws ServiceException {
-        postRESTResource(relativePath, is, closeIs, length, contentType, false, false, msecTimeout);
+        postRESTResource(relativePath, is, closeIs, length, contentType, false, false, msecTimeout, null);
     }
 
     /**
