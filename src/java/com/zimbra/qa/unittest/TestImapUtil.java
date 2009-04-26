@@ -17,6 +17,7 @@ package com.zimbra.qa.unittest;
 import junit.framework.TestCase;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.ImapInputStream;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.datasource.ImapUtil;
 
@@ -120,7 +121,8 @@ public class TestImapUtil extends TestCase {
         for (String folder : folders) {
             sb.append("* LIST () \"/\" \"").append(folder).append("\"\r\n");
         }
+        ImapConfig config = new ImapConfig();
         return new ImapInputStream(
-            new ByteArrayInputStream(Ascii.getBytes(sb.toString())), null);
+            new ByteArrayInputStream(Ascii.getBytes(sb.toString())), config);
     }
 }

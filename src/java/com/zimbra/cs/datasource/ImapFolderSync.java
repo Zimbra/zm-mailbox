@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.datasource;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -55,10 +54,10 @@ import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.Zimbra;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -237,6 +236,7 @@ class ImapFolderSync {
         }
         // Fetch new messages
         List<Long> uidsToDelete = new ArrayList<Long>();
+        // Set handler for message data
         maxUid = uidNext > 0 ? uidNext - 1 : 0;
         if (maxUid <= 0 || lastUid < maxUid) {
             fetchMessages(lastUid + 1, uidsToDelete);
@@ -259,6 +259,7 @@ class ImapFolderSync {
         completed = true;
     }
 
+    
     private SyncState getSyncState(boolean fullSync) throws ServiceException {
         syncState = ds.removeSyncState(localFolder.getId());
         if (syncState == null || fullSync) {
@@ -641,6 +642,8 @@ class ImapFolderSync {
                     if (ai != null) {
                         try {
                             storeImapMessage(md.getUid(), ai.itemId, ai.zflags);
+                        } catch (OutOfMemoryError e) {
+                            Zimbra.halt("Out of memory");
                         } catch (ServiceException e) {
                             syncMessageFailed(ai.itemId,
                                 "Couldn't store message tracker for uid " + md.getUid(), e);
@@ -930,6 +933,8 @@ class ImapFolderSync {
                 try {
                     handleFetch(md, flagsByUid, uidsToDelete);
                     clearError(uid);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("Out of memory");
                 } catch (Exception e) {
                     syncFailed("Fetch failed for uid " + uid, e);
                     SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
@@ -1002,13 +1007,17 @@ class ImapFolderSync {
         if (uid == -1) {
             throw new MailException("Missing UID in FETCH response");
         }
-        ImapData body = getBody(md);
+        ParsedMessage pm = getBody(md);
         MessageData flagsData = flagsByUid.get(uid);
         if (flagsData == null) {
-            return; // Message must have been deleted remotely
+            pm.deleteIncomingBlob();
+            return;
         }
         remoteFolder.debug("Found new IMAP message with uid %d", uid);
-        ParsedMessage pm = parseMessage(body, flagsData);
+        // Parse the message data
+        Date date = md.getInternalDate();
+        Long time = date != null ? date.getTime() : null;
+        pm.initialize(time, mailbox.attachmentsIndexingEnabled());
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
         int folderId = localFolder.getId();
         Message msg = imapSync.addMessage(null, pm, folderId, zflags);
@@ -1027,29 +1036,15 @@ class ImapFolderSync {
         }
     }
 
-    private static ImapData getBody(MessageData md) throws MailException {
+    private static ParsedMessage getBody(MessageData md) throws MailException {
         Body[] sections = md.getBodySections();
         if (sections == null || sections.length != 1) {
             throw new MailException(
               "Invalid body section FETCH response for uid " +  md.getUid());
         }
-        return sections[0].getImapData();
+        return (ParsedMessage) sections[0].getData();
     }
     
-    private ParsedMessage parseMessage(ImapData body, MessageData md)
-        throws ServiceException, MessagingException, IOException {
-        Date date = md.getInternalDate();
-        Long time = date != null ? date.getTime() : null;
-        boolean indexAttachments = mailbox.attachmentsIndexingEnabled();
-        if (body.isLiteral()) {
-            File file = ((Literal) body).getFile();
-            if (file != null) {
-                return new ParsedMessage(file, time, indexAttachments);
-            }
-        }
-        return new ParsedMessage(body.getBytes(), time, indexAttachments);
-    }
-
     // Deletes remote messages for specified uids. Returns the UIDs that were
     // actually deleted.
     private List<Long> deleteMessages(List<Long> uids) throws ServiceException {

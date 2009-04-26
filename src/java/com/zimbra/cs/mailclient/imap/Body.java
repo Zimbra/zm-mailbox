@@ -40,15 +40,13 @@ public final class Body {
     private long origin = -1;
     private Object data;
 
-    public static Body read(ImapInputStream is, DataHandler handler)
-        throws IOException {
+    public static Body read(ImapInputStream is) throws IOException {
         Body b = new Body();
-        b.readBody(is, handler);
+        b.readBody(is);
         return b;
     }
 
-    private void readBody(ImapInputStream is, DataHandler handler)
-        throws IOException {
+    private void readBody(ImapInputStream is) throws IOException {
         is.skipChar('[');
         if (is.peekChar() != ']') {
             readSection(is);
@@ -59,7 +57,7 @@ public final class Body {
             is.skipChar('>');
         }
         is.skipChar(' ');
-        data = is.readFetchData(handler);
+        data = is.readFetchData();
     }
 
     private void readSection(ImapInputStream is) throws IOException {

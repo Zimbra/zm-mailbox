@@ -15,5 +15,5 @@
 package com.zimbra.cs.mailclient.imap;
 
 public interface DataHandler {
-    Object processData(ImapData data);
+    Object handleData(ImapData data) throws Exception;
 }

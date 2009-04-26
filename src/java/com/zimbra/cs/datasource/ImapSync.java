@@ -17,6 +17,8 @@ package com.zimbra.cs.datasource;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.DataHandler;
+import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
@@ -24,6 +26,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -142,6 +146,7 @@ public class ImapSync extends MailItemImport {
         connect();
         int folderId = dataSource.getFolderId();
         localRootFolder = getMailbox().getFolderById(null, folderId);
+        connection.setDataHandler(new FetchDataHandler());
         try {
             syncFolders(folderIds, fullSync);
             connection.logout();
@@ -152,6 +157,31 @@ public class ImapSync extends MailItemImport {
         }
     }
 
+    // Handler for fetched message data which uses ParsedMessage to stream
+    // the message data to disk if necessary.
+    private static class FetchDataHandler implements DataHandler {
+        public Object handleData(ImapData data) throws Exception {
+            try {
+                LOG.debug("FetchHandler: data = " + data);
+                return getParsedMessage(data);
+            } catch (OutOfMemoryError e) {
+                Zimbra.halt("Out of memory");
+                return null;
+            }
+        }
+    }
+
+    private static ParsedMessage getParsedMessage(ImapData data)
+        throws ServiceException, IOException {
+        if (data.isLiteral()) {
+            // If this is a literal then we have a direct input stream for
+            // reading the message body. Let ParsedMessage decide whether
+            // to stream message data directly to disk.
+            return new ParsedMessage(data.getInputStream(), data.getSize());
+        }
+        return new ParsedMessage(data.getBytes());
+    }
+    
     protected void connect() throws ServiceException {
         if (!connection.isClosed()) return;
         try {

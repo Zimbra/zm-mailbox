@@ -137,13 +137,7 @@ public class ParsedMessage {
     throws ServiceException {
         mMimeMessage = msg;
         mExpandedMessage = msg;
-        try {
-            init(receivedDate, indexAttachments);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        }
+        initialize(receivedDate, indexAttachments);
     }
 
     public ParsedMessage(byte[] rawData, boolean indexAttachments)
@@ -151,21 +145,24 @@ public class ParsedMessage {
         this(rawData, null, indexAttachments);
     }
 
-    public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
-    throws ServiceException {
+    /*
+     * Creates a new, uninitialized instance of ParsedMessage from the specified
+     * raw bytes. Used in IMAP import where initialization and parsing must
+     * be delayed until we've had a chance to fully read the IMAP response.
+     */
+    public ParsedMessage(byte[] rawData) throws ServiceException {
         if (rawData == null || rawData.length == 0) {
             throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
         }
         mRawData = rawData;
-        try {
-            init(receivedDate, indexAttachments);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        }
     }
     
+    public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
+    throws ServiceException {
+        this(rawData);
+        initialize(receivedDate, indexAttachments);
+    }
+
     /**
      * Creates a <tt>ParsedMessage</tt> from a file already stored on disk.
      * @param file the file on disk.
@@ -182,17 +179,15 @@ public class ParsedMessage {
         // Initialize Blob object
         Volume volume = Volume.getCurrentMessageVolume();
         mIncomingBlob = new Blob(file, volume.getId());
-        try {
-            init(receivedDate, indexAttachments);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        }
+        initialize(receivedDate, indexAttachments);
     }
-    
-    public ParsedMessage(InputStream in, int sizeHint, Long receivedDate, boolean indexAttachments)
-    throws ServiceException {
+
+    /*
+     * Creates a new, uninitialized instance of ParsedMessage from the specified
+     * input stream. Used in IMAP import where initialization and parsing must
+     * be delayed until we've had a chance to fully read the IMAP response.
+     */
+    public ParsedMessage(InputStream in, int sizeHint) throws ServiceException {
         try {
             if (in == null) {
                 throw new IOException("InputStream cannot be null");
@@ -217,13 +212,15 @@ public class ParsedMessage {
                 mIncomingBlob = StoreManager.getInstance().storeIncoming(jointStream, sizeHint, null, volume.getId(), reader);
                 mRawData = reader.getData();  // Returns data only for compressed blobs, otherwise null.
             }
-
-            init(receivedDate, indexAttachments);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
         }
+    }
+
+    public ParsedMessage(InputStream in, int sizeHint, Long receivedDate, boolean indexAttachments)
+    throws ServiceException {
+        this(in, sizeHint);
+        initialize(receivedDate, indexAttachments);
     }
 
     /**
@@ -234,6 +231,11 @@ public class ParsedMessage {
     throws ServiceException {
         mRawData = original.mRawData;
         mIncomingBlob = original.mIncomingBlob;
+        initialize(receivedDate, indexAttachments);
+    }
+
+    public void initialize(Long receivedDate, boolean indexAttachments)
+        throws ServiceException {
         try {
             init(receivedDate, indexAttachments);
         } catch (MessagingException e) {
@@ -242,7 +244,7 @@ public class ParsedMessage {
             throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
         }
     }
-
+    
     /**
      * Runs MIME mutators and converters, initializes {@link #mMimeMessage}, {@link #mExpandedMessage},
      * {@link #mFileInputStream} and {@link #mReceivedDate} based on message content.

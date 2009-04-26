@@ -29,6 +29,8 @@ import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailclient.imap.DataHandler;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -42,6 +44,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
@@ -178,21 +181,28 @@ public class TestImapClient extends TestCase {
 
     public void testFetch() throws Exception {
         login();
-        Mailbox mb = connection.select("INBOX");
-        final AtomicLong count = new AtomicLong(mb.getExists());
-        connection.uidFetch("1:*", "(ENVELOPE UID)", new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
-                if (res.getCCode() != CAtom.FETCH) return false;
-                MessageData md = (MessageData) res.getData();
-                assertNotNull(md);
-                assertNotNull(md.getEnvelope());
-                assertNotNull(md.getUid());
-                count.decrementAndGet();
-                System.out.printf("Fetched uid = %s\n", md.getUid());
-                return true;
+        connection.setDataHandler(new DataHandler() {
+            public Object handleData(ImapData data) throws Exception {
+                LOG.debug("handleData: data = " + data);
+                InputStream is = data.getInputStream();
+                int n, count = 0;
+                while ((n = (int) is.skip(data.getSize())) > 0) {
+                    count += n;
+                }
+                assertEquals(data.getSize(), count);
+                return count;
             }
         });
-        assertEquals(0, count.longValue());
+        Mailbox mb = connection.select("INBOX");
+        MessageData md = connection.fetch(1, "(UID BODY.PEEK[])");
+        Object data = md.getBodySections()[0].getData();
+        assertNotNull(data);
+        assertTrue("Expected Integer but got " + data.getClass(), data instanceof Integer);
+        connection.setDataHandler(null);
+        md = connection.fetch(1, "(UID BODY.PEEK[]");
+        data = md.getBodySections()[0].getData();
+        assertNotNull(data);
+        assertTrue("Expected Literal but got " + data.getClass(), data instanceof Literal);
     }
 
     public void testID() throws Exception {

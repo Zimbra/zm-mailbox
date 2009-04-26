@@ -19,6 +19,7 @@ import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailInputStream;
+import com.zimbra.cs.mailclient.MailException;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -31,15 +32,25 @@ import java.io.EOFException;
  * An input stream for reading IMAP response data.
  */
 public final class ImapInputStream extends MailInputStream {
+    private final ImapConnection connection;
     private final ImapConfig config;
 
     private static final boolean DEBUG = false;
 
-    public ImapInputStream(InputStream is, ImapConfig config) {
+    public ImapInputStream(InputStream is, ImapConnection connection) {
         super(is);
-        this.config = config;
+        this.connection = connection;
+        config = connection.getImapConfig();
     }
 
+    // TODO This constructor can be removed once we switch to the new ImapSync
+    // and UidFetch is no longer needed
+    public ImapInputStream(InputStream is, ImapConfig config) {
+        super(is);
+        connection = null;
+        this.config = config;
+    }
+    
     public Atom readAtom() throws IOException {
         String s = readChars(Chars.ATOM_CHARS);
         if (s.length() == 0) {
@@ -94,19 +105,26 @@ public final class ImapInputStream extends MailInputStream {
         return as;
     }
 
-    public Object readFetchData(DataHandler handler) throws IOException {
+    public Object readFetchData() throws IOException {
+        DataHandler handler = getDataHandler();
         if (handler == null) {
             return readNStringData();
         }
         ImapData as = peek() == '{' ? readLiteral(false) : readNStringData();
         try {
-            return handler.processData(as);
+            return handler.handleData(as);
+        } catch (Throwable e) {
+            throw new MailException("Exception in data handler", e);
         } finally {
             if (as.isLiteral()) {
                 InputStream is = as.getInputStream();
                 while (is.skip(as.getSize()) > 0) ;
             }
         }
+    }
+
+    private DataHandler getDataHandler() {
+        return connection != null ? connection.getDataHandler() : null;
     }
     
     public String readAString() throws IOException {
@@ -192,7 +210,7 @@ public final class ImapInputStream extends MailInputStream {
         skipChar('}');
         skipCRLF();
         TraceInputStream is = getTraceInputStream();
-        if (is != null && config != null) {
+        if (is != null) {
             int maxSize = config.getMaxLiteralTraceSize();
             if (maxSize >= 0 && len > maxSize) {
                 is.suspendTrace("<<< literal data not shown >>>");
@@ -220,7 +238,7 @@ public final class ImapInputStream extends MailInputStream {
         if (!cache) {
             return new Literal(in, len);
         }
-        if (config == null || len <= config.getMaxLiteralMemSize()) {
+        if (len <= config.getMaxLiteralMemSize()) {
             // Cache literal data in memory
             byte[] b = new byte[len];
             Io.readFully(in, b);
@@ -238,7 +256,6 @@ public final class ImapInputStream extends MailInputStream {
         }
         return new Literal(f, true);
     }
-
 
     public String readText() throws IOException {
         return readChars(Chars.TEXT_CHARS);

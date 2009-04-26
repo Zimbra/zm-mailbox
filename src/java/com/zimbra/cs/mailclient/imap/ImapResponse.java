@@ -34,26 +34,20 @@ public final class ImapResponse {
     public static final String UNTAGGED = "*";
 
     public static ImapResponse read(ImapInputStream is) throws IOException {
-        return read(is, null);
-    }
-    
-    public static ImapResponse read(ImapInputStream is, DataHandler handler)
-        throws IOException {
         ImapResponse res = new ImapResponse();
-        res.readResponse(is, handler);
+        res.readResponse(is);
         return res;
     }
 
     private ImapResponse() {}
     
-    private void readResponse(ImapInputStream is, DataHandler handler)
-        throws IOException {
+    private void readResponse(ImapInputStream is) throws IOException {
         tag = is.readText(' ');
         is.skipChar(' ');
         if (tag.equals(CONTINUATION)) {
             data = ResponseText.read(is);
         } else if (tag.equals(UNTAGGED)) {
-            readUntagged(is, handler);
+            readUntagged(is);
         } else if (Chars.isTag(tag)) {
             readTagged(is);
         } else {
@@ -62,8 +56,7 @@ public final class ImapResponse {
         is.skipCRLF();
     }
 
-    private void readUntagged(ImapInputStream is, DataHandler handler)
-        throws IOException {
+    private void readUntagged(ImapInputStream is) throws IOException {
         code = is.readAtom();
         number = code.getNumber();
         if (number != -1) {
@@ -108,7 +101,7 @@ public final class ImapResponse {
             // msg-att         = "(" (msg-att-dynamic / msg-att-static)
             //                    *(SP (msg-att-dynamic / msg-att-static)) ")"
             is.skipChar(' ');
-            data = MessageData.read(is, number, handler);
+            data = MessageData.read(is, number);
             break;
         case EXISTS: case RECENT: case EXPUNGE:
             break;

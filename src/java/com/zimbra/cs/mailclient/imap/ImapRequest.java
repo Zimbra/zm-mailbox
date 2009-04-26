@@ -26,14 +26,14 @@ import java.util.Arrays;
 import java.util.Date;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
-import java.text.SimpleDateFormat;
 
 public class ImapRequest {
     private final ImapConnection connection;
     private final String tag;
     private final Atom cmd;
     private List<Object> params;
-    private ResponseHandler handler;
+    private ResponseHandler responseHandler;
+    private DataHandler dataHandler;
 
     public ImapRequest(ImapConnection connection, Atom cmd) {
         this.connection = connection;
@@ -59,13 +59,18 @@ public class ImapRequest {
     }
 
     public void setResponseHandler(ResponseHandler handler) {
-        this.handler = handler;
+        this.responseHandler = handler;
+    }
+
+    public void setDataHandler(DataHandler handler) {
+        this.dataHandler = handler;
     }
     
     public String getTag() { return tag; }
     public Atom getCommand() { return cmd; }
     public List<Object> getParams() { return params; }
-    public ResponseHandler getResponseHandler() { return handler; }
+    public ResponseHandler getResponseHandler() { return responseHandler; }
+    public DataHandler getDataHandler() { return dataHandler; }
     
     public boolean isAuthenticate() {
         return CAtom.AUTHENTICATE.atom().equals(cmd);
