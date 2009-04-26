@@ -1033,7 +1033,7 @@ class ImapFolderSync {
             throw new MailException(
               "Invalid body section FETCH response for uid " +  md.getUid());
         }
-        return sections[0].getData();
+        return sections[0].getImapData();
     }
     
     private ParsedMessage parseMessage(ImapData body, MessageData md)

@@ -735,7 +735,7 @@ public class ImapImport extends MailItemImport {
                     }
                     IMAPMessage msg = remoteMsgs.get(uid);
                     if (msg == null) return;
-                    ImapData data = md.getBodySections()[0].getData();
+                    ImapData data = md.getBodySections()[0].getImapData();
                     // If server does not support APPENDUID and there are
                     // local messages without UID, match downloaded messages
                     // based on checksum and assign UID.

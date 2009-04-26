@@ -67,24 +67,27 @@ public final class MessageData {
     private static final SimpleDateFormat INTERNALDATE_FORMAT =
         new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
 
-    public static MessageData read(long msgno, ImapInputStream is) throws IOException {
+    public static MessageData read(ImapInputStream is, long msgno,
+                                   DataHandler handler) throws IOException {
         MessageData md = new MessageData();
         md.msgno = msgno;
-        md.readResponse(is);
+        md.readResponse(is, handler);
         return md;
     }
 
     private MessageData() {}
     
-    private void readResponse(ImapInputStream is) throws IOException {
+    private void readResponse(ImapInputStream is, DataHandler handler)
+        throws IOException {
         is.skipChar('(');
         do {
-            readAttribute(is);
+            readAttribute(is, handler);
         } while (is.match(' '));
         is.skipChar(')');
     }
 
-    private void readAttribute(ImapInputStream is) throws IOException {
+    private void readAttribute(ImapInputStream is, DataHandler handler)
+        throws IOException {
         // Need to special case BODY[] since '[' is also a valid atom char
         String s = is.readChars(Chars.FETCH_CHARS);
         if (s.length() == 0) {
@@ -96,7 +99,7 @@ public final class MessageData {
             if (bodySections == null) {
                 bodySections = new ArrayList<Body>();
             }
-            bodySections.add(Body.read(is));
+            bodySections.add(Body.read(is, handler));
             return;
         }
         is.skipChar(' ');

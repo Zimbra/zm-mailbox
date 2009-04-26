@@ -85,7 +85,7 @@ public final class ImapInputStream extends MailInputStream {
         ImapData ns = readNStringData();
         return ns.isNil() ? null : ns.toString();
     }
-    
+
     public ImapData readNStringData() throws IOException {
         ImapData as = readAStringData();
         if (!as.isNString()) {
@@ -94,10 +94,25 @@ public final class ImapInputStream extends MailInputStream {
         return as;
     }
 
+    public Object readFetchData(DataHandler handler) throws IOException {
+        if (handler == null) {
+            return readNStringData();
+        }
+        ImapData as = peek() == '{' ? readLiteral(false) : readNStringData();
+        try {
+            return handler.processData(as);
+        } finally {
+            if (as.isLiteral()) {
+                InputStream is = as.getInputStream();
+                while (is.skip(as.getSize()) > 0) ;
+            }
+        }
+    }
+    
     public String readAString() throws IOException {
         return readAStringData().toString();
     }
-    
+
     public ImapData readAStringData() throws IOException {
         ImapData as;
         String s;
@@ -106,7 +121,7 @@ public final class ImapInputStream extends MailInputStream {
             as = readQuoted();
             break;
         case '{':
-            as = readLiteral();
+            as = readLiteral(true);
             break;
         default:
             s = readChars(Chars.ASTRING_CHARS);
@@ -167,7 +182,7 @@ public final class ImapInputStream extends MailInputStream {
         return new Quoted(sbuf.toString());
     }
 
-    private Literal readLiteral() throws IOException {
+    private Literal readLiteral(boolean cache) throws IOException {
         skipChar('{');
         long len = readNumber();
         if (len > Integer.MAX_VALUE) {
@@ -176,23 +191,35 @@ public final class ImapInputStream extends MailInputStream {
         if (DEBUG) pd("readLiteral: size = %d", len);
         skipChar('}');
         skipCRLF();
-        TraceInputStream is =
-            (in instanceof TraceInputStream) ? (TraceInputStream) in : null;
-        if (is != null && is.isEnabled() && config != null) {
+        TraceInputStream is = getTraceInputStream();
+        if (is != null && config != null) {
             int maxSize = config.getMaxLiteralTraceSize();
             if (maxSize >= 0 && len > maxSize) {
                 is.suspendTrace("<<< literal data not shown >>>");
                 try {
-                    return readLiteral((int) len);
+                    return readLiteral((int) len, cache);
                 } finally {
                     is.resumeTrace();
                 }
             }
         }
-        return readLiteral((int) len);
+        return readLiteral((int) len, cache);
     }
 
-    private Literal readLiteral(int len) throws IOException {
+    private TraceInputStream getTraceInputStream() {
+        if (in instanceof TraceInputStream) {
+            TraceInputStream is = (TraceInputStream) in;
+            if (is.isEnabled()) {
+                return is;
+            }
+        }
+        return null;
+    }
+    
+    private Literal readLiteral(int len, boolean cache) throws IOException {
+        if (!cache) {
+            return new Literal(in, len);
+        }
         if (config == null || len <= config.getMaxLiteralMemSize()) {
             // Cache literal data in memory
             byte[] b = new byte[len];

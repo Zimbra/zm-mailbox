@@ -146,7 +146,7 @@ public class UidFetch {
             public void handleResponse(MessageData md) {
                 Body b = md.getBodySections()[0];
                 pd("Fetched message: uid = %d, size = %d, date = %s",
-                    md.getUid(), b.getSize(), md.getInternalDate());
+                    md.getUid(), b.getImapData().getSize(), md.getInternalDate());
             }
         });
     }

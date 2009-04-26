@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.cs.mailclient.util.LimitInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 
 import java.io.InputStream;
@@ -29,20 +30,22 @@ import java.io.FileInputStream;
  * IMAP literal data type.
  */
 public final class Literal extends ImapData {
-    private final byte[] bytes;
+    private byte[] bytes;
     private final File file;
+    private final LimitInputStream stream;
     private final int size;
     private boolean tmp; // if true then file is temporary
 
     public Literal(byte[] bytes) {
         this.bytes = bytes;
         file = null;
+        stream = null;
         size = bytes.length;
     }
 
     public Literal(File file, boolean tmp) {
-        bytes = null;
         this.file = file;
+        stream = null;
         size = (int) file.length();
         this.tmp = tmp;
     }
@@ -51,13 +54,25 @@ public final class Literal extends ImapData {
         this(file, false);
     }
 
+    public Literal(InputStream is, int size) {
+        bytes = null;
+        file = null;
+        stream = new LimitInputStream(is, size);
+        this.size = size;
+    }
+
     public Type getType() {
         return Type.LITERAL;
     }
     
     public InputStream getInputStream() throws IOException {
-        return bytes != null ?
-            new ByteArrayInputStream(bytes) : new FileInputStream(file);
+        if (bytes != null) {
+            return new ByteArrayInputStream(bytes);
+        } else if (file != null) {
+            return new FileInputStream(file);
+        } else {
+            return stream;
+        }
     }
 
     public int getSize() {
@@ -80,8 +95,7 @@ public final class Literal extends ImapData {
         }
     }
 
-    public void writePrefix(ImapOutputStream os, boolean lp)
-            throws IOException {
+    public void writePrefix(ImapOutputStream os, boolean lp) throws IOException {
         os.write('{');
         os.write(String.valueOf(size));
         if (lp) os.write('+');
@@ -106,8 +120,11 @@ public final class Literal extends ImapData {
     }
 
     public String toString() {
+        if (stream != null) {
+            return String.format("[literal %d bytes]", size);
+        }
         try {
-        return Ascii.toString(getBytes());
+            return Ascii.toString(getBytes());
         } catch (IOException e) {
             throw new IllegalStateException(
                 "I/O error while reading literal bytes", e);

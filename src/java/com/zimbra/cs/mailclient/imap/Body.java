@@ -38,15 +38,17 @@ public final class Body {
     private CAtom section;
     private String[] fieldNames;
     private long origin = -1;
-    private ImapData data;
+    private Object data;
 
-    public static Body read(ImapInputStream is) throws IOException {
+    public static Body read(ImapInputStream is, DataHandler handler)
+        throws IOException {
         Body b = new Body();
-        b.readBody(is);
+        b.readBody(is, handler);
         return b;
     }
 
-    private void readBody(ImapInputStream is) throws IOException {
+    private void readBody(ImapInputStream is, DataHandler handler)
+        throws IOException {
         is.skipChar('[');
         if (is.peekChar() != ']') {
             readSection(is);
@@ -57,7 +59,7 @@ public final class Body {
             is.skipChar('>');
         }
         is.skipChar(' ');
-        data = is.readNStringData();
+        data = is.readFetchData(handler);
     }
 
     private void readSection(ImapInputStream is) throws IOException {
@@ -97,8 +99,7 @@ public final class Body {
         return sb.toString();
     }
 
-    private static String[] readFieldNames(ImapInputStream is)
-            throws IOException {
+    private static String[] readFieldNames(ImapInputStream is) throws IOException {
         is.skipChar('(');
         ArrayList<String> names = new ArrayList<String>();
         do {
@@ -112,21 +113,18 @@ public final class Body {
     public CAtom getSection() { return section; }
     public String[] getFieldNames() { return fieldNames; }
     public long getOrigin() { return origin; }
-    public ImapData getData() { return data; }
+    public Object getData() { return data; }
+
+    public ImapData getImapData() {
+        if (data != null && !(data instanceof ImapData)) {
+            throw new UnsupportedOperationException();
+        }
+        return (ImapData) data;
+    }
     
-    public InputStream getInputStream() throws IOException {
-        return data.getInputStream();
-    }
-
-    public int getSize() {
-        return data.getSize();
-    }
-
-    public byte[] getBytes() throws IOException {
-        return data.getBytes();
-    }
-
     public void dispose() {
-        if (data != null) data.dispose();
+        if (data instanceof ImapData) {
+            ((ImapData) data).dispose();
+        }
     }
 }

@@ -33,22 +33,27 @@ public final class ImapResponse {
     public static final String CONTINUATION = "+";
     public static final String UNTAGGED = "*";
 
-    public static ImapResponse read(ImapInputStream is)
+    public static ImapResponse read(ImapInputStream is) throws IOException {
+        return read(is, null);
+    }
+    
+    public static ImapResponse read(ImapInputStream is, DataHandler handler)
         throws IOException {
-        ImapResponse ir = new ImapResponse();
-        ir.readResponse(is);
-        return ir;
+        ImapResponse res = new ImapResponse();
+        res.readResponse(is, handler);
+        return res;
     }
 
     private ImapResponse() {}
     
-    private void readResponse(ImapInputStream is) throws IOException {
+    private void readResponse(ImapInputStream is, DataHandler handler)
+        throws IOException {
         tag = is.readText(' ');
         is.skipChar(' ');
         if (tag.equals(CONTINUATION)) {
             data = ResponseText.read(is);
         } else if (tag.equals(UNTAGGED)) {
-            readUntagged(is);
+            readUntagged(is, handler);
         } else if (Chars.isTag(tag)) {
             readTagged(is);
         } else {
@@ -57,7 +62,8 @@ public final class ImapResponse {
         is.skipCRLF();
     }
 
-    private void readUntagged(ImapInputStream is) throws IOException {
+    private void readUntagged(ImapInputStream is, DataHandler handler)
+        throws IOException {
         code = is.readAtom();
         number = code.getNumber();
         if (number != -1) {
@@ -102,7 +108,7 @@ public final class ImapResponse {
             // msg-att         = "(" (msg-att-dynamic / msg-att-static)
             //                    *(SP (msg-att-dynamic / msg-att-static)) ")"
             is.skipChar(' ');
-            data = MessageData.read(number, is);
+            data = MessageData.read(is, number, handler);
             break;
         case EXISTS: case RECENT: case EXPUNGE:
             break;
