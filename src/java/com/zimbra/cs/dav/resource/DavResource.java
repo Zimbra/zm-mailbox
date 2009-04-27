@@ -40,6 +40,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
+import com.zimbra.cs.httpclient.URLUtil;
 
 /**
  * DavResource is an object identified by a URL in the hierarchy of HTTP URL
@@ -101,7 +102,7 @@ public abstract class DavResource {
 	}
 	
 	public void setHref(String href) {
-		getProperty(DavElements.E_HREF).setStringValue(href);
+		getProperty(DavElements.E_HREF).setStringValue(URLUtil.urlEscape(href));
 	}
 	
 	public boolean isValid() {

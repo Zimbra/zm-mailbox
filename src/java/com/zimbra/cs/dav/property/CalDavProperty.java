@@ -187,15 +187,10 @@ public class CalDavProperty extends ResourceProperty {
 				
 			}
 			if (homeSets == null || homeSets.length == 0) {
-				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-				e.setText(DavServlet.DAV_PATH + "/" + user + "/");
-				mChildren.add(e);
+				mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/"));
 			} else {
-				for (String calHome : homeSets) {
-					Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-					e.setText(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/");
-					mChildren.add(e);
-				}
+				for (String calHome : homeSets)
+					mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/"));
 			}
 		}
 	}
@@ -203,18 +198,14 @@ public class CalDavProperty extends ResourceProperty {
 	private static class ScheduleInboxURL extends CalDavProperty {
 		public ScheduleInboxURL(String user) {
 			super(DavElements.E_SCHEDULE_INBOX_URL);
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(DavServlet.DAV_PATH + "/" + user + "/Inbox/");
-			mChildren.add(e);
+			mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Inbox/"));
 		}
 	}
 	
 	private static class ScheduleOutboxURL extends CalDavProperty {
 		public ScheduleOutboxURL(String user) {
 			super(DavElements.E_SCHEDULE_OUTBOX_URL);
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(DavServlet.DAV_PATH + "/" + user + "/Sent/");
-			mChildren.add(e);
+			mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Sent/"));
 		}
 	}
 	
@@ -262,9 +253,7 @@ public class CalDavProperty extends ResourceProperty {
 					continue;
 	            if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
 	                continue;
-				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-				e.setText(DavServlet.DAV_PATH + "/" + user + f.getPath() + "/");
-				mChildren.add(e);
+				mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + f.getPath() + "/"));
 			}
 		}
 	}
