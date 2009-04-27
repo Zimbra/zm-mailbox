@@ -315,7 +315,7 @@ public class SoapHttpTransport extends SoapTransport {
                     Element soapResp = parseSoapResponse(responseStr, raw);
                     
                     if (mHttpDebugListener != null)
-                        mHttpDebugListener.receiveSoapMessage(method, soapReq);
+                        mHttpDebugListener.receiveSoapMessage(method, soapResp);
                     
                     return soapResp;
                 }
