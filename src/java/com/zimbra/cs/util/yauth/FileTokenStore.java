@@ -46,7 +46,7 @@ public class FileTokenStore extends TokenStore {
         }
     }
 
-    public void putToken(String appId, String user, String token) {
+    protected void putToken(String appId, String user, String token) {
         synchronized (this) {
             tokens.put(key(appId, user), token);
             saveTokens();
