@@ -34,6 +34,8 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
+import com.zimbra.cs.session.AdminSession;
+import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -69,6 +71,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         checkAccountRight(zsc, account, attrs);
 
         // check to see if quota is being changed
+        long curQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
         checkQuota(zsc, account, attrs);
 
         // check to see if cos is being changed, need right on new cos 
@@ -86,6 +89,15 @@ public class ModifyAccount extends AdminDocumentHandler {
                 new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));
         
         checkNewServer(zsc, context, account);
+        
+        long newQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+        if (newQuota != curQuota) {
+            // clear the quota cache
+            AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
+            if (session != null)
+                GetQuotaUsage.clearCachedQuotaUsage(session);
+        }
+            
 
         Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
         ToXML.encodeAccountOld(response, account);

@@ -48,6 +48,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     public static final String SORT_QUOTA_LIMIT = "quotaLimit";
     public static final String SORT_ACCOUNT = "account";
         
+    private static final String QUOTA_USAGE_CACHE_KEY = "GetQuotaUsage";
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -94,15 +95,14 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             checkRight(zsc, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
         
         QuotaUsageParams params = new QuotaUsageParams(d, sortBy,sortAscending);
-
-        ArrayList<AccountQuota> quotas = params.doSearch();
+        ArrayList<AccountQuota> quotas;
        
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
-            QuotaUsageParams cachedParams = (QuotaUsageParams) session.getData("GetQuotaUsage");
+            QuotaUsageParams cachedParams = getCachedQuotaUsage(session);
             if (cachedParams == null || !cachedParams.equals(params)) {
                 quotas = params.doSearch();
-                session.setData("GetQuotaUsage", params);
+                setCachedQuotaUsage(session, params);
             } else {
                 quotas = cachedParams.doSearch();
             }
@@ -124,6 +124,18 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, i < quotas.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, quotas.size());
         return response;
+    }
+    
+    synchronized static QuotaUsageParams getCachedQuotaUsage(AdminSession session) {
+        return (QuotaUsageParams) session.getData(QUOTA_USAGE_CACHE_KEY);
+    }
+    
+    synchronized static void setCachedQuotaUsage(AdminSession session, QuotaUsageParams params) {
+        session.setData(QUOTA_USAGE_CACHE_KEY, params);
+    }
+    
+    synchronized static void clearCachedQuotaUsage(AdminSession session) {
+        session.clearData(QUOTA_USAGE_CACHE_KEY);
     }
     
     public static class AccountQuota {
